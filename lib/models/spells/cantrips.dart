@@ -1,0 +1,1077 @@
+import '../spellbook_data.dart';
+
+const List<SpellItem> srdCantrips = [
+  SpellItem(
+    id: 'spell_true_strike',
+    name: 'True Strike',
+    level: 0,
+    school: SpellSchool.divination,
+    isChangedIn2024: true,
+    diffSummary:
+        'Completely redesigned: Now makes an immediate weapon attack using your spellcasting modifier for attack and damage, dealing radiant damage.',
+    diffHighlights: [
+      '2014: 1 Action, Concentration (1 round), grants advantage on your NEXT turn’s first attack roll.',
+      '2024: 1 Action, Instantaneous. Immediately make a weapon attack using your spellcasting ability for attack & damage rolls (deals Radiant damage). Damage scales with +1d6 Radiant at 5th, 11th, and 17th level.',
+      'Now available to Bards, Sorcerers, Warlocks, and Wizards.',
+    ],
+    tags: ['attack', 'weapon', 'radiant', 'cantrip', 'redesign'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'S',
+      duration: 'Concentration, up to 1 round',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You point a finger at a target in range. Your magic grants you a brief insight into the target’s defenses.',
+        'On your next turn, you gain advantage on your first attack roll against the target, provided the spell hasn’t ended.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components:
+          'S, M (a weapon with which you have proficiency and that is worth at least 1 CP)',
+      duration: 'Instantaneous',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      rollFormula: '1d6',
+      damageOrHealType: 'Radiant',
+      description: [
+        'Guided by a flash of magical insight, you make one attack with the weapon used in the spell’s casting.',
+        'The attack uses your spellcasting ability modifier instead of Strength or Dexterity for the attack and damage rolls.',
+        'On a hit, the target suffers the weapon attack’s normal effects, and the damage dealt by the weapon is Radiant damage instead of its normal damage type.',
+        'Cantrip Upgrade: The attack deals an extra 1d6 Radiant damage at 5th level, 2d6 at 11th level, and 3d6 at 17th level.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_blade_ward',
+    name: 'Blade Ward',
+    level: 0,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'Changed from an Action granting weapon resistance for 1 round to a Reaction/Concentration spell subtracting 1d4 from enemy attack rolls.',
+    diffHighlights: [
+      '2014: 1 Action, Self, 1 round duration. Grants resistance to bludgeoning, piercing, and slashing damage from weapon attacks until the end of your next turn.',
+      '2024: 1 Reaction (when an enemy within 30 ft attacks you/ally) or 1 Action Concentration (1 minute). Subtracted 1d4 from the attacker’s d20 roll.',
+    ],
+    tags: ['defense', 'ward', 'cantrip', 'reaction', 'abjuration'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: '1 round',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You extend your hand and trace a sigil of warding in the air.',
+        'Until the end of your next turn, you have resistance against bludgeoning, piercing, and slashing damage dealt by weapon attacks.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime:
+          '1 Reaction, which you take in response to a creature you can see within 30 feet of you making an attack roll',
+      reactionTrigger:
+          'A creature you can see within 30 feet makes an attack roll',
+      range: '30 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You trace a shimmering ward in the air. The target creature subtracts 1d4 from the triggering attack roll and any attack rolls it makes against you or other creatures while the spell lasts.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_guidance',
+    name: 'Guidance',
+    level: 0,
+    school: SpellSchool.divination,
+    isChangedIn2024: true,
+    diffSummary:
+        'Now cast as a Reaction within 30 feet when an ally fails an ability check, instead of pre-casting via Touch as an Action.',
+    diffHighlights: [
+      '2014: 1 Action, Touch, Concentration up to 1 min. Target adds 1d4 to one ability check of its choice before the spell ends.',
+      '2024: 1 Reaction (or Action), Range 30 ft, Concentration up to 1 min. Can be triggered when a creature fails an ability check to add 1d4 potentially turning failure into success. Once used, a creature is immune for 1 hour.',
+    ],
+    tags: ['support', 'buff', 'ability check', 'reaction', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.cleric, SpellClass.druid],
+      description: [
+        'You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one ability check of its choice.',
+        'It can roll the die before or after making the ability check. The spell then ends.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime:
+          '1 Reaction, which you take when a creature you can see within 30 feet of you fails an ability check',
+      reactionTrigger:
+          'A creature you can see within 30 feet fails an ability check',
+      range: '30 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.cleric, SpellClass.druid],
+      description: [
+        'You channel divine guidance to aid a creature. The target rolls 1d4 and adds the number rolled to the check, potentially turning failure into success.',
+        'A creature can benefit from this spell only once per hour.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_friends',
+    name: 'Friends',
+    level: 0,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: true,
+    diffSummary:
+        'No longer causes the target to automatically become hostile after the duration expires.',
+    diffHighlights: [
+      '2014: Gives advantage on Charisma checks against one non-hostile creature. When the spell ends, the creature realizes it was magically influenced and becomes hostile.',
+      '2024: Target makes a Wisdom save; on failure, target gains the Charmed condition for the duration. When it ends, target does not automatically become hostile unless provoked.',
+    ],
+    tags: ['social', 'charm', 'enchantment', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components:
+          'S, M (a amount of makeup applied to the face as this spell is cast)',
+      materialDetails:
+          SpellMaterialComponent(description: 'an amount of makeup'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'For the duration, you have advantage on all Charisma checks directed at one creature of your choice that isn’t hostile toward you.',
+        'When the spell ends, the creature realizes that you used magic to influence its mood and becomes hostile toward you. A creature prone to violence might attack you.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '10 feet',
+      components: 'S, M (a piece of makeup)',
+      materialDetails: SpellMaterialComponent(description: 'a piece of makeup'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'One creature of your choice within range must make a Wisdom saving throw. On a failed save, the target has the Charmed condition for the duration.',
+        'While charmed, the target is friendly to you and regards you as a trusted friend. When the spell ends, the creature knows you charmed it, but does not automatically become violent.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_shocking_grasp',
+    name: 'Shocking Grasp',
+    level: 0,
+    school: SpellSchool.evocation,
+    isChangedIn2024: true,
+    diffSummary:
+        'Removes the target’s ability to make Opportunity Attacks instead of completely stripping all Reactions.',
+    diffHighlights: [
+      '2014: On hit, target takes 1d8 lightning damage and CANNOT TAKE REACTIONS until the start of its next turn. Advantage if target is wearing armor made of metal.',
+      '2024: On hit, target takes 1d8 lightning damage and CANNOT MAKE OPPORTUNITY ATTACKS until the start of its next turn. Gives tactical disengage while preserving non-opportunity reactions like Counterspell or Shield.',
+    ],
+    tags: ['melee', 'lightning', 'reaction-denial', 'cantrip', 'evocation'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d8',
+      damageOrHealType: 'Lightning',
+      description: [
+        'Lightning springs from your hand to deliver a shock to a creature you try to touch. Make a melee spell attack against the target. You have advantage on the attack roll if the target is wearing armor made of metal.',
+        'On a hit, the target takes 1d8 lightning damage, and it can’t take reactions until the start of its next turn.',
+        'Cantrip Upgrade: Damage increases by 1d8 at 5th, 11th, and 17th levels.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d8',
+      damageOrHealType: 'Lightning',
+      description: [
+        'Lightning springs from your hand to deliver a shock. Make a melee spell attack against the target. You have Advantage if the target is wearing metal armor.',
+        'On a hit, the target takes 1d8 Lightning damage, and it can’t make Opportunity Attacks until the start of its next turn.',
+        'Cantrip Upgrade: Damage increases by 1d8 at 5th (2d8), 11th (3d8), and 17th (4d8) levels.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_eldritch_blast',
+    name: 'Eldritch Blast',
+    level: 0,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Remains the staple 1d10 force damage cantrip with scaling beam count at 5th, 11th, and 17th levels.',
+    tags: ['force', 'ranged', 'beams', 'cantrip', 'warlock'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.warlock],
+      rollFormula: '1d10',
+      damageOrHealType: 'Force',
+      description: [
+        'A beam of crackling energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 force damage.',
+        'The spell creates more than one beam when you reach higher levels: two beams at 5th level, three beams at 11th level, and four beams at 17th level.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.warlock],
+      rollFormula: '1d10',
+      damageOrHealType: 'Force',
+      description: [
+        'A beam of crackling energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 force damage.',
+        'The spell creates more than one beam when you reach higher levels: two beams at 5th level, three beams at 11th level, and four beams at 17th level.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_fire_bolt',
+    name: 'Fire Bolt',
+    level: 0,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Ranged spell attack dealing 1d10 fire damage that can ignite flammable objects.',
+    tags: ['fire', 'ranged', 'attack', 'damage', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d10',
+      damageOrHealType: 'Fire',
+      description: [
+        'You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 fire damage.',
+        'A flammable object hit by this spell ignites if it isn’t being worn or carried.',
+        'Cantrip Upgrade: Damage increases by 1d10 at 5th level (2d10), 11th level (3d10), and 17th level (4d10).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d10',
+      damageOrHealType: 'Fire',
+      description: [
+        'You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 fire damage.',
+        'A flammable object hit by this spell ignites if it isn’t being worn or carried.',
+        'Cantrip Upgrade: Damage increases by 1d10 at 5th level (2d10), 11th level (3d10), and 17th level (4d10).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_ray_of_frost',
+    name: 'Ray of Frost',
+    level: 0,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Ranged spell attack dealing 1d8 cold damage and reducing target movement speed by 10 feet.',
+    tags: ['cold', 'slow', 'ranged', 'damage', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d8',
+      damageOrHealType: 'Cold',
+      description: [
+        'A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target.',
+        'On a hit, it takes 1d8 cold damage, and its speed is reduced by 10 feet until the start of your next turn.',
+        'Cantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d8',
+      damageOrHealType: 'Cold',
+      description: [
+        'A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target.',
+        'On a hit, it takes 1d8 cold damage, and its speed is reduced by 10 feet until the start of your next turn.',
+        'Cantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_sacred_flame',
+    name: 'Sacred Flame',
+    level: 0,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Deals 1d8 radiant damage on Dexterity save, ignoring the benefits of cover.',
+    tags: ['radiant', 'cleric', 'save', 'ignores-cover', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      rollFormula: '1d8',
+      damageOrHealType: 'Radiant',
+      savingThrow: 'Dexterity',
+      description: [
+        'Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage.',
+        'The target gains no benefit from cover for this saving throw.',
+        'Cantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      rollFormula: '1d8',
+      damageOrHealType: 'Radiant',
+      savingThrow: 'Dexterity',
+      description: [
+        'Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage.',
+        'The target gains no benefit from cover for this saving throw.',
+        'Cantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_vicious_mockery',
+    name: 'Vicious Mockery',
+    level: 0,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: true,
+    diffSummary:
+        'Deals psychic damage on Wisdom save and imposes Disadvantage on the target’s next attack roll (buffed to 1d6 damage in 2024).',
+    diffHighlights: [
+      '2014: Deals 1d4 Psychic damage on failed Wisdom save.',
+      '2024: Damage buffed from 1d4 to 1d6 Psychic damage.',
+    ],
+    tags: ['psychic', 'bard', 'debuff', 'disadvantage', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.bard],
+      rollFormula: '1d4',
+      damageOrHealType: 'Psychic',
+      savingThrow: 'Wisdom',
+      description: [
+        'You unleash a string of insults laced with subtle enchantments at a creature you can see within range. If the target can hear you, it must succeed on a Wisdom saving throw or take 1d4 psychic damage and have disadvantage on the next attack roll it makes before the end of its next turn.',
+        'Cantrip Upgrade: Damage increases by 1d4 at 5th level (2d4), 11th level (3d4), and 17th level (4d4).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.bard],
+      rollFormula: '1d6',
+      damageOrHealType: 'Psychic',
+      savingThrow: 'Wisdom',
+      description: [
+        'You unleash a string of insults at a creature you can see within range. If the target can hear you, it must make a Wisdom saving throw.',
+        'On a failed save, it takes 1d6 Psychic damage and has Disadvantage on the next attack roll it makes before the end of its next turn.',
+        'Cantrip Upgrade: Damage increases by 1d6 at 5th level (2d6), 11th level (3d6), and 17th level (4d6).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_mage_hand',
+    name: 'Mage Hand',
+    level: 0,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a spectral, floating hand that can manipulate objects up to 10 pounds within 30 feet.',
+    tags: ['utility', 'spectral', 'manipulation', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S',
+      duration: '1 minute',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action.',
+        'You can use your action to control the hand (manipulate an object, open an unlocked door/container, stow or retrieve an item). The hand can’t attack, activate magic items, or carry more than 10 pounds.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S',
+      duration: '1 minute',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action.',
+        'You can use your action to control the hand (manipulate an object, open an unlocked door/container, stow or retrieve an item). The hand can’t attack, activate magic items, or carry more than 10 pounds.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_minor_illusion',
+    name: 'Minor Illusion',
+    level: 0,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a sound or an image of an object within a 5-foot cube for 1 minute.',
+    tags: ['illusion', 'utility', 'sound', 'image', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'S, M (a bit of fleece)',
+      materialDetails: SpellMaterialComponent(description: 'a bit of fleece'),
+      duration: '1 minute',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You create a sound or an image of an object within range that lasts for the duration.',
+        'If you create a sound, its volume can range from a whisper to a scream. If you create an image of an object, it must no larger than a 5-foot cube and cannot create light, sound, smell, or any other sensory effect.',
+        'Physical interaction with the image reveals it to be an illusion. An Investigation check against your Spell Save DC also reveals it.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'S, M (a bit of fleece)',
+      materialDetails: SpellMaterialComponent(description: 'a bit of fleece'),
+      duration: '1 minute',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You create a sound or an image of an object within range that lasts for the duration.',
+        'If you create a sound, its volume can range from a whisper to a scream. If you create an image of an object, it must no larger than a 5-foot cube and cannot create light, sound, smell, or any other sensory effect.',
+        'Physical interaction with the image reveals it to be an illusion. An Investigation check against your Spell Save DC also reveals it.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_prestidigitation',
+    name: 'Prestidigitation',
+    level: 0,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'The staple minor magical trick cantrip: sensory effects, lighting/snuffing flames, cleaning, heating/flavoring, and minor trinkets.',
+    tags: ['utility', 'tricks', 'roleplay', 'flavor', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '10 feet',
+      components: 'V, S',
+      duration: 'Up to 1 hour',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'This spell is a minor magical trick that novice spellcasters use for practice.',
+        'You create an instantaneous harmless sensory effect, instantaneously light or snuff a candle/torch/campfire, clean or soil an object no larger than 1 cubic foot, chill/warm/flavor up to 1 cubic foot of nonliving material for 1 hour, or create a nonmagical trinket or illusory image that can fit in your hand until the end of your next turn.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '10 feet',
+      components: 'V, S',
+      duration: 'Up to 1 hour',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'This spell is a minor magical trick that novice spellcasters use for practice.',
+        'You create an instantaneous harmless sensory effect, instantaneously light or snuff a candle/torch/campfire, clean or soil an object no larger than 1 cubic foot, chill/warm/flavor up to 1 cubic foot of nonliving material for 1 hour, or create a nonmagical trinket or illusory image that can fit in your hand until the end of your next turn.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_light',
+    name: 'Light',
+    level: 0,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Touches one object to make it shine bright light in a 20-foot radius and dim light for an additional 20 feet for 1 hour.',
+    tags: ['utility', 'light', 'vision', 'cantrip', 'evocation'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, M (a firefly or phosphorescent moss)',
+      materialDetails: SpellMaterialComponent(
+          description: 'a firefly or phosphorescent moss'),
+      duration: '1 hour',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Dexterity',
+      description: [
+        'You touch one object that is no larger than 10 feet in any dimension. Until the spell ends, the object sheds bright light in a 20-foot radius and dim light for an additional 20 feet.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, M (a firefly)',
+      materialDetails: SpellMaterialComponent(description: 'a firefly'),
+      duration: '1 hour',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Dexterity',
+      description: [
+        'An object you touch sheds bright light in a 20-foot radius and dim light for an additional 20 feet for 1 hour.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_mending',
+    name: 'Mending',
+    level: 0,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Repairs a single break or tear in an object you touch (up to 1 foot in any dimension) over 1 minute.',
+    tags: ['utility', 'repair', 'cantrip', 'transmutation'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Touch',
+      components: 'V, S, M (two lodestones)',
+      materialDetails: SpellMaterialComponent(description: 'two lodestones'),
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      description: [
+        'This spell repairs a single break or tear in an object you touch, such as a broken chain link, two halves of a broken key, a torn cloak, or a leaking wineskin.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Touch',
+      components: 'V, S, M (two lodestones)',
+      materialDetails: SpellMaterialComponent(description: 'two lodestones'),
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      description: [
+        'Repairs a single break or tear in an object you touch, leaving no trace of the former damage.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_resistance',
+    name: 'Resistance',
+    level: 0,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'Touch a willing creature to add 1d4 to a saving throw (changed to a reaction when a creature fails a save in 2024).',
+    diffHighlights: [
+      '2014: 1 Action, Concentration up to 1 minute. Target adds 1d4 to one saving throw of its choice before the spell ends.',
+      '2024: 1 Reaction (when a creature you can see within 30 ft fails a saving throw). Target adds 1d4 to the roll, potentially turning failure into success.',
+    ],
+    tags: ['buff', 'save-bonus', 'abjuration', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (a miniature cloak)',
+      materialDetails: SpellMaterialComponent(description: 'a miniature cloak'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.cleric, SpellClass.druid],
+      description: [
+        'You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one saving throw of its choice.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Reaction',
+      range: '30 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric, SpellClass.druid],
+      reactionTrigger: 'When a creature within 30 ft fails a saving throw',
+      description: [
+        'You grant a surge of resilience to a creature within 30 feet that fails a save, adding 1d4 to the total.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_spare_the_dying',
+    name: 'Spare the Dying',
+    level: 0,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: true,
+    diffSummary:
+        'Stabilizes a dying creature at 0 HP (buffed to 15-foot range with range scaling in 2024).',
+    diffHighlights: [
+      '2014: Touch range, 1 Action. Stabilizes a living creature at 0 hit points.',
+      '2024: 15-foot range, 1 Action. Range increases by 15 feet at levels 5, 11, and 17 (up to 60 ft).',
+    ],
+    tags: ['stabilize', 'healing', 'cleric', 'cantrip', 'necromancy'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      description: [
+        'You touch a living creature that has 0 hit points. The creature becomes stable. This spell has no effect on undead or constructs.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '15 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      description: [
+        'You stabilize a creature with 0 Hit Points within 15 feet. The range increases to 30 ft at level 5, 45 ft at level 11, and 60 ft at level 17.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_thaumaturgy',
+    name: 'Thaumaturgy',
+    level: 0,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Manifests minor divine supernatural wonders (booming voice, flickering flames, tremors, ominous sounds, opening/closing doors).',
+    tags: [
+      'utility',
+      'divine',
+      'roleplay',
+      'cleric',
+      'cantrip',
+      'transmutation'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V',
+      duration: 'Up to 1 minute',
+      classes: [SpellClass.cleric],
+      description: [
+        'You manifest a minor wonder, a sign of supernatural power: your voice booms up to 3 times as loud, flames flicker/brighten/dim, tremors shake the ground, ominous sounds echo, or unlocked doors/windows fly open or slam shut.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V',
+      duration: 'Up to 1 minute',
+      classes: [SpellClass.cleric],
+      description: [
+        'Creates supernatural manifestations: booming voice, flickering lights, ground tremors, eerie whispers, or snapping open/closed doors.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_chill_touch',
+    name: 'Chill Touch',
+    level: 0,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: true,
+    diffSummary:
+        'Deals 1d10 necrotic damage and prevents healing for 1 round (changed to a melee spell attack with d10 scaling in 2024).',
+    diffHighlights: [
+      '2014: Ranged spell attack (120 ft), deals 1d8 Necrotic damage. Target cannot regain hit points until your next turn.',
+      '2024: Melee spell attack (Touch), deals 1d10 Necrotic damage and prevents healing until the start of your next turn.',
+    ],
+    tags: ['necrotic', 'anti-heal', 'attack', 'cantrip', 'necromancy'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: '1 round',
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      rollFormula: '1d8',
+      damageOrHealType: 'Necrotic',
+      description: [
+        'You create a ghostly skeletal hand in the space of a creature within range. Make a ranged spell attack against the creature. On a hit, the target takes 1d8 necrotic damage, and it can’t regain hit points until the start of your next turn.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: '1 round',
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      rollFormula: '1d10',
+      damageOrHealType: 'Necrotic',
+      description: [
+        'Make a melee spell attack dealing 1d10 Necrotic damage. The target cannot regain Hit Points until the start of your next turn.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_dancing_lights',
+    name: 'Dancing Lights',
+    level: 0,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates up to four torch-like glowing orbs of light within 120 feet that you can move as a Bonus Action.',
+    tags: ['utility', 'light', 'concentration', 'cantrip', 'evocation'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (a bit of phosphorus or wychwood, or a glowworm)',
+      materialDetails: SpellMaterialComponent(
+          description: 'phosphorus, wychwood, or glowworm'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'You create up to four torch-sized lights within range, making them appear as torches, lanterns, or glowing orbs. As a bonus action on your turn, you can move the lights up to 60 feet.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (glowworm or phosphorus)',
+      materialDetails:
+          SpellMaterialComponent(description: 'glowworm or phosphorus'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Conjures 4 glowing orbs of light within 120 feet that can be repositioned with a Bonus Action.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_message',
+    name: 'Message',
+    level: 0,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Whispers a message to a creature within 120 feet that only they can hear, and they can reply in a whisper.',
+    tags: ['communication', 'stealth', 'cantrip', 'transmutation'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (a short piece of copper wire)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a short piece of copper wire'),
+      duration: '1 round',
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'You point your finger toward a creature within range and whisper a message. The target (and only the target) hears the message and can reply in a whisper that only you can hear.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (copper wire)',
+      materialDetails: SpellMaterialComponent(description: 'copper wire'),
+      duration: '1 round',
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Sends a private whispered tele-vocal message to a creature within 120 ft, allowing an immediate whispered reply.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_shillelagh',
+    name: 'Shillelagh',
+    level: 0,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: true,
+    diffSummary:
+        'Imbues a club or quarterstaff with nature’s magic to use spellcasting modifier for attack/damage and deal 1d8 force/bludgeoning damage (scales die size in 2024).',
+    diffHighlights: [
+      '2014: Bonus Action, Touch. Weapon die becomes 1d8 bludgeoning using Wisdom for attack & damage.',
+      '2024: Bonus Action, Touch. Can deal Force damage. Damage die scales to 1d10 at lvl 5, 1d12 at lvl 11, and 2d6 at lvl 17.',
+    ],
+    tags: ['weapon', 'druid', 'bonus-action', 'cantrip', 'transmutation'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Touch',
+      components:
+          'V, S, M (mistletoe, a shamrock leaf, and a club or quarterstaff)',
+      materialDetails:
+          SpellMaterialComponent(description: 'mistletoe and a shamrock leaf'),
+      duration: '1 minute',
+      classes: [SpellClass.druid],
+      rollFormula: '1d8 + mod',
+      damageOrHealType: 'Bludgeoning (Magical)',
+      description: [
+        'The wood of a club or quarterstaff you are holding is imbued with nature’s power. For the duration, you can use your spellcasting ability instead of Strength for the attack and damage rolls of melee attacks using that weapon, and the weapon’s damage die becomes a d8.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Touch',
+      components: 'V, S, M (mistletoe leaf and club/quarterstaff)',
+      materialDetails: SpellMaterialComponent(description: 'mistletoe leaf'),
+      duration: '1 minute',
+      classes: [SpellClass.druid],
+      rollFormula: '1d8 + mod',
+      damageOrHealType: 'Force or Bludgeoning',
+      description: [
+        'Imbues your wooden weapon with spellcasting attack/damage modifiers. Deals Force or Bludgeoning damage with scaling die sizes (1d10 at 5th, 1d12 at 11th, 2d6 at 17th level).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_produce_flame',
+    name: 'Produce Flame',
+    level: 0,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'Flickering flame appears in hand shedding light and can be hurled as a spell attack dealing 1d8 fire damage (Bonus Action to cast in 2024).',
+    diffHighlights: [
+      '2014: 1 Action, Self, 10 minutes. Hurl flame up to 30 feet as an action.',
+      '2024: 1 Bonus Action, Self, 10 minutes. Range increased to 60 feet when hurled as an action.',
+    ],
+    tags: ['fire', 'light', 'druid', 'cantrip', 'conjuration'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: '10 minutes',
+      classes: [SpellClass.druid],
+      rollFormula: '1d8',
+      damageOrHealType: 'Fire',
+      description: [
+        'A flickering flame appears in your hand shedding bright light in a 10-foot radius. You can hurl the flame at a creature within 30 feet as a ranged spell attack dealing 1d8 fire damage.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: '10 minutes',
+      classes: [SpellClass.druid],
+      rollFormula: '1d8',
+      damageOrHealType: 'Fire',
+      description: [
+        'Creates a hand flame as a Bonus Action shedding light. Can be hurled up to 60 feet to deal 1d8 Fire damage.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_acid_splash',
+    name: 'Acid Splash',
+    level: 0,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Hurls a bubble of acid affecting one creature (or two within 5 feet) dealing 1d6 acid damage on failed Dexterity save.',
+    tags: ['acid', 'aoe', 'save', 'sorcerer', 'wizard', 'cantrip'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d6',
+      damageOrHealType: 'Acid',
+      savingThrow: 'Dexterity',
+      description: [
+        'You hurl a bubble of acid. Choose one creature within range, or choose two creatures within range that are within 5 feet of each other. A target must succeed on a Dexterity saving throw or take 1d6 acid damage.',
+        'Cantrip Upgrade: Damage increases by 1d6 at 5th level (2d6), 11th level (3d6), and 17th level (4d6).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d6',
+      damageOrHealType: 'Acid',
+      savingThrow: 'Dexterity',
+      description: [
+        'You hurl a bubble of acid. Choose one creature within range, or choose two creatures within range that are within 5 feet of each other. A target must succeed on a Dexterity saving throw or take 1d6 acid damage.',
+        'Cantrip Upgrade: Damage increases by 1d6 at 5th level (2d6), 11th level (3d6), and 17th level (4d6).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_poison_spray',
+    name: 'Poison Spray',
+    level: 0,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Projects a puff of noxious gas dealing 1d12 poison damage to a creature within 10 feet on failed Constitution save.',
+    tags: [
+      'poison',
+      'save',
+      'druid',
+      'sorcerer',
+      'warlock',
+      'wizard',
+      'cantrip'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '10 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      rollFormula: '1d12',
+      damageOrHealType: 'Poison',
+      savingThrow: 'Constitution',
+      description: [
+        'You extend your hand toward a creature you can see within range and project a puff of noxious gas from your palm. The creature must succeed on a Constitution saving throw or take 1d12 poison damage.',
+        'Cantrip Upgrade: Damage increases by 1d12 at 5th level (2d12), 11th level (3d12), and 17th level (4d12).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '10 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      rollFormula: '1d12',
+      damageOrHealType: 'Poison',
+      savingThrow: 'Constitution',
+      description: [
+        'You extend your hand toward a creature you can see within range and project a puff of noxious gas from your palm. The creature must succeed on a Constitution saving throw or take 1d12 poison damage.',
+        'Cantrip Upgrade: Damage increases by 1d12 at 5th level (2d12), 11th level (3d12), and 17th level (4d12).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_druidcraft',
+    name: 'Druidcraft',
+    level: 0,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Primal sensory tricks: forecast weather for 24 hours, bloom flowers, spark sensory breeze/odors, or light/snuff small candles and campfires.',
+    tags: ['druid', 'nature', 'utility', 'weather', 'cantrip', 'transmutation'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.druid],
+      description: [
+        'Whispering to the spirits of nature, you create one of the following effects: a tiny sensory forecast of tomorrow’s weather, instantly making a flower blossom or leaf sprout, creating a harmless sensory effect (falling leaves, odor of skunk, breeze), or lighting/snuffing a candle, torch, or small campfire.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.druid],
+      description: [
+        'Whispering to the spirits of nature, you create one of the following effects: a tiny sensory forecast of tomorrow’s weather, instantly making a flower blossom or leaf sprout, creating a harmless sensory effect (falling leaves, odor of skunk, breeze), or lighting/snuffing a candle, torch, or small campfire.',
+      ],
+    ),
+  ),
+];

@@ -1,0 +1,730 @@
+import '../spellbook_data.dart';
+
+const List<SpellItem> srdLevel9Spells = [
+  SpellItem(
+    id: 'spell_mass_heal',
+    name: 'Mass Heal',
+    level: 9,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'A flood of healing energy restores up to 700 Hit Points divided among chosen creatures and cures all diseases, blindness, and deafness (Abjuration in 2024).',
+    tags: ['healing', 'mass-heal', 'ultimate', 'cure', 'abjuration', 'level 9'],
+    rules2014: SpellEditionDetails(
+      schoolOverride: SpellSchool.evocation,
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      damageOrHealType: '700 Hit Points (Pool)',
+      description: [
+        'A flood of healing energy flows from you into injured creatures around you. You restore up to 700 hit points, divided as you choose among any number of creatures that you can see within range.',
+        'Creatures healed by this spell are also cured of all diseases and any effect making them blinded or deafened. This spell has no effect on undead or constructs.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      schoolOverride: SpellSchool.abjuration,
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      damageOrHealType: '700 Hit Points (Pool)',
+      description: [
+        'Distributes up to 700 Hit Points of healing among any number of creatures within 60 feet. Cures Blinded, Deafened, and Poisoned conditions.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_true_resurrection',
+    name: 'True Resurrection',
+    level: 9,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Restores life to a creature dead for up to 200 years even if no physical body remains, providing a new body and restoring full HP with no penalties.',
+    tags: [
+      'revive',
+      'ultimate-resurrection',
+      'costly-component',
+      'necromancy',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 hour',
+      range: 'Touch',
+      components:
+          'V, S, M (a sprinkle of holy water and diamonds worth at least 25,000 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'holy water and diamonds worth 25,000 gp',
+        hasCost: true,
+        costInGp: 25000,
+        isConsumed: true,
+      ),
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric, SpellClass.druid],
+      description: [
+        'You touch a creature that has been dead for no longer than 200 years and that died for any reason except old age.',
+        'If the creature’s soul is free and willing, the creature is restored to life with all its hit points.',
+        'This spell closes all wounds, neutralizes any poison, cures all diseases, and lifts any curses affecting the creature when it died. If the original body no longer exists, you need only speak the creature’s name, and a new body is provided.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 hour',
+      range: 'Touch',
+      components: 'V, S, M (holy water and diamonds worth 25,000 gp, consumed)',
+      materialDetails: SpellMaterialComponent(
+        description: 'diamonds worth 25,000 gp',
+        hasCost: true,
+        costInGp: 25000,
+        isConsumed: true,
+      ),
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric, SpellClass.druid],
+      description: [
+        'Brings a creature dead up to 200 years back to life at full HP with all curses/poisons cured. Creates a brand new body if none exists.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_gate',
+    name: 'Gate',
+    level: 9,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Opens a portal to a specific plane of existence or precisely summons a named extraplanar creature through the gate.',
+    tags: [
+      'portal',
+      'planar-travel',
+      'summon',
+      'concentration',
+      'conjuration',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a diamond worth at least 5,000 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'diamond worth 5,000 gp',
+        hasCost: true,
+        costInGp: 5000,
+        isConsumed: false,
+      ),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.cleric, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'You conjure a portal linking an unoccupied space you can see within range to a precise location on a different plane of existence.',
+        'When you cast this spell, you can speak the name of a specific creature. If that creature is on another plane, the portal opens in the creature’s immediate vicinity and draws the creature through it.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (diamond worth 5,000 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'diamond worth 5,000 gp',
+        hasCost: true,
+        costInGp: 5000,
+        isConsumed: false,
+      ),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.cleric, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Opens an interplanar portal or pulls a named legendary creature through to your location.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_astral_projection',
+    name: 'Astral Projection',
+    level: 9,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Projects you and up to eight willing creatures into the Astral Plane leaving physical bodies in suspended animation connected by a silver cord.',
+    tags: [
+      'astral',
+      'planar-travel',
+      'silver-cord',
+      'costly-component',
+      'necromancy',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 hour',
+      range: '10 feet',
+      components:
+          'V, S, M (for each creature you affect in this way, you must provide one jacinth worth at least 1,000 gp and one ornate silver bar worth at least 100 gp, all of which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description:
+            'jacinth worth 1,000 gp and silver bar worth 100 gp per creature',
+        hasCost: true,
+        costInGp: 1100,
+        isConsumed: true,
+      ),
+      duration: 'Special',
+      classes: [SpellClass.cleric, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'You and up to eight willing creatures project astral bodies into the Astral Plane. Your material body remains behind in a state of suspended animation, connected to your astral form by a shimmering silver cord.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 hour',
+      range: '10 feet',
+      components:
+          'V, S, M (jacinth worth 1,000 gp and silver bar worth 100 gp per creature, consumed)',
+      materialDetails: SpellMaterialComponent(
+        description: 'jacinth and silver bar worth 1,100 gp per target',
+        hasCost: true,
+        costInGp: 1100,
+        isConsumed: true,
+      ),
+      duration: 'Special',
+      classes: [SpellClass.cleric, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Projects astral avatars of up to 9 creatures onto the Astral Plane while mortal forms rest safely in stasis.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_meteor_swarm',
+    name: 'Meteor Swarm',
+    level: 9,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Blasts four 40-foot radius spheres with blazing orbs dealing 20d6 fire damage and 20d6 bludgeoning damage (40d6 total) on Dexterity save.',
+    tags: [
+      'ultimate',
+      'fire',
+      'bludgeoning',
+      'apocalypse',
+      'aoe',
+      'evocation',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '1 mile',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '20d6 + 20d6',
+      damageOrHealType: 'Fire & Bludgeoning (40d6 total)',
+      savingThrow: 'Dexterity',
+      description: [
+        'Blazing orbs of fire plummet to the ground at four different points within 1 mile. Each 40-foot-radius sphere deals 20d6 fire damage and 20d6 bludgeoning damage on a failed Dexterity save (half on success).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '1 mile',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '20d6 + 20d6',
+      damageOrHealType: 'Fire & Bludgeoning (40d6 total)',
+      savingThrow: 'Dexterity',
+      description: [
+        'Blazing orbs plummet at 4 separate points within 1 mile dealing 20d6 Fire + 20d6 Bludgeoning damage on failed Dexterity save (half on success).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_power_word_kill',
+    name: 'Power Word Kill',
+    level: 9,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Utters a word of power that instantly kills one creature within 60 feet if it has 100 hit points or fewer (no saving throw).',
+    tags: ['death', 'instant-kill', 'no-save', 'enchantment', 'level 9'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You utter a word of power that can compel one creature you can see within range to die instantly. If the creature has 100 hit points or fewer, it dies immediately.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'Utters a word of power that instantly kills a creature with 100 Hit Points or fewer.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_wish',
+    name: 'Wish',
+    level: 9,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'The pinnacle of mortal magic: Duplicates any spell of 8th level or lower with no components or costs, or produces reality-altering custom effects with severe stress.',
+    tags: ['ultimate', 'duplicate', 'reality-warping', 'level 9'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Wish is the mightiest spell a mortal creature can cast. Duplicates any spell of 8th level or lower without meeting requirements or material costs, or creates reality-altering effects with necrotic stress and a 33% chance of never casting Wish again.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Mightiest spell in existence. Duplicates any spell of 8th level or lower with zero components, or alters reality under severe casting stress.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_foresight',
+    name: 'Foresight',
+    level: 9,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Grants a willing creature the ability to see into the immediate future for 8 hours without concentration: advantage on all d20 rolls, and disadvantage on all incoming attacks.',
+    tags: [
+      'buff',
+      'advantage-all',
+      'disadvantage-incoming',
+      'no-concentration',
+      'divination',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Touch',
+      components: 'V, S, M (a hummingbird feather)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a hummingbird feather'),
+      duration: '8 hours',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.druid,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You touch a willing creature and bestow a limited ability to see into the immediate future. For 8 hours, the target can’t be surprised and has advantage on attack rolls, ability checks, and saving throws.',
+        'Other creatures have disadvantage on attack rolls against the target for the duration.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Touch',
+      components: 'V, S, M (a hummingbird feather)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a hummingbird feather'),
+      duration: '8 hours',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.druid,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'Grants 8 hours of Advantage on all attacks/checks/saves, immunity to Surprised, and Disadvantage to all incoming attack rolls.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_time_stop',
+    name: 'Time Stop',
+    level: 9,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Briefly stops the flow of time for everyone but yourself, allowing you to take 1d4 + 1 turns in a row.',
+    tags: ['time', 'turns', 'transmutation', 'level 9'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Instantaneous (1d4 + 1 turns)',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d4 + 1',
+      description: [
+        'You briefly stop the flow of time for everyone but yourself. No time passes for other creatures, while you take 1d4 + 1 turns in a row, during which you can use actions and move as normal.',
+        'Ends early if one of the actions you use during this period affects another creature or an object being worn or carried by someone other than you.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Instantaneous (1d4 + 1 turns)',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '1d4 + 1',
+      description: [
+        'Freezes time for other creatures, granting 1d4 + 1 consecutive turns to act freely.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_prismatic_wall',
+    name: 'Prismatic Wall',
+    level: 9,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a shimmering, multicolored wall with seven layers of protection (dealing 10d6 Fire, Acid, Lightning, Poison, Cold + Petrification + Planar Banishment), completely impenetrable to spells.',
+    tags: ['prismatic', 'wall', 'ultimate-defense', 'abjuration', 'level 9'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: '10 minutes',
+      concentration: false,
+      classes: [SpellClass.bard, SpellClass.wizard],
+      rollFormula: '10d6',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 10, diceSides: 6),
+      damageOrHealType: 'Prismatic Multi-Layer',
+      savingThrow: 'Dexterity / Constitution / Wisdom',
+      description: [
+        'A shimmering, multicolored plane of light forms a wall (up to 90 ft long, 30 ft high) or sphere (up to 30 ft diameter).',
+        'Consists of 7 layers: Red (10d6 Fire, stops nonmagical ranged attacks), Orange (10d6 Acid, stops magical ranged attacks), Yellow (10d6 Lightning, stops spells), Green (10d6 Poison, stops breath/gases), Blue (10d6 Cold), Indigo (Restrained/Petrified), Violet (10d6 Blinded/Banished).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: '10 minutes',
+      concentration: false,
+      classes: [SpellClass.bard, SpellClass.wizard],
+      rollFormula: '10d6',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 10, diceSides: 6),
+      damageOrHealType: 'Prismatic Multi-Layer',
+      savingThrow: 'Dexterity',
+      description: [
+        'Impenetrable 7-layer prismatic barrier dealing devastating elemental damage and blindness/banishment to anything attempting to cross.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_shapechange',
+    name: 'Shapechange',
+    level: 9,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Transforms you into any creature with a CR equal to your level (excluding constructs and undead), and you can adopt a new form as an Action on subsequent turns.',
+    tags: [
+      'polymorph',
+      'shapechange',
+      'concentration',
+      'transmutation',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S, M (a jade circlet worth at least 1,500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'jade circlet worth 1,500 gp',
+        hasCost: true,
+        costInGp: 1500,
+        isConsumed: false,
+      ),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.wizard],
+      description: [
+        'You assume the form of a different creature for the duration. The new form can be of any creature with a challenge rating no higher than your level. You retain your mental scores, personality, and spellcasting ability, and can switch to another form as an action.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S, M (a jade circlet worth at least 1,500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'jade circlet worth 1,500 gp',
+        hasCost: true,
+        costInGp: 1500,
+        isConsumed: false,
+      ),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.wizard],
+      description: [
+        'You assume the form of a different creature for the duration. The new form can be of any creature with a challenge rating no higher than your level. You retain your mental scores, personality, and spellcasting ability, and can switch to another form as an action.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_power_word_heal',
+    name: 'Power Word Heal',
+    level: 9,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'A wave of healing energy washes over the touched creature: restores all Hit Points, ends all charmed, frightened, paralyzed, and stunned conditions, and target can stand up using its reaction.',
+    tags: [
+      'healing',
+      'full-heal',
+      'cure-conditions',
+      'bard',
+      'cleric',
+      'evocation',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.bard, SpellClass.cleric],
+      damageOrHealType: 'Full Hit Points Restored',
+      description: [
+        'A wave of healing energy washes over the creature you touch. The target regains all its hit points.',
+        'If the creature is charmed, frightened, paralyzed, or stunned, the condition ends. If the creature is prone, it can use its reaction to stand up. This spell has no effect on undead or constructs.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.bard, SpellClass.cleric],
+      damageOrHealType: 'Full Hit Points Restored',
+      description: [
+        'A wave of healing energy washes over the creature you touch. The target regains all its hit points.',
+        'If the creature is charmed, frightened, paralyzed, or stunned, the condition ends. If the creature is prone, it can use its reaction to stand up. This spell has no effect on undead or constructs.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_storm_of_vengeance',
+    name: 'Storm of Vengeance',
+    level: 9,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Calls down a 360-foot-radius apocalyptic storm: round 1 thunder (2d6 deafening), round 2 acid rain (1d6), round 3 lightning bolts (6x 10d6), round 4 hail (2d6), rounds 5-10 freezing rain & gusts (1d6 cold).',
+    tags: [
+      'storm',
+      'apocalyptic',
+      'aoe',
+      'concentration',
+      'druid',
+      'conjuration',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Sight (360-foot-radius storm cloud)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid],
+      damageOrHealType: 'Thunder / Acid / Lightning / Cold',
+      description: [
+        'A churning storm cloud forms, centered on a point within range and spreading to a radius of 360 feet. Lightning flashes in the area, thunder rolls, and torrential rains fall.',
+        'Round 1: 2d6 thunder damage and deafened on failed Constitution save. Round 2: 1d6 acid damage. Round 3: 6 bolts of lightning call down dealing 10d6 lightning damage on failed Dexterity save. Round 4: 2d6 bludgeoning damage from hail. Rounds 5–10: 1d6 cold damage each turn and difficult terrain.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Sight (360-foot-radius storm cloud)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid],
+      damageOrHealType: 'Thunder / Acid / Lightning / Cold',
+      description: [
+        'A churning storm cloud forms, centered on a point within range and spreading to a radius of 360 feet. Lightning flashes in the area, thunder rolls, and torrential rains fall.',
+        'Round 1: 2d6 thunder damage and deafened on failed Constitution save. Round 2: 1d6 acid damage. Round 3: 6 bolts of lightning call down dealing 10d6 lightning damage on failed Dexterity save. Round 4: 2d6 bludgeoning damage from hail. Rounds 5–10: 1d6 cold damage each turn and difficult terrain.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_true_polymorph',
+    name: 'True Polymorph',
+    level: 9,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Transforms a creature into another creature of equal or lower CR/level, a creature into an object, or an object into a creature. If concentration is held for the full 1 hour, the transformation becomes permanent.',
+    tags: [
+      'polymorph',
+      'permanent-transformation',
+      'concentration',
+      'bard',
+      'warlock',
+      'wizard',
+      'transmutation',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components:
+          'V, S, M (a drop of mercury, a dollop of gum arabic, and a wisp of smoke)',
+      materialDetails: SpellMaterialComponent(
+          description: 'mercury, gum arabic, wisp of smoke'),
+      duration: 'Concentration, up to 1 hour (permanent if full duration)',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Wisdom',
+      description: [
+        'Choose one creature or nonmagical object that you can see within range. You transform the creature into a different creature, the creature into an object, or the object into a creature (CR equal to or less than target’s level/CR).',
+        'The target assumes the hit points of its new form. If you concentrate on this spell for the full duration, the transformation becomes permanent until dispelled.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components:
+          'V, S, M (a drop of mercury, a dollop of gum arabic, and a wisp of smoke)',
+      materialDetails: SpellMaterialComponent(
+          description: 'mercury, gum arabic, wisp of smoke'),
+      duration: 'Concentration, up to 1 hour (permanent if full duration)',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Wisdom',
+      description: [
+        'Choose one creature or nonmagical object that you can see within range. You transform the creature into a different creature, the creature into an object, or the object into a creature (CR equal to or less than target’s level/CR).',
+        'The target assumes the hit points of its new form. If you concentrate on this spell for the full duration, the transformation becomes permanent until dispelled.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_imprisonment',
+    name: 'Imprisonment',
+    level: 9,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Entrap a target indefinitely on failed Wisdom save: Burial, Chaining, Hedged Prison, Minimus Containment (gem), or Slumber. Permanent until dispelled. Costly component (500 gp per HD of target).',
+    tags: [
+      'trap',
+      'permanent-binding',
+      'gem-prison',
+      'costly-component',
+      'warlock',
+      'wizard',
+      'abjuration',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '30 feet',
+      components:
+          'V, S, M (a vellum depiction or a carved statuette in the likeness of the target, and a special component that varies by form worth at least 500 gp per Hit Die of the target)',
+      materialDetails: SpellMaterialComponent(
+        description:
+            'statuette and special component worth at least 500 gp per Hit Die',
+        hasCost: true,
+        costInGp: 5000,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Wisdom',
+      description: [
+        'You create a magical restraint to hold a creature that you can see within range. The target must succeed on a Wisdom saving throw or be bound by the spell; on a success, the creature is immune to this spell if you cast it again.',
+        'Modes include: Burial (entombed deep underground in a sphere of magical force), Chaining (firmly bound by chains to the ground), Hedged Prison (transported to a demiplane labyrinth), Minimus Containment (shrunk to 1 inch tall and trapped in a gemstone), or Slumber (falls asleep for the duration and does not age).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '30 feet',
+      components:
+          'V, S, M (a vellum depiction or a carved statuette in the likeness of the target, and a special component that varies by form worth at least 500 gp per Hit Die of the target)',
+      materialDetails: SpellMaterialComponent(
+        description:
+            'statuette and special component worth at least 500 gp per Hit Die',
+        hasCost: true,
+        costInGp: 5000,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Wisdom',
+      description: [
+        'You create a magical restraint to hold a creature that you can see within range. The target must succeed on a Wisdom saving throw or be bound by the spell; on a success, the creature is immune to this spell if you cast it again.',
+        'Modes include: Burial (entombed deep underground in a sphere of magical force), Chaining (firmly bound by chains to the ground), Hedged Prison (transported to a demiplane labyrinth), Minimus Containment (shrunk to 1 inch tall and trapped in a gemstone), or Slumber (falls asleep for the duration and does not age).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_weird',
+    name: 'Weird',
+    level: 9,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Manifest illusory phantasms of deepest fears in a 30-foot-radius sphere: each creature makes a Wisdom save or becomes frightened and takes 4d10 psychic damage at the start of each of its turns.',
+    tags: [
+      'fear',
+      'psychic-damage',
+      'aoe-terror',
+      'concentration',
+      'wizard',
+      'illusion',
+      'level 9'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (30-foot-radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.wizard],
+      rollFormula: '4d10',
+      damageOrHealType: 'Psychic',
+      savingThrow: 'Wisdom',
+      description: [
+        'Drawing on the deepest fears of an entire group of creatures, you create illusory creatures in their minds, visible only to them.',
+        'Each creature in a 30-foot-radius sphere centered on a point of your choice within range must make a Wisdom saving throw. On a failed save, a creature becomes frightened for the duration. At the start of each of the frightened creature’s turns, it must make a Wisdom saving throw or take 4d10 psychic damage. On a successful save, the spell ends for that creature.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (30-foot-radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.wizard],
+      rollFormula: '4d10',
+      damageOrHealType: 'Psychic',
+      savingThrow: 'Wisdom',
+      description: [
+        'Drawing on the deepest fears of an entire group of creatures, you create illusory creatures in their minds, visible only to them.',
+        'Each creature in a 30-foot-radius sphere centered on a point of your choice within range must make a Wisdom saving throw. On a failed save, a creature becomes frightened for the duration. At the start of each of the frightened creature’s turns, it must make a Wisdom saving throw or take 4d10 psychic damage. On a successful save, the spell ends for that creature.',
+      ],
+    ),
+  ),
+];

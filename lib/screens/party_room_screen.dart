@@ -1,0 +1,2335 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../models/party/campaign_membership.dart';
+import '../models/party/party_event.dart';
+import '../models/party/party_loot_item.dart';
+import '../models/party/party_purse.dart';
+import '../models/party/party_session_state.dart';
+import '../models/room_roll.dart';
+import '../services/dice_room_service.dart';
+import '../services/haptic_service.dart';
+import '../services/party/campaign_registry_service.dart';
+import '../services/party/party_room_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/party/campaign_dialogs.dart';
+import '../widgets/party/loot_conflict_resolution_dialog.dart';
+import '../models/domain/character_models.dart';
+import '../services/persistence/character_persistence_service.dart';
+import 'character_sheet_view.dart';
+import 'dice_roller_screen.dart';
+import 'dm_dashboard_screen.dart';
+import '../infrastructure/dtos/character_telemetry_dto.dart';
+import '../infrastructure/di/injection_container.dart';
+import '../application/services/cascading_transport_router.dart';
+import '../application/services/room_connection_telemetry.dart';
+import '../application/services/room_sync_orchestrator.dart';
+import '../presentation/widgets/room_connection_badge.dart';
+import '../widgets/party/party_vitality_hud.dart';
+
+/// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,
+/// Coin Purse with Party Share distribution, Live Dice Feed, and History/Audit Log with Host Trash Recovery.
+class PartyRoomScreen extends StatefulWidget {
+  final String roomCode;
+  final String? initialPlayerName;
+  final PartyRoomService partyService;
+  final CampaignRegistryService registry;
+  final DiceRoomService diceService;
+  final RoomSyncOrchestrator? orchestrator;
+  final CascadingTransportRouter? router;
+
+  PartyRoomScreen({
+    super.key,
+    required this.roomCode,
+    this.initialPlayerName,
+    PartyRoomService? partyService,
+    CampaignRegistryService? registry,
+    DiceRoomService? diceService,
+    this.orchestrator,
+    this.router,
+  })  : partyService = partyService ?? PartyRoomService(),
+        registry = registry ?? CampaignRegistryService(),
+        diceService = diceService ?? DiceRoomService();
+
+  @override
+  State<PartyRoomScreen> createState() => _PartyRoomScreenState();
+}
+
+class _PartyRoomScreenState extends State<PartyRoomScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  late final PartyRoomService _partyService;
+  late final CampaignRegistryService _registry;
+  late final DiceRoomService _diceService;
+
+  RoomSyncOrchestrator? _orchestrator;
+  CascadingTransportRouter? _router;
+  Stream<RoomConnectionTelemetry>? _telemetryStream;
+
+  late String _roomCode;
+  late String _playerName;
+
+  late Stream<List<RoomRoll>> _rollStream;
+
+  StreamSubscription<ClaimConflictEvent>? _claimConflictSub;
+  StreamSubscription<PurseOverdraftEvent>? _overdraftSub;
+
+  // Filter state for vault items
+  String _selectedCategoryFilter =
+      'all'; // 'all', 'magicItem', 'gem_art', 'gear', 'claimed', 'unclaimed'
+  int _partySplitCount = 4;
+  bool _includeLiquidatedInSplit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _partyService = widget.partyService;
+    _registry = widget.registry;
+    _diceService = widget.diceService;
+    _roomCode = widget.roomCode.trim().toUpperCase();
+    _tabController = TabController(length: 3, vsync: this);
+
+    final membership = _registry.getMembership(_roomCode);
+    _playerName = widget.initialPlayerName ??
+        membership?.characterId ??
+        _diceService.playerName ??
+        'Adventurer';
+
+    _diceService.joinRoom(_roomCode, _playerName);
+    _rollStream = _diceService.streamRoomRolls(_roomCode);
+    _registry.updateLastPlayed(_roomCode);
+
+    _initSyncServices();
+
+    _claimConflictSub = _partyService.claimConflictStream.listen((event) {
+      if (mounted && event.roomCode == _roomCode) {
+        if (event.attemptedPlayer == _playerName) {
+          HapticService.heavyImpact(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '⚡ "${event.itemName}" was already claimed by ${event.winnerPlayer} (first to server)',
+              ),
+              backgroundColor: Colors.deepOrange.shade800,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    });
+
+    _overdraftSub = _partyService.overdraftStream.listen((event) {
+      if (mounted && event.roomCode == _roomCode && _isDmOrCoDm) {
+        HapticService.mediumImpact(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '⚠️ Purse Overdraft: ${event.denomination} balance clamped to 0 after spend by ${event.playerName}.',
+            ),
+            backgroundColor: Colors.amber.shade900,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _initSyncServices() async {
+    // Whenever someone opens or connects to the room, rehydrate and reset 30-day lease
+    unawaited(_partyService.ensureRoomExists(
+      roomCode: _roomCode,
+      campaignName: _currentMembership?.campaignName,
+      hostKey: _currentMembership?.hostKey,
+    ));
+
+    // Flush any pending outbox actions immediately upon entering the room
+    unawaited(_partyService.flushOutbox(_roomCode));
+
+    // Push active local character telemetry to room immediately upon entering
+    try {
+      final localChars = await CharacterPersistenceService().loadCharacters();
+      final myChar = localChars
+          .where((c) =>
+              c.id.slug == _currentMembership?.characterId ||
+              c.name.toLowerCase() == _playerName.toLowerCase())
+          .firstOrNull;
+      if (myChar != null) {
+        unawaited(_partyService.linkCharacterToCampaign(
+          roomCode: _roomCode,
+          character: myChar,
+          existingRosterName: _playerName,
+          isNewImport: false,
+        ));
+      }
+    } catch (_) {}
+
+    if (widget.orchestrator != null) {
+      _orchestrator = widget.orchestrator;
+      _router = widget.router;
+      _telemetryStream = widget.orchestrator!.watchTelemetry();
+      if (mounted) setState(() {});
+      return;
+    }
+
+    if (sl.isRegistered<RoomSyncOrchestrator>()) {
+      final orchestrator = sl<RoomSyncOrchestrator>();
+      _orchestrator = orchestrator;
+      _router = sl.isRegistered<CascadingTransportRouter>()
+          ? sl<CascadingTransportRouter>()
+          : null;
+      _telemetryStream = orchestrator.watchTelemetry();
+
+      final localNodeId =
+          '$_playerName-${_roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+      if (_router != null) {
+        unawaited(_router!.initializeRoom(_roomCode, localNodeId));
+      }
+      orchestrator.startSynchronization();
+
+      if (mounted) setState(() {});
+      return;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PartyRoomScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final cleanCode = widget.roomCode.trim().toUpperCase();
+    if (oldWidget.roomCode.trim().toUpperCase() != cleanCode ||
+        oldWidget.diceService != widget.diceService) {
+      _diceService = widget.diceService;
+      _roomCode = cleanCode;
+      _rollStream = _diceService.streamRoomRolls(_roomCode);
+    }
+  }
+
+  @override
+  void dispose() {
+    _orchestrator?.stopSynchronization();
+    _router?.disconnect();
+    _claimConflictSub?.cancel();
+    _overdraftSub?.cancel();
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _copyRoomCode() {
+    Clipboard.setData(ClipboardData(text: _roomCode));
+    HapticService.lightImpact(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Room Code "$_roomCode" copied to clipboard!'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _confirmLeaveCampaign(String campaignName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.exit_to_app, color: Colors.orangeAccent),
+            SizedBox(width: 8),
+            Text('Leave Campaign'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to leave "$campaignName" ($_roomCode)?\n\n'
+          'Your active player status and local campaign link will be removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style:
+                FilledButton.styleFrom(backgroundColor: Colors.orange.shade800),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Leave Campaign'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      try {
+        await _partyService.leaveCampaign(
+          roomCode: _roomCode,
+          playerName: _playerName,
+        );
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Left campaign "$campaignName"')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error leaving campaign: $e'),
+                backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteCampaign(String campaignName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.delete_forever, color: Colors.redAccent),
+            SizedBox(width: 8),
+            Text('Delete Campaign'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to permanently delete "$campaignName" ($_roomCode)?\n\n'
+          'This will delete the room, party loot, and all cloud records for all participants. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade800),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete Permanently'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      try {
+        await _partyService.deleteCampaign(
+          roomCode: _roomCode,
+          hostKey: _currentMembership?.hostKey,
+        );
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Campaign "$campaignName" permanently deleted')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error deleting campaign: $e'),
+                backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  CampaignMembership? get _currentMembership =>
+      _registry.getMembership(_roomCode);
+  bool get _isDmOrCoDm => _currentMembership?.isDmOrCoDm ?? false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    final tabletop = theme.extension<TabletopColors>() ??
+        (isDark ? TabletopColors.dark : TabletopColors.light);
+
+    return ValueListenableBuilder<List<CampaignMembership>>(
+      valueListenable: _registry.membershipsNotifier,
+      builder: (context, _, __) {
+        return StreamBuilder<PartySessionState?>(
+          stream: _partyService.streamSession(_roomCode),
+          builder: (context, sessionSnap) {
+            final session = sessionSnap.data;
+            final campaignName = session?.campaignName ??
+                _currentMembership?.campaignName ??
+                'Party Room';
+
+            return Scaffold(
+              appBar: AppBar(
+                elevation: 2,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            campaignName,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (_isDmOrCoDm) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade700,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _currentMembership?.role == CampaignRole.host
+                                  ? 'DM'
+                                  : 'Co-DM',
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    InkWell(
+                      onTap: _copyRoomCode,
+                      borderRadius: BorderRadius.circular(4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _roomCode,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.0,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.copy,
+                              size: 12, color: colorScheme.primary),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  // P2P Room Connection Telemetry Badge
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: RoomConnectionBadge(
+                      telemetryStream: _telemetryStream ??
+                          (sl.isRegistered<RoomSyncOrchestrator>()
+                              ? sl<RoomSyncOrchestrator>().watchTelemetry()
+                              : const Stream.empty()),
+                      initialTelemetry: _orchestrator?.currentTelemetry ??
+                          (sl.isRegistered<RoomSyncOrchestrator>()
+                              ? sl<RoomSyncOrchestrator>().currentTelemetry
+                              : null),
+                    ),
+                  ),
+                  // Connection / Outbox Sync Status Badge
+                  ValueListenableBuilder<int>(
+                    valueListenable: _partyService.pendingOutboxCount,
+                    builder: (context, count, _) {
+                      if (count > 0) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: ActionChip(
+                            avatar: const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            label: Text('Syncing ($count)',
+                                style: const TextStyle(fontSize: 11)),
+                            tooltip:
+                                'Syncing $count pending update(s) to cloud. Tap to force sync now.',
+                            onPressed: () =>
+                                _partyService.flushOutbox(_roomCode),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  if (MediaQuery.sizeOf(context).width >= 600) ...[
+                    // Link Character Button
+                    IconButton(
+                      icon: const Icon(Icons.link, color: Colors.tealAccent),
+                      tooltip: 'Link Character to Campaign',
+                      onPressed: () => LinkCampaignCharacterDialog.show(
+                        context,
+                        roomCode: _roomCode,
+                        onLinked: () => setState(() {}),
+                      ),
+                    ),
+                    // Party Roster & Character Management Button
+                    IconButton(
+                      icon: const Icon(Icons.groups, color: Colors.blueAccent),
+                      tooltip: 'Party Roster & Characters',
+                      onPressed: () => ManagePartyRosterDialog.show(
+                        context,
+                        roomCode: _roomCode,
+                        currentName: _playerName,
+                        initialRoster: session?.characterRoster ?? const [],
+                        onActiveCharacterChanged: (newName) {
+                          setState(() => _playerName = newName);
+                        },
+                      ),
+                    ),
+                    // Claim DM Passkey Button (if player)
+                    if (!_isDmOrCoDm)
+                      IconButton(
+                        icon: const Icon(Icons.vpn_key_outlined,
+                            color: Colors.amber),
+                        tooltip: 'Claim DM / Enter Passkey',
+                        onPressed: () => ClaimDmPasskeyDialog.show(
+                          context,
+                          initialRoomCode: _roomCode,
+                          initialPlayerName: _playerName,
+                        ),
+                      ),
+                    // DM Passkey Export Button (if DM)
+                    if (_isDmOrCoDm && _currentMembership != null)
+                      IconButton(
+                        icon: const Icon(Icons.key, color: Colors.amber),
+                        tooltip: 'Share DM Passkey',
+                        onPressed: () => ShareDmPasskeyDialog.show(
+                            context, _currentMembership!),
+                      ),
+                    // DM Dashboard / Console Direct Button (if DM)
+                    if (_isDmOrCoDm)
+                      IconButton(
+                        icon: const Icon(Icons.dashboard_customize_outlined,
+                            color: Colors.purpleAccent),
+                        tooltip: 'Open DM Screen / Command Console',
+                        onPressed: () {
+                          HapticService.selectionTick(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DmDashboardScreen(
+                                  initialCampaignId: 'campaign_$_roomCode'),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (val) {
+                      if (val == 'dmDashboard') {
+                        HapticService.selectionTick(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DmDashboardScreen(
+                                initialCampaignId: 'campaign_$_roomCode'),
+                          ),
+                        );
+                      } else if (val == 'linkChar') {
+                        LinkCampaignCharacterDialog.show(
+                          context,
+                          roomCode: _roomCode,
+                          onLinked: () => setState(() {}),
+                        );
+                      } else if (val == 'switchChar') {
+                        SwitchActiveCharacterDialog.show(
+                          context,
+                          roomCode: _roomCode,
+                          currentName: _playerName,
+                          roster: session?.characterRoster ?? const [],
+                          onCharacterSelected: (name) =>
+                              setState(() => _playerName = name),
+                        );
+                      } else if (val == 'roster') {
+                        ManagePartyRosterDialog.show(
+                          context,
+                          roomCode: _roomCode,
+                          currentName: _playerName,
+                          initialRoster: session?.characterRoster ?? const [],
+                          onActiveCharacterChanged: (name) =>
+                              setState(() => _playerName = name),
+                        );
+                      } else if (val == 'addLoot') {
+                        AddLootItemDialog.show(context,
+                            roomCode: _roomCode, playerName: _playerName);
+                      } else if (val == 'diceRoller') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DiceRollerScreen(
+                              roomService: _diceService,
+                            ),
+                          ),
+                        );
+                      } else if (val == 'claimDm') {
+                        ClaimDmPasskeyDialog.show(
+                          context,
+                          initialRoomCode: _roomCode,
+                          initialPlayerName: _playerName,
+                        );
+                      } else if (val == 'passkey' &&
+                          _currentMembership != null) {
+                        ShareDmPasskeyDialog.show(context, _currentMembership!);
+                      } else if (val == 'leaveCampaign') {
+                        _confirmLeaveCampaign(campaignName);
+                      } else if (val == 'deleteCampaign') {
+                        _confirmDeleteCampaign(campaignName);
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'linkChar',
+                        child: Row(
+                          children: [
+                            Icon(Icons.link,
+                                size: 18, color: Colors.tealAccent),
+                            SizedBox(width: 8),
+                            Text('Link Character'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'switchChar',
+                        child: Row(
+                          children: [
+                            Icon(Icons.badge_outlined,
+                                size: 18, color: Colors.blueAccent),
+                            SizedBox(width: 8),
+                            Text('Switch Active Character'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'roster',
+                        child: Row(
+                          children: [
+                            Icon(Icons.groups_outlined,
+                                size: 18, color: Colors.indigoAccent),
+                            SizedBox(width: 8),
+                            Text('Party Character Roster'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'addLoot',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_box_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Add Custom Loot Item'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'diceRoller',
+                        child: Row(
+                          children: [
+                            Icon(Icons.casino_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Open Full Dice Roller'),
+                          ],
+                        ),
+                      ),
+                      if (!_isDmOrCoDm) ...[
+                        const PopupMenuItem(
+                          value: 'claimDm',
+                          child: Row(
+                            children: [
+                              Icon(Icons.vpn_key_outlined,
+                                  size: 18, color: Colors.amber),
+                              SizedBox(width: 8),
+                              Text('Claim DM / Enter Passkey'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'leaveCampaign',
+                          child: Row(
+                            children: [
+                              Icon(Icons.exit_to_app,
+                                  size: 18, color: Colors.orangeAccent),
+                              SizedBox(width: 8),
+                              Text('Leave Campaign',
+                                  style: TextStyle(color: Colors.orangeAccent)),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (_isDmOrCoDm) ...[
+                        const PopupMenuItem(
+                          value: 'dmDashboard',
+                          child: Row(
+                            children: [
+                              Icon(Icons.dashboard_customize_outlined,
+                                  size: 18, color: Colors.purpleAccent),
+                              SizedBox(width: 8),
+                              Text('Open DM Screen / Console'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'passkey',
+                          child: Row(
+                            children: [
+                              Icon(Icons.key_outlined,
+                                  size: 18, color: Colors.amber),
+                              SizedBox(width: 8),
+                              Text('Share DM Passkey'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'deleteCampaign',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_forever,
+                                  size: 18, color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Delete Campaign',
+                                  style: TextStyle(color: Colors.redAccent)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+                bottom: TabBar(
+                  controller: _tabController,
+                  indicatorColor: colorScheme.primary,
+                  tabs: const [
+                    Tab(
+                        icon: Icon(Icons.shield_moon_outlined),
+                        text: 'Party Vault'),
+                    Tab(icon: Icon(Icons.casino_outlined), text: 'Dice Feed'),
+                    Tab(
+                        icon: Icon(Icons.history_edu),
+                        text: 'Loot & Trash Log'),
+                  ],
+                ),
+              ),
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _KeepAliveTab(
+                      child: _buildVaultTab(session, tabletop, isDark)),
+                  _KeepAliveTab(child: _buildDiceFeedTab(tabletop, isDark)),
+                  _KeepAliveTab(
+                      child: _buildHistoryAndTrashTab(tabletop, isDark)),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // =========================================================================
+  // TAB 1: PARTY VAULT & COIN PURSE
+  // =========================================================================
+
+  Widget _buildVaultTab(
+      PartySessionState? session, TabletopColors tabletop, bool isDark) {
+    final purse = session?.partyPurse ?? const PartyPurse();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return StreamBuilder<List<PartyLootItem>>(
+      stream: _partyService.streamLoot(_roomCode),
+      builder: (context, lootSnap) {
+        final allItems = lootSnap.data ?? [];
+
+        // Compute total gem & art gold value
+        double gemsAndArtTotal = 0.0;
+        for (final item in allItems) {
+          if (item.category == 'gem' || item.category == 'art') {
+            gemsAndArtTotal += item.totalGpValue;
+          }
+        }
+
+        // Filter items
+        final filteredItems = allItems.where((item) {
+          if (_selectedCategoryFilter == 'magicItem')
+            return item.category == 'magicItem';
+          if (_selectedCategoryFilter == 'gem_art')
+            return item.category == 'gem' || item.category == 'art';
+          if (_selectedCategoryFilter == 'gear')
+            return item.category == 'gear' || item.category == 'currency';
+          if (_selectedCategoryFilter == 'claimed') return item.isClaimed;
+          if (_selectedCategoryFilter == 'unclaimed') return !item.isClaimed;
+          return true;
+        }).toList();
+
+        final split = purse.splitShares(
+          _partySplitCount,
+          includeLiquidatedGemsAndArt: _includeLiquidatedInSplit,
+          liquidatedGemsAndArtGp: gemsAndArtTotal,
+        );
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          children: [
+            // 0. ACTIVE CHARACTER & ROSTER BANNER
+            _buildActiveCharacterBanner(session, colorScheme, isDark),
+            const SizedBox(height: 14),
+
+            // 1. COIN PURSE HERO CARD (SHARED PARTY VAULT / RESERVE)
+            _buildCoinPurseCard(
+                purse, split, session, tabletop, isDark, gemsAndArtTotal),
+            const SizedBox(height: 14),
+
+            // 1.5 INDIVIDUAL PARTY MEMBER GOLD STORES
+            _buildMemberPursesCard(session, tabletop, colorScheme, isDark),
+            const SizedBox(height: 14),
+
+            // 2. CATEGORY FILTER CHIPS
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All Items (${allItems.length})', 'all'),
+                  const SizedBox(width: 6),
+                  _buildFilterChip(
+                    '✨ Magic (${allItems.where((i) => i.category == 'magicItem').length})',
+                    'magicItem',
+                  ),
+                  const SizedBox(width: 6),
+                  _buildFilterChip(
+                    '💎 Gems & Art (${allItems.where((i) => i.category == 'gem' || i.category == 'art').length})',
+                    'gem_art',
+                  ),
+                  const SizedBox(width: 6),
+                  _buildFilterChip(
+                    '⚔️ Gear (${allItems.where((i) => i.category == 'gear' || i.category == 'currency').length})',
+                    'gear',
+                  ),
+                  const SizedBox(width: 6),
+                  _buildFilterChip('🙋 Claimed', 'claimed'),
+                  const SizedBox(width: 6),
+                  _buildFilterChip('📦 Unclaimed', 'unclaimed'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // 3. LOOT ITEMS LIST
+            if (filteredItems.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.inventory_2_outlined,
+                          size: 48, color: Colors.grey.shade500),
+                      const SizedBox(height: 10),
+                      Text(
+                        allItems.isEmpty
+                            ? 'The party vault is currently empty.\nAdd drops or deposit treasure hoards!'
+                            : 'No items match the selected filter.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.grey.shade500, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...filteredItems.map((item) =>
+                  _buildLootItemCard(item, session, tabletop, isDark)),
+
+            const SizedBox(height: 70), // Bottom padding for FAB
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _openActiveCharacterSheet(PartySessionState? session) async {
+    // 1. Always prioritize authoritative local storage for this player's character
+    final localChars = await CharacterPersistenceService().loadCharacters();
+    Character? targetChar = localChars
+        .where((c) =>
+            c.id.slug == _currentMembership?.characterId ||
+            c.name.toLowerCase() == _playerName.toLowerCase())
+        .firstOrNull;
+
+    // 2. Fall back to sharedCharacters only if not found locally (e.g. DM viewing remote player)
+    if (targetChar == null &&
+        session != null &&
+        session.sharedCharacters.isNotEmpty) {
+      final rawMap = session.sharedCharacters[_playerName] ??
+          (_currentMembership?.characterId != null
+              ? session.sharedCharacters[_currentMembership!.characterId]
+              : null);
+      if (rawMap != null) {
+        try {
+          targetChar = Character.fromMap(rawMap);
+        } catch (_) {}
+      }
+    }
+
+    if (!mounted) return;
+
+    final updated = await Navigator.push<Character?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CharacterSheetView(
+          character: targetChar,
+          isDmMode: _isDmOrCoDm,
+        ),
+      ),
+    );
+
+    // 3. Regardless of whether updated is null (e.g. popped via swipe/system gesture),
+    // reload latest state from persistence and sync to room
+    final localCharsAfter =
+        await CharacterPersistenceService().loadCharacters();
+    final latestChar = localCharsAfter
+            .where((c) =>
+                c.id.slug ==
+                    (targetChar?.id.slug ?? _currentMembership?.characterId) ||
+                c.name.toLowerCase() == _playerName.toLowerCase())
+            .firstOrNull ??
+        updated ??
+        targetChar;
+
+    if (latestChar != null) {
+      await _partyService.linkCharacterToCampaign(
+        roomCode: _roomCode,
+        character: latestChar,
+        existingRosterName: _playerName,
+        isNewImport: false,
+      );
+      await _partyService.updateCharacterTelemetry(
+        roomCode: _roomCode,
+        character: latestChar,
+        existingRosterName: _playerName,
+      );
+      if (mounted) setState(() {});
+    }
+  }
+
+  Widget _buildActiveCharacterBanner(
+      PartySessionState? session, ColorScheme colorScheme, bool isDark) {
+    final roster = session?.characterRoster ?? const [];
+    final myPurse = session?.getMemberPurse(_playerName) ?? const PartyPurse();
+    final isLinked =
+        session?.sharedCharacters.containsKey(_playerName) == true ||
+            (_currentMembership?.characterId != null &&
+                _currentMembership!.characterId!.isNotEmpty &&
+                _currentMembership!.characterId != 'Adventurer' &&
+                _currentMembership!.characterId != 'DM');
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF222738) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.2),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 620;
+
+          Widget buildIdentityHeader() {
+            return Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
+                  child:
+                      Icon(Icons.person, size: 18, color: colorScheme.primary),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ACTIVE CHARACTER / SESSION IDENTITY',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 2,
+                        children: [
+                          Text(
+                            _playerName,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                          if (isLinked)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade800
+                                    .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                    color: Colors.green.shade600, width: 0.8),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_circle,
+                                      size: 10, color: Colors.green),
+                                  SizedBox(width: 3),
+                                  Text(
+                                    'Linked',
+                                    style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+
+          final actionButtons = <Widget>[
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: Colors.teal,
+              ),
+              icon: const Icon(Icons.link, size: 15),
+              label: const Text('Link', style: TextStyle(fontSize: 12)),
+              onPressed: () => LinkCampaignCharacterDialog.show(
+                context,
+                roomCode: _roomCode,
+                onLinked: () => setState(() {}),
+              ),
+            ),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Icon(Icons.swap_horiz, size: 16),
+              label: const Text('Switch', style: TextStyle(fontSize: 12)),
+              onPressed: () => SwitchActiveCharacterDialog.show(
+                context,
+                roomCode: _roomCode,
+                currentName: _playerName,
+                roster: roster,
+                onCharacterSelected: (name) {
+                  _diceService.joinRoom(_roomCode, name);
+                  setState(() => _playerName = name);
+                },
+              ),
+            ),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: Colors.blueAccent,
+              ),
+              icon: const Icon(Icons.badge_outlined, size: 15),
+              label: const Text('Sheet', style: TextStyle(fontSize: 12)),
+              onPressed: () => _openActiveCharacterSheet(session),
+            ),
+            if (!_isDmOrCoDm)
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: Colors.amber.shade800,
+                ),
+                icon: const Icon(Icons.vpn_key_outlined, size: 14),
+                label: const Text('Claim DM', style: TextStyle(fontSize: 12)),
+                onPressed: () => ClaimDmPasskeyDialog.show(
+                  context,
+                  initialRoomCode: _roomCode,
+                  initialPlayerName: _playerName,
+                ),
+              ),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Icon(Icons.groups_outlined, size: 16),
+              label: const Text('Roster', style: TextStyle(fontSize: 12)),
+              onPressed: () => ManagePartyRosterDialog.show(
+                context,
+                roomCode: _roomCode,
+                currentName: _playerName,
+                initialRoster: roster,
+                onActiveCharacterChanged: (name) {
+                  _diceService.joinRoom(_roomCode, name);
+                  setState(() => _playerName = name);
+                },
+              ),
+            ),
+          ];
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isCompact) ...[
+                buildIdentityHeader(),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: actionButtons,
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(child: buildIdentityHeader()),
+                    ...actionButtons.map(
+                      (btn) => Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: btn,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // Personal Pouch summary for active character
+              const SizedBox(height: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary
+                      .withValues(alpha: isDark ? 0.12 : 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.account_balance_wallet_outlined,
+                        size: 16, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Your Store: ~${myPurse.totalGpEquivalent.toStringAsFixed(1)} GP (${myPurse.pp} PP, ${myPurse.gp} GP, ${myPurse.ep} EP, ${myPurse.sp} SP, ${myPurse.cp} CP)',
+                        style: const TextStyle(
+                            fontSize: 11.5, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => MemberCoinTransactionDialog.show(
+                        context,
+                        roomCode: _roomCode,
+                        characterName: _playerName,
+                        performedBy: _playerName,
+                        isDeposit: true,
+                      ),
+                      child: const Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Text('+Add',
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green)),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    InkWell(
+                      onTap: () => MemberCoinTransactionDialog.show(
+                        context,
+                        roomCode: _roomCode,
+                        characterName: _playerName,
+                        performedBy: _playerName,
+                        isDeposit: false,
+                      ),
+                      child: const Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Text('-Spend',
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Live combat vitality telemetry if linked
+              if (session != null) ...[
+                Builder(
+                  builder: (context) {
+                    CharacterTelemetryDto? activeTelemetry = session
+                            .partyTelemetry[_playerName] ??
+                        (_currentMembership?.characterId != null
+                            ? session
+                                .partyTelemetry[_currentMembership!.characterId]
+                            : null);
+                    if (activeTelemetry == null &&
+                        session.sharedCharacters.isNotEmpty) {
+                      final rawMap = session.sharedCharacters[_playerName] ??
+                          (_currentMembership?.characterId != null
+                              ? session.sharedCharacters[
+                                  _currentMembership!.characterId]
+                              : null);
+                      if (rawMap != null) {
+                        if (rawMap.containsKey('hp') ||
+                            rawMap.containsKey('id')) {
+                          try {
+                            activeTelemetry =
+                                CharacterTelemetryDto.fromMap(rawMap);
+                          } catch (_) {
+                            activeTelemetry =
+                                CharacterTelemetryDto.fromLegacyCharacterMap(
+                                    rawMap);
+                          }
+                        }
+                      }
+                    }
+                    if (activeTelemetry == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: PartyVitalityHud.fromDto(
+                        dto: activeTelemetry,
+                        isCompact: true,
+                        onTap: () => _openActiveCharacterSheet(session),
+                      ),
+                    );
+                  },
+                ),
+              ],
+
+              if (roster.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.shield_outlined,
+                        size: 14, color: colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Quick Roster Select (${roster.length}):',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      ...roster.map((rName) {
+                        final isCurrent = rName == _playerName;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ChoiceChip(
+                            avatar: Icon(
+                              isCurrent
+                                  ? Icons.check_circle
+                                  : Icons.person_outline,
+                              size: 14,
+                              color: isCurrent
+                                  ? Colors.white
+                                  : colorScheme.primary,
+                            ),
+                            label: Text(rName,
+                                style: const TextStyle(fontSize: 11.5)),
+                            selected: isCurrent,
+                            selectedColor: colorScheme.primary,
+                            onSelected: (selected) {
+                              if (!isCurrent) {
+                                _partyService.setActiveCharacter(
+                                  roomCode: _roomCode,
+                                  characterName: rName,
+                                );
+                                _diceService.joinRoom(_roomCode, rName);
+                                setState(() => _playerName = rName);
+                              }
+                            },
+                          ),
+                        );
+                      }),
+                      ActionChip(
+                        avatar: const Icon(Icons.add, size: 14),
+                        label: const Text('Add Member',
+                            style: TextStyle(fontSize: 11.5)),
+                        onPressed: () => ManagePartyRosterDialog.show(
+                          context,
+                          roomCode: _roomCode,
+                          currentName: _playerName,
+                          initialRoster: roster,
+                          onActiveCharacterChanged: (name) {
+                            _diceService.joinRoom(_roomCode, name);
+                            setState(() => _playerName = name);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMemberPursesCard(
+    PartySessionState? session,
+    TabletopColors tabletop,
+    ColorScheme colorScheme,
+    bool isDark,
+  ) {
+    final roster =
+        session?.characterRoster.where((s) => s.trim().isNotEmpty).toList() ??
+            [];
+    final allMembers = roster.isNotEmpty
+        ? roster
+        : [_playerName].where((s) => s.trim().isNotEmpty).toList();
+
+    if (allMembers.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: isDark ? const Color(0xFF1E2230) : const Color(0xFFF8FAFC),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.people_alt_outlined,
+                    color: Colors.amber, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Character Gold Stores (${allMembers.length})',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact),
+                  icon: const Icon(Icons.currency_exchange, size: 14),
+                  label:
+                      const Text('Disperse...', style: TextStyle(fontSize: 11)),
+                  onPressed: () {
+                    final purse = session?.partyPurse ?? const PartyPurse();
+                    DisperseLootDialog.show(
+                      context,
+                      initialRoomCode: _roomCode,
+                      purse: purse,
+                      sourceTitle: 'Vault Funds',
+                      isVaultDispersal: true,
+                    );
+                  },
+                ),
+              ],
+            ),
+            const Divider(height: 14),
+            ...allMembers.map((member) {
+              final purse =
+                  session?.getMemberPurse(member) ?? const PartyPurse();
+              final isMe = member == _playerName;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isMe
+                      ? colorScheme.primary
+                          .withValues(alpha: isDark ? 0.15 : 0.08)
+                      : (isDark ? const Color(0xFF131622) : Colors.white),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isMe
+                        ? colorScheme.primary.withValues(alpha: 0.4)
+                        : (isDark
+                            ? const Color(0xFF2A2E3D)
+                            : const Color(0xFFE2E8F0)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 13,
+                      backgroundColor:
+                          isMe ? colorScheme.primary : Colors.grey.shade700,
+                      child: const Icon(Icons.person,
+                          size: 14, color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                member + (isMe ? ' (You)' : ''),
+                                style: TextStyle(
+                                  fontWeight:
+                                      isMe ? FontWeight.bold : FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '~${purse.totalGpEquivalent.toStringAsFixed(1)} GP',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFF59E0B),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${purse.pp} PP, ${purse.gp} GP, ${purse.ep} EP, ${purse.sp} SP, ${purse.cp} CP',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, size: 18),
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (ctx) => [
+                        const PopupMenuItem(
+                            value: 'deposit', child: Text('Deposit Coins')),
+                        const PopupMenuItem(
+                            value: 'withdraw', child: Text('Withdraw Coins')),
+                        const PopupMenuItem(
+                            value: 'transfer_to_reserve',
+                            child: Text('Transfer to Party Reserve')),
+                        const PopupMenuItem(
+                            value: 'withdraw_from_reserve',
+                            child: Text('Withdraw from Party Reserve')),
+                      ],
+                      onSelected: (action) {
+                        if (action == 'deposit') {
+                          MemberCoinTransactionDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            isDeposit: true,
+                          );
+                        } else if (action == 'withdraw') {
+                          MemberCoinTransactionDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            isDeposit: false,
+                          );
+                        } else if (action == 'transfer_to_reserve') {
+                          TransferCoinDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            toReserve: true,
+                          );
+                        } else if (action == 'withdraw_from_reserve') {
+                          TransferCoinDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            toReserve: false,
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _selectedCategoryFilter == value;
+    return ChoiceChip(
+      label: Text(label,
+          style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _selectedCategoryFilter = value),
+    );
+  }
+
+  Widget _buildCoinPurseCard(
+    PartyPurse purse,
+    PartyPurseSplit split,
+    PartySessionState? session,
+    TabletopColors tabletop,
+    bool isDark, [
+    double gemsAndArtTotal = 0.0,
+  ]) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: isDark ? const Color(0xFF1E2230) : const Color(0xFFF8FAFC),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.monetization_on,
+                    color: Color(0xFFF59E0B), size: 24),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Party Coin Vault & Reserve',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '~${purse.totalGpEquivalent.toStringAsFixed(1)} GP',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Color(0xFFF59E0B)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // High-Contrast Coin Counters
+            Row(
+              children: [
+                _buildCoinBadge(
+                    'PP', purse.pp, const Color(0xFFCBD5E1), isDark),
+                const SizedBox(width: 6),
+                _buildCoinBadge(
+                    'GP', purse.gp, const Color(0xFFF59E0B), isDark),
+                const SizedBox(width: 6),
+                _buildCoinBadge(
+                    'EP', purse.ep, const Color(0xFF93C5FD), isDark),
+                const SizedBox(width: 6),
+                _buildCoinBadge(
+                    'SP', purse.sp, const Color(0xFFE2E8F0), isDark),
+                const SizedBox(width: 6),
+                _buildCoinBadge(
+                    'CP', purse.cp, const Color(0xFFB45309), isDark),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Action Buttons: Deposit & Withdraw
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Deposit Coins'),
+                    onPressed: () => CoinTransactionDialog.show(
+                      context,
+                      roomCode: _roomCode,
+                      playerName: _playerName,
+                      isDeposit: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    icon: const Icon(Icons.remove, size: 18),
+                    label: const Text('Withdraw'),
+                    onPressed: () => CoinTransactionDialog.show(
+                      context,
+                      roomCode: _roomCode,
+                      playerName: _playerName,
+                      isDeposit: false,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Disperse Vault Funds Button
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFF59E0B),
+                  side: BorderSide(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                icon: const Icon(Icons.currency_exchange, size: 16),
+                label: const Text('Disperse Vault Funds to Party...',
+                    style:
+                        TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                onPressed: () => DisperseLootDialog.show(
+                  context,
+                  initialRoomCode: _roomCode,
+                  purse: purse,
+                  liquidatedGemsAndArtGp: gemsAndArtTotal,
+                  sourceTitle: 'Party Vault Funds',
+                  isVaultDispersal: true,
+                ),
+              ),
+            ),
+
+            const Divider(height: 24),
+
+            // Live Party Share Calculator
+            Row(
+              children: [
+                const Icon(Icons.pie_chart_outline,
+                    size: 18, color: Colors.blueAccent),
+                const SizedBox(width: 6),
+                const Expanded(
+                  child: Text('Party Share Calculator',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                ),
+                DropdownButton<int>(
+                  value: _partySplitCount,
+                  isDense: true,
+                  underline: const SizedBox(),
+                  items: [2, 3, 4, 5, 6, 7, 8].map((n) {
+                    return DropdownMenuItem(
+                        value: n, child: Text('$n Players'));
+                  }).toList(),
+                  onChanged: (val) =>
+                      setState(() => _partySplitCount = val ?? 4),
+                ),
+              ],
+            ),
+            if (session?.characterRoster.isNotEmpty == true &&
+                session!.characterRoster.length != _partySplitCount)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: ActionChip(
+                  avatar: const Icon(Icons.groups, size: 14),
+                  label: Text(
+                      'Set to Roster (${session.characterRoster.length} Players)',
+                      style: const TextStyle(fontSize: 11)),
+                  onPressed: () => setState(
+                      () => _partySplitCount = session.characterRoster.length),
+                ),
+              ),
+            const SizedBox(height: 6),
+            CheckboxListTile(
+              value: _includeLiquidatedInSplit,
+              onChanged: (val) =>
+                  setState(() => _includeLiquidatedInSplit = val ?? false),
+              title: const Text('Include gems & art liquidation in split',
+                  style: TextStyle(fontSize: 12)),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color:
+                    colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Each Player Receives:',
+                      style: TextStyle(
+                          fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '~${split.perPlayerGpEquivalent.toStringAsFixed(1)} GP',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFF59E0B),
+                        fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCoinBadge(
+      String denomination, int amount, Color color, bool isDark) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.15 : 0.25),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              denomination,
+              style: TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, color: color),
+            ),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '$amount',
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLootItemCard(PartyLootItem item, PartySessionState? session,
+      TabletopColors tabletop, bool isDark) {
+    final isClaimedByMe = item.claimedByPlayer == _playerName;
+
+    Color categoryColor = Colors.blueGrey;
+    IconData categoryIcon = Icons.inventory_2_outlined;
+
+    if (item.category == 'magicItem') {
+      categoryColor = Colors.purple;
+      categoryIcon = Icons.auto_awesome;
+    } else if (item.category == 'gem') {
+      categoryColor = Colors.cyan;
+      categoryIcon = Icons.diamond_outlined;
+    } else if (item.category == 'art') {
+      categoryColor = Colors.orange;
+      categoryIcon = Icons.palette_outlined;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: categoryColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(categoryIcon, color: categoryColor, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.count > 1
+                                  ? '${item.name} (x${item.count})'
+                                  : item.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                          ),
+                          if (item.totalGpValue > 0)
+                            Text(
+                              '${item.totalGpValue.toStringAsFixed(0)} GP',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFF59E0B)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            item.categoryLabel,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: categoryColor,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          if (item.requiresAttunement) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'Requires Attunement',
+                                style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: Colors.purple,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (item.sourceTableOrMonster != null &&
+                          item.sourceTableOrMonster!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          item.sourceTableOrMonster!,
+                          style: const TextStyle(
+                              fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                      if (item.hasConflict) ...[
+                        const SizedBox(height: 6),
+                        InkWell(
+                          onTap: () {
+                            final hostKey = _currentMembership?.hostKey ?? '';
+                            LootConflictResolutionDialog.show(
+                              context,
+                              roomCode: _roomCode,
+                              item: item,
+                              hostKey: hostKey,
+                              playerName: _playerName,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                  color: Colors.amber.withValues(alpha: 0.65)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.sync_problem,
+                                    size: 14, color: Colors.amber),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Sync Conflict (Tap to Resolve)',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Delete / Archive item button
+                IconButton(
+                  icon: const Icon(Icons.delete_outline,
+                      size: 18, color: Colors.grey),
+                  tooltip: 'Move to Vault Trash',
+                  onPressed: () => _partyService.archiveLootItem(
+                    roomCode: _roomCode,
+                    lootId: item.id,
+                    playerName: _playerName,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 16),
+            // Claim and Attunement Row
+            Row(
+              children: [
+                if (item.isClaimed)
+                  Chip(
+                    avatar: Icon(Icons.person,
+                        size: 14, color: isClaimedByMe ? Colors.white : null),
+                    label: Text(
+                      isClaimedByMe
+                          ? 'Claimed by You'
+                          : 'Claimed: ${item.claimedByPlayer}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isClaimedByMe ? Colors.white : null,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    backgroundColor:
+                        isClaimedByMe ? Colors.green.shade700 : null,
+                  )
+                else
+                  const Chip(
+                    label: Text('In Vault (Unclaimed)',
+                        style: TextStyle(fontSize: 11)),
+                  ),
+                const Spacer(),
+                if (item.requiresAttunement && item.isClaimed)
+                  TextButton.icon(
+                    icon: Icon(
+                      item.isAttuned ? Icons.link : Icons.link_off,
+                      size: 16,
+                      color: item.isAttuned ? Colors.purple : Colors.grey,
+                    ),
+                    label: Text(
+                      item.isAttuned ? 'Attuned' : 'Attune',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: item.isAttuned ? Colors.purple : null,
+                      ),
+                    ),
+                    onPressed: () => _partyService.toggleAttunement(
+                      roomCode: _roomCode,
+                      lootId: item.id,
+                      isAttuned: !item.isAttuned,
+                      playerName: _playerName,
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.assignment_ind_outlined, size: 18),
+                  tooltip: 'Assign to Character...',
+                  onPressed: () async {
+                    final chosen = await AssignLootDialog.show(
+                      context,
+                      itemName: item.name,
+                      currentActiveName: _playerName,
+                      roster: session?.characterRoster ?? const [],
+                      activePlayers: session?.activePlayers ?? const [],
+                    );
+                    if (chosen == null) return;
+                    if (chosen == '__unclaim__') {
+                      await _partyService.claimLootItem(
+                        roomCode: _roomCode,
+                        lootId: item.id,
+                        playerName: null,
+                      );
+                    } else {
+                      await _partyService.claimLootItem(
+                        roomCode: _roomCode,
+                        lootId: item.id,
+                        playerName: chosen,
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(width: 4),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    minimumSize: Size.zero,
+                  ),
+                  onPressed: () {
+                    if (item.isClaimed) {
+                      _partyService.claimLootItem(
+                        roomCode: _roomCode,
+                        lootId: item.id,
+                        playerName: null,
+                      );
+                    } else {
+                      _partyService.claimLootItem(
+                        roomCode: _roomCode,
+                        lootId: item.id,
+                        playerName: _playerName,
+                      );
+                    }
+                  },
+                  child: Text(
+                    item.isClaimed
+                        ? (isClaimedByMe ? 'Unclaim' : 'Take Claim')
+                        : 'Claim',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // TAB 2: LIVE DICE FEED
+  // =========================================================================
+
+  Widget _buildDiceFeedTab(TabletopColors tabletop, bool isDark) {
+    return StreamBuilder<List<RoomRoll>>(
+      stream: _rollStream,
+      initialData: _diceService.getCachedRolls(_roomCode),
+      builder: (context, snapshot) {
+        final rolls = snapshot.data ?? [];
+
+        if (rolls.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.casino_outlined, size: 48, color: Colors.grey),
+                const SizedBox(height: 12),
+                const Text(
+                  'No dice rolls logged yet for this room.\nRoll dice to broadcast in real time!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DiceRollerScreen(
+                        roomService: _diceService,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.casino),
+                  label: const Text('Open Dice Roller'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          itemCount: rolls.length,
+          itemBuilder: (context, index) {
+            final roll = rolls[index];
+            return _buildRollCard(roll, isDark);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRollCard(RoomRoll roll, bool isDark) {
+    Color cardColor =
+        isDark ? const Color(0xFF1E2230) : const Color(0xFFF8FAFC);
+    Color totalColor = Colors.blueAccent;
+
+    if (roll.isCrit) {
+      totalColor = Colors.greenAccent.shade700;
+    } else if (roll.isFumble) {
+      totalColor = Colors.redAccent;
+    }
+
+    return Card(
+      key: ValueKey(roll.id),
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      color: cardColor,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: totalColor.withValues(alpha: 0.2),
+          child: Text(
+            '${roll.total}',
+            style: TextStyle(fontWeight: FontWeight.bold, color: totalColor),
+          ),
+        ),
+        title: Row(
+          children: [
+            Text(roll.playerName,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 13.5)),
+            const SizedBox(width: 8),
+            if (roll.isCrit)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(4)),
+                child: const Text('NAT 20',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold)),
+              ),
+            if (roll.isFumble)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                    color: Colors.red, borderRadius: BorderRadius.circular(4)),
+                child: const Text('FUMBLE',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold)),
+              ),
+          ],
+        ),
+        subtitle: Text(
+          '${roll.formulaString} (${roll.individualRolls.join(', ')})',
+          style: const TextStyle(fontSize: 12),
+        ),
+        trailing: Text(
+          '${roll.timestamp.hour.toString().padLeft(2, '0')}:${roll.timestamp.minute.toString().padLeft(2, '0')}',
+          style: const TextStyle(fontSize: 11, color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // TAB 3: AUDIT HISTORY & HOST TRASH RESTORE
+  // =========================================================================
+
+  Widget _buildHistoryAndTrashTab(TabletopColors tabletop, bool isDark) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.history), text: 'Event Audit Log'),
+              Tab(
+                  icon: Icon(Icons.delete_sweep_outlined),
+                  text: 'Vault Trash & Restore'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildAuditLogList(),
+                _buildTrashRestoreList(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuditLogList() {
+    return StreamBuilder<List<PartyEvent>>(
+      stream: _partyService.streamEvents(_roomCode),
+      builder: (context, snapshot) {
+        final events = snapshot.data ?? [];
+        if (events.isEmpty) {
+          return const Center(
+              child: Text('No events recorded in audit log yet.'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: events.length,
+          itemBuilder: (context, idx) {
+            final evt = events[idx];
+            IconData icon = Icons.info_outline;
+            Color color = Colors.blue;
+
+            if (evt.type.contains('coin')) {
+              icon = Icons.monetization_on_outlined;
+              color = Colors.amber.shade700;
+            } else if (evt.type.contains('Claim')) {
+              icon = Icons.person_pin_outlined;
+              color = Colors.green;
+            } else if (evt.type.contains('Archive')) {
+              icon = Icons.delete_outline;
+              color = Colors.redAccent;
+            } else if (evt.type.contains('Restore') ||
+                evt.type.contains('Rehydrate')) {
+              icon = Icons.restore;
+              color = Colors.purple;
+            } else if (evt.type.toLowerCase().contains('feat')) {
+              icon = Icons.military_tech;
+              color = Colors.amberAccent;
+            } else if (evt.type.toLowerCase().contains('stat')) {
+              icon = Icons.trending_up;
+              color = Colors.cyanAccent;
+            }
+
+            return ListTile(
+              dense: true,
+              leading: Icon(icon, color: color, size: 20),
+              title: Text(evt.details, style: const TextStyle(fontSize: 13)),
+              subtitle: Text(
+                '${evt.playerName} • ${_formatDateTime(evt.timestamp)}',
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTrashRestoreList() {
+    return StreamBuilder<List<PartyLootItem>>(
+      stream: _partyService.streamLoot(_roomCode, includeArchived: true),
+      builder: (context, snapshot) {
+        final allItems = snapshot.data ?? [];
+        final archivedItems = allItems.where((i) => i.isArchived).toList();
+
+        if (archivedItems.isEmpty) {
+          return const Center(
+              child: Text('Trash is empty. No archived loot items.'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: archivedItems.length,
+          itemBuilder: (context, idx) {
+            final item = archivedItems[idx];
+            return Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              child: ListTile(
+                leading: const Icon(Icons.archive_outlined, color: Colors.grey),
+                title: Text(item.name,
+                    style: const TextStyle(
+                        decoration: TextDecoration.lineThrough)),
+                subtitle: Text(
+                  'Archived by ${item.archivedBy ?? 'Unknown'}${item.archivedAt != null ? ' • ${_formatDateTime(item.archivedAt!)}' : ''}',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                trailing: _isDmOrCoDm
+                    ? ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                        ),
+                        icon: const Icon(Icons.restore, size: 14),
+                        label: const Text('Restore',
+                            style: TextStyle(fontSize: 11)),
+                        onPressed: () async {
+                          final hostKey = _currentMembership?.hostKey ?? '';
+                          try {
+                            await _partyService.restoreLootItem(
+                              roomCode: _roomCode,
+                              lootId: item.id,
+                              hostKey: hostKey,
+                              playerName: _playerName,
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Restored "${item.name}" to party vault!')),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Failed to restore: $e')),
+                              );
+                            }
+                          }
+                        },
+                      )
+                    : const Tooltip(
+                        message: 'Only DM / Co-DM can restore items',
+                        child: Icon(Icons.lock_outline,
+                            size: 16, color: Colors.grey),
+                      ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _formatDateTime(DateTime dt) {
+    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _KeepAliveTab extends StatefulWidget {
+  final Widget child;
+  const _KeepAliveTab({required this.child});
+
+  @override
+  State<_KeepAliveTab> createState() => _KeepAliveTabState();
+}
+
+class _KeepAliveTabState extends State<_KeepAliveTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+}

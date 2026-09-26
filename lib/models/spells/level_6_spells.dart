@@ -1,0 +1,1536 @@
+import '../spellbook_data.dart';
+
+const List<SpellItem> srdLevel6Spells = [
+  SpellItem(
+    id: 'spell_heal',
+    name: 'Heal',
+    level: 6,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'Restores 70 Hit Points to a target and ends blindness, deafness, and diseases (classified as Abjuration in 2024).',
+    tags: ['healing', 'flat-heal', 'cure', 'abjuration', 'level 6'],
+    rules2014: SpellEditionDetails(
+      schoolOverride: SpellSchool.evocation,
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric, SpellClass.druid],
+      damageOrHealType: '70 Hit Points',
+      description: [
+        'Choose a creature that you can see within range. A surge of positive energy washes through the creature, causing it to regain 70 hit points.',
+        'This spell also ends blindness, deafness, and any diseases affecting the target. This spell has no effect on constructs or undead.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 7th level or higher, the amount of healing increases by 10 for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      schoolOverride: SpellSchool.abjuration,
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric, SpellClass.druid],
+      damageOrHealType: '70 Hit Points',
+      description: [
+        'A target creature regains 70 Hit Points. Also ends the Blinded, Deafened, and Poisoned conditions.',
+      ],
+      higherLevels:
+          'Healing increases by 10 Hit Points for each slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_harm',
+    name: 'Harm',
+    level: 6,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Deals 14d6 necrotic damage on Constitution save and reduces maximum HP by the amount taken for 1 hour or until removed.',
+    tags: ['necrotic', 'debuff', 'max-hp-reduction', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      rollFormula: '14d6',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 14, diceSides: 6),
+      damageOrHealType: 'Necrotic',
+      savingThrow: 'Constitution',
+      description: [
+        'You unleash a virulent disease on a creature that you can see within range.',
+        'The target must make a Constitution saving throw. On a failed save, it takes 14d6 necrotic damage, or half as much on a successful save. The damage can’t reduce the target’s hit points below 1.',
+        'If the target fails the saving throw, its hit point maximum is reduced for 1 hour by an amount equal to the necrotic damage it took.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      rollFormula: '14d6',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 14, diceSides: 6),
+      damageOrHealType: 'Necrotic',
+      savingThrow: 'Constitution',
+      description: [
+        'A virulent disease deals 14d6 Necrotic damage on a Constitution save (half on success; cannot reduce below 1 HP). Target’s HP max is reduced by the damage taken for 1 hour.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_heroes_feast',
+    name: "Heroes' Feast",
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Brings forth a magnificent feast for up to 12 creatures granting poison immunity, fear immunity, max HP increase (+2d10), and Wisdom save advantage for 24 hours.',
+    tags: ['buff', 'feast', 'max-hp', 'immunity', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Self (30-foot radius)',
+      components:
+          'V, S, M (a gem-encrusted bowl worth at least 1,000 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'a gem-encrusted bowl worth 1,000 gp',
+        hasCost: true,
+        costInGp: 1000,
+        isConsumed: true,
+      ),
+      duration: 'Instantaneous (24 hours benefits)',
+      classes: [SpellClass.cleric, SpellClass.druid],
+      description: [
+        'You bring forth a magnificent feast that takes 1 hour to consume and disappears at the end of that time. Up to twelve other creatures can partake.',
+        'Creatures gain immunity to poison and being frightened, make Wisdom saving throws with advantage, and their hit point maximum increases by 2d10 for 24 hours.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Self (30-foot radius)',
+      components:
+          'V, S, M (a gem-encrusted bowl worth at least 1,000 gp, consumed)',
+      materialDetails: SpellMaterialComponent(
+        description: 'gem-encrusted bowl worth 1,000 gp',
+        hasCost: true,
+        costInGp: 1000,
+        isConsumed: true,
+      ),
+      duration: 'Instantaneous (24 hours benefits)',
+      classes: [SpellClass.cleric, SpellClass.druid],
+      description: [
+        'Partakers gain immunity to Poison and Frightened, Advantage on Wisdom saves, and +2d10 max HP for 24 hours.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_planar_ally',
+    name: 'Planar Ally',
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Beseeches an otherworldly celestial, elemental, or fiend to perform a task for payment or service.',
+    tags: ['summon', 'negotiation', 'planar', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      description: [
+        'You beseech an otherworldly entity for aid. The entity sends a celestial, an elemental, or a fiend loyal to it to aid you.',
+        'You must negotiate a payment or sacrifice for the ally’s service (typically 100 to 1,000 gp per minute/hour/day depending on the task).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      description: [
+        'You call upon a cosmic patron to send an extraplanar ally (Celestial, Elemental, or Fiend). You negotiate a price in gold or services for its aid.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_forbiddance',
+    name: 'Forbiddance',
+    level: 6,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Wards up to 40,000 sq ft against teleportation/planar travel and deals 5d10 radiant or necrotic damage to specified creature types.',
+    tags: ['ward', 'anti-teleport', 'ritual', 'radiant', 'necrotic', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Touch',
+      components:
+          'V, S, M (holy water, rare incense, and ruby dust worth at least 1,000 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'holy water, incense, and ruby dust worth 1,000 gp',
+        hasCost: true,
+        costInGp: 1000,
+        isConsumed: false,
+      ),
+      duration: '1 day (or permanent if cast every day for 30 days)',
+      ritual: true,
+      classes: [SpellClass.cleric],
+      rollFormula: '5d10',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 5, diceSides: 10),
+      damageOrHealType: 'Radiant or Necrotic',
+      description: [
+        'You create a magical ward protecting up to 40,000 square feet of floor space.',
+        'Prevents planar travel, portal creation, and teleportation into the area. Deals 5d10 Radiant or Necrotic damage when designated creature types (celestials, elementals, fey, fiends, or undead) enter or start their turn in the area.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Touch',
+      components:
+          'V, S, M (holy water, rare incense, and ruby dust worth 1,000 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'holy water, incense, and ruby dust worth 1,000 gp',
+        hasCost: true,
+        costInGp: 1000,
+        isConsumed: false,
+      ),
+      duration: '1 day (or permanent if cast every day for 30 days)',
+      ritual: true,
+      classes: [SpellClass.cleric],
+      rollFormula: '5d10',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 5, diceSides: 10),
+      damageOrHealType: 'Radiant or Necrotic',
+      description: [
+        'Creates an anti-teleportation ward over 40,000 sq ft that damages specified otherworldly creature types for 5d10 Radiant/Necrotic damage.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_word_of_recall',
+    name: 'Word of Recall',
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Instantly teleports you and up to 5 willing creatures to a sanctuary dedicated to your deity that you previously designated.',
+    tags: ['teleport', 'sanctuary', 'escape', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '5 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      description: [
+        'You and up to five willing creatures within 5 feet are instantly teleported to a designated sanctuary previously prepared by casting this spell there.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '5 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      description: [
+        'Teleports caster and up to 5 willing allies within 5 ft to your designated holy sanctuary.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_blade_barrier',
+    name: 'Blade Barrier',
+    level: 6,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a whirling wall of razor-sharp blades dealing 6d10 slashing damage and providing three-quarters cover.',
+    tags: ['wall', 'slashing', 'area-control', 'concentration', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '90 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.cleric],
+      rollFormula: '6d10',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 6, diceSides: 10),
+      damageOrHealType: 'Slashing',
+      savingThrow: 'Dexterity',
+      description: [
+        'You create a vertical wall of whirling, razor-sharp blades made of magical energy up to 100 feet long, 20 feet high, and 5 feet thick (or a 60-ft ring).',
+        'Provides three-quarters cover and difficult terrain. Creatures entering or starting their turn in the area take 6d10 slashing damage on a failed Dexterity save (half on success).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '90 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.cleric],
+      rollFormula: '6d10',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 6, diceSides: 10),
+      damageOrHealType: 'Slashing',
+      savingThrow: 'Dexterity',
+      description: [
+        'Whirling blade wall deals 6d10 Slashing damage on Dexterity save, provides 3/4 cover, and is Difficult Terrain.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_find_the_path',
+    name: 'Find the Path',
+    level: 6,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Reveals the shortest, most direct physical path to a specific known location on the same plane.',
+    tags: [
+      'navigation',
+      'pathfinding',
+      'divination',
+      'concentration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components: 'V, S, M (a set of divinatory tools worth 100 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'divinatory tools worth 100 gp',
+        hasCost: true,
+        costInGp: 100,
+        isConsumed: false,
+      ),
+      duration: 'Concentration, up to 1 day',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.cleric, SpellClass.druid],
+      description: [
+        'This spell allows you to find the shortest, most direct physical route to a specific fixed location that you are familiar with on the same plane of existence.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components: 'V, S, M (divinatory tools worth 100 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'divinatory tools worth 100 gp',
+        hasCost: true,
+        costInGp: 100,
+        isConsumed: false,
+      ),
+      duration: 'Concentration, up to 1 day',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.cleric, SpellClass.druid],
+      description: [
+        'Grants knowledge of the most direct route to a known destination on your plane.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_true_seeing',
+    name: 'True Seeing',
+    level: 6,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Grants truesight out to 120 feet, seeing through normal/magical darkness, illusions, shapechangers, and the Ethereal Plane.',
+    tags: ['truesight', 'illusion-counter', 'ethereal', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (an eye ointment worth 250 gp, consumed by the spell)',
+      materialDetails: SpellMaterialComponent(
+        description: 'eye ointment worth 250 gp',
+        hasCost: true,
+        costInGp: 250,
+        isConsumed: true,
+      ),
+      duration: '1 hour',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'You give a willing creature the ability to see things as they actually are out to a range of 120 feet.',
+        'The creature has truesight, notices secret doors hidden by magic, and can see into the Ethereal Plane.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (eye ointment worth 250 gp, consumed)',
+      materialDetails: SpellMaterialComponent(
+        description: 'eye ointment worth 250 gp',
+        hasCost: true,
+        costInGp: 250,
+        isConsumed: true,
+      ),
+      duration: '1 hour',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'Grants Truesight 120 ft, revealing invisible creatures, illusions, shapechangers, secret doors, and the Ethereal Plane.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_create_undead',
+    name: 'Create Undead',
+    level: 6,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Animates 3 Ghouls (or Ghasts, Wights, and Mummies with higher spell slots) for 24 hours.',
+    tags: [
+      'undead',
+      'ghoul',
+      'ghast',
+      'wight',
+      'mummy',
+      'necromancy',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '10 feet',
+      components:
+          'V, S, M (clay pots with grave dirt, brackish water, and 150 gp black onyx per corpse)',
+      materialDetails: SpellMaterialComponent(
+        description:
+            'clay pots with grave dirt, brackish water, and 150 gp black onyx per corpse',
+        hasCost: true,
+        costInGp: 150,
+        isConsumed: false,
+      ),
+      duration: 'Instantaneous (24 hours control)',
+      classes: [SpellClass.cleric, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'You can cast this spell only at night. Choose up to three corpses within range to become ghouls under your command.',
+      ],
+      higherLevels:
+          'Slot 7th: 4 Ghouls. Slot 8th: 5 Ghouls or 2 Ghasts/Wights. Slot 9th: 6 Ghouls, 3 Ghasts/Wights, or 2 Mummies.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '10 feet',
+      components:
+          'V, S, M (grave dirt, brackish water, and black onyx worth 150+ gp per corpse)',
+      materialDetails: SpellMaterialComponent(
+        description:
+            'grave dirt, brackish water, and black onyx worth 150+ gp per corpse',
+        hasCost: true,
+        costInGp: 150,
+        isConsumed: false,
+      ),
+      duration: 'Instantaneous (24 hours control)',
+      classes: [SpellClass.cleric, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Animates up to three corpses into Ghouls under your command for 24 hours.',
+      ],
+      higherLevels:
+          'Slot 7th: 4 Ghouls. Slot 8th: 5 Ghouls or 2 Ghasts/Wights. Slot 9th: 6 Ghouls, 3 Ghasts/Wights, or 2 Mummies.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_chain_lightning',
+    name: 'Chain Lightning',
+    level: 6,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Fires a bolt of lightning dealing 10d8 lightning damage on Dexterity save, arcing to up to 3 additional targets within 30 feet.',
+    tags: ['lightning', 'aoe', 'arc', 'damage', 'evocation', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '150 feet',
+      components: 'V, S, M (fur, amber or glass rod, and silver pins)',
+      materialDetails: SpellMaterialComponent(
+          description: 'fur, amber/glass rod, and silver pins'),
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '10d8',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 10, diceSides: 8),
+      damageOrHealType: 'Lightning',
+      savingThrow: 'Dexterity',
+      description: [
+        'Deals 10d8 Lightning damage to primary target and up to 3 secondary targets within 30 feet on failed Dexterity save (half on success).',
+      ],
+      higherLevels:
+          'One additional secondary bolt leaps for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '150 feet',
+      components: 'V, S, M (fur, amber rod, and silver pins)',
+      materialDetails: SpellMaterialComponent(
+          description: 'fur, amber rod, and silver pins'),
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '10d8',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 10, diceSides: 8),
+      damageOrHealType: 'Lightning',
+      savingThrow: 'Dexterity',
+      description: [
+        'Deals 10d8 Lightning damage to primary target and up to 3 secondary targets on failed Dexterity save (half on success).',
+      ],
+      higherLevels:
+          'One additional secondary bolt leaps for each slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_disintegrate',
+    name: 'Disintegrate',
+    level: 6,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Deals 10d6 + 40 force damage on Dexterity save; a creature reduced to 0 HP is turned into a pile of fine gray dust.',
+    tags: ['force', 'disintegrate', 'high-damage', 'transmutation', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a lodestone and a pinch of dust)',
+      materialDetails: SpellMaterialComponent(
+          description: 'a lodestone and a pinch of dust'),
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '10d6 + 40',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 10,
+          diceSides: 6,
+          dicePerSlotLevel: 3,
+          staticBonus: 40),
+      damageOrHealType: 'Force',
+      savingThrow: 'Dexterity',
+      description: [
+        'A thin green ray deals 10d6 + 40 force damage on a failed Dexterity save. Turns target to dust if reduced to 0 HP.',
+      ],
+      higherLevels: 'Damage increases by 3d6 for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a lodestone and a pinch of dust)',
+      materialDetails: SpellMaterialComponent(
+          description: 'a lodestone and a pinch of dust'),
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '10d6 + 40',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 10,
+          diceSides: 6,
+          dicePerSlotLevel: 3,
+          staticBonus: 40),
+      damageOrHealType: 'Force',
+      savingThrow: 'Dexterity',
+      description: [
+        'Deals 10d6 + 40 Force damage on a failed Dexterity save. Turns target to dust if reduced to 0 HP.',
+      ],
+      higherLevels: 'Damage increases by 3d6 for each slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_sunbeam',
+    name: 'Sunbeam',
+    level: 6,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Unleashes a 60-foot line of radiant sunlight dealing 6d8 radiant damage and blinding targets; can be refired each turn as an Action.',
+    tags: ['sunlight', 'radiant', 'blind', 'line', 'concentration', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (60-foot line)',
+      components: 'V, S, M (a magnifying glass)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a magnifying glass'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '6d8',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 6, diceSides: 8),
+      damageOrHealType: 'Radiant',
+      savingThrow: 'Constitution',
+      description: [
+        'A beam of brilliant light flashes in a 5-foot-wide, 60-foot-long line. Each creature takes 6d8 radiant damage and is blinded on failed Constitution save (half damage and not blinded on success). Undead and oozes have disadvantage.',
+        'You can create a new line of radiance as your action on any turn until the spell ends.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (60-foot line)',
+      components: 'V, S, M (a magnifying glass)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a magnifying glass'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '6d8',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 6, diceSides: 8),
+      damageOrHealType: 'Radiant',
+      savingThrow: 'Constitution',
+      description: [
+        'Fires a 60-ft line dealing 6d8 Radiant damage and Blinded on failed Constitution save. Can fire again on subsequent turns as an Action.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_globe_of_invulnerability',
+    name: 'Globe of Invulnerability',
+    level: 6,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates an immobile 10-foot-radius barrier that completely blocks any spell of 5th level or lower.',
+    tags: [
+      'abjuration',
+      'spell-barrier',
+      'immunity',
+      'concentration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (10-foot-radius sphere)',
+      components: 'V, S, M (a glass or crystal bead)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a glass or crystal bead'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'An immobile 10-foot-radius sphere surrounds you. Any spell of 5th level or lower cast from outside the barrier can’t affect creatures or objects inside it, even if cast using a higher-level slot.',
+      ],
+      higherLevels:
+          'The barrier blocks spells of 1 level higher for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (10-foot-radius sphere)',
+      components: 'V, S, M (a glass bead)',
+      materialDetails: SpellMaterialComponent(description: 'a glass bead'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Barrier suppresses all spells of 5th level or lower from affecting anyone inside.',
+      ],
+      higherLevels: 'Blocks spells 1 level higher per slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_mass_suggestion',
+    name: 'Mass Suggestion',
+    level: 6,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Influences up to twelve creatures within range to pursue a suggested course of activity for up to 24 hours without concentration.',
+    tags: [
+      'charm',
+      'social',
+      'multi-target',
+      'no-concentration',
+      'enchantment',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, M (a snake’s tongue and a honeycomb)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a snake’s tongue and honeycomb'),
+      duration: '24 hours',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'You suggest a course of activity (limited to a sentence or two) to up to twelve creatures within range. Each must make a Wisdom saving throw or follow the suggestion for 24 hours.',
+      ],
+      higherLevels:
+          'Slot 7th: 10 days duration. Slot 8th: 30 days duration. Slot 9th: 1 year and 1 day duration.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, M (snake tongue and honeycomb)',
+      materialDetails:
+          SpellMaterialComponent(description: 'snake tongue and honeycomb'),
+      duration: '24 hours',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'Up to 12 creatures follow a suggested course of action for 24 hours on failed Wisdom save.',
+      ],
+      higherLevels:
+          '7th level: 10 days. 8th level: 30 days. 9th level: 1 year and 1 day.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_contingency',
+    name: 'Contingency',
+    level: 6,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Prepares an emergency contingency spell of 5th level or lower to trigger automatically upon a specified condition.',
+    tags: ['contingency', 'prep', 'buff', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Self',
+      components:
+          'V, S, M (a statuette of yourself carved from ivory and decorated with gems worth 1,500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'ivory statuette with gems worth 1,500 gp',
+        hasCost: true,
+        costInGp: 1500,
+        isConsumed: false,
+      ),
+      duration: '10 days',
+      classes: [SpellClass.wizard],
+      description: [
+        'Choose a spell of 5th level or lower that you can cast, that has a casting time of 1 action, and that can target you. You cast that spell as part of creating the contingency.',
+        'The contingent spell takes effect immediately when the designated trigger occurs.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Self',
+      components: 'V, S, M (ivory statuette with gems worth 1,500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'ivory statuette with gems worth 1,500 gp',
+        hasCost: true,
+        costInGp: 1500,
+        isConsumed: false,
+      ),
+      duration: '10 days',
+      classes: [SpellClass.wizard],
+      description: [
+        'Stores a 5th-level or lower spell targeting yourself that immediately activates when a set condition occurs.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_eyebite',
+    name: 'Eyebite',
+    level: 6,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Causes eyes to glow with dark power; can inflict Asleep, Panicked, or Sickened conditions on targets each turn as an Action.',
+    tags: [
+      'debuff',
+      'asleep',
+      'frightened',
+      'poisoned',
+      'concentration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'Your eyes become an inky void. Each turn as an Action, you can target one creature within 60 feet. On a failed Wisdom save, target suffers one effect: Asleep (unconscious), Panicked (frightened and must dash away), or Sickened (poisoned and disadvantage).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'Allows targeting a creature each round to impose Asleep, Panicked, or Sickened on a failed Wisdom save.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_flesh_to_stone',
+    name: 'Flesh to Stone',
+    level: 6,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Restrains a creature and turns it to stone (petrified) after three failed Constitution saving throws.',
+    tags: ['petrify', 'restrain', 'concentration', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a pinch of lime, water, and earth)',
+      materialDetails:
+          SpellMaterialComponent(description: 'lime, water, and earth'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'You attempt to turn one creature that you can see within range into stone. On a failed Constitution save, it is restrained. It makes saves each turn: 3 successes end it, 3 failures petrify it permanently (if concentration maintained for the full minute).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (lime, water, and earth)',
+      materialDetails:
+          SpellMaterialComponent(description: 'lime, water, and earth'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'Restrains and gradually turns a fleshy creature to stone upon 3 failed Constitution saves.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_circle_of_death',
+    name: 'Circle of Death',
+    level: 6,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'A massive 60-foot radius sphere of negative energy deals 8d6 necrotic damage on a Constitution save.',
+    tags: ['necrotic', 'aoe', 'mass-damage', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '150 feet (60-foot radius sphere)',
+      components:
+          'V, S, M (the powder of a crushed black pearl worth at least 500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'powder of a crushed black pearl worth 500 gp',
+        hasCost: true,
+        costInGp: 500,
+        isConsumed: false,
+      ),
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      rollFormula: '8d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 8, diceSides: 6, dicePerSlotLevel: 2),
+      damageOrHealType: 'Necrotic',
+      savingThrow: 'Constitution',
+      description: [
+        'A sphere of negative energy ripples out in a 60-foot radius. Each creature must make a Constitution save, taking 8d6 necrotic damage on a failed save, or half on success.',
+      ],
+      higherLevels: 'Damage increases by 2d6 for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '150 feet (60-foot radius sphere)',
+      components: 'V, S, M (black pearl worth 500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'black pearl worth 500 gp',
+        hasCost: true,
+        costInGp: 500,
+        isConsumed: false,
+      ),
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      rollFormula: '8d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 8, diceSides: 6, dicePerSlotLevel: 2),
+      damageOrHealType: 'Necrotic',
+      savingThrow: 'Constitution',
+      description: [
+        'Deals 8d6 Necrotic damage in a 60-foot radius on failed Constitution save (half on success).',
+      ],
+      higherLevels: 'Damage increases by 2d6 per slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_wall_of_ice',
+    name: 'Wall of Ice',
+    level: 6,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a wall of solid ice dealing 10d6 cold damage when created, and leaving a freezing cloud dealing 5d6 cold damage if breached.',
+    tags: ['ice', 'cold', 'wall', 'concentration', 'level 6'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (a piece of quartz)',
+      materialDetails: SpellMaterialComponent(description: 'a piece of quartz'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.wizard],
+      rollFormula: '10d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 10, diceSides: 6, dicePerSlotLevel: 2),
+      damageOrHealType: 'Cold',
+      savingThrow: 'Dexterity',
+      description: [
+        'You create a wall of ice up to 100 feet long or a 60-foot ring. Creatures in its path take 10d6 cold damage on a failed Dexterity save (half on success). Breaching a section leaves a freezing fog dealing 5d6 cold damage on a Constitution save.',
+      ],
+      higherLevels:
+          'Damage increases by 2d6 initial and 1d6 fog for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (a piece of quartz)',
+      materialDetails: SpellMaterialComponent(description: 'a piece of quartz'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.wizard],
+      rollFormula: '10d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 10, diceSides: 6, dicePerSlotLevel: 2),
+      damageOrHealType: 'Cold',
+      savingThrow: 'Dexterity',
+      description: [
+        'Creates an icy wall dealing 10d6 Cold damage upon placement and creates cold fog when destroyed.',
+      ],
+      higherLevels: 'Damage increases by 2d6 per slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_wall_of_thorns',
+    name: 'Wall of Thorns',
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a barrier of pliable, tangled brush with sharp thorns dealing 7d8 piercing damage and 7d8 slashing damage on movement.',
+    tags: [
+      'thorns',
+      'piercing',
+      'slashing',
+      'wall',
+      'concentration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (a handful of thorns)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a handful of thorns'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.druid],
+      rollFormula: '7d8',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 7, diceSides: 8, dicePerSlotLevel: 1),
+      damageOrHealType: 'Piercing / Slashing',
+      savingThrow: 'Dexterity',
+      description: [
+        'You create a wall of tough, pliable, tangled brush bristling with needle-sharp thorns up to 60 feet long, 10 feet high, and 5 feet thick. Deals 7d8 piercing damage upon appearing (Dexterity save for half), and 7d8 slashing damage for every 5 feet a creature moves through it.',
+      ],
+      higherLevels: 'Damage increases by 1d8 for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S, M (a handful of thorns)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a handful of thorns'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.druid],
+      rollFormula: '7d8',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 7, diceSides: 8, dicePerSlotLevel: 1),
+      damageOrHealType: 'Piercing / Slashing',
+      savingThrow: 'Dexterity',
+      description: [
+        'Thorn wall deals 7d8 Piercing damage upon placement and 7d8 Slashing damage per 5 ft moved through it.',
+      ],
+      higherLevels: 'Damage increases by 1d8 per slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_wind_walk',
+    name: 'Wind Walk',
+    level: 6,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Transforms you and up to ten willing creatures into gaseous cloud form with a flying speed of 300 feet (approx. 30 mph) for up to 8 hours.',
+    tags: [
+      'travel',
+      'flight',
+      'gas-form',
+      'group-buff',
+      'transmutation',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '30 feet',
+      components: 'V, S, M (fire and holy water)',
+      materialDetails:
+          SpellMaterialComponent(description: 'fire and holy water'),
+      duration: '8 hours',
+      classes: [SpellClass.druid],
+      description: [
+        'You and up to ten willing creatures you can see within range assume a gaseous form for the duration, gaining a flying speed of 300 feet and resistance to nonmagical damage.',
+        'Reverting between cloud and solid form takes 1 minute.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '30 feet',
+      components: 'V, S, M (fire and holy water)',
+      materialDetails:
+          SpellMaterialComponent(description: 'fire and holy water'),
+      duration: '8 hours',
+      classes: [SpellClass.druid],
+      description: [
+        'You and up to ten willing creatures you can see within range assume a gaseous form for the duration, gaining a flying speed of 300 feet and resistance to nonmagical damage.',
+        'Reverting between cloud and solid form takes 1 minute.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_arcane_gate',
+    name: 'Arcane Gate',
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates two linked teleportation portals up to 500 feet apart for 10 minutes. Any creature stepping through instantly emerges from the other.',
+    tags: [
+      'teleport',
+      'portal',
+      'mobility',
+      'concentration',
+      'sorcerer',
+      'warlock',
+      'wizard',
+      'conjuration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '500 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'You create linked teleportation portals that remain open for the duration. Choose two points on the ground that you can see, one within 10 feet of you and one up to 500 feet away.',
+        'A circular portal, 10 feet in diameter, opens over each point. Any creature entering the portal exits from the other portal as if the two were adjacent to each other. As a bonus action, you can rotate the rings so that they face other directions.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '500 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'You create linked teleportation portals that remain open for the duration. Choose two points on the ground that you can see, one within 10 feet of you and one up to 500 feet away.',
+        'A circular portal, 10 feet in diameter, opens over each point. Any creature entering the portal exits from the other portal as if the two were adjacent to each other. As a bonus action, you can rotate the rings so that they face other directions.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_freezing_sphere',
+    name: 'Freezing Sphere',
+    level: 6,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Shoots a frigid globe exploding in a 60-foot-radius sphere dealing 10d6 cold damage on Constitution save and freezing water up to 6 inches thick, or creates a slingable ice bead for 1 minute.',
+    tags: [
+      'cold',
+      'aoe',
+      'freeze-water',
+      'delayed-trigger',
+      'evocation',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '300 feet (60-foot-radius sphere)',
+      components: 'V, S, M (a small crystal sphere and a drop of water)',
+      materialDetails: SpellMaterialComponent(
+          description: 'crystal sphere and drop of water'),
+      duration: 'Instantaneous (or up to 1 minute as sling stone)',
+      classes: [SpellClass.wizard],
+      rollFormula: '10d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 10, diceSides: 6, dicePerSlotLevel: 1),
+      damageOrHealType: 'Cold',
+      savingThrow: 'Constitution',
+      description: [
+        'A frigid globe of cold energy streaks from your fingertips to a point of your choice within range, where it explodes in a 60-foot-radius sphere. Each creature in the area takes 10d6 cold damage on a failed Constitution save (half on success).',
+        'If the globe enters water or a liquid that is mostly water, it freezes the liquid to a depth of 6 inches over an area 30 feet square.',
+        'You can also choose to hold the globe as a small sling stone that detonates when thrown or after 1 minute.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 7th level or higher, the damage increases by 1d6 for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '300 feet (60-foot-radius sphere)',
+      components: 'V, S, M (a small crystal sphere and a drop of water)',
+      materialDetails: SpellMaterialComponent(
+          description: 'crystal sphere and drop of water'),
+      duration: 'Instantaneous (or up to 1 minute as sling stone)',
+      classes: [SpellClass.wizard],
+      rollFormula: '10d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 10, diceSides: 6, dicePerSlotLevel: 1),
+      damageOrHealType: 'Cold',
+      savingThrow: 'Constitution',
+      description: [
+        'A frigid globe of cold energy streaks from your fingertips to a point of your choice within range, where it explodes in a 60-foot-radius sphere. Each creature in the area takes 10d6 cold damage on a failed Constitution save (half on success).',
+        'If the globe enters water or a liquid that is mostly water, it freezes the liquid to a depth of 6 inches over an area 30 feet square.',
+        'You can also choose to hold the globe as a small sling stone that detonates when thrown or after 1 minute.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 7th level or higher, the damage increases by 1d6 for each slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_irresistible_dance',
+    name: 'Irresistible Dance',
+    level: 6,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Forces a target to instantly begin a comic dance without initial saving throw: speed becomes 0, has Disadvantage on DEX saves and attacks, and attacks against it have Advantage. Target can use action to make Wisdom save to end dance.',
+    tags: [
+      'control',
+      'dance',
+      'no-initial-save',
+      'advantage-attacks',
+      'concentration',
+      'bard',
+      'wizard',
+      'enchantment',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.wizard],
+      savingThrow: 'Wisdom (action to attempt)',
+      description: [
+        'Choose one creature that you can see within range. The target begins a comic dance in place: shuffling, tapping its feet, and capering for the duration. Creatures that can’t be charmed are immune to this spell.',
+        'A dancing creature must use all its movement to dance without leaving its space and has disadvantage on Dexterity saving throws and attack rolls. While the target is dancing, other creatures have advantage on attack rolls against it.',
+        'As an action, a dancing creature makes a Wisdom saving throw to regain control of itself. On a successful save, the spell ends.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.wizard],
+      savingThrow: 'Wisdom (action to attempt)',
+      description: [
+        'Choose one creature that you can see within range. The target begins a comic dance in place: shuffling, tapping its feet, and capering for the duration. Creatures that can’t be charmed are immune to this spell.',
+        'A dancing creature must use all its movement to dance without leaving its space and has disadvantage on Dexterity saving throws and attack rolls. While the target is dancing, other creatures have advantage on attack rolls against it.',
+        'As an action, a dancing creature makes a Wisdom saving throw to regain control of itself. On a successful save, the spell ends.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_guards_and_wards',
+    name: 'Guards and Wards',
+    level: 6,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Wards a stronghold up to 2,500 sq ft for 24 hours: fog corridors, locked doors, webbed stairs, magical illusions, and suggestion on doors. Permanent if cast daily for 1 year.',
+    tags: [
+      'stronghold-defense',
+      'ward',
+      'security',
+      'complex',
+      'wizard',
+      'bard',
+      'abjuration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Touch',
+      components:
+          'V, S, M (burning incense, a small measure of brimstone and oil, a knotted string, a small amount of blood from a monstrosity, and a small silver rod worth at least 10 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'incense, brimstone, blood, and silver rod worth 10 gp',
+        hasCost: true,
+        costInGp: 10,
+        isConsumed: false,
+      ),
+      duration: '24 hours',
+      classes: [SpellClass.bard, SpellClass.wizard],
+      description: [
+        'You create a ward that protects up to 2,500 square feet of floor space (an area 50 feet square, or one hundred 5-foot squares or twenty-five 10-foot squares).',
+        'Warded effects include: Corridors (filled with fog, heavily obscured), Doors (magically locked as if by arcane lock), Stairs (covered by webs as if by web spell), and extra effects like dancing lights, magic mouth, or suggestion.',
+        'Casting this spell on the same spot every day for 1 year makes the effects permanent.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: 'Touch',
+      components:
+          'V, S, M (burning incense, a small measure of brimstone and oil, a knotted string, a small amount of blood from a monstrosity, and a small silver rod worth at least 10 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'incense, brimstone, blood, and silver rod worth 10 gp',
+        hasCost: true,
+        costInGp: 10,
+        isConsumed: false,
+      ),
+      duration: '24 hours',
+      classes: [SpellClass.bard, SpellClass.wizard],
+      description: [
+        'You create a ward that protects up to 2,500 square feet of floor space (an area 50 feet square, or one hundred 5-foot squares or twenty-five 10-foot squares).',
+        'Warded effects include: Corridors (filled with fog, heavily obscured), Doors (magically locked as if by arcane lock), Stairs (covered by webs as if by web spell), and extra effects like dancing lights, magic mouth, or suggestion.',
+        'Casting this spell on the same spot every day for 1 year makes the effects permanent.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_move_earth',
+    name: 'Move Earth',
+    level: 6,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Reshape dirt, sand, or clay in a 40-foot square area every 10 minutes for up to 2 hours (create trenches, ridges, pillars, or level ground). Cannot affect rock/stone.',
+    tags: [
+      'terrain',
+      'excavation',
+      'earth-shaping',
+      'concentration',
+      'druid',
+      'sorcerer',
+      'wizard',
+      'transmutation',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (40-foot square)',
+      components:
+          'V, S, M (an iron blade and a small bag containing a mixture of soils)',
+      materialDetails: SpellMaterialComponent(
+          description: 'iron blade and soil mixture bag'),
+      duration: 'Concentration, up to 2 hours',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Choose an area of terrain no larger than 40 feet on a side within range. You can reshape dirt, sand, or clay in the area in any manner you choose for the duration.',
+        'You can raise or lower the elevation, create or flatten trenches or pillars, or collapse tunnels. The movement occurs slowly over 10 minutes per 40-foot area, giving creatures time to move safely.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (40-foot square)',
+      components:
+          'V, S, M (an iron blade and a small bag containing a mixture of soils)',
+      materialDetails: SpellMaterialComponent(
+          description: 'iron blade and soil mixture bag'),
+      duration: 'Concentration, up to 2 hours',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Choose an area of terrain no larger than 40 feet on a side within range. You can reshape dirt, sand, or clay in the area in any manner you choose for the duration.',
+        'You can raise or lower the elevation, create or flatten trenches or pillars, or collapse tunnels. The movement occurs slowly over 10 minutes per 40-foot area, giving creatures time to move safely.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_conjure_fey',
+    name: 'Conjure Fey',
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Summons a fey creature of CR 6 or lower (or fey spirit in beast form) for up to 1 hour. If concentration breaks, the fey becomes hostile.',
+    tags: [
+      'summon',
+      'fey',
+      'beast-form',
+      'concentration',
+      'druid',
+      'warlock',
+      'conjuration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '90 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.warlock],
+      description: [
+        'You summon a fey creature of challenge rating 6 or lower, or a fey spirit that takes the form of a beast of challenge rating 6 or lower. It appears in an unoccupied space that you can see within range.',
+        'The fey creature is friendly to you and your companions for the duration. Roll initiative for the creature, which has its own turns. If your concentration is broken, the fey doesn’t disappear; instead, you lose control of the fey and it becomes hostile toward you and your companions.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 7th level or higher, the challenge rating increases by 1 for each slot level above 6th.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '90 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.warlock],
+      description: [
+        'You summon a fey creature of challenge rating 6 or lower, or a fey spirit that takes the form of a beast of challenge rating 6 or lower. It appears in an unoccupied space that you can see within range.',
+        'The fey creature is friendly to you and your companions for the duration. Roll initiative for the creature, which has its own turns. If your concentration is broken, the fey doesn’t disappear; instead, you lose control of the fey and it becomes hostile toward you and your companions.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 7th level or higher, the challenge rating increases by 1 for each slot level above 6th.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_instant_summons',
+    name: 'Instant Summons',
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Inscribe an item weighing up to 10 lbs into a sapphire worth 1,000 gp. Later crush the sapphire as an Action from any distance to teleport the item to your hand. Ritual spell.',
+    tags: [
+      'item-recall',
+      'teleport-object',
+      'sapphire-binding',
+      'ritual',
+      'costly-component',
+      'wizard',
+      'conjuration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Touch',
+      components: 'V, S, M (a sapphire worth 1,000 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'sapphire worth 1,000 gp',
+        hasCost: true,
+        costInGp: 1000,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      ritual: true,
+      classes: [SpellClass.wizard],
+      description: [
+        'You touch an item weighing 10 pounds or less whose longest dimension is 6 feet or less. The spell leaves an invisible mark on its surface and invisibly inscribes the item’s name on the sapphire you use as the material component.',
+        'At any time thereafter, you can use your action to speak the item’s name and crush the sapphire. The item instantly appears in your hand regardless of physical or planar distance. If another creature is holding the item, crushing the sapphire fails to teleport it, but you learn who possesses the item and where they are.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Touch',
+      components: 'V, S, M (a sapphire worth 1,000 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'sapphire worth 1,000 gp',
+        hasCost: true,
+        costInGp: 1000,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      ritual: true,
+      classes: [SpellClass.wizard],
+      description: [
+        'You touch an item weighing 10 pounds or less whose longest dimension is 6 feet or less. The spell leaves an invisible mark on its surface and invisibly inscribes the item’s name on the sapphire you use as the material component.',
+        'At any time thereafter, you can use your action to speak the item’s name and crush the sapphire. The item instantly appears in your hand regardless of physical or planar distance. If another creature is holding the item, crushing the sapphire fails to teleport it, but you learn who possesses the item and where they are.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_magic_jar',
+    name: 'Magic Jar',
+    level: 6,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Project your soul into a container (gem/urn worth 500 gp) and possess humanoids within 100 feet on failed Charisma save indefinitely. Costly component.',
+    tags: [
+      'possession',
+      'soul-transfer',
+      'body-snatch',
+      'costly-component',
+      'wizard',
+      'necromancy',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components:
+          'V, S, M (a gem, crystal, reliquary, or some other ornamental container worth at least 500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'gem, crystal, or ornamental container worth 500 gp',
+        hasCost: true,
+        costInGp: 500,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.wizard],
+      savingThrow: 'Charisma',
+      description: [
+        'Your body falls into a catatonic state as your soul leaves it and enters the container you used for the spell’s material component.',
+        'While your soul inhabits the container, you are aware of your surroundings as if in the container’s space. You can try to possess any humanoid within 100 feet of you that you can see (failed Charisma save). Once you possess a body, you control it completely and retain your INT, WIS, CHA, and class features.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components:
+          'V, S, M (a gem, crystal, reliquary, or some other ornamental container worth at least 500 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'gem, crystal, or ornamental container worth 500 gp',
+        hasCost: true,
+        costInGp: 500,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.wizard],
+      savingThrow: 'Charisma',
+      description: [
+        'Your body falls into a catatonic state as your soul leaves it and enters the container you used for the spell’s material component.',
+        'While your soul inhabits the container, you are aware of your surroundings as if in the container’s space. You can try to possess any humanoid within 100 feet of you that you can see (failed Charisma save). Once you possess a body, you control it completely and retain your INT, WIS, CHA, and class features.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_programmed_illusion',
+    name: 'Programmed Illusion',
+    level: 6,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates an illusion of a scene up to 5 minutes long in a 30-foot cube that activates whenever a designated trigger occurs. Costly component (25 gp jade dust).',
+    tags: [
+      'scripted-illusion',
+      'alarm-scene',
+      'permanent-trigger',
+      'costly-component',
+      'bard',
+      'wizard',
+      'illusion',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (30-foot cube)',
+      components:
+          'V, S, M (a bit of fleece and jade dust worth at least 25 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'fleece and jade dust worth 25 gp',
+        hasCost: true,
+        costInGp: 25,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.bard, SpellClass.wizard],
+      description: [
+        'You create an illusion of an object, a creature, or a visible phenomenon in range that activates when a specific condition occurs. The illusion is imperceptible until then. It must be no larger than a 30-foot cube.',
+        'When the condition you specify occurs, the illusion springs into existence and performs the script you described (up to 5 minutes long with sound, smells, and temperatures). Once the script finishes, the illusion vanishes and remains dormant for 10 minutes.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (30-foot cube)',
+      components:
+          'V, S, M (a bit of fleece and jade dust worth at least 25 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'fleece and jade dust worth 25 gp',
+        hasCost: true,
+        costInGp: 25,
+        isConsumed: false,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.bard, SpellClass.wizard],
+      description: [
+        'You create an illusion of an object, a creature, or a visible phenomenon in range that activates when a specific condition occurs. The illusion is imperceptible until then. It must be no larger than a 30-foot cube.',
+        'When the condition you specify occurs, the illusion springs into existence and performs the script you described (up to 5 minutes long with sound, smells, and temperatures). Once the script finishes, the illusion vanishes and remains dormant for 10 minutes.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_transport_via_plants',
+    name: 'Transport via Plants',
+    level: 6,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Link any Large or larger inanimate plant to another specific inanimate plant anywhere on the same plane for 1 round. Step into one and emerge from the other.',
+    tags: [
+      'teleport',
+      'plant-portal',
+      'intercontinental',
+      'druid',
+      'conjuration',
+      'level 6'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '10 feet',
+      components: 'V, S',
+      duration: '1 round',
+      classes: [SpellClass.druid],
+      description: [
+        'This spell creates a magical link between a Large or larger inanimate plant within range and another plant, at any distance, on the same plane of existence. You must have seen or touched the destination plant at least once in the past.',
+        'For the duration, any creature can step into the target plant and exit from the destination plant by using 5 feet of movement.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '10 feet',
+      components: 'V, S',
+      duration: '1 round',
+      classes: [SpellClass.druid],
+      description: [
+        'This spell creates a magical link between a Large or larger inanimate plant within range and another plant, at any distance, on the same plane of existence. You must have seen or touched the destination plant at least once in the past.',
+        'For the duration, any creature can step into the target plant and exit from the destination plant by using 5 feet of movement.',
+      ],
+    ),
+  ),
+];

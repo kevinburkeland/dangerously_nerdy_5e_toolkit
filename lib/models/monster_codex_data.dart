@@ -1,0 +1,979 @@
+import 'package:flutter/material.dart';
+import 'arena/monster_combat_profile.dart';
+import 'dm_screen_data.dart';
+import 'domain/spell_monster_equipment.dart';
+import 'dpr/dpr_models.dart';
+import 'monster_codex/bestiary/bestiary_cr_0_to_quarter.dart';
+import 'monster_codex/bestiary/bestiary_cr_five_to_eight.dart';
+import 'monster_codex/bestiary/bestiary_cr_half_to_one.dart';
+import 'monster_codex/bestiary/bestiary_cr_nine_plus.dart';
+import 'monster_codex/bestiary/bestiary_cr_two_to_four.dart';
+import 'monster_codex/srd_monster_2024_diffs.dart';
+import 'monster_codex/srd_monster_cr_bands.dart';
+import 'srd_summons/srd_summons_library.dart';
+import '../services/rules/dpr_calculator_engine.dart';
+
+enum MonsterSortMode {
+  crAscending('CR: Low to High', Icons.sort),
+  crDescending('CR: High to Low', Icons.sort),
+  dprDescending('DPR: High to Low', Icons.local_fire_department_outlined),
+  nameAscending('Name: A to Z', Icons.sort_by_alpha);
+
+  final String label;
+  final IconData icon;
+  const MonsterSortMode(this.label, this.icon);
+}
+
+enum MonsterCrBand {
+  all('All CR'),
+  cr0ToQuarter('CR 0-1/4'),
+  crHalfToOne('CR 1/2-1'),
+  crTwoToFour('CR 2-4'),
+  crFiveToEight('CR 5-8'),
+  crNinePlus('CR 9+');
+
+  final String label;
+  const MonsterCrBand(this.label);
+}
+
+class MonsterItem {
+  final String id;
+  final String name;
+  final String? name2014;
+  final String? name2024;
+  final MinionStatBlock statBlock2014;
+  final MinionStatBlock statBlock2024;
+  final bool isChangedIn2024;
+  final String? diffSummary;
+  final List<String> diffHighlights;
+  final String sourcePresetId;
+  final String sourcePresetName;
+  final String? sourceSpellId;
+  final SummonCategory sourceCategory;
+
+  const MonsterItem({
+    required this.id,
+    required this.name,
+    this.name2014,
+    this.name2024,
+    required this.statBlock2014,
+    required this.statBlock2024,
+    this.isChangedIn2024 = false,
+    this.diffSummary,
+    this.diffHighlights = const [],
+    this.sourcePresetId = 'srd_bestiary',
+    this.sourcePresetName = '5e SRD Bestiary',
+    this.sourceSpellId,
+    this.sourceCategory = SummonCategory.spell,
+  });
+
+  factory MonsterItem.simple({
+    required String id,
+    required String name,
+    String? name2014,
+    String? name2024,
+    required MinionStatBlock statBlock,
+    bool isChangedIn2024 = false,
+    String? diffSummary,
+    List<String> diffHighlights = const [],
+    String sourcePresetId = 'srd_bestiary',
+    String sourcePresetName = '5e SRD Bestiary',
+    String? sourceSpellId,
+    SummonCategory sourceCategory = SummonCategory.spell,
+  }) {
+    return MonsterItem(
+      id: id,
+      name: name,
+      name2014: name2014,
+      name2024: name2024,
+      statBlock2014: statBlock,
+      statBlock2024: statBlock,
+      isChangedIn2024: isChangedIn2024,
+      diffSummary: diffSummary,
+      diffHighlights: diffHighlights,
+      sourcePresetId: sourcePresetId,
+      sourcePresetName: sourcePresetName,
+      sourceSpellId: sourceSpellId,
+      sourceCategory: sourceCategory,
+    );
+  }
+
+  MinionStatBlock getStatBlock(
+      [DmRulesEdition edition = DmRulesEdition.v2024]) {
+    return edition == DmRulesEdition.v2014 ? statBlock2014 : statBlock2024;
+  }
+
+  String getName([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    if (edition == DmRulesEdition.v2014 && name2014 != null) return name2014!;
+    if (edition == DmRulesEdition.v2024 && name2024 != null) return name2024!;
+    return name;
+  }
+
+  MinionStatBlock get sourceStatBlock => statBlock2024;
+
+  String get size => sourceStatBlock.sizeDisplay;
+  String get type => sourceStatBlock.typeDisplay;
+  String get alignment => sourceStatBlock.alignment;
+  String get crDisplay => sourceStatBlock.crDisplay;
+  bool get isHomebrew => sourcePresetId == 'homebrew';
+  double get challengeRating =>
+      _parseChallengeRating(sourceStatBlock.crDisplay);
+  int get ac => sourceStatBlock.ac;
+  int get hp => sourceStatBlock.maxHp;
+  String get speed => sourceStatBlock.speed;
+  int get strScore => sourceStatBlock.strScore;
+  int get dexScore => sourceStatBlock.dexScore;
+  int get conScore => sourceStatBlock.conScore;
+  int get intScore => sourceStatBlock.intScore;
+  int get wisScore => sourceStatBlock.wisScore;
+  int get chaScore => sourceStatBlock.chaScore;
+  String get senses => sourceStatBlock.senses;
+  String get languages => sourceStatBlock.languages;
+  String? get savingThrows => sourceStatBlock.savingThrows;
+  String? get skills => sourceStatBlock.skills;
+  String? get damageVulnerabilities => sourceStatBlock.damageVulnerabilities;
+  String? get damageResistances => sourceStatBlock.damageResistances;
+  String? get damageImmunities => sourceStatBlock.damageImmunities;
+  String? get conditionImmunities => sourceStatBlock.conditionImmunities;
+  List<CreatureTrait> get traits => sourceStatBlock.traits;
+  List<CreatureAction> get actions => sourceStatBlock.actions;
+  List<CreatureAction> get reactions => sourceStatBlock.reactions;
+  int? get xp => sourceStatBlock.xp;
+
+  /// Retrieves the pre-calculated, strongly typed [MonsterCombatProfile] for the specified rules edition.
+  MonsterCombatProfile getCombatProfile(
+      [DmRulesEdition edition = DmRulesEdition.v2024]) {
+    return MonsterCombatProfile.fromStatBlock(
+      getStatBlock(edition),
+      challengeRating: challengeRating,
+    );
+  }
+
+  static final Map<String, double> _dprCache = {};
+
+  static void clearCaches() {
+    _dprCache.clear();
+  }
+
+  double calculateBaselineDpr([
+    DmRulesEdition edition = DmRulesEdition.v2024,
+    int targetAc = 15,
+  ]) {
+    final cacheKey = '${id}_${edition.name}_$targetAc';
+    final cached = _dprCache[cacheKey];
+    if (cached != null) return cached;
+
+    final sb = getStatBlock(edition);
+    final allAttacks = sb.extractDprAttacks();
+    final adv =
+        sb.hasPackTactics ? AdvantageType.advantage : AdvantageType.normal;
+
+    final turnAttacks = allAttacks.where((a) => !a.isLegendaryAction).toList();
+    final legAttacks = allAttacks.where((a) => a.isLegendaryAction).toList();
+
+    // 1. Calculate standard Multiattack / Turn DPR
+    double multiattackDpr = 0.0;
+    for (final attack in turnAttacks) {
+      if (attack.rechargeRoll == null && attack.attacksPerRound > 0) {
+        final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+          attack.copyWith(attacksPerRound: 1),
+          targetAc,
+          adv,
+        );
+        multiattackDpr += pt.dpr * attack.attacksPerRound;
+      }
+    }
+
+    // 2. Check for recharge actions (e.g. Dragon Breath Recharge 5-6 or Recharge 6)
+    final rechargeActions =
+        turnAttacks.where((a) => a.rechargeRoll != null).toList();
+    double turnDpr = multiattackDpr;
+
+    if (rechargeActions.isNotEmpty) {
+      DprAttackAction? bestRecharge;
+      double maxRechargeDpr = 0.0;
+      for (final r in rechargeActions) {
+        final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+          r.copyWith(attacksPerRound: 1),
+          targetAc,
+          adv,
+        );
+        if (pt.dpr > maxRechargeDpr) {
+          maxRechargeDpr = pt.dpr;
+          bestRecharge = r;
+        }
+      }
+
+      if (bestRecharge != null && maxRechargeDpr > multiattackDpr) {
+        // 3-round amortization (55.6% for Recharge 5-6, 44.4% for Recharge 6)
+        final freq =
+            bestRecharge.rechargeRoll == 5 ? (1.667 / 3.0) : (1.333 / 3.0);
+        turnDpr = (maxRechargeDpr * freq) + (multiattackDpr * (1.0 - freq));
+      }
+    }
+
+    // 3. Evaluate Legendary Actions (3 actions per round budget)
+    double legendaryDpr = 0.0;
+    if (legAttacks.isNotEmpty) {
+      final scoredLeg = <({DprAttackAction attack, double dpr, int cost})>[];
+      for (final la in legAttacks) {
+        final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+          la.copyWith(attacksPerRound: 1),
+          targetAc,
+          adv,
+        );
+        scoredLeg.add((
+          attack: la,
+          dpr: pt.dpr,
+          cost: la.legendaryCost > 0 ? la.legendaryCost : 1
+        ));
+      }
+
+      double bestLegSum = 0.0;
+      for (final option in scoredLeg) {
+        final uses = 3 ~/ option.cost;
+        final sum = option.dpr * uses;
+        if (sum > bestLegSum) bestLegSum = sum;
+      }
+      for (int i = 0; i < scoredLeg.length; i++) {
+        for (int j = 0; j < scoredLeg.length; j++) {
+          if (i == j) continue;
+          final a = scoredLeg[i];
+          final b = scoredLeg[j];
+          for (int countA = 0; countA * a.cost <= 3; countA++) {
+            final remaining = 3 - (countA * a.cost);
+            final countB = remaining ~/ b.cost;
+            final sum = (countA * a.dpr) + (countB * b.dpr);
+            if (sum > bestLegSum) bestLegSum = sum;
+          }
+        }
+      }
+      legendaryDpr = bestLegSum;
+    }
+
+    final total = turnDpr + legendaryDpr;
+    _dprCache[cacheKey] = total;
+    return total;
+  }
+
+  String _getCorpus([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final buffer = StringBuffer()
+      ..write('${getName(edition)} ')
+      ..write('${sb.sizeDisplay} ')
+      ..write('${sb.typeDisplay} ')
+      ..write('${sb.alignment} ')
+      ..write('${sb.crDisplay} ')
+      ..write('${sb.speed} ')
+      ..write('${sb.ac} ')
+      ..write('${sb.maxHp} ')
+      ..write('${sb.savingThrows ?? ''} ')
+      ..write('${sb.skills ?? ''} ')
+      ..write('${sb.damageVulnerabilities ?? ''} ')
+      ..write('${sb.damageResistances ?? ''} ')
+      ..write('${sb.damageImmunities ?? ''} ')
+      ..write('${sb.conditionImmunities ?? ''} ')
+      ..write('${sb.senses} ')
+      ..write('${sb.languages} ')
+      ..write('$sourcePresetName ');
+
+    for (final trait in sb.traits) {
+      buffer
+        ..write('${trait.name} ')
+        ..write('${trait.description} ');
+    }
+
+    for (final action in sb.actions) {
+      buffer
+        ..write('${action.name} ')
+        ..write('${action.description} ')
+        ..write('${action.attackType ?? ''} ')
+        ..write('${action.reach ?? ''} ')
+        ..write('${action.hitDamage ?? ''} ');
+    }
+
+    for (final reaction in sb.reactions) {
+      buffer
+        ..write('${reaction.name} ')
+        ..write('${reaction.description} ');
+    }
+
+    return buffer.toString().toLowerCase();
+  }
+
+  bool matches(
+    String query, {
+    String? typeFilter,
+    String? sizeFilter,
+    double? maxCr,
+    double? minCr,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  }) {
+    final sb = getStatBlock(edition);
+    final crVal = _parseChallengeRating(sb.crDisplay);
+
+    if (typeFilter != null &&
+        sb.typeDisplay.toLowerCase() != typeFilter.toLowerCase()) {
+      return false;
+    }
+
+    if (sizeFilter != null &&
+        sb.sizeDisplay.toLowerCase() != sizeFilter.toLowerCase()) {
+      return false;
+    }
+
+    if (maxCr != null && crVal > maxCr) {
+      return false;
+    }
+
+    if (minCr != null && crVal < minCr) {
+      return false;
+    }
+
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return true;
+    return _getCorpus(edition).contains(trimmed.toLowerCase());
+  }
+
+  static double _parseChallengeRating(String crDisplay) {
+    final cleaned = crDisplay.replaceAll(RegExp(r'[^0-9/]'), '');
+    if (cleaned.isEmpty) return 0;
+
+    if (cleaned.contains('/')) {
+      final pieces = cleaned.split('/');
+      if (pieces.length != 2) return 0;
+      final numerator = double.tryParse(pieces[0]) ?? 0;
+      final denominator = double.tryParse(pieces[1]) ?? 1;
+      if (denominator == 0) return 0;
+      return numerator / denominator;
+    }
+
+    return double.tryParse(cleaned) ?? 0;
+  }
+}
+
+class MonsterCodexLibrary {
+  MonsterCodexLibrary._();
+
+  static final List<MonsterItem> _baseMonsters = _buildAllMonsters();
+  static List<MonsterItem> _homebrewMonsters = [];
+
+  static List<MonsterItem> get allMonsters => [
+        ..._baseMonsters,
+        ..._homebrewMonsters,
+      ];
+
+  static List<MonsterItem> get homebrewMonsters =>
+      List.unmodifiable(_homebrewMonsters);
+
+  static void setHomebrewMonsters(List<Monster> monsters) {
+    _homebrewMonsters = monsters.map((m) => m.toMonsterItem()).toList()
+      ..sort((a, b) {
+        final crCompare = a.challengeRating.compareTo(b.challengeRating);
+        if (crCompare != 0) return crCompare;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+  }
+
+  static void addHomebrewMonster(Monster monster) {
+    final item = monster.toMonsterItem();
+    _homebrewMonsters.removeWhere((m) => m.id == item.id);
+    _homebrewMonsters.add(item);
+    _homebrewMonsters.sort((a, b) {
+      final crCompare = a.challengeRating.compareTo(b.challengeRating);
+      if (crCompare != 0) return crCompare;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+  }
+
+  static void removeHomebrewMonster(String slug) {
+    _homebrewMonsters.removeWhere((m) => m.id == slug);
+  }
+
+  static void clearHomebrewMonsters() {
+    _homebrewMonsters.clear();
+  }
+
+  static MonsterItem? getMonsterById(String id) {
+    try {
+      return allMonsters.firstWhere((m) => m.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static MonsterItem? getMonsterByName(String name) {
+    final lower = name.trim().toLowerCase();
+    if (lower.isEmpty) return null;
+
+    // 1. Exact equality match takes strict precedence
+    for (final m in allMonsters) {
+      if (m.name.toLowerCase() == lower || m.id.toLowerCase() == lower) {
+        return m;
+      }
+    }
+
+    // 2. Strict word-boundary fallback regex matching
+    final wordRegex =
+        RegExp(r'\b' + RegExp.escape(lower) + r'\b', caseSensitive: false);
+    for (final m in allMonsters) {
+      final mLower = m.name.toLowerCase();
+      if (wordRegex.hasMatch(mLower)) {
+        // Enforce word-boundary anti-collision: prevent generic 'dragon' from matching 'Dragon Turtle'
+        if (lower == 'dragon' &&
+            (mLower.contains('turtle') || mLower == 'dragon turtle')) {
+          continue;
+        }
+        return m;
+      }
+    }
+    return null;
+  }
+
+  static List<MonsterItem> getMonstersByType(String type) {
+    final normalized = type.trim().toLowerCase();
+    return allMonsters
+        .where((m) => m.type.toLowerCase() == normalized)
+        .toList();
+  }
+
+  static List<MonsterItem> getMonstersBySize(String size) {
+    final normalized = size.trim().toLowerCase();
+    return allMonsters
+        .where((m) => m.size.toLowerCase() == normalized)
+        .toList();
+  }
+
+  static List<MonsterItem> getMonstersByCrRange({
+    double minCr = 0,
+    double maxCr = double.infinity,
+  }) {
+    return allMonsters
+        .where((m) => m.challengeRating >= minCr && m.challengeRating <= maxCr)
+        .toList();
+  }
+
+  static List<MonsterItem> getSpellSummonedMonsters() {
+    return allMonsters
+        .where((m) => m.sourceCategory == SummonCategory.spell)
+        .toList();
+  }
+
+  static List<MonsterItem> getMagicItemMonsters() {
+    return allMonsters
+        .where((m) => m.sourceCategory == SummonCategory.magicItem)
+        .toList();
+  }
+
+  static List<MonsterItem> getMonstersBySourcePreset(String presetId) {
+    final normalized = presetId.trim().toLowerCase();
+    return allMonsters
+        .where((m) => m.sourcePresetId.toLowerCase() == normalized)
+        .toList();
+  }
+
+  static List<MonsterItem> getCr0ToQuarterMonsters() {
+    return getMonstersByCrRange(minCr: 0, maxCr: 0.25);
+  }
+
+  static List<MonsterItem> getCrHalfToOneMonsters() {
+    return getMonstersByCrRange(minCr: 0.5, maxCr: 1);
+  }
+
+  static List<MonsterItem> getCrTwoToFourMonsters() {
+    return getMonstersByCrRange(minCr: 2, maxCr: 4);
+  }
+
+  static List<MonsterItem> getCrFiveToEightMonsters() {
+    return getMonstersByCrRange(minCr: 5, maxCr: 8);
+  }
+
+  static List<MonsterItem> getCrNinePlusMonsters() {
+    return getMonstersByCrRange(minCr: 9);
+  }
+
+  static List<MonsterItem> search(
+    String query, {
+    String? typeFilter,
+    String? sizeFilter,
+    double? maxCr,
+    double? minCr,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  }) {
+    return allMonsters
+        .where(
+          (m) => m.matches(
+            query,
+            typeFilter: typeFilter,
+            sizeFilter: sizeFilter,
+            maxCr: maxCr,
+            minCr: minCr,
+            edition: edition,
+          ),
+        )
+        .toList();
+  }
+
+  static List<MonsterItem> _buildAllMonsters() {
+    final byNormalizedKey = <String, MonsterItem>{};
+
+    String normalizeKey(String id, String name) {
+      return name.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    }
+
+    // 1. Ingest modular bestiary catalogs (definitive SRD stats)
+    for (final item in [
+      ...BestiaryCr0ToQuarter.entries,
+      ...BestiaryCrHalfToOne.entries,
+      ...BestiaryCrTwoToFour.entries,
+      ...BestiaryCrFiveToEight.entries,
+      ...BestiaryCrNinePlus.entries,
+    ]) {
+      final key = normalizeKey(item.id, item.name);
+      byNormalizedKey[key] = item;
+    }
+
+    // 2. Ingest spell-summoned & companion minions (augment with spell preset if matching, or add if unique)
+    for (final sourceEntry in SrdMonsterCrBands.allEntriesByCrBand) {
+      final preset = sourceEntry.preset;
+      final statBlock = sourceEntry.statBlock;
+      final key = normalizeKey(statBlock.id, statBlock.name);
+
+      final existing = byNormalizedKey[key];
+      if (existing != null) {
+        if (existing.sourceSpellId == null && preset.spellId != null) {
+          byNormalizedKey[key] = MonsterItem(
+            id: existing.id,
+            name: existing.name,
+            name2014: existing.name2014,
+            name2024: existing.name2024,
+            statBlock2014: existing.statBlock2014,
+            statBlock2024: existing.statBlock2024,
+            isChangedIn2024: existing.isChangedIn2024,
+            diffSummary: existing.diffSummary,
+            diffHighlights: existing.diffHighlights,
+            sourcePresetId: preset.id,
+            sourcePresetName: preset.name,
+            sourceSpellId: preset.spellId,
+            sourceCategory: preset.category,
+          );
+        }
+      } else {
+        byNormalizedKey[key] = MonsterItem.simple(
+          id: statBlock.id,
+          name: statBlock.name,
+          statBlock: statBlock,
+          sourcePresetId: preset.id,
+          sourcePresetName: preset.name,
+          sourceSpellId: preset.spellId,
+          sourceCategory: preset.category,
+        );
+      }
+    }
+
+    final monsters = byNormalizedKey.values.map((item) {
+      final diffInfo = SrdMonster2024Diffs.getDiff(item.id, item.name);
+      if (diffInfo != null) {
+        return MonsterItem(
+          id: item.id,
+          name: item.name,
+          name2014: item.name2014,
+          name2024: item.name2024,
+          statBlock2014: item.statBlock2014,
+          statBlock2024: item.statBlock2024,
+          isChangedIn2024: true,
+          diffSummary: diffInfo.summary,
+          diffHighlights: diffInfo.highlights,
+          sourcePresetId: item.sourcePresetId,
+          sourcePresetName: item.sourcePresetName,
+          sourceSpellId: item.sourceSpellId,
+          sourceCategory: item.sourceCategory,
+        );
+      }
+      return item;
+    }).toList()
+      ..sort((a, b) {
+        final crCompare = a.challengeRating.compareTo(b.challengeRating);
+        if (crCompare != 0) return crCompare;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+
+    return monsters;
+  }
+}
+
+/// Extension mapping domain Monster to MinionStatBlock and MonsterItem for cross-toolkit usage.
+extension MonsterHomebrewExt on Monster {
+  MinionStatBlock toMinionStatBlock() {
+    final parsedCr = MonsterItem._parseChallengeRating(challengeRating);
+    final crStr = challengeRating.trim().toLowerCase().startsWith('cr')
+        ? challengeRating.trim()
+        : 'CR $challengeRating';
+
+    // Parse ability scores
+    int parseScore(String key, String legacyKey) {
+      final val = customProperties[key] ?? customProperties[legacyKey];
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 10;
+      return 10;
+    }
+
+    int str = parseScore('str', 'strScore');
+    int dex = parseScore('dex', 'dexScore');
+    int con = parseScore('con', 'conScore');
+    int intSc = parseScore('int', 'intScore');
+    int wis = parseScore('wis', 'wisScore');
+    int cha = parseScore('cha', 'chaScore');
+
+    int ac = armorClass;
+    int hp = hitPoints;
+    String hitDice = hitDieFormula;
+
+    // Parse traits & actions from actionsMarkdown
+    final parsedActions = <CreatureAction>[];
+    final parsedTraits = <CreatureTrait>[];
+
+    final blocks = actionsMarkdown
+        .split(RegExp(r'\n{2,}|\n(?=#{1,6}\s+)|(?<=\n)(?=[-*•]\s+|\*\*)'));
+    for (final rawBlock in blocks) {
+      final block = rawBlock.trim();
+      if (block.isEmpty) continue;
+
+      // Filter out standalone section headers like "### Actions", "### Traits", "### Reactions"
+      final isPureSectionHeader = RegExp(
+        r'^#{1,6}\s*(actions?|traits?|reactions?|bonus\s*actions?|legendary\s*actions?)\s*$',
+        caseSensitive: false,
+      ).hasMatch(block);
+      if (isPureSectionHeader) continue;
+
+      String? title;
+      String? desc;
+
+      // 1. Markdown Heading format: "### Title\nDesc" or "### Title: Desc" or "### Title"
+      final headingMatch =
+          RegExp(r'^#{1,6}\s+([^\n:]+?)(?:\s*:\s*|\s*\n\s*)([\s\S]*)$')
+              .firstMatch(block);
+      if (headingMatch != null) {
+        title = headingMatch.group(1)!.trim();
+        desc = headingMatch.group(2)!.trim();
+      }
+
+      // 2. Bold/Italic/Bullet Prefix with colon or period: "**Title**: Desc" or "**Title.** Desc" or "*Title.* Desc" or "- **Title**: Desc"
+      if (title == null) {
+        final prefixMatch = RegExp(
+                r'^(?:[-*•\s]*)[\*_]{1,3}([^\*_:.\n]+?)[\*_]{1,3}[:.]\s*([\s\S]*)$')
+            .firstMatch(block);
+        if (prefixMatch != null) {
+          title = prefixMatch.group(1)!.trim();
+          desc = prefixMatch.group(2)!.trim();
+        }
+      }
+
+      // 3. Plain text with colon: "Title: Desc" or "- Title: Desc"
+      if (title == null) {
+        final colonMatch =
+            RegExp(r'^(?:[-*•\s]*)([^:\n]+?):\s*([\s\S]*)$').firstMatch(block);
+        if (colonMatch != null) {
+          title = colonMatch.group(1)!.trim();
+          desc = colonMatch.group(2)!.trim();
+        }
+      }
+
+      // 4. Fallback: single heading line without body or multi-line block where first line is title
+      if (title == null) {
+        if (block.startsWith('#')) {
+          final cleanTitle = block.replaceAll(RegExp(r'^#{1,6}\s*'), '').trim();
+          if (cleanTitle.isNotEmpty) {
+            title = cleanTitle;
+            desc = '';
+          }
+        } else if (block.contains('\n')) {
+          final firstLine = block.substring(0, block.indexOf('\n')).trim();
+          if (firstLine.isNotEmpty && firstLine.length < 50) {
+            title =
+                firstLine.replaceAll(RegExp(r'^[#*\-•\s]+|[*_:]+$'), '').trim();
+            desc = block.substring(block.indexOf('\n')).trim();
+          }
+        }
+      }
+
+      if (title != null && title.isNotEmpty) {
+        title = title.replaceAll(RegExp(r'^[#*\-•\s]+|[*_:]+$'), '').trim();
+        desc = (desc ?? '').trim();
+
+        // Skip if title is just section header without content
+        if (RegExp(r'^(actions?|traits?|reactions?|bonus\s*actions?|legendary\s*actions?)$',
+                    caseSensitive: false)
+                .hasMatch(title) &&
+            desc.isEmpty) {
+          continue;
+        }
+
+        final isAction = title.toLowerCase().contains('multiattack') ||
+            desc.toLowerCase().contains('weapon attack') ||
+            desc.toLowerCase().contains('spell attack') ||
+            desc.toLowerCase().contains('to hit') ||
+            desc.toLowerCase().contains('hit:');
+
+        if (isAction) {
+          final atkBonusMatch =
+              RegExp(r'([+-]\d+)\s+to\s+hit').firstMatch(desc);
+          final reachMatch =
+              RegExp(r'(?:reach|range)\s+([^,\n]+)').firstMatch(desc);
+          final reachRaw = reachMatch?.group(1)?.trim();
+          final reachClean = reachRaw != null
+              ? (reachRaw.endsWith('ft') ? '$reachRaw.' : reachRaw)
+              : null;
+          final hitDmgMatch =
+              RegExp(r'(?:Hit:?\s*)?(\d+\s*\([^)]+\)[^.\n]*)').firstMatch(desc);
+
+          parsedActions.add(CreatureAction(
+            name: title,
+            description: desc.isNotEmpty ? desc : title,
+            attackBonus: int.tryParse(atkBonusMatch?.group(1) ?? ''),
+            reach: reachClean,
+            hitDamage: hitDmgMatch?.group(1)?.trim(),
+          ));
+        } else {
+          parsedTraits.add(CreatureTrait(
+            name: title,
+            description: desc.isNotEmpty ? desc : title,
+          ));
+        }
+      } else {
+        final clean = block.replaceAll(RegExp(r'^[#*\-•\s]+'), '').trim();
+        if (clean.isNotEmpty) {
+          parsedTraits.add(CreatureTrait(name: 'Feature', description: clean));
+        }
+      }
+    }
+
+    // Determine primary attack parameters
+    int atkBonus = ((parsedCr * 1.5).round() + 2).clamp(2, 14);
+    int dmgCount = 1;
+    int dmgSides = 6;
+    int dmgBonus = 2;
+    String dmgType = 'Slashing';
+    final packTactics = actionsMarkdown.toLowerCase().contains('pack tactics');
+
+    if (parsedActions.isNotEmpty) {
+      final firstWithBonus = parsedActions.firstWhere(
+        (a) => a.attackBonus != null,
+        orElse: () => parsedActions.first,
+      );
+      if (firstWithBonus.attackBonus != null) {
+        atkBonus = firstWithBonus.attackBonus!;
+      }
+      final fullText =
+          '${firstWithBonus.hitDamage ?? ""} ${firstWithBonus.description}';
+      final dmgMatch =
+          RegExp(r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?').firstMatch(fullText);
+      if (dmgMatch != null) {
+        dmgCount = int.tryParse(dmgMatch.group(1)!) ?? 1;
+        dmgSides = int.tryParse(dmgMatch.group(2)!) ?? 6;
+        final sign = dmgMatch.group(3);
+        final bonusVal = int.tryParse(dmgMatch.group(4) ?? '') ?? 0;
+        dmgBonus = sign == '-' ? -bonusVal : bonusVal;
+      }
+      final typeMatch = RegExp(
+        r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)',
+        caseSensitive: false,
+      ).firstMatch(fullText);
+      if (typeMatch != null) {
+        final t = typeMatch.group(1)!;
+        dmgType = t[0].toUpperCase() + t.substring(1).toLowerCase();
+      }
+    } else if (attackMath.isNotEmpty) {
+      final math = attackMath.first;
+      final dmgMatch = RegExp(r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?')
+          .firstMatch(math.diceFormula);
+      if (dmgMatch != null) {
+        dmgCount = int.tryParse(dmgMatch.group(1)!) ?? 1;
+        dmgSides = int.tryParse(dmgMatch.group(2)!) ?? 6;
+        final sign = dmgMatch.group(3);
+        final bonusVal = int.tryParse(dmgMatch.group(4) ?? '') ?? 0;
+        dmgBonus = sign == '-' ? -bonusVal : bonusVal;
+      }
+      final typeName = math.damageType.name;
+      if (typeName.isNotEmpty) {
+        dmgType = typeName[0].toUpperCase() + typeName.substring(1);
+      }
+    }
+
+    Color color;
+    final typeLower = monsterType.toLowerCase();
+    if (typeLower.contains('beast')) {
+      color = const Color(0xFF388E3C);
+    } else if (typeLower.contains('dragon')) {
+      color = const Color(0xFFFF8F00);
+    } else if (typeLower.contains('fiend')) {
+      color = const Color(0xFFC62828);
+    } else if (typeLower.contains('undead')) {
+      color = const Color(0xFF7B1FA2);
+    } else if (typeLower.contains('elemental')) {
+      color = const Color(0xFFE65100);
+    } else if (typeLower.contains('fey')) {
+      color = const Color(0xFF00897B);
+    } else if (typeLower.contains('celestial')) {
+      color = const Color(0xFF0288D1);
+    } else if (typeLower.contains('construct')) {
+      color = const Color(0xFF5D4037);
+    } else if (typeLower.contains('aberration')) {
+      color = const Color(0xFF6A1B9A);
+    } else {
+      color = const Color(0xFF8B5CF6);
+    }
+
+    // If parsedActions is empty and creature has _copy in customProperties, revitalize from base monster!
+    if (parsedActions.isEmpty && customProperties.containsKey('_copy')) {
+      final copyObj = customProperties['_copy'];
+      if (copyObj is Map && copyObj['name'] != null) {
+        final baseName = copyObj['name'].toString().trim();
+        final baseItem = MonsterCodexLibrary.getMonsterByName(baseName);
+        if (baseItem != null) {
+          final baseSb = baseItem.sourceStatBlock;
+          if (parsedTraits.isEmpty) {
+            parsedTraits.addAll(baseSb.traits);
+          }
+          parsedActions.addAll(baseSb.actions);
+          if (ac == 10 && baseSb.ac > 10) {
+            ac = baseSb.ac;
+          }
+          if (hp <= 10 && baseSb.maxHp > 10) {
+            hp = baseSb.maxHp;
+            hitDice = baseSb.hitDice ?? hitDice;
+          }
+          if (str == 10 &&
+              dex == 10 &&
+              con == 10 &&
+              intSc == 10 &&
+              wis == 10 &&
+              cha == 10) {
+            str = baseSb.strScore;
+            dex = baseSb.dexScore;
+            con = baseSb.conScore;
+            intSc = baseSb.intScore;
+            wis = baseSb.wisScore;
+            cha = baseSb.chaScore;
+          }
+        }
+      }
+    }
+
+    String? formatDefenses(dynamic val) {
+      if (val == null) return null;
+      if (val is List) {
+        if (val.isEmpty) return null;
+        return val
+            .map((e) => e is Map
+                ? (e['note'] != null
+                    ? '${e['resist'] ?? e['immune'] ?? ''} (${e['note']})'
+                    : e.toString())
+                : e.toString())
+            .join(', ');
+      }
+      final str = val.toString().trim();
+      return str.isNotEmpty ? str : null;
+    }
+
+    String? formatMapValues(dynamic val) {
+      if (val is Map) {
+        if (val.isEmpty) return null;
+        return val.entries
+            .map((e) => '${e.key.toString().toUpperCase()} ${e.value}')
+            .join(', ');
+      }
+      if (val is String && val.trim().isNotEmpty) return val.trim();
+      return null;
+    }
+
+    String? extractSpeed(String md) {
+      final m = RegExp(r'\*\*Speed:\*\*\s*([^\n]+)', caseSensitive: false)
+          .firstMatch(md);
+      return m?.group(1)?.trim();
+    }
+
+    final speed = customProperties['speed']?.toString() ??
+        extractSpeed(actionsMarkdown) ??
+        '30 ft.';
+    final saves = customProperties['savingThrows']?.toString() ??
+        formatMapValues(customProperties['save']);
+    final skills = customProperties['skills']?.toString() ??
+        formatMapValues(customProperties['skill']);
+    final vuln = customProperties['damageVulnerabilities']?.toString() ??
+        formatDefenses(customProperties['vulnerable']);
+    final resist = customProperties['damageResistances']?.toString() ??
+        formatDefenses(customProperties['resist']);
+    final immune = customProperties['damageImmunities']?.toString() ??
+        formatDefenses(customProperties['immune']);
+    final condImmune = customProperties['conditionImmunities']?.toString() ??
+        formatDefenses(customProperties['conditionImmune']);
+
+    String? senses = customProperties['senses']?.toString();
+    if (senses == null || senses.isEmpty) {
+      final rawSenses = formatDefenses(customProperties['senses']);
+      final passive = customProperties['passive'];
+      final parts = [
+        if (rawSenses != null && rawSenses.isNotEmpty) rawSenses,
+        if (passive != null) 'passive Perception $passive'
+      ];
+      if (parts.isNotEmpty) {
+        senses = parts.join(', ');
+      }
+    }
+    senses ??= 'passive Perception 10';
+
+    final languages = customProperties['languages']?.toString() ??
+        formatDefenses(customProperties['languages']) ??
+        '—';
+
+    return MinionStatBlock(
+      id: id.slug,
+      name: name,
+      sizeDisplay: size,
+      crDisplay: crStr,
+      typeDisplay: monsterType,
+      alignment: alignment,
+      ac: ac,
+      maxHp: hp,
+      hitDice: hitDice.isNotEmpty ? hitDice : null,
+      speed: speed,
+      strScore: str,
+      dexScore: dex,
+      conScore: con,
+      intScore: intSc,
+      wisScore: wis,
+      chaScore: cha,
+      savingThrows: saves,
+      skills: skills,
+      damageVulnerabilities: vuln,
+      damageResistances: resist,
+      damageImmunities: immune,
+      conditionImmunities: condImmune,
+      senses: senses,
+      languages: languages,
+      traits: parsedTraits,
+      actions: parsedActions,
+      attackBonus: atkBonus,
+      damageDiceCount: dmgCount,
+      damageDiceSides: dmgSides,
+      damageBonus: dmgBonus,
+      damageType: dmgType,
+      hasPackTactics: packTactics,
+      accentColor: color,
+    );
+  }
+
+  MonsterItem toMonsterItem() {
+    final statBlock = toMinionStatBlock();
+    return MonsterItem(
+      id: id.slug,
+      name: name,
+      statBlock2014: statBlock,
+      statBlock2024: statBlock,
+      sourcePresetId: 'homebrew',
+      sourcePresetName: 'Homebrew & Custom Creatures',
+      sourceCategory: SummonCategory.spell,
+    );
+  }
+}

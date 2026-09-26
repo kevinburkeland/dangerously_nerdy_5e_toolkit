@@ -1,0 +1,1807 @@
+import 'dart:async';
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
+import '../models/dice_roll.dart';
+import '../models/dm_screen_data.dart' show DmRulesEdition;
+import '../models/domain/character_models.dart';
+import '../models/domain/core_types.dart';
+import '../models/domain/entity_reference.dart';
+import '../models/domain/spell_monster_equipment.dart';
+import '../models/characters/srd_feats_library.dart';
+import '../models/domain/homebrew_extended_entities.dart';
+import '../models/party/campaign_membership.dart';
+import '../models/party/party_purse.dart';
+import '../models/room_roll.dart';
+import '../services/dice_room_service.dart';
+import '../services/party/campaign_registry_service.dart';
+import '../services/party/party_room_service.dart';
+import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import '../infrastructure/repositories/local_character_repository.dart';
+import '../services/persistence/campaign_profile_service.dart';
+import '../services/persistence/debounced_storage_service.dart';
+import '../services/repository/reference_resolver.dart';
+import '../services/rules/character_evaluation_engine.dart';
+import '../services/rules/character_homebrew_validator.dart';
+import '../services/rules/character_progression_engine.dart';
+import '../services/rules/character_reparse_engine.dart';
+import '../services/rules/inventory_transaction_service.dart';
+import '../services/rules/skill_trait_resolver.dart';
+import '../models/domain/feature_grant.dart';
+import '../utils/secure_random.dart';
+
+/// State controller for managing an active Character sheet, handling live stat recalculation,
+/// resource management, equipment/attunement toggles, condition management, and debounced persistence.
+class CharacterSheetController extends ChangeNotifier {
+  final ICharacterRepository _persistenceService;
+  final DebouncedStorageService _debouncedStorage;
+  final ReferenceResolver? _resolver;
+
+  late Character _character;
+  late EvaluatedCharacterStats _stats;
+  bool _isSaving = false;
+
+  CharacterSheetController({
+    required Character character,
+    ICharacterRepository? persistenceService,
+    DebouncedStorageService? debouncedStorage,
+    ReferenceResolver? resolver,
+  })  : _character = character,
+        _persistenceService = persistenceService ?? LocalCharacterRepository(),
+        _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
+        _resolver = resolver {
+    _recalculateStats();
+  }
+
+  Character get character => _character;
+  EvaluatedCharacterStats get stats => _stats;
+  bool get isSaving => _isSaving;
+  DmRulesEdition get rulesEdition => _character.rulesEdition;
+
+  MissingHomebrewReport get missingHomebrewReport =>
+      CharacterHomebrewValidator.validate(_character);
+  bool get hasMissingHomebrew => missingHomebrewReport.hasMissing;
+
+  bool get hasInspiration =>
+      _character.resources.hasHeroicInspiration ||
+      _character.customProperties['hasInspiration'] == true;
+
+  String get _debounceTaskKey =>
+      'character_sheet_persist_${_character.id.slug}';
+
+  /// Recalculates stats synchronously.
+  void _recalculateStats() {
+    _stats = CharacterEvaluationEngine.evaluate(
+      _character,
+      resolver: _resolver,
+    );
+  }
+
+  /// Sets a new active character, flushes any pending writes for the previous character, and re-evaluates stats.
+  /// If [persist] is true (default), immediately saves the updated character to storage.
+  Future<void> setCharacter(Character newCharacter,
+      {bool persist = true}) async {
+    await flush();
+    _character = newCharacter;
+    _recalculateStats();
+    notifyListeners();
+    if (persist) {
+      await _persistImmediate();
+    }
+  }
+
+  /// Switches active ruleset edition (2014 vs 2024) and triggers live re-evaluation.
+  Future<void> setRulesEdition(DmRulesEdition edition) async {
+    if (_character.rulesEdition == edition) return;
+    _character = _character.copyWith(rulesEdition: edition);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Reparses and re-evaluates the active character against the latest compendiums and rules,
+  /// persisting the changes immediately to local storage.
+  Future<Character> reparseActiveCharacter() async {
+    final updated = CharacterReparseEngine.reparse(_character);
+    _character = updated;
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+    return _character;
+  }
+
+  /// Advances character level via [CharacterProgressionEngine] and immediately flushes persistence.
+  Future<void> applyLevelUp(LevelUpRequest request) async {
+    final updated = CharacterProgressionEngine.applyLevelUp(
+      _character,
+      request,
+      resolver: _resolver,
+    );
+    _character = updated;
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+  }
+
+  /// Schedules debounced disk persistence to prevent main-isolate I/O thrashing.
+  void _schedulePersist(
+      {Duration duration = const Duration(milliseconds: 350)}) {
+    _debouncedStorage.scheduleWrite(
+      _debounceTaskKey,
+      () => _persistImmediate(),
+      duration: duration,
+    );
+  }
+
+  /// Flushes pending persistence immediately.
+  Future<void> flush() async {
+    await _debouncedStorage.flushKey(_debounceTaskKey);
+    await _debouncedStorage.flushKey('save_character_roster');
+  }
+
+  /// Persists the active character immediately.
+  Future<void> _persistImmediate() async {
+    _isSaving = true;
+    notifyListeners();
+    try {
+      final deps =
+          CharacterHomebrewValidator.collectHomebrewDependencies(_character);
+      if (deps.isNotEmpty) {
+        final updatedCp =
+            Map<String, dynamic>.from(_character.customProperties);
+        updatedCp['usedHomebrew'] = deps;
+        _character = _character.copyWith(customProperties: updatedCp);
+      }
+      await _persistenceService.saveCharacter(_character);
+      unawaited(_syncTelemetryToLinkedCampaigns());
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  /// Updates the character's coin purse directly and triggers debounced persistence and room sync.
+  Future<void> updatePurse(PartyPurse newPurse) async {
+    if (_character.purse == newPurse) return;
+    _character = _character.copyWith(purse: newPurse);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+    unawaited(_syncPurseToLinkedCampaigns());
+  }
+
+  /// Modifies a single coin denomination in the character's purse (clamped >= 0).
+  Future<void> modifyPurseCoin(String coinKey, int delta) async {
+    final curPurse = _character.purse;
+    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: 'local');
+    await updatePurse(newPurse);
+  }
+
+  /// Toggles the equipped state of an inventory item instance.
+  Future<void> toggleEquipItem(String instanceId) async {
+    final targetItem = _character.inventory.firstWhere(
+      (item) => item.instanceId == instanceId,
+      orElse: () => throw ArgumentError('Item instance $instanceId not found'),
+    );
+
+    if (targetItem.isEquipped) {
+      _character =
+          InventoryTransactionService.unequipItem(_character, instanceId);
+    } else {
+      final slot = InventoryTransactionService.resolveDefaultSlot(targetItem);
+      _character =
+          InventoryTransactionService.equipItem(_character, instanceId, slot);
+    }
+
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Explicitly sets or toggles the attuned state of an item instance, validating capacity against [effectiveMaxAttunementSlots].
+  /// Returns `true` if successful, or `false` if the attunement limit is exceeded.
+  Future<bool> toggleAttunement(String instanceId, bool isAttuned) async {
+    final targetItem = _character.inventory.firstWhere(
+      (item) => item.instanceId == instanceId,
+      orElse: () => throw ArgumentError('Item instance $instanceId not found'),
+    );
+
+    if (isAttuned && !targetItem.isAttuned) {
+      final currentAttunedCount =
+          _character.inventory.where((i) => i.isAttuned).length;
+      final maxSlots = _stats.effectiveMaxAttunementSlots;
+      if (currentAttunedCount >= maxSlots) {
+        return false;
+      }
+    }
+
+    final updatedInventory = _character.inventory.map((item) {
+      if (item.instanceId == instanceId) {
+        return item.copyWith(isAttuned: isAttuned);
+      }
+      return item;
+    }).toList();
+
+    _character = _character.copyWith(inventory: updatedInventory);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+    return true;
+  }
+
+  /// Toggles the attuned state of an item instance, strictly respecting the dynamic attunement limit.
+  /// Returns `true` if successful, or `false` if the attunement limit prevents attuning.
+  Future<bool> toggleAttuneItem(String instanceId) async {
+    final targetItem = _character.inventory.firstWhere(
+      (item) => item.instanceId == instanceId,
+      orElse: () => throw ArgumentError('Item instance $instanceId not found'),
+    );
+    return toggleAttunement(instanceId, !targetItem.isAttuned);
+  }
+
+  /// Adds an item instance to the character's inventory.
+  Future<void> addItem(InventoryItemInstance item) async {
+    final updated = List<InventoryItemInstance>.from(_character.inventory)
+      ..add(item);
+    _character = _character.copyWith(inventory: updated);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Removes an item instance from the character's inventory by its instanceId.
+  Future<void> removeItem(String instanceId) async {
+    final updated =
+        _character.inventory.where((i) => i.instanceId != instanceId).toList();
+    _character = _character.copyWith(inventory: updated);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Updates quantity of an inventory item instance.
+  Future<void> updateItemQuantity(String instanceId, int quantity) async {
+    if (quantity <= 0) {
+      await removeItem(instanceId);
+      return;
+    }
+    final updated = _character.inventory.map((item) {
+      if (item.instanceId == instanceId) {
+        return item.copyWith(quantity: quantity);
+      }
+      return item;
+    }).toList();
+    _character = _character.copyWith(inventory: updated);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Applies damage to the character.
+  /// Damage strictly depletes temporary HP before reducing current HP, clamping at 0.
+  Future<void> takeDamage(int amount) async {
+    if (amount <= 0) return;
+    final curHp = _character.resources.currentHp;
+    final curTemp = _character.resources.tempHp;
+
+    int newHp = curHp;
+    int newTemp = curTemp;
+
+    if (curTemp > 0) {
+      if (amount <= curTemp) {
+        newTemp = curTemp - amount;
+      } else {
+        final remainingDamage = amount - curTemp;
+        newTemp = 0;
+        newHp = math.max(0, curHp - remainingDamage);
+      }
+    } else {
+      newHp = math.max(0, curHp - amount);
+    }
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        currentHp: newHp,
+        tempHp: newTemp,
+      ),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Heals the character by [amount], clamping at dynamic evaluated max HP.
+  /// Characters who are dying (currentHp == 0 and failures < 3) regain hit points and reset death saves.
+  /// Dead characters (deathSaveFailures >= 3) cannot regain hit points unless [isRevival] is true.
+  Future<void> heal(int amount, {bool isRevival = false}) async {
+    if (amount <= 0) return;
+
+    final isDead = _character.resources.deathSaveFailures >= 3;
+    if (isDead && !isRevival) return;
+
+    // Resolve dynamic maximum HP accounting for active CON buffs, Tough feat, etc.
+    final evaluated = CharacterEvaluationEngine.evaluate(_character);
+    final effectiveMaxHp = evaluated.maxHp;
+
+    final canRevive = isRevival || _character.resources.deathSaveFailures < 3;
+
+    final updatedHp = _character.resources.hitPoints
+        .copyWith(maxHp: effectiveMaxHp)
+        .heal(amount, allowRevive: canRevive);
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        hitPoints: updatedHp,
+        deathSaveSuccesses: updatedHp.currentHp > 0
+            ? 0
+            : _character.resources.deathSaveSuccesses,
+        deathSaveFailures: updatedHp.currentHp > 0
+            ? 0
+            : _character.resources.deathSaveFailures,
+      ),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Modifies current HP by [delta] (positive for healing, negative for damage).
+  /// Damage is absorbed by temporary HP first before depleting current HP.
+  Future<void> modifyHp(int delta) async {
+    if (delta < 0) {
+      await takeDamage(delta.abs());
+    } else if (delta > 0) {
+      await heal(delta);
+    }
+  }
+
+  /// Sets temporary hit points directly.
+  Future<void> setTempHp(int tempHp) async {
+    final clampedTemp = math.max(0, tempHp);
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(tempHp: clampedTemp),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Sets or updates death save counters (clamped 0 to 3).
+  Future<void> setDeathSaves({int? successes, int? failures}) async {
+    final curSuccesses = _character.resources.deathSaveSuccesses;
+    final curFailures = _character.resources.deathSaveFailures;
+    final newSuccesses = (successes ?? curSuccesses).clamp(0, 3);
+    final newFailures = (failures ?? curFailures).clamp(0, 3);
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        deathSaveSuccesses: newSuccesses,
+        deathSaveFailures: newFailures,
+      ),
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Sets or updates exhaustion level (0 to 10).
+  Future<void> setExhaustionLevel(int level) async {
+    final clampedLevel = level.clamp(0, 10);
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere((c) => c.conditionName.toLowerCase() == 'exhaustion');
+
+    if (clampedLevel > 0) {
+      conditions.add(CharacterCondition(
+        conditionName: 'exhaustion',
+        parameters: {'level': clampedLevel},
+      ));
+    }
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(exhaustionLevel: clampedLevel),
+      conditions: conditions,
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Adds a condition to the character.
+  Future<void> addCondition(CharacterCondition condition) async {
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere((c) =>
+          c.conditionName.toLowerCase() ==
+          condition.conditionName.toLowerCase())
+      ..add(condition);
+
+    _character = _character.copyWith(conditions: conditions);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Removes a condition from the character.
+  Future<void> removeCondition(String conditionName) async {
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere(
+          (c) => c.conditionName.toLowerCase() == conditionName.toLowerCase());
+
+    _character = _character.copyWith(conditions: conditions);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Adds a language to the character if not already present.
+  Future<void> addLanguage(String language) async {
+    final clean = language.trim();
+    if (clean.isEmpty) return;
+    final langs = List<String>.from(_character.languages);
+    if (!langs.any((l) => l.toLowerCase() == clean.toLowerCase())) {
+      langs.add(clean);
+      _character = _character.copyWith(languages: langs);
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
+  /// Removes a language from the character.
+  Future<void> removeLanguage(String language) async {
+    final clean = language.trim().toLowerCase();
+    final langs = List<String>.from(_character.languages)
+      ..removeWhere((l) => l.toLowerCase() == clean);
+    _character = _character.copyWith(languages: langs);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Overwrites the full language list of the character.
+  Future<void> setLanguages(List<String> languages) async {
+    final seen = <String>{};
+    final unique = <String>[];
+    for (final l in languages) {
+      final clean = l.trim();
+      if (clean.isNotEmpty && seen.add(clean.toLowerCase())) {
+        unique.add(clean);
+      }
+    }
+    _character = _character.copyWith(languages: unique);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Adds a tool proficiency to the character if not already present.
+  Future<void> addToolProficiency(String tool) async {
+    final clean = tool.trim();
+    if (clean.isEmpty) return;
+    final tools = List<String>.from(_character.toolProficiencies);
+    if (!tools.any((t) => t.toLowerCase() == clean.toLowerCase())) {
+      tools.add(clean);
+      _character = _character.copyWith(toolProficiencies: tools);
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
+  /// Removes a tool proficiency from the character.
+  Future<void> removeToolProficiency(String tool) async {
+    final clean = tool.trim().toLowerCase();
+    final tools = List<String>.from(_character.toolProficiencies)
+      ..removeWhere((t) => t.toLowerCase() == clean);
+    _character = _character.copyWith(toolProficiencies: tools);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Overwrites the full tool proficiency list of the character.
+  Future<void> setToolProficiencies(List<String> tools) async {
+    final seen = <String>{};
+    final unique = <String>[];
+    for (final t in tools) {
+      final clean = t.trim();
+      if (clean.isNotEmpty && seen.add(clean.toLowerCase())) {
+        unique.add(clean);
+      }
+    }
+    _character = _character.copyWith(toolProficiencies: unique);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Spends a hit die of the given type (e.g., "d8", "d10").
+  Future<bool> expendHitDie(String dieType) async {
+    final currentDice =
+        Map<String, int>.from(_character.resources.currentHitDice);
+    final count = currentDice[dieType] ?? 0;
+    if (count <= 0) return false;
+
+    currentDice[dieType] = count - 1;
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(currentHitDice: currentDice),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+    return true;
+  }
+
+  /// Recovers a hit die of the given type up to class max.
+  Future<void> recoverHitDie(String dieType) async {
+    final currentDice =
+        Map<String, int>.from(_character.resources.currentHitDice);
+    final count = currentDice[dieType] ?? 0;
+    currentDice[dieType] = count + 1;
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(currentHitDice: currentDice),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Sets heroic inspiration explicitly.
+  Future<void> setHeroicInspiration(bool value) async {
+    final customProps = Map<String, dynamic>.from(_character.customProperties);
+    customProps['hasInspiration'] = value;
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(hasHeroicInspiration: value),
+      customProperties: customProps,
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Toggles heroic inspiration status.
+  Future<void> toggleInspiration() async {
+    final current = hasInspiration;
+    await setHeroicInspiration(!current);
+  }
+
+  /// Applies a Short Rest: spends the provided hit dice, applies rolled healing via [heal],
+  /// recovers Pact Magic slots, and persists state.
+  Future<void> applyShortRest({
+    required Map<String, int> hitDiceSpent,
+    required int healingRolled,
+  }) async {
+    final currentDice =
+        Map<String, int>.from(_character.resources.currentHitDice);
+    for (final entry in hitDiceSpent.entries) {
+      final cur = currentDice[entry.key] ?? 0;
+      currentDice[entry.key] = math.max(0, cur - entry.value);
+    }
+
+    // Pact Magic slots recharge on short rest (RAW 5e Warlock mechanics)
+    final spellSlots = _character.resources.spellSlots;
+    final updatedSpellSlots = spellSlots.copyWith(
+      pactMagicCurrent: spellSlots.pactMagicMax,
+    );
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        currentHitDice: currentDice,
+        spellSlots: updatedSpellSlots,
+      ),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+
+    if (healingRolled > 0) {
+      await heal(healingRolled);
+    }
+  }
+
+  /// Applies a Long Rest:
+  /// - Resets HP to max
+  /// - Resets Temp HP to 0
+  /// - Clears death save successes and failures
+  /// - Restores all spell slots & pact slots
+  /// Performs a standard 5e Long Rest:
+  /// - Restores Current HP to maximum
+  /// - Resets Temp HP to 0
+  /// - Clears death save successes and failures
+  /// - Restores all spell slots & pact slots
+  /// - Reduces exhaustion level by 1
+  /// - Restores spent hit dice greedily up to half of character's total level (min 1)
+  Future<void> applyLongRest() async {
+    final evaluated = CharacterEvaluationEngine.evaluate(_character);
+    final totalLevel = _character.totalLevel;
+
+    // RAW: Regain at least 1 Hit Die, up to half total character level
+    int diceBudget = math.max(1, totalLevel ~/ 2);
+
+    // Group current available dice and capacity by die face
+    final currentDice =
+        Map<String, int>.from(_character.resources.currentHitDice);
+
+    // Determine total capacity per die type from class progression
+    final maxDicePerType = <String, int>{};
+    for (final cls in _character.progression.classes) {
+      maxDicePerType[cls.hitDie] =
+          (maxDicePerType[cls.hitDie] ?? 0) + cls.level;
+    }
+
+    // Sort die faces descending (d12 -> d10 -> d8 -> d6) for greedy allocation
+    final sortedFaces = maxDicePerType.keys.toList()
+      ..sort((a, b) {
+        final valA = int.tryParse(a.replaceAll('d', '')) ?? 0;
+        final valB = int.tryParse(b.replaceAll('d', '')) ?? 0;
+        return valB.compareTo(valA);
+      });
+
+    for (final face in sortedFaces) {
+      if (diceBudget <= 0) break;
+      final maxCapacity = maxDicePerType[face] ?? 0;
+      final current = currentDice[face] ?? 0;
+      final missing = maxCapacity - current;
+
+      if (missing > 0) {
+        final restore = math.min(missing, diceBudget);
+        currentDice[face] = current + restore;
+        diceBudget -= restore;
+      }
+    }
+
+    // Reduce exhaustion by 1
+    final curExhaustion = _character.resources.exhaustionLevel;
+    final newExhaustion = math.max(0, curExhaustion - 1);
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere((c) => c.conditionName.toLowerCase() == 'exhaustion');
+    if (newExhaustion > 0) {
+      conditions.add(CharacterCondition(
+        conditionName: 'exhaustion',
+        parameters: {'level': newExhaustion},
+      ));
+    }
+
+    // Restore spell slots: combine evaluated slots with any explicit resources.spellSlots maxes
+    final existingPool = _character.resources.spellSlots;
+    final maxSlots = Map<int, int>.from(existingPool.maxSlots);
+    for (final entry in evaluated.computedSpellSlots.maxSlots.entries) {
+      maxSlots[entry.key] = math.max(maxSlots[entry.key] ?? 0, entry.value);
+    }
+    final pactMax = math.max(
+        existingPool.pactMagicMax, evaluated.computedSpellSlots.pactMagicMax);
+    final pactLevel = math.max(existingPool.pactMagicSlotLevel,
+        evaluated.computedSpellSlots.pactMagicSlotLevel);
+
+    final restoredSpellSlots = SpellSlotPool(
+      maxSlots: maxSlots,
+      currentSlots: Map<int, int>.from(maxSlots),
+      pactMagicMax: pactMax,
+      pactMagicCurrent: pactMax,
+      pactMagicSlotLevel: pactLevel,
+    );
+
+    final updatedResources = _character.resources.copyWith(
+      currentHp: evaluated.maxHp,
+      tempHp: 0,
+      deathSaveSuccesses: 0,
+      deathSaveFailures: 0,
+      exhaustionLevel: newExhaustion,
+      currentHitDice: currentDice,
+      spellSlots: restoredSpellSlots,
+    );
+
+    await setCharacter(_character.copyWith(
+      resources: updatedResources,
+      conditions: conditions,
+    ));
+  }
+
+  /// Safely decrements a spell slot of a given level, updating immutable state and scheduling persistence.
+  /// If [isPactMagic] is true (or if the character has no regular slots at [level] but has Pact Magic at that level),
+  /// the character's Pact Magic slot pool is decremented instead.
+  Future<void> expendSpellSlot(int level, {bool isPactMagic = false}) async {
+    final pool = _character.resources.spellSlots;
+    if (isPactMagic ||
+        ((pool.maxSlots[level] ?? 0) == 0 &&
+            pool.pactMagicSlotLevel == level &&
+            pool.pactMagicMax > 0)) {
+      await expendPactSlot();
+      return;
+    }
+
+    final curMap = Map<int, int>.from(pool.currentSlots);
+    final maxMap = pool.maxSlots;
+
+    final currentAvailable = curMap[level] ?? (maxMap[level] ?? 0);
+    if (currentAvailable > 0) {
+      curMap[level] = currentAvailable - 1;
+      _character = _character.copyWith(
+        resources: _character.resources.copyWith(
+          spellSlots: pool.copyWith(currentSlots: curMap),
+        ),
+      );
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
+  /// Safely decrements a Pact Magic slot, updating immutable state and scheduling persistence.
+  Future<void> expendPactSlot() async {
+    final pool = _character.resources.spellSlots;
+    if (pool.pactMagicCurrent > 0) {
+      _character = _character.copyWith(
+        resources: _character.resources.copyWith(
+          spellSlots:
+              pool.copyWith(pactMagicCurrent: pool.pactMagicCurrent - 1),
+        ),
+      );
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
+  /// Consumes or recovers a spell slot of a given level.
+  Future<void> toggleSpellSlot(int level, bool isExpending) async {
+    final pool = _character.resources.spellSlots;
+    final curMap = Map<int, int>.from(pool.currentSlots);
+    final maxMap = pool.maxSlots;
+
+    final currentAvailable = curMap[level] ?? (maxMap[level] ?? 0);
+    final maxAvailable = maxMap[level] ?? currentAvailable;
+
+    if (isExpending && currentAvailable > 0) {
+      curMap[level] = currentAvailable - 1;
+    } else if (!isExpending && currentAvailable < maxAvailable) {
+      curMap[level] = currentAvailable + 1;
+    }
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        spellSlots: pool.copyWith(currentSlots: curMap),
+      ),
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Consumes or recovers a Pact Magic spell slot.
+  Future<void> togglePactSlot(bool isExpending) async {
+    final pool = _character.resources.spellSlots;
+    final cur = pool.pactMagicCurrent;
+    final max = pool.pactMagicMax;
+
+    int newCur = cur;
+    if (isExpending && cur > 0) {
+      newCur = cur - 1;
+    } else if (!isExpending && cur < max) {
+      newCur = cur + 1;
+    }
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        spellSlots: pool.copyWith(pactMagicCurrent: newCur),
+      ),
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Restores all spell slots (including Pact Magic) to maximum (Long Rest).
+  Future<void> restoreAllSpellSlots() async {
+    final pool = _character.resources.spellSlots;
+    final restoredMap = Map<int, int>.from(pool.maxSlots);
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        spellSlots: pool.copyWith(
+          currentSlots: restoredMap,
+          pactMagicCurrent: pool.pactMagicMax,
+        ),
+      ),
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Toggles whether a known spell is currently prepared.
+  Future<void> togglePreparedSpell(EntityReference<Spell> spellRef) async {
+    final curPrep =
+        List<EntityReference<Spell>>.from(_character.spellsPrepared);
+    final isAlreadyPrep = curPrep.any((s) => s.slug == spellRef.slug);
+
+    if (isAlreadyPrep) {
+      curPrep.removeWhere((s) => s.slug == spellRef.slug);
+    } else {
+      curPrep.add(spellRef);
+    }
+
+    _character = _character.copyWith(spellsPrepared: curPrep);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Adds a new spell or cantrip to the character sheet.
+  Future<void> addSpell(
+    EntityReference<Spell> spellRef, {
+    bool isCantrip = false,
+    bool isPrepared = false,
+  }) async {
+    if (isCantrip) {
+      final curCantrips =
+          List<EntityReference<Spell>>.from(_character.cantrips);
+      if (!curCantrips.any((c) => c.slug == spellRef.slug)) {
+        curCantrips.add(spellRef);
+        _character = _character.copyWith(cantrips: curCantrips);
+      }
+    } else {
+      final curKnown =
+          List<EntityReference<Spell>>.from(_character.spellsKnown);
+      if (!curKnown.any((s) => s.slug == spellRef.slug)) {
+        curKnown.add(spellRef);
+      }
+      final curPrep =
+          List<EntityReference<Spell>>.from(_character.spellsPrepared);
+      if (isPrepared && !curPrep.any((s) => s.slug == spellRef.slug)) {
+        curPrep.add(spellRef);
+      }
+      _character = _character.copyWith(
+        spellsKnown: curKnown,
+        spellsPrepared: curPrep,
+      );
+    }
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Removes a spell or cantrip from the character sheet.
+  Future<void> removeSpell(
+    EntityReference<Spell> spellRef, {
+    bool isCantrip = false,
+  }) async {
+    final updatedAllocated = Map<String, List<EntityReference<Spell>>>.from(
+        _character.allocatedSpells);
+    for (final entry in updatedAllocated.entries.toList()) {
+      final filtered =
+          entry.value.where((s) => s.slug != spellRef.slug).toList();
+      updatedAllocated[entry.key] = filtered;
+    }
+
+    if (isCantrip) {
+      final curCantrips = List<EntityReference<Spell>>.from(_character.cantrips)
+        ..removeWhere((c) => c.slug == spellRef.slug);
+      _character = _character.copyWith(
+        cantrips: curCantrips,
+        allocatedSpells: updatedAllocated,
+      );
+    } else {
+      final curKnown = List<EntityReference<Spell>>.from(_character.spellsKnown)
+        ..removeWhere((s) => s.slug == spellRef.slug);
+      final curPrep =
+          List<EntityReference<Spell>>.from(_character.spellsPrepared)
+            ..removeWhere((s) => s.slug == spellRef.slug);
+      _character = _character.copyWith(
+        spellsKnown: curKnown,
+        spellsPrepared: curPrep,
+        allocatedSpells: updatedAllocated,
+      );
+    }
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Evaluates whether the character has a specific capability flag enabled from any selected feature option, feat, class feature, or custom properties.
+  bool hasCapabilityFlag(String flagKey) =>
+      _character.hasCapabilityFlag(flagKey);
+
+  /// True if character has Agonizing Blast invocation enabled (adds CHA modifier to Eldritch Blast damage).
+  bool get hasAgonizingBlast => hasCapabilityFlag('eldritchBlastChaDamage');
+
+  /// True if character has Jack of All Trades (adds half proficiency bonus to untrained ability checks/initiative).
+  bool get hasJackOfAllTrades => hasCapabilityFlag('jackOfAllTrades');
+
+  /// True if character has medium armor DEX cap bonus capability (raises medium armor DEX cap from +2 to +3).
+  bool get hasMediumArmorMaster => hasCapabilityFlag('mediumArmorDexCapBonus');
+
+  /// Executes a spell attack roll: 1d20 + stats.spellAttackBonus.
+  DiceRollResult rollSpellAttack(Spell spell) {
+    final bonus = stats.spellAttackBonus;
+    final result = DiceRollResult.roll(
+      dieType: DieType.d20,
+      count: 1,
+      modifier: bonus,
+    );
+
+    // Broadcast roll to dice room if active
+    final roomService = DiceRoomService();
+    final activeRoom = roomService.activeRoomCode;
+    if (activeRoom != null) {
+      final playerName =
+          _character.name.isNotEmpty ? _character.name : 'Player';
+      final roomRoll = RoomRoll(
+        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        roomCode: activeRoom,
+        playerName: playerName,
+        formulaString: '${spell.name} (Spell Attack)',
+        total: result.total,
+        individualRolls: result.individualRolls,
+        details: [
+          '1d20(${result.individualRolls.first}) + $bonus = ${result.total}'
+        ],
+        isCrit: result.isCrit,
+        isFumble: result.isFumble,
+        timestamp: DateTime.now(),
+      );
+      roomService.broadcastRoll(roomRoll);
+    }
+
+    return result;
+  }
+
+  /// Executes a spell damage roll, dynamically routing capability flags
+  /// (e.g. adding Charisma modifier to Eldritch Blast if 'eldritchBlastChaDamage' is active).
+  DiceRollResult rollSpellDamage(Spell spell, {int? slotLevel}) {
+    final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
+    final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
+    final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
+        spell.name.toLowerCase() == 'eldritch blast';
+
+    // Parse or retrieve damage dice
+    String formula = '1d10';
+    if (spell.damageMath.isNotEmpty) {
+      formula = spell.damageMath.first.diceFormula;
+    } else if (spell.customProperties['rollFormula'] != null) {
+      formula = spell.customProperties['rollFormula'].toString();
+    }
+
+    // Determine base dice count and die type
+    int count = 1;
+    DieType dieType = DieType.d10;
+    int customSides = 10;
+
+    final match = RegExp(r'^(\d+)d(\d+)').firstMatch(formula.trim());
+    if (match != null) {
+      count = int.tryParse(match.group(1)!) ?? 1;
+      final sides = int.tryParse(match.group(2)!) ?? 10;
+      dieType = DieType.values.firstWhere(
+        (d) => d.sides == sides && d != DieType.custom,
+        orElse: () => DieType.custom,
+      );
+      customSides = sides;
+    }
+
+    int modifier = 0;
+    if (isEldritchBlast &&
+        (hasAgonizingBlast ||
+            hasCapabilityFlag('eldritchBlastChaDamage') ||
+            hasCapabilityFlag('agonizing_blast'))) {
+      final chaMod =
+          _character.effectiveAbilityScores.getModifier(AbilityType.charisma);
+      modifier += chaMod;
+    }
+
+    final result = DiceRollResult.rollPool(
+      diceEntries: [
+        DiceEntry(
+          dieType: dieType,
+          count: count,
+          customSides: customSides,
+        ),
+      ],
+      modifier: modifier,
+    );
+
+    // Broadcast roll to dice room if active
+    final roomService = DiceRoomService();
+    final activeRoom = roomService.activeRoomCode;
+    if (activeRoom != null) {
+      final playerName =
+          _character.name.isNotEmpty ? _character.name : 'Player';
+      final roomRoll = RoomRoll(
+        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        roomCode: activeRoom,
+        playerName: playerName,
+        formulaString: '${spell.name} (Damage: ${result.formulaString})',
+        total: result.total,
+        individualRolls: result.individualRolls,
+        details: [
+          '${result.diceEntries.first.formulaString}(${result.individualRolls.join(", ")})'
+              '${modifier != 0 ? (modifier > 0 ? " + $modifier" : " - ${modifier.abs()}") : ""} = ${result.total}'
+        ],
+        isCrit: result.isCrit,
+        isFumble: result.isFumble,
+        timestamp: DateTime.now(),
+      );
+      roomService.broadcastRoll(roomRoll);
+    }
+
+    return result;
+  }
+
+  /// Casts a spell, expending the specified spell slot (or Pact Magic slot),
+  /// scaling damage dice or effects if upcast above base spell level, and dispatching
+  /// the roll to [DiceRoomService].
+  Future<DiceRollResult?> castSpell(
+    Spell spell, {
+    int? castLevel,
+    bool isPactMagic = false,
+  }) async {
+    final pool = _character.resources.spellSlots;
+    final effectiveIsPact = isPactMagic ||
+        (castLevel != null &&
+            (pool.maxSlots[castLevel] ?? 0) == 0 &&
+            pool.pactMagicSlotLevel == castLevel &&
+            pool.pactMagicMax > 0);
+
+    if (castLevel != null && castLevel > 0) {
+      if (effectiveIsPact) {
+        await expendPactSlot();
+      } else {
+        await expendSpellSlot(castLevel);
+      }
+    }
+
+    final effectiveLevel =
+        castLevel ?? (effectiveIsPact ? pool.pactMagicSlotLevel : spell.level);
+    final delta =
+        effectiveLevel > spell.level ? (effectiveLevel - spell.level) : 0;
+
+    final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
+    final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
+    final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
+        spell.name.toLowerCase() == 'eldritch blast';
+    final isArmorOfAgathys = cleanSlug == 'armor-of-agathys' ||
+        spell.name.toLowerCase() == 'armor of agathys';
+
+    // Armor of Agathys: grants 5 temp HP per slot level & 5 cold retaliation damage
+    if (isArmorOfAgathys) {
+      final flatHp = effectiveLevel > 0 ? (effectiveLevel * 5) : 5;
+      if (flatHp > _character.resources.tempHp) {
+        await setTempHp(flatHp);
+      }
+      final roomService = DiceRoomService();
+      final activeRoom = roomService.activeRoomCode ?? 'LOCAL';
+      final playerName =
+          _character.name.isNotEmpty ? _character.name : 'Player';
+      final pactLabel = effectiveIsPact
+          ? ' (Pact Magic Level $effectiveLevel)'
+          : (effectiveLevel > spell.level
+              ? ' (Cast at Level $effectiveLevel)'
+              : '');
+      final agathysResult = DiceRollResult(
+        timestamp: DateTime.now(),
+        diceEntries: const [],
+        groupResults: const [],
+        modifier: flatHp,
+        rollMode: RollMode.normal,
+        individualRolls: const [],
+        total: flatHp,
+        isCrit: false,
+        isFumble: false,
+      );
+      final roomRoll = RoomRoll(
+        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        roomCode: activeRoom,
+        playerName: playerName,
+        formulaString:
+            '${spell.name}$pactLabel: $flatHp Temp HP ($flatHp Cold Retaliation)',
+        total: flatHp,
+        individualRolls: const [],
+        details: ['$flatHp Temp HP & $flatHp Cold Damage on melee hit'],
+        timestamp: DateTime.now(),
+        isCrit: false,
+        isFumble: false,
+      );
+      roomService.broadcastRoll(roomRoll);
+      return agathysResult;
+    }
+
+    // Parse base formula
+    String baseFormula = '1d10';
+    if (spell.damageMath.isNotEmpty) {
+      baseFormula = spell.damageMath.first.diceFormula;
+    } else if (spell.customProperties['rollFormula'] != null) {
+      baseFormula = spell.customProperties['rollFormula'].toString();
+    }
+
+    int baseCount = 1;
+    DieType baseDieType = DieType.d10;
+    int baseSides = 10;
+
+    final baseMatch = RegExp(r'^(\d+)d(\d+)').firstMatch(baseFormula.trim());
+    if (baseMatch != null) {
+      baseCount = int.tryParse(baseMatch.group(1)!) ?? 1;
+      final sides = int.tryParse(baseMatch.group(2)!) ?? 10;
+      baseDieType = DieType.values.firstWhere(
+        (d) => d.sides == sides && d != DieType.custom,
+        orElse: () => DieType.custom,
+      );
+      baseSides = sides;
+    }
+
+    // Upcast scaling
+    int additionalCount = 0;
+    DieType additionalDieType = baseDieType;
+    int additionalSides = baseSides;
+
+    if (delta > 0) {
+      String? scalingStr;
+      for (final dm in spell.damageMath) {
+        if (dm.scalingFormula != null && dm.scalingFormula!.trim().isNotEmpty) {
+          scalingStr = dm.scalingFormula;
+          break;
+        }
+      }
+      scalingStr ??= spell.customProperties['scalingFormula']?.toString();
+
+      if (scalingStr != null) {
+        final scaleMatch = RegExp(r'(\d+)d(\d+)').firstMatch(scalingStr);
+        if (scaleMatch != null) {
+          final dicePerLevel = int.tryParse(scaleMatch.group(1)!) ?? 1;
+          final sSides = int.tryParse(scaleMatch.group(2)!) ?? baseSides;
+          additionalCount = delta * dicePerLevel;
+          additionalDieType = DieType.values.firstWhere(
+            (d) => d.sides == sSides && d != DieType.custom,
+            orElse: () => DieType.custom,
+          );
+          additionalSides = sSides;
+        }
+      } else if (spell.higherLevelsMarkdown != null) {
+        final hlMatch =
+            RegExp(r'(\d+)d(\d+)').firstMatch(spell.higherLevelsMarkdown!);
+        if (hlMatch != null) {
+          final dicePerLevel = int.tryParse(hlMatch.group(1)!) ?? 1;
+          final sSides = int.tryParse(hlMatch.group(2)!) ?? baseSides;
+          additionalCount = delta * dicePerLevel;
+          additionalDieType = DieType.values.firstWhere(
+            (d) => d.sides == sSides && d != DieType.custom,
+            orElse: () => DieType.custom,
+          );
+          additionalSides = sSides;
+        }
+      }
+    }
+
+    int modifier = 0;
+    if (isEldritchBlast &&
+        (hasAgonizingBlast ||
+            hasCapabilityFlag('eldritchBlastChaDamage') ||
+            hasCapabilityFlag('agonizing_blast'))) {
+      final chaMod =
+          _character.effectiveAbilityScores.getModifier(AbilityType.charisma);
+      modifier += chaMod;
+    }
+
+    // Assemble pool
+    final List<DiceEntry> entries = [];
+    if (additionalCount > 0 && additionalSides == baseSides) {
+      entries.add(DiceEntry(
+        dieType: baseDieType,
+        count: baseCount + additionalCount,
+        customSides: baseSides,
+      ));
+    } else {
+      entries.add(DiceEntry(
+        dieType: baseDieType,
+        count: baseCount,
+        customSides: baseSides,
+      ));
+      if (additionalCount > 0) {
+        entries.add(DiceEntry(
+          dieType: additionalDieType,
+          count: additionalCount,
+          customSides: additionalSides,
+        ));
+      }
+    }
+
+    final result = DiceRollResult.rollPool(
+      diceEntries: entries,
+      modifier: modifier,
+    );
+
+    // Broadcast roll to DiceRoomService
+    final roomService = DiceRoomService();
+    final activeRoom = roomService.activeRoomCode ?? 'LOCAL';
+    final playerName = _character.name.isNotEmpty ? _character.name : 'Player';
+    final upcastLabel = effectiveIsPact
+        ? ' (Pact Magic Level $effectiveLevel)'
+        : (effectiveLevel > spell.level
+            ? ' (Cast at Level $effectiveLevel)'
+            : '');
+    final roomRoll = RoomRoll(
+      id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+      roomCode: activeRoom,
+      playerName: playerName,
+      formulaString: '${spell.name}$upcastLabel: ${result.formulaString}',
+      total: result.total,
+      individualRolls: result.individualRolls,
+      details: [
+        '${result.diceEntries.map((e) => e.formulaString).join(" + ")}(${result.individualRolls.join(", ")})'
+            '${modifier != 0 ? (modifier > 0 ? " + $modifier" : " - ${modifier.abs()}") : ""} = ${result.total}'
+      ],
+      isCrit: result.isCrit,
+      isFumble: result.isFumble,
+      timestamp: DateTime.now(),
+    );
+    roomService.broadcastRoll(roomRoll);
+
+    return result;
+  }
+
+  /// Returns current available charges for a named resource (e.g., 'Action Surge', 'Channel Divinity').
+  int getResourceCharges(String resourceKey, {int defaultMax = 1}) {
+    final pool = _character.resources;
+    final cleanKey = resourceKey.trim().toLowerCase();
+    return pool.customResourcesCurrent[cleanKey] ??
+        pool.customResourcesMax[cleanKey] ??
+        defaultMax;
+  }
+
+  /// Returns max charges for a named resource.
+  int getResourceMax(String resourceKey, {int defaultMax = 1}) {
+    final pool = _character.resources;
+    final cleanKey = resourceKey.trim().toLowerCase();
+    return pool.customResourcesMax[cleanKey] ?? defaultMax;
+  }
+
+  /// Updates current (and optionally max) charges for a named custom resource.
+  Future<void> updateResourceCharges(String resourceKey, int current,
+      {int? max}) async {
+    final pool = _character.resources;
+    final cleanKey = resourceKey.trim().toLowerCase();
+    final curMap = Map<String, int>.from(pool.customResourcesCurrent);
+    final maxMap = Map<String, int>.from(pool.customResourcesMax);
+
+    final resolvedMax = max ?? maxMap[cleanKey] ?? (current > 0 ? current : 1);
+    final clampedCurrent = current.clamp(0, resolvedMax);
+
+    curMap[cleanKey] = clampedCurrent;
+    maxMap[cleanKey] = resolvedMax;
+
+    _character = _character.copyWith(
+      resources: pool.copyWith(
+        customResourcesCurrent: curMap,
+        customResourcesMax: maxMap,
+      ),
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Consumes one charge of a named resource.
+  Future<void> expendResourceCharge(String resourceKey,
+      {int defaultMax = 1}) async {
+    final current = getResourceCharges(resourceKey, defaultMax: defaultMax);
+    final max = getResourceMax(resourceKey, defaultMax: defaultMax);
+    if (current > 0) {
+      await updateResourceCharges(resourceKey, current - 1, max: max);
+    }
+  }
+
+  /// Recovers one charge of a named resource.
+  Future<void> recoverResourceCharge(String resourceKey,
+      {int defaultMax = 1}) async {
+    final current = getResourceCharges(resourceKey, defaultMax: defaultMax);
+    final max = getResourceMax(resourceKey, defaultMax: defaultMax);
+    if (current < max) {
+      await updateResourceCharges(resourceKey, current + 1, max: max);
+    }
+  }
+
+  /// Returns all indexed campaign memberships linking this character.
+  List<CampaignMembership> getLinkedCampaigns() {
+    final registry = CampaignRegistryService();
+    final slug = _character.id.slug.toLowerCase().trim();
+    final name = _character.name.toLowerCase().trim();
+    return registry.memberships.where((m) {
+      final cId = m.characterId?.toLowerCase().trim();
+      return cId != null && (cId == slug || cId == name);
+    }).toList();
+  }
+
+  /// Dispatches audit logging to linked campaigns and party rooms.
+  Future<void> _logCampaignChangeIfLinked({
+    required String type,
+    required String details,
+  }) async {
+    final slug = _character.id.slug;
+    final name = _character.name;
+
+    // 1. Check CampaignRegistryService memberships
+    final memberships = getLinkedCampaigns();
+    for (final m in memberships) {
+      await PartyRoomService().logEvent(
+        roomCode: m.roomCode,
+        type: type,
+        playerName: name,
+        details: details,
+      );
+    }
+
+    // 2. Check CampaignProfileService DM profiles
+    await CampaignProfileService().logCampaignEvent(
+      characterId: slug,
+      characterName: name,
+      type: type,
+      details: details,
+    );
+  }
+
+  /// Synchronizes live telemetry (HP, Temp HP, spell slots, conditions, death saves) to any linked campaigns.
+  Future<void> _syncTelemetryToLinkedCampaigns() async {
+    final memberships = getLinkedCampaigns();
+    for (final m in memberships) {
+      try {
+        await PartyRoomService().updateCharacterTelemetry(
+          roomCode: m.roomCode,
+          character: _character,
+        );
+      } catch (_) {}
+    }
+  }
+
+  /// Synchronizes personal purse balance to any linked campaigns.
+  Future<void> _syncPurseToLinkedCampaigns() async {
+    final memberships = getLinkedCampaigns();
+    for (final m in memberships) {
+      try {
+        await PartyRoomService().updateMemberPurse(
+          roomCode: m.roomCode,
+          characterName: _character.name,
+          newPurse: _character.purse,
+          performedBy: _character.name,
+        );
+      } catch (_) {}
+    }
+  }
+
+  /// Adds a feat to the character sheet, optionally granting ability score increases,
+  /// skill/expertise choices, tool proficiencies, or feature option choices (e.g. Eldritch Invocations, Fighting Styles).
+  Future<void> addFeat(
+    EntityReference<DomainEntity> featRef, {
+    String? reason,
+    AbilityType? abilityBonus,
+    int bonusAmount = 1,
+    SkillType? skillGrant,
+    SkillType? expertiseGrant,
+    List<String>? featureOptions,
+    String? toolGrant,
+  }) async {
+    final existingFeats =
+        List<EntityReference<DomainEntity>>.from(_character.feats);
+    if (!existingFeats.any((f) => f.slug == featRef.slug)) {
+      existingFeats.add(featRef);
+    }
+
+    final feat = SrdFeatsLibrary.findBySlug(featRef.slug);
+
+    var newBonusScores = _character.bonusScores;
+    if (abilityBonus != null) {
+      final curBonus = newBonusScores.getScore(abilityBonus);
+      newBonusScores = newBonusScores.copyWith(
+        strength: abilityBonus == AbilityType.strength
+            ? curBonus + bonusAmount
+            : null,
+        dexterity: abilityBonus == AbilityType.dexterity
+            ? curBonus + bonusAmount
+            : null,
+        constitution: abilityBonus == AbilityType.constitution
+            ? curBonus + bonusAmount
+            : null,
+        intelligence: abilityBonus == AbilityType.intelligence
+            ? curBonus + bonusAmount
+            : null,
+        wisdom:
+            abilityBonus == AbilityType.wisdom ? curBonus + bonusAmount : null,
+        charisma: abilityBonus == AbilityType.charisma
+            ? curBonus + bonusAmount
+            : null,
+      );
+    }
+
+    final updatedSkills = Map<SkillType, SkillProficiencyLevel>.from(
+        _character.skillProficiencies);
+    if (skillGrant != null) {
+      updatedSkills[skillGrant] = SkillProficiencyLevel.proficient;
+    }
+    if (expertiseGrant != null) {
+      updatedSkills[expertiseGrant] = SkillProficiencyLevel.expertise;
+    }
+
+    // Resolve tool proficiencies
+    final updatedTools = List<String>.from(_character.toolProficiencies);
+    if (toolGrant != null && toolGrant.trim().isNotEmpty) {
+      final t = toolGrant.trim();
+      if (!updatedTools.contains(t)) updatedTools.add(t);
+    }
+    if (feat != null) {
+      for (final g in feat.grants) {
+        if (g.type == GrantType.bonusTool) {
+          final tName = g.payload['tool']?.toString() ?? '';
+          if (tName.isNotEmpty && !updatedTools.contains(tName))
+            updatedTools.add(tName);
+        }
+      }
+      final rawTools = feat.customProperties['toolProficiencies'];
+      if (rawTools is List) {
+        for (final item in rawTools) {
+          if (item is String &&
+              item.isNotEmpty &&
+              !updatedTools.contains(item)) {
+            updatedTools.add(item);
+          } else if (item is Map) {
+            final tName = item.keys.firstWhere(
+                (k) => k != 'any' && k != 'anyArtisansTool',
+                orElse: () => '');
+            if (tName.isNotEmpty && !updatedTools.contains(tName)) {
+              updatedTools.add(tName);
+            }
+          }
+        }
+      }
+    }
+
+    // Resolve armor and weapon proficiencies
+    final customProps = Map<String, dynamic>.from(_character.customProperties);
+    if (abilityBonus != null && bonusAmount > 0) {
+      customProps['feat_bonus_${featRef.slug}'] = abilityBonus.name;
+      customProps['feat_bonus_amount_${featRef.slug}'] = bonusAmount;
+    }
+    final allFeatSlugs = existingFeats.map((f) => f.slug).toList();
+    final primaryClassSlug =
+        _character.progression.classes.firstOrNull?.classRef.slug;
+    customProps['armorProficiencies'] =
+        SkillTraitResolver.resolveArmorProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: allFeatSlugs,
+      customProperties: customProps,
+    );
+    customProps['weaponProficiencies'] =
+        SkillTraitResolver.resolveWeaponProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: allFeatSlugs,
+      customProperties: customProps,
+    );
+
+    var updatedProgression = _character.progression;
+    if (featureOptions != null &&
+        featureOptions.isNotEmpty &&
+        _character.progression.classes.isNotEmpty) {
+      final featOptKey = 'feat-${featRef.slug}';
+      final updatedClasses = <ClassLevelProgression>[];
+      for (int i = 0; i < _character.progression.classes.length; i++) {
+        final c = _character.progression.classes[i];
+        if (i == 0) {
+          final mergedOptions =
+              Map<String, List<String>>.from(c.selectedFeatureOptions);
+          mergedOptions[featOptKey] = List<String>.from(featureOptions);
+          updatedClasses.add(c.copyWith(selectedFeatureOptions: mergedOptions));
+        } else {
+          updatedClasses.add(c);
+        }
+      }
+      updatedProgression = updatedProgression.copyWith(classes: updatedClasses);
+    }
+
+    _character = _character.copyWith(
+      feats: existingFeats,
+      bonusScores: newBonusScores,
+      skillProficiencies: updatedSkills,
+      toolProficiencies: updatedTools,
+      progression: updatedProgression,
+      customProperties: customProps,
+    );
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    // Prepare audit log entry
+    final parts = <String>['Added feat: ${featRef.displayName}'];
+    if (abilityBonus != null) {
+      parts.add('+$bonusAmount ${abilityBonus.shortName}');
+    }
+    if (skillGrant != null &&
+        expertiseGrant != null &&
+        skillGrant == expertiseGrant) {
+      parts.add('Proficiency & Expertise in ${skillGrant.displayName}');
+    } else {
+      if (skillGrant != null)
+        parts.add('Proficiency: ${skillGrant.displayName}');
+      if (expertiseGrant != null)
+        parts.add('Expertise: ${expertiseGrant.displayName}');
+    }
+    if (toolGrant != null && toolGrant.isNotEmpty) {
+      parts.add('Tool: $toolGrant');
+    }
+    if (featureOptions != null && featureOptions.isNotEmpty) {
+      parts.add('Options: ${featureOptions.join(', ')}');
+    }
+    if (reason != null && reason.trim().isNotEmpty) {
+      parts.add('("${reason.trim()}")');
+    }
+    await _logCampaignChangeIfLinked(
+      type: 'featAdded',
+      details: parts.join(' • '),
+    );
+  }
+
+  /// Removes a feat from the character sheet.
+  Future<void> removeFeat(String featSlug, {String? reason}) async {
+    final existingFeats =
+        List<EntityReference<DomainEntity>>.from(_character.feats);
+    final matchIdx = existingFeats.indexWhere((f) => f.slug == featSlug);
+    if (matchIdx == -1) return;
+
+    final removed = existingFeats.removeAt(matchIdx);
+    final feat = SrdFeatsLibrary.findBySlug(featSlug) ??
+        Feat(
+          id: EntityId(slug: featSlug, ruleset: _character.id.ruleset),
+          name: removed.displayName,
+          descriptionMarkdown: '',
+        );
+    final customProps = Map<String, dynamic>.from(_character.customProperties);
+    final trackedAbilityName =
+        customProps.remove('feat_bonus_$featSlug')?.toString();
+    final trackedAmount =
+        (customProps.remove('feat_bonus_amount_$featSlug') as num?)?.toInt() ??
+            feat.statIncreaseAmount;
+
+    var newBonusScores = _character.bonusScores;
+    if (trackedAbilityName != null) {
+      final ab = AbilityType.fromLooseString(trackedAbilityName);
+      final curBonus = newBonusScores.getScore(ab);
+      if (curBonus >= trackedAmount) {
+        final reduced = (curBonus - trackedAmount).toInt();
+        newBonusScores = newBonusScores.copyWith(
+          strength: ab == AbilityType.strength ? reduced : null,
+          dexterity: ab == AbilityType.dexterity ? reduced : null,
+          constitution: ab == AbilityType.constitution ? reduced : null,
+          intelligence: ab == AbilityType.intelligence ? reduced : null,
+          wisdom: ab == AbilityType.wisdom ? reduced : null,
+          charisma: ab == AbilityType.charisma ? reduced : null,
+        );
+      }
+    } else if (feat.hasAbilityScoreIncrease) {
+      for (final ab in feat.selectableAbilities) {
+        final curBonus = newBonusScores.getScore(ab);
+        if (curBonus >= feat.statIncreaseAmount) {
+          final reduced = (curBonus - feat.statIncreaseAmount).toInt();
+          newBonusScores = newBonusScores.copyWith(
+            strength: ab == AbilityType.strength ? reduced : null,
+            dexterity: ab == AbilityType.dexterity ? reduced : null,
+            constitution: ab == AbilityType.constitution ? reduced : null,
+            intelligence: ab == AbilityType.intelligence ? reduced : null,
+            wisdom: ab == AbilityType.wisdom ? reduced : null,
+            charisma: ab == AbilityType.charisma ? reduced : null,
+          );
+          break;
+        }
+      }
+    }
+
+    // Remove feat option choices from all classes
+    var updatedProgression = _character.progression;
+    final featOptKey = 'feat-$featSlug';
+    if (_character.progression.classes
+        .any((c) => c.selectedFeatureOptions.containsKey(featOptKey))) {
+      final updatedClasses = _character.progression.classes.map((c) {
+        if (c.selectedFeatureOptions.containsKey(featOptKey)) {
+          final mergedOptions =
+              Map<String, List<String>>.from(c.selectedFeatureOptions)
+                ..remove(featOptKey);
+          return c.copyWith(selectedFeatureOptions: mergedOptions);
+        }
+        return c;
+      }).toList();
+      updatedProgression = updatedProgression.copyWith(classes: updatedClasses);
+    }
+
+    // Re-resolve armor and weapon proficiencies without this feat
+    final remainingFeatSlugs = existingFeats.map((f) => f.slug).toList();
+    final primaryClassSlug =
+        _character.progression.classes.firstOrNull?.classRef.slug;
+    customProps['armorProficiencies'] =
+        SkillTraitResolver.resolveArmorProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: remainingFeatSlugs,
+      customProperties: null,
+    );
+    customProps['weaponProficiencies'] =
+        SkillTraitResolver.resolveWeaponProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: remainingFeatSlugs,
+      customProperties: null,
+    );
+
+    // Remove tools granted by this feat unless still granted by another feat
+    final updatedTools = List<String>.from(_character.toolProficiencies);
+    final featTools = <String>{};
+    for (final g in feat.grants) {
+      if (g.type == GrantType.bonusTool) {
+        final tName = g.payload['tool']?.toString() ?? '';
+        if (tName.isNotEmpty) featTools.add(tName);
+      }
+    }
+    final rawTools = feat.customProperties['toolProficiencies'];
+    if (rawTools is List) {
+      for (final item in rawTools) {
+        if (item is String && item.isNotEmpty) {
+          featTools.add(item);
+        } else if (item is Map) {
+          final tName = item.keys.firstWhere(
+              (k) => k != 'any' && k != 'anyArtisansTool',
+              orElse: () => '');
+          if (tName.isNotEmpty) featTools.add(tName);
+        }
+      }
+    }
+
+    final otherFeatTools = <String>{};
+    for (final fRef in existingFeats) {
+      final otherF = SrdFeatsLibrary.findBySlug(fRef.slug);
+      if (otherF != null) {
+        for (final g in otherF.grants) {
+          if (g.type == GrantType.bonusTool) {
+            final tName = g.payload['tool']?.toString() ?? '';
+            if (tName.isNotEmpty) otherFeatTools.add(tName);
+          }
+        }
+      }
+    }
+    updatedTools.removeWhere(
+        (t) => featTools.contains(t) && !otherFeatTools.contains(t));
+
+    _character = _character.copyWith(
+      feats: existingFeats,
+      bonusScores: newBonusScores,
+      toolProficiencies: updatedTools,
+      progression: updatedProgression,
+      customProperties: customProps,
+    );
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Removed feat: ${removed.displayName} ("${reason.trim()}")'
+        : 'Removed feat: ${removed.displayName}';
+
+    await _logCampaignChangeIfLinked(
+      type: 'featRemoved',
+      details: details,
+    );
+  }
+
+  /// Updates proficiency or expertise level for a specific skill.
+  Future<void> setSkillProficiency(
+    SkillType skill,
+    SkillProficiencyLevel level, {
+    String? reason,
+  }) async {
+    final updatedSkills = Map<SkillType, SkillProficiencyLevel>.from(
+        _character.skillProficiencies);
+    if (level == SkillProficiencyLevel.none) {
+      updatedSkills.remove(skill);
+    } else {
+      updatedSkills[skill] = level;
+    }
+
+    _character = _character.copyWith(
+      skillProficiencies: updatedSkills,
+    );
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Updated ${skill.displayName} to ${level.name} ("${reason.trim()}")'
+        : 'Updated ${skill.displayName} to ${level.name}';
+
+    await _logCampaignChangeIfLinked(
+      type: 'skillProficiencyChanged',
+      details: details,
+    );
+  }
+
+  /// Cycles a skill's proficiency level: None -> Proficient -> Expertise -> None.
+  Future<void> cycleSkillProficiency(SkillType skill) async {
+    final current =
+        _character.skillProficiencies[skill] ?? SkillProficiencyLevel.none;
+    final next = switch (current) {
+      SkillProficiencyLevel.none => SkillProficiencyLevel.proficient,
+      SkillProficiencyLevel.jackOfAllTrades => SkillProficiencyLevel.proficient,
+      SkillProficiencyLevel.proficient => SkillProficiencyLevel.expertise,
+      SkillProficiencyLevel.expertise => SkillProficiencyLevel.none,
+    };
+    await setSkillProficiency(skill, next);
+  }
+
+  /// Modifies an individual ability score on the character sheet.
+  Future<void> modifyAbilityScore(
+    AbilityType ability,
+    int newScore, {
+    String? reason,
+    bool isBaseScore = true,
+  }) async {
+    final oldScore = isBaseScore
+        ? _character.baseScores.getScore(ability)
+        : _character.bonusScores.getScore(ability);
+
+    if (oldScore == newScore) return;
+
+    if (isBaseScore) {
+      final updatedBase = _character.baseScores.copyWith(
+        strength: ability == AbilityType.strength ? newScore : null,
+        dexterity: ability == AbilityType.dexterity ? newScore : null,
+        constitution: ability == AbilityType.constitution ? newScore : null,
+        intelligence: ability == AbilityType.intelligence ? newScore : null,
+        wisdom: ability == AbilityType.wisdom ? newScore : null,
+        charisma: ability == AbilityType.charisma ? newScore : null,
+      );
+      _character = _character.copyWith(baseScores: updatedBase);
+    } else {
+      final updatedBonus = _character.bonusScores.copyWith(
+        strength: ability == AbilityType.strength ? newScore : null,
+        dexterity: ability == AbilityType.dexterity ? newScore : null,
+        constitution: ability == AbilityType.constitution ? newScore : null,
+        intelligence: ability == AbilityType.intelligence ? newScore : null,
+        wisdom: ability == AbilityType.wisdom ? newScore : null,
+        charisma: ability == AbilityType.charisma ? newScore : null,
+      );
+      _character = _character.copyWith(bonusScores: updatedBonus);
+    }
+
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final delta = newScore - oldScore;
+    final deltaStr = delta >= 0 ? '+$delta' : '$delta';
+    final diff = '${ability.shortName}: $oldScore -> $newScore ($deltaStr)';
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Modified stat: $diff ("${reason.trim()}")'
+        : 'Modified stat: $diff';
+
+    await _logCampaignChangeIfLinked(
+      type: 'statModified',
+      details: details,
+    );
+  }
+
+  /// Modifies base ability scores with an entire [AbilityScores] object, logging diffs.
+  Future<void> modifyBaseAbilityScores(AbilityScores newScores,
+      {String? reason}) async {
+    final oldScores = _character.baseScores;
+    final diffs = <String>[];
+
+    for (final ability in AbilityType.values) {
+      final oldS = oldScores.getScore(ability);
+      final newS = newScores.getScore(ability);
+      if (oldS != newS) {
+        final delta = newS - oldS;
+        final deltaStr = delta >= 0 ? '+$delta' : '$delta';
+        diffs.add('${ability.shortName}: $oldS -> $newS ($deltaStr)');
+      }
+    }
+
+    if (diffs.isEmpty) return;
+
+    _character = _character.copyWith(baseScores: newScores);
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final diffString = diffs.join(', ');
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Adjusted stats: $diffString ("${reason.trim()}")'
+        : 'Adjusted stats: $diffString';
+
+    await _logCampaignChangeIfLinked(
+      type: 'statModified',
+      details: details,
+    );
+  }
+
+  @override
+  void dispose() {
+    flush();
+    super.dispose();
+  }
+}

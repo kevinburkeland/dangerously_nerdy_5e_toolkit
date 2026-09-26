@@ -1,0 +1,308 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../application/services/cascading_transport_router.dart';
+import '../application/services/room_connection_telemetry.dart';
+import '../application/services/room_sync_orchestrator.dart';
+import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import '../infrastructure/di/injection_container.dart';
+import '../presentation/widgets/room_connection_badge.dart';
+import '../services/dice_room_service.dart';
+import '../theme/app_theme.dart';
+import 'dialogs/join_create_room_dialog.dart';
+
+class RoomBannerWidget extends StatefulWidget {
+  final DiceRoomService roomService;
+  final String? activeRoomCode;
+  final String? playerName;
+  final bool compact;
+  final Function(String roomCode, String playerName)? onJoinRoom;
+  final VoidCallback? onLeaveRoom;
+  final Stream<RoomConnectionTelemetry>? telemetryStream;
+  final RoomConnectionTelemetry? initialTelemetry;
+
+  RoomBannerWidget({
+    super.key,
+    DiceRoomService? roomService,
+    this.activeRoomCode,
+    this.playerName,
+    this.compact = false,
+    this.onJoinRoom,
+    this.onLeaveRoom,
+    this.telemetryStream,
+    this.initialTelemetry,
+  }) : roomService = roomService ?? DiceRoomService();
+
+  @override
+  State<RoomBannerWidget> createState() => _RoomBannerWidgetState();
+}
+
+class _RoomBannerWidgetState extends State<RoomBannerWidget> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAndConnect();
+    widget.roomService.activeSessionNotifier.addListener(_onSessionChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant RoomBannerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.activeRoomCode != widget.activeRoomCode ||
+        oldWidget.playerName != widget.playerName ||
+        oldWidget.roomService != widget.roomService) {
+      oldWidget.roomService.activeSessionNotifier
+          .removeListener(_onSessionChanged);
+      widget.roomService.activeSessionNotifier.addListener(_onSessionChanged);
+      _checkAndConnect();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.roomService.activeSessionNotifier.removeListener(_onSessionChanged);
+    super.dispose();
+  }
+
+  void _onSessionChanged() {
+    _checkAndConnect();
+    if (mounted) setState(() {});
+  }
+
+  void _checkAndConnect() {
+    final effectiveRoom =
+        widget.activeRoomCode ?? widget.roomService.activeRoomCode;
+    final effectiveName =
+        widget.playerName ?? widget.roomService.playerName ?? 'Adventurer';
+    if (effectiveRoom != null && effectiveRoom.isNotEmpty) {
+      if (sl.isRegistered<IP2pTransportPort>()) {
+        final transport = sl<IP2pTransportPort>();
+        if (transport is CascadingTransportRouter) {
+          if (transport.activeAdapter == null ||
+              transport.currentState == TransportState.offline) {
+            final localNodeId =
+                '$effectiveName-${effectiveRoom.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+            unawaited(transport.initializeRoom(effectiveRoom, localNodeId));
+          }
+        }
+      }
+      if (sl.isRegistered<RoomSyncOrchestrator>()) {
+        final orchestrator = sl<RoomSyncOrchestrator>();
+        if (!orchestrator.isSynchronizing) {
+          orchestrator.startSynchronization();
+        }
+      }
+    }
+  }
+
+  void _showJoinCreateRoomDialog(
+      BuildContext context, String? currentName, String? currentRoom) {
+    JoinCreateRoomDialog.show(
+      context,
+      initialPlayerName: currentName,
+      initialRoomCode: currentRoom,
+      onJoinRoom: (code, name) {
+        widget.roomService.joinRoom(code, name);
+        widget.onJoinRoom?.call(code, name);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final tabletop = theme.extension<TabletopColors>() ??
+        (isDark ? TabletopColors.dark : TabletopColors.light);
+
+    return ValueListenableBuilder<RoomSession?>(
+      valueListenable: widget.roomService.activeSessionNotifier,
+      builder: (context, session, _) {
+        final String? effectiveRoom =
+            widget.activeRoomCode ?? session?.roomCode;
+        final String? effectiveName = widget.playerName ?? session?.playerName;
+        final bool isConnected =
+            effectiveRoom != null && effectiveRoom.isNotEmpty;
+        final String roomCode = effectiveRoom ?? '';
+        final bool isRemembered = session?.isRemembered ?? false;
+
+        final bool isCompact = widget.compact;
+
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 10 : 14,
+            vertical: isCompact ? 6 : 9,
+          ),
+          decoration: BoxDecoration(
+            color: isConnected
+                ? primary.withValues(alpha: isDark ? 0.12 : 0.08)
+                : tabletop.cardBackground,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isConnected
+                  ? primary.withValues(alpha: 0.45)
+                  : tabletop.cardBorder.withValues(alpha: 0.6),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isConnected ? Icons.sensors : Icons.sensors_off,
+                color: isConnected
+                    ? primary
+                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                size: isCompact ? 18 : 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            isConnected ? roomCode : 'Solo Mode',
+                            style: TextStyle(
+                              color: isConnected
+                                  ? primary
+                                  : theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isCompact ? 13 : 13.5,
+                              letterSpacing: 0.3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isConnected && isRemembered) ...[
+                          const SizedBox(width: 6),
+                          Tooltip(
+                            message: 'Room saved across visits until you leave',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                    color: primary.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.bookmark_added,
+                                      color: primary, size: 10),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    'Saved',
+                                    style: TextStyle(
+                                      color: primary,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    Text(
+                      isConnected
+                          ? 'Broadcasting as ${effectiveName ?? "Anonymous"}'
+                          : 'Not connected to a live room',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: isCompact ? 11 : 11.5,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (isConnected) ...[
+                RoomConnectionBadge(
+                  compact: true,
+                  telemetryStream: widget.telemetryStream ??
+                      (sl.isRegistered<RoomSyncOrchestrator>()
+                          ? sl<RoomSyncOrchestrator>().watchTelemetry()
+                          : const Stream.empty()),
+                  initialTelemetry: widget.initialTelemetry ??
+                      (sl.isRegistered<RoomSyncOrchestrator>()
+                          ? sl<RoomSyncOrchestrator>().currentTelemetry
+                          : null),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: Icon(Icons.copy, color: primary, size: 17),
+                  tooltip: 'Copy Room Code',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: roomCode));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Copied "$roomCode" to clipboard!'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                  ),
+                  onPressed: () {
+                    widget.roomService.leaveRoom();
+                    widget.onLeaveRoom?.call();
+                  },
+                  child: Text(
+                    'Leave',
+                    style: TextStyle(
+                      color: tabletop.fumbleRed,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ] else
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary.withValues(alpha: 0.15),
+                    foregroundColor: primary,
+                    elevation: 0,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isCompact ? 8 : 10,
+                      vertical: isCompact ? 4 : 6,
+                    ),
+                    minimumSize: Size.zero,
+                  ),
+                  onPressed: () => _showJoinCreateRoomDialog(
+                      context, effectiveName, effectiveRoom),
+                  icon: Icon(Icons.hub, size: isCompact ? 13 : 14),
+                  label: Text(
+                    'Join Room',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isCompact ? 11 : 11.5,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}

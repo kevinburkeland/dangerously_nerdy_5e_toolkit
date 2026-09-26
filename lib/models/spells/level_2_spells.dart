@@ -1,0 +1,2576 @@
+import '../spellbook_data.dart';
+
+const List<SpellItem> srdLevel2Spells = [
+  SpellItem(
+    id: 'spell_barkskin',
+    name: 'Barkskin',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: true,
+    diffSummary:
+        'Completely redesigned: Now casts as a Bonus Action and grants temporary hit points each turn instead of setting a minimum AC 16.',
+    diffHighlights: [
+      '2014: 1 Action, Concentration (1 hr). Target’s AC can’t be less than 16 regardless of armor.',
+      '2024: 1 Bonus Action, Concentration (1 hr). Target gains Temporary HP equal to your spellcasting modifier + 10 (and replenishes each round).',
+    ],
+    tags: ['buff', 'defense', 'temp hp', 'bonus action', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (a handful of oak bark)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a handful of oak bark'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      description: [
+        'You touch a willing creature. Until the spell ends, the target’s skin has a rough, bark-like appearance, and the target’s AC can’t be less than 16, regardless of what kind of armor it is wearing.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Touch',
+      components: 'V, S, M (a handful of oak bark)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a handful of oak bark'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      rollFormula: '10 + mod',
+      damageOrHealType: 'Temporary HP',
+      description: [
+        'You touch a willing creature. Until the spell ends, the target’s skin is protected by bark. The target gains Temporary Hit Points equal to 10 + your spellcasting ability modifier.',
+        'At the start of each of its turns while the spell lasts, if the target has fewer than that number of Temporary Hit Points, it regains Temporary Hit Points up to that amount.',
+      ],
+      higherLevels:
+          'When cast with a 3rd-level or higher slot, the Temporary Hit Points increase by 5 for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_spiritual_weapon',
+    name: 'Spiritual Weapon',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: true,
+    diffSummary:
+        'Now requires Concentration! No longer allows free non-concentration passive bonus action attacks for 1 minute.',
+    diffHighlights: [
+      '2014: 1 Bonus Action, 1 minute duration (NO CONCENTRATION). Bonus action to attack each turn for 1d8 + modifier Force damage.',
+      '2024: 1 Bonus Action, Concentration (up to 1 minute). Deals 1d8 + modifier Force damage on bonus action attacks.',
+    ],
+    tags: ['cleric', 'force', 'concentration-added', 'nerfed', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: '1 minute',
+      concentration: false,
+      classes: [SpellClass.cleric],
+      rollFormula: '1d8 + mod',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 1,
+          diceSides: 8,
+          dicePerSlotLevel: 1,
+          slotStep: 2,
+          addsAbilityMod: true),
+      damageOrHealType: 'Force',
+      description: [
+        'You create a floating, spectral weapon within range that lasts for the duration or until you cast this spell again. When you cast the spell, you can make a melee spell attack against a creature within 5 feet of the weapon. On a hit, the target takes force damage equal to 1d8 + your spellcasting ability modifier.',
+        'As a bonus action on your turn, you can move the weapon up to 20 feet and repeat the attack against a creature within 5 feet of it.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d8 for every two slot levels above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.cleric],
+      rollFormula: '1d8 + mod',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 1,
+          diceSides: 8,
+          dicePerSlotLevel: 1,
+          slotStep: 2,
+          addsAbilityMod: true),
+      damageOrHealType: 'Force',
+      description: [
+        'You create a floating, spectral weapon within range that lasts for the duration. When you cast the spell, you can make a melee spell attack against a creature within 5 feet of the weapon. On a hit, the target takes Force damage equal to 1d8 + your spellcasting ability modifier.',
+        'As a Bonus Action on subsequent turns, you can move the weapon up to 20 feet and repeat the attack against a creature within 5 feet of it.',
+      ],
+      higherLevels:
+          'When cast with a 3rd-level or higher slot, damage increases by 1d8 for every two slot levels above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_pass_without_trace',
+    name: 'Pass without Trace',
+    level: 2,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'Changed from a passive +10 Stealth aura into granting Advantage on Stealth checks with a +10 bonus on specific rolls.',
+    diffHighlights: [
+      '2014: +10 bonus to Dexterity (Stealth) checks for you and companions within 30 ft, cannot be tracked except by magical means.',
+      '2024: Clarified interaction with new Hide action mechanics (giving +10 bonus or Advantage depending on conditions).',
+    ],
+    tags: ['stealth', 'druid', 'ranger', 'concentration', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (30-foot radius)',
+      components:
+          'V, S, M (ashes from a burned leaf of mistletoe and a sprig of spruce)',
+      materialDetails: SpellMaterialComponent(
+          description: 'ashes from burned mistletoe and a sprig of spruce'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      description: [
+        'A veil of shadows and silence radiates from you, masking you and your companions from detection.',
+        'For the duration, each creature you choose within 30 feet of you (including you) has a +10 bonus to Dexterity (Stealth) checks and can’t be tracked except by magical means.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (30-foot radius)',
+      components: 'V, S, M (ashes from a burned leaf of mistletoe)',
+      materialDetails:
+          SpellMaterialComponent(description: 'ashes from burned mistletoe'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      description: [
+        'A veil of shadows and silence radiates from you. For the duration, you and each creature you choose within 30 feet of you gain a +10 bonus to Dexterity (Stealth) checks and leave no tracks or other traces of passage.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_misty_step',
+    name: 'Misty Step',
+    level: 2,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space that you can see.',
+    tags: ['teleport', 'bonus action', 'mobility', 'conjuration', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space that you can see.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_hold_person',
+    name: 'Hold Person',
+    level: 2,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Paralyzes a humanoid target on failed Wisdom save (+1 humanoid per higher spell slot).',
+    tags: [
+      'paralyze',
+      'humanoid',
+      'save',
+      'concentration',
+      'enchantment',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a small, straight piece of iron)',
+      materialDetails: SpellMaterialComponent(
+          description: 'a small, straight piece of iron'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'Choose a humanoid that you can see within range. The target must succeed on a Wisdom saving throw or be paralyzed for the duration.',
+        'At the end of each of its turns, the target can make another Wisdom saving throw. On a success, the spell ends on the target.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, you can target one additional humanoid for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a small, straight piece of iron)',
+      materialDetails: SpellMaterialComponent(
+          description: 'a small, straight piece of iron'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'Choose a Humanoid within range. The target must make a Wisdom saving throw or have the Paralyzed condition for the duration. It repeats the save at the end of each turn.',
+      ],
+      higherLevels:
+          'Target one additional Humanoid for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_invisibility',
+    name: 'Invisibility',
+    level: 2,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Touches a creature to make it invisible until it attacks or casts a spell (+1 target per higher slot).',
+    tags: ['invisible', 'stealth', 'concentration', 'illusion', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (an eyelash encased in gum arabic)',
+      materialDetails: SpellMaterialComponent(
+          description: 'an eyelash encased in gum arabic'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'A creature you touch becomes invisible until the spell ends.',
+        'The spell ends for a target that attacks or casts a spell.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, you can target one additional creature for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (an eyelash encased in gum arabic)',
+      materialDetails: SpellMaterialComponent(
+          description: 'an eyelash encased in gum arabic'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'A creature you touch gains the Invisible condition until the spell ends or until it attacks or casts a spell.',
+      ],
+      higherLevels:
+          'Target one additional creature for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_scorching_ray',
+    name: 'Scorching Ray',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates 3 rays of fire dealing 2d6 fire damage each on ranged spell attack (+1 ray per higher slot).',
+    tags: ['fire', 'attack', 'ranged', 'damage', 'evocation', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '2d6',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 2, diceSides: 6),
+      damageOrHealType: 'Fire',
+      description: [
+        'You create three rays of fire and hurl them at targets within range. You can hurl them at one target or several.',
+        'Make a ranged spell attack for each ray. On a hit, the target takes 2d6 fire damage.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, you create one additional ray for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      rollFormula: '2d6',
+      scalingFormula: SpellScalingFormula(baseDiceCount: 2, diceSides: 6),
+      damageOrHealType: 'Fire',
+      description: [
+        'You create three rays of fire. Make a ranged spell attack for each ray, dealing 2d6 Fire damage per hit.',
+      ],
+      higherLevels: 'Create one additional ray for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_shatter',
+    name: 'Shatter',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Deals 3d8 thunder damage in a 10-foot radius sphere on Constitution save (inorganic objects have disadvantage).',
+    tags: ['thunder', 'aoe', 'damage', 'evocation', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a chip of mica)',
+      materialDetails: SpellMaterialComponent(description: 'a chip of mica'),
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      rollFormula: '3d8',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 3, diceSides: 8, dicePerSlotLevel: 1),
+      damageOrHealType: 'Thunder',
+      savingThrow: 'Constitution',
+      description: [
+        'A sudden loud ringing noise, painfully intense, erupts from a point of your choice within range. Each creature in a 10-foot-radius sphere centered on that point must make a Constitution saving throw.',
+        'A creature takes 3d8 thunder damage on a failed save, or half as much damage on a successful one. A creature made of inorganic material such as stone, crystal, or metal has disadvantage on this saving throw.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d8 for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a chip of mica)',
+      materialDetails: SpellMaterialComponent(description: 'a chip of mica'),
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      rollFormula: '3d8',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 3, diceSides: 8, dicePerSlotLevel: 1),
+      damageOrHealType: 'Thunder',
+      savingThrow: 'Constitution',
+      description: [
+        'A loud ringing noise erupts in a 10-foot-radius Sphere. Each creature takes 3d8 Thunder damage on failed Con save (half on success). Inorganic creatures have Disadvantage.',
+      ],
+      higherLevels: 'Damage increases by 1d8 for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_lesser_restoration',
+    name: 'Lesser Restoration',
+    level: 2,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'Casting time changed to 1 Bonus Action in 2024 rules! Ends one disease or condition (Blinded, Deafened, Paralyzed, or Poisoned).',
+    diffHighlights: [
+      '2014: 1 Action casting time.',
+      '2024: 1 Bonus Action casting time.',
+    ],
+    tags: [
+      'cure',
+      'healing',
+      'support',
+      'bonus action',
+      'abjuration',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.paladin,
+        SpellClass.ranger
+      ],
+      description: [
+        'You touch a creature and can end either one disease or one condition afflicting it. The condition can be blinded, deafened, paralyzed, or poisoned.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.paladin,
+        SpellClass.ranger
+      ],
+      description: [
+        'You touch a creature and end one condition afflicting it: Blinded, Deafened, Paralyzed, or Poisoned.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_aid',
+    name: 'Aid',
+    level: 2,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Bolsters up to three allies within 30 feet, increasing both their current and maximum Hit Points by 5 for 8 hours without concentration.',
+    tags: [
+      'buff',
+      'max-hp',
+      'healing',
+      'no-concentration',
+      'cleric',
+      'paladin',
+      'level 2',
+      'abjuration'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S, M (a tiny strip of white cloth)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a tiny strip of white cloth'),
+      duration: '8 hours',
+      classes: [SpellClass.cleric, SpellClass.paladin],
+      damageOrHealType: 'Max HP (+5)',
+      description: [
+        'Your spell bolsters your allies with toughness and resolve. Choose up to three creatures within range. Each target’s hit point maximum and current hit points increase by 5 for the duration.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, a target’s hit points increase by an additional 5 for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S, M (white cloth)',
+      materialDetails: SpellMaterialComponent(description: 'white cloth'),
+      duration: '8 hours',
+      classes: [SpellClass.cleric, SpellClass.paladin],
+      damageOrHealType: 'Max HP (+5)',
+      description: [
+        'Increases current and max Hit Points of up to 3 allies by 5 for 8 hours.',
+      ],
+      higherLevels: 'Hit Points increase by +5 per slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_prayer_of_healing',
+    name: 'Prayer of Healing',
+    level: 2,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: true,
+    diffSummary:
+        'Heals up to 6 creatures for 2d8 + mod (redesigned in 2024 as an Abjuration spell granting Short Rest benefits in 10 minutes).',
+    diffHighlights: [
+      '2014: 10 minutes casting time, Evocation. Restores 2d8 + spellcasting mod to up to 6 creatures.',
+      '2024: 10 minutes casting time, Abjuration. Affected creatures gain the benefits of a Short Rest and heal.',
+    ],
+    tags: ['healing', 'group-heal', 'short-rest', 'cleric', 'level 2'],
+    rules2014: SpellEditionDetails(
+      schoolOverride: SpellSchool.evocation,
+      castingTime: '10 minutes',
+      range: '30 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      rollFormula: '2d8 + mod',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 2, diceSides: 8, dicePerSlotLevel: 1),
+      damageOrHealType: 'Healing',
+      description: [
+        'Up to six creatures of your choice that you can see within range each regain hit points equal to 2d8 + your spellcasting ability modifier. This spell has no effect on undead or constructs.',
+      ],
+      higherLevels: 'Healing increases by 1d8 for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      schoolOverride: SpellSchool.abjuration,
+      castingTime: '10 minutes',
+      range: '30 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric],
+      rollFormula: '2d8 + mod',
+      damageOrHealType: 'Healing & Short Rest',
+      description: [
+        'Heals up to 6 creatures for 2d8 + mod and confers the benefits of a Short Rest.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_silence',
+    name: 'Silence',
+    level: 2,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a 20-foot radius sphere of total silence: no sound can pass, creatures inside are immune to thunder damage and deafened, and spells requiring verbal components cannot be cast.',
+    tags: [
+      'anti-caster',
+      'stealth',
+      'ritual',
+      'concentration',
+      'cleric',
+      'bard',
+      'ranger',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (20-foot radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 10 minutes',
+      ritual: true,
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.cleric, SpellClass.ranger],
+      description: [
+        'For the duration, no sound can be created within or pass through a 20-foot-radius sphere centered on a point you choose within range.',
+        'Any creature or object entirely inside the sphere is immune to thunder damage, and creatures are deafened while entirely inside it. Casting a spell that includes a verbal component is impossible there.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (20-foot radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 10 minutes',
+      ritual: true,
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.cleric, SpellClass.ranger],
+      description: [
+        'Mutes all sound in a 20-ft radius sphere, granting immunity to Thunder damage and completely preventing Verbal spellcasting.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_blindness_deafness',
+    name: 'Blindness/Deafness',
+    level: 2,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Inflicts either the Blinded or Deafened condition on a foe for 1 minute on a failed Constitution save without requiring concentration.',
+    tags: [
+      'debuff',
+      'blind',
+      'deaf',
+      'no-concentration',
+      'cleric',
+      'bard',
+      'sorcerer',
+      'wizard',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V',
+      duration: '1 minute',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Constitution',
+      description: [
+        'You can blind or deafen a foe. Choose one creature that you can see within range to make a Constitution saving throw. If it fails, the target is either blinded or deafened (your choice) for the duration. At the end of each of its turns, the target can make a Constitution save to end the spell.',
+      ],
+      higherLevels:
+          'Target one additional creature for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V',
+      duration: '1 minute',
+      concentration: false,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Constitution',
+      description: [
+        'Inflicts Blinded or Deafened condition on failed Constitution save (repeats save at end of each turn).',
+      ],
+      higherLevels: 'Target +1 creature per slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_enhance_ability',
+    name: 'Enhance Ability',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Bestows magical enhancement: Bear’s Endurance (+2d6 temp HP), Bull’s Strength (advantage STR), Cat’s Grace (advantage DEX), Eagle’s Splendor (advantage CHA), Fox’s Cunning (advantage INT), or Owl’s Wisdom (advantage WIS).',
+    tags: [
+      'buff',
+      'advantage-checks',
+      'temp-hp',
+      'concentration',
+      'cleric',
+      'druid',
+      'bard',
+      'sorcerer',
+      'wizard',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (fur or a feather from a beast)',
+      materialDetails:
+          SpellMaterialComponent(description: 'fur or a feather from a beast'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      description: [
+        'You touch a creature and bestow upon it a magical enhancement (Bear’s Endurance, Bull’s Strength, Cat’s Grace, Eagle’s Splendor, Fox’s Cunning, or Owl’s Wisdom), granting advantage on chosen ability checks and temporary hit points for Bear’s Endurance.',
+      ],
+      higherLevels:
+          'Target one additional creature for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (beast fur/feather)',
+      materialDetails: SpellMaterialComponent(description: 'beast fur/feather'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      description: [
+        'Grants Advantage on chosen ability checks and bonus temp HP for up to 1 hour.',
+      ],
+      higherLevels: 'Target +1 creature per slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_warding_bond',
+    name: 'Warding Bond',
+    level: 2,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a mystic bond with a willing ally: grants +1 AC, +1 to all saves, and resistance to all damage, while you take the exact same damage they take.',
+    tags: [
+      'buff',
+      'damage-share',
+      'resistance',
+      'ac-bonus',
+      'cleric',
+      'abjuration',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (a pair of platinum rings worth at least 50 gp each, which you and the target must wear for the duration)',
+      materialDetails: SpellMaterialComponent(
+        description: 'pair of platinum rings worth 50 gp each',
+        hasCost: true,
+        costInGp: 100,
+        isConsumed: false,
+      ),
+      duration: '1 hour',
+      classes: [SpellClass.cleric],
+      description: [
+        'This spell wards a willing creature you touch and creates a mystic connection between you and the target until the spell ends.',
+        'While the target is within 60 feet of you, it gains a +1 bonus to AC and saving throws, and it has resistance to all damage. Each time it takes damage, you take the same amount of damage.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (pair of platinum rings worth 50 gp each)',
+      materialDetails: SpellMaterialComponent(
+        description: 'pair of platinum rings worth 50 gp each',
+        hasCost: true,
+        costInGp: 100,
+        isConsumed: false,
+      ),
+      duration: '1 hour',
+      classes: [SpellClass.cleric],
+      description: [
+        'Grants ally +1 AC, +1 saves, and Resistance to all damage while within 60 ft; you suffer equal shared damage.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_heat_metal',
+    name: 'Heat Metal',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Heats a metal object red-hot dealing 2d8 fire damage and forcing creature to drop it or suffer disadvantage on attacks/ability checks; can trigger as Bonus Action each turn.',
+    tags: [
+      'fire',
+      'anti-metal',
+      'bonus-action-trigger',
+      'concentration',
+      'druid',
+      'bard',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (a piece of iron and a flame)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a piece of iron and a flame'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.druid],
+      rollFormula: '2d8',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 2, diceSides: 8, dicePerSlotLevel: 1),
+      damageOrHealType: 'Fire',
+      savingThrow: 'Constitution',
+      description: [
+        'Choose a manufactured metal object within range. Any creature in physical contact with the object takes 2d8 fire damage. You can use a bonus action on each subsequent turn to cause this damage again.',
+        'If a creature is holding or wearing the object and takes the damage, it must make a Constitution save or drop the object if possible; if it doesn’t drop it, it has disadvantage on attack rolls and ability checks until start of your next turn.',
+      ],
+      higherLevels: 'Damage increases by 1d8 for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S, M (iron and flame)',
+      materialDetails: SpellMaterialComponent(description: 'iron and flame'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.druid],
+      rollFormula: '2d8',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 2, diceSides: 8, dicePerSlotLevel: 1),
+      damageOrHealType: 'Fire',
+      savingThrow: 'Constitution',
+      description: [
+        'Heats metal dealing 2d8 Fire damage and imposing Disadvantage or forcing target to drop it. Refire with Bonus Action.',
+      ],
+      higherLevels: 'Damage increases by 1d8 per slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_moonbeam',
+    name: 'Moonbeam',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: true,
+    diffSummary:
+        'Calls down a 5-foot-radius cylinder of silvery moonlight dealing 2d10 radiant damage on Constitution save and forcing shapechangers back to true form.',
+    diffHighlights: [
+      '2014: 1 Action, Concentration up to 1 minute. Deals damage when a creature enters the area on a turn or starts its turn there.',
+      '2024: 1 Action, Concentration up to 1 minute. Triggers damage when entering or moving the cylinder onto a creature.',
+    ],
+    tags: [
+      'radiant',
+      'moonlight',
+      'shapechanger-counter',
+      'concentration',
+      'druid',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (5-foot-radius cylinder)',
+      components:
+          'V, S, M (several seeds of any moonseed plant and a piece of opalescent feldspar)',
+      materialDetails:
+          SpellMaterialComponent(description: 'moonseed seeds and feldspar'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid],
+      rollFormula: '2d10',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 2, diceSides: 10, dicePerSlotLevel: 1),
+      damageOrHealType: 'Radiant',
+      savingThrow: 'Constitution',
+      description: [
+        'A silvery beam of pale light shines down in a 5-foot-radius, 40-foot-high cylinder. Deals 2d10 radiant damage on failed Constitution save (half on success). Shapechangers make save with disadvantage and revert to original form on failure.',
+        'You can move the beam up to 60 feet in any direction as an action.',
+      ],
+      higherLevels: 'Damage increases by 1d10 for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (5-foot-radius cylinder)',
+      components: 'V, S, M (feldspar)',
+      materialDetails: SpellMaterialComponent(description: 'feldspar'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid],
+      rollFormula: '2d10',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 2, diceSides: 10, dicePerSlotLevel: 1),
+      damageOrHealType: 'Radiant',
+      savingThrow: 'Constitution',
+      description: [
+        'A silvery beam of pale light shines down in a 5-foot-radius, 40-foot-high cylinder. Deals 2d10 radiant damage on failed Constitution save (half on success). Shapechangers make save with disadvantage and revert to original form on failure.',
+        'You can move the beam up to 60 feet in any direction as an action.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d10 for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_acid_arrow',
+    name: 'Acid Arrow',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'A shimmering green arrow streaks toward a target dealing 4d4 acid damage immediately plus 2d4 acid damage at the end of its next turn (half initial damage on miss).',
+    tags: ['acid', 'ranged', 'attack', 'evocation', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '90 feet',
+      components: 'V, S, M (powdered rhubarb leaf and an adder’s stomach)',
+      materialDetails:
+          SpellMaterialComponent(description: 'rhubarb leaf and adder stomach'),
+      duration: 'Instantaneous',
+      classes: [SpellClass.wizard],
+      rollFormula: '4d4',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 4, diceSides: 4, dicePerSlotLevel: 1),
+      damageOrHealType: 'Acid (4d4 + 2d4)',
+      description: [
+        'A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target.',
+        'On a hit, the target takes 4d4 acid damage immediately and 2d4 acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage and no damage at the end of its next turn.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the damage (both initial and later) increases by 1d4 for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '90 feet',
+      components: 'V, S, M (powdered rhubarb leaf and an adder’s stomach)',
+      materialDetails:
+          SpellMaterialComponent(description: 'rhubarb leaf and adder stomach'),
+      duration: 'Instantaneous',
+      classes: [SpellClass.wizard],
+      rollFormula: '4d4',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 4, diceSides: 4, dicePerSlotLevel: 1),
+      damageOrHealType: 'Acid (4d4 + 2d4)',
+      description: [
+        'A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target.',
+        'On a hit, the target takes 4d4 acid damage immediately and 2d4 acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage and no damage at the end of its next turn.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the damage (both initial and later) increases by 1d4 for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_blur',
+    name: 'Blur',
+    level: 2,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Your body becomes blurred and shifting: any creature has Disadvantage on attack rolls against you unless it has blindsight or truesight.',
+    tags: [
+      'defense',
+      'disadvantage',
+      'concentration',
+      'sorcerer',
+      'wizard',
+      'illusion',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Your body becomes blurred, shifting and wavering to all who can see you. For the duration, any creature has disadvantage on attack rolls against you.',
+        'An attacker is immune to this effect if it doesn’t rely on sight, as with blindsight, or can see through illusions, as with truesight.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Your body becomes blurred, shifting and wavering to all who can see you. For the duration, any creature has disadvantage on attack rolls against you.',
+        'An attacker is immune to this effect if it doesn’t rely on sight, as with blindsight, or can see through illusions, as with truesight.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_darkness',
+    name: 'Darkness',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Magical darkness spreads from a point in a 15-foot-radius sphere. Darkvision cannot see through it, and nonmagical light cannot illuminate it.',
+    tags: [
+      'darkness',
+      'obscure',
+      'aoe',
+      'concentration',
+      'sorcerer',
+      'warlock',
+      'wizard',
+      'evocation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (15-foot-radius sphere)',
+      components: 'V, M (bat fur and a drop of pitch or piece of coal)',
+      materialDetails:
+          SpellMaterialComponent(description: 'bat fur and pitch or coal'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Magical darkness spreads from a point you choose within range to fill a 15-foot-radius sphere for the duration. The darkness spreads around corners. A creature with darkvision can’t see through this darkness, and nonmagical light can’t illuminate it.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (15-foot-radius sphere)',
+      components: 'V, M (bat fur and a drop of pitch or piece of coal)',
+      materialDetails:
+          SpellMaterialComponent(description: 'bat fur and pitch or coal'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Magical darkness spreads from a point you choose within range to fill a 15-foot-radius sphere for the duration. The darkness spreads around corners. A creature with darkvision can’t see through this darkness, and nonmagical light can’t illuminate it.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_darkvision',
+    name: 'Darkvision',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Touch a willing creature to grant it darkvision out to a range of 60 feet for 8 hours.',
+    tags: [
+      'vision',
+      'buff',
+      'utility',
+      'druid',
+      'ranger',
+      'sorcerer',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (either a pinch of dried carrot or an agate)',
+      materialDetails:
+          SpellMaterialComponent(description: 'dried carrot or agate'),
+      duration: '8 hours',
+      classes: [
+        SpellClass.druid,
+        SpellClass.ranger,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      description: [
+        'You touch a willing creature to grant it the ability to see in the dark. For the duration, that creature has darkvision out to a range of 60 feet.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (either a pinch of dried carrot or an agate)',
+      materialDetails:
+          SpellMaterialComponent(description: 'dried carrot or agate'),
+      duration: '8 hours',
+      classes: [
+        SpellClass.druid,
+        SpellClass.ranger,
+        SpellClass.sorcerer,
+        SpellClass.wizard
+      ],
+      description: [
+        'You touch a willing creature to grant it the ability to see in the dark. For the duration, that creature has darkvision out to a range of 60 feet.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_detect_thoughts',
+    name: 'Detect Thoughts',
+    level: 2,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Read surface thoughts of creatures within 30 feet, or probe deeper into a creature’s mind on failed Wisdom save.',
+    tags: [
+      'telepathy',
+      'mind-read',
+      'social',
+      'concentration',
+      'bard',
+      'sorcerer',
+      'wizard',
+      'divination',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S, M (a copper piece)',
+      materialDetails: SpellMaterialComponent(description: 'a copper piece'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Wisdom',
+      description: [
+        'For the duration, you can read the thoughts of certain creatures. When you cast the spell and as your action on each turn, you can focus on one creature within 30 feet to read its surface thoughts.',
+        'You can also probe deeper into the target’s mind. If it fails a Wisdom saving throw, you gain insight into its reasoning, its emotional state, and something that looms large in its mind.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S, M (a copper piece)',
+      materialDetails: SpellMaterialComponent(description: 'a copper piece'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Wisdom',
+      description: [
+        'For the duration, you can read the thoughts of certain creatures. When you cast the spell and as your action on each turn, you can focus on one creature within 30 feet to read its surface thoughts.',
+        'You can also probe deeper into the target’s mind. If it fails a Wisdom saving throw, you gain insight into its reasoning, its emotional state, and something that looms large in its mind.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_enlarge_reduce',
+    name: 'Enlarge/Reduce',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Cause a creature or object to double in size (Advantage on STR checks/saves, +1d4 weapon damage) or halve in size (Disadvantage on STR, -1d4 damage) on Constitution save.',
+    tags: [
+      'buff',
+      'debuff',
+      'size',
+      'concentration',
+      'sorcerer',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S, M (a pinch of powdered iron)',
+      materialDetails: SpellMaterialComponent(description: 'powdered iron'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'You cause a creature or an object you can see within range to grow larger or smaller for the duration. An unwilling creature can make a Constitution saving throw to avoid the effect.',
+        'Enlarge: Target’s size increases by one category, weight is multiplied by eight. Target has advantage on Strength checks and Strength saving throws, and its weapons deal an extra 1d4 damage.',
+        'Reduce: Target’s size decreases by one category, weight is divided by eight. Target has disadvantage on Strength checks and Strength saving throws, and its weapons deal 1d4 less damage (minimum 1).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S, M (a pinch of powdered iron)',
+      materialDetails: SpellMaterialComponent(description: 'powdered iron'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'You cause a creature or an object you can see within range to grow larger or smaller for the duration. An unwilling creature can make a Constitution saving throw to avoid the effect.',
+        'Enlarge: Target’s size increases by one category, weight is multiplied by eight. Target has advantage on Strength checks and Strength saving throws, and its weapons deal an extra 1d4 damage.',
+        'Reduce: Target’s size decreases by one category, weight is divided by eight. Target has disadvantage on Strength checks and Strength saving throws, and its weapons deal 1d4 less damage (minimum 1).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_flaming_sphere',
+    name: 'Flaming Sphere',
+    level: 2,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'A 5-foot-diameter sphere of fire rolls up to 30 feet as a Bonus Action dealing 2d6 fire damage on Dexterity save.',
+    tags: [
+      'fire',
+      'sphere',
+      'bonus-action-move',
+      'concentration',
+      'druid',
+      'wizard',
+      'conjuration',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components:
+          'V, S, M (a bit of tallow, a pinch of brimstone, and a dusting of powdered iron)',
+      materialDetails: SpellMaterialComponent(
+          description: 'tallow, brimstone, and iron dust'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.wizard],
+      rollFormula: '2d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 2, diceSides: 6, dicePerSlotLevel: 1),
+      damageOrHealType: 'Fire',
+      savingThrow: 'Dexterity',
+      description: [
+        'A 5-foot-diameter sphere of fire appears in an unoccupied space on the ground within range. Any creature that ends its turn within 5 feet of the sphere must make a Dexterity saving throw. The creature takes 2d6 fire damage on a failed save, or half as much on a successful one.',
+        'As a bonus action, you can move the sphere up to 30 feet.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components:
+          'V, S, M (a bit of tallow, a pinch of brimstone, and a dusting of powdered iron)',
+      materialDetails: SpellMaterialComponent(
+          description: 'tallow, brimstone, and iron dust'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.wizard],
+      rollFormula: '2d6',
+      scalingFormula: SpellScalingFormula(
+          baseDiceCount: 2, diceSides: 6, dicePerSlotLevel: 1),
+      damageOrHealType: 'Fire',
+      savingThrow: 'Dexterity',
+      description: [
+        'A 5-foot-diameter sphere of fire appears in an unoccupied space on the ground within range. Any creature that ends its turn within 5 feet of the sphere must make a Dexterity saving throw. The creature takes 2d6 fire damage on a failed save, or half as much on a successful one.',
+        'As a bonus action, you can move the sphere up to 30 feet.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_knock',
+    name: 'Knock',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Instantly unlocks one locked door, box, chest, padlock, or pair of manacles, or suppresses Arcane Lock for 10 minutes. Emits a loud knock audible out to 300 feet.',
+    tags: [
+      'utility',
+      'unlock',
+      'loud',
+      'bard',
+      'sorcerer',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Choose an object that you can see within range. The object can be a door, a box, a chest, a set of manacles, a padlock, or another object that contains a mundane or magical means that prevents access.',
+        'A target that is held shut by a mundane lock or that is stuck or barred becomes unlocked, unstuck, or unbarred. If the object has multiple locks, only one of them is unlocked.',
+        'When you cast the spell, a loud knock, audible from as far away as 300 feet, emanates from the target object.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V',
+      duration: 'Instantaneous',
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'Choose an object that you can see within range. The object can be a door, a box, a chest, a set of manacles, a padlock, or another object that contains a mundane or magical means that prevents access.',
+        'A target that is held shut by a mundane lock or that is stuck or barred becomes unlocked, unstuck, or unbarred. If the object has multiple locks, only one of them is unlocked.',
+        'When you cast the spell, a loud knock, audible from as far away as 300 feet, emanates from the target object.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_levitate',
+    name: 'Levitate',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Levitates one creature or object up to 500 lbs up to 20 feet vertically. Target can only move by pushing or pulling against fixed objects on failed Constitution save.',
+    tags: [
+      'mobility',
+      'control',
+      'vertical-movement',
+      'concentration',
+      'sorcerer',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components:
+          'V, S, M (a small metal spring and a piece of malleable wire)',
+      materialDetails:
+          SpellMaterialComponent(description: 'metal spring and wire'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'One creature or object of your choice that you can see within range rises vertically, up to 20 feet, and remains suspended there for the duration (up to 500 pounds). An unwilling creature makes a Constitution saving throw to avoid the effect.',
+        'You can change the target’s altitude by up to 20 feet in either direction on your turn.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components:
+          'V, S, M (a small metal spring and a piece of malleable wire)',
+      materialDetails:
+          SpellMaterialComponent(description: 'metal spring and wire'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'One creature or object of your choice that you can see within range rises vertically, up to 20 feet, and remains suspended there for the duration (up to 500 pounds). An unwilling creature makes a Constitution saving throw to avoid the effect.',
+        'You can change the target’s altitude by up to 20 feet in either direction on your turn.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_mirror_image',
+    name: 'Mirror Image',
+    level: 2,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates three illusory duplicates of yourself. When targeted by an attack, roll a d20 to see if the attack targets a duplicate instead (AC 10 + DEX mod). Non-concentration.',
+    tags: [
+      'defense',
+      'clones',
+      'non-concentration',
+      'bard',
+      'sorcerer',
+      'warlock',
+      'wizard',
+      'illusion',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: '1 minute',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'Three illusory duplicates of yourself appear in your space. Until the spell ends, the duplicates move with you and mimic your actions, shifting position so as to make it impossible to track which image is real.',
+        'Each time a creature targets you with an attack during the spell’s duration, roll a d20 to determine whether the attack instead targets one of your duplicates (3 duplicates: 6+, 2 duplicates: 8+, 1 duplicate: 11+). A duplicate’s AC is 10 + your Dexterity modifier.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: '1 minute',
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      description: [
+        'Three illusory duplicates of yourself appear in your space. Until the spell ends, the duplicates move with you and mimic your actions, shifting position so as to make it impossible to track which image is real.',
+        'Each time a creature targets you with an attack during the spell’s duration, roll a d20 to determine whether the attack instead targets one of your duplicates (3 duplicates: 6+, 2 duplicates: 8+, 1 duplicate: 11+). A duplicate’s AC is 10 + your Dexterity modifier.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_see_invisibility',
+    name: 'See Invisibility',
+    level: 2,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'See invisible creatures and objects as if they were visible, and see into the Ethereal Plane out to 60 feet for 1 hour. Non-concentration.',
+    tags: [
+      'anti-invisibility',
+      'ethereal',
+      'vision',
+      'bard',
+      'sorcerer',
+      'wizard',
+      'divination',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components:
+          'V, S, M (a pinch of talc and a small sprinkling of powdered silver)',
+      materialDetails:
+          SpellMaterialComponent(description: 'talc and powdered silver'),
+      duration: '1 hour',
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'For the duration, you see invisible creatures and objects as if they were visible, and you can see into the Ethereal Plane. Ethereal creatures and objects appear ghostly and translucent.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components:
+          'V, S, M (a pinch of talc and a small sprinkling of powdered silver)',
+      materialDetails:
+          SpellMaterialComponent(description: 'talc and powdered silver'),
+      duration: '1 hour',
+      classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'For the duration, you see invisible creatures and objects as if they were visible, and you can see into the Ethereal Plane. Ethereal creatures and objects appear ghostly and translucent.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_spider_climb',
+    name: 'Spider Climb',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Grants one willing creature the ability to move up, down, and across vertical surfaces and upside down along ceilings with hands free (climbing speed equal to walking speed).',
+    tags: [
+      'climb',
+      'wall-walking',
+      'mobility',
+      'concentration',
+      'sorcerer',
+      'warlock',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (a drop of bitumen and a spider)',
+      materialDetails:
+          SpellMaterialComponent(description: 'bitumen and a spider'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Until the spell ends, one willing creature you touch gains the ability to move up, down, and across vertical surfaces and upside down along ceilings, while leaving its hands free. The target also gains a climbing speed equal to its walking speed.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S, M (a drop of bitumen and a spider)',
+      materialDetails:
+          SpellMaterialComponent(description: 'bitumen and a spider'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
+      description: [
+        'Until the spell ends, one willing creature you touch gains the ability to move up, down, and across vertical surfaces and upside down along ceilings, while leaving its hands free. The target also gains a climbing speed equal to its walking speed.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_spike_growth',
+    name: 'Spike Growth',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'The ground in a 20-foot radius sprouts hard spikes turning it into difficult terrain. A creature takes 2d4 piercing damage for every 5 feet it travels in the area.',
+    tags: [
+      'hazard',
+      'piercing',
+      'difficult-terrain',
+      'concentration',
+      'druid',
+      'ranger',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '150 feet (20-foot-radius sphere)',
+      components:
+          'V, S, M (seven sharp thorns or seven small twigs, each sharpened to a point)',
+      materialDetails:
+          SpellMaterialComponent(description: 'sharpened thorns or twigs'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      rollFormula: '2d4',
+      damageOrHealType: 'Piercing (per 5 ft moved)',
+      description: [
+        'The ground in a 20-foot radius centered on a point within range twists and sprouts hard spikes and thorns. The area becomes difficult terrain for the duration.',
+        'When a creature moves into or within the area, it takes 2d4 piercing damage for every 5 feet it travels. The transformation of the ground is camouflaged to look natural; a creature must make a Perception check against your spell save DC to recognize the terrain as hazardous before entering.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '150 feet (20-foot-radius sphere)',
+      components:
+          'V, S, M (seven sharp thorns or seven small twigs, each sharpened to a point)',
+      materialDetails:
+          SpellMaterialComponent(description: 'sharpened thorns or twigs'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      rollFormula: '2d4',
+      damageOrHealType: 'Piercing (per 5 ft moved)',
+      description: [
+        'The ground in a 20-foot radius centered on a point within range twists and sprouts hard spikes and thorns. The area becomes difficult terrain for the duration.',
+        'When a creature moves into or within the area, it takes 2d4 piercing damage for every 5 feet it travels. The transformation of the ground is camouflaged to look natural; a creature must make a Perception check against your spell save DC to recognize the terrain as hazardous before entering.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_suggestion',
+    name: 'Suggestion',
+    level: 2,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Suggest a course of activity (phrased to sound reasonable) to a creature on failed Wisdom save; target pursues the task for up to 8 hours.',
+    tags: [
+      'social',
+      'charm',
+      'command',
+      'concentration',
+      'bard',
+      'sorcerer',
+      'warlock',
+      'wizard',
+      'enchantment',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components:
+          'V, M (a snake’s tongue and either a bit of honeycomb or a drop of sweet oil)',
+      materialDetails:
+          SpellMaterialComponent(description: 'snake tongue and honeycomb/oil'),
+      duration: 'Concentration, up to 8 hours',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'You suggest a course of activity (limited to a sentence or two) and magically influence a creature you can see within range that can hear and understand you. The suggestion must be worded in such a manner as to make the activity sound reasonable.',
+        'The target must make a Wisdom saving throw. On a failed save, it pursues the course of action you described to the best of its ability for the duration. The suggested activity can continue for the entire duration, and ends if the activity is completed early or if you or your companions damage the target.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components:
+          'V, M (a snake’s tongue and either a bit of honeycomb or a drop of sweet oil)',
+      materialDetails:
+          SpellMaterialComponent(description: 'snake tongue and honeycomb/oil'),
+      duration: 'Concentration, up to 8 hours',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.sorcerer,
+        SpellClass.warlock,
+        SpellClass.wizard
+      ],
+      savingThrow: 'Wisdom',
+      description: [
+        'You suggest a course of activity (limited to a sentence or two) and magically influence a creature you can see within range that can hear and understand you. The suggestion must be worded in such a manner as to make the activity sound reasonable.',
+        'The target must make a Wisdom saving throw. On a failed save, it pursues the course of action you described to the best of its ability for the duration. The suggested activity can continue for the entire duration, and ends if the activity is completed early or if you or your companions damage the target.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_web',
+    name: 'Web',
+    level: 2,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Thick, sticky webbing fills a 20-foot cube creating difficult terrain and heavily obscuring light. Creatures entering or starting turn in webs must succeed on Dexterity save or be restrained.',
+    tags: [
+      'restrain',
+      'webs',
+      'aoe',
+      'hazard',
+      'concentration',
+      'sorcerer',
+      'wizard',
+      'conjuration',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (20-foot cube)',
+      components: 'V, S, M (a bit of spiderweb)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a bit of spiderweb'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Dexterity',
+      description: [
+        'You conjure a mass of thick, sticky webbing at a point within range. The webs fill a 20-foot cube. The webs are difficult terrain and lightly obscure their area.',
+        'Each creature that starts its turn in the webs or that enters them during its turn must make a Dexterity saving throw. On a failed save, the creature is restrained as long as it remains in the webs or until it breaks free (Strength check vs DC).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (20-foot cube)',
+      components: 'V, S, M (a bit of spiderweb)',
+      materialDetails:
+          SpellMaterialComponent(description: 'a bit of spiderweb'),
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Dexterity',
+      description: [
+        'You conjure a mass of thick, sticky webbing at a point within range. The webs fill a 20-foot cube. The webs are difficult terrain and lightly obscure their area.',
+        'Each creature that starts its turn in the webs or that enters them during its turn must make a Dexterity saving throw. On a failed save, the creature is restrained as long as it remains in the webs or until it breaks free (Strength check vs DC).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_zone_of_truth',
+    name: 'Zone of Truth',
+    level: 2,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a magical zone in a 15-foot-radius sphere. A creature that enters or starts turn in zone cannot speak a deliberate lie on failed Charisma save.',
+    tags: [
+      'truth',
+      'interrogation',
+      'social',
+      'cleric',
+      'paladin',
+      'bard',
+      'enchantment',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (15-foot-radius sphere)',
+      components: 'V, S',
+      duration: '10 minutes',
+      classes: [SpellClass.bard, SpellClass.cleric, SpellClass.paladin],
+      savingThrow: 'Charisma',
+      description: [
+        'You create a magical zone that guards against deception in a 15-foot-radius sphere centered on a point of your choice within range. Until the spell ends, a creature that enters the spell’s area for the first time on a turn or starts its turn there must make a Charisma saving throw.',
+        'On a failed save, a creature can’t speak a deliberate lie while in the radius. You know whether each creature succeeds or fails on its saving throw.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (15-foot-radius sphere)',
+      components: 'V, S',
+      duration: '10 minutes',
+      classes: [SpellClass.bard, SpellClass.cleric, SpellClass.paladin],
+      savingThrow: 'Charisma',
+      description: [
+        'You create a magical zone that guards against deception in a 15-foot-radius sphere centered on a point of your choice within range. Until the spell ends, a creature that enters the spell’s area for the first time on a turn or starts its turn there must make a Charisma saving throw.',
+        'On a failed save, a creature can’t speak a deliberate lie while in the radius. You know whether each creature succeeds or fails on its saving throw.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_alter_self',
+    name: 'Alter Self',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Assume a new form for 1 hour: Aquatic Adaptation (swim speed & breathe underwater), Change Appearance (alter face, build, height, gender), or Natural Weapons (1d6 magical unarmed strikes +1 to hit/dmg).',
+    tags: [
+      'transformation',
+      'underwater',
+      'disguise',
+      'natural-weapons',
+      'concentration',
+      'sorcerer',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'You assume a different form. When you cast the spell, choose one of the following options: Aquatic Adaptation (breathe underwater and gain swim speed equal to walking speed), Change Appearance (transform your physical appearance), or Natural Weapons (grow claws, fangs, or horns dealing 1d6 bludgeoning, piercing, or slashing damage with a +1 bonus to attack and damage rolls).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.sorcerer, SpellClass.wizard],
+      description: [
+        'You assume a different form. When you cast the spell, choose one of the following options: Aquatic Adaptation (breathe underwater and gain swim speed equal to walking speed), Change Appearance (transform your physical appearance), or Natural Weapons (grow claws, fangs, or horns dealing 1d6 bludgeoning, piercing, or slashing damage with a +1 bonus to attack and damage rolls).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_augury',
+    name: 'Augury',
+    level: 2,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Receive an omen from an otherworldly entity about the results of a specific course of action within the next 30 minutes (Weal, Woe, Weal and Woe, or Nothing). Ritual spell.',
+    tags: ['divination', 'omen', 'future-sight', 'ritual', 'cleric', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components:
+          'V, S, M (specially marked sticks, bones, or similar tokens worth at least 25 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'divination tokens worth 25 gp',
+        hasCost: true,
+        costInGp: 25,
+        isConsumed: false,
+      ),
+      duration: 'Instantaneous',
+      ritual: true,
+      classes: [SpellClass.cleric],
+      description: [
+        'By casting gem-inlaid sticks, rolling dragon bones, or consulting cards, you receive an omen from an otherworldly entity about the results of a specific course of action that you plan to take within the next 30 minutes.',
+        'The DM chooses from the following possible omens: Weal (for good results), Woe (for bad results), Weal and Woe (for both good and bad results), or Nothing (for results that aren’t especially good or bad).',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components:
+          'V, S, M (specially marked sticks, bones, or similar tokens worth at least 25 gp)',
+      materialDetails: SpellMaterialComponent(
+        description: 'divination tokens worth 25 gp',
+        hasCost: true,
+        costInGp: 25,
+        isConsumed: false,
+      ),
+      duration: 'Instantaneous',
+      ritual: true,
+      classes: [SpellClass.cleric],
+      description: [
+        'By casting gem-inlaid sticks, rolling dragon bones, or consulting cards, you receive an omen from an otherworldly entity about the results of a specific course of action that you plan to take within the next 30 minutes.',
+        'The DM chooses from the following possible omens: Weal (for good results), Woe (for bad results), Weal and Woe (for both good and bad results), or Nothing (for results that aren’t especially good or bad).',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_calm_emotions',
+    name: 'Calm Emotions',
+    level: 2,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Calms humanoids in a 20-foot-radius sphere on failed Charisma save: suppress charmed/frightened conditions or make hostile creatures indifferent toward chosen targets.',
+    tags: [
+      'charm-counter',
+      'pacify',
+      'social',
+      'concentration',
+      'bard',
+      'cleric',
+      'enchantment',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (20-foot-radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.cleric],
+      savingThrow: 'Charisma',
+      description: [
+        'You attempt to suppress strong emotions in a group of people. Each humanoid in a 20-foot-radius sphere centered on a point you choose must make a Charisma saving throw.',
+        'On a failed save, you can choose to: suppress any effect causing a target to be charmed or frightened, or make a target indifferent about creatures of your choice that it is hostile toward.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet (20-foot-radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.bard, SpellClass.cleric],
+      savingThrow: 'Charisma',
+      description: [
+        'You attempt to suppress strong emotions in a group of people. Each humanoid in a 20-foot-radius sphere centered on a point you choose must make a Charisma saving throw.',
+        'On a failed save, you can choose to: suppress any effect causing a target to be charmed or frightened, or make a target indifferent about creatures of your choice that it is hostile toward.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_find_steed',
+    name: 'Find Steed',
+    level: 2,
+    school: SpellSchool.conjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Summons an unusually intelligent, strong, and loyal steed (warhorse, pony, camel, elk, or mastiff) that serves as a mount and shares telepathic bond up to 1 mile.',
+    tags: ['mount', 'steed', 'companion', 'paladin', 'conjuration', 'level 2'],
+    rules2014: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: '30 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.paladin],
+      description: [
+        'You summon a spirit that assumes the form of an unusually intelligent, strong, and loyal steed, creating a long-lasting bond with it. Appearing in an unoccupied space within range, the steed takes on a form that you choose: a warhorse, a pony, a camel, an elk, or a mastiff.',
+        'Your steed serves you as a mount, both in combat and out, and you have an instinctive bond with it that allows you to fight as a seamless unit. While mounted, spells you cast targeting only yourself can also target your steed.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '10 minutes',
+      range: '30 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.paladin],
+      description: [
+        'You summon a spirit that assumes the form of an unusually intelligent, strong, and loyal steed, creating a long-lasting bond with it. Appearing in an unoccupied space within range, the steed takes on a form that you choose: a warhorse, a pony, a camel, an elk, or a mastiff.',
+        'Your steed serves you as a mount, both in combat and out, and you have an instinctive bond with it that allows you to fight as a seamless unit. While mounted, spells you cast targeting only yourself can also target your steed.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_gentle_repose',
+    name: 'Gentle Repose',
+    level: 2,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'Protects a touched corpse from decay for 10 days, preventing it from becoming undead and extending the time limit on resurrection spells. Ritual spell.',
+    tags: [
+      'corpse-preservation',
+      'anti-undead',
+      'resurrection-aid',
+      'ritual',
+      'cleric',
+      'wizard',
+      'necromancy',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (a pinch of salt and one copper piece placed on each of the corpse’s eyes)',
+      materialDetails: SpellMaterialComponent(
+          description: 'salt and copper pieces for eyes'),
+      duration: '10 days',
+      ritual: true,
+      classes: [SpellClass.cleric, SpellClass.wizard],
+      description: [
+        'You touch a corpse or other remains. For the duration, the target is protected from decay and can’t become undead.',
+        'The spell effectively extends the time limit on raising the target from the dead, since days spent under the influence of this spell don’t count against the time limit of spells such as raise dead.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (a pinch of salt and one copper piece placed on each of the corpse’s eyes)',
+      materialDetails: SpellMaterialComponent(
+          description: 'salt and copper pieces for eyes'),
+      duration: '10 days',
+      ritual: true,
+      classes: [SpellClass.cleric, SpellClass.wizard],
+      description: [
+        'You touch a corpse or other remains. For the duration, the target is protected from decay and can’t become undead.',
+        'The spell effectively extends the time limit on raising the target from the dead, since days spent under the influence of this spell don’t count against the time limit of spells such as raise dead.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_locate_object',
+    name: 'Locate Object',
+    level: 2,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Sense the direction to a specific or general object within 1,000 feet of you as long as it is not blocked by lead.',
+    tags: [
+      'locate',
+      'tracking',
+      'search',
+      'concentration',
+      'bard',
+      'cleric',
+      'druid',
+      'paladin',
+      'ranger',
+      'wizard',
+      'divination',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (1,000 feet)',
+      components: 'V, S, M (a forked twig)',
+      materialDetails: SpellMaterialComponent(description: 'a forked twig'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.paladin,
+        SpellClass.ranger,
+        SpellClass.wizard
+      ],
+      description: [
+        'Describe or name an object that is familiar to you. You sense the direction to the object’s location, as long as that object is within 1,000 feet of you. If the object is in motion, you know the direction of its movement.',
+        'This spell can locate a specific object known to you, as long as you have seen it up close within 30 feet at least once. The spell can’t locate an object if any thickness of lead blocks a direct path between you and the object.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (1,000 feet)',
+      components: 'V, S, M (a forked twig)',
+      materialDetails: SpellMaterialComponent(description: 'a forked twig'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [
+        SpellClass.bard,
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.paladin,
+        SpellClass.ranger,
+        SpellClass.wizard
+      ],
+      description: [
+        'Describe or name an object that is familiar to you. You sense the direction to the object’s location, as long as that object is within 1,000 feet of you. If the object is in motion, you know the direction of its movement.',
+        'This spell can locate a specific object known to you, as long as you have seen it up close within 30 feet at least once. The spell can’t locate an object if any thickness of lead blocks a direct path between you and the object.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_magic_weapon',
+    name: 'Magic Weapon',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Touch a nonmagical weapon as a Bonus Action turning it into a magic weapon with a +1 bonus to attack rolls and damage rolls.',
+    tags: [
+      'weapon-buff',
+      'bonus-action',
+      'magic-damage',
+      'concentration',
+      'paladin',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.paladin, SpellClass.wizard],
+      description: [
+        'You touch a nonmagical weapon. Until the spell ends, that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 4th level or higher, the bonus increases to +2. When you use a spell slot of 6th level or higher, the bonus increases to +3.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 hour',
+      concentration: true,
+      classes: [SpellClass.paladin, SpellClass.wizard],
+      description: [
+        'You touch a nonmagical weapon. Until the spell ends, that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 4th level or higher, the bonus increases to +2. When you use a spell slot of 6th level or higher, the bonus increases to +3.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_animal_messenger',
+    name: 'Animal Messenger',
+    level: 2,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Command a Tiny beast within 30 feet to deliver a 25-word message to a designated recipient at a specified location up to 50 miles away over 24 hours. Ritual spell.',
+    tags: [
+      'animal',
+      'message-delivery',
+      'long-range',
+      'ritual',
+      'bard',
+      'cleric',
+      'druid',
+      'ranger',
+      'enchantment',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S, M (a morsel of food)',
+      materialDetails: SpellMaterialComponent(description: 'a morsel of food'),
+      duration: '24 hours',
+      ritual: true,
+      classes: [SpellClass.bard, SpellClass.druid, SpellClass.ranger],
+      description: [
+        'By means of this spell, you use an animal to deliver a message. Choose a Tiny beast you can see within range. You specify a location and a recipient. Speak a message of up to 25 words.',
+        'The target beast travels for the duration toward the specified location, covering roughly 50 miles per 24 hours for a flying messenger or 25 miles for other animals. When the messenger arrives, it delivers your message to the creature you described.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the duration increases by 48 hours for each slot level above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '30 feet',
+      components: 'V, S, M (a morsel of food)',
+      materialDetails: SpellMaterialComponent(description: 'a morsel of food'),
+      duration: '24 hours',
+      ritual: true,
+      classes: [SpellClass.bard, SpellClass.druid, SpellClass.ranger],
+      description: [
+        'By means of this spell, you use an animal to deliver a message. Choose a Tiny beast you can see within range. You specify a location and a recipient. Speak a message of up to 25 words.',
+        'The target beast travels for the duration toward the specified location, covering roughly 50 miles per 24 hours for a flying messenger or 25 miles for other animals. When the messenger arrives, it delivers your message to the creature you described.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 3rd level or higher, the duration increases by 48 hours for each slot level above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_arcane_lock',
+    name: 'Arcane Lock',
+    level: 2,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Magically locks an entryway, chest, or door indefinitely (+10 to DC to pick/break). Only opens for designated individuals or password. Costly component.',
+    tags: [
+      'lock',
+      'security',
+      'ward',
+      'permanent',
+      'costly-component',
+      'wizard',
+      'abjuration',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (gold dust worth at least 25 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'gold dust worth 25 gp',
+        hasCost: true,
+        costInGp: 25,
+        isConsumed: true,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.wizard],
+      description: [
+        'You touch a closed door, window, gate, chest, or other entryway, and it becomes locked for the duration. You and the creatures you designate when you cast this spell can open the object normally.',
+        'You can also set a password that, when spoken within 5 feet of the object, suppresses this spell for 1 minute. The entry is entry-proof to mundane forcing (+10 to the DC to break open or pick the lock). Knock suppresses arcane lock for 10 minutes.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (gold dust worth at least 25 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'gold dust worth 25 gp',
+        hasCost: true,
+        costInGp: 25,
+        isConsumed: true,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.wizard],
+      description: [
+        'You touch a closed door, window, gate, chest, or other entryway, and it becomes locked for the duration. You and the creatures you designate when you cast this spell can open the object normally.',
+        'You can also set a password that, when spoken within 5 feet of the object, suppresses this spell for 1 minute. The entry is entry-proof to mundane forcing (+10 to the DC to break open or pick the lock). Knock suppresses arcane lock for 10 minutes.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_continual_flame',
+    name: 'Continual Flame',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Creates a permanent, heatless torch flame shedding bright light in a 20-foot radius. Cannot be smothered or quenched. Costly component.',
+    tags: [
+      'permanent-light',
+      'torch',
+      'heatless-flame',
+      'costly-component',
+      'cleric',
+      'wizard',
+      'evocation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (ruby dust worth at least 50 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'ruby dust worth 50 gp',
+        hasCost: true,
+        costInGp: 50,
+        isConsumed: true,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.cleric, SpellClass.wizard],
+      description: [
+        'A flame, producing no heat and using no oxygen, shines from an object you touch. The effect looks like a regular flame, but it creates no heat and doesn’t consume oxygen.',
+        'A continual flame produces bright light in a 20-foot radius and dim light for an additional 20 feet. It lasts until dispelled and can be covered or hidden, but not smothered or quenched.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (ruby dust worth at least 50 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'ruby dust worth 50 gp',
+        hasCost: true,
+        costInGp: 50,
+        isConsumed: true,
+      ),
+      duration: 'Until dispelled',
+      classes: [SpellClass.cleric, SpellClass.wizard],
+      description: [
+        'A flame, producing no heat and using no oxygen, shines from an object you touch. The effect looks like a regular flame, but it creates no heat and doesn’t consume oxygen.',
+        'A continual flame produces bright light in a 20-foot radius and dim light for an additional 20 feet. It lasts until dispelled and can be covered or hidden, but not smothered or quenched.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_protection_from_poison',
+    name: 'Protection from Poison',
+    level: 2,
+    school: SpellSchool.abjuration,
+    isChangedIn2024: false,
+    diffSummary:
+        'Touch a creature to neutralize one poison affecting it, grant Advantage on saving throws against poison, and grant Resistance to poison damage for 1 hour. Non-concentration.',
+    tags: [
+      'cure-poison',
+      'poison-resistance',
+      'buff',
+      'non-concentration',
+      'cleric',
+      'druid',
+      'paladin',
+      'ranger',
+      'abjuration',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: '1 hour',
+      classes: [
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.paladin,
+        SpellClass.ranger
+      ],
+      description: [
+        'You touch a creature. If it is poisoned, you neutralize the poison. If more than one poison afflicts the target, you neutralize one poison that you know is present, or you neutralize one at random.',
+        'For the duration, the target has advantage on saving throws against being poisoned, and it has resistance to poison damage.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components: 'V, S',
+      duration: '1 hour',
+      classes: [
+        SpellClass.cleric,
+        SpellClass.druid,
+        SpellClass.paladin,
+        SpellClass.ranger
+      ],
+      description: [
+        'You touch a creature. If it is poisoned, you neutralize the poison. If more than one poison afflicts the target, you neutralize one poison that you know is present, or you neutralize one at random.',
+        'For the duration, the target has advantage on saving throws against being poisoned, and it has resistance to poison damage.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_rope_trick',
+    name: 'Rope Trick',
+    level: 2,
+    school: SpellSchool.transmutation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Touch a rope up to 60 feet long: it rises vertically and leads to an extradimensional space holding up to eight Medium creatures for 1 hour. Non-concentration.',
+    tags: [
+      'safe-rest',
+      'hideout',
+      'extradimensional',
+      'rope',
+      'non-concentration',
+      'wizard',
+      'transmutation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (powdered corn extract and a twisted loop of parchment)',
+      materialDetails: SpellMaterialComponent(
+          description: 'corn extract and parchment loop'),
+      duration: '1 hour',
+      classes: [SpellClass.wizard],
+      description: [
+        'You touch a length of rope that is up to 60 feet long. One end of the rope then rises into the air until the whole rope hangs perpendicular to the ground. At the upper end of the rope, an invisible entrance opens to an extradimensional space that lasts until the spell ends.',
+        'The extradimensional space can hold up to eight Medium or smaller creatures. The rope can be pulled into the space, making the rope invisible from outside.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Touch',
+      components:
+          'V, S, M (powdered corn extract and a twisted loop of parchment)',
+      materialDetails: SpellMaterialComponent(
+          description: 'corn extract and parchment loop'),
+      duration: '1 hour',
+      classes: [SpellClass.wizard],
+      description: [
+        'You touch a length of rope that is up to 60 feet long. One end of the rope then rises into the air until the whole rope hangs perpendicular to the ground. At the upper end of the rope, an invisible entrance opens to an extradimensional space that lasts until the spell ends.',
+        'The extradimensional space can hold up to eight Medium or smaller creatures. The rope can be pulled into the space, making the rope invisible from outside.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_enthrall',
+    name: 'Enthrall',
+    level: 2,
+    school: SpellSchool.enchantment,
+    isChangedIn2024: false,
+    diffSummary:
+        'Weave a distracting string of words: targets within 60 feet make a Wisdom save or have disadvantage on Perception checks made to perceive any creature other than you for 1 minute.',
+    tags: [
+      'distraction',
+      'stealth-support',
+      'crowd-control',
+      'bard',
+      'warlock',
+      'enchantment',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: '1 minute',
+      classes: [SpellClass.bard, SpellClass.warlock],
+      savingThrow: 'Wisdom',
+      description: [
+        'You weave a distracting string of words, causing creatures of your choice that you can see within range and that can hear you to make a Wisdom saving throw. Any creature that can’t be charmed succeeds on this saving throw automatically.',
+        'On a failed save, the target has disadvantage on Wisdom (Perception) checks made to perceive any creature other than you until the spell ends or until the target can no longer hear you.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: '1 minute',
+      classes: [SpellClass.bard, SpellClass.warlock],
+      savingThrow: 'Wisdom',
+      description: [
+        'You weave a distracting string of words, causing creatures of your choice that you can see within range and that can hear you to make a Wisdom saving throw. Any creature that can’t be charmed succeeds on this saving throw automatically.',
+        'On a failed save, the target has disadvantage on Wisdom (Perception) checks made to perceive any creature other than you until the spell ends or until the target can no longer hear you.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_find_traps',
+    name: 'Find Traps',
+    level: 2,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Sense the presence of any trap within range that is within line of sight, and learn the general nature of the danger.',
+    tags: [
+      'traps',
+      'detection',
+      'exploration',
+      'cleric',
+      'druid',
+      'ranger',
+      'divination',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric, SpellClass.druid, SpellClass.ranger],
+      description: [
+        'You sense the presence of any trap within range that is within line of sight. A trap, for the purpose of this spell, includes anything that would inflict a sudden or unexpected effect you consider harmful or undesirable.',
+        'If you sense a trap in this way, you learn the general nature of the danger posed by a trap you sense.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      classes: [SpellClass.cleric, SpellClass.druid, SpellClass.ranger],
+      description: [
+        'You sense the presence of any trap within range that is within line of sight. A trap, for the purpose of this spell, includes anything that would inflict a sudden or unexpected effect you consider harmful or undesirable.',
+        'If you sense a trap in this way, you learn the general nature of the danger posed by a trap you sense.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_flame_blade',
+    name: 'Flame Blade',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'Evoke a fiery blade in your free hand as a Bonus Action for 10 minutes. Make melee spell attacks dealing 3d6 fire damage.',
+    tags: [
+      'fire-weapon',
+      'melee-spell-attack',
+      'bonus-action',
+      'concentration',
+      'druid',
+      'evocation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Self',
+      components: 'V, S, M (leaf of sumac)',
+      materialDetails: SpellMaterialComponent(description: 'leaf of sumac'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.druid],
+      rollFormula: '3d6',
+      damageOrHealType: 'Fire',
+      description: [
+        'You evoke a fiery blade in your free hand. The blade is similar in size and shape to a scimitar, and it lasts for the duration.',
+        'You can use your action to make a melee spell attack with the fiery blade. On a hit, the target takes 3d6 fire damage. The flaming blade sheds bright light in a 10-foot radius and dim light for an additional 10 feet.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for every two slot levels above 2nd.',
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Bonus Action',
+      range: 'Self',
+      components: 'V, S, M (leaf of sumac)',
+      materialDetails: SpellMaterialComponent(description: 'leaf of sumac'),
+      duration: 'Concentration, up to 10 minutes',
+      concentration: true,
+      classes: [SpellClass.druid],
+      rollFormula: '3d6',
+      damageOrHealType: 'Fire',
+      description: [
+        'You evoke a fiery blade in your free hand. The blade is similar in size and shape to a scimitar, and it lasts for the duration.',
+        'You can use your action to make a melee spell attack with the fiery blade. On a hit, the target takes 3d6 fire damage. The flaming blade sheds bright light in a 10-foot radius and dim light for an additional 10 feet.',
+      ],
+      higherLevels:
+          'When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for every two slot levels above 2nd.',
+    ),
+  ),
+  SpellItem(
+    id: 'spell_gust_of_wind',
+    name: 'Gust of Wind',
+    level: 2,
+    school: SpellSchool.evocation,
+    isChangedIn2024: false,
+    diffSummary:
+        'A 60-foot line of strong wind pushes creatures 15 feet away on failed Strength save and disperses gas/fog. Concentration up to 1 minute.',
+    tags: [
+      'wind',
+      'push',
+      'fog-clear',
+      'concentration',
+      'druid',
+      'sorcerer',
+      'wizard',
+      'evocation',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (60-foot line)',
+      components: 'V, S, M (a legume seed)',
+      materialDetails: SpellMaterialComponent(description: 'a legume seed'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Strength',
+      description: [
+        'A line of strong wind 60 feet long and 10 feet wide blasts from you in a direction you choose for the spell’s duration. Each creature that starts its turn in the line must succeed on a Strength saving throw or be pushed 15 feet away from you in a direction following the line.',
+        'The gust disperses gas or vapor, and it extinguishes candles, torches, and similar unprotected flames in the area.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (60-foot line)',
+      components: 'V, S, M (a legume seed)',
+      materialDetails: SpellMaterialComponent(description: 'a legume seed'),
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.druid, SpellClass.sorcerer, SpellClass.wizard],
+      savingThrow: 'Strength',
+      description: [
+        'A line of strong wind 60 feet long and 10 feet wide blasts from you in a direction you choose for the spell’s duration. Each creature that starts its turn in the line must succeed on a Strength saving throw or be pushed 15 feet away from you in a direction following the line.',
+        'The gust disperses gas or vapor, and it extinguishes candles, torches, and similar unprotected flames in the area.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_locate_animals_or_plants',
+    name: 'Locate Animals or Plants',
+    level: 2,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary:
+        'Sense the direction and distance to the closest specific kind of beast or plant within 5 miles. Ritual spell.',
+    tags: [
+      'tracking',
+      'nature',
+      'foraging',
+      'ritual',
+      'bard',
+      'druid',
+      'ranger',
+      'divination',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (5 miles)',
+      components: 'V, S, M (a bit of fur from a bloodhound)',
+      materialDetails: SpellMaterialComponent(description: 'bloodhound fur'),
+      duration: 'Instantaneous',
+      ritual: true,
+      classes: [SpellClass.bard, SpellClass.druid, SpellClass.ranger],
+      description: [
+        'Describe or name a specific kind of beast or plant. Concentrating on the voice of nature in your surroundings, you learn the direction and distance to the closest creature or plant of that kind within 5 miles, if any are present.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: 'Self (5 miles)',
+      components: 'V, S, M (a bit of fur from a bloodhound)',
+      materialDetails: SpellMaterialComponent(description: 'bloodhound fur'),
+      duration: 'Instantaneous',
+      ritual: true,
+      classes: [SpellClass.bard, SpellClass.druid, SpellClass.ranger],
+      description: [
+        'Describe or name a specific kind of beast or plant. Concentrating on the voice of nature in your surroundings, you learn the direction and distance to the closest creature or plant of that kind within 5 miles, if any are present.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_magic_mouth',
+    name: 'Magic Mouth',
+    level: 2,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary:
+        'Implant an illusory mouth on an object that recites a 25-word message when a specified trigger occurs indefinitely. Costly component. Ritual spell.',
+    tags: [
+      'alarm',
+      'trigger-message',
+      'sentinel',
+      'ritual',
+      'costly-component',
+      'bard',
+      'wizard',
+      'illusion',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '30 feet',
+      components:
+          'V, S, M (a small bit of honeycomb and jade dust worth at least 10 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'honeycomb and jade dust worth 10 gp',
+        hasCost: true,
+        costInGp: 10,
+        isConsumed: true,
+      ),
+      duration: 'Until dispelled',
+      ritual: true,
+      classes: [SpellClass.bard, SpellClass.wizard],
+      description: [
+        'You implant a message within an object in range, a message that is uttered when a trigger condition is met. Choose one object that you can see and that isn’t being worn or carried by another creature. Then speak the message, which must be 25 words or fewer.',
+        'You also decide upon the trigger circumstances: visual or audible triggers within 30 feet of the object.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: '30 feet',
+      components:
+          'V, S, M (a small bit of honeycomb and jade dust worth at least 10 gp, which the spell consumes)',
+      materialDetails: SpellMaterialComponent(
+        description: 'honeycomb and jade dust worth 10 gp',
+        hasCost: true,
+        costInGp: 10,
+        isConsumed: true,
+      ),
+      duration: 'Until dispelled',
+      ritual: true,
+      classes: [SpellClass.bard, SpellClass.wizard],
+      description: [
+        'You implant a message within an object in range, a message that is uttered when a trigger condition is met. Choose one object that you can see and that isn’t being worn or carried by another creature. Then speak the message, which must be 25 words or fewer.',
+        'You also decide upon the trigger circumstances: visual or audible triggers within 30 feet of the object.',
+      ],
+    ),
+  ),
+  SpellItem(
+    id: 'spell_ray_of_enfeeblement',
+    name: 'Ray of Enfeeblement',
+    level: 2,
+    school: SpellSchool.necromancy,
+    isChangedIn2024: false,
+    diffSummary:
+        'A black beam of enervating energy saps strength: on a hit, target deals only half damage with weapon attacks that use Strength for up to 1 minute (Constitution save at end of its turns to end).',
+    tags: [
+      'debuff',
+      'strength-reduction',
+      'ranged-spell-attack',
+      'concentration',
+      'warlock',
+      'wizard',
+      'necromancy',
+      'level 2'
+    ],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'A black beam of enervating energy springs from your finger toward a creature within range. Make a ranged spell attack against the target.',
+        'On a hit, the target deals only half damage with weapon attacks that use Strength until the spell ends. At the end of each of the target’s turns, it can make a Constitution saving throw against the spell. On a success, the spell ends.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '60 feet',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.warlock, SpellClass.wizard],
+      savingThrow: 'Constitution',
+      description: [
+        'A black beam of enervating energy springs from your finger toward a creature within range. Make a ranged spell attack against the target.',
+        'On a hit, the target deals only half damage with weapon attacks that use Strength until the spell ends. At the end of each of the target’s turns, it can make a Constitution saving throw against the spell. On a success, the spell ends.',
+      ],
+    ),
+  ),
+];

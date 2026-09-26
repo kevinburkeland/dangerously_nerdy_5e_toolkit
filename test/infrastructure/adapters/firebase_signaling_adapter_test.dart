@@ -1,0 +1,322 @@
+// ignore_for_file: subtype_of_sealed_class
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_signaling_adapter.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/signaling_message.dart';
+
+void main() {
+  group('FirebaseSignalingAdapter Ephemeral Lifecycle Tests', () {
+    late List<String> deletedPaths;
+    late FirebaseSignalingAdapter adapter;
+
+    setUp(() {
+      deletedPaths = [];
+      adapter = FirebaseSignalingAdapter(
+        onDeleteDocument: (path) async {
+          deletedPaths.add(path);
+        },
+      );
+    });
+
+    tearDown(() async {
+      await adapter.dispose();
+    });
+
+    test('Initializes correctly with roomCode and localNodeId', () async {
+      await adapter.initialize(
+          roomCode: 'TEST-1234', localNodeId: 'node-alpha');
+      expect(adapter.currentRoomCode, 'TEST-1234');
+      expect(adapter.localNodeId, 'node-alpha');
+    });
+
+    test('Creates offer, answer, and ICE candidate signals with tracked paths',
+        () async {
+      await adapter.initialize(
+          roomCode: 'TEST-1234', localNodeId: 'node-alpha');
+
+      final offerId =
+          await adapter.sendOffer(toNodeId: 'node-beta', sdp: 'v=0\r\no=...');
+      expect(offerId.isNotEmpty, isTrue);
+      expect(adapter.trackedDocPaths,
+          contains('rooms/TEST-1234/nodes/node-beta/signals/$offerId'));
+
+      final answerId = await adapter.sendAnswer(
+          toNodeId: 'node-beta', sdp: 'v=0\r\no=answer...');
+      expect(adapter.trackedDocPaths,
+          contains('rooms/TEST-1234/nodes/node-beta/signals/$answerId'));
+
+      final candidateId = await adapter.sendIceCandidate(
+        toNodeId: 'node-beta',
+        candidate: {
+          'candidate': 'candidate:1 1 UDP ...',
+          'sdpMid': '0',
+          'sdpMLineIndex': 0
+        },
+      );
+      expect(adapter.trackedDocPaths,
+          contains('rooms/TEST-1234/nodes/node-beta/signals/$candidateId'));
+      expect(adapter.trackedDocPaths.length, 3);
+    });
+
+    test(
+        'Ephemeral Signaling Verification: explicitly calls delete on all documents post-handshake',
+        () async {
+      await adapter.initialize(
+          roomCode: 'ROOM-ALPHA', localNodeId: 'node-alpha');
+
+      final offerId =
+          await adapter.sendOffer(toNodeId: 'node-beta', sdp: 'sdp-offer-data');
+      final answerId = await adapter.sendAnswer(
+          toNodeId: 'node-beta', sdp: 'sdp-answer-data');
+      final candId = await adapter.sendIceCandidate(
+        toNodeId: 'node-beta',
+        candidate: {'candidate': 'ice-1'},
+      );
+
+      expect(adapter.trackedDocPaths.length, 3);
+      expect(deletedPaths, isEmpty);
+
+      // Simulate handshake completion (p2pEstablished) -> cleanUpSignalingSession()
+      await adapter.cleanUpSignalingSession();
+
+      // All documents MUST be deleted, leaving zero persistent signaling data in the cloud
+      expect(deletedPaths,
+          contains('rooms/ROOM-ALPHA/nodes/node-beta/signals/$offerId'));
+      expect(deletedPaths,
+          contains('rooms/ROOM-ALPHA/nodes/node-beta/signals/$answerId'));
+      expect(deletedPaths,
+          contains('rooms/ROOM-ALPHA/nodes/node-beta/signals/$candId'));
+      expect(deletedPaths.length, 3);
+      expect(adapter.trackedDocPaths, isEmpty);
+    });
+
+    test(
+        'deleteSignal deletes individual signal documents immediately upon consumption',
+        () async {
+      await adapter.initialize(
+          roomCode: 'ROOM-BETA', localNodeId: 'node-alpha');
+
+      final signalId =
+          await adapter.sendOffer(toNodeId: 'node-beta', sdp: 'sdp-offer');
+      expect(adapter.trackedDocPaths,
+          contains('rooms/ROOM-BETA/nodes/node-beta/signals/$signalId'));
+
+      await adapter.deleteSignal(signalId);
+      expect(deletedPaths,
+          contains('rooms/ROOM-BETA/nodes/node-beta/signals/$signalId'));
+      expect(
+          adapter.trackedDocPaths
+              .contains('rooms/ROOM-BETA/nodes/node-beta/signals/$signalId'),
+          isFalse);
+    });
+
+    test(
+        'watchIncomingSignals receives emitted signals and tracks them for cleanup',
+        () async {
+      await adapter.initialize(
+          roomCode: 'ROOM-BETA', localNodeId: 'node-alpha');
+
+      final receivedSignals = <SignalingMessage>[];
+      final sub = adapter.watchIncomingSignals().listen(receivedSignals.add);
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final incoming = SignalingMessage(
+        id: 'incoming-signal-1',
+        roomCode: 'ROOM-BETA',
+        fromNodeId: 'node-beta',
+        toNodeId: 'node-alpha',
+        type: SignalingType.offer,
+        sdp: 'remote-sdp-offer',
+        timestamp: now,
+      );
+
+      adapter.emitIncomingSignal(incoming);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(receivedSignals.length, 1);
+      expect(receivedSignals.first.sdp, 'remote-sdp-offer');
+      expect(
+          adapter.trackedDocPaths,
+          contains(
+              'rooms/ROOM-BETA/nodes/node-alpha/signals/incoming-signal-1'));
+
+      await adapter.cleanUpSignalingSession();
+      expect(
+          deletedPaths,
+          contains(
+              'rooms/ROOM-BETA/nodes/node-alpha/signals/incoming-signal-1'));
+
+      await sub.cancel();
+    });
+
+    test(
+        'Cost Safety Sliding TTL Verification: ignores signals older than 60s window',
+        () async {
+      await adapter.initialize(roomCode: 'ROOM-TTL', localNodeId: 'node-alpha');
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      expect(adapter.lastPruningThreshold, isNotNull);
+      expect(adapter.lastPruningThreshold!, lessThanOrEqualTo(now - 59000));
+      expect(adapter.lastPruningThreshold!, greaterThanOrEqualTo(now - 61000));
+
+      final receivedSignals = <SignalingMessage>[];
+      final sub = adapter.watchIncomingSignals().listen(receivedSignals.add);
+
+      // Stale signal from 75 seconds ago
+      final staleSignal = SignalingMessage(
+        id: 'stale-signal-1',
+        roomCode: 'ROOM-TTL',
+        fromNodeId: 'node-stale',
+        toNodeId: 'node-alpha',
+        type: SignalingType.offer,
+        sdp: 'stale-sdp',
+        timestamp: now - 75000,
+      );
+
+      adapter.emitIncomingSignal(staleSignal);
+      await Future<void>.delayed(Duration.zero);
+
+      // Must be completely ignored and NOT tracked or emitted
+      expect(receivedSignals, isEmpty);
+      expect(
+          adapter.trackedDocPaths.contains(
+              'rooms/ROOM-TTL/nodes/node-alpha/signals/stale-signal-1'),
+          isFalse);
+
+      // Fresh signal from 10 seconds ago
+      final freshSignal = SignalingMessage(
+        id: 'fresh-signal-1',
+        roomCode: 'ROOM-TTL',
+        fromNodeId: 'node-fresh',
+        toNodeId: 'node-alpha',
+        type: SignalingType.peerJoin,
+        timestamp: now - 10000,
+      );
+
+      adapter.emitIncomingSignal(freshSignal);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(receivedSignals.length, 1);
+      expect(receivedSignals.first.id, 'fresh-signal-1');
+      expect(adapter.trackedDocPaths,
+          contains('rooms/ROOM-TTL/nodes/node-alpha/signals/fresh-signal-1'));
+
+      await sub.cancel();
+    });
+
+    test(
+        'broadcastJoin dispatches a wildcard peerJoin signal to all room participants',
+        () async {
+      await adapter.initialize(
+          roomCode: 'ROOM-JOIN', localNodeId: 'node-joiner');
+
+      final joinId = await adapter.broadcastJoin();
+      expect(joinId.isNotEmpty, isTrue);
+      expect(adapter.trackedDocPaths,
+          contains('rooms/ROOM-JOIN/nodes/*/signals/$joinId'));
+    });
+
+    test(
+        'cleanUpPeerSignaling isolates document cleanup per peer and preserves other peers in multi-peer rooms',
+        () async {
+      await adapter.initialize(roomCode: 'MULTI-ROOM', localNodeId: 'node-a');
+
+      final offerB = await adapter.sendOffer(toNodeId: 'node-b', sdp: 'sdp-b');
+      final offerC = await adapter.sendOffer(toNodeId: 'node-c', sdp: 'sdp-c');
+
+      expect(adapter.trackedDocPaths.length, 2);
+      expect(adapter.peerTrackedDocPaths['node-b'],
+          contains('rooms/MULTI-ROOM/nodes/node-b/signals/$offerB'));
+      expect(adapter.peerTrackedDocPaths['node-c'],
+          contains('rooms/MULTI-ROOM/nodes/node-c/signals/$offerC'));
+
+      // Node B establishes connection -> cleanUpPeerSignaling('node-b')
+      await adapter.cleanUpPeerSignaling('node-b');
+
+      // Only Node B's document deleted
+      expect(deletedPaths,
+          contains('rooms/MULTI-ROOM/nodes/node-b/signals/$offerB'));
+      expect(deletedPaths,
+          isNot(contains('rooms/MULTI-ROOM/nodes/node-c/signals/$offerC')));
+      expect(adapter.trackedDocPaths,
+          contains('rooms/MULTI-ROOM/nodes/node-c/signals/$offerC'));
+      expect(adapter.peerTrackedDocPaths.containsKey('node-b'), isFalse);
+      expect(adapter.peerTrackedDocPaths['node-c'], isNotNull);
+    });
+
+    test('Zero phantom tracked document paths on failed network writes',
+        () async {
+      final fakeFirestore = _FakeFailingFirestore();
+      final failingAdapter = FirebaseSignalingAdapter(firestore: fakeFirestore);
+
+      await failingAdapter.initialize(
+          roomCode: 'FAIL-ROOM', localNodeId: 'node-fail');
+
+      expect(
+        () async =>
+            failingAdapter.sendOffer(toNodeId: 'node-target', sdp: 'fake-sdp'),
+        throwsA(isA<Exception>()),
+      );
+
+      expect(failingAdapter.trackedDocPaths, isEmpty);
+      expect(failingAdapter.peerTrackedDocPaths, isEmpty);
+      await failingAdapter.dispose();
+    });
+  });
+}
+
+class _FakeFailingDocRef implements DocumentReference<Map<String, dynamic>> {
+  @override
+  Future<void> set(Map<String, dynamic> data, [SetOptions? options]) async {
+    throw Exception('Simulated Firestore network write error');
+  }
+
+  @override
+  Future<void> delete() async {}
+
+  @override
+  CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
+      _FakeSignalingCollectionRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeSignalingCollectionRef
+    implements CollectionReference<Map<String, dynamic>> {
+  @override
+  DocumentReference<Map<String, dynamic>> doc([String? path]) =>
+      _FakeFailingDocRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #where) return this;
+    if (invocation.memberName == #snapshots)
+      return const Stream<QuerySnapshot<Map<String, dynamic>>>.empty();
+    return super.noSuchMethod(invocation);
+  }
+}
+
+class _FakeRoomsCollectionRef
+    implements CollectionReference<Map<String, dynamic>> {
+  @override
+  DocumentReference<Map<String, dynamic>> doc([String? path]) =>
+      _FakeFailingDocRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeFailingFirestore implements FirebaseFirestore {
+  @override
+  CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
+      _FakeRoomsCollectionRef();
+
+  @override
+  DocumentReference<Map<String, dynamic>> doc(String documentPath) =>
+      _FakeFailingDocRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}

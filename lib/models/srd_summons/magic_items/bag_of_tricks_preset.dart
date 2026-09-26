@@ -1,0 +1,740 @@
+import 'package:flutter/material.dart';
+import '../minion_stat_block.dart';
+import '../summon_preset.dart';
+import '../spells/beast_presets.dart';
+
+class BagOfTricksSummons {
+  // --- GRAY BAG CREATURES (d8) ---
+  static const weasel = MinionStatBlock(
+    id: 'bot_weasel',
+    name: 'Weasel',
+    sizeDisplay: 'Tiny',
+    crDisplay: 'CR 0',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 13,
+    maxHp: 1,
+    hitDice: '1d4 - 1',
+    speed: '30 ft.',
+    strScore: 3,
+    dexScore: 16,
+    conScore: 8,
+    intScore: 2,
+    wisScore: 12,
+    chaScore: 3,
+    skills: 'Perception +3, Stealth +5',
+    senses: 'passive Perception 13',
+    languages: '—',
+    xp: 10,
+    traits: [
+      CreatureTrait(
+        name: 'Keen Hearing and Smell',
+        description:
+            'The weasel has advantage on Wisdom (Perception) checks that rely on hearing or smell.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 1 piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 5,
+        reach: 'reach 5 ft.',
+        hitDamage: '1 piercing damage',
+      ),
+    ],
+    attackBonus: 5,
+    damageDiceCount: 1,
+    damageDiceSides: 1,
+    damageBonus: 0,
+    damageType: 'Piercing',
+    specialTrait: 'Keen Hearing and Smell',
+    accentColor: Color(0xFF90A4AE),
+  );
+
+  static const giantRat = MinionStatBlock(
+    id: 'bot_giant_rat',
+    name: 'Giant Rat',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 1/8',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 12,
+    maxHp: 7,
+    hitDice: '2d6',
+    speed: '30 ft.',
+    strScore: 7,
+    dexScore: 15,
+    conScore: 11,
+    intScore: 2,
+    wisScore: 10,
+    chaScore: 4,
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: '—',
+    xp: 25,
+    hasPackTactics: true,
+    traits: [
+      CreatureTrait(
+        name: 'Keen Smell',
+        description:
+            'The rat has advantage on Wisdom (Perception) checks that rely on smell.',
+      ),
+      CreatureTrait(
+        name: 'Pack Tactics',
+        description:
+            'The rat has advantage on an attack roll against a creature if at least one of the rat\'s allies is within 5 feet of the creature and the ally isn\'t incapacitated.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 4 (1d4 + 2) piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '4 (1d4 + 2) piercing damage',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    specialTrait: 'Keen Smell & Pack Tactics',
+    accentColor: Color(0xFF78909C),
+  );
+
+  static const badger = MinionStatBlock(
+    id: 'bot_badger',
+    name: 'Badger',
+    sizeDisplay: 'Tiny',
+    crDisplay: 'CR 0',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 10,
+    maxHp: 3,
+    hitDice: '1d4 + 1',
+    speed: '20 ft., burrow 5 ft.',
+    strScore: 4,
+    dexScore: 11,
+    conScore: 12,
+    intScore: 2,
+    wisScore: 12,
+    chaScore: 5,
+    senses: 'darkvision 30 ft., passive Perception 11',
+    languages: '—',
+    xp: 10,
+    traits: [
+      CreatureTrait(
+        name: 'Keen Smell',
+        description:
+            'The badger has advantage on Wisdom (Perception) checks that rely on smell.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +2 to hit, reach 5 ft., one target. Hit: 1 piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 2,
+        reach: 'reach 5 ft.',
+        hitDamage: '1 piercing damage',
+      ),
+    ],
+    attackBonus: 2,
+    damageDiceCount: 1,
+    damageDiceSides: 1,
+    damageBonus: 0,
+    damageType: 'Piercing',
+    specialTrait: 'Keen Smell & Burrow 5 ft.',
+    accentColor: Color(0xFF607D8B),
+  );
+
+  static const giantElk = MinionStatBlock(
+    id: 'bot_giant_elk',
+    name: 'Giant Elk',
+    sizeDisplay: 'Huge',
+    crDisplay: 'CR 2',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 14,
+    armorType: 'natural armor',
+    maxHp: 42,
+    hitDice: '5d12 + 10',
+    speed: '60 ft.',
+    strScore: 19,
+    dexScore: 16,
+    conScore: 14,
+    intScore: 7,
+    wisScore: 14,
+    chaScore: 10,
+    skills: 'Perception +4',
+    senses: 'passive Perception 14',
+    languages:
+        'understands Giant Elk, Common, Elvish, and Sylvan but can\'t speak them',
+    xp: 450,
+    traits: [
+      CreatureTrait(
+        name: 'Charge',
+        description:
+            'If the elk moves at least 20 feet straight toward a target and then hits it with a ram attack on the same turn, the target takes an extra 7 (2d6) damage. If the target is a creature, it must succeed on a DC 14 Strength saving throw or be knocked prone.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Ram',
+        description:
+            'Melee Weapon Attack: +6 to hit, reach 10 ft., one target. Hit: 11 (2d6 + 4) bludgeoning damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 6,
+        reach: 'reach 10 ft.',
+        hitDamage: '11 (2d6 + 4) bludgeoning damage',
+      ),
+      CreatureAction(
+        name: 'Hooves',
+        description:
+            'Melee Weapon Attack: +6 to hit, reach 5 ft., one prone creature. Hit: 22 (4d8 + 4) bludgeoning damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 6,
+        reach: 'reach 5 ft.',
+        hitDamage: '22 (4d8 + 4) bludgeoning damage',
+      ),
+    ],
+    attackBonus: 6,
+    damageDiceCount: 2,
+    damageDiceSides: 6,
+    damageBonus: 4,
+    damageType: 'Bludgeoning',
+    specialTrait:
+        'Charge (Extra 2d6 damage, DC 14 Str save or prone) & Hooves (4d8+4)',
+    accentColor: Color(0xFF263238),
+  );
+
+  // --- RUST BAG CREATURES (d8) ---
+  static const rat = MinionStatBlock(
+    id: 'bot_rat',
+    name: 'Rat',
+    sizeDisplay: 'Tiny',
+    crDisplay: 'CR 0',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 10,
+    maxHp: 1,
+    hitDice: '1d4 - 1',
+    speed: '20 ft.',
+    strScore: 2,
+    dexScore: 11,
+    conScore: 9,
+    intScore: 2,
+    wisScore: 10,
+    chaScore: 4,
+    senses: 'darkvision 30 ft., passive Perception 10',
+    languages: '—',
+    xp: 10,
+    traits: [
+      CreatureTrait(
+        name: 'Keen Smell',
+        description:
+            'The rat has advantage on Wisdom (Perception) checks that rely on smell.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +0 to hit, reach 5 ft., one target. Hit: 1 piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 0,
+        reach: 'reach 5 ft.',
+        hitDamage: '1 piercing damage',
+      ),
+    ],
+    attackBonus: 0,
+    damageDiceCount: 1,
+    damageDiceSides: 1,
+    damageBonus: 0,
+    damageType: 'Piercing',
+    specialTrait: 'Keen Smell & Darkvision',
+    accentColor: Color(0xFFA1887F),
+  );
+
+  static const owl = MinionStatBlock(
+    id: 'bot_owl',
+    name: 'Owl',
+    sizeDisplay: 'Tiny',
+    crDisplay: 'CR 0',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 11,
+    maxHp: 1,
+    hitDice: '1d4 - 1',
+    speed: '5 ft., fly 60 ft.',
+    strScore: 3,
+    dexScore: 13,
+    conScore: 8,
+    intScore: 2,
+    wisScore: 12,
+    chaScore: 7,
+    skills: 'Perception +3, Stealth +3',
+    senses: 'darkvision 120 ft., passive Perception 13',
+    languages: '—',
+    xp: 10,
+    traits: [
+      CreatureTrait(
+        name: 'Flyby',
+        description:
+            'The owl doesn\'t provoke opportunity attacks when it flies out of an enemy\'s reach.',
+      ),
+      CreatureTrait(
+        name: 'Keen Hearing and Sight',
+        description:
+            'The owl has advantage on Wisdom (Perception) checks that rely on hearing or sight.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Talons',
+        description:
+            'Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 1 slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 3,
+        reach: 'reach 5 ft.',
+        hitDamage: '1 slashing damage',
+      ),
+    ],
+    attackBonus: 3,
+    damageDiceCount: 1,
+    damageDiceSides: 1,
+    damageBonus: 0,
+    damageType: 'Slashing',
+    specialTrait: 'Flyby (no opportunity attacks) & Darkvision 120 ft.',
+    accentColor: Color(0xFF8D6E63),
+  );
+
+  static const mastiff = MinionStatBlock(
+    id: 'bot_mastiff',
+    name: 'Mastiff',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 1/8',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 12,
+    maxHp: 5,
+    hitDice: '1d8 + 1',
+    speed: '40 ft.',
+    strScore: 13,
+    dexScore: 14,
+    conScore: 12,
+    intScore: 3,
+    wisScore: 12,
+    chaScore: 7,
+    skills: 'Perception +3',
+    senses: 'passive Perception 13',
+    languages: '—',
+    xp: 25,
+    traits: [
+      CreatureTrait(
+        name: 'Keen Hearing and Smell',
+        description:
+            'The mastiff has advantage on Wisdom (Perception) checks that rely on hearing or smell.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 4 (1d6 + 1) piercing damage. If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 3,
+        reach: 'reach 5 ft.',
+        hitDamage: '4 (1d6 + 1) piercing damage + DC 11 Str save or prone',
+      ),
+    ],
+    attackBonus: 3,
+    damageDiceCount: 1,
+    damageDiceSides: 6,
+    damageBonus: 1,
+    damageType: 'Piercing',
+    specialTrait: 'Keen Hearing/Smell & Trip (DC 11 Str save)',
+    accentColor: Color(0xFF795548),
+  );
+
+  static const goat = MinionStatBlock(
+    id: 'bot_goat',
+    name: 'Goat',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 1/8',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 10,
+    maxHp: 4,
+    hitDice: '1d8',
+    speed: '40 ft.',
+    strScore: 12,
+    dexScore: 10,
+    conScore: 11,
+    intScore: 2,
+    wisScore: 10,
+    chaScore: 5,
+    senses: 'passive Perception 10',
+    languages: '—',
+    xp: 25,
+    traits: [
+      CreatureTrait(
+        name: 'Charge',
+        description:
+            'If the goat moves at least 20 feet straight toward a target and then hits it with a ram attack on the same turn, the target takes an extra 2 (1d4) bludgeoning damage. If the target is a creature, it must succeed on a DC 10 Strength saving throw or be knocked prone.',
+      ),
+      CreatureTrait(
+        name: 'Sure-Footed',
+        description:
+            'The goat has advantage on Strength and Dexterity saving throws made against being knocked prone.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Ram',
+        description:
+            'Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 3 (1d4 + 1) bludgeoning damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 3,
+        reach: 'reach 5 ft.',
+        hitDamage: '3 (1d4 + 1) bludgeoning damage',
+      ),
+    ],
+    attackBonus: 3,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 1,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Charge (Extra 1d4 damage, DC 10 Str save or prone)',
+    accentColor: Color(0xFF6D4C41),
+  );
+
+  static const giantGoat = MinionStatBlock(
+    id: 'bot_giant_goat',
+    name: 'Giant Goat',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 1/4',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 11,
+    armorType: 'natural armor',
+    maxHp: 19,
+    hitDice: '3d10 + 3',
+    speed: '40 ft.',
+    strScore: 17,
+    dexScore: 11,
+    conScore: 12,
+    intScore: 3,
+    wisScore: 12,
+    chaScore: 6,
+    senses: 'passive Perception 11',
+    languages: '—',
+    xp: 50,
+    traits: [
+      CreatureTrait(
+        name: 'Charge',
+        description:
+            'If the goat moves at least 20 feet straight toward a target and then hits it with a ram attack on the same turn, the target takes an extra 5 (2d4) bludgeoning damage. If the target is a creature, it must succeed on a DC 13 Strength saving throw or be knocked prone.',
+      ),
+      CreatureTrait(
+        name: 'Sure-Footed',
+        description:
+            'The goat has advantage on Strength and Dexterity saving throws made against being knocked prone.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Ram',
+        description:
+            'Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (2d4 + 3) bludgeoning damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 5,
+        reach: 'reach 5 ft.',
+        hitDamage: '8 (2d4 + 3) bludgeoning damage',
+      ),
+    ],
+    attackBonus: 5,
+    damageDiceCount: 2,
+    damageDiceSides: 4,
+    damageBonus: 3,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Charge (Extra 2d4 damage, DC 13 Str save or prone)',
+    accentColor: Color(0xFF5D4037),
+  );
+
+  // --- TAN BAG CREATURES (d8) ---
+  static const jackal = MinionStatBlock(
+    id: 'bot_jackal',
+    name: 'Jackal',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 0',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 12,
+    maxHp: 3,
+    hitDice: '1d6',
+    speed: '40 ft.',
+    strScore: 8,
+    dexScore: 15,
+    conScore: 11,
+    intScore: 3,
+    wisScore: 12,
+    chaScore: 6,
+    skills: 'Perception +3',
+    senses: 'passive Perception 13',
+    languages: '—',
+    xp: 10,
+    hasPackTactics: true,
+    traits: [
+      CreatureTrait(
+        name: 'Keen Hearing and Smell',
+        description:
+            'The jackal has advantage on Wisdom (Perception) checks that rely on hearing or smell.',
+      ),
+      CreatureTrait(
+        name: 'Pack Tactics',
+        description:
+            'The jackal has advantage on an attack roll against a creature if at least one of the jackal\'s allies is within 5 feet of the creature and the ally isn\'t incapacitated.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 4 (1d4 + 2) piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '4 (1d4 + 2) piercing damage',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    specialTrait: 'Pack Tactics & Keen Hearing/Smell',
+    accentColor: Color(0xFFDCE775),
+  );
+
+  static const baboon = MinionStatBlock(
+    id: 'bot_baboon',
+    name: 'Baboon',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 0',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 12,
+    maxHp: 3,
+    hitDice: '1d6',
+    speed: '30 ft., climb 30 ft.',
+    strScore: 8,
+    dexScore: 14,
+    conScore: 11,
+    intScore: 4,
+    wisScore: 12,
+    chaScore: 6,
+    senses: 'passive Perception 11',
+    languages: '—',
+    xp: 10,
+    hasPackTactics: true,
+    traits: [
+      CreatureTrait(
+        name: 'Pack Tactics',
+        description:
+            'The baboon has advantage on an attack roll against a creature if at least one of the baboon\'s allies is within 5 feet of the creature and the ally isn\'t incapacitated.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +1 to hit, reach 5 ft., one target. Hit: 1 (1d4 - 1) piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 1,
+        reach: 'reach 5 ft.',
+        hitDamage: '1 (1d4 - 1) piercing damage',
+      ),
+    ],
+    attackBonus: 1,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: -1,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Pack Tactics & Climb 30 ft.',
+    accentColor: Color(0xFFAFB42B),
+  );
+
+  static const axeBeak = MinionStatBlock(
+    id: 'bot_axe_beak',
+    name: 'Axe Beak',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 1/4',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 11,
+    maxHp: 19,
+    hitDice: '3d10 + 3',
+    speed: '50 ft.',
+    strScore: 14,
+    dexScore: 12,
+    conScore: 12,
+    intScore: 2,
+    wisScore: 10,
+    chaScore: 5,
+    senses: 'passive Perception 10',
+    languages: '—',
+    xp: 50,
+    traits: [],
+    actions: [
+      CreatureAction(
+        name: 'Beak',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 6 (1d8 + 2) slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '6 (1d8 + 2) slashing damage',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 8,
+    damageBonus: 2,
+    damageType: 'Slashing',
+    specialTrait: 'Speed 50 ft.',
+    accentColor: Color(0xFFFBC02D),
+  );
+
+  static const giantWeasel = MinionStatBlock(
+    id: 'bot_giant_weasel',
+    name: 'Giant Weasel',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 1/8',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 13,
+    maxHp: 9,
+    hitDice: '2d8',
+    speed: '40 ft.',
+    strScore: 11,
+    dexScore: 16,
+    conScore: 10,
+    intScore: 4,
+    wisScore: 12,
+    chaScore: 5,
+    skills: 'Perception +3, Stealth +5',
+    senses: 'darkvision 60 ft., passive Perception 13',
+    languages: '—',
+    xp: 25,
+    traits: [
+      CreatureTrait(
+        name: 'Keen Hearing and Smell',
+        description:
+            'The weasel has advantage on Wisdom (Perception) checks that rely on hearing or smell.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 5 (1d4 + 3) piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 5,
+        reach: 'reach 5 ft.',
+        hitDamage: '5 (1d4 + 3) piercing damage',
+      ),
+    ],
+    attackBonus: 5,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 3,
+    damageType: 'Piercing',
+    specialTrait: 'Keen Hearing and Smell & Darkvision',
+    accentColor: Color(0xFF827717),
+  );
+
+  // --- PRESETS FOR EACH BAG VARIANT ---
+  static const grayBagPreset = SummonPreset(
+    id: 'bag_of_tricks_gray',
+    name: 'Bag of Tricks (Gray)',
+    category: SummonCategory.magicItem,
+    levelDisplay: 'Wondrous Item (Uncommon)',
+    castingTime: '1 Action',
+    range: '20 feet',
+    components: 'Action (Pull fuzzy object and throw)',
+    duration: 'Until killed or next dawn',
+    description:
+        'Pull a fuzzy object from the Gray Bag of Tricks and throw it up to 20 feet. Roll a d8: 1=Weasel, 2=Giant Rat, 3=Badger, 4=Boar, 5=Panther, 6=Giant Badger, 7=Dire Wolf, 8=Giant Elk.',
+    upcastRules: 'Up to 3 uses per day.',
+    statBlocks: [
+      weasel,
+      giantRat,
+      badger,
+      BeastSummons.boar,
+      BeastSummons.panther,
+      BeastSummons.giantBadger,
+      BeastSummons.direWolf,
+      giantElk,
+    ],
+    isRandomTable: true,
+  );
+
+  static const rustBagPreset = SummonPreset(
+    id: 'bag_of_tricks_rust',
+    name: 'Bag of Tricks (Rust)',
+    category: SummonCategory.magicItem,
+    levelDisplay: 'Wondrous Item (Uncommon)',
+    castingTime: '1 Action',
+    range: '20 feet',
+    components: 'Action (Pull fuzzy object and throw)',
+    duration: 'Until killed or next dawn',
+    description:
+        'Pull a fuzzy object from the Rust Bag of Tricks and throw it up to 20 feet. Roll a d8: 1=Rat, 2=Owl, 3=Mastiff, 4=Goat, 5=Giant Goat, 6=Giant Boar, 7=Lion, 8=Brown Bear.',
+    upcastRules: 'Up to 3 uses per day.',
+    statBlocks: [
+      rat,
+      owl,
+      mastiff,
+      goat,
+      giantGoat,
+      BeastSummons.giantBoar,
+      BeastSummons.lion,
+      BeastSummons.brownBear,
+    ],
+    isRandomTable: true,
+  );
+
+  static const tanBagPreset = SummonPreset(
+    id: 'bag_of_tricks_tan',
+    name: 'Bag of Tricks (Tan)',
+    category: SummonCategory.magicItem,
+    levelDisplay: 'Wondrous Item (Uncommon)',
+    castingTime: '1 Action',
+    range: '20 feet',
+    components: 'Action (Pull fuzzy object and throw)',
+    duration: 'Until killed or next dawn',
+    description:
+        'Pull a fuzzy object from the Tan Bag of Tricks and throw it up to 20 feet. Roll a d8: 1=Jackal, 2=Ape, 3=Baboon, 4=Axe Beak, 5=Black Bear, 6=Giant Weasel, 7=Giant Hyena, 8=Tiger.',
+    upcastRules: 'Up to 3 uses per day.',
+    statBlocks: [
+      jackal,
+      BeastSummons.ape,
+      baboon,
+      axeBeak,
+      BeastSummons.blackBear,
+      giantWeasel,
+      BeastSummons.giantHyena,
+      BeastSummons.tiger,
+    ],
+    isRandomTable: true,
+  );
+
+  // Backward-compatibility default alias
+  static const bagOfTricksPreset = grayBagPreset;
+}

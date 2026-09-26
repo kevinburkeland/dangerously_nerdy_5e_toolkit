@@ -1,0 +1,307 @@
+import 'package:flutter/material.dart';
+import '../minion_stat_block.dart';
+import '../summon_preset.dart';
+
+class AnimateObjectsSummon {
+  static const tinyObject = MinionStatBlock(
+    id: 'ao_tiny',
+    name: 'Tiny Animated Object',
+    sizeDisplay: 'Tiny',
+    crDisplay: 'CR 1/4',
+    typeDisplay: 'Construct',
+    alignment: 'unaligned',
+    ac: 18,
+    maxHp: 20,
+    speed: '30 ft., fly 30 ft. (hover)',
+    strScore: 4,
+    dexScore: 18,
+    conScore: 10,
+    intScore: 3,
+    wisScore: 3,
+    chaScore: 1,
+    damageImmunities: 'poison, psychic',
+    conditionImmunities:
+        'blinded, charmed, deafened, exhaustion, frightened, paralyzed, petrified, poisoned',
+    senses:
+        'blindsight 30 ft. (blind beyond this radius), passive Perception 6',
+    languages: '—',
+    xp: 50,
+    traits: [
+      CreatureTrait(
+        name: 'Antimagic Susceptibility',
+        description:
+            'The object is incapacitated while in the area of an antimagic field. If targeted by dispel magic, the object must succeed on a Constitution saving throw against the caster\'s spell save DC or fall unconscious for 1 minute.',
+      ),
+      CreatureTrait(
+        name: 'Construct Nature',
+        description:
+            'An animated object doesn\'t require air, food, drink, or sleep.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 6 (1d4 + 4) bludgeoning/piercing/slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 8,
+        reach: 'reach 5 ft.',
+        hitDamage: '6 (1d4 + 4) damage',
+      ),
+    ],
+    attackBonus: 8,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 4,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
+    accentColor: Color(0xFF4CAF50),
+  );
+
+  static const smallObject = MinionStatBlock(
+    id: 'ao_small',
+    name: 'Small Animated Object',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 1/2',
+    typeDisplay: 'Construct',
+    alignment: 'unaligned',
+    ac: 16,
+    maxHp: 25,
+    speed: '30 ft., fly 30 ft. (hover)',
+    strScore: 6,
+    dexScore: 14,
+    conScore: 10,
+    intScore: 3,
+    wisScore: 3,
+    chaScore: 1,
+    damageImmunities: 'poison, psychic',
+    conditionImmunities:
+        'blinded, charmed, deafened, exhaustion, frightened, paralyzed, petrified, poisoned',
+    senses:
+        'blindsight 30 ft. (blind beyond this radius), passive Perception 6',
+    languages: '—',
+    xp: 100,
+    traits: [
+      CreatureTrait(
+        name: 'Antimagic Susceptibility',
+        description:
+            'The object is incapacitated while in the area of an antimagic field. If targeted by dispel magic, the object must succeed on a Constitution saving throw against the caster\'s spell save DC or fall unconscious for 1 minute.',
+      ),
+      CreatureTrait(
+        name: 'Construct Nature',
+        description:
+            'An animated object doesn\'t require air, food, drink, or sleep.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 6 (1d8 + 2) bludgeoning/piercing/slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 6,
+        reach: 'reach 5 ft.',
+        hitDamage: '6 (1d8 + 2) damage',
+      ),
+    ],
+    attackBonus: 6,
+    damageDiceCount: 1,
+    damageDiceSides: 8,
+    damageBonus: 2,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
+    accentColor: Color(0xFF03A9F4),
+  );
+
+  static const mediumObject = MinionStatBlock(
+    id: 'ao_medium',
+    name: 'Medium Animated Object',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 1',
+    typeDisplay: 'Construct',
+    alignment: 'unaligned',
+    ac: 13,
+    maxHp: 40,
+    speed: '30 ft., fly 30 ft. (hover)',
+    strScore: 10,
+    dexScore: 12,
+    conScore: 10,
+    intScore: 3,
+    wisScore: 3,
+    chaScore: 1,
+    damageImmunities: 'poison, psychic',
+    conditionImmunities:
+        'blinded, charmed, deafened, exhaustion, frightened, paralyzed, petrified, poisoned',
+    senses:
+        'blindsight 30 ft. (blind beyond this radius), passive Perception 6',
+    languages: '—',
+    xp: 200,
+    traits: [
+      CreatureTrait(
+        name: 'Antimagic Susceptibility',
+        description:
+            'The object is incapacitated while in the area of an antimagic field. If targeted by dispel magic, the object must succeed on a Constitution saving throw against the caster\'s spell save DC or fall unconscious for 1 minute.',
+      ),
+      CreatureTrait(
+        name: 'Construct Nature',
+        description:
+            'An animated object doesn\'t require air, food, drink, or sleep.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (2d6 + 1) bludgeoning/piercing/slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 5,
+        reach: 'reach 5 ft.',
+        hitDamage: '8 (2d6 + 1) damage',
+      ),
+    ],
+    attackBonus: 5,
+    damageDiceCount: 2,
+    damageDiceSides: 6,
+    damageBonus: 1,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
+    accentColor: Color(0xFFFF9800),
+  );
+
+  static const largeObject = MinionStatBlock(
+    id: 'ao_large',
+    name: 'Large Animated Object',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 2',
+    typeDisplay: 'Construct',
+    alignment: 'unaligned',
+    ac: 10,
+    maxHp: 50,
+    speed: '30 ft., fly 30 ft. (hover)',
+    strScore: 14,
+    dexScore: 10,
+    conScore: 10,
+    intScore: 3,
+    wisScore: 3,
+    chaScore: 1,
+    damageImmunities: 'poison, psychic',
+    conditionImmunities:
+        'blinded, charmed, deafened, exhaustion, frightened, paralyzed, petrified, poisoned',
+    senses:
+        'blindsight 30 ft. (blind beyond this radius), passive Perception 6',
+    languages: '—',
+    xp: 450,
+    traits: [
+      CreatureTrait(
+        name: 'Antimagic Susceptibility',
+        description:
+            'The object is incapacitated while in the area of an antimagic field. If targeted by dispel magic, the object must succeed on a Constitution saving throw against the caster\'s spell save DC or fall unconscious for 1 minute.',
+      ),
+      CreatureTrait(
+        name: 'Construct Nature',
+        description:
+            'An animated object doesn\'t require air, food, drink, or sleep.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 13 (2d10 + 2) bludgeoning/piercing/slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 6,
+        reach: 'reach 5 ft.',
+        hitDamage: '13 (2d10 + 2) damage',
+      ),
+    ],
+    attackBonus: 6,
+    damageDiceCount: 2,
+    damageDiceSides: 10,
+    damageBonus: 2,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
+    accentColor: Color(0xFFE91E63),
+  );
+
+  static const hugeObject = MinionStatBlock(
+    id: 'ao_huge',
+    name: 'Huge Animated Object',
+    sizeDisplay: 'Huge',
+    crDisplay: 'CR 4',
+    typeDisplay: 'Construct',
+    alignment: 'unaligned',
+    ac: 10,
+    maxHp: 80,
+    speed: '30 ft., fly 30 ft. (hover)',
+    strScore: 18,
+    dexScore: 6,
+    conScore: 10,
+    intScore: 3,
+    wisScore: 3,
+    chaScore: 1,
+    damageImmunities: 'poison, psychic',
+    conditionImmunities:
+        'blinded, charmed, deafened, exhaustion, frightened, paralyzed, petrified, poisoned',
+    senses:
+        'blindsight 30 ft. (blind beyond this radius), passive Perception 6',
+    languages: '—',
+    xp: 1100,
+    traits: [
+      CreatureTrait(
+        name: 'Antimagic Susceptibility',
+        description:
+            'The object is incapacitated while in the area of an antimagic field. If targeted by dispel magic, the object must succeed on a Constitution saving throw against the caster\'s spell save DC or fall unconscious for 1 minute.',
+      ),
+      CreatureTrait(
+        name: 'Construct Nature',
+        description:
+            'An animated object doesn\'t require air, food, drink, or sleep.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 17 (2d12 + 4) bludgeoning/piercing/slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 8,
+        reach: 'reach 5 ft.',
+        hitDamage: '17 (2d12 + 4) damage',
+      ),
+    ],
+    attackBonus: 8,
+    damageDiceCount: 2,
+    damageDiceSides: 12,
+    damageBonus: 4,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
+    accentColor: Color(0xFF9C27B0),
+  );
+
+  static const preset = SummonPreset(
+    id: 'animate_objects',
+    spellId: 'spell_animate_objects',
+    name: 'Animate Objects',
+    category: SummonCategory.spell,
+    levelDisplay: '5th-level Transmutation',
+    castingTime: '1 Action',
+    range: '120 feet',
+    components: 'V, S',
+    duration: 'Concentration, up to 1 minute',
+    description:
+        'Objects come to life at your command. Choose up to ten nonmagical objects within range. Tiny/Small count as 1 pt, Medium counts as 2 pts, Large counts as 4 pts, Huge counts as 8 pts (up to 10 pts total at 5th level).',
+    upcastRules: '+2 points per spell slot level above 5th level.',
+    statBlocks: [
+      tinyObject,
+      smallObject,
+      mediumObject,
+      largeObject,
+      hugeObject
+    ],
+    budgetCalculator: _calculateAnimateObjectsBudget,
+    defaultMinionCount: 10,
+  );
+
+  static int _calculateAnimateObjectsBudget(int spellLevel) =>
+      10 + (spellLevel - 5).clamp(0, 4) * 2;
+}

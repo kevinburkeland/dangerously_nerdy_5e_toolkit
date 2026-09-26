@@ -1,0 +1,125 @@
+import 'dart:async';
+import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+
+/// Transport adapter for Tier 1 Local Wi-Fi / LAN communication.
+///
+/// Implements [IP2pTransportPort] for zero-cost, zero-latency local communication.
+/// In environments where local network discovery/sockets are unavailable or disabled,
+/// [initializeRoom] fails, allowing [CascadingTransportRouter] to step down
+/// to WebRTC mesh (Tier 2).
+class LocalWifiAdapter implements IP2pTransportPort {
+  final Future<void> Function(String roomCode, String localNodeId)?
+      onInitialize;
+  final Future<void> Function(String jsonPayload)? onBroadcast;
+  final Future<void> Function()? onDisconnect;
+  final Future<bool> Function(String roomCode, String localNodeId)? onProbe;
+
+  String? _roomCode;
+  String? _localNodeId;
+  bool _isInitialized = false;
+
+  StreamController<String> _incomingPayloadsController =
+      StreamController<String>.broadcast(sync: false);
+
+  LocalWifiAdapter({
+    this.onInitialize,
+    this.onBroadcast,
+    this.onDisconnect,
+    this.onProbe,
+  });
+
+  bool get isInitialized => _isInitialized;
+  String? get roomCode => _roomCode;
+  String? get localNodeId => _localNodeId;
+
+  @override
+  TransportState get currentState =>
+      _isInitialized ? TransportState.localWifi : TransportState.offline;
+
+  @override
+  Map<String, int> get peerLastSeen => const {};
+
+  @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+
+  @override
+  Future<void> prepareSession() async {}
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async {
+    if (onProbe != null) {
+      try {
+        return await onProbe!(roomCode, localNodeId);
+      } catch (_) {
+        return false;
+      }
+    }
+    if (_isInitialized) return true;
+    return onInitialize != null;
+  }
+
+  @override
+  Future<void> initializeRoom(String roomCode, String localNodeId) async {
+    _roomCode = roomCode.trim().toUpperCase();
+    _localNodeId = localNodeId;
+
+    if (_incomingPayloadsController.isClosed) {
+      _incomingPayloadsController =
+          StreamController<String>.broadcast(sync: false);
+    }
+
+    if (onInitialize != null) {
+      await onInitialize!(_roomCode!, _localNodeId!);
+      _isInitialized = true;
+      return;
+    }
+
+    // Default behavior: Local Wi-Fi requires platform socket or LAN multicast setup.
+    // If no custom handler is provided, throw so the router cascades to WebRTC (Tier 2).
+    throw UnsupportedError(
+      'Local Wi-Fi transport is not enabled on this host; falling back to WebRTC.',
+    );
+  }
+
+  @override
+  Future<void> broadcastPayload(String jsonPayload) async {
+    if (!_isInitialized) {
+      throw StateError(
+          'LocalWifiAdapter must be initialized before broadcasting.');
+    }
+
+    if (onBroadcast != null) {
+      await onBroadcast!(jsonPayload);
+    }
+  }
+
+  /// Injects an incoming payload from a local LAN peer.
+  void emitIncomingPayload(String payload) {
+    _incomingPayloadsController.add(payload);
+  }
+
+  @override
+  Stream<String> watchIncomingPayloads() => _incomingPayloadsController.stream;
+
+  @override
+  Future<void> disconnect() async {
+    _isInitialized = false;
+    _roomCode = null;
+    _localNodeId = null;
+
+    if (onDisconnect != null) {
+      await onDisconnect!();
+    }
+    await _incomingPayloadsController.close();
+  }
+}
+
+/// Concrete adapter class representing the Tier 1 Local Wi-Fi transport adapter.
+class LocalWifiTransportAdapter extends LocalWifiAdapter {
+  LocalWifiTransportAdapter({
+    super.onInitialize,
+    super.onBroadcast,
+    super.onDisconnect,
+    super.onProbe,
+  });
+}

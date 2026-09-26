@@ -1,0 +1,853 @@
+import 'package:flutter/material.dart';
+import '../minion_stat_block.dart';
+import '../summon_preset.dart';
+
+class ElementalSummons {
+  // --- CR 5 ELEMENTALS (5th-level base slot) ---
+  static const airElemental = MinionStatBlock(
+    id: 'elem_air',
+    name: 'Air Elemental',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 5',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral',
+    ac: 15,
+    maxHp: 90,
+    hitDice: '12d10 + 24',
+    speed: 'fly 90 ft. (hover)',
+    strScore: 14,
+    dexScore: 20,
+    conScore: 14,
+    intScore: 6,
+    wisScore: 10,
+    chaScore: 6,
+    damageResistances:
+        'lightning, thunder; bludgeoning, piercing, and slashing from nonmagical attacks',
+    damageImmunities: 'poison',
+    conditionImmunities:
+        'exhaustion, grappled, paralyzed, petrified, poisoned, prone, restrained, unconscious',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'Auran',
+    xp: 1800,
+    traits: [
+      CreatureTrait(
+        name: 'Air Form',
+        description:
+            'The elemental can enter a hostile creature\'s space and stop there. It can move through a space as narrow as 1 inch wide without squeezing.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description: 'The elemental makes two slam attacks.',
+      ),
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 14 (2d8 + 5) bludgeoning damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 8,
+        reach: 'reach 5 ft.',
+        hitDamage: '14 (2d8 + 5) bludgeoning damage',
+      ),
+      CreatureAction(
+        name: 'Whirlwind (Recharge 4–6)',
+        description:
+            'Each creature in the elemental\'s space must make a DC 13 Strength saving throw. On a failure, a target takes 15 (3d8 + 2) bludgeoning damage and is flung up to 20 feet in a random direction and knocked prone. If a thrown target strikes an object, such as a wall or floor, the target takes 3 (1d6) bludgeoning damage for every 10 feet it was thrown.',
+      ),
+    ],
+    attackBonus: 8,
+    damageDiceCount: 2,
+    damageDiceSides: 8,
+    damageBonus: 5,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Whirlwind (DC 13 Strength save or flung)',
+    accentColor: Color(0xFF81D4FA),
+  );
+
+  static const earthElemental = MinionStatBlock(
+    id: 'elem_earth',
+    name: 'Earth Elemental',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 5',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral',
+    ac: 17,
+    armorType: 'natural armor',
+    maxHp: 126,
+    hitDice: '12d10 + 60',
+    speed: '30 ft., burrow 30 ft.',
+    strScore: 20,
+    dexScore: 8,
+    conScore: 20,
+    intScore: 5,
+    wisScore: 10,
+    chaScore: 5,
+    damageVulnerabilities: 'thunder',
+    damageResistances:
+        'bludgeoning, piercing, and slashing from nonmagical attacks',
+    damageImmunities: 'poison',
+    conditionImmunities:
+        'exhaustion, paralyzed, petrified, poisoned, unconscious',
+    senses: 'darkvision 60 ft., tremorsense 60 ft., passive Perception 10',
+    languages: 'Terran',
+    xp: 1800,
+    traits: [
+      CreatureTrait(
+        name: 'Earth Glide',
+        description:
+            'The elemental can burrow through nonmagical, unworked earth and stone. While doing so, the elemental doesn\'t disturb the material it moves through.',
+      ),
+      CreatureTrait(
+        name: 'Siege Monster',
+        description:
+            'The elemental deals double damage to objects and structures.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description: 'The elemental makes two slam attacks.',
+      ),
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 14 (2d8 + 5) bludgeoning damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 8,
+        reach: 'reach 10 ft.',
+        hitDamage: '14 (2d8 + 5) bludgeoning damage',
+      ),
+    ],
+    attackBonus: 8,
+    damageDiceCount: 2,
+    damageDiceSides: 8,
+    damageBonus: 5,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Siege Monster & Earth Glide',
+    accentColor: Color(0xFFA1887F),
+  );
+
+  static const fireElemental = MinionStatBlock(
+    id: 'elem_fire',
+    name: 'Fire Elemental',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 5',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral',
+    ac: 13,
+    maxHp: 102,
+    hitDice: '12d10 + 36',
+    speed: '50 ft.',
+    strScore: 10,
+    dexScore: 17,
+    conScore: 16,
+    intScore: 6,
+    wisScore: 10,
+    chaScore: 7,
+    damageResistances:
+        'bludgeoning, piercing, and slashing from nonmagical attacks',
+    damageImmunities: 'fire, poison',
+    conditionImmunities:
+        'exhaustion, grappled, paralyzed, petrified, poisoned, prone, restrained, unconscious',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'Ignan',
+    xp: 1800,
+    traits: [
+      CreatureTrait(
+        name: 'Fire Form',
+        description:
+            'The elemental can move through a space as narrow as 1 inch wide without squeezing. A creature that touches the elemental or hits it with a melee attack while within 5 feet of it takes 5 (1d10) fire damage. In addition, the elemental can enter a hostile creature\'s space and stop there. The first time it enters a creature\'s space on a turn, that creature takes 5 (1d10) fire damage and catches fire.',
+      ),
+      CreatureTrait(
+        name: 'Illumination',
+        description:
+            'The elemental sheds bright light in a 30-foot radius and dim light for an additional 30 feet.',
+      ),
+      CreatureTrait(
+        name: 'Water Susceptibility',
+        description:
+            'For every 5 feet the elemental moves in water, or for every gallon of water splashed on it, it takes 1 cold damage.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description: 'The elemental makes two touch attacks.',
+      ),
+      CreatureAction(
+        name: 'Touch',
+        description:
+            'Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 10 (2d6 + 3) fire damage. If the target is a creature or a flammable object, it catches fire. Until a creature takes an action to douse the fire, the target takes 5 (1d10) fire damage at the start of each of its turns.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 6,
+        reach: 'reach 5 ft.',
+        hitDamage: '10 (2d6 + 3) fire damage + target catches fire',
+      ),
+    ],
+    attackBonus: 6,
+    damageDiceCount: 2,
+    damageDiceSides: 6,
+    damageBonus: 3,
+    damageType: 'Fire',
+    specialTrait: 'Touch (Target catches fire for 1d10 fire per turn)',
+    accentColor: Color(0xFFFF5722),
+  );
+
+  static const waterElemental = MinionStatBlock(
+    id: 'elem_water',
+    name: 'Water Elemental',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 5',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral',
+    ac: 14,
+    armorType: 'natural armor',
+    maxHp: 114,
+    hitDice: '12d10 + 48',
+    speed: '30 ft., swim 90 ft.',
+    strScore: 18,
+    dexScore: 14,
+    conScore: 18,
+    intScore: 5,
+    wisScore: 10,
+    chaScore: 8,
+    damageResistances:
+        'acid; bludgeoning, piercing, and slashing from nonmagical attacks',
+    damageImmunities: 'poison',
+    conditionImmunities:
+        'exhaustion, grappled, paralyzed, petrified, poisoned, prone, restrained, unconscious',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'Aquan',
+    xp: 1800,
+    traits: [
+      CreatureTrait(
+        name: 'Water Form',
+        description:
+            'The elemental can enter a hostile creature\'s space and stop there. It can move through a space as narrow as 1 inch wide without squeezing.',
+      ),
+      CreatureTrait(
+        name: 'Freeze',
+        description:
+            'If the elemental takes cold damage, it partially freezes; its speed is reduced by 20 feet until the end of its next turn.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description: 'The elemental makes two slam attacks.',
+      ),
+      CreatureAction(
+        name: 'Slam',
+        description:
+            'Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) bludgeoning damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 7,
+        reach: 'reach 5 ft.',
+        hitDamage: '13 (2d8 + 4) bludgeoning damage',
+      ),
+      CreatureAction(
+        name: 'Whelm (Recharge 4–6)',
+        description:
+            'Each creature in the elemental\'s space must make a DC 15 Strength saving throw. On a failure, a target takes 13 (2d8 + 4) bludgeoning damage. If it is Large or smaller, it is also grappled (escape DC 14). Until this grapple ends, the target is restrained and unable to breathe unless it can breathe water.',
+      ),
+    ],
+    attackBonus: 7,
+    damageDiceCount: 2,
+    damageDiceSides: 8,
+    damageBonus: 4,
+    damageType: 'Bludgeoning',
+    specialTrait: 'Whelm (DC 15 Strength save or grappled and drowning)',
+    accentColor: Color(0xFF0288D1),
+  );
+
+  static const salamander = MinionStatBlock(
+    id: 'elem_salamander',
+    name: 'Salamander',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 5',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral evil',
+    ac: 15,
+    armorType: 'natural armor',
+    maxHp: 90,
+    hitDice: '12d10 + 24',
+    speed: '30 ft.',
+    strScore: 18,
+    dexScore: 14,
+    conScore: 15,
+    intScore: 11,
+    wisScore: 10,
+    chaScore: 12,
+    damageVulnerabilities: 'cold',
+    damageResistances:
+        'bludgeoning, piercing, and slashing from nonmagical attacks',
+    damageImmunities: 'fire, poison',
+    conditionImmunities: 'poisoned',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'Ignan',
+    xp: 1800,
+    traits: [
+      CreatureTrait(
+        name: 'Heated Body',
+        description:
+            'A creature that touches the salamander or hits it with a melee attack while within 5 feet of it takes 7 (2d6) fire damage.',
+      ),
+      CreatureTrait(
+        name: 'Heated Weapons',
+        description:
+            'Any metal melee weapon the salamander wields deals an extra 3 (1d6) fire damage on a hit.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description:
+            'The salamander makes two attacks: one with its spear and one with its tail.',
+      ),
+      CreatureAction(
+        name: 'Spear',
+        description:
+            'Melee or Ranged Weapon Attack: +7 to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 11 (2d6 + 4) piercing damage, or 13 (2d8 + 4) piercing damage if used with two hands, plus 3 (1d6) fire damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 7,
+        reach: 'reach 5 ft.',
+        hitDamage: '11 (2d6 + 4) piercing + 3 (1d6) fire',
+      ),
+      CreatureAction(
+        name: 'Tail',
+        description:
+            'Melee Weapon Attack: +7 to hit, reach 10 ft., one target. Hit: 11 (2d6 + 4) bludgeoning damage plus 7 (2d6) fire damage, and the target is grappled (escape DC 14). Until this grapple ends, the target is restrained.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 7,
+        reach: 'reach 10 ft.',
+        hitDamage: '11 (2d6 + 4) bludgeoning + 7 (2d6) fire + Grapple',
+      ),
+    ],
+    attackBonus: 7,
+    damageDiceCount: 2,
+    damageDiceSides: 6,
+    damageBonus: 4,
+    damageType: 'Piercing',
+    secondaryDamageDiceCount: 1,
+    secondaryDamageDiceSides: 6,
+    secondaryDamageType: 'Fire',
+    specialTrait: 'Spear + Tail Constrict + Heated Body (2d6 fire aura)',
+    accentColor: Color(0xFFE64A19),
+  );
+
+  static const xorn = MinionStatBlock(
+    id: 'elem_xorn',
+    name: 'Xorn',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 5',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral',
+    ac: 19,
+    armorType: 'natural armor',
+    maxHp: 84,
+    hitDice: '8d8 + 48',
+    speed: '20 ft., burrow 20 ft.',
+    strScore: 17,
+    dexScore: 10,
+    conScore: 22,
+    intScore: 11,
+    wisScore: 10,
+    chaScore: 11,
+    skills: 'Perception +6, Stealth +3',
+    damageResistances:
+        'piercing and slashing from nonmagical attacks not made with adamantine',
+    damageImmunities: 'cold, fire, poison',
+    conditionImmunities: 'poisoned',
+    senses: 'darkvision 60 ft., tremorsense 60 ft., passive Perception 16',
+    languages: 'Terran',
+    xp: 1800,
+    traits: [
+      CreatureTrait(
+        name: 'Earth Glide',
+        description:
+            'The xorn can burrow through nonmagical, unworked earth and stone. While doing so, the xorn doesn\'t disturb the material it moves through.',
+      ),
+      CreatureTrait(
+        name: 'Stone Camouflage',
+        description:
+            'The xorn has advantage on Dexterity (Stealth) checks made to hide in rocky terrain.',
+      ),
+      CreatureTrait(
+        name: 'Treasure Sense',
+        description:
+            'The xorn can pinpoint, by scent, the location of precious metals and stones, such as coins and gems, within 60 feet of it.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description: 'The xorn makes three claw attacks and one bite attack.',
+      ),
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 13 (3d6 + 3) piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 6,
+        reach: 'reach 5 ft.',
+        hitDamage: '13 (3d6 + 3) piercing damage',
+      ),
+      CreatureAction(
+        name: 'Claw',
+        description:
+            'Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 6 (1d6 + 3) slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 6,
+        reach: 'reach 5 ft.',
+        hitDamage: '6 (1d6 + 3) slashing damage',
+      ),
+    ],
+    attackBonus: 6,
+    damageDiceCount: 3,
+    damageDiceSides: 6,
+    damageBonus: 3,
+    damageType: 'Piercing',
+    specialTrait: 'Multiattack (3 Claws + 1 Bite) & Earth Glide',
+    accentColor: Color(0xFF795548),
+  );
+
+  // --- CR 2 & CR 1/4 - 1/2 MINOR ELEMENTALS ---
+  static const fireSnake = MinionStatBlock(
+    id: 'elem_fire_snake',
+    name: 'Fire Snake',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 1',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral evil',
+    ac: 14,
+    armorType: 'natural armor',
+    maxHp: 22,
+    hitDice: '5d8',
+    speed: '30 ft.',
+    strScore: 12,
+    dexScore: 14,
+    conScore: 11,
+    intScore: 7,
+    wisScore: 10,
+    chaScore: 8,
+    damageVulnerabilities: 'cold',
+    damageResistances:
+        'bludgeoning, piercing, and slashing from nonmagical attacks',
+    damageImmunities: 'fire, poison',
+    conditionImmunities: 'poisoned',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'understands Ignan but can\'t speak',
+    xp: 200,
+    traits: [
+      CreatureTrait(
+        name: 'Heated Body',
+        description:
+            'A creature that touches the fire snake or hits it with a melee attack while within 5 feet of it takes 3 (1d6) fire damage.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description:
+            'The fire snake makes two attacks: one with its bite and one with its tail.',
+      ),
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 4 (1d4 + 2) piercing damage plus 3 (1d6) fire damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '4 (1d4 + 2) piercing + 3 (1d6) fire',
+      ),
+      CreatureAction(
+        name: 'Tail',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 4 (1d4 + 2) bludgeoning damage plus 3 (1d6) fire damage, and the target is grappled (escape DC 11). Until this grapple ends, the target is restrained.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '4 (1d4 + 2) bludgeoning + 3 (1d6) fire + Grapple',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    secondaryDamageDiceCount: 1,
+    secondaryDamageDiceSides: 6,
+    secondaryDamageType: 'Fire',
+    specialTrait: 'Bite + Tail (1d6 fire each) + Heated Body',
+    accentColor: Color(0xFFFF7043),
+  );
+
+  static const gargoyle = MinionStatBlock(
+    id: 'elem_gargoyle',
+    name: 'Gargoyle',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 2',
+    typeDisplay: 'Elemental',
+    alignment: 'chaotic evil',
+    ac: 15,
+    armorType: 'natural armor',
+    maxHp: 52,
+    hitDice: '7d8 + 21',
+    speed: '30 ft., fly 60 ft.',
+    strScore: 15,
+    dexScore: 11,
+    conScore: 16,
+    intScore: 6,
+    wisScore: 11,
+    chaScore: 7,
+    damageResistances:
+        'bludgeoning, piercing, and slashing from nonmagical attacks that aren\'t adamantine',
+    damageImmunities: 'poison',
+    conditionImmunities: 'exhaustion, petrified, poisoned',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'Terran',
+    xp: 450,
+    traits: [
+      CreatureTrait(
+        name: 'False Appearance',
+        description:
+            'While the gargoyle remains motionless, it is indistinguishable from an inanimate statue.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description:
+            'The gargoyle makes two attacks: one with its bite and one with its claws.',
+      ),
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 5 (1d6 + 2) piercing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '5 (1d6 + 2) piercing damage',
+      ),
+      CreatureAction(
+        name: 'Claws',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 5 (1d6 + 2) slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '5 (1d6 + 2) slashing damage',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 6,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    specialTrait: 'Multiattack (Bite + Claws) & False Appearance',
+    accentColor: Color(0xFF616161),
+  );
+
+  static const dustMephit = MinionStatBlock(
+    id: 'elem_dust_mephit',
+    name: 'Dust Mephit',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 1/2',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral evil',
+    ac: 12,
+    maxHp: 17,
+    hitDice: '5d6',
+    speed: '30 ft., fly 30 ft.',
+    strScore: 5,
+    dexScore: 14,
+    conScore: 10,
+    intScore: 9,
+    wisScore: 11,
+    chaScore: 10,
+    skills: 'Perception +2, Stealth +4',
+    damageVulnerabilities: 'fire',
+    damageImmunities: 'poison',
+    conditionImmunities: 'poisoned',
+    senses: 'darkvision 60 ft., passive Perception 12',
+    languages: 'Auran, Terran',
+    xp: 100,
+    traits: [
+      CreatureTrait(
+        name: 'Death Burst',
+        description:
+            'When the mephit dies, it explodes in a burst of dust. Each creature within 5 feet of it must succeed on a DC 10 Constitution saving throw or be blinded for 1 minute.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Claws',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 4 (1d4 + 2) slashing damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '4 (1d4 + 2) slashing damage',
+      ),
+      CreatureAction(
+        name: 'Blinding Breath (Recharge 6)',
+        description:
+            'The mephit exhales a 15-foot cone of blinding dust. Each creature in that area must succeed on a DC 10 Dexterity saving throw or be blinded for 1 minute.',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 2,
+    damageType: 'Slashing',
+    specialTrait: 'Death Burst & Blinding Breath (DC 10 Con save)',
+    accentColor: Color(0xFFBCAAA4),
+  );
+
+  static const iceMephit = MinionStatBlock(
+    id: 'elem_ice_mephit',
+    name: 'Ice Mephit',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 1/2',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral evil',
+    ac: 11,
+    maxHp: 21,
+    hitDice: '6d6',
+    speed: '30 ft., fly 30 ft.',
+    strScore: 7,
+    dexScore: 13,
+    conScore: 10,
+    intScore: 9,
+    wisScore: 11,
+    chaScore: 12,
+    skills: 'Perception +2, Stealth +3',
+    damageVulnerabilities: 'bludgeoning, fire',
+    damageImmunities: 'cold, poison',
+    conditionImmunities: 'poisoned',
+    senses: 'darkvision 60 ft., passive Perception 12',
+    languages: 'Aquan, Auran',
+    xp: 100,
+    traits: [
+      CreatureTrait(
+        name: 'Death Burst',
+        description:
+            'When the mephit dies, it explodes in a burst of jagged ice. Each creature within 5 feet of it must make a DC 10 Dexterity saving throw, taking 4 (1d8) cold damage on a failed save, or half as much damage on a successful one.',
+      ),
+      CreatureTrait(
+        name: 'False Appearance',
+        description:
+            'While the mephit remains motionless, it is indistinguishable from an ordinary shard of ice.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Claws',
+        description:
+            'Melee Weapon Attack: +3 to hit, reach 5 ft., one creature. Hit: 3 (1d4 + 1) slashing damage plus 2 (1d4) cold damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 3,
+        reach: 'reach 5 ft.',
+        hitDamage: '3 (1d4 + 1) slashing + 2 (1d4) cold',
+      ),
+      CreatureAction(
+        name: 'Frost Breath (Recharge 6)',
+        description:
+            'The mephit exhales a 15-foot cone of cold air. Each creature in that area must make a DC 10 Dexterity saving throw, taking 5 (2d4) cold damage on a failed save, or half as much damage on a successful one.',
+      ),
+    ],
+    attackBonus: 3,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 1,
+    damageType: 'Slashing',
+    secondaryDamageDiceCount: 1,
+    secondaryDamageDiceSides: 4,
+    secondaryDamageType: 'Cold',
+    specialTrait: 'Death Burst (1d8 cold) & Frost Breath',
+    accentColor: Color(0xFF80DEEA),
+  );
+
+  static const magmaMephit = MinionStatBlock(
+    id: 'elem_magma_mephit',
+    name: 'Magma Mephit',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 1/2',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral evil',
+    ac: 11,
+    maxHp: 22,
+    hitDice: '5d6 + 5',
+    speed: '30 ft., fly 30 ft.',
+    strScore: 8,
+    dexScore: 12,
+    conScore: 12,
+    intScore: 7,
+    wisScore: 10,
+    chaScore: 10,
+    skills: 'Stealth +3',
+    damageVulnerabilities: 'cold',
+    damageImmunities: 'fire, poison',
+    conditionImmunities: 'poisoned',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'Ignan, Terran',
+    xp: 100,
+    traits: [
+      CreatureTrait(
+        name: 'Death Burst',
+        description:
+            'When the mephit dies, it explodes in a burst of lava. Each creature within 5 feet of it must make a DC 11 Dexterity saving throw, taking 7 (2d6) fire damage on a failed save, or half as much damage on a successful one.',
+      ),
+      CreatureTrait(
+        name: 'False Appearance',
+        description:
+            'While the mephit remains motionless, it is indistinguishable from an ordinary mound of magma.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Claws',
+        description:
+            'Melee Weapon Attack: +3 to hit, reach 5 ft., one creature. Hit: 3 (1d4 + 1) slashing damage plus 2 (1d4) fire damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 3,
+        reach: 'reach 5 ft.',
+        hitDamage: '3 (1d4 + 1) slashing + 2 (1d4) fire',
+      ),
+      CreatureAction(
+        name: 'Fire Breath (Recharge 6)',
+        description:
+            'The mephit exhales a 15-foot cone of fire. Each creature in that area must make a DC 11 Dexterity saving throw, taking 7 (2d6) fire damage on a failed save, or half as much damage on a successful one.',
+      ),
+    ],
+    attackBonus: 3,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 1,
+    damageType: 'Slashing',
+    secondaryDamageDiceCount: 1,
+    secondaryDamageDiceSides: 4,
+    secondaryDamageType: 'Fire',
+    specialTrait: 'Death Burst (2d6 fire) & Fire Breath',
+    accentColor: Color(0xFFFF8A65),
+  );
+
+  static const steamMephit = MinionStatBlock(
+    id: 'elem_steam_mephit',
+    name: 'Steam Mephit',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 1/4',
+    typeDisplay: 'Elemental',
+    alignment: 'neutral evil',
+    ac: 10,
+    maxHp: 21,
+    hitDice: '6d6',
+    speed: '30 ft., fly 30 ft.',
+    strScore: 5,
+    dexScore: 11,
+    conScore: 10,
+    intScore: 11,
+    wisScore: 10,
+    chaScore: 12,
+    damageImmunities: 'fire, poison',
+    conditionImmunities: 'poisoned',
+    senses: 'darkvision 60 ft., passive Perception 10',
+    languages: 'Aquan, Ignan',
+    xp: 50,
+    traits: [
+      CreatureTrait(
+        name: 'Death Burst',
+        description:
+            'When the mephit dies, it explodes in a cloud of steam. Each creature within 5 feet of it must make a DC 10 Dexterity saving throw, taking 4 (1d8) fire damage on a failed save, or half as much damage on a successful one.',
+      ),
+    ],
+    actions: [
+      CreatureAction(
+        name: 'Claws',
+        description:
+            'Melee Weapon Attack: +2 to hit, reach 5 ft., one creature. Hit: 2 (1d4) slashing damage plus 2 (1d4) fire damage.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 2,
+        reach: 'reach 5 ft.',
+        hitDamage: '2 (1d4) slashing + 2 (1d4) fire',
+      ),
+      CreatureAction(
+        name: 'Steam Breath (Recharge 6)',
+        description:
+            'The mephit exhales a 15-foot cone of scalding steam. Each creature in that area must make a DC 10 Dexterity saving throw, taking 4 (1d8) fire damage on a failed save, or half as much damage on a successful one.',
+      ),
+    ],
+    attackBonus: 2,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 0,
+    damageType: 'Slashing',
+    secondaryDamageDiceCount: 1,
+    secondaryDamageDiceSides: 4,
+    secondaryDamageType: 'Fire',
+    specialTrait: 'Death Burst (1d8 fire) & Steam Breath',
+    accentColor: Color(0xFFB0BEC5),
+  );
+
+  static const conjureElementalPreset = SummonPreset(
+    id: 'conjure_elemental',
+    spellId: 'spell_conjure_elemental',
+    name: 'Conjure Elemental',
+    category: SummonCategory.spell,
+    levelDisplay: '5th-level Conjuration',
+    castingTime: '1 Minute',
+    range: '90 feet',
+    components:
+        'V, S, M (burning incense for air, soft clay for earth, sulfur for fire, or water and sand for water)',
+    duration: 'Concentration, up to 1 hour',
+    description:
+        'You call forth an elemental servant. Choose an area of air, earth, fire, or water that fills a 10-foot cube within range to summon an Elemental of CR 5 or lower.',
+    upcastRules:
+        'Summon an elemental with CR increased by 1 for each slot level above 5th.',
+    statBlocks: [
+      airElemental,
+      earthElemental,
+      fireElemental,
+      waterElemental,
+      salamander,
+      xorn
+    ],
+    budgetCalculator: _calculateConjureElementalBudget,
+    defaultMinionCount: 1,
+  );
+
+  static const conjureMinorElementalsPreset = SummonPreset(
+    id: 'conjure_minor_elementals',
+    spellId: 'spell_conjure_minor_elementals',
+    name: 'Conjure Minor Elementals',
+    category: SummonCategory.spell,
+    levelDisplay: '4th-level Conjuration',
+    castingTime: '1 Minute',
+    range: '90 feet',
+    components: 'V, S',
+    duration: 'Concentration, up to 1 hour',
+    description:
+        'You summon elementals: 1 of CR 2 or lower, 2 of CR 1 or lower, 4 of CR 1/2 or lower, or 8 of CR 1/4 or lower.',
+    upcastRules:
+        'Twice as many with 6th-level slot; three times as many with 8th-level slot.',
+    statBlocks: [
+      gargoyle,
+      fireSnake,
+      dustMephit,
+      iceMephit,
+      magmaMephit,
+      steamMephit
+    ],
+    budgetCalculator: _calculateConjureMinorElementalsBudget,
+    defaultMinionCount: 4,
+  );
+
+  static int _calculateConjureElementalBudget(int spellLevel) => 1;
+
+  static int _calculateConjureMinorElementalsBudget(int spellLevel) {
+    if (spellLevel < 6) return 8;
+    if (spellLevel < 8) return 16;
+    return 24;
+  }
+}

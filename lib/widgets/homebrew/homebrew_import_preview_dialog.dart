@@ -1,0 +1,816 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import '../../models/domain/core_types.dart';
+import '../../models/domain/entity_reference.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
+import '../../models/domain/homebrew_other_category.dart';
+import '../../services/acl/homebrew_merge_resolver.dart';
+import '../../services/fluff/entity_fluff_service.dart';
+import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
+import '../../services/io/compendium_file_picker_service.dart';
+import '../../services/persistence/homebrew_persistence_service.dart';
+import '../dialogs/app_dialog_frame.dart';
+
+/// Modal dialog providing interactive preview, category filters, automated deduplication,
+/// and collision resolution for incoming Homebrew Bundles or Compendium JSON.
+class HomebrewImportPreviewDialog extends StatefulWidget {
+  final String? initialJson;
+
+  /// When [true] (the default), JSON parsing is offloaded to a Dart isolate via
+  /// [compute] so large files don't freeze the UI. Set [false] in widget tests
+  /// to keep execution synchronous and avoid [pumpAndSettle] timeouts.
+  final bool useIsolate;
+
+  const HomebrewImportPreviewDialog({
+    super.key,
+    this.initialJson,
+    this.useIsolate = true,
+  });
+
+  @override
+  State<HomebrewImportPreviewDialog> createState() =>
+      _HomebrewImportPreviewDialogState();
+}
+
+class _HomebrewImportPreviewDialogState
+    extends State<HomebrewImportPreviewDialog> {
+  final _textController = TextEditingController();
+  final _persistence = HomebrewPersistenceService();
+  final _resolver = const HomebrewMergeResolver();
+
+  RulesetVersion? _selectedRuleset;
+  ImportAnalysisResult? _analysisResult;
+  Map<HomebrewOtherCategory, List<ImportAnalysisItem<HomebrewCompendiumEntry>>>?
+      _bucketedOtherEntries;
+  LoadedCompendiumFile? _loadedFile;
+
+  // Analysis phase
+  bool _isAnalyzing = false;
+  String _analyzePhase = 'Parsing JSON\u2026';
+
+  // Commit phase
+  bool _isImporting = false;
+  int _importProgress = 0;
+  int _importTotal = 0;
+  String _importPhase = '';
+
+  bool _applyToRemainingCollisions = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialJson != null && widget.initialJson!.isNotEmpty) {
+      _textController.text = widget.initialJson!;
+      _analyzeInput(widget.initialJson!);
+    }
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _analyzeInput(String jsonString) async {
+    if (jsonString.trim().isEmpty) return;
+
+    setState(() {
+      _isAnalyzing = true;
+      _analyzePhase = 'Parsing JSON\u2026';
+      _errorMessage = null;
+    });
+
+    try {
+      // Offload CPU-bound JSON parsing + ACL pipeline to an isolate so the
+      // UI thread stays responsive during large file processing.
+      final IngestionBatchResult ingestion;
+      if (widget.useIsolate) {
+        ingestion = await compute(
+          _parseJsonInIsolate,
+          _ParseRequest(jsonString, _selectedRuleset),
+        );
+      } else {
+        // Synchronous path used in tests to avoid isolate/pumpAndSettle issues.
+        ingestion =
+            _parseJsonInIsolate(_ParseRequest(jsonString, _selectedRuleset));
+      }
+
+      if (ingestion.hasErrors && ingestion.totalEntities == 0) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = ingestion.errors.join('\n');
+            _isAnalyzing = false;
+          });
+        }
+        return;
+      }
+
+      // Register parsed lore/fluff across the isolate boundary onto the main thread
+      if (ingestion.fluff.isNotEmpty) {
+        EntityFluffService().batchRegisterFluff(ingestion.fluff);
+      }
+
+      setState(() => _analyzePhase = 'Checking for conflicts\u2026');
+      final bundle = ingestion.toBundle();
+
+      // Load local items for deduplication
+      final spells = await _persistence.loadCustomSpells();
+      final monsters = await _persistence.loadCustomMonsters();
+      final items = await _persistence.loadCustomItems();
+      final classes = await _persistence.loadCustomClasses();
+      final subclasses = await _persistence.loadCustomSubclasses();
+      final races = await _persistence.loadCustomRaces();
+      final subraces = await _persistence.loadCustomSubraces();
+      final feats = await _persistence.loadCustomFeats();
+      final backgrounds = await _persistence.loadCustomBackgrounds();
+      final others = await _persistence.loadCustomOtherEntries();
+
+      final analysis = _resolver.analyzeBundle(
+        incomingBundle: bundle,
+        localSpells: spells,
+        localMonsters: monsters,
+        localItems: items,
+        localClasses: classes,
+        localSubclasses: subclasses,
+        localRaces: races,
+        localSubraces: subraces,
+        localFeats: feats,
+        localBackgrounds: backgrounds,
+        localOtherEntries: others,
+      );
+
+      final bucketed = <HomebrewOtherCategory,
+          List<ImportAnalysisItem<HomebrewCompendiumEntry>>>{};
+      for (final e in analysis.otherEntries) {
+        final subcat = HomebrewOtherCategory.classify(
+          category: e.incomingEntity.category,
+          name: e.incomingEntity.name,
+          customProperties: e.incomingEntity.customProperties,
+        );
+        bucketed.putIfAbsent(subcat, () => []).add(e);
+      }
+
+      if (mounted) {
+        setState(() {
+          _analysisResult = analysis;
+          _bucketedOtherEntries = bucketed;
+          _isAnalyzing = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to analyze compendium: $e';
+          _isAnalyzing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickFile() async {
+    setState(() {
+      _errorMessage = null;
+    });
+    final file = await CompendiumFilePickerService.pickCompendiumJsonFile();
+    if (file == null) return;
+    setState(() {
+      _loadedFile = file;
+      _textController.clear();
+    });
+    _analyzeInput(file.content);
+  }
+
+  Future<void> _commitImport() async {
+    final analysis = _analysisResult;
+    if (analysis == null || !analysis.hasSelected) return;
+
+    setState(() {
+      _isImporting = true;
+      _importProgress = 0;
+      _importTotal = analysis.selectedCount;
+      _importPhase = 'Preparing\u2026';
+    });
+
+    int lastReported = 0;
+    final stopwatch = Stopwatch()..start();
+    try {
+      await _persistence.importResolvedBundle(
+        analysis,
+        onProgress: (saved, total, phase) {
+          if (!mounted) return;
+          final elapsed = stopwatch.elapsedMilliseconds;
+          if (saved == total || saved - lastReported >= 50 || elapsed >= 80) {
+            lastReported = saved;
+            stopwatch.reset();
+            setState(() {
+              _importProgress = saved;
+              _importTotal = total;
+              _importPhase = phase;
+            });
+          }
+        },
+      );
+      if (mounted) {
+        Navigator.of(context).pop(analysis.selectedCount);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Import failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isImporting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final analysis = _analysisResult;
+
+    return AppDialogFrame(
+      icon: Icons.file_download_outlined,
+      iconColor: Colors.tealAccent,
+      title: analysis == null
+          ? 'Import Homebrew / Compendium JSON'
+          : 'Homebrew Import Preview',
+      maxWidth: 680,
+      content: _isAnalyzing
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(_analyzePhase),
+                  ],
+                ),
+              ),
+            )
+          : _isImporting
+              ? _buildImportingView()
+              : analysis == null
+                  ? _buildInputView(theme)
+                  : _buildAnalysisPreview(theme, analysis),
+      actions: [
+        if (analysis != null)
+          TextButton(
+            onPressed: () => setState(() {
+              _analysisResult = null;
+              _loadedFile = null;
+            }),
+            child: const Text('Back / Edit JSON'),
+          ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        if (analysis == null)
+          ElevatedButton.icon(
+            onPressed: () {
+              final src = _loadedFile?.content ?? _textController.text;
+              _analyzeInput(src);
+            },
+            icon: const Icon(Icons.analytics_outlined),
+            label: const Text('Analyze Bundle'),
+          )
+        else if (!_isImporting)
+          ElevatedButton.icon(
+            onPressed: analysis.hasSelected ? _commitImport : null,
+            icon: const Icon(Icons.check_circle_outline),
+            label: Text('Confirm Import (${analysis.selectedCount} items)'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.tealAccent,
+              foregroundColor: Colors.black,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImportingView() {
+    final progress = _importTotal > 0 ? _importProgress / _importTotal : 0.0;
+    final pct = (_importTotal > 0 ? (progress * 100).round() : 0);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Importing $_importPhase',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              Text(
+                '$_importProgress / $_importTotal',
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 10,
+              backgroundColor: Colors.white12,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Colors.tealAccent),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '$pct% complete',
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputView(ThemeData theme) {
+    final loadedFile = _loadedFile;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Target Ruleset Edition:',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SegmentedButton<RulesetVersion?>(
+          segments: const [
+            ButtonSegment<RulesetVersion?>(
+              value: RulesetVersion.v2024,
+              icon: Icon(Icons.auto_awesome, size: 16),
+              label: Text('2024 Revision'),
+            ),
+            ButtonSegment<RulesetVersion?>(
+              value: RulesetVersion.v2014,
+              icon: Icon(Icons.history_edu, size: 16),
+              label: Text('2014 Classic'),
+            ),
+            ButtonSegment<RulesetVersion?>(
+              value: null,
+              icon: Icon(Icons.auto_mode, size: 16),
+              label: Text('Auto-Detect'),
+            ),
+          ],
+          selected: {_selectedRuleset},
+          onSelectionChanged: (newSelection) {
+            setState(() {
+              _selectedRuleset = newSelection.first;
+            });
+            if (loadedFile != null) {
+              _analyzeInput(loadedFile.content);
+            } else if (_textController.text.trim().isNotEmpty) {
+              _analyzeInput(_textController.text);
+            }
+          },
+        ),
+        const SizedBox(height: 14),
+        // ── File Upload Section ──────────────────────────────────────────────
+        if (loadedFile == null)
+          OutlinedButton.icon(
+            onPressed: _pickFile,
+            icon: const Icon(Icons.upload_file, size: 18),
+            label: const Text('Upload JSON File'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              foregroundColor: Colors.tealAccent,
+              side: BorderSide(color: Colors.tealAccent.withValues(alpha: 0.6)),
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.teal.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border:
+                  Border.all(color: Colors.tealAccent.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.insert_drive_file,
+                    color: Colors.tealAccent, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loadedFile.fileName,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        loadedFile.formattedSize,
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: 'Remove file',
+                  onPressed: () => setState(() => _loadedFile = null),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 14),
+        // ── Paste Divider ────────────────────────────────────────────────────
+        Row(
+          children: [
+            const Expanded(child: Divider()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                loadedFile == null
+                    ? 'OR PASTE JSON TEXT'
+                    : 'OR PASTE JSON TEXT INSTEAD',
+                style:
+                    theme.textTheme.labelSmall?.copyWith(color: Colors.white38),
+              ),
+            ),
+            const Expanded(child: Divider()),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // ── Paste Area ───────────────────────────────────────────────────────
+        TextField(
+          controller: _textController,
+          maxLines: 8,
+          style: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 12,
+            color: loadedFile != null ? Colors.white30 : null,
+          ),
+          enabled: loadedFile == null,
+          decoration: InputDecoration(
+            hintText: '{\n  "spell": [...],\n  "monster": [...]\n}',
+            filled: true,
+            fillColor: loadedFile != null ? Colors.black12 : Colors.black26,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onChanged: (val) {
+            if (val.trim().isNotEmpty) {
+              setState(() => _loadedFile = null);
+            }
+          },
+        ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+              border:
+                  Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+            ),
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAnalysisPreview(ThemeData theme, ImportAnalysisResult analysis) {
+    return SizedBox(
+      height: 440,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Summary Chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildMetricChip(
+                label: '${analysis.novelCount} New',
+                icon: Icons.add_circle_outline,
+                color: Colors.greenAccent,
+              ),
+              if (analysis.srdDuplicateCount > 0)
+                _buildMetricChip(
+                  label:
+                      '${analysis.srdDuplicateCount} SRD Built-in (Excluded)',
+                  icon: Icons.shield_outlined,
+                  color: Colors.cyanAccent,
+                ),
+              _buildMetricChip(
+                label: '${analysis.identicalCount} Already in Library',
+                icon: Icons.check_circle_outline,
+                color: Colors.grey,
+              ),
+              _buildMetricChip(
+                label: '${analysis.collisionCount} Conflicts',
+                icon: Icons.warning_amber_rounded,
+                color:
+                    analysis.hasCollisions ? Colors.amberAccent : Colors.grey,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          // Category List
+          Expanded(
+            child: ListView(
+              children: [
+                if (analysis.spells.isNotEmpty)
+                  _buildCategorySection('Spells', analysis.spells),
+                if (analysis.monsters.isNotEmpty)
+                  _buildCategorySection('Monsters', analysis.monsters),
+                if (analysis.items.isNotEmpty)
+                  _buildCategorySection(
+                      'Equipment & Magic Items', analysis.items),
+                if (analysis.classes.isNotEmpty)
+                  _buildCategorySection('Classes', analysis.classes),
+                if (analysis.subclasses.isNotEmpty)
+                  _buildCategorySection('Subclasses', analysis.subclasses),
+                if (analysis.races.isNotEmpty)
+                  _buildCategorySection('Races & Species', analysis.races),
+                if (analysis.feats.isNotEmpty)
+                  _buildCategorySection('Feats', analysis.feats),
+                if (analysis.backgrounds.isNotEmpty)
+                  _buildCategorySection('Backgrounds', analysis.backgrounds),
+                if (_bucketedOtherEntries != null)
+                  for (final entry in _bucketedOtherEntries!.entries) ...[
+                    if (entry.value.isNotEmpty)
+                      _buildCategorySection(entry.key.label, entry.value),
+                  ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricChip({
+    required String label,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Chip(
+      avatar: Icon(icon, size: 16, color: color),
+      label: Text(
+        label,
+        style:
+            TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+      ),
+      backgroundColor: color.withValues(alpha: 0.12),
+      side: BorderSide(color: color.withValues(alpha: 0.3)),
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  Widget _buildCategorySection<T extends DomainEntity>(
+    String title,
+    List<ImportAnalysisItem<T>> items,
+  ) {
+    final allSelected = items.every((i) => i.isSelected);
+
+    return ExpansionTile(
+      initiallyExpanded: items.length <= 50,
+      title: Text(
+        '$title (${items.where((i) => i.isSelected).length}/${items.length})',
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
+      trailing: TextButton(
+        onPressed: () {
+          setState(() {
+            final nextState = !allSelected;
+            for (final item in items) {
+              item.isSelected = nextState;
+            }
+          });
+        },
+        child: Text(allSelected ? 'Deselect All' : 'Select All',
+            style: const TextStyle(fontSize: 12)),
+      ),
+      children: items.map((item) => _buildItemTile(item)).toList(),
+    );
+  }
+
+  Widget _buildItemTile<T extends DomainEntity>(ImportAnalysisItem<T> item) {
+    final isCollision = item.disposition == ImportDisposition.collision;
+    final isIdentical = item.disposition == ImportDisposition.identical;
+    final isSrd = item.isSrdCanon;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isCollision
+            ? Colors.amberAccent.withValues(alpha: 0.08)
+            : isSrd
+                ? Colors.cyanAccent.withValues(alpha: 0.04)
+                : isIdentical
+                    ? Colors.white.withValues(alpha: 0.02)
+                    : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isCollision
+              ? Colors.amberAccent.withValues(alpha: 0.3)
+              : isSrd
+                  ? Colors.cyanAccent.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Checkbox(
+                value: item.isSelected,
+                onChanged: (val) {
+                  final checked = val ?? false;
+                  setState(() {
+                    item.isSelected = checked;
+                    if (checked &&
+                        item.resolution == CollisionResolution.keepLocal) {
+                      item.resolution = CollisionResolution.overwrite;
+                    }
+                  });
+                },
+                activeColor: Colors.tealAccent,
+                checkColor: Colors.black,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              Expanded(
+                child: Text(
+                  item.displayName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: isIdentical || isSrd ? Colors.white54 : Colors.white,
+                  ),
+                ),
+              ),
+              if (isSrd)
+                _buildBadge('SRD BUILT-IN', Colors.cyanAccent)
+              else if (item.disposition == ImportDisposition.novel)
+                _buildBadge('NEW', Colors.greenAccent)
+              else if (isIdentical)
+                _buildBadge('IDENTICAL', Colors.grey)
+              else
+                _buildBadge('CONFLICT', Colors.amberAccent),
+            ],
+          ),
+          if (isCollision) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 40, top: 4, bottom: 6),
+              child: Text(
+                item.diffSummary,
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.amberAccent),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 40),
+              child: SegmentedButton<CollisionResolution>(
+                segments: const [
+                  ButtonSegment(
+                    value: CollisionResolution.overwrite,
+                    label: Text('Overwrite', style: TextStyle(fontSize: 11)),
+                  ),
+                  ButtonSegment(
+                    value: CollisionResolution.keepLocal,
+                    label: Text('Keep Local', style: TextStyle(fontSize: 11)),
+                  ),
+                  ButtonSegment(
+                    value: CollisionResolution.duplicateRename,
+                    label: Text('Duplicate (Copy)',
+                        style: TextStyle(fontSize: 11)),
+                  ),
+                ],
+                selected: {item.resolution},
+                onSelectionChanged: (set) {
+                  final chosen = set.first;
+                  setState(() {
+                    item.resolution = chosen;
+                    item.isSelected = chosen != CollisionResolution.keepLocal;
+                    if (_applyToRemainingCollisions &&
+                        _analysisResult != null) {
+                      _analysisResult!.applyResolutionToAllCollisions(chosen);
+                    }
+                  });
+                },
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 40, top: 4),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _applyToRemainingCollisions = !_applyToRemainingCollisions;
+                    if (_applyToRemainingCollisions &&
+                        _analysisResult != null) {
+                      _analysisResult!
+                          .applyResolutionToAllCollisions(item.resolution);
+                    }
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        key: const Key('do_for_remaining_collisions_checkbox'),
+                        value: _applyToRemainingCollisions,
+                        onChanged: (val) {
+                          setState(() {
+                            _applyToRemainingCollisions = val ?? false;
+                            if (_applyToRemainingCollisions &&
+                                _analysisResult != null) {
+                              _analysisResult!.applyResolutionToAllCollisions(
+                                  item.resolution);
+                            }
+                          });
+                        },
+                        activeColor: Colors.tealAccent,
+                        checkColor: Colors.black,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Do this for remaining collisions',
+                      style: TextStyle(fontSize: 11, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        text,
+        style:
+            TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+      ),
+    );
+  }
+}
+
+// ─── Isolate support ────────────────────────────────────────────────────────
+
+/// Payload for the isolate-based JSON parse step.
+class _ParseRequest {
+  final String jsonString;
+  final RulesetVersion? forceRuleset;
+
+  const _ParseRequest(this.jsonString, this.forceRuleset);
+}
+
+/// Top-level function required by [compute] — runs in a separate isolate so
+/// that ACL parsing of large compendium files does not block the UI thread.
+IngestionBatchResult _parseJsonInIsolate(_ParseRequest req) {
+  final pipeline = CompendiumJsonIngestionPipeline();
+  return pipeline.ingestJsonString(req.jsonString,
+      forceRuleset: req.forceRuleset);
+}

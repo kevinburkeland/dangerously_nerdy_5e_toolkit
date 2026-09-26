@@ -1,0 +1,770 @@
+import 'package:flutter/material.dart';
+import '../../models/srd_summons/minion_stat_block.dart';
+import '../../services/fluff/entity_fluff_service.dart';
+import '../../services/haptic_service.dart';
+import '../../utils/dice_formatters.dart';
+import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../monster_codex/creature_dpr_view.dart';
+
+class CreatureStatBlockDialog extends StatefulWidget {
+  final MinionStatBlock statBlock;
+  final VoidCallback? onAddToSquad;
+  final String? addToSquadLabel;
+
+  const CreatureStatBlockDialog({
+    super.key,
+    required this.statBlock,
+    this.onAddToSquad,
+    this.addToSquadLabel,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    required MinionStatBlock statBlock,
+    VoidCallback? onAddToSquad,
+    String? addToSquadLabel,
+  }) {
+    HapticService.selectionTick(context);
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => CreatureStatBlockDialog(
+        statBlock: statBlock,
+        onAddToSquad: onAddToSquad,
+        addToSquadLabel: addToSquadLabel,
+      ),
+    );
+  }
+
+  @override
+  State<CreatureStatBlockDialog> createState() =>
+      _CreatureStatBlockDialogState();
+}
+
+class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
+  bool _isGlyphActive = true;
+  int _selectedTabIndex = 0;
+  late TextEditingController _notesController;
+  final EntityFluffService _fluffService = EntityFluffService();
+
+  @override
+  void initState() {
+    super.initState();
+    final slug = widget.statBlock.name.toLowerCase().replaceAll(' ', '-');
+    final existing = _fluffService.getUserNotes('monster', slug) ?? '';
+    _notesController = TextEditingController(text: existing);
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _toggleGlyphAnimation() {
+    HapticService.selectionTick(context);
+    setState(() => _isGlyphActive = !_isGlyphActive);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sb = widget.statBlock;
+    final slug = sb.name.toLowerCase().replaceAll(' ', '-');
+    final importedFluff = _fluffService.getFluff('monster', slug);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620, maxHeight: 760),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1A2E),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: sb.accentColor.withValues(alpha: 0.6),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: sb.accentColor.withValues(alpha: 0.15),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Dialog Header Bar
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(15)),
+                  border: Border(
+                    bottom:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.menu_book, color: sb.accentColor, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      '5E SRD CREATURE STAT BLOCK',
+                      style: TextStyle(
+                        color: sb.accentColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close,
+                          color: Colors.white70, size: 22),
+                      tooltip: 'Close stat block',
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Navigation Tabs: Stat Block, DPR Calculator & Lore/Notes
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  border: Border(
+                    bottom:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildHeaderTabButton(
+                        index: 0,
+                        label: 'Stat Block',
+                        icon: Icons.menu_book,
+                        accent: sb.accentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _buildHeaderTabButton(
+                        index: 1,
+                        label: 'Damage / DPR',
+                        icon: Icons.calculate_outlined,
+                        accent: sb.accentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _buildHeaderTabButton(
+                        index: 2,
+                        label: 'Lore & Notes',
+                        icon: Icons.auto_stories,
+                        accent: sb.accentColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Body: Stat Block, DPR View or Lore & Notes View
+              Flexible(
+                child: _selectedTabIndex == 1
+                    ? CreatureDprView(statBlock: sb)
+                    : _selectedTabIndex == 2
+                        ? _buildLoreNotesTab(sb, slug, importedFluff)
+                        : SingleChildScrollView(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 1. Creature Glyph, Name & Type / Alignment
+                                InkWell(
+                                  onTap: _toggleGlyphAnimation,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 4, horizontal: 4),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        DndGlyph.monster(
+                                          creatureType: sb.glyphCreatureType,
+                                          crTier: sb.glyphCrTier,
+                                          actionRings: sb.glyphActionRings,
+                                          size: 64,
+                                          isDarkMode: true,
+                                          isActive: _isGlyphActive,
+                                          onTap: _toggleGlyphAnimation,
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                sb.name,
+                                                style: const TextStyle(
+                                                  color: Color(
+                                                      0xFFFFD54F), // 5e Monster Manual Gold
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.w900,
+                                                  letterSpacing: 0.5,
+                                                  fontFamily: 'serif',
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '${sb.sizeDisplay} ${sb.typeDisplay.toLowerCase()}, ${sb.alignment}',
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 13,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 10),
+                                _buildTaperedDivider(sb.accentColor),
+                                const SizedBox(height: 10),
+
+                                // 2. AC, HP, Speed
+                                _buildKeyValLine(
+                                  'Armor Class',
+                                  '${sb.ac}${sb.armorType != null ? " (${sb.armorType})" : ""}',
+                                ),
+                                _buildKeyValLine(
+                                  'Hit Points',
+                                  '${sb.maxHp}${sb.hitDice != null ? " (${sb.hitDice})" : ""}',
+                                ),
+                                _buildKeyValLine('Speed', sb.speed),
+
+                                const SizedBox(height: 10),
+                                _buildTaperedDivider(sb.accentColor),
+                                const SizedBox(height: 12),
+
+                                // 3. Ability Scores Grid (STR, DEX, CON, INT, WIS, CHA)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.25),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.06)),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      _buildAbilityScoreBox(
+                                          'STR', sb.strScore, sb.strMod),
+                                      _buildVerticalDivider(),
+                                      _buildAbilityScoreBox(
+                                          'DEX', sb.dexScore, sb.dexMod),
+                                      _buildVerticalDivider(),
+                                      _buildAbilityScoreBox(
+                                          'CON', sb.conScore, sb.conMod),
+                                      _buildVerticalDivider(),
+                                      _buildAbilityScoreBox(
+                                          'INT', sb.intScore, sb.intMod),
+                                      _buildVerticalDivider(),
+                                      _buildAbilityScoreBox(
+                                          'WIS', sb.wisScore, sb.wisMod),
+                                      _buildVerticalDivider(),
+                                      _buildAbilityScoreBox(
+                                          'CHA', sb.chaScore, sb.chaMod),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+                                _buildTaperedDivider(sb.accentColor),
+                                const SizedBox(height: 10),
+
+                                // 4. Defenses, Senses, Languages, Challenge
+                                if (sb.savingThrows != null &&
+                                    sb.savingThrows!.isNotEmpty)
+                                  _buildKeyValLine(
+                                      'Saving Throws', sb.savingThrows!),
+                                if (sb.skills != null && sb.skills!.isNotEmpty)
+                                  _buildKeyValLine('Skills', sb.skills!),
+                                if (sb.damageVulnerabilities != null &&
+                                    sb.damageVulnerabilities!.isNotEmpty)
+                                  _buildKeyValLine('Damage Vulnerabilities',
+                                      sb.damageVulnerabilities!),
+                                if (sb.damageResistances != null &&
+                                    sb.damageResistances!.isNotEmpty)
+                                  _buildKeyValLine('Damage Resistances',
+                                      sb.damageResistances!),
+                                if (sb.damageImmunities != null &&
+                                    sb.damageImmunities!.isNotEmpty)
+                                  _buildKeyValLine('Damage Immunities',
+                                      sb.damageImmunities!),
+                                if (sb.conditionImmunities != null &&
+                                    sb.conditionImmunities!.isNotEmpty)
+                                  _buildKeyValLine('Condition Immunities',
+                                      sb.conditionImmunities!),
+                                _buildKeyValLine('Senses', sb.senses),
+                                _buildKeyValLine('Languages', sb.languages),
+                                _buildKeyValLine(
+                                  'Challenge',
+                                  '${sb.crDisplay.replaceAll("CR ", "")}${sb.xp != null ? " (${sb.xp} XP)" : ""}',
+                                ),
+
+                                // 5. Special Traits
+                                if (sb.traits.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  _buildTaperedDivider(sb.accentColor),
+                                  const SizedBox(height: 10),
+                                  for (final trait in sb.traits) ...[
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 8.0),
+                                      child: FormattedMarkdownText(
+                                        '***${trait.name}.*** ${trait.description}',
+                                        style: const TextStyle(
+                                          color: Color(0xE6FFFFFF),
+                                          fontSize: 13,
+                                          height: 1.35,
+                                        ),
+                                        boldColor: const Color(0xFFFFD54F),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+
+                                // 6. Actions Section
+                                if (sb.actions.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  _buildTaperedDivider(sb.accentColor),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'ACTIONS',
+                                    style: TextStyle(
+                                      color: Color(0xFFFFD54F),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.0,
+                                      fontFamily: 'serif',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  for (final action in sb.actions) ...[
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 10.0),
+                                      child: FormattedMarkdownText(
+                                        '***${action.name}.*** ${action.description}',
+                                        style: const TextStyle(
+                                          color: Color(0xE6FFFFFF),
+                                          fontSize: 13,
+                                          height: 1.35,
+                                        ),
+                                        boldColor: const Color(0xFFFFD54F),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+
+                                // 7. Reactions Section
+                                if (sb.reactions.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  _buildTaperedDivider(sb.accentColor),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'REACTIONS',
+                                    style: TextStyle(
+                                      color: Color(0xFFFFD54F),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.0,
+                                      fontFamily: 'serif',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  for (final reaction in sb.reactions) ...[
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 10.0),
+                                      child: FormattedMarkdownText(
+                                        '***${reaction.name}.*** ${reaction.description}',
+                                        style: const TextStyle(
+                                          color: Color(0xE6FFFFFF),
+                                          fontSize: 13,
+                                          height: 1.35,
+                                        ),
+                                        boldColor: const Color(0xFFFFD54F),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+
+                                // 8. Legendary Actions Section
+                                if (sb.legendaryActions.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  _buildTaperedDivider(sb.accentColor),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'LEGENDARY ACTIONS',
+                                    style: TextStyle(
+                                      color: Color(0xFFFFD54F),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.0,
+                                      fontFamily: 'serif',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'The ${sb.name.toLowerCase()} can take 3 legendary actions, choosing from the options below. Only one legendary action option can be used at a time and only at the end of another creature\'s turn. The ${sb.name.toLowerCase()} regains spent legendary actions at the start of its turn.',
+                                    style: const TextStyle(
+                                      color: Color(0xCCFFFFFF),
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  for (final legAction
+                                      in sb.legendaryActions) ...[
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 8.0),
+                                      child: FormattedMarkdownText(
+                                        '***${legAction.name}.*** ${legAction.description}',
+                                        style: const TextStyle(
+                                          color: Color(0xE6FFFFFF),
+                                          fontSize: 13,
+                                          height: 1.35,
+                                        ),
+                                        boldColor: const Color(0xFFFFD54F),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ],
+                            ),
+                          ),
+              ),
+
+              // Bottom Action Bar
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius:
+                      const BorderRadius.vertical(bottom: Radius.circular(15)),
+                  border: Border(
+                    top:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('CLOSE',
+                          style: TextStyle(color: Colors.white70)),
+                    ),
+                    if (widget.onAddToSquad != null) ...[
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add, size: 18),
+                        label: Text(widget.addToSquadLabel ?? 'ADD TO SQUAD'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: sb.accentColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () {
+                          HapticService.mediumImpact(context);
+                          Navigator.of(context).pop();
+                          widget.onAddToSquad!();
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKeyValLine(String key, String val) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '$key ',
+              style: const TextStyle(
+                color: Color(0xFFFFD54F),
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            TextSpan(
+              text: val,
+              style: const TextStyle(
+                color: Color(0xE6FFFFFF),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _expandAbilityName(String abbr) {
+    switch (abbr.toUpperCase()) {
+      case 'STR':
+        return 'Strength';
+      case 'DEX':
+        return 'Dexterity';
+      case 'CON':
+        return 'Constitution';
+      case 'INT':
+        return 'Intelligence';
+      case 'WIS':
+        return 'Wisdom';
+      case 'CHA':
+        return 'Charisma';
+      default:
+        return abbr;
+    }
+  }
+
+  Widget _buildAbilityScoreBox(String name, int score, int mod) {
+    final modStr = DiceFormatters.formatBonus(mod, includeZero: true);
+    final fullName = _expandAbilityName(name);
+    final semanticLabel =
+        '$fullName: $score, modifier ${mod >= 0 ? "plus $mod" : "$mod"}';
+
+    return Semantics(
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: const TextStyle(
+              color: Color(0xFFFFD54F),
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$score ($modStr)',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalDivider() {
+    return Container(
+      height: 24,
+      width: 1,
+      color: Colors.white.withValues(alpha: 0.1),
+    );
+  }
+
+  Widget _buildTaperedDivider(Color accent) {
+    return Container(
+      height: 2,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            accent.withValues(alpha: 0.8),
+            const Color(0xFFFFD54F),
+            accent.withValues(alpha: 0.8),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoreNotesTab(
+      MinionStatBlock sb, String slug, EntityFluff? importedFluff) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Imported Lore Section
+          if (importedFluff != null &&
+              importedFluff.loreMarkdown.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: sb.accentColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border:
+                    Border.all(color: sb.accentColor.withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.menu_book, size: 16, color: sb.accentColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Compendium Lore${importedFluff.source != null ? " (${importedFluff.source})" : ""}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: sb.accentColor),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  FormattedMarkdownText(importedFluff.loreMarkdown),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // User Custom DM / Campaign Notes Section
+          Row(
+            children: [
+              Icon(Icons.edit_note, size: 18, color: sb.accentColor),
+              const SizedBox(width: 6),
+              Text(
+                'DM Campaign & Encounter Notes',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: sb.accentColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Encounter tactics, monster personality, lair details, or loot drops. Saved locally automatically.',
+            style: TextStyle(fontSize: 11.5, color: Colors.white70),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _notesController,
+            maxLines: 7,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText:
+                  'Add encounter tactics, lair actions, behavioral quirks, loot drops...',
+              hintStyle: const TextStyle(fontSize: 12, color: Colors.white38),
+              filled: true,
+              fillColor: Colors.black.withValues(alpha: 0.3),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: sb.accentColor, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+            onChanged: (val) =>
+                _fluffService.setUserNotes('monster', slug, val),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderTabButton({
+    required int index,
+    required String label,
+    required IconData icon,
+    required Color accent,
+  }) {
+    final isSelected = _selectedTabIndex == index;
+    return InkWell(
+      onTap: () {
+        HapticService.selectionTick(context);
+        setState(() => _selectedTabIndex = index);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accent.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? accent : Colors.white.withValues(alpha: 0.1),
+            width: isSelected ? 1.4 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? const Color(0xFFFFD54F) : Colors.white70,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? const Color(0xFFFFD54F) : Colors.white70,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

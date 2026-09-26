@@ -1,0 +1,733 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
+import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
+import 'package:vtt_engine_core/ports/i_character_repository.dart';
+
+class _FakePersistenceService implements ICharacterRepository {
+  Character? savedCharacter;
+
+  @override
+  Future<List<Character>> saveCharacter(Character character) async {
+    savedCharacter = character;
+    return [character];
+  }
+
+  @override
+  Future<List<Character>> loadCharacters() async =>
+      savedCharacter != null ? [savedCharacter!] : [];
+
+  @override
+  Future<String?> loadActiveCharacterId() async => savedCharacter?.id.slug;
+
+  @override
+  Future<void> saveActiveCharacterId(String slug) async {}
+
+  @override
+  Future<void> clearActiveCharacterId() async {
+    savedCharacter = null;
+  }
+
+  @override
+  Future<void> saveRoster(List<Character> roster) async {}
+
+  @override
+  Future<List<Character>> deleteCharacter(String slug) async => [];
+
+  @override
+  Future<List<Character>> getCharactersByIds(List<String> ids) async =>
+      savedCharacter != null && ids.contains(savedCharacter!.id.slug)
+          ? [savedCharacter!]
+          : [];
+
+  @override
+  Future<Character?> getCharacter(String id) async =>
+      (await getCharactersByIds([id])).firstOrNull;
+
+  @override
+  Future<void> saveCharacters(List<Character> characters) async {
+    if (characters.isNotEmpty) savedCharacter = characters.last;
+  }
+
+  @override
+  Future<Character> reparseCharacter(Character character) async {
+    savedCharacter = character;
+    return character;
+  }
+
+  @override
+  Future<List<Character>> reparseAllCharacters() async =>
+      savedCharacter != null ? [savedCharacter!] : [];
+}
+
+void main() {
+  late Character testCharacter;
+  late _FakePersistenceService fakePersistence;
+  late CharacterSheetController controller;
+
+  setUp(() {
+    testCharacter = const Character(
+      id: EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
+      name: 'Valeros',
+      speciesRef: EntityReference<DomainEntity>(
+        refType: EntityType.species,
+        slug: 'human',
+        displayName: 'Human',
+      ),
+      progression: CharacterProgression(
+        classes: [
+          ClassLevelProgression(
+            classRef: EntityReference<DomainEntity>(
+              refType: EntityType.classDefinition,
+              slug: 'fighter',
+              displayName: 'Fighter',
+            ),
+            level: 4,
+            hitDie: 'd10',
+            isStartingClass: true,
+          ),
+        ],
+      ),
+      baseScores: AbilityScores(
+        strength: 16,
+        dexterity: 14,
+        constitution: 14,
+        intelligence: 10,
+        wisdom: 12,
+        charisma: 8,
+      ),
+      resources: CharacterResourcePool(
+        currentHp: 10,
+        tempHp: 4,
+        currentHitDice: {'d10': 1},
+        deathSaveSuccesses: 2,
+        deathSaveFailures: 1,
+        exhaustionLevel: 2,
+      ),
+      inventory: [
+        InventoryItemInstance(
+          instanceId: 'item-1',
+          itemRef: EntityReference<EquipmentItem>(
+            refType: EntityType.equipment,
+            slug: 'ring-of-protection',
+            displayName: 'Ring of Protection',
+          ),
+          requiresAttunement: true,
+          isAttuned: true,
+        ),
+        InventoryItemInstance(
+          instanceId: 'item-2',
+          itemRef: EntityReference<EquipmentItem>(
+            refType: EntityType.equipment,
+            slug: 'cloak-of-elvenkind',
+            displayName: 'Cloak of Elvenkind',
+          ),
+          requiresAttunement: true,
+          isAttuned: true,
+        ),
+        InventoryItemInstance(
+          instanceId: 'item-3',
+          itemRef: EntityReference<EquipmentItem>(
+            refType: EntityType.equipment,
+            slug: 'boots-of-speed',
+            displayName: 'Boots of Speed',
+          ),
+          requiresAttunement: true,
+          isAttuned: true,
+        ),
+        InventoryItemInstance(
+          instanceId: 'item-4',
+          itemRef: EntityReference<EquipmentItem>(
+            refType: EntityType.equipment,
+            slug: 'amulet-of-health',
+            displayName: 'Amulet of Health',
+          ),
+          requiresAttunement: true,
+          isAttuned: false,
+        ),
+      ],
+    );
+
+    fakePersistence = _FakePersistenceService();
+    controller = CharacterSheetController(
+      character: testCharacter,
+      persistenceService: fakePersistence,
+    );
+  });
+
+  group('CharacterSheetController Live Mechanics Tests', () {
+    test('applyShortRest spends hit dice and applies healing', () async {
+      final initialHp = controller.character.resources.currentHp;
+      await controller.applyShortRest(
+        hitDiceSpent: {'d10': 1},
+        healingRolled: 8,
+      );
+
+      expect(controller.character.resources.currentHitDice['d10'], equals(0));
+      expect(controller.character.resources.currentHp, equals(initialHp + 8));
+    });
+
+    test(
+        'applyLongRest resets HP, tempHp, clears death saves, recovers half hit dice, and removes 1 exhaustion',
+        () async {
+      await controller.applyLongRest();
+
+      final res = controller.character.resources;
+      expect(res.currentHp, equals(controller.stats.maxHp));
+      expect(res.tempHp, equals(0));
+      expect(res.deathSaveSuccesses, equals(0));
+      expect(res.deathSaveFailures, equals(0));
+      // Started with 1/4 d10, level 4 => recovers 2 d10 => now 3 d10
+      expect(res.currentHitDice['d10'], equals(3));
+      // Exhaustion reduced from 2 to 1
+      expect(res.exhaustionLevel, equals(1));
+    });
+
+    test('toggleAttuneItem strictly enforces attunement limit', () async {
+      expect(controller.stats.effectiveMaxAttunementSlots, equals(3));
+      expect(controller.character.inventory.where((i) => i.isAttuned).length,
+          equals(3));
+
+      // Attempting to attune 4th item should fail and return false
+      final result = await controller.toggleAttuneItem('item-4');
+      expect(result, isFalse);
+      expect(
+          controller.character.inventory
+              .firstWhere((i) => i.instanceId == 'item-4')
+              .isAttuned,
+          isFalse);
+
+      // Unattune item-1 first
+      final unattuneResult = await controller.toggleAttuneItem('item-1');
+      expect(unattuneResult, isTrue);
+      expect(
+          controller.character.inventory
+              .firstWhere((i) => i.instanceId == 'item-1')
+              .isAttuned,
+          isFalse);
+
+      // Now attuning item-4 should succeed
+      final attuneResult = await controller.toggleAttuneItem('item-4');
+      expect(attuneResult, isTrue);
+      expect(
+          controller.character.inventory
+              .firstWhere((i) => i.instanceId == 'item-4')
+              .isAttuned,
+          isTrue);
+    });
+
+    test('death save and exhaustion modifiers work correctly', () async {
+      await controller.setDeathSaves(successes: 3, failures: 0);
+      expect(controller.character.resources.deathSaveSuccesses, equals(3));
+      expect(controller.character.resources.deathSaveFailures, equals(0));
+
+      await controller.setExhaustionLevel(3);
+      expect(controller.character.resources.exhaustionLevel, equals(3));
+
+      await controller.toggleInspiration();
+      expect(controller.hasInspiration, isTrue);
+      await controller.toggleInspiration();
+      expect(controller.hasInspiration, isFalse);
+    });
+
+    test(
+        'takeDamage strictly depletes tempHp before reducing currentHp, clamping at 0',
+        () async {
+      // testCharacter has currentHp: 10, tempHp: 4
+      expect(controller.character.resources.currentHp, equals(10));
+      expect(controller.character.resources.tempHp, equals(4));
+
+      // 1. Partial damage absorbed by tempHp
+      await controller.takeDamage(3);
+      expect(controller.character.resources.tempHp, equals(1));
+      expect(controller.character.resources.currentHp, equals(10));
+
+      // 2. Damage exceeding remaining tempHp
+      await controller.takeDamage(
+          5); // 1 tempHp absorbed, remaining 4 damages currentHp (10 - 4 = 6)
+      expect(controller.character.resources.tempHp, equals(0));
+      expect(controller.character.resources.currentHp, equals(6));
+
+      // 3. Overkill damage clamps currentHp at 0
+      await controller.takeDamage(20);
+      expect(controller.character.resources.tempHp, equals(0));
+      expect(controller.character.resources.currentHp, equals(0));
+    });
+
+    test('heal increases currentHp clamped at stats.maxHp', () async {
+      // Bring HP down to 0 then heal 5
+      await controller.takeDamage(100);
+      await controller.heal(5);
+      expect(controller.character.resources.currentHp, equals(5));
+
+      // Heal beyond maxHp
+      final maxHp = controller.stats.maxHp;
+      await controller.heal(maxHp + 50);
+      expect(controller.character.resources.currentHp, equals(maxHp));
+    });
+
+    test(
+        'Short Rest explicitly recovers Warlock Pact Magic slots, but not standard spell slots',
+        () async {
+      final warlockMage = controller.character.copyWith(
+        resources: controller.character.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 3},
+            currentSlots: {1: 1, 2: 0},
+            pactMagicMax: 2,
+            pactMagicCurrent: 0,
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      await controller.setCharacter(warlockMage);
+
+      expect(controller.character.resources.spellSlots.pactMagicCurrent,
+          equals(0));
+      expect(
+          controller.character.resources.spellSlots.currentSlots[1], equals(1));
+      expect(
+          controller.character.resources.spellSlots.currentSlots[2], equals(0));
+
+      // Take short rest
+      await controller.applyShortRest(hitDiceSpent: {}, healingRolled: 0);
+
+      // Pact magic slots should be fully restored to pactMagicMax (2)
+      expect(controller.character.resources.spellSlots.pactMagicCurrent,
+          equals(2));
+      // Standard spell slots should remain unchanged
+      expect(
+          controller.character.resources.spellSlots.currentSlots[1], equals(1));
+      expect(
+          controller.character.resources.spellSlots.currentSlots[2], equals(0));
+    });
+
+    test(
+        'Long Rest restores all standard spell slots and pact magic slots to maximum',
+        () async {
+      final warlockMage = controller.character.copyWith(
+        resources: controller.character.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 3},
+            currentSlots: {1: 1, 2: 0},
+            pactMagicMax: 2,
+            pactMagicCurrent: 0,
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      await controller.setCharacter(warlockMage);
+
+      await controller.applyLongRest();
+
+      final pool = controller.character.resources.spellSlots;
+      expect(pool.pactMagicCurrent, equals(2));
+      expect(pool.currentSlots[1], equals(4));
+      expect(pool.currentSlots[2], equals(3));
+    });
+
+    group('Languages & Tool Proficiencies Management', () {
+      test('addLanguage adds unique language and avoids duplicates', () {
+        expect(controller.character.languages, equals(['Common']));
+
+        controller.addLanguage('Elvish');
+        expect(controller.character.languages, contains('Elvish'));
+        expect(controller.character.languages.length, equals(2));
+
+        // Adding duplicate should not duplicate entry
+        controller.addLanguage('elvish');
+        expect(controller.character.languages.length, equals(2));
+
+        controller.addLanguage('Dwarvish');
+        expect(controller.character.languages.length, equals(3));
+        expect(controller.character.languages, contains('Dwarvish'));
+      });
+
+      test('removeLanguage removes target language', () {
+        controller.setLanguages(['Common', 'Elvish', 'Draconic']);
+        expect(controller.character.languages.length, equals(3));
+
+        controller.removeLanguage('Elvish');
+        expect(controller.character.languages, isNot(contains('Elvish')));
+        expect(controller.character.languages.length, equals(2));
+      });
+
+      test('setLanguages sets entire list without duplicates', () {
+        controller.setLanguages(['Common', 'elvish', 'Elvish', 'Orc']);
+        expect(controller.character.languages,
+            equals(['Common', 'elvish', 'Orc']));
+      });
+
+      test('addToolProficiency adds unique tool and avoids duplicates', () {
+        expect(controller.character.toolProficiencies, isEmpty);
+
+        controller.addToolProficiency("Thieves' Tools");
+        expect(
+            controller.character.toolProficiencies, contains("Thieves' Tools"));
+        expect(controller.character.toolProficiencies.length, equals(1));
+
+        // Duplicate
+        controller.addToolProficiency("thieves' tools");
+        expect(controller.character.toolProficiencies.length, equals(1));
+
+        controller.addToolProficiency("Smith's Tools");
+        expect(controller.character.toolProficiencies.length, equals(2));
+      });
+
+      test('removeToolProficiency removes target tool', () {
+        controller
+            .setToolProficiencies(["Thieves' Tools", "Smith's Tools", 'Lute']);
+        expect(controller.character.toolProficiencies.length, equals(3));
+
+        controller.removeToolProficiency("Smith's Tools");
+        expect(controller.character.toolProficiencies,
+            isNot(contains("Smith's Tools")));
+        expect(controller.character.toolProficiencies.length, equals(2));
+      });
+
+      test('setToolProficiencies sets list and trims items', () {
+        controller.setToolProficiencies(["  Thieves' Tools  ", "Lute", "Lute"]);
+        expect(controller.character.toolProficiencies,
+            equals(["Thieves' Tools", "Lute"]));
+      });
+    });
+
+    test(
+        'Multiclass Hit Die Recovery Test: greedy allocation to highest die face',
+        () async {
+      const multiclassChar = Character(
+        id: EntityId(slug: 'multi-hero', ruleset: RulesetVersion.v2024),
+        name: 'MultiHero',
+        speciesRef: EntityReference<DomainEntity>(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'fighter',
+                displayName: 'Fighter',
+              ),
+              level: 1,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'wizard',
+                displayName: 'Wizard',
+              ),
+              level: 1,
+              hitDie: 'd6',
+            ),
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'rogue',
+                displayName: 'Rogue',
+              ),
+              level: 1,
+              hitDie: 'd8',
+            ),
+          ],
+        ),
+        baseScores: AbilityScores(
+          strength: 10,
+          dexterity: 10,
+          constitution: 10,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        resources: CharacterResourcePool(
+          currentHp: 1,
+          currentHitDice: {
+            'd10': 0,
+            'd8': 0,
+            'd6': 0,
+          },
+        ),
+      );
+
+      final mcController = CharacterSheetController(
+        character: multiclassChar,
+        persistenceService: fakePersistence,
+      );
+
+      // Level 3 total: diceBudget = math.max(1, 3 ~/ 2) = 1 die
+      await mcController.applyLongRest();
+
+      final dice = mcController.character.resources.currentHitDice;
+      expect(dice['d10'], equals(1));
+      expect(dice['d8'], equals(0));
+      expect(dice['d6'], equals(0));
+    });
+
+    test(
+        'Dynamic Max HP Healing Test: healing clamps against dynamically evaluated max HP',
+        () async {
+      // Base CON 10 with level 1 base max HP 10, boosted to evaluated max HP 25 via Tough feat and level progression
+      const buffedChar = Character(
+        id: EntityId(slug: 'dynamic-hp-hero', ruleset: RulesetVersion.v2024),
+        name: 'BuffedHero',
+        speciesRef: EntityReference<DomainEntity>(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'fighter',
+                displayName: 'Fighter',
+              ),
+              level: 2,
+              hitDie: 'd10',
+              hitPointsRolled: [11], // 10 (lvl 1) + 11 (lvl 2) = 21
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        feats: [
+          EntityReference<DomainEntity>(
+            refType: EntityType.feat,
+            slug: 'tough', // +2 HP per level => +4 HP => 21 + 4 = 25
+            displayName: 'Tough',
+          ),
+        ],
+        baseScores: AbilityScores(
+          strength: 10,
+          dexterity: 10,
+          constitution: 10, // Base CON 10 (+0 mod)
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        resources: CharacterResourcePool(
+          currentHp: 5,
+        ),
+      );
+
+      final dynController = CharacterSheetController(
+        character: buffedChar,
+        persistenceService: fakePersistence,
+      );
+
+      expect(dynController.stats.maxHp, equals(25));
+
+      // Healing 30 should clamp to 25 (evaluated max HP), not 10
+      await dynController.heal(30);
+      expect(dynController.character.resources.currentHp, equals(25));
+    });
+
+    test(
+        'expendSpellSlot(3) decrements 3rd-level slot from 2 to 1 and triggers persistence',
+        () async {
+      final spellChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 3, 3: 2},
+            currentSlots: {1: 4, 2: 3, 3: 2},
+          ),
+        ),
+      );
+
+      final spellCtrl = CharacterSheetController(
+        character: spellChar,
+        persistenceService: fakePersistence,
+      );
+
+      expect(
+          spellCtrl.character.resources.spellSlots.currentSlots[3], equals(2));
+
+      await spellCtrl.expendSpellSlot(3);
+
+      expect(
+          spellCtrl.character.resources.spellSlots.currentSlots[3], equals(1));
+
+      await spellCtrl.flush();
+      expect(
+          fakePersistence.savedCharacter?.resources.spellSlots.currentSlots[3],
+          equals(1));
+    });
+
+    test(
+        'castSpell scales upcast damage dice and decrements the selected higher slot',
+        () async {
+      const spell = Spell(
+        id: EntityId(slug: 'scorching-burst', ruleset: RulesetVersion.v2024),
+        name: 'Scorching Burst',
+        level: 2,
+        school: 'evocation',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '60 ft',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Deal 2d8 fire damage.',
+        damageMath: [
+          EvaluationMath(
+            diceFormula: '2d8',
+            damageType: DamageType.fire,
+            scalingFormula: '+1d8 per slot above 2nd',
+          ),
+        ],
+      );
+
+      final casterChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {2: 3, 4: 2},
+            currentSlots: {2: 3, 4: 2},
+          ),
+        ),
+      );
+
+      final casterCtrl = CharacterSheetController(
+        character: casterChar,
+        persistenceService: fakePersistence,
+      );
+
+      // Cast 2nd level spell using 4th level slot
+      final result = await casterCtrl.castSpell(spell, castLevel: 4);
+      expect(result, isNotNull);
+      // Base 2d8 + (4 - 2)*1d8 = 4d8 total dice
+      expect(result!.diceEntries.first.count, equals(4));
+      expect(result.diceEntries.first.dieType, equals(DieType.d8));
+
+      // 4th level slot decremented 2 -> 1, 2nd level slot untouched at 3
+      expect(
+          casterCtrl.character.resources.spellSlots.currentSlots[4], equals(1));
+      expect(
+          casterCtrl.character.resources.spellSlots.currentSlots[2], equals(3));
+    });
+
+    test(
+        'Active feature charge methods safely update, expend, and recover charges',
+        () async {
+      final chargeChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          customResourcesCurrent: {'action surge': 1},
+          customResourcesMax: {'action surge': 1},
+        ),
+      );
+
+      final chargeCtrl = CharacterSheetController(
+        character: chargeChar,
+        persistenceService: fakePersistence,
+      );
+
+      expect(chargeCtrl.getResourceCharges('Action Surge'), equals(1));
+      expect(chargeCtrl.getResourceMax('Action Surge'), equals(1));
+
+      await chargeCtrl.expendResourceCharge('Action Surge');
+      expect(chargeCtrl.getResourceCharges('Action Surge'), equals(0));
+
+      await chargeCtrl.recoverResourceCharge('Action Surge');
+      expect(chargeCtrl.getResourceCharges('Action Surge'), equals(1));
+    });
+
+    test('expendPactSlot decrements pact slots safely and clamps at 0',
+        () async {
+      final warlockChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            pactMagicMax: 2,
+            pactMagicCurrent: 2,
+            pactMagicSlotLevel: 3,
+          ),
+        ),
+      );
+      final warlockCtrl = CharacterSheetController(
+        character: warlockChar,
+        persistenceService: fakePersistence,
+      );
+
+      await warlockCtrl.expendPactSlot();
+      expect(warlockCtrl.character.resources.spellSlots.pactMagicCurrent,
+          equals(1));
+
+      await warlockCtrl.expendPactSlot();
+      expect(warlockCtrl.character.resources.spellSlots.pactMagicCurrent,
+          equals(0));
+
+      // Cannot drop below 0
+      await warlockCtrl.expendPactSlot();
+      expect(warlockCtrl.character.resources.spellSlots.pactMagicCurrent,
+          equals(0));
+    });
+
+    test(
+        'expendSpellSlot automatically delegates to Pact Magic when regular slot does not exist',
+        () async {
+      final warlockChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            pactMagicMax: 2,
+            pactMagicCurrent: 2,
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      final warlockCtrl = CharacterSheetController(
+        character: warlockChar,
+        persistenceService: fakePersistence,
+      );
+
+      // Level 2 regular slot doesn't exist, but pactMagicSlotLevel is 2
+      await warlockCtrl.expendSpellSlot(2);
+      expect(warlockCtrl.character.resources.spellSlots.pactMagicCurrent,
+          equals(1));
+    });
+
+    test(
+        'castSpell with Armor of Agathys on Warlock sets temp HP and expends pact slot',
+        () async {
+      const agathysSpell = Spell(
+        id: EntityId(
+            slug: 'spell_armor_of_agathys', ruleset: RulesetVersion.v2024),
+        name: 'Armor of Agathys',
+        level: 1,
+        school: 'abjuration',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration:
+            SpellDuration(type: DurationType.timed, durationSeconds: 3600),
+        range: 'Self',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
+      );
+
+      final warlockChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          tempHp: 0,
+          spellSlots: const SpellSlotPool(
+            pactMagicMax: 2,
+            pactMagicCurrent: 2,
+            pactMagicSlotLevel: 3,
+          ),
+        ),
+      );
+      final warlockCtrl = CharacterSheetController(
+        character: warlockChar,
+        persistenceService: fakePersistence,
+      );
+
+      final roll = await warlockCtrl.castSpell(agathysSpell,
+          castLevel: 3, isPactMagic: true);
+      expect(roll, isNotNull);
+      // Level 3 slot = 3 * 5 = 15 Temp HP
+      expect(roll!.total, equals(15));
+      expect(warlockCtrl.character.resources.tempHp, equals(15));
+      expect(warlockCtrl.character.resources.spellSlots.pactMagicCurrent,
+          equals(1));
+    });
+  });
+}

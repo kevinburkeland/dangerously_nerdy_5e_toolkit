@@ -1,0 +1,996 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_loot_item.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('PartyRoomService & Conflict Resolution Engine', () {
+    late CampaignRegistryService registry;
+    late DiceRoomService diceService;
+    late PartyRoomService partyService;
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      registry = CampaignRegistryService.newInstance();
+      diceService = DiceRoomService.newInstance();
+      partyService = PartyRoomService.newInstance(
+        registry: registry,
+        diceRoomService: diceService,
+      );
+    });
+
+    test(
+        'Explicit Create Campaign generates roomCode, hostKey, and stores DM membership',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Crown City Vault Heist',
+        playerName: 'DM Kevin',
+      );
+
+      expect(session.roomCode, startsWith('ROOM-'));
+      expect(session.campaignName, equals('Crown City Vault Heist'));
+      expect(session.hostKeyHash.length, equals(64));
+      expect(session.activePlayers, contains('DM Kevin'));
+
+      // Check registry
+      final membership = registry.getMembership(session.roomCode);
+      expect(membership, isNotNull);
+      expect(membership!.isHost, isTrue);
+      expect(membership.hasHostKey, isTrue);
+      expect(registry.activeCampaign?.roomCode, equals(session.roomCode));
+    });
+
+    test('Explicit Join Campaign joins existing live room as Player', () async {
+      // 1. DM creates room
+      final created = await partyService.createCampaign(
+        campaignName: 'Shadows of the Vampire',
+        playerName: 'DM Vlad',
+      );
+
+      // 2. Player joins room
+      final joined = await partyService.joinCampaign(
+        roomCode: created.roomCode,
+        playerName: 'Dr. Seward',
+      );
+
+      expect(joined.roomCode, equals(created.roomCode));
+      expect(joined.activePlayers, contains('Dr. Seward'));
+
+      // Player registry check
+      final playerMembership = registry.getMembership(created.roomCode);
+      expect(playerMembership, isNotNull);
+      expect(playerMembership!.characterId, equals('Dr. Seward'));
+
+      // 3. Player joins using raw 6-character code without 'ROOM-' prefix
+      final rawCode = created.roomCode.replaceFirst('ROOM-', '');
+      final joinedRaw = await partyService.joinCampaign(
+        roomCode: rawCode.toLowerCase(),
+        playerName: 'Ezmerelda',
+      );
+      expect(joinedRaw.roomCode, equals(created.roomCode));
+      expect(joinedRaw.activePlayers, contains('Ezmerelda'));
+    });
+
+    test(
+        'Explicit Join Campaign rejects non-existent room without creating ghost document',
+        () async {
+      expect(
+        () => partyService.joinCampaign(
+          roomCode: 'ROOM-NONEXISTENT',
+          playerName: 'Lost Player',
+        ),
+        throwsA(isA<CampaignNotFoundException>()),
+      );
+
+      // Verify no membership was saved in registry
+      expect(registry.getMembership('ROOM-NONEXISTENT'), isNull);
+    });
+
+    test(
+        'ensureRoomExists creates or rehydrates room stub and resets 30-day lease',
+        () async {
+      final stub = await partyService.ensureRoomExists(
+        roomCode: 'ROOM-STUB01',
+        campaignName: 'Stateless Adventure',
+      );
+
+      expect(stub.roomCode, equals('ROOM-STUB01'));
+      expect(stub.campaignName, equals('Stateless Adventure'));
+      expect(
+          stub.expiresAt.isAfter(DateTime.now().add(const Duration(days: 28))),
+          isTrue);
+
+      final cached = partyService.getCachedSession('ROOM-STUB01');
+      expect(cached, isNotNull);
+      expect(cached!.campaignName, equals('Stateless Adventure'));
+
+      // Re-calling ensureRoomExists refreshes the lease
+      final refreshed = await partyService.ensureRoomExists(
+        roomCode: 'ROOM-STUB01',
+        campaignName: 'Stateless Adventure Updated',
+      );
+      expect(refreshed.campaignName, equals('Stateless Adventure Updated'));
+      expect(
+          refreshed.expiresAt
+              .isAfter(stub.expiresAt.subtract(const Duration(seconds: 1))),
+          isTrue);
+    });
+
+    test('joinCampaign resets 30-day lease upon player connection', () async {
+      final created = await partyService.createCampaign(
+        campaignName: 'Lease Test Campaign',
+        playerName: 'DM',
+      );
+
+      await partyService.ensureRoomExists(
+        roomCode: created.roomCode,
+        campaignName: created.campaignName,
+      );
+
+      final joined = await partyService.joinCampaign(
+        roomCode: created.roomCode,
+        playerName: 'Adventurer',
+      );
+
+      // Joining should have reset the lease to 30 days
+      expect(
+          joined.expiresAt
+              .isAfter(DateTime.now().add(const Duration(days: 28))),
+          isTrue);
+    });
+
+    test(
+        'Automatic Rehydration of dormant campaign when valid hostKey exists locally',
+        () async {
+      const dormantCode = 'ROOM-DORMANT1';
+      const hostKey = 'sample-host-uuid-1234';
+
+      // Simulate dormant campaign saved in local registry before remote TTL expired
+      final localDormant = CampaignMembership(
+        roomCode: dormantCode,
+        campaignName: 'Out of the Abyss',
+        role: CampaignRole.host,
+        hostKey: hostKey,
+        characterId: 'DM Kevin',
+        lastPlayed: DateTime.now().subtract(const Duration(days: 45)),
+      );
+      await registry.saveMembership(localDormant);
+
+      // Join call triggers automatic local rehydration
+      final rehydrated = await partyService.joinCampaign(
+        roomCode: dormantCode,
+        playerName: 'DM Kevin',
+      );
+
+      expect(rehydrated.roomCode, equals(dormantCode));
+      expect(rehydrated.campaignName, equals('Out of the Abyss'));
+      expect(
+          rehydrated.expiresAt
+              .isAfter(DateTime.now().add(const Duration(days: 28))),
+          isTrue);
+    });
+
+    test('Atomic Coin Deposits & Withdrawals merge additively', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Gold Test Campaign',
+        playerName: 'DM',
+      );
+
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'Alice',
+        gp: 100,
+        pp: 10,
+        note: 'Quest Reward',
+      );
+
+      // Stream / session update check
+      var currentSession =
+          await partyService.streamSession(session.roomCode).first;
+      expect(currentSession?.partyPurse.gp, equals(100));
+      expect(currentSession?.partyPurse.pp, equals(10));
+      expect(currentSession?.partyPurse.totalGpEquivalent, equals(200.0));
+
+      await partyService.withdrawCoins(
+        roomCode: session.roomCode,
+        playerName: 'Bob',
+        gp: 30,
+        note: 'Supplies',
+      );
+
+      currentSession = await partyService.streamSession(session.roomCode).first;
+      expect(currentSession?.partyPurse.gp, equals(70));
+    });
+
+    test('Loot Item Add, Claim, Attunement, and Soft-Delete', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Loot Test',
+        playerName: 'DM',
+      );
+
+      final item = PartyLootItem(
+        id: 'cloak_of_elvenkind_1',
+        name: 'Cloak of Elvenkind',
+        category: 'magicItem',
+        count: 1,
+        gpValue: 500.0,
+        requiresAttunement: true,
+        createdAt: DateTime.now(),
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      );
+
+      // 1. Add item
+      await partyService.addLootItem(
+        roomCode: session.roomCode,
+        playerName: 'DM',
+        item: item,
+      );
+
+      var loot = await partyService.streamLoot(session.roomCode).first;
+      expect(loot.length, equals(1));
+      expect(loot.first.name, equals('Cloak of Elvenkind'));
+      expect(loot.first.isClaimed, isFalse);
+
+      // 2. Claim item
+      await partyService.claimLootItem(
+        roomCode: session.roomCode,
+        lootId: item.id,
+        playerName: 'Sylas',
+      );
+
+      loot = await partyService.streamLoot(session.roomCode).first;
+      expect(loot.first.isClaimed, isTrue);
+      expect(loot.first.claimedByPlayer, equals('Sylas'));
+
+      // 3. Attune
+      await partyService.toggleAttunement(
+        roomCode: session.roomCode,
+        lootId: item.id,
+        isAttuned: true,
+        playerName: 'Sylas',
+      );
+
+      loot = await partyService.streamLoot(session.roomCode).first;
+      expect(loot.first.isAttuned, isTrue);
+
+      // 4. Soft Delete (Archive)
+      await partyService.archiveLootItem(
+        roomCode: session.roomCode,
+        lootId: item.id,
+        playerName: 'Sylas',
+      );
+
+      // Active vault stream hides archived items
+      loot = await partyService.streamLoot(session.roomCode).first;
+      expect(loot.isEmpty, isTrue);
+
+      // Trash stream includes archived items
+      final trash = await partyService
+          .streamLoot(session.roomCode, includeArchived: true)
+          .first;
+      expect(trash.length, equals(1));
+      expect(trash.first.isArchived, isTrue);
+      expect(trash.first.archivedBy, equals('Sylas'));
+    });
+
+    test('Host-Only Item Restore requires valid hostKey', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Restore Test',
+        playerName: 'DM',
+      );
+
+      final membership = registry.getMembership(session.roomCode);
+      final validHostKey = membership!.hostKey!;
+
+      final item = PartyLootItem(
+        id: 'potion_healing_1',
+        name: 'Potion of Healing',
+        category: 'gear',
+        count: 2,
+        gpValue: 50.0,
+        createdAt: DateTime.now(),
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      );
+
+      await partyService.addLootItem(
+          roomCode: session.roomCode, playerName: 'DM', item: item);
+      await partyService.archiveLootItem(
+          roomCode: session.roomCode, lootId: item.id, playerName: 'Player');
+
+      // Invalid hostKey throws UnauthorizedHostActionException
+      expect(
+        () => partyService.restoreLootItem(
+          roomCode: session.roomCode,
+          lootId: item.id,
+          hostKey: 'wrong-invalid-key',
+          playerName: 'Player',
+        ),
+        throwsA(isA<UnauthorizedHostActionException>()),
+      );
+
+      // Valid hostKey restores item
+      await partyService.restoreLootItem(
+        roomCode: session.roomCode,
+        lootId: item.id,
+        hostKey: validHostKey,
+        playerName: 'DM',
+      );
+
+      final loot = await partyService.streamLoot(session.roomCode).first;
+      expect(loot.length, equals(1));
+      expect(loot.first.isArchived, isFalse);
+    });
+
+    test('Event Audit Stream logs deposits, additions, claims, and archives',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Audit Test',
+        playerName: 'DM',
+      );
+
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'Dain',
+        gp: 50,
+      );
+
+      final events = await partyService.streamEvents(session.roomCode).first;
+      expect(events.isNotEmpty, isTrue);
+      expect(events.any((e) => e.type == 'coinDeposit'), isTrue);
+      expect(events.any((e) => e.type == 'roomCreate'), isTrue);
+    });
+
+    test('Character Roster and Active Session Identity management', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Roster Test Campaign',
+        playerName: 'DM Kevin',
+      );
+
+      // Add characters to campaign roster
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Thorek (Fighter)',
+        playerName: 'DM Kevin',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Elaris (Wizard)',
+        playerName: 'DM Kevin',
+      );
+
+      var liveSession =
+          await partyService.streamSession(session.roomCode).first;
+      expect(liveSession?.characterRoster, contains('Thorek (Fighter)'));
+      expect(liveSession?.characterRoster, contains('Elaris (Wizard)'));
+
+      // Switch active character
+      await partyService.setActiveCharacter(
+        roomCode: session.roomCode,
+        characterName: 'Thorek (Fighter)',
+      );
+
+      liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession?.activePlayers, contains('Thorek (Fighter)'));
+
+      // Verify membership characterId updated
+      final membership = registry.getMembership(session.roomCode);
+      expect(membership?.characterId, equals('Thorek (Fighter)'));
+
+      // Remove character from roster
+      await partyService.removeCharacterFromRoster(
+        roomCode: session.roomCode,
+        characterName: 'Elaris (Wizard)',
+        playerName: 'Thorek (Fighter)',
+      );
+
+      liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession?.characterRoster.contains('Elaris (Wizard)'), isFalse);
+    });
+
+    test('Disperse Coins to Party with Share for Party Reserve and Remainders',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Treasure Dispersal Campaign',
+        playerName: 'DM Kevin',
+      );
+
+      final recipients = ['Thorek', 'Elaris', 'Dain'];
+
+      // Disperse 100 GP, 10 PP, 11 SP across 3 characters + 1 reserve (4 shares)
+      // 10 PP / 4 = 2 PP each, 2 PP remainder -> Reserve gets 2+2 = 4 PP
+      // 100 GP / 4 = 25 GP each, 0 remainder -> Reserve gets 25 GP
+      // 11 SP / 4 = 2 SP each, 3 SP remainder -> Reserve gets 2+3 = 5 SP
+      const purseToDisperse = PartyPurse(
+        pp: 10,
+        gp: 100,
+        sp: 11,
+      );
+
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: purseToDisperse,
+        recipientCharacters: recipients,
+        performedBy: 'DM Kevin',
+        includePartyReserve: true,
+      );
+
+      final liveSession =
+          await partyService.streamSession(session.roomCode).first;
+      expect(liveSession, isNotNull);
+
+      // Check characters
+      for (final char in recipients) {
+        final charPurse = liveSession!.getMemberPurse(char);
+        expect(charPurse.pp, equals(2));
+        expect(charPurse.gp, equals(25));
+        expect(charPurse.sp, equals(2));
+      }
+
+      // Check Party Reserve
+      expect(liveSession!.partyPurse.pp, equals(4)); // 2 share + 2 rem
+      expect(liveSession.partyPurse.gp, equals(25)); // 25 share + 0 rem
+      expect(liveSession.partyPurse.sp, equals(5)); // 2 share + 3 rem
+    });
+
+    test(
+        'Disperse Coins with liquidated gems/art objects evenly into GP stores',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Liquidated Loot Campaign',
+        playerName: 'DM',
+      );
+
+      final recipients = ['Sylas', 'Valen'];
+      // 100 GP in coins + 300 GP in liquidated gems = 400 GP total
+      // 2 players + 1 reserve = 3 shares: 400 / 3 = 133 GP each, 1 GP remainder
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: const PartyPurse(gp: 100),
+        liquidatedGemsAndArtGp: 300.0,
+        includeLiquidatedInSplit: true,
+        recipientCharacters: recipients,
+        performedBy: 'DM',
+        includePartyReserve: true,
+      );
+
+      final liveSession =
+          await partyService.streamSession(session.roomCode).first;
+      expect(liveSession!.getMemberPurse('Sylas').gp, equals(133));
+      expect(liveSession.getMemberPurse('Valen').gp, equals(133));
+      expect(liveSession.partyPurse.gp, equals(134)); // 133 share + 1 remainder
+    });
+
+    test(
+        'Disperse Vault Funds (isVaultDispersal: true) deducts character shares from party vault and conserves currency',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Vault Fund Dispersal Campaign',
+        playerName: 'DM',
+      );
+
+      // Initially deposit 100 GP into the party vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM',
+        gp: 100,
+      );
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp,
+          equals(100));
+
+      final recipients = ['Sylas', 'Dain'];
+      // 100 GP in vault, 2 characters + 1 party reserve = 3 shares.
+      // 100 ~/ 3 = 33 GP per share, 1 GP remainder.
+      // Sylas gets 33 GP, Dain gets 33 GP.
+      // Withdrawn from vault = 33 * 2 = 66 GP.
+      // Vault remaining = 100 - 66 = 34 GP (33 reserve share + 1 remainder).
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: const PartyPurse(gp: 100),
+        recipientCharacters: recipients,
+        performedBy: 'DM',
+        includePartyReserve: true,
+        isVaultDispersal: true,
+      );
+
+      final liveSession =
+          await partyService.streamSession(session.roomCode).first;
+      expect(liveSession, isNotNull);
+      expect(liveSession!.getMemberPurse('Sylas').gp, equals(33));
+      expect(liveSession.getMemberPurse('Dain').gp, equals(33));
+      expect(liveSession.partyPurse.gp, equals(34));
+
+      // Conservation of currency: 33 + 33 + 34 = 100 GP total (zero inflation / no compounding)
+      final totalPartyWealth = liveSession.getMemberPurse('Sylas').gp +
+          liveSession.getMemberPurse('Dain').gp +
+          liveSession.partyPurse.gp;
+      expect(totalPartyWealth, equals(100));
+    });
+
+    test(
+        'Disperse Vault Funds without party reserve empties vault to characters',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Full Vault Dispersal Campaign',
+        playerName: 'DM',
+      );
+
+      // Initially deposit 50 GP into party vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM',
+        gp: 50,
+      );
+
+      final recipients = ['Sylas', 'Dain'];
+      // 50 GP / 2 characters = 25 GP each, 0 remainder.
+      // Withdrawn from vault = 25 * 2 = 50 GP.
+      // Vault remaining = 0 GP.
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: const PartyPurse(gp: 50),
+        recipientCharacters: recipients,
+        performedBy: 'DM',
+        includePartyReserve: false,
+        isVaultDispersal: true,
+      );
+
+      final liveSession =
+          await partyService.streamSession(session.roomCode).first;
+      expect(liveSession, isNotNull);
+      expect(liveSession!.getMemberPurse('Sylas').gp, equals(25));
+      expect(liveSession.getMemberPurse('Dain').gp, equals(25));
+      expect(liveSession.partyPurse.gp, equals(0));
+    });
+
+    test('Transfer between Member Store and Party Reserve', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Vault Transfer Campaign',
+        playerName: 'DM',
+      );
+
+      // Give Dain 100 GP initially
+      await partyService.updateMemberPurse(
+        roomCode: session.roomCode,
+        characterName: 'Dain',
+        newPurse: const PartyPurse(gp: 100),
+        performedBy: 'Dain',
+      );
+
+      var live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.getMemberPurse('Dain').gp, equals(100));
+      expect(live.partyPurse.gp, equals(0));
+
+      // Transfer 40 GP from Dain to Party Reserve
+      await partyService.transferMemberToReserve(
+        roomCode: session.roomCode,
+        characterName: 'Dain',
+        performedBy: 'Dain',
+        gp: 40,
+      );
+
+      live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.getMemberPurse('Dain').gp, equals(60));
+      expect(live.partyPurse.gp, equals(40));
+
+      // Withdraw 15 GP from Party Reserve back to Dain
+      await partyService.transferReserveToMember(
+        roomCode: session.roomCode,
+        characterName: 'Dain',
+        performedBy: 'Dain',
+        gp: 15,
+      );
+
+      live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.getMemberPurse('Dain').gp, equals(75));
+      expect(live.partyPurse.gp, equals(25));
+    });
+
+    test(
+        'Deleting a character from roster purges member purse and transfers coins to Reserve',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Roster Deletion Campaign',
+        playerName: 'DM',
+      );
+
+      // Add Kaelen and Corin to roster
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Kaelen',
+        playerName: 'DM',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Corin',
+        playerName: 'DM',
+      );
+
+      // Give Kaelen 50 GP and Corin 10 GP
+      await partyService.updateMemberPurse(
+        roomCode: session.roomCode,
+        characterName: 'Kaelen',
+        newPurse: const PartyPurse(gp: 50),
+        performedBy: 'DM',
+      );
+      await partyService.updateMemberPurse(
+        roomCode: session.roomCode,
+        characterName: 'Corin',
+        newPurse: const PartyPurse(gp: 10),
+        performedBy: 'DM',
+      );
+
+      var live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.characterRoster, contains('Kaelen'));
+      expect(live.getMemberPurse('Kaelen').gp, equals(50));
+      expect(live.partyPurse.gp, equals(0));
+
+      // Remove Kaelen from roster
+      await partyService.removeCharacterFromRoster(
+        roomCode: session.roomCode,
+        characterName: 'Kaelen',
+        playerName: 'DM',
+      );
+
+      live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.characterRoster.contains('Kaelen'), isFalse);
+      expect(live.memberPurses.containsKey('Kaelen'), isFalse);
+      // Kaelen's 50 GP transferred to party reserve
+      expect(live.partyPurse.gp, equals(50));
+      expect(live.getMemberPurse('Corin').gp, equals(10));
+    });
+
+    test(
+        'Join Campaign with DM hostKey promotes player to Host role upon joining',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Dragonfire Campaign',
+        playerName: 'DM Eldrin',
+      );
+
+      final dmMembership = registry.getMembership(session.roomCode);
+      final rawKey = dmMembership!.hostKey!;
+
+      // Clear local registry to simulate joining from a new player client
+      registry.membershipsNotifier.value = [];
+
+      // Join with passkey
+      final joined = await partyService.joinCampaign(
+        roomCode: session.roomCode,
+        playerName: 'Co-DM Kaelen',
+        hostKey: rawKey,
+      );
+
+      expect(joined.roomCode, equals(session.roomCode));
+      final playerMembership = registry.getMembership(session.roomCode);
+      expect(playerMembership, isNotNull);
+      expect(playerMembership!.isHost, isTrue);
+      expect(playerMembership.hasHostKey, isTrue);
+      expect(playerMembership.hostKey, equals(rawKey));
+    });
+
+    test(
+        'Join Campaign with invalid DM hostKey rejects with UnauthorizedHostActionException',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Dragonfire Campaign 2',
+        playerName: 'DM Eldrin',
+      );
+
+      expect(
+        () => partyService.joinCampaign(
+          roomCode: session.roomCode,
+          playerName: 'Hacker',
+          hostKey: 'invalid-secret-key',
+        ),
+        throwsA(isA<UnauthorizedHostActionException>()),
+      );
+    });
+
+    test(
+        'claimDmRole verifies passkey and promotes existing player membership to DM/Co-DM',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'High Gate Campaign',
+        playerName: 'DM Kevin',
+      );
+
+      final dmMembership = registry.getMembership(session.roomCode);
+      final hostKey = dmMembership!.hostKey!;
+
+      // Player joins first as normal player (resetting membership to player role)
+      final playerMembership = CampaignMembership(
+        roomCode: session.roomCode,
+        campaignName: session.campaignName,
+        role: CampaignRole.player,
+        characterId: 'Morwen',
+        lastPlayed: DateTime.now(),
+      );
+      await registry.saveMembership(playerMembership);
+
+      var mem = registry.getMembership(session.roomCode);
+      expect(mem!.role, equals(CampaignRole.player));
+      expect(mem.hasHostKey, isFalse);
+
+      // Player claims DM role with full copied passkey text snippet
+      final snippet =
+          'Room: ${session.roomCode}\nPasskey Mnemonic: dragon wizard shield potion goblin scroll\nHostKey: $hostKey';
+      final claimed = await partyService.claimDmRole(
+        roomCode: session.roomCode,
+        hostKeyOrPasskey: snippet,
+        targetRole: CampaignRole.coDm,
+        playerName: 'Co-DM Morwen',
+      );
+
+      expect(claimed.role, equals(CampaignRole.coDm));
+      expect(claimed.isCoDm, isTrue);
+      expect(claimed.isDmOrCoDm, isTrue);
+      expect(claimed.hostKey, equals(hostKey));
+      expect(claimed.characterId, equals('Co-DM Morwen'));
+
+      mem = registry.getMembership(session.roomCode);
+      expect(mem!.role, equals(CampaignRole.coDm));
+      expect(mem.hostKey, equals(hostKey));
+    });
+
+    test(
+        'claimDmRole throws UnauthorizedHostActionException when passkey is invalid',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'High Gate Campaign 2',
+        playerName: 'DM Kevin',
+      );
+
+      expect(
+        () => partyService.claimDmRole(
+          roomCode: session.roomCode,
+          hostKeyOrPasskey: 'bad-key-12345',
+        ),
+        throwsA(isA<UnauthorizedHostActionException>()),
+      );
+    });
+
+    test('depositCoins and withdrawCoins update purse and do not wedge outbox',
+        () async {
+      final session = await partyService.ensureRoomExists(
+        roomCode: 'ROOM-COIN01',
+        campaignName: 'Treasure Vault',
+      );
+
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'Dain',
+        gp: 50,
+        sp: 20,
+      );
+
+      final cached = partyService.getCachedSession(session.roomCode);
+      expect(cached, isNotNull);
+      expect(cached!.partyPurse.gp, equals(50));
+      expect(cached.partyPurse.sp, equals(20));
+
+      await partyService.withdrawCoins(
+        roomCode: session.roomCode,
+        playerName: 'Dain',
+        gp: 10,
+      );
+
+      final afterWithdraw = partyService.getCachedSession(session.roomCode);
+      expect(afterWithdraw!.partyPurse.gp, equals(40));
+    });
+
+    test('clearOutbox removes pending items and updates pendingOutboxCount',
+        () {
+      final action = PartyOutboxAction(
+        id: 'test_action_1',
+        roomCode: 'ROOM-OUTBOX',
+        actionType: 'coinDeposit',
+        payload: {'gp': 10},
+        timestamp: DateTime.now(),
+      );
+
+      expect(action.retryCount, equals(0));
+      final map = action.toMap();
+      expect(map['retryCount'], equals(0));
+
+      final restored = PartyOutboxAction.fromMap(map);
+      expect(restored.retryCount, equals(0));
+
+      // Test clearOutbox
+      partyService.clearOutbox('ROOM-OUTBOX');
+      expect(partyService.pendingOutboxCount.value, equals(0));
+    });
+
+    test(
+        'leaveCampaign removes player from active session, roster, and local registry',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Departure at Dawn',
+        playerName: 'DM Sarah',
+      );
+
+      // Add a player
+      await partyService.setActiveCharacter(
+        roomCode: session.roomCode,
+        characterName: 'Aramil',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Aramil',
+        playerName: 'Aramil',
+      );
+
+      var cached = partyService.getCachedSession(session.roomCode);
+      expect(cached!.activePlayers, contains('Aramil'));
+      expect(cached.characterRoster, contains('Aramil'));
+
+      // Player leaves campaign
+      await partyService.leaveCampaign(
+        roomCode: session.roomCode,
+        playerName: 'Aramil',
+      );
+
+      cached = partyService.getCachedSession(session.roomCode);
+      expect(cached!.activePlayers, isNot(contains('Aramil')));
+      expect(cached.characterRoster, isNot(contains('Aramil')));
+      expect(registry.getMembership(session.roomCode), isNull);
+    });
+
+    test(
+        'deleteCampaign verifies host key authority and purges all local and session state',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Citadel of Doom',
+        playerName: 'DM Kevin',
+      );
+      final dmMembership = registry.getMembership(session.roomCode);
+      expect(dmMembership, isNotNull);
+      final hostKey = dmMembership!.hostKey!;
+
+      // Unauthorized deletion attempt throws exception
+      expect(
+        () => partyService.deleteCampaign(
+          roomCode: session.roomCode,
+          hostKey: 'invalid-dm-key',
+        ),
+        throwsA(isA<UnauthorizedHostActionException>()),
+      );
+
+      // Authorized deletion with DM hostKey succeeds
+      await partyService.deleteCampaign(
+        roomCode: session.roomCode,
+        hostKey: hostKey,
+      );
+
+      expect(registry.getMembership(session.roomCode), isNull);
+      expect(partyService.getCachedSession(session.roomCode), isNull);
+    });
+
+    test(
+        'syncAllExistingCampaignsToFirestore iterates through local memberships',
+        () async {
+      await partyService.createCampaign(
+        campaignName: 'Syncable Campaign 1',
+        playerName: 'DM Alpha',
+      );
+      await partyService.createCampaign(
+        campaignName: 'Syncable Campaign 2',
+        playerName: 'DM Beta',
+      );
+
+      expect(registry.memberships.length, equals(2));
+
+      // Should complete cleanly without throwing
+      await partyService.syncAllExistingCampaignsToFirestore();
+    });
+
+    test(
+        'queueOutbox triggers pendingOutboxCount and clearOutbox cancels cleanly',
+        () {
+      final action = PartyOutboxAction(
+        id: 'test_create_act',
+        roomCode: 'ROOM-AUTO01',
+        actionType: 'createRoom',
+        payload: {'roomCode': 'ROOM-AUTO01', 'campaignName': 'Auto Room'},
+        timestamp: DateTime.now(),
+      );
+      expect(action.actionType, equals('createRoom'));
+      expect(action.roomCode, equals('ROOM-AUTO01'));
+
+      // In offline/in-memory mode, clearOutbox resets pendingOutboxCount
+      partyService.clearOutbox('ROOM-AUTO01');
+      expect(partyService.pendingOutboxCount.value, equals(0));
+    });
+
+    test(
+        'ensureRoomExists preserves existing party vault coins without zeroing',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Vault Protection Campaign',
+        playerName: 'DM Protection',
+      );
+
+      // Deposit 100 GP into vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM Protection',
+        gp: 100,
+      );
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp,
+          equals(100));
+
+      // ensureRoomExists called on room mount or background sync
+      await partyService.ensureRoomExists(
+        roomCode: session.roomCode,
+        campaignName: session.campaignName,
+      );
+
+      // Must remain 100 GP, not wiped to zero
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp,
+          equals(100));
+    });
+
+    test('linkCharacterToCampaign retains existing party vault balance',
+        () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Roster Linking Campaign',
+        playerName: 'DM Lead',
+      );
+
+      // Deposit 50 GP into party vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM Lead',
+        gp: 50,
+      );
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp,
+          equals(50));
+
+      // A character links to the campaign
+      const dummyChar = Character(
+        id: EntityId(slug: 'test-link-char', ruleset: RulesetVersion.v2024),
+        name: 'Dain Ironfoot',
+        speciesRef: EntityReference(
+            slug: 'dwarf', refType: EntityType.species, displayName: 'Dwarf'),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(
+                  slug: 'fighter',
+                  refType: EntityType.classDefinition,
+                  displayName: 'Fighter'),
+              level: 3,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: AbilityScores.standardArray(),
+        resources: CharacterResourcePool(currentHp: 25),
+        purse: PartyPurse(gp: 15),
+      );
+
+      final updated = await partyService.linkCharacterToCampaign(
+        roomCode: session.roomCode,
+        character: dummyChar,
+      );
+
+      // Character linked with personal purse of 15 GP
+      expect(updated.characterRoster, contains('Dain Ironfoot'));
+      expect(updated.getMemberPurse('Dain Ironfoot').gp, equals(15));
+
+      // Party vault MUST still have 50 GP!
+      expect(updated.partyPurse.gp, equals(50));
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp,
+          equals(50));
+    });
+  });
+}

@@ -1,0 +1,518 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progression_engine.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_stat_calculator.dart';
+
+void main() {
+  group('FeatAsiExtension Tests', () {
+    test(
+        'Tenacious feat has all 6 abilities, requires choice, and grants saving throw',
+        () {
+      const tenacious = Feat(
+        id: EntityId(slug: 'tenacious', ruleset: RulesetVersion.v2024),
+        name: 'Tenacious',
+        descriptionMarkdown: '',
+      );
+      expect(tenacious.hasAbilityScoreIncrease, isTrue);
+      expect(tenacious.requiresAbilityChoice, isTrue);
+      expect(tenacious.selectableAbilities.length, equals(6));
+      expect(tenacious.selectableAbilities, containsAll(AbilityType.values));
+      expect(tenacious.statIncreaseAmount, equals(1));
+      expect(tenacious.grantsSavingThrowProficiency, isTrue);
+      expect(tenacious.choiceRiderDescription, contains('saving throw'));
+    });
+
+    test(
+        'Athlete feat allows STR or DEX choice and does not grant saving throw',
+        () {
+      const athlete = Feat(
+        id: EntityId(slug: 'athlete', ruleset: RulesetVersion.v2024),
+        name: 'Athlete',
+        descriptionMarkdown: '',
+      );
+      expect(athlete.hasAbilityScoreIncrease, isTrue);
+      expect(athlete.requiresAbilityChoice, isTrue);
+      expect(athlete.selectableAbilities,
+          equals([AbilityType.strength, AbilityType.dexterity]));
+      expect(athlete.statIncreaseAmount, equals(1));
+      expect(athlete.grantsSavingThrowProficiency, isFalse);
+    });
+
+    test('Observant feat allows INT or WIS choice', () {
+      const observant = Feat(
+        id: EntityId(slug: 'observant', ruleset: RulesetVersion.v2024),
+        name: 'Observant',
+        descriptionMarkdown: '',
+      );
+      expect(observant.hasAbilityScoreIncrease, isTrue);
+      expect(observant.requiresAbilityChoice, isTrue);
+      expect(observant.selectableAbilities,
+          equals([AbilityType.intelligence, AbilityType.wisdom]));
+      expect(observant.statIncreaseAmount, equals(1));
+    });
+
+    test('Actor feat has fixed single ability (CHA)', () {
+      const actor = Feat(
+        id: EntityId(slug: 'actor', ruleset: RulesetVersion.v2024),
+        name: 'Actor',
+        descriptionMarkdown: '',
+      );
+      expect(actor.hasAbilityScoreIncrease, isTrue);
+      expect(actor.requiresAbilityChoice, isFalse);
+      expect(actor.selectableAbilities, equals([AbilityType.charisma]));
+      expect(actor.statIncreaseAmount, equals(1));
+    });
+
+    test('Heavy Armor Master has fixed single ability (STR)', () {
+      const ham = Feat(
+        id: EntityId(slug: 'heavy-armor-master', ruleset: RulesetVersion.v2024),
+        name: 'Heavy Armor Master',
+        descriptionMarkdown: '',
+      );
+      expect(ham.hasAbilityScoreIncrease, isTrue);
+      expect(ham.requiresAbilityChoice, isFalse);
+      expect(ham.selectableAbilities, equals([AbilityType.strength]));
+      expect(ham.statIncreaseAmount, equals(1));
+    });
+
+    test('Custom Homebrew Feat with dynamic customProperties works seamlessly',
+        () {
+      const customFeat = Feat(
+        id: EntityId(slug: 'mind-over-matter', ruleset: RulesetVersion.v2024),
+        name: 'Mind Over Matter',
+        descriptionMarkdown:
+            'Increase INT or CON by 1 and gain saving throw proficiency.',
+        customProperties: {
+          'selectableAbilities': ['intelligence', 'constitution'],
+          'statIncrease': 1,
+          'grantsSavingThrowProficiency': true,
+          'riderDescription': 'Grants saving throw proficiency in chosen stat.',
+        },
+      );
+
+      expect(customFeat.hasAbilityScoreIncrease, isTrue);
+      expect(customFeat.requiresAbilityChoice, isTrue);
+      expect(customFeat.selectableAbilities,
+          equals([AbilityType.intelligence, AbilityType.constitution]));
+      expect(customFeat.statIncreaseAmount, equals(1));
+      expect(customFeat.grantsSavingThrowProficiency, isTrue);
+      expect(customFeat.choiceRiderDescription, contains('saving throw'));
+    });
+
+    test(
+        'Chef feat deserialized from homebrew JSON format parses CON or WIS choices',
+        () {
+      final rawChef = {
+        'id': {'slug': 'chef', 'ruleset': 'v2014'},
+        'name': 'Chef',
+        'category': 'General',
+        'descriptionMarkdown': 'Mastering culinary arts...',
+        'grants': [],
+        'customProperties': {
+          'page': 79,
+          'ability': [
+            {
+              'choose': {
+                'from': ['con', 'wis'],
+                'amount': 1,
+              }
+            }
+          ],
+          'toolProficiencies': [
+            {"cook's utensils": true}
+          ]
+        }
+      };
+
+      final chef = Feat.fromMap(rawChef);
+      expect(chef.hasAbilityScoreIncrease, isTrue);
+      expect(chef.requiresAbilityChoice, isTrue);
+      expect(chef.selectableAbilities,
+          equals([AbilityType.constitution, AbilityType.wisdom]));
+      expect(chef.statIncreaseAmount, equals(1));
+    });
+
+    test('FeatAsiExtension parses various structured ability formats correctly',
+        () {
+      // 1. Crushing Might: str or con
+      const crushingMight = Feat(
+        id: EntityId(slug: 'crushing-might', ruleset: RulesetVersion.v2014),
+        name: 'Crushing Might',
+        descriptionMarkdown: '',
+        customProperties: {
+          'ability': [
+            {
+              'choose': {
+                'from': ['str', 'con'],
+                'amount': 1,
+              }
+            }
+          ]
+        },
+      );
+      expect(crushingMight.requiresAbilityChoice, isTrue);
+      expect(crushingMight.selectableAbilities,
+          equals([AbilityType.strength, AbilityType.constitution]));
+      expect(crushingMight.statIncreaseAmount, equals(1));
+
+      // 2. Fey Heritage: int, wis, or cha
+      const feyHeritage = Feat(
+        id: EntityId(slug: 'fey-heritage', ruleset: RulesetVersion.v2014),
+        name: 'Fey Heritage',
+        descriptionMarkdown: '',
+        customProperties: {
+          'ability': [
+            {
+              'choose': {
+                'from': ['int', 'wis', 'cha'],
+                'amount': 1,
+              }
+            }
+          ]
+        },
+      );
+      expect(feyHeritage.requiresAbilityChoice, isTrue);
+      expect(
+          feyHeritage.selectableAbilities,
+          equals([
+            AbilityType.intelligence,
+            AbilityType.wisdom,
+            AbilityType.charisma,
+          ]));
+      expect(feyHeritage.statIncreaseAmount, equals(1));
+
+      // 3. Fixed single ability (Eldritch Vitality: con + 1)
+      const eldritchVitality = Feat(
+        id: EntityId(slug: 'eldritch-vitality', ruleset: RulesetVersion.v2014),
+        name: 'Eldritch Vitality',
+        descriptionMarkdown: '',
+        customProperties: {
+          'ability': [
+            {'con': 1}
+          ]
+        },
+      );
+      expect(eldritchVitality.hasAbilityScoreIncrease, isTrue);
+      expect(eldritchVitality.requiresAbilityChoice, isFalse);
+      expect(eldritchVitality.selectableAbilities,
+          equals([AbilityType.constitution]));
+      expect(eldritchVitality.statIncreaseAmount, equals(1));
+    });
+  });
+
+  group('CharacterProgressionEngine with Feat ASIs & Riders', () {
+    late LayeredPriorityRepository repository;
+    late ReferenceResolver resolver;
+
+    setUp(() {
+      repository = LayeredPriorityRepository();
+      resolver = ReferenceResolver(repository);
+    });
+
+    Character createBaseRogueLevel3() {
+      return const Character(
+        id: EntityId(slug: 'shadow-rogue', ruleset: RulesetVersion.v2024),
+        name: 'Shadow',
+        speciesRef: EntityReference(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        baseScores: AbilityScores(
+          strength: 10,
+          dexterity: 15,
+          constitution: 13, // +1 modifier
+          intelligence: 12,
+          wisdom: 14,
+          charisma: 8,
+        ),
+        bonusScores: AbilityScores(
+          strength: 0,
+          dexterity: 0,
+          constitution: 0,
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        ),
+        savingThrowProficiencies: {
+          AbilityType.dexterity,
+          AbilityType.intelligence,
+        },
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(
+                refType: EntityType.classDefinition,
+                slug: 'rogue',
+                displayName: 'Rogue',
+              ),
+              level: 3,
+              hitDie: 'd8',
+              hitPointsRolled: [5, 5],
+              isStartingClass: true,
+            ),
+          ],
+          manualHpRolls: {1: 8, 2: 5, 3: 5},
+        ),
+        skillProficiencies: {
+          SkillType.acrobatics: SkillProficiencyLevel.proficient,
+          SkillType.stealth: SkillProficiencyLevel.expertise,
+        },
+        resources: CharacterResourcePool(
+          currentHp: 21, // 8+1 + 5+1 + 5+1 = 21
+          tempHp: 0,
+          currentHitDice: {'d8': 3},
+        ),
+      );
+    }
+
+    test(
+        'Level 4: Taking Tenacious (Constitution) increases CON, grants save, and retroactively updates HP',
+        () {
+      final rogue = createBaseRogueLevel3();
+      expect(rogue.savingThrowProficiencies,
+          isNot(contains(AbilityType.constitution)));
+
+      const levelUpReq = LevelUpRequest(
+        targetClassSlug: 'rogue',
+        hpChoice: HpProgressionChoice.average(), // 5 for d8
+        asiOrFeat: AsiOrFeatChoice.feat(
+          EntityReference(
+            refType: EntityType.feat,
+            slug: 'tenacious',
+            displayName: 'Tenacious',
+          ),
+          abilityIncreases: {AbilityType.constitution: 1},
+          savingThrowGrants: {AbilityType.constitution},
+          chosenFeatAbility: AbilityType.constitution,
+        ),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(rogue, levelUpReq,
+          resolver: resolver);
+
+      expect(leveled.totalLevel, equals(4));
+      // CON bonus increased from 0 to 1
+      expect(leveled.bonusScores.constitution, equals(1));
+      // Saving throws now include Constitution!
+      expect(
+          leveled.savingThrowProficiencies, contains(AbilityType.constitution));
+      expect(leveled.savingThrowProficiencies, contains(AbilityType.dexterity));
+      expect(
+          leveled.savingThrowProficiencies, contains(AbilityType.intelligence));
+
+      final stats = CharacterStatCalculator.compute(leveled, resolver);
+      // Base CON 13 + 1 = 14 (+2 mod)
+      expect(stats.effectiveScores.constitution, equals(14));
+      expect(stats.abilityModifiers[AbilityType.constitution], equals(2));
+
+      // Proficiency bonus at level 4 is +2
+      expect(stats.proficiencyBonus, equals(2));
+      // Saving throw for CON: +2 mod + 2 prof = +4!
+      expect(stats.savingThrowModifiers[AbilityType.constitution], equals(4));
+
+      // HP check:
+      // Level 1: 8 + 2 = 10
+      // Level 2: 5 + 2 = 7
+      // Level 3: 5 + 2 = 7
+      // Level 4: 5 + 2 = 7
+      // Total HP = 10 + 7 + 7 + 7 = 31 (retroactive CON boost applied!)
+      expect(stats.maxHp, equals(31));
+      expect(leveled.resources.currentHp, equals(31));
+    });
+
+    test(
+        'Level 4: Taking Athlete (Dexterity) increases DEX by 1 without granting saving throws',
+        () {
+      final rogue = createBaseRogueLevel3();
+
+      const levelUpReq = LevelUpRequest(
+        targetClassSlug: 'rogue',
+        hpChoice: HpProgressionChoice.average(),
+        asiOrFeat: AsiOrFeatChoice.feat(
+          EntityReference(
+            refType: EntityType.feat,
+            slug: 'athlete',
+            displayName: 'Athlete',
+          ),
+          abilityIncreases: {AbilityType.dexterity: 1},
+          chosenFeatAbility: AbilityType.dexterity,
+        ),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(rogue, levelUpReq,
+          resolver: resolver);
+
+      expect(leveled.bonusScores.dexterity, equals(1));
+      final stats = CharacterStatCalculator.compute(leveled, resolver);
+      // Base DEX 15 + 1 = 16 (+3 mod)
+      expect(stats.effectiveScores.dexterity, equals(16));
+      expect(stats.abilityModifiers[AbilityType.dexterity], equals(3));
+      // CON saving throw was not granted
+      expect(leveled.savingThrowProficiencies,
+          isNot(contains(AbilityType.constitution)));
+    });
+
+    test(
+        'Level 4: Taking custom homebrew feat with skill and saving throw grants',
+        () {
+      final rogue = createBaseRogueLevel3();
+
+      const levelUpReq = LevelUpRequest(
+        targetClassSlug: 'rogue',
+        hpChoice: HpProgressionChoice.average(),
+        asiOrFeat: AsiOrFeatChoice.feat(
+          EntityReference(
+            refType: EntityType.feat,
+            slug: 'mystic-initiate',
+            displayName: 'Mystic Initiate',
+          ),
+          abilityIncreases: {AbilityType.wisdom: 1},
+          savingThrowGrants: {AbilityType.wisdom},
+          skillGrants: {SkillType.arcana},
+          chosenFeatAbility: AbilityType.wisdom,
+        ),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(rogue, levelUpReq,
+          resolver: resolver);
+
+      expect(leveled.bonusScores.wisdom, equals(1));
+      expect(leveled.savingThrowProficiencies, contains(AbilityType.wisdom));
+      expect(leveled.skillProficiencies[SkillType.arcana],
+          equals(SkillProficiencyLevel.proficient));
+    });
+
+    test(
+        'Versatile Specialist feat parses ability, skillProficiencies, and expertise from JSON',
+        () {
+      final rawVersatileSpecialist = {
+        'id': {'slug': 'versatile-specialist', 'ruleset': 'v2014'},
+        'name': 'Versatile Specialist',
+        'category': 'General',
+        'descriptionMarkdown':
+            'Increase one ability score of your choice by 1...',
+        'grants': [],
+        'customProperties': {
+          'ability': [
+            {
+              'choose': {
+                'from': ['str', 'dex', 'con', 'int', 'wis', 'cha'],
+                'amount': 1,
+              }
+            }
+          ],
+          'skillProficiencies': [
+            {
+              'choose': {
+                'from': [
+                  'athletics',
+                  'acrobatics',
+                  'sleight of hand',
+                  'stealth',
+                  'arcana',
+                  'history',
+                  'investigation',
+                  'nature',
+                  'religion',
+                  'animal handling',
+                  'insight',
+                  'medicine',
+                  'perception',
+                  'survival',
+                  'deception',
+                  'intimidation',
+                  'performance',
+                  'persuasion'
+                ],
+                'count': 1,
+              }
+            }
+          ],
+          'expertise': [
+            {'anyProficientSkill': 1}
+          ]
+        }
+      };
+
+      final feat = Feat.fromMap(rawVersatileSpecialist);
+      expect(feat.hasAbilityScoreIncrease, isTrue);
+      expect(feat.selectableAbilities.length, equals(6));
+      expect(feat.hasSkillProficiencyChoice, isTrue);
+      expect(feat.selectableSkills.length, equals(18));
+      expect(feat.hasExpertiseChoice, isTrue);
+    });
+
+    test(
+        'Level 4: Versatile Specialist supports granting skill proficiency and expertise to the SAME skill',
+        () {
+      final rogue = createBaseRogueLevel3();
+      // Initially, rogue is not proficient in athletics
+      expect(rogue.skillProficiencies[SkillType.athletics], isNull);
+
+      const levelUpReq = LevelUpRequest(
+        targetClassSlug: 'rogue',
+        hpChoice: HpProgressionChoice.average(),
+        asiOrFeat: AsiOrFeatChoice.feat(
+          EntityReference(
+            refType: EntityType.feat,
+            slug: 'versatile-specialist',
+            displayName: 'Versatile Specialist',
+          ),
+          abilityIncreases: {AbilityType.constitution: 1},
+          skillGrants: {SkillType.athletics},
+          expertiseGrants: {SkillType.athletics},
+          chosenFeatAbility: AbilityType.constitution,
+        ),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(rogue, levelUpReq,
+          resolver: resolver);
+
+      expect(leveled.bonusScores.constitution, equals(1));
+      // Athletics received proficiency AND expertise, ending up as expertise!
+      expect(leveled.skillProficiencies[SkillType.athletics],
+          equals(SkillProficiencyLevel.expertise));
+    });
+
+    test(
+        'Level 4: Versatile Specialist supports granting new skill proficiency and expertise to different skills',
+        () {
+      final rogue = createBaseRogueLevel3();
+      // Rogue has expertise in stealth and proficiency in acrobatics initially (from createBaseRogueLevel3)
+      expect(rogue.skillProficiencies[SkillType.acrobatics],
+          equals(SkillProficiencyLevel.proficient));
+      expect(rogue.skillProficiencies[SkillType.nature], isNull);
+
+      const levelUpReq = LevelUpRequest(
+        targetClassSlug: 'rogue',
+        hpChoice: HpProgressionChoice.average(),
+        asiOrFeat: AsiOrFeatChoice.feat(
+          EntityReference(
+            refType: EntityType.feat,
+            slug: 'versatile-specialist',
+            displayName: 'Versatile Specialist',
+          ),
+          abilityIncreases: {AbilityType.dexterity: 1},
+          skillGrants: {SkillType.nature},
+          expertiseGrants: {SkillType.acrobatics},
+          chosenFeatAbility: AbilityType.dexterity,
+        ),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(rogue, levelUpReq,
+          resolver: resolver);
+
+      expect(leveled.bonusScores.dexterity, equals(1));
+      expect(leveled.skillProficiencies[SkillType.nature],
+          equals(SkillProficiencyLevel.proficient));
+      expect(leveled.skillProficiencies[SkillType.acrobatics],
+          equals(SkillProficiencyLevel.expertise));
+    });
+  });
+}

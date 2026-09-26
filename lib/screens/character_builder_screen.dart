@@ -1,0 +1,6230 @@
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import '../models/app_settings.dart';
+import '../models/characters/srd_feats_library.dart';
+import '../models/characters/srd_classes_library.dart';
+import '../models/characters/srd_species_library.dart';
+import '../models/characters/srd_backgrounds_library.dart';
+import '../models/characters/srd_equipment_library.dart';
+import '../models/characters/srd_proficiencies_library.dart';
+import '../models/characters/subclass_spells_library.dart';
+import '../models/magic_items/magic_item_library.dart';
+import '../models/domain/core_types.dart';
+import '../models/domain/character_models.dart';
+import '../models/domain/entity_reference.dart';
+import '../models/domain/feature_grant.dart';
+import '../models/domain/homebrew_extended_entities.dart';
+import '../models/domain/spell_monster_equipment.dart';
+import '../models/party/party_purse.dart';
+import '../models/spellbook_data.dart';
+import '../services/haptic_service.dart';
+import '../services/repository/layered_priority_repository.dart';
+import '../services/repository/reference_resolver.dart';
+import '../services/rules/character_factory.dart';
+import '../services/rules/character_homebrew_validator.dart';
+import '../services/rules/character_stat_calculator.dart';
+import '../services/rules/inventory_transaction_service.dart';
+import '../services/rules/spell_allocation_validator.dart';
+import '../services/rules/skill_trait_resolver.dart';
+import '../services/persistence/character_persistence_service.dart';
+import '../services/persistence/homebrew_persistence_service.dart';
+import '../providers/settings_provider.dart';
+import '../widgets/common/formatted_markdown_text.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../widgets/glyphs/dnd_glyph.dart';
+import '../widgets/room_banner_widget.dart';
+import '../widgets/character_builder/level_up_wizard_dialog.dart';
+import '../widgets/character_builder/ability_score_step.dart';
+import '../widgets/character_builder/background_step.dart';
+import '../providers/character_sheet_controller.dart';
+import '../providers/character_builder_controller.dart';
+import '../widgets/character_sheet/character_header_banner.dart';
+import '../widgets/character_sheet/character_vitals_hud.dart';
+import '../widgets/character_sheet/ability_scores_ribbon.dart';
+import '../widgets/character_sheet/character_sheet_tabs.dart';
+import '../widgets/character_sheet/missing_homebrew_warning_widget.dart';
+
+/// Interactive Character Generator, Live State Sheet, and Multiclassing Studio
+class CharacterBuilderScreen extends StatefulWidget {
+  const CharacterBuilderScreen({super.key});
+
+  @override
+  State<CharacterBuilderScreen> createState() => _CharacterBuilderScreenState();
+}
+
+class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+  late LayeredPriorityRepository _repository;
+  late ReferenceResolver _resolver;
+
+  // Active Edition
+  DmRulesEdition _rulesEdition = DmRulesEdition.v2024;
+  DmRulesEdition? _localEditionOverride;
+
+  // Character Persistence & Roster
+  final CharacterPersistenceService _persistenceService =
+      CharacterPersistenceService();
+  List<Character> _characterRoster = [];
+  bool _isSelectorView = true; // Defaults to Character Selector
+  String _rosterSearchQuery = '';
+  RulesetVersion? _rosterRulesetFilter;
+
+  // Active Character & State
+  Character? _character;
+  CharacterSheetController? _sheetController;
+
+  // Guided Character Creation Wizard State
+  int _wizardStep = 0;
+  RulesetVersion _selectedRuleset = RulesetVersion.v2024;
+  final TextEditingController _nameController = TextEditingController();
+  String? _selectedSpecies;
+  String? _selectedSubrace;
+  String? _selectedClass;
+  String? _selectedBackground;
+  String? _selectedFeat;
+  AbilityType? _selectedFeatAbility;
+  SkillType? _selectedFeatSkill;
+  SkillType? _selectedFeatExpertise;
+  String? _selectedFeatOption;
+  String? _wizardSelectedSubclass;
+  final Map<String, List<String>> _wizardSelectedFeatureOptions = {};
+  final Set<String> _selectedWizardCantrips = {};
+  final Set<String> _selectedWizardSpells = {};
+  String? _selectedStartingEquipmentPreset;
+  Set<SkillType> _wizardSelectedSkills = {};
+  final Set<SkillType> _compensatorySkillPicks = {};
+  final Set<SkillType> _speciesBonusSkillPicks = {};
+
+  // Guided Builder Step Search Queries
+  String _speciesSearchQuery = '';
+  String _featSearchQuery = '';
+  String _spellSearchQuery = '';
+
+  // Language & Tool Proficiency Selection State
+  final Set<String> _builderLanguages = {'Common'};
+  final Set<String> _builderToolProficiencies = {};
+  String? _dwarfToolChoice;
+  final Set<String> _speciesBonusLanguages = {};
+  final Set<String> _classBonusTools = {};
+
+  Set<String> get _allBuilderLanguages {
+    final result = Set<String>.from(_builderLanguages);
+    if (result.isEmpty) result.add('Common');
+    final spSlug = _selectedSpecies?.toLowerCase();
+    if (spSlug != null) {
+      if (spSlug.contains('dwarf')) result.add('Dwarvish');
+      if (spSlug.contains('elf') && !spSlug.contains('half-elf'))
+        result.add('Elvish');
+      if (spSlug.contains('half-elf')) result.add('Elvish');
+      if (spSlug.contains('halfling')) result.add('Halfling');
+      if (spSlug.contains('dragonborn')) result.add('Draconic');
+      if (spSlug.contains('gnome')) result.add('Gnomish');
+      if (spSlug.contains('half-orc')) result.add('Orc');
+      if (spSlug.contains('tiefling')) result.add('Infernal');
+      result.addAll(_speciesBonusLanguages);
+    }
+    if (_selectedClass?.toLowerCase() == 'rogue') result.add('Thieves\' Cant');
+    if (_selectedClass?.toLowerCase() == 'druid') result.add('Druidic');
+    if (_selectedBackground != null) {
+      final bg = SrdBackgroundsLibrary.findBySlug(_selectedBackground!);
+      if (bg != null) result.addAll(bg.languages);
+    }
+    return result;
+  }
+
+  Set<String> get _allBuilderTools {
+    final result = Set<String>.from(_builderToolProficiencies);
+    final spSlug = _selectedSpecies?.toLowerCase();
+    if (spSlug != null) {
+      if (spSlug.contains('dwarf')) {
+        result.add(_dwarfToolChoice ?? 'Smith\'s Tools');
+      }
+      if (spSlug.contains('rock') && spSlug.contains('gnome')) {
+        result.add('Tinker\'s Tools');
+      }
+    }
+    final clSlug = _selectedClass?.toLowerCase();
+    if (clSlug != null) {
+      if (clSlug == 'rogue') result.add('Thieves\' Tools');
+      if (clSlug == 'druid') result.add('Herbalism Kit');
+      result.addAll(_classBonusTools);
+    }
+    if (_selectedBackground != null) {
+      final bg = SrdBackgroundsLibrary.findBySlug(_selectedBackground!);
+      if (bg != null) result.addAll(bg.toolProficiencies);
+    }
+    return result;
+  }
+
+  // Ability Allocation Controller & Consumable Pools
+  late final CharacterBuilderController _abilityScoreController;
+  AbilityScores get _wizardBaseScores =>
+      _abilityScoreController.effectiveBaseScores;
+
+  // Lineage / Background Bonus Allocations
+  final Set<AbilityType> _variantHumanBonuses = {};
+  AbilityType _backgroundPrimaryBonus = AbilityType.strength; // +2 in 2024
+  AbilityType _backgroundSecondaryBonus =
+      AbilityType.constitution; // +1 in 2024
+
+  final List<String> _suggestedNames = [
+    'Valeros Ironclad',
+    'Eldrin Shadowbane',
+    'Kaelen Swift',
+    'Lyra Sunseeker',
+    'Thorek Stoneguard',
+    'Aria Whisperwind',
+    'Morgrim Battlehammer',
+    'Zephyr Stormcaller',
+    'Vespera Nightshade',
+    'Rowan Oakheart',
+    'Gideon Dawnbringer',
+    'Cassian Brightwood',
+  ];
+
+  bool get _hasActiveCharacter => !_isSelectorView && _character != null;
+  int get _expectedTabCount => _hasActiveCharacter ? 4 : 2;
+
+  void _syncTabController() {
+    final expected = _expectedTabCount;
+    if (_tabController.length != expected) {
+      final oldIndex = _tabController.index.clamp(0, expected - 1);
+      final old = _tabController;
+      _tabController = TabController(
+        length: expected,
+        initialIndex: oldIndex,
+        vsync: this,
+      );
+      old.dispose();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _expectedTabCount, vsync: this);
+
+    _repository = LayeredPriorityRepository();
+    _resolver = ReferenceResolver(_repository);
+
+    _initSampleRepository();
+    _initDefaultCharacter();
+
+    _abilityScoreController =
+        CharacterBuilderController(initialMode: 'standard', startEmpty: true);
+    _abilityScoreController.setName(_nameController.text.trim().isEmpty
+        ? 'Adventurer'
+        : _nameController.text.trim());
+    _abilityScoreController.addListener(_onAbilityScoreControllerChanged);
+    _nameController.addListener(_onNameControllerChanged);
+  }
+
+  void _onNameControllerChanged() {
+    _abilityScoreController.setName(_nameController.text.trim().isEmpty
+        ? 'Adventurer'
+        : _nameController.text.trim());
+    if (mounted) setState(() {});
+  }
+
+  void _onAbilityScoreControllerChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _initSampleRepository() {
+    final baseLayer = PriorityLayer(
+      layerId: 'base-srd',
+      name: 'SRD Baseline',
+      priority: LayerPriority.baseRuleset,
+    );
+
+    // Register all SRD items
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'chain-mail', ruleset: RulesetVersion.v2024),
+      name: 'Chain Mail',
+      itemType: 'Heavy Armor',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Heavy armor with Base AC 16.',
+      customProperties: {'baseAc': 16, 'armorType': 'heavy'},
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'leather-armor', ruleset: RulesetVersion.v2024),
+      name: 'Leather Armor',
+      itemType: 'Light Armor',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Light armor Base AC 11 + DEX modifier.',
+      customProperties: {'baseAc': 11, 'armorType': 'light'},
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'breastplate', ruleset: RulesetVersion.v2024),
+      name: 'Breastplate',
+      itemType: 'Medium Armor',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Medium armor Base AC 14 + DEX (max 2).',
+      customProperties: {'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2},
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'shield', ruleset: RulesetVersion.v2024),
+      name: 'Shield',
+      itemType: 'Shield',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: '+2 Shield AC.',
+      customProperties: {'isShield': true, 'acBonus': 2},
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'longsword', ruleset: RulesetVersion.v2024),
+      name: 'Longsword',
+      itemType: 'Martial Melee Weapon',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Versatile 1d8 slashing (1d10 two-handed).',
+      customProperties: {
+        'isWeapon': true,
+        'damageFormula': '1d8',
+        'damageType': 'slashing'
+      },
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'greatsword', ruleset: RulesetVersion.v2024),
+      name: 'Greatsword',
+      itemType: 'Martial Melee Weapon',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Heavy, two-handed 2d6 slashing.',
+      customProperties: {
+        'isWeapon': true,
+        'damageFormula': '2d6',
+        'damageType': 'slashing'
+      },
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'shortsword', ruleset: RulesetVersion.v2024),
+      name: 'Shortsword',
+      itemType: 'Martial Melee Weapon',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Finesse, Light 1d6 piercing.',
+      customProperties: {
+        'isWeapon': true,
+        'isFinesse': true,
+        'damageFormula': '1d6',
+        'damageType': 'piercing'
+      },
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'longbow', ruleset: RulesetVersion.v2024),
+      name: 'Longbow',
+      itemType: 'Martial Ranged Weapon',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Heavy, two-handed ranged weapon 1d8 piercing.',
+      customProperties: {
+        'isWeapon': true,
+        'isRanged': true,
+        'damageFormula': '1d8',
+        'damageType': 'piercing',
+        'range': '150/600 ft',
+      },
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'ring-of-protection', ruleset: RulesetVersion.v2024),
+      name: 'Ring of Protection',
+      itemType: 'Ring',
+      rarity: 'Rare',
+      requiresAttunement: true,
+      descriptionMarkdown: '+1 AC and Saving Throws when attuned.',
+      customProperties: {'acBonus': 1},
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(
+          slug: 'gauntlets-of-ogre-power', ruleset: RulesetVersion.v2024),
+      name: 'Gauntlets of Ogre Power',
+      itemType: 'Wondrous Item',
+      rarity: 'Uncommon',
+      requiresAttunement: true,
+      descriptionMarkdown: 'Sets wearer Strength to 19.',
+      customProperties: {
+        'abilityOverrides': {'strength': 19}
+      },
+    ));
+
+    baseLayer.registerEntity(const EquipmentItem(
+      id: EntityId(slug: 'potion-of-healing', ruleset: RulesetVersion.v2024),
+      name: 'Potion of Healing',
+      itemType: 'Potion',
+      rarity: 'Common',
+      requiresAttunement: false,
+      descriptionMarkdown: 'Heals 2d4 + 2 HP.',
+      customProperties: {},
+    ));
+
+    // Register all SRD Feats, Classes, Species, Backgrounds
+    for (final feat in SrdFeatsLibrary.allFeats) {
+      baseLayer.registerEntity(feat);
+    }
+    for (final cls in SrdClassesLibrary.allClasses) {
+      baseLayer.registerEntity(cls);
+    }
+    for (final sp in SrdSpeciesLibrary.allSpecies) {
+      baseLayer.registerEntity(sp);
+    }
+    for (final bg in SrdBackgroundsLibrary.allBackgrounds) {
+      baseLayer.registerEntity(bg);
+    }
+    for (final eq in SrdEquipmentLibrary.allEquipmentItems) {
+      baseLayer.registerEntity(eq);
+    }
+
+    _repository.addLayer(baseLayer);
+  }
+
+  void _initDefaultCharacter() {
+    _characterRoster = [];
+    _character = null;
+    _isSelectorView = true;
+    _loadPersistedRoster();
+  }
+
+  Future<void> _loadPersistedRoster() async {
+    await HomebrewPersistenceService().syncToLibraries();
+    final loaded = await _persistenceService.loadCharacters();
+    final activeId = await _persistenceService.loadActiveCharacterId();
+    if (mounted) {
+      setState(() {
+        _characterRoster = loaded;
+        if (_characterRoster.isNotEmpty) {
+          if (activeId != null) {
+            final matched = _characterRoster.cast<Character?>().firstWhere(
+                  (c) => c?.id.slug == activeId,
+                  orElse: () => null,
+                );
+            _character = matched ?? _characterRoster.first;
+          } else {
+            _character = _characterRoster.first;
+          }
+          _recalculateStats();
+        } else {
+          _character = null;
+          _isSelectorView = true;
+        }
+        _syncTabController();
+      });
+    }
+  }
+
+  void _selectCharacter(Character char) {
+    HapticService.selectionTick(context);
+    setState(() {
+      _character = char;
+      _rulesEdition = char.ruleset == RulesetVersion.v2024
+          ? DmRulesEdition.v2024
+          : DmRulesEdition.v2014;
+      _isSelectorView = false;
+      _recalculateStats();
+      _syncTabController();
+    });
+    _persistenceService.saveActiveCharacterId(char.id.slug);
+  }
+
+  void _confirmDeleteCharacter(Character char) {
+    HapticService.selectionTick(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text('Delete ${char.name}?',
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Are you sure you want to delete ${char.name}? This character will be permanently removed from your roster.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white60)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.shade700,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _deleteCharacter(char);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteCharacter(Character char) async {
+    HapticService.heavyImpact(context);
+    final updated = await _persistenceService.deleteCharacter(char.id.slug);
+    setState(() {
+      _characterRoster = updated;
+      if (_character?.id.slug == char.id.slug) {
+        if (_characterRoster.isNotEmpty) {
+          _character = _characterRoster.first;
+          _recalculateStats();
+        } else {
+          _character = null;
+        }
+        _isSelectorView = true;
+      }
+      _syncTabController();
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade900,
+          content: Text('${char.name} deleted from roster.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _reparseCharacter(Character hero) async {
+    HapticService.selectionTick(context);
+    final reloaded = await _persistenceService.reparseCharacter(hero);
+    setState(() {
+      _characterRoster = _characterRoster
+          .map((c) => c.id.slug == reloaded.id.slug ? reloaded : c)
+          .toList();
+      if (_character?.id.slug == reloaded.id.slug) {
+        _character = reloaded;
+        _recalculateStats();
+      }
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF0F766E),
+          content: Text('${hero.name} reparsed and updated!'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _reparseAllCharacters() async {
+    HapticService.mediumImpact(context);
+    final updatedList = await _persistenceService.reparseAllCharacters();
+    setState(() {
+      _characterRoster = updatedList;
+      if (_character != null) {
+        final currentUpdated = updatedList.firstWhere(
+          (c) => c.id.slug == _character!.id.slug,
+          orElse: () => _character!,
+        );
+        _character = currentUpdated;
+        _recalculateStats();
+      }
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF0F766E),
+          content: Text(
+              'All ${updatedList.length} character sheets reparsed and updated!'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _recalculateStats() {
+    final char = _character;
+    if (char != null) {
+      _syncSheetController();
+    }
+  }
+
+  void _syncSheetController() {
+    final char = _character;
+    if (char != null) {
+      if (_sheetController == null) {
+        _sheetController = CharacterSheetController(
+          character: char,
+          persistenceService: _persistenceService,
+          resolver: _resolver,
+        );
+        _sheetController!.addListener(_onSheetControllerUpdated);
+      } else if (_sheetController!.character.id != char.id ||
+          _sheetController!.character != char) {
+        _sheetController!.setCharacter(char);
+      }
+    } else {
+      _sheetController?.removeListener(_onSheetControllerUpdated);
+      _sheetController?.dispose();
+      _sheetController = null;
+    }
+  }
+
+  void _onSheetControllerUpdated() {
+    if (_sheetController != null && mounted) {
+      setState(() {
+        _character = _sheetController!.character;
+      });
+    }
+  }
+
+  void _onRulesEditionChanged(DmRulesEdition newEdition) {
+    HapticService.selectionTick(context);
+    setState(() {
+      _localEditionOverride = newEdition;
+      _rulesEdition = newEdition;
+      _selectedRuleset = newEdition == DmRulesEdition.v2024
+          ? RulesetVersion.v2024
+          : RulesetVersion.v2014;
+      final char = _character;
+      if (char != null) {
+        _character = char.copyWith(
+          id: EntityId(slug: char.id.slug, ruleset: _selectedRuleset),
+        );
+        _recalculateStats();
+      }
+    });
+    SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
+  }
+
+  @override
+  void dispose() {
+    _abilityScoreController.removeListener(_onAbilityScoreControllerChanged);
+    _abilityScoreController.dispose();
+    _sheetController?.removeListener(_onSheetControllerUpdated);
+    _sheetController?.dispose();
+    _tabController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final settingsProvider = SettingsScope.maybeOf(context);
+    final activeEdition = _localEditionOverride ??
+        settingsProvider?.settings.rulesEdition ??
+        _rulesEdition;
+
+    if (_localEditionOverride == null && activeEdition != _rulesEdition) {
+      _rulesEdition = activeEdition;
+      _selectedRuleset = activeEdition == DmRulesEdition.v2024
+          ? RulesetVersion.v2024
+          : RulesetVersion.v2014;
+      final char = _character;
+      if (char != null) {
+        _character = char.copyWith(
+          id: EntityId(slug: char.id.slug, ruleset: _selectedRuleset),
+        );
+        _syncSheetController();
+      }
+    }
+
+    _syncTabController();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Icon(Icons.person_pin, color: Colors.cyanAccent),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _isSelectorView || _character == null
+                    ? 'Character Studio'
+                    : _character!.name,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          RulesEditionToggle(
+            currentEdition: _rulesEdition,
+            onEditionChanged: _onRulesEditionChanged,
+          ),
+          const SizedBox(width: 8),
+        ],
+        bottom: TabBar(
+          key: ValueKey('studio_tab_bar_$_hasActiveCharacter'),
+          controller: _tabController,
+          indicatorColor: Colors.cyanAccent,
+          labelColor: Colors.cyanAccent,
+          unselectedLabelColor: Colors.white70,
+          tabs: _hasActiveCharacter
+              ? const [
+                  Tab(icon: Icon(Icons.badge_outlined), text: 'Live Sheet'),
+                  Tab(icon: Icon(Icons.auto_awesome), text: 'Guided Builder'),
+                  Tab(
+                      icon: Icon(Icons.inventory_2_outlined),
+                      text: 'Inventory & Loot'),
+                  Tab(icon: Icon(Icons.upgrade), text: 'Level Up'),
+                ]
+              : const [
+                  Tab(icon: Icon(Icons.badge_outlined), text: 'Live Sheet'),
+                  Tab(icon: Icon(Icons.auto_awesome), text: 'Guided Builder'),
+                ],
+        ),
+      ),
+      body: Column(
+        children: [
+          RoomBannerWidget(),
+          Expanded(
+            child: TabBarView(
+              key: ValueKey('studio_tab_bar_view_$_hasActiveCharacter'),
+              controller: _tabController,
+              children: [
+                _buildLiveSheetTab(theme),
+                _buildGuidedBuilderTab(theme),
+                if (_hasActiveCharacter) ...[
+                  _buildInventoryTab(theme),
+                  _buildLevelUpTab(theme),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static DndClassType? _findClassType(String? slug) {
+    if (slug == null) return null;
+    final s = slug.toLowerCase();
+    for (final c in DndClassType.values) {
+      if (c.name.toLowerCase() == s || c.displayName.toLowerCase() == s)
+        return c;
+    }
+    return null;
+  }
+
+  static SpeciesType _findSpeciesType(String? slug) {
+    if (slug == null) return SpeciesType.human;
+    final s = slug.toLowerCase();
+    if (s.contains('human')) return SpeciesType.human;
+    for (final sp in SpeciesType.values) {
+      if (sp.name.toLowerCase() == s ||
+          sp.displayName.toLowerCase() == s ||
+          s.contains(sp.name.toLowerCase())) return sp;
+    }
+    return SpeciesType.human;
+  }
+
+  // --------------------------------------------------------------------------
+  // TAB 1: LIVE SHEET & REACTIVE STATS
+  // --------------------------------------------------------------------------
+  Widget _buildLiveSheetTab(ThemeData theme) {
+    if (_isSelectorView || _characterRoster.isEmpty) {
+      return _buildCharacterSelectorView(theme);
+    }
+    return _buildActiveLiveSheetView(theme);
+  }
+
+  Widget _buildMiniPill(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        text,
+        style:
+            TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildCharacterSelectorView(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
+    final filteredRoster = _characterRoster.where((c) {
+      if (_rosterRulesetFilter != null && c.ruleset != _rosterRulesetFilter) {
+        return false;
+      }
+      if (_rosterSearchQuery.isEmpty) return true;
+      final q = _rosterSearchQuery.toLowerCase();
+      final nameMatches = c.name.toLowerCase().contains(q);
+      final classMatches = c.progression.classes
+          .any((cls) => cls.classRef.displayName.toLowerCase().contains(q));
+      final speciesMatches = c.speciesRef.displayName.toLowerCase().contains(q);
+      final bgMatches =
+          c.backgroundRef?.displayName.toLowerCase().contains(q) ?? false;
+      return nameMatches || classMatches || speciesMatches || bgMatches;
+    }).toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Roster Banner / Hero Card
+        Card(
+          color: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.cyanAccent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.groups_outlined,
+                      color: Colors.cyanAccent, size: 28),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '5e Character Roster',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Select an adventurer to inspect their live sheet, or manage your party members.',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const Key('reparse_all_roster_button'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.cyanAccent,
+                        side: const BorderSide(color: Colors.cyanAccent),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                      ),
+                      icon: const Icon(Icons.sync, size: 16),
+                      label: const Text('Reparse Roster',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12)),
+                      onPressed: _characterRoster.isEmpty
+                          ? null
+                          : _reparseAllCharacters,
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.cyanAccent.shade700,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      icon: const Icon(Icons.person_add_alt_1, size: 16),
+                      label: const Text('New Hero',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12)),
+                      onPressed: () {
+                        HapticService.selectionTick(context);
+                        _tabController.animateTo(1);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Search Bar
+        TextField(
+          style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: 'Search heroes by name, class, species...',
+            hintStyle: TextStyle(
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                fontSize: 12),
+            prefixIcon: Icon(Icons.search, color: primary, size: 18),
+            filled: true,
+            fillColor: isDark
+                ? const Color(0xFF1E293B)
+                : theme.colorScheme.surfaceContainerHighest,
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (val) => setState(() => _rosterSearchQuery = val.trim()),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Ruleset Filter Chips
+        Row(
+          children: [
+            FilterChip(
+              label: const Text('All Rulesets', style: TextStyle(fontSize: 11)),
+              selected: _rosterRulesetFilter == null,
+              onSelected: (_) => setState(() => _rosterRulesetFilter = null),
+            ),
+            const SizedBox(width: 6),
+            FilterChip(
+              label: const Text('2024 Revised', style: TextStyle(fontSize: 11)),
+              selected: _rosterRulesetFilter == RulesetVersion.v2024,
+              onSelected: (_) =>
+                  setState(() => _rosterRulesetFilter = RulesetVersion.v2024),
+            ),
+            const SizedBox(width: 6),
+            FilterChip(
+              label: const Text('2014 Classic', style: TextStyle(fontSize: 11)),
+              selected: _rosterRulesetFilter == RulesetVersion.v2014,
+              onSelected: (_) =>
+                  setState(() => _rosterRulesetFilter = RulesetVersion.v2014),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        if (filteredRoster.isEmpty)
+          Card(
+            color: const Color(0xFF1E293B),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  children: [
+                    const Icon(Icons.person_off_outlined,
+                        color: Colors.white38, size: 36),
+                    const SizedBox(height: 8),
+                    Text(
+                      _characterRoster.isEmpty
+                          ? 'No characters in roster yet.'
+                          : 'No characters found matching your filter.',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.person_add_alt_1, size: 16),
+                      label: const Text('Create New Character'),
+                      onPressed: () {
+                        HapticService.selectionTick(context);
+                        _tabController.animateTo(1);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          ...filteredRoster.map((hero) {
+            final curCls = hero.progression.classes.firstOrNull;
+            final clsType = curCls != null
+                ? _findClassType(curCls.classRef.slug)
+                : DndClassType.fighter;
+            final isCurrentActive = _character?.id.slug == hero.id.slug;
+            final heroStats = CharacterStatCalculator.compute(hero, _resolver);
+            final heroHomebrewReport =
+                CharacterHomebrewValidator.validate(hero);
+
+            return Card(
+              key: ValueKey('character_card_${hero.id.slug}'),
+              color: const Color(0xFF1E293B),
+              margin: const EdgeInsets.only(bottom: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isCurrentActive ? Colors.cyanAccent : Colors.white12,
+                  width: isCurrentActive ? 1.5 : 1.0,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        RepaintBoundary(
+                          child: SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: DndGlyph.classFeature(
+                                classType: clsType ?? DndClassType.fighter,
+                                size: 44,
+                                isDarkMode: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      hero.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          hero.ruleset == RulesetVersion.v2024
+                                              ? Colors.cyan.shade900
+                                                  .withValues(alpha: 0.6)
+                                              : Colors.amber.shade900
+                                                  .withValues(alpha: 0.6),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      hero.ruleset == RulesetVersion.v2024
+                                          ? '2024'
+                                          : '2014',
+                                      style: TextStyle(
+                                        color:
+                                            hero.ruleset == RulesetVersion.v2024
+                                                ? Colors.cyanAccent
+                                                : Colors.amberAccent,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  if (heroHomebrewReport.hasMissing) ...[
+                                    const SizedBox(width: 8),
+                                    MissingHomebrewBadge(
+                                      character: hero,
+                                      report: heroHomebrewReport,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Level ${hero.totalLevel} ${hero.progression.classes.map((c) => "${c.classRef.displayName} ${c.level}").join(" / ")} • ${hero.speciesRef.displayName} • ${hero.backgroundRef?.displayName ?? "Adventurer"}',
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          key: ValueKey('reparse_character_${hero.id.slug}'),
+                          icon: const Icon(Icons.sync,
+                              color: Colors.cyanAccent, size: 20),
+                          tooltip: 'Reparse Character Sheet',
+                          onPressed: () => _reparseCharacter(hero),
+                        ),
+                        IconButton(
+                          key: ValueKey('delete_character_${hero.id.slug}'),
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.redAccent, size: 20),
+                          tooltip: 'Delete Character',
+                          onPressed: () => _confirmDeleteCharacter(hero),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 16, color: Colors.white12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            _buildMiniPill('AC ${heroStats.armorClass}',
+                                Colors.amberAccent),
+                            _buildMiniPill(
+                                'HP ${hero.resources.currentHp}/${heroStats.maxHp}',
+                                Colors.redAccent),
+                            _buildMiniPill(
+                                'Prof +${heroStats.proficiencyBonus}',
+                                Colors.cyanAccent),
+                            _buildMiniPill('Speed ${hero.baseSpeedFeet}ft',
+                                Colors.greenAccent),
+                          ],
+                        ),
+                        ElevatedButton.icon(
+                          key: ValueKey('open_sheet_${hero.id.slug}'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.cyanAccent.shade700,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            minimumSize: Size.zero,
+                          ),
+                          icon: const Icon(Icons.badge_outlined, size: 14),
+                          label: const Text('Open Sheet',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold)),
+                          onPressed: () => _selectCharacter(hero),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildActiveLiveSheetView(ThemeData theme) {
+    final char = _character;
+    if (char == null) {
+      return _buildCharacterSelectorView(theme);
+    }
+
+    _syncSheetController();
+    final controller = _sheetController;
+    if (controller == null) return const SizedBox.shrink();
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 900;
+
+            if (isWide) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        children: [
+                          CharacterHeaderBanner(
+                            controller: controller,
+                            onSwitchHero: () {
+                              setState(() {
+                                _isSelectorView = true;
+                                _syncTabController();
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 14),
+                          CharacterVitalsHud(controller: controller),
+                          const SizedBox(height: 14),
+                          AbilityScoresRibbon(controller: controller),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 6,
+                      child: CharacterSheetTabs(controller: controller),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  CharacterHeaderBanner(
+                    controller: controller,
+                    onSwitchHero: () {
+                      setState(() {
+                        _isSelectorView = true;
+                        _syncTabController();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  CharacterVitalsHud(controller: controller),
+                  const SizedBox(height: 12),
+                  AbilityScoresRibbon(controller: controller),
+                  const SizedBox(height: 14),
+                  CharacterSheetTabs(controller: controller),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  bool _isSpellcasterClass(String? classSlug, RulesetVersion ruleset) {
+    if (classSlug == null) return false;
+    final slug = classSlug.toLowerCase();
+    if (slug == 'wizard' ||
+        slug == 'cleric' ||
+        slug == 'druid' ||
+        slug == 'bard' ||
+        slug == 'sorcerer' ||
+        slug == 'warlock') {
+      return true;
+    }
+    if (ruleset == RulesetVersion.v2024 && slug == 'ranger') {
+      return true;
+    }
+    return false;
+  }
+
+  SpellClass? _findSpellClass(String? slug) {
+    if (slug == null) return null;
+    return switch (slug.toLowerCase()) {
+      'wizard' => SpellClass.wizard,
+      'cleric' => SpellClass.cleric,
+      'druid' => SpellClass.druid,
+      'bard' => SpellClass.bard,
+      'sorcerer' => SpellClass.sorcerer,
+      'warlock' => SpellClass.warlock,
+      'ranger' => SpellClass.ranger,
+      'paladin' => SpellClass.paladin,
+      _ => null,
+    };
+  }
+
+  AbilityType _getCastingAbility(String? slug) {
+    if (slug == null) return AbilityType.charisma;
+    return switch (slug.toLowerCase()) {
+      'wizard' => AbilityType.intelligence,
+      'cleric' || 'druid' || 'ranger' => AbilityType.wisdom,
+      _ => AbilityType.charisma,
+    };
+  }
+
+  List<String> _getWizardStepTypes() {
+    final curSpecies = _selectedSpecies != null
+        ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)
+        : null;
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+    final hasFeatStep =
+        (is2024 && SrdFeatsLibrary.getOriginFeats().isNotEmpty) ||
+            (curSpecies?.grantsBonusFeat ?? false);
+    final curClass = _selectedClass != null
+        ? SrdClassesLibrary.findBySlug(_selectedClass!,
+            ruleset: _selectedRuleset)
+        : null;
+    final isCaster = _isSpellcasterClass(_selectedClass, _selectedRuleset);
+    final hasSubclass = curClass != null &&
+        curClass.getSubclassLevel(_selectedRuleset) == 1 &&
+        curClass.subclasses.isNotEmpty;
+    final lvl1Decisions =
+        curClass?.getDecisionsForLevel(1, ruleset: _selectedRuleset) ?? [];
+    final hasDecisions = lvl1Decisions.isNotEmpty;
+
+    final preset =
+        SettingsScope.settingsOf(context, listen: false).wizardOrderingPreset;
+
+    final steps = <String>['basics'];
+
+    void addClassBlocks() {
+      steps.add('class');
+      if (hasSubclass) steps.add('subclass');
+      if (hasDecisions) steps.add('class_decisions');
+    }
+
+    switch (preset) {
+      case WizardOrderingPreset.modern2024:
+        addClassBlocks();
+        steps.add('background');
+        steps.add('species');
+        steps.add('scores');
+      case WizardOrderingPreset.attributesFirst:
+        steps.add('scores');
+        addClassBlocks();
+        steps.add('species');
+        steps.add('background');
+      case WizardOrderingPreset.classic2014:
+        steps.add('species');
+        addClassBlocks();
+        steps.add('background');
+        steps.add('scores');
+    }
+
+    if (hasFeatStep) steps.add('feats');
+    if (isCaster) steps.add('spells');
+    steps.add('equipment');
+    steps.add('review');
+    return steps;
+  }
+
+  // --------------------------------------------------------------------------
+  // TAB 2: GUIDED CHARACTER CREATION WIZARD (STEP-BY-STEP)
+  // --------------------------------------------------------------------------
+  Widget _buildGuidedBuilderTab(ThemeData theme) {
+    final curSpecies = _selectedSpecies != null
+        ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)
+        : null;
+    final steps = _getWizardStepTypes();
+    final maxStepIndex = steps.length - 1;
+    if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
+
+    final curClass = _selectedClass != null
+        ? SrdClassesLibrary.findBySlug(_selectedClass!,
+            ruleset: _selectedRuleset)
+        : null;
+    final curBackground = _selectedBackground != null
+        ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!)
+        : null;
+    final allowedClassSkills =
+        curClass != null ? curClass.allowedSkills : <SkillType>[];
+    final allowedSkillCount = curClass?.skillChoiceCount ?? 2;
+    final lvl1Decisions =
+        curClass?.getDecisionsForLevel(1, ruleset: _selectedRuleset) ?? [];
+
+    final currentStepKey = steps[_wizardStep];
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Stepper Progress Header
+        Row(
+          children: List.generate(steps.length, (i) {
+            final isDone = i < _wizardStep;
+            final isCur = i == _wizardStep;
+            return Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                height: 6,
+                decoration: BoxDecoration(
+                  color: isCur
+                      ? Colors.cyanAccent
+                      : (isDone ? Colors.cyan.shade800 : Colors.white12),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 12),
+
+        // Step Content Card
+        Card(
+          color: const Color(0xFF1E293B),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: () {
+              return switch (currentStepKey) {
+                'basics' => _buildStep0Basics(theme),
+                'species' => _buildStep1Species(theme),
+                'class' => _buildStep2Class(
+                    theme, curClass, allowedClassSkills, allowedSkillCount),
+                'subclass' => curClass != null
+                    ? _buildStepSubclass(theme, curClass)
+                    : const SizedBox.shrink(),
+                'class_decisions' => curClass != null
+                    ? _buildStepClassDecisions(theme, curClass, lvl1Decisions)
+                    : const SizedBox.shrink(),
+                'background' => _buildStep3Background(theme, curBackground),
+                'scores' => () {
+                    final curSubrace = _selectedSubrace != null
+                        ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!)
+                        : null;
+                    return AbilityScoreStep(
+                      controller: _abilityScoreController,
+                      curSpecies: curSpecies,
+                      curSubrace: curSubrace,
+                      curBackground: curBackground,
+                      selectedRuleset: _selectedRuleset,
+                      variantHumanBonuses: _variantHumanBonuses,
+                      onVariantHumanBonusesChanged: (set) => setState(() {
+                        _variantHumanBonuses.clear();
+                        _variantHumanBonuses.addAll(set);
+                        _abilityScoreController.setFlexibleAbilityChoices(
+                            _variantHumanBonuses.toList());
+                      }),
+                      backgroundPrimaryBonus: _backgroundPrimaryBonus,
+                      onBackgroundPrimaryBonusChanged: (ab) =>
+                          setState(() => _backgroundPrimaryBonus = ab),
+                      backgroundSecondaryBonus: _backgroundSecondaryBonus,
+                      onBackgroundSecondaryBonusChanged: (ab) =>
+                          setState(() => _backgroundSecondaryBonus = ab),
+                      bonusScores: _calculateBonusScores(
+                          curSpecies, curBackground, _selectedRuleset,
+                          curSubrace: curSubrace),
+                    );
+                  }(),
+                'feats' => _buildStep5Feats(theme),
+                'spells' => curClass != null
+                    ? _buildStepSpells(theme, curClass)
+                    : const SizedBox.shrink(),
+                'equipment' => _buildStep6Equipment(theme),
+                _ =>
+                  _buildStep7Review(theme, curSpecies, curClass, curBackground),
+              };
+            }(),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Navigation Actions
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (_wizardStep > 0)
+              OutlinedButton.icon(
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Previous'),
+                onPressed: () {
+                  HapticService.selectionTick(context);
+                  setState(() => _wizardStep--);
+                },
+              )
+            else
+              const SizedBox.shrink(),
+            if (_wizardStep < maxStepIndex)
+              () {
+                bool canAdvance;
+                switch (currentStepKey) {
+                  case 'basics':
+                    canAdvance = true;
+                  case 'species':
+                    final curSp = _selectedSpecies != null
+                        ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)
+                        : null;
+                    final chosenSub = _selectedSubrace != null
+                        ? curSp?.subraces
+                            .where((s) => s.id.slug == _selectedSubrace)
+                            .firstOrNull
+                        : null;
+                    final hasSubBonuses = chosenSub != null &&
+                        (chosenSub.fixedAbilityBonuses2014.isNotEmpty ||
+                            chosenSub.flexibleAbilityChoiceCount > 0);
+                    final flexCount = hasSubBonuses
+                        ? chosenSub.flexibleAbilityChoiceCount
+                        : (curSp?.flexibleAbilityChoiceCount ?? 0);
+                    final isNon2024 = _selectedRuleset != RulesetVersion.v2024;
+                    final subraceValid = curSp == null ||
+                        curSp.subraces.isEmpty ||
+                        _selectedSubrace != null;
+                    final statsChosenBeforeSpecies =
+                        _abilityScoreController.isAbilityAllocationComplete;
+                    final flexibleValid = !isNon2024 ||
+                        flexCount == 0 ||
+                        !statsChosenBeforeSpecies ||
+                        _variantHumanBonuses.length == flexCount;
+                    canAdvance = _abilityScoreController.hasValidSpecies &&
+                        _abilityScoreController.refundedSkillChoices == 0 &&
+                        subraceValid &&
+                        flexibleValid;
+                  case 'class':
+                    canAdvance = _abilityScoreController.hasValidClass;
+                  case 'subclass':
+                    canAdvance = _wizardSelectedSubclass != null;
+                  case 'class_decisions':
+                    canAdvance = true;
+                  case 'background':
+                    canAdvance = _abilityScoreController.hasValidBackground &&
+                        _abilityScoreController.refundedSkillChoices == 0;
+                  case 'scores':
+                    canAdvance =
+                        _abilityScoreController.isAbilityAllocationComplete;
+                  case 'feats':
+                    canAdvance = _selectedFeat != null;
+                  case 'spells':
+                    canAdvance = true;
+                  case 'equipment':
+                    canAdvance = _selectedStartingEquipmentPreset != null;
+                  default:
+                    canAdvance = true;
+                }
+
+                return ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: canAdvance
+                        ? Colors.cyanAccent.shade700
+                        : Colors.grey.shade800,
+                    foregroundColor: canAdvance ? Colors.black : Colors.white38,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                  ),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Next Step',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  onPressed: canAdvance
+                      ? () {
+                          HapticService.selectionTick(context);
+                          setState(() => _wizardStep++);
+                        }
+                      : null,
+                );
+              }()
+            else
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _abilityScoreController.isReadyForCompilation
+                      ? Colors.greenAccent.shade700
+                      : Colors.grey.shade800,
+                  foregroundColor: _abilityScoreController.isReadyForCompilation
+                      ? Colors.black
+                      : Colors.white38,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                ),
+                icon: const Icon(Icons.check_circle),
+                label: const Text('CREATE & LAUNCH SHEET',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: _abilityScoreController.isReadyForCompilation
+                    ? () {
+                        HapticService.heavyImpact(context);
+                        _finalizeCreatedCharacter();
+                      }
+                    : null,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep0Basics(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Step 1: Character Identity & Edition',
+            style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+        const SizedBox(height: 6),
+        const Text(
+            'Enter your character\'s name and pick the 5e rules standard.',
+            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Character Name',
+                  hintText: 'e.g. Valeros Ironclad',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filled(
+              icon: const Icon(Icons.casino),
+              tooltip: 'Random Name Suggestion',
+              onPressed: () {
+                HapticService.selectionTick(context);
+                setState(() {
+                  _nameController.text = _suggestedNames[
+                      math.Random().nextInt(_suggestedNames.length)];
+                });
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Text('Ruleset Standard:',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        SegmentedButton<RulesetVersion>(
+          segments: const [
+            ButtonSegment(
+              value: RulesetVersion.v2024,
+              label: Text('2024 SRD (5.2 Revised)'),
+              icon: Icon(Icons.auto_awesome),
+            ),
+            ButtonSegment(
+              value: RulesetVersion.v2014,
+              label: Text('2014 SRD (5.1 Classic)'),
+              icon: Icon(Icons.history_edu),
+            ),
+          ],
+          selected: {_selectedRuleset},
+          onSelectionChanged: (set) {
+            final targetRuleset = set.first;
+            final targetEdition = targetRuleset == RulesetVersion.v2024
+                ? DmRulesEdition.v2024
+                : DmRulesEdition.v2014;
+            _onRulesEditionChanged(targetEdition);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep1Species(ThemeData theme) {
+    final speciesList =
+        SrdSpeciesLibrary.getSpeciesForRuleset(_selectedRuleset);
+    final selectedSpeciesObj = _selectedSpecies != null
+        ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)
+        : null;
+    final edition = _selectedRuleset == RulesetVersion.v2024
+        ? DmRulesEdition.v2024
+        : DmRulesEdition.v2014;
+    final speciesBonusSkillCount =
+        SkillTraitResolver.getSpeciesBonusSkillCount(_selectedSpecies, edition);
+    final curClass = _selectedClass != null
+        ? SrdClassesLibrary.findBySlug(_selectedClass!,
+            ruleset: _selectedRuleset)
+        : null;
+    final curBackground = _selectedBackground != null
+        ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!)
+        : null;
+
+    final selectedSubraceObj =
+        (_selectedSubrace != null && selectedSpeciesObj != null)
+            ? selectedSpeciesObj.subraces
+                .where((s) => s.id.slug == _selectedSubrace)
+                .firstOrNull
+            : null;
+    final subFlexCount = selectedSubraceObj?.flexibleAbilityChoiceCount ?? 0;
+    final hasSubBonuses = selectedSubraceObj != null &&
+        (selectedSubraceObj.fixedAbilityBonuses2014.isNotEmpty ||
+            subFlexCount > 0);
+    final flexibleCount = hasSubBonuses
+        ? subFlexCount
+        : (selectedSpeciesObj?.flexibleAbilityChoiceCount ?? 0);
+    final flexibleBonusValue = (selectedSubraceObj != null &&
+            selectedSubraceObj.flexibleAbilityBonus > 0)
+        ? selectedSubraceObj.flexibleAbilityBonus
+        : (selectedSpeciesObj?.flexibleAbilityBonusValue ?? 1);
+    final fixedBonuses = hasSubBonuses
+        ? selectedSubraceObj.fixedAbilityBonuses2014
+        : (selectedSpeciesObj?.fixedAbilityBonuses2014 ?? const {});
+    final flexiblePool = hasSubBonuses
+        ? selectedSubraceObj.flexibleAbilityPool
+        : selectedSpeciesObj?.flexibleAbilityPool;
+
+    final spReport = curClass != null
+        ? SkillTraitResolver.resolveSkills(
+            speciesSlug: _selectedSpecies,
+            subraceSlug: _selectedSubrace,
+            backgroundSlug: _selectedBackground,
+            classSlug: curClass.id.slug,
+            requestedClassSkills: _wizardSelectedSkills,
+            compensatoryPicks: _compensatorySkillPicks,
+            speciesBonusSkills: _speciesBonusSkillPicks,
+            edition: edition,
+          )
+        : null;
+    final alreadyTaken = spReport?.resolvedProficiencies.keys.toSet() ??
+        {
+          ..._wizardSelectedSkills,
+          ..._abilityScoreController.grantedSpeciesSkills
+        };
+    final eligibleBonusSkills = SkillType.values.where((sk) {
+      return !alreadyTaken.contains(sk) || _speciesBonusSkillPicks.contains(sk);
+    }).toList();
+
+    final filteredSpecies = speciesList.where((sp) {
+      if (_speciesSearchQuery.isEmpty) return true;
+      final q = _speciesSearchQuery.toLowerCase();
+      final nameMatches = sp.name.toLowerCase().contains(q);
+      final slugMatches = sp.id.slug.toLowerCase().contains(q);
+      final traitsMatch = sp.traitsMarkdown.toLowerCase().contains(q);
+      final speedMatch = sp.speed.toLowerCase().contains(q);
+      final summaryMatch =
+          sp.abilityScoreSummary?.toLowerCase().contains(q) ?? false;
+      final subraceMatches = sp.subraces.any((sub) =>
+          sub.name.toLowerCase().contains(q) ||
+          sub.traitsMarkdown.toLowerCase().contains(q));
+      return nameMatches ||
+          slugMatches ||
+          traitsMatch ||
+          speedMatch ||
+          summaryMatch ||
+          subraceMatches;
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Step 2: Choose Species / Race',
+            style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+        const SizedBox(height: 6),
+        const Text(
+            'Select your character lineage from standard SRD and imported homebrew species.',
+            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        const SizedBox(height: 12),
+
+        // Search Bar
+        TextField(
+          decoration: InputDecoration(
+            labelText: 'Search Species / Races',
+            hintText: 'Filter by species name, subrace, traits, speed...',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _speciesSearchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => setState(() => _speciesSearchQuery = ''),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) => setState(() => _speciesSearchQuery = val.trim()),
+        ),
+        const SizedBox(height: 12),
+        SkillRefundAlertSection(controller: _abilityScoreController),
+        if (filteredSpecies.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No species found matching "$_speciesSearchQuery"',
+                style: const TextStyle(
+                    color: Colors.white54, fontStyle: FontStyle.italic),
+              ),
+            ),
+          )
+        else
+          ...filteredSpecies.map((sp) {
+            final isSelected = _selectedSpecies == sp.id.slug;
+            final spType = _findSpeciesType(sp.id.slug);
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.cyan.shade900.withValues(alpha: 0.3)
+                    : Colors.black26,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isSelected ? Colors.cyanAccent : Colors.white12,
+                  width: isSelected ? 1.5 : 1.0,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isSelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
+                            color:
+                                isSelected ? Colors.cyanAccent : Colors.white54,
+                          ),
+                          const SizedBox(width: 8),
+                          RepaintBoundary(
+                            child: SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: DndGlyph.species(
+                                  speciesType: spType,
+                                  size: 32,
+                                  isDarkMode: true,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      title: Text(sp.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(
+                          'Speed: ${sp.getSpeedForEdition(_rulesEdition)} • Size: ${sp.size}\n${sp.abilityScoreSummary ?? ""}',
+                          style: const TextStyle(
+                              fontSize: 11.5, color: Colors.white70)),
+                      onTap: () {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          final prevSpecies = _selectedSpecies;
+                          _selectedSpecies = sp.id.slug;
+                          Subrace? autoSubrace;
+                          if (_speciesSearchQuery.isNotEmpty) {
+                            final q = _speciesSearchQuery.toLowerCase();
+                            autoSubrace = sp.subraces
+                                .where(
+                                    (sub) => sub.name.toLowerCase().contains(q))
+                                .firstOrNull;
+                          }
+                          _selectedSubrace = autoSubrace?.id.slug ??
+                              (sp.subraces.isNotEmpty
+                                  ? sp.subraces.first.id.slug
+                                  : null);
+                          _abilityScoreController.setSpecies(
+                            EntityReference(
+                              refType: EntityType.species,
+                              slug: sp.id.slug,
+                              displayName: sp.name,
+                              customProperties: {
+                                if (sp.flexibleAbilityPool != null)
+                                  'flexibleAbilityPool': sp.flexibleAbilityPool,
+                                if (sp.flexibleAbilityChoiceCount > 0)
+                                  'flexibleAbilityCount':
+                                      sp.flexibleAbilityChoiceCount,
+                                if (sp.flexibleAbilityBonus > 0)
+                                  'flexibleAbilityBonus':
+                                      sp.flexibleAbilityBonus,
+                                if (sp.fixedAbilityBonuses2014.isNotEmpty)
+                                  'fixedAbilityBonuses':
+                                      sp.fixedAbilityBonuses2014,
+                              },
+                            ),
+                          );
+                          if (_selectedSubrace != null) {
+                            final chosenSub = sp.subraces.firstWhere(
+                                (s) => s.id.slug == _selectedSubrace);
+                            _abilityScoreController.setSubrace(
+                              EntityReference(
+                                refType: EntityType.species,
+                                slug: chosenSub.id.slug,
+                                displayName: chosenSub.name,
+                                customProperties: {
+                                  if (chosenSub.flexibleAbilityPool != null)
+                                    'flexibleAbilityPool':
+                                        chosenSub.flexibleAbilityPool,
+                                  if (chosenSub.flexibleAbilityCount > 0)
+                                    'flexibleAbilityCount':
+                                        chosenSub.flexibleAbilityCount,
+                                  if (chosenSub.flexibleAbilityBonus > 0)
+                                    'flexibleAbilityBonus':
+                                        chosenSub.flexibleAbilityBonus,
+                                  if (chosenSub.fixedAbilityBonuses.isNotEmpty)
+                                    'fixedAbilityBonuses':
+                                        chosenSub.fixedAbilityBonuses,
+                                },
+                              ),
+                            );
+                          }
+                          if (prevSpecies != sp.id.slug) {
+                            _speciesBonusSkillPicks.clear();
+                          }
+                          final is2014 =
+                              _selectedRuleset == RulesetVersion.v2014;
+                          final chosenSub = _selectedSubrace != null
+                              ? sp.subraces
+                                  .where((s) => s.id.slug == _selectedSubrace)
+                                  .firstOrNull
+                              : null;
+                          final hasSubAbilities = chosenSub != null &&
+                              (chosenSub.fixedAbilityBonuses2014.isNotEmpty ||
+                                  chosenSub.flexibleAbilityChoiceCount > 0);
+                          final flexCount = is2014
+                              ? (hasSubAbilities
+                                  ? chosenSub.flexibleAbilityChoiceCount
+                                  : sp.flexibleAbilityChoiceCount)
+                              : 0;
+                          if (flexCount == 0) {
+                            _variantHumanBonuses.clear();
+                          } else {
+                            final fixed = hasSubAbilities
+                                ? chosenSub.fixedAbilityBonuses2014
+                                : sp.fixedAbilityBonuses2014;
+                            final pool = hasSubAbilities
+                                ? chosenSub.flexibleAbilityPool
+                                : sp.flexibleAbilityPool;
+                            final validAbilities = AbilityType.values
+                                .where((a) =>
+                                    !fixed.containsKey(a.name.toLowerCase()))
+                                .where((a) =>
+                                    pool == null ||
+                                    pool.isEmpty ||
+                                    pool.any((p) {
+                                      final pStr = p.toLowerCase().trim();
+                                      final prefix = pStr.length > 3
+                                          ? pStr.substring(0, 3)
+                                          : pStr;
+                                      return a.name
+                                          .toLowerCase()
+                                          .startsWith(prefix);
+                                    }))
+                                .toList();
+                            _variantHumanBonuses.retainAll(validAbilities);
+                            while (_variantHumanBonuses.length > flexCount) {
+                              _variantHumanBonuses
+                                  .remove(_variantHumanBonuses.last);
+                            }
+                          }
+                          _abilityScoreController.setFlexibleAbilityChoices(
+                              _variantHumanBonuses.toList());
+
+                          final is2024 =
+                              _selectedRuleset == RulesetVersion.v2024;
+                          final hasFeatStep = is2024 || sp.grantsBonusFeat;
+                          final maxStepIndex = hasFeatStep ? 7 : 6;
+                          if (_wizardStep > maxStepIndex)
+                            _wizardStep = maxStepIndex;
+                        });
+                      },
+                    ),
+                    if (isSelected && sp.subraces.isNotEmpty) ...[
+                      const Divider(height: 1, color: Colors.cyanAccent),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.account_tree_outlined,
+                                    size: 16, color: Colors.cyanAccent),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Choose Subspecies / Lineage (${sp.subraces.length} available):',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.5,
+                                      color: Colors.cyanAccent),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...sp.subraces.map((sub) {
+                              final isSubSelected =
+                                  _selectedSubrace == sub.id.slug;
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 6),
+                                child: Material(
+                                  color: isSubSelected
+                                      ? Colors.cyan.shade900
+                                          .withValues(alpha: 0.5)
+                                      : Colors.black12,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    side: BorderSide(
+                                      color: isSubSelected
+                                          ? Colors.cyanAccent
+                                          : Colors.white10,
+                                      width: isSubSelected ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    dense: true,
+                                    visualDensity: VisualDensity.compact,
+                                    leading: Icon(
+                                      isSubSelected
+                                          ? Icons.radio_button_checked
+                                          : Icons.radio_button_unchecked,
+                                      size: 18,
+                                      color: isSubSelected
+                                          ? Colors.cyanAccent
+                                          : Colors.white38,
+                                    ),
+                                    title: Text(
+                                      sub.name,
+                                      style: TextStyle(
+                                        fontWeight: isSubSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        fontSize: 13,
+                                        color: isSubSelected
+                                            ? Colors.white
+                                            : Colors.white70,
+                                      ),
+                                    ),
+                                    subtitle: ((sub.abilityScoreSummary
+                                                    ?.isNotEmpty ==
+                                                true) ||
+                                            (sub.speed?.isNotEmpty == true) ||
+                                            (sub.darkvision != null &&
+                                                sub.darkvision! > 0) ||
+                                            sub.traitsMarkdown.isNotEmpty)
+                                        ? Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              if ((sub.abilityScoreSummary
+                                                          ?.isNotEmpty ==
+                                                      true) ||
+                                                  (sub.speed?.isNotEmpty ==
+                                                      true) ||
+                                                  (sub.darkvision != null &&
+                                                      sub.darkvision! > 0)) ...[
+                                                const SizedBox(height: 4),
+                                                Wrap(
+                                                  spacing: 6,
+                                                  runSpacing: 4,
+                                                  children: [
+                                                    if (sub.abilityScoreSummary
+                                                            ?.isNotEmpty ==
+                                                        true)
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 6,
+                                                                vertical: 2),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors
+                                                              .cyanAccent
+                                                              .withValues(
+                                                                  alpha: 0.15),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(4),
+                                                          border: Border.all(
+                                                              color: Colors
+                                                                  .cyanAccent
+                                                                  .withValues(
+                                                                      alpha:
+                                                                          0.4)),
+                                                        ),
+                                                        child: Text(
+                                                          sub.abilityScoreSummary!,
+                                                          style: const TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Colors
+                                                                  .cyanAccent),
+                                                        ),
+                                                      ),
+                                                    if (sub.speed?.isNotEmpty ==
+                                                        true)
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 6,
+                                                                vertical: 2),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors
+                                                              .greenAccent
+                                                              .withValues(
+                                                                  alpha: 0.15),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(4),
+                                                          border: Border.all(
+                                                              color: Colors
+                                                                  .greenAccent
+                                                                  .withValues(
+                                                                      alpha:
+                                                                          0.4)),
+                                                        ),
+                                                        child: Text(
+                                                          'Speed ${sub.speed!.contains("ft") ? sub.speed : "${sub.speed} ft."}',
+                                                          style: const TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Colors
+                                                                  .greenAccent),
+                                                        ),
+                                                      ),
+                                                    if (sub.darkvision !=
+                                                            null &&
+                                                        sub.darkvision! > 0)
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 6,
+                                                                vertical: 2),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors
+                                                              .purpleAccent
+                                                              .withValues(
+                                                                  alpha: 0.15),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(4),
+                                                          border: Border.all(
+                                                              color: Colors
+                                                                  .purpleAccent
+                                                                  .withValues(
+                                                                      alpha:
+                                                                          0.4)),
+                                                        ),
+                                                        child: Text(
+                                                          'Darkvision ${sub.darkvision} ft.',
+                                                          style: const TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Colors
+                                                                  .purpleAccent),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ],
+                                              if (sub.traitsMarkdown
+                                                  .isNotEmpty) ...[
+                                                const SizedBox(height: 6),
+                                                FormattedMarkdownText(
+                                                  sub.traitsMarkdown,
+                                                  style: const TextStyle(
+                                                      fontSize: 11,
+                                                      color: Colors.white70),
+                                                  maxLines: 3,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ],
+                                          )
+                                        : null,
+                                    onTap: () {
+                                      HapticService.selectionTick(context);
+                                      setState(() {
+                                        _selectedSubrace = sub.id.slug;
+                                        _abilityScoreController.setSubrace(
+                                          EntityReference(
+                                            refType: EntityType.species,
+                                            slug: sub.id.slug,
+                                            displayName: sub.name,
+                                            customProperties: {
+                                              if (sub.flexibleAbilityPool !=
+                                                  null)
+                                                'flexibleAbilityPool':
+                                                    sub.flexibleAbilityPool,
+                                              if (sub.flexibleAbilityCount > 0)
+                                                'flexibleAbilityCount':
+                                                    sub.flexibleAbilityCount,
+                                              if (sub.flexibleAbilityBonus > 0)
+                                                'flexibleAbilityBonus':
+                                                    sub.flexibleAbilityBonus,
+                                              if (sub.fixedAbilityBonuses
+                                                  .isNotEmpty)
+                                                'fixedAbilityBonuses':
+                                                    sub.fixedAbilityBonuses,
+                                            },
+                                          ),
+                                        );
+                                        if (_selectedRuleset ==
+                                            RulesetVersion.v2014) {
+                                          final flexCount =
+                                              sub.flexibleAbilityChoiceCount > 0
+                                                  ? sub
+                                                      .flexibleAbilityChoiceCount
+                                                  : sp.flexibleAbilityChoiceCount;
+                                          if (flexCount == 0) {
+                                            _variantHumanBonuses.clear();
+                                          } else {
+                                            final fixed = (sub
+                                                        .fixedAbilityBonuses2014
+                                                        .isNotEmpty ||
+                                                    sub.flexibleAbilityChoiceCount >
+                                                        0)
+                                                ? sub.fixedAbilityBonuses2014
+                                                : sp.fixedAbilityBonuses2014;
+                                            final pool =
+                                                sub.flexibleAbilityPool ??
+                                                    sp.flexibleAbilityPool;
+                                            final validAbilities = AbilityType
+                                                .values
+                                                .where((a) =>
+                                                    !fixed.containsKey(
+                                                        a.name.toLowerCase()))
+                                                .where((a) =>
+                                                    pool == null ||
+                                                    pool.isEmpty ||
+                                                    pool.any((p) {
+                                                      final pStr = p
+                                                          .toLowerCase()
+                                                          .trim();
+                                                      final prefix =
+                                                          pStr.length > 3
+                                                              ? pStr.substring(
+                                                                  0, 3)
+                                                              : pStr;
+                                                      return a.name
+                                                          .toLowerCase()
+                                                          .startsWith(prefix);
+                                                    }))
+                                                .toList();
+                                            _variantHumanBonuses
+                                                .retainAll(validAbilities);
+                                            while (_variantHumanBonuses.length >
+                                                flexCount) {
+                                              _variantHumanBonuses.remove(
+                                                  _variantHumanBonuses.last);
+                                            }
+                                          }
+                                          _abilityScoreController
+                                              .setFlexibleAbilityChoices(
+                                                  _variantHumanBonuses
+                                                      .toList());
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (isSelected) ...[
+                      // 2014 Racial Attributes & Lineage Flexible Choices
+                      if (_selectedRuleset == RulesetVersion.v2014 &&
+                          flexibleCount > 0) ...[
+                        const Divider(height: 1, color: Colors.cyanAccent),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color:
+                                  Colors.cyan.shade900.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _variantHumanBonuses.length ==
+                                        flexibleCount
+                                    ? Colors.greenAccent
+                                    : Colors.cyanAccent.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${sp.name}${selectedSubraceObj != null ? " (${selectedSubraceObj.name})" : ""} Lineage Ability Choices (+$flexibleBonusValue):',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.cyanAccent,
+                                            fontSize: 13),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${_variantHumanBonuses.length} / $flexibleCount selected',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: _variantHumanBonuses.length ==
+                                                flexibleCount
+                                            ? Colors.greenAccent
+                                            : Colors.amberAccent,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Select $flexibleCount different ability score${flexibleCount > 1 ? 's' : ''} to receive a +$flexibleBonusValue bonus:',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: Colors.white70),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 6,
+                                  children: AbilityType.values.map((ab) {
+                                    final isFixed = fixedBonuses
+                                        .containsKey(ab.name.toLowerCase());
+                                    final inPool = flexiblePool == null ||
+                                        flexiblePool.isEmpty ||
+                                        flexiblePool.any((p) {
+                                          final pStr = p.toLowerCase().trim();
+                                          final prefix = pStr.length > 3
+                                              ? pStr.substring(0, 3)
+                                              : pStr;
+                                          return ab.name
+                                              .toLowerCase()
+                                              .startsWith(prefix);
+                                        });
+                                    if (!isFixed && !inPool)
+                                      return const SizedBox.shrink();
+
+                                    final isChosen =
+                                        _variantHumanBonuses.contains(ab);
+                                    return FilterChip(
+                                      label: Text(isFixed
+                                          ? '${ab.name.toUpperCase()} (+${fixedBonuses[ab.name.toLowerCase()]} Fixed)'
+                                          : '${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
+                                      selected: isChosen,
+                                      selectedColor: Colors.cyanAccent
+                                          .withValues(alpha: 0.3),
+                                      checkmarkColor: Colors.cyanAccent,
+                                      onSelected: isFixed
+                                          ? null
+                                          : (selected) {
+                                              HapticService.selectionTick(
+                                                  context);
+                                              setState(() {
+                                                if (selected) {
+                                                  while (_variantHumanBonuses
+                                                              .length >=
+                                                          flexibleCount &&
+                                                      _variantHumanBonuses
+                                                          .isNotEmpty) {
+                                                    _variantHumanBonuses.remove(
+                                                        _variantHumanBonuses
+                                                            .first);
+                                                  }
+                                                  _variantHumanBonuses.add(ab);
+                                                } else {
+                                                  _variantHumanBonuses
+                                                      .remove(ab);
+                                                }
+                                                _abilityScoreController
+                                                    .setFlexibleAbilityChoices(
+                                                        _variantHumanBonuses
+                                                            .toList());
+                                              });
+                                            },
+                                    );
+                                  }).toList(),
+                                ),
+                                if (_wizardBaseScores.strength > 0) ...[
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Current Ability Totals (allocated base + lineage bonuses):',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white70),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 4,
+                                    children: AbilityType.values.map((ab) {
+                                      final base =
+                                          _wizardBaseScores.getScore(ab);
+                                      final fixedAmt =
+                                          fixedBonuses[ab.name.toLowerCase()] ??
+                                              0;
+                                      final flexAmt =
+                                          _variantHumanBonuses.contains(ab)
+                                              ? flexibleBonusValue
+                                              : 0;
+                                      final bonusAmt = fixedAmt + flexAmt;
+                                      final total = base + bonusAmt;
+                                      final mod = (total - 10) ~/ 2;
+                                      final modStr =
+                                          mod >= 0 ? '+$mod' : '$mod';
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: bonusAmt > 0
+                                              ? Colors.cyan.shade900
+                                                  .withValues(alpha: 0.4)
+                                              : Colors.black26,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          border: Border.all(
+                                              color: bonusAmt > 0
+                                                  ? Colors.cyanAccent
+                                                      .withValues(alpha: 0.5)
+                                                  : Colors.white12),
+                                        ),
+                                        child: Text(
+                                          '${ab.name.substring(0, 3).toUpperCase()}: $total ($modStr)${bonusAmt > 0 ? ' [+$bonusAmt]' : ''}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: bonusAmt > 0
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            color: bonusAmt > 0
+                                                ? Colors.cyanAccent
+                                                : Colors.white70,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      // Species Flexible Bonus Skills (e.g. 2024 Human Skillful, 2014 Variant Human, Half-Elf Skill Versatility)
+                      if (speciesBonusSkillCount > 0) ...[
+                        const Divider(height: 1, color: Colors.tealAccent),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.tealAccent.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _speciesBonusSkillPicks.length ==
+                                        speciesBonusSkillCount
+                                    ? Colors.greenAccent
+                                    : Colors.tealAccent.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Species Bonus Skills (${sp.name}):',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: Colors.tealAccent),
+                                    ),
+                                    Text(
+                                      '${_speciesBonusSkillPicks.length} / $speciesBonusSkillCount selected',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: _speciesBonusSkillPicks.length ==
+                                                speciesBonusSkillCount
+                                            ? Colors.greenAccent
+                                            : Colors.amberAccent,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Your lineage grants $speciesBonusSkillCount skill proficiency choice${speciesBonusSkillCount > 1 ? 's' : ''}:',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: Colors.white70),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: eligibleBonusSkills.map((sk) {
+                                    final isChosen =
+                                        _speciesBonusSkillPicks.contains(sk);
+                                    return FilterChip(
+                                      label: Text(sk.displayName,
+                                          style: const TextStyle(fontSize: 12)),
+                                      selected: isChosen,
+                                      selectedColor: Colors.tealAccent
+                                          .withValues(alpha: 0.3),
+                                      onSelected: (selected) {
+                                        HapticService.selectionTick(context);
+                                        setState(() {
+                                          if (selected) {
+                                            if (_speciesBonusSkillPicks.length <
+                                                speciesBonusSkillCount) {
+                                              _speciesBonusSkillPicks.add(sk);
+                                            } else {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                      'Cannot select more than $speciesBonusSkillCount species bonus skill(s).'),
+                                                  duration: const Duration(
+                                                      seconds: 2),
+                                                ),
+                                              );
+                                            }
+                                          } else {
+                                            _speciesBonusSkillPicks.remove(sk);
+                                          }
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      // Dwarf Tools / Bonus Languages
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: _buildSpeciesProficienciesPrompt(sp),
+                      ),
+                      const SizedBox(height: 8),
+                      // Species Racial Bonus Summary
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        child:
+                            _buildSpeciesRacialBonusSummary(sp, curBackground),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildSpeciesProficienciesPrompt(Race sp) {
+    final spSlug = sp.id.slug.toLowerCase();
+    final is2014 = _selectedRuleset == RulesetVersion.v2014;
+    final isDwarf = spSlug.contains('dwarf');
+    final hasBonusLang = is2014 &&
+        (spSlug == 'human' ||
+            spSlug == 'human-variant' ||
+            spSlug.contains('half-elf'));
+
+    if (!isDwarf && !hasBonusLang) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isDwarf) ...[
+            const Row(
+              children: [
+                Icon(Icons.handyman, size: 16, color: Colors.amberAccent),
+                SizedBox(width: 6),
+                Text('Dwarf Tool Proficiency:',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Colors.amberAccent)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+                'Gain proficiency with the artisan\'s tools of your choice: Smith\'s Tools, Brewer\'s Supplies, or Mason\'s Tools.',
+                style: TextStyle(fontSize: 11.5, color: Colors.white70)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              children: [
+                'Smith\'s Tools',
+                'Brewer\'s Supplies',
+                'Mason\'s Tools'
+              ].map((tool) {
+                final isChosen = (_dwarfToolChoice ?? 'Smith\'s Tools') == tool;
+                return ChoiceChip(
+                  label: Text(tool, style: const TextStyle(fontSize: 11)),
+                  selected: isChosen,
+                  selectedColor: Colors.amberAccent.withValues(alpha: 0.3),
+                  onSelected: (selected) {
+                    if (selected) {
+                      HapticService.selectionTick(context);
+                      setState(() => _dwarfToolChoice = tool);
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+            if (hasBonusLang) const Divider(height: 16),
+          ],
+          if (hasBonusLang) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.translate, size: 16, color: Colors.cyanAccent),
+                    SizedBox(width: 6),
+                    Text('Species Bonus Language:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.cyanAccent)),
+                  ],
+                ),
+                Text(
+                  '${_speciesBonusLanguages.length} / 1 languages selected',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: _speciesBonusLanguages.isNotEmpty
+                        ? Colors.greenAccent
+                        : Colors.amberAccent,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text('Select 1 additional language granted by your lineage:',
+                style: TextStyle(fontSize: 11.5, color: Colors.white70)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                'Elvish',
+                'Dwarvish',
+                'Giant',
+                'Gnomish',
+                'Goblin',
+                'Halfling',
+                'Orc',
+                'Draconic',
+                'Celestial',
+                'Undercommon',
+              ].map((lang) {
+                final isChosen = _speciesBonusLanguages.contains(lang);
+                return FilterChip(
+                  label: Text(lang, style: const TextStyle(fontSize: 11)),
+                  selected: isChosen,
+                  selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      _speciesBonusLanguages.clear();
+                      if (selected) {
+                        _speciesBonusLanguages.add(lang);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassToolsPrompt(CharacterClass curClass) {
+    final clSlug = curClass.id.slug.toLowerCase();
+    final isBard = clSlug == 'bard';
+    final isMonk = clSlug == 'monk';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade900.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.construction,
+                  size: 16, color: Colors.amberAccent),
+              const SizedBox(width: 6),
+              Text(
+                isBard
+                    ? 'Bard Musical Instruments (Select 3):'
+                    : (isMonk
+                        ? 'Monk Tool / Instrument (Select 1):'
+                        : 'Class Tools & Dialects:'),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.amberAccent),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (isBard) ...[
+            const Text('Choose three musical instruments of your choice:',
+                style: TextStyle(fontSize: 11.5, color: Colors.white70)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: SrdProficienciesLibrary.musicalInstruments.map((inst) {
+                final isChosen = _classBonusTools.contains(inst);
+                return FilterChip(
+                  label: Text(inst, style: const TextStyle(fontSize: 11)),
+                  selected: isChosen,
+                  selectedColor: Colors.amberAccent.withValues(alpha: 0.3),
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      if (selected) {
+                        if (_classBonusTools.length < 3) {
+                          _classBonusTools.add(inst);
+                        }
+                      } else {
+                        _classBonusTools.remove(inst);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ] else if (isMonk) ...[
+            const Text('Choose one artisan\'s tool or musical instrument:',
+                style: TextStyle(fontSize: 11.5, color: Colors.white70)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                ...SrdProficienciesLibrary.artisansTools.take(6),
+                ...SrdProficienciesLibrary.musicalInstruments.take(4),
+              ].map((tool) {
+                final isChosen = _classBonusTools.contains(tool);
+                return FilterChip(
+                  label: Text(tool, style: const TextStyle(fontSize: 11)),
+                  selected: isChosen,
+                  selectedColor: Colors.amberAccent.withValues(alpha: 0.3),
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      _classBonusTools.clear();
+                      if (selected) {
+                        _classBonusTools.add(tool);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ] else if (clSlug == 'rogue') ...[
+            const Text(
+                'Granted: Thieves\' Tools & Thieves\' Cant (Secret Dialect)',
+                style: TextStyle(fontSize: 12, color: Colors.white70)),
+          ] else if (clSlug == 'druid') ...[
+            const Text('Granted: Herbalism Kit & Druidic (Secret Dialect)',
+                style: TextStyle(fontSize: 12, color: Colors.white70)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpeciesRacialBonusSummary(Race sp, Background? curBackground) {
+    final curSub = _selectedSubrace != null
+        ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!)
+        : null;
+    final bonuses = _calculateBonusScores(sp, curBackground, _selectedRuleset,
+        curSubrace: curSub);
+    final hasBaseScores = _abilityScoreController.isAbilityAllocationComplete ||
+        _abilityScoreController.hasValidScores;
+    final baseScores = _wizardBaseScores;
+
+    final bonusEntries = <String>[];
+    if (bonuses.strength > 0) bonusEntries.add('+${bonuses.strength} STR');
+    if (bonuses.dexterity > 0) bonusEntries.add('+${bonuses.dexterity} DEX');
+    if (bonuses.constitution > 0)
+      bonusEntries.add('+${bonuses.constitution} CON');
+    if (bonuses.intelligence > 0)
+      bonusEntries.add('+${bonuses.intelligence} INT');
+    if (bonuses.wisdom > 0) bonusEntries.add('+${bonuses.wisdom} WIS');
+    if (bonuses.charisma > 0) bonusEntries.add('+${bonuses.charisma} CHA');
+
+    final bonusSummaryText =
+        bonusEntries.isNotEmpty ? bonusEntries.join(', ') : 'None';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.fitness_center,
+                  color: Colors.cyanAccent, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Racial Attribute Modifiers (${sp.name}): $bonusSummaryText',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Colors.cyanAccent),
+                ),
+              ),
+            ],
+          ),
+          if (hasBaseScores) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Base Scores + Racial Bonuses = Resulting Attributes:',
+              style: TextStyle(fontSize: 11.5, color: Colors.white70),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: AbilityType.values.map((ab) {
+                final base = baseScores.getScore(ab);
+                final bonus = bonuses.getScore(ab);
+                final total = base + bonus;
+                final mod = (total - 10) ~/ 2;
+                final modStr = mod >= 0 ? '+$mod' : '$mod';
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: bonus > 0
+                        ? Colors.cyan.shade900.withValues(alpha: 0.3)
+                        : Colors.black26,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: bonus > 0
+                            ? Colors.cyanAccent.withValues(alpha: 0.5)
+                            : Colors.white12),
+                  ),
+                  child: Text(
+                    '${ab.name.substring(0, 3).toUpperCase()}: $total ($modStr)${bonus > 0 ? ' [+$bonus]' : ''}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight:
+                          bonus > 0 ? FontWeight.bold : FontWeight.normal,
+                      color: bonus > 0 ? Colors.cyanAccent : Colors.white70,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep2Class(ThemeData theme, CharacterClass? curClass,
+      List<SkillType> allowedSkills, int allowedCount) {
+    final curClassType = _findClassType(_selectedClass);
+    final edition = _selectedRuleset == RulesetVersion.v2024
+        ? DmRulesEdition.v2024
+        : DmRulesEdition.v2014;
+
+    // Resolve skills through the rules engine to detect collisions and compensatory picks
+    final skillReport = curClass != null
+        ? SkillTraitResolver.resolveSkills(
+            speciesSlug: _selectedSpecies,
+            subraceSlug: _selectedSubrace,
+            backgroundSlug: _selectedBackground,
+            classSlug: curClass.id.slug,
+            requestedClassSkills: _wizardSelectedSkills,
+            compensatoryPicks: _compensatorySkillPicks,
+            speciesBonusSkills: _speciesBonusSkillPicks,
+            edition: edition,
+          )
+        : null;
+
+    final speciesBonusSkillCount =
+        SkillTraitResolver.getSpeciesBonusSkillCount(_selectedSpecies, edition);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Step 3: Choose Class & Starting Skills',
+            style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+        const SizedBox(height: 6),
+        const Text(
+            'Select your core adventurer class and starting skill proficiencies.',
+            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        const SizedBox(height: 12),
+        if (curClassType != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.cyan.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                RepaintBoundary(
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: DndGlyph.classFeature(
+                        classType: curClassType,
+                        size: 48,
+                        isDarkMode: true,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        curClassType.displayName.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Text(
+                        'd${curClassType.hitDieSides} Hit Die • Resource: ${curClassType.primaryResource}',
+                        style: const TextStyle(
+                            fontSize: 11.5, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.shield_outlined, color: Colors.cyanAccent, size: 36),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'NO CLASS SELECTED',
+                        style: TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Select a class below to allocate skills and hit dice.',
+                        style: TextStyle(fontSize: 11.5, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedClass,
+          hint: const Text('Select Starting Class...'),
+          decoration: const InputDecoration(
+              labelText: 'Starting Class', border: OutlineInputBorder()),
+          items: SrdClassesLibrary.allClasses
+              .map((c) => DropdownMenuItem(
+                  value: c.id.slug,
+                  child: Text(
+                      '${c.name} (${c.hitDie} • Primary: ${c.primaryAbility})')))
+              .toList(),
+          onChanged: (v) {
+            if (v == null) return;
+            HapticService.selectionTick(context);
+            setState(() {
+              if (_selectedClass != v) {
+                _wizardSelectedFeatureOptions.clear();
+                _selectedWizardCantrips.clear();
+                _selectedWizardSpells.clear();
+              }
+              _selectedClass = v;
+              final newCls =
+                  SrdClassesLibrary.findBySlug(v, ruleset: _selectedRuleset)!;
+              _abilityScoreController.setClass(
+                EntityReference(
+                  refType: EntityType.classDefinition,
+                  slug: newCls.id.slug,
+                  displayName: newCls.name,
+                ),
+                hitDie: newCls.hitDie,
+              );
+              final newAllowed = newCls.allowedSkills;
+              final cnt = newCls.skillChoiceCount;
+              _wizardSelectedSkills = newAllowed.take(cnt).toSet();
+              _compensatorySkillPicks.clear();
+              _abilityScoreController.setSelectedSkills(_wizardSelectedSkills);
+            });
+          },
+        ),
+        if (curClass != null && skillReport != null) ...[
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Class Skills (Pick $allowedCount):',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('${_wizardSelectedSkills.length} / $allowedCount selected',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _wizardSelectedSkills.length == allowedCount
+                        ? Colors.greenAccent
+                        : Colors.amberAccent,
+                    fontWeight: FontWeight.bold,
+                  )),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: allowedSkills.map((sk) {
+              final isChosen = _wizardSelectedSkills.contains(sk);
+              final source = skillReport.grantedSkills[sk];
+              final isGrantedByOther =
+                  source != null && !source.startsWith('Class:');
+
+              return FilterChip(
+                label: Text(isGrantedByOther
+                    ? '${sk.displayName} ($source)'
+                    : sk.displayName),
+                selected: isChosen,
+                avatar: isGrantedByOther
+                    ? const Icon(Icons.info_outline,
+                        size: 14, color: Colors.amberAccent)
+                    : null,
+                onSelected: (selected) {
+                  HapticService.selectionTick(context);
+                  setState(() {
+                    if (selected) {
+                      if (_wizardSelectedSkills.length < allowedCount) {
+                        _wizardSelectedSkills.add(sk);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                'Cannot select more than $allowedCount class skills for ${curClass.name}.'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } else {
+                      _wizardSelectedSkills.remove(sk);
+                    }
+                    _abilityScoreController
+                        .setSelectedSkills(_wizardSelectedSkills);
+                  });
+                },
+              );
+            }).toList(),
+          ),
+
+          // Collision & Compensatory Picks Section
+          if (skillReport.collidingSkills.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amberAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: Colors.amberAccent.withValues(alpha: 0.4)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          color: Colors.amberAccent, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Skill Collision Detected: ${skillReport.collidingSkills.map((s) => s.displayName).join(", ")} is already granted by your background/species.',
+                          style: const TextStyle(
+                              color: Colors.amberAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Per RAW rules, you receive ${skillReport.compensatoryPicksEarned} compensatory choice(s) from any remaining unselected skill.',
+                    style:
+                        const TextStyle(fontSize: 11.5, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Compensatory Pick(s):',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(
+                        '${_compensatorySkillPicks.length} / ${skillReport.compensatoryPicksEarned} selected',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _compensatorySkillPicks.length ==
+                                  skillReport.compensatoryPicksEarned
+                              ? Colors.greenAccent
+                              : Colors.amberAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: SkillType.values.where((sk) {
+                      return skillReport.availableSkillPool.contains(sk) ||
+                          _compensatorySkillPicks.contains(sk);
+                    }).map((sk) {
+                      final isChosen = _compensatorySkillPicks.contains(sk);
+                      return FilterChip(
+                        label: Text(sk.displayName,
+                            style: const TextStyle(fontSize: 12)),
+                        selected: isChosen,
+                        selectedColor:
+                            Colors.amberAccent.withValues(alpha: 0.3),
+                        onSelected: (selected) {
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            if (selected) {
+                              if (_compensatorySkillPicks.length <
+                                  skillReport.compensatoryPicksEarned) {
+                                _compensatorySkillPicks.add(sk);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Cannot select more than ${skillReport.compensatoryPicksEarned} compensatory skill(s).'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            } else {
+                              _compensatorySkillPicks.remove(sk);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+
+        // Species Flexible Bonus Skills (e.g. Human Skillful, Half-Elf Skill Versatility)
+        if (speciesBonusSkillCount > 0 && skillReport != null) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.tealAccent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: Colors.tealAccent.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                        'Species Bonus Skill (${_selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)?.name ?? "Species" : "Species"}):',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.tealAccent)),
+                    Text(
+                      '${_speciesBonusSkillPicks.length} / $speciesBonusSkillCount selected',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _speciesBonusSkillPicks.length ==
+                                speciesBonusSkillCount
+                            ? Colors.greenAccent
+                            : Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: SkillType.values.where((sk) {
+                    return !skillReport.resolvedProficiencies.containsKey(sk) ||
+                        _speciesBonusSkillPicks.contains(sk);
+                  }).map((sk) {
+                    final isChosen = _speciesBonusSkillPicks.contains(sk);
+                    return FilterChip(
+                      label: Text(sk.displayName,
+                          style: const TextStyle(fontSize: 12)),
+                      selected: isChosen,
+                      selectedColor: Colors.tealAccent.withValues(alpha: 0.3),
+                      onSelected: (selected) {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          if (selected) {
+                            if (_speciesBonusSkillPicks.length <
+                                speciesBonusSkillCount) {
+                              _speciesBonusSkillPicks.add(sk);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Cannot select more than $speciesBonusSkillCount species bonus skill(s).'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } else {
+                            _speciesBonusSkillPicks.remove(sk);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        if (curClass != null) ...[
+          const SizedBox(height: 16),
+          _buildClassToolsPrompt(curClass),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStepSubclass(ThemeData theme, CharacterClass curClass) {
+    if (curClass.subclasses.isEmpty) {
+      return const Text('No subclasses available for this class.');
+    }
+    _wizardSelectedSubclass ??= curClass.subclasses.first.id.slug;
+    final selectedSlug = _wizardSelectedSubclass!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Choose ${curClass.name} Subclass / Archetype',
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Under the selected ruleset (${_selectedRuleset == RulesetVersion.v2024 ? '2024' : '2014'}), ${curClass.name} chooses an archetype at 1st level.',
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
+        const SizedBox(height: 14),
+        ...curClass.subclasses.map((sub) {
+          final isSelected = sub.id.slug == selectedSlug;
+          return Card(
+            color: isSelected
+                ? Colors.cyan.shade900.withValues(alpha: 0.4)
+                : const Color(0xFF0F172A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: isSelected ? Colors.cyanAccent : Colors.white12,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            margin: const EdgeInsets.only(bottom: 12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                HapticService.selectionTick(context);
+                setState(() => _wizardSelectedSubclass = sub.id.slug);
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color:
+                              isSelected ? Colors.cyanAccent : Colors.white54,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            sub.name,
+                            style: TextStyle(
+                              color:
+                                  isSelected ? Colors.cyanAccent : Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (sub.featuresMarkdown.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      FormattedMarkdownText(
+                        sub.featuresMarkdown,
+                        defaultColor: Colors.white70,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Set<String> _getBuilderKnownSpellSlugs() {
+    final slugs = <String>{};
+    for (final id in _selectedWizardCantrips) {
+      slugs.add(id.toLowerCase().trim());
+      final item = SpellbookLibrary.getSpellById(id);
+      if (item != null) {
+        slugs.add(item.name.toLowerCase().trim());
+      }
+    }
+    for (final id in _selectedWizardSpells) {
+      slugs.add(id.toLowerCase().trim());
+      final item = SpellbookLibrary.getSpellById(id);
+      if (item != null) {
+        slugs.add(item.name.toLowerCase().trim());
+      }
+    }
+    return slugs;
+  }
+
+  Set<String> _getBuilderSelectedPacts() {
+    final pacts = <String>{};
+    final pactRegex = RegExp(r'pact[-_ ](?:of[-_ ]the[-_ ])?([a-z0-9]+)',
+        caseSensitive: false);
+    for (final list in _wizardSelectedFeatureOptions.values) {
+      for (final id in list) {
+        final lower = id.toLowerCase();
+        final match = pactRegex.firstMatch(lower);
+        if (match != null) {
+          pacts.add(match.group(1)!);
+        } else {
+          if (lower.contains('blade')) pacts.add('blade');
+          if (lower.contains('tome')) pacts.add('tome');
+          if (lower.contains('chain')) pacts.add('chain');
+        }
+      }
+    }
+    return pacts;
+  }
+
+  Widget _buildStepClassDecisions(ThemeData theme, CharacterClass curClass,
+      List<ClassFeatureDecision> decisions) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${curClass.name} Decisions & Specializations',
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Customize your ${curClass.name} feature options at 1st level.',
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
+        const SizedBox(height: 14),
+        ...decisions.map((decision) {
+          final selected = _wizardSelectedFeatureOptions[decision.id] ??= [
+            if (decision.availableOptions.isNotEmpty)
+              (decision.availableOptions.firstWhere(
+                (o) => o.prerequisite
+                    .evaluate(
+                      classLevel: 1,
+                      selectedPacts: _getBuilderSelectedPacts(),
+                      knownSpellSlugs: _getBuilderKnownSpellSlugs(),
+                    )
+                    .isMet,
+                orElse: () => decision.availableOptions.first,
+              )).id,
+          ];
+
+          return Card(
+            color: const Color(0xFF0F172A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: const BorderSide(color: Colors.white24),
+            ),
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.cyan.shade800,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          decision.type.displayName,
+                          style: const TextStyle(
+                              color: Colors.cyanAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          decision.name,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(decision.prompt,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 12),
+                  ...decision.availableOptions.map((opt) {
+                    final isOptSelected = selected.contains(opt.id);
+                    final eval = opt.prerequisite.evaluate(
+                      classLevel: 1,
+                      selectedPacts: _getBuilderSelectedPacts(),
+                      knownSpellSlugs: _getBuilderKnownSpellSlugs(),
+                    );
+                    final isGated = !eval.isMet && !isOptSelected;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isOptSelected
+                            ? Colors.cyan.shade900.withValues(alpha: 0.3)
+                            : (isGated ? Colors.black45 : Colors.black26),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isOptSelected
+                              ? Colors.cyanAccent.withValues(alpha: 0.7)
+                              : (isGated
+                                  ? Colors.orangeAccent.withValues(alpha: 0.3)
+                                  : Colors.white12),
+                        ),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () {
+                          if (isGated) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Cannot select ${opt.name}: ${eval.summary}'),
+                                backgroundColor: Colors.red.shade900,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            if (decision.maxSelections == 1) {
+                              _wizardSelectedFeatureOptions[decision.id] = [
+                                opt.id
+                              ];
+                            } else {
+                              final list = List<String>.from(
+                                  _wizardSelectedFeatureOptions[decision.id] ??
+                                      []);
+                              if (list.contains(opt.id)) {
+                                if (list.length > decision.minSelections) {
+                                  list.remove(opt.id);
+                                }
+                              } else {
+                                if (list.length < decision.maxSelections) {
+                                  list.add(opt.id);
+                                }
+                              }
+                              _wizardSelectedFeatureOptions[decision.id] = list;
+                            }
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    isGated
+                                        ? Icons.lock_outline
+                                        : (decision.maxSelections == 1
+                                            ? (isOptSelected
+                                                ? Icons.radio_button_checked
+                                                : Icons.radio_button_off)
+                                            : (isOptSelected
+                                                ? Icons.check_box
+                                                : Icons
+                                                    .check_box_outline_blank)),
+                                    color: isOptSelected
+                                        ? Colors.cyanAccent
+                                        : (isGated
+                                            ? Colors.orangeAccent
+                                                .withValues(alpha: 0.7)
+                                            : Colors.white38),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      opt.name,
+                                      style: TextStyle(
+                                        color: isOptSelected
+                                            ? Colors.cyanAccent
+                                            : (isGated
+                                                ? Colors.white38
+                                                : Colors.white),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13.5,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isGated)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade900
+                                            .withValues(alpha: 0.4),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                            color: Colors.orangeAccent
+                                                .withValues(alpha: 0.5)),
+                                      ),
+                                      child: Text(
+                                        eval.summary,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.orangeAccent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              if (opt.descriptionMarkdown.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 26),
+                                  child: FormattedMarkdownText(
+                                    opt.descriptionMarkdown,
+                                    defaultColor: isGated
+                                        ? Colors.white38
+                                        : Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildStep3Background(ThemeData theme, Background? curBackground) {
+    return BackgroundStep(
+      controller: _abilityScoreController,
+      selectedBackground: _selectedBackground ?? '',
+      selectedRuleset: _selectedRuleset,
+      onBackgroundSelected: (slug) {
+        final is2024 = _selectedRuleset == RulesetVersion.v2024;
+        final bg = SrdBackgroundsLibrary.findBySlug(slug);
+        setState(() {
+          _selectedBackground = slug;
+          _abilityScoreController.setBackground(
+            EntityReference(
+              refType: EntityType.background,
+              slug: slug,
+              displayName: bg?.name ?? slug,
+              customProperties: {
+                if (bg != null) ...bg.customProperties,
+                if (bg != null && bg.skillProficiencies.isNotEmpty)
+                  'skillProficiencies': bg.skillProficiencies,
+                if (bg != null && bg.toolProficiencies.isNotEmpty)
+                  'toolProficiencies': bg.toolProficiencies,
+                if (bg != null && bg.languages.isNotEmpty)
+                  'languages': bg.languages,
+              },
+            ),
+          );
+          // Auto-set origin feat recommendation in 2024 mode
+          if (is2024 && bg?.originFeat != null) {
+            final fSlug = bg!.originFeat!
+                .toLowerCase()
+                .replaceAll(' ', '-')
+                .replaceAll('(', '')
+                .replaceAll(')', '');
+            if (SrdFeatsLibrary.findBySlug(fSlug) != null) {
+              _selectedFeat = fSlug;
+            }
+          }
+        });
+      },
+    );
+  }
+
+  List<FeatureOption> _getEligibleInvocationsForBuilder(Feat feat) {
+    final isWarlock = _selectedClass?.toLowerCase() == 'warlock';
+    final warlockLevel = isWarlock ? 1 : 0;
+    final selectedPacts =
+        _wizardSelectedFeatureOptions.values.expand((opts) => opts);
+    final knownSpells = {..._selectedWizardCantrips, ..._selectedWizardSpells};
+
+    return SrdFeatureOptions.warlockInvocations.where((opt) {
+      final eval = feat.evaluateInvocationPrerequisite(
+        opt,
+        isWarlock: isWarlock,
+        warlockLevel: warlockLevel,
+        selectedPacts: selectedPacts,
+        knownSpellSlugs: knownSpells,
+      );
+      return eval.isMet;
+    }).toList();
+  }
+
+  Widget _buildStep5Feats(ThemeData theme) {
+    final curSpecies = _selectedSpecies != null
+        ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)
+        : null;
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+    final availableFeats = is2024
+        ? SrdFeatsLibrary.getOriginFeats()
+        : SrdFeatsLibrary.getFeatsForRuleset(RulesetVersion.v2014);
+
+    final filteredFeats = availableFeats.where((feat) {
+      if (_featSearchQuery.isEmpty) return true;
+      final q = _featSearchQuery.toLowerCase();
+      final nameMatches = feat.name.toLowerCase().contains(q);
+      final slugMatches = feat.id.slug.toLowerCase().contains(q);
+      final descMatches = feat.descriptionMarkdown.toLowerCase().contains(q);
+      final catMatches = feat.category.toLowerCase().contains(q);
+      final prereqMatches =
+          feat.prerequisite?.toLowerCase().contains(q) ?? false;
+      return nameMatches ||
+          slugMatches ||
+          descMatches ||
+          catMatches ||
+          prereqMatches;
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          is2024
+              ? 'Step 6: Origin Feat'
+              : 'Step 6: ${curSpecies?.name ?? "Species"} Bonus Feat',
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          is2024
+              ? 'Choose your starting 1st-level Origin Feat.'
+              : 'As a ${curSpecies?.name ?? "adventurer"}, choose your 1st-level bonus feat from the 2014 SRD Feat Library.',
+          style:
+              theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade400),
+        ),
+        const SizedBox(height: 12),
+
+        // Search Bar
+        TextField(
+          decoration: InputDecoration(
+            labelText: 'Search Feats',
+            hintText: 'Filter by feat name, category, prerequisite...',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _featSearchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => setState(() => _featSearchQuery = ''),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) => setState(() => _featSearchQuery = val.trim()),
+        ),
+        const SizedBox(height: 12),
+        if (filteredFeats.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No feats found matching "$_featSearchQuery"',
+                style: const TextStyle(
+                    color: Colors.white54, fontStyle: FontStyle.italic),
+              ),
+            ),
+          )
+        else
+          ...filteredFeats.map((feat) {
+            final isSelected = _selectedFeat == feat.id.slug;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              color: isSelected
+                  ? Colors.cyanAccent.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.05),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isSelected ? Colors.cyanAccent : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  HapticService.selectionTick(context);
+                  setState(() {
+                    _selectedFeat = feat.id.slug;
+                    if (feat.hasAbilityScoreIncrease) {
+                      if (_selectedFeatAbility == null ||
+                          !feat.selectableAbilities
+                              .contains(_selectedFeatAbility)) {
+                        _selectedFeatAbility = feat.selectableAbilities.first;
+                      }
+                    } else {
+                      _selectedFeatAbility = null;
+                    }
+                    if (feat.hasSkillProficiencyChoice) {
+                      final selectable = feat.selectableSkills.isNotEmpty
+                          ? feat.selectableSkills
+                          : SkillType.values.toList();
+                      if (_selectedFeatSkill == null ||
+                          !selectable.contains(_selectedFeatSkill)) {
+                        _selectedFeatSkill = selectable.first;
+                      }
+                    } else {
+                      _selectedFeatSkill = null;
+                    }
+                    if (feat.hasExpertiseChoice) {
+                      final eligible = <SkillType>{
+                        ..._wizardSelectedSkills,
+                        ..._speciesBonusSkillPicks,
+                        ..._compensatorySkillPicks,
+                        if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                      };
+                      if (eligible.isEmpty) eligible.addAll(SkillType.values);
+                      if (_selectedFeatExpertise == null ||
+                          !eligible.contains(_selectedFeatExpertise)) {
+                        _selectedFeatExpertise =
+                            _selectedFeatSkill ?? eligible.first;
+                      }
+                    } else {
+                      _selectedFeatExpertise = null;
+                    }
+                    if (feat.hasInvocationChoice) {
+                      final eligible = _getEligibleInvocationsForBuilder(feat);
+                      _selectedFeatOption =
+                          eligible.isNotEmpty ? eligible.first.id : null;
+                    } else if (feat.hasFightingStyleChoice) {
+                      _selectedFeatOption =
+                          SrdFeatureOptions.fightingStyles.isNotEmpty
+                              ? SrdFeatureOptions.fightingStyles.first.id
+                              : null;
+                    } else {
+                      _selectedFeatOption = null;
+                    }
+                  });
+                },
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: DndGlyph.feat(
+                        category: FeatCategory.parse(feat.category),
+                        featId: feat.id.slug,
+                        displayName: feat.name,
+                        size: 32,
+                        isDarkMode: true,
+                      ),
+                      title: Text(feat.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: FormattedMarkdownText(
+                        feat.descriptionMarkdown,
+                        style: const TextStyle(
+                            fontSize: 11.5, color: Colors.white70),
+                      ),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle,
+                              color: Colors.purpleAccent)
+                          : null,
+                    ),
+                    if (isSelected && feat.hasAbilityScoreIncrease) ...[
+                      const Divider(color: Colors.white12, height: 1),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (feat.requiresAbilityChoice) ...[
+                              Text(
+                                'Choose Ability to Increase (+${feat.statIncreaseAmount}):',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.cyanAccent,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: feat.selectableAbilities.map((ab) {
+                                  final isChipSelected =
+                                      (_selectedFeatAbility ??
+                                              feat.selectableAbilities.first) ==
+                                          ab;
+                                  return ChoiceChip(
+                                    key: Key('builder_feat_ability_${ab.name}'),
+                                    label: Text(
+                                        '${ab.shortName} (+${feat.statIncreaseAmount})'),
+                                    selected: isChipSelected,
+                                    selectedColor: Colors.purpleAccent
+                                        .withValues(alpha: 0.3),
+                                    onSelected: (val) {
+                                      if (val) {
+                                        HapticService.selectionTick(context);
+                                        setState(
+                                            () => _selectedFeatAbility = ab);
+                                      }
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ] else ...[
+                              Chip(
+                                avatar: const Icon(Icons.arrow_upward,
+                                    size: 14, color: Colors.greenAccent),
+                                label: Text(
+                                    '+${feat.statIncreaseAmount} ${feat.selectableAbilities.first.shortName} (Included)'),
+                                backgroundColor:
+                                    Colors.green.withValues(alpha: 0.15),
+                              ),
+                            ],
+                            if (feat.grantsSavingThrowProficiency) ...[
+                              const SizedBox(height: 8),
+                              () {
+                                final chosenSave = _selectedFeatAbility ??
+                                    feat.selectableAbilities.first;
+                                return Row(
+                                  children: [
+                                    const Icon(Icons.shield,
+                                        color: Colors.cyanAccent, size: 16),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Grants Proficiency: ${chosenSave.shortName} Saving Throws',
+                                      style: const TextStyle(
+                                        color: Colors.cyanAccent,
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }(),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (isSelected &&
+                        (feat.hasSkillProficiencyChoice ||
+                            feat.hasExpertiseChoice)) ...[
+                      const Divider(color: Colors.white12, height: 1),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (feat.hasSkillProficiencyChoice) ...[
+                              const Text(
+                                'Choose Skill Proficiency:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.cyanAccent,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<SkillType>(
+                                key: ValueKey(
+                                    'builder_feat_skill_${_selectedFeatSkill}_${feat.id.slug}'),
+                                initialValue: _selectedFeatSkill ??
+                                    (feat.selectableSkills.isNotEmpty
+                                        ? feat.selectableSkills.first
+                                        : SkillType.athletics),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: Colors.black26,
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                                items: (feat.selectableSkills.isNotEmpty
+                                        ? feat.selectableSkills
+                                        : SkillType.values)
+                                    .map((s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(s.displayName),
+                                        ))
+                                    .toList(),
+                                onChanged: (s) {
+                                  if (s != null) {
+                                    final oldSkill = _selectedFeatSkill;
+                                    setState(() {
+                                      _selectedFeatSkill = s;
+                                      if (feat.hasExpertiseChoice) {
+                                        final eligible = <SkillType>{
+                                          ..._wizardSelectedSkills,
+                                          ..._speciesBonusSkillPicks,
+                                          ..._compensatorySkillPicks,
+                                          s,
+                                        };
+                                        if (_selectedFeatExpertise == null ||
+                                            _selectedFeatExpertise ==
+                                                oldSkill ||
+                                            !eligible.contains(
+                                                _selectedFeatExpertise)) {
+                                          _selectedFeatExpertise = s;
+                                        }
+                                      }
+                                    });
+                                  }
+                                },
+                              ),
+                            ],
+                            if (feat.hasExpertiseChoice) ...[
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Choose Skill for Expertise (Double Proficiency):',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.cyanAccent,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              () {
+                                final eligible = <SkillType>{
+                                  ..._wizardSelectedSkills,
+                                  ..._speciesBonusSkillPicks,
+                                  ..._compensatorySkillPicks,
+                                  if (_selectedFeatSkill != null)
+                                    _selectedFeatSkill!,
+                                };
+                                if (eligible.isEmpty)
+                                  eligible.addAll(SkillType.values);
+                                final effectiveVal = eligible
+                                        .contains(_selectedFeatExpertise)
+                                    ? _selectedFeatExpertise
+                                    : (_selectedFeatSkill != null &&
+                                            eligible
+                                                .contains(_selectedFeatSkill)
+                                        ? _selectedFeatSkill
+                                        : eligible.first);
+
+                                return DropdownButtonFormField<SkillType>(
+                                  key: ValueKey(
+                                      'builder_feat_expertise_${effectiveVal}_$_selectedFeatSkill'),
+                                  initialValue: effectiveVal,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    filled: true,
+                                    fillColor: Colors.black26,
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  items: eligible
+                                      .map((s) => DropdownMenuItem(
+                                            value: s,
+                                            child: Text(
+                                              s == _selectedFeatSkill
+                                                  ? '${s.displayName} (From this Feat)'
+                                                  : s.displayName,
+                                            ),
+                                          ))
+                                      .toList(),
+                                  onChanged: (s) {
+                                    if (s != null) {
+                                      setState(
+                                          () => _selectedFeatExpertise = s);
+                                    }
+                                  },
+                                );
+                              }(),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (isSelected && feat.hasInvocationChoice) ...[
+                      const Divider(color: Colors.white12, height: 1),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: () {
+                          final isWarlock =
+                              _selectedClass?.toLowerCase() == 'warlock';
+                          final eligible =
+                              _getEligibleInvocationsForBuilder(feat);
+                          final effectiveVal =
+                              eligible.any((o) => o.id == _selectedFeatOption)
+                                  ? _selectedFeatOption
+                                  : (eligible.isNotEmpty
+                                      ? eligible.first.id
+                                      : null);
+                          final selectedOpt = eligible
+                              .where((o) => o.id == effectiveVal)
+                              .firstOrNull;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Choose Eldritch Invocation:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.purpleAccent,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isWarlock
+                                    ? 'As a Warlock, you may select any invocation whose prerequisites you meet.'
+                                    : 'Without the Warlock class, you may only select invocations with no prerequisites.',
+                                style: TextStyle(
+                                    fontSize: 11, color: Colors.grey.shade400),
+                              ),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                key: const Key(
+                                    'builder_feat_invocation_dropdown'),
+                                initialValue: effectiveVal,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: Colors.black26,
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                                items: eligible
+                                    .map((opt) => DropdownMenuItem(
+                                          value: opt.id,
+                                          child: Text(opt.name),
+                                        ))
+                                    .toList(),
+                                onChanged: (optId) {
+                                  if (optId != null) {
+                                    setState(() => _selectedFeatOption = optId);
+                                  }
+                                },
+                              ),
+                              if (selectedOpt != null &&
+                                  selectedOpt
+                                      .descriptionMarkdown.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.shade900
+                                        .withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                        color: Colors.purpleAccent
+                                            .withValues(alpha: 0.3)),
+                                  ),
+                                  child: FormattedMarkdownText(
+                                    selectedOpt.descriptionMarkdown,
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade300,
+                                        fontStyle: FontStyle.italic),
+                                    maxLines: 4,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        }(),
+                      ),
+                    ],
+                    if (isSelected && feat.hasFightingStyleChoice) ...[
+                      const Divider(color: Colors.white12, height: 1),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: () {
+                          const styles = SrdFeatureOptions.fightingStyles;
+                          final effectiveVal = styles
+                                  .any((o) => o.id == _selectedFeatOption)
+                              ? _selectedFeatOption
+                              : (styles.isNotEmpty ? styles.first.id : null);
+                          final selectedOpt = styles
+                              .where((o) => o.id == effectiveVal)
+                              .firstOrNull;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Choose Fighting Style:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orangeAccent,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                key: const Key(
+                                    'builder_feat_fighting_style_dropdown'),
+                                initialValue: effectiveVal,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: Colors.black26,
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                                items: styles
+                                    .map((opt) => DropdownMenuItem(
+                                          value: opt.id,
+                                          child: Text(opt.name),
+                                        ))
+                                    .toList(),
+                                onChanged: (optId) {
+                                  if (optId != null) {
+                                    setState(() => _selectedFeatOption = optId);
+                                  }
+                                },
+                              ),
+                              if (selectedOpt != null &&
+                                  selectedOpt
+                                      .descriptionMarkdown.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade900
+                                        .withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                        color: Colors.orangeAccent
+                                            .withValues(alpha: 0.3)),
+                                  ),
+                                  child: FormattedMarkdownText(
+                                    selectedOpt.descriptionMarkdown,
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade300,
+                                        fontStyle: FontStyle.italic),
+                                    maxLines: 4,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        }(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildStep6Equipment(ThemeData theme) {
+    final curClass = _selectedClass != null
+        ? SrdClassesLibrary.findBySlug(_selectedClass!,
+            ruleset: _selectedRuleset)
+        : null;
+    final packages = curClass != null
+        ? SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug)
+        : <SrdEquipmentPackage>[];
+    final stepNumber = _getWizardStepTypes().indexOf('equipment') + 1;
+
+    if (packages.isNotEmpty &&
+        !packages.any((p) => p.id == _selectedStartingEquipmentPreset)) {
+      _selectedStartingEquipmentPreset = packages.first.id;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Step $stepNumber: Starting Equipment & Inventory (SRD)',
+          style: theme.textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          curClass != null
+              ? 'Choose an official 5e SRD starting inventory package or starting wealth for your ${curClass.name}.'
+              : 'Choose an official 5e SRD starting inventory package or starting wealth.',
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
+        const SizedBox(height: 12),
+        if (packages.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'Please select a starting class to view available equipment packages.',
+              style: TextStyle(color: Colors.white60),
+            ),
+          )
+        else
+          ...packages.map((pkg) {
+            return _buildEquipmentPresetOption(
+              id: pkg.id,
+              title: pkg.name,
+              subtitle: pkg.subtitle,
+              icon: pkg.icon,
+              gold: pkg.startingGold,
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildEquipmentPresetOption({
+    required String id,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    int? gold,
+  }) {
+    final isSelected = _selectedStartingEquipmentPreset == id;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? Colors.cyan.shade900.withValues(alpha: 0.3)
+            : Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected ? Colors.cyanAccent : Colors.white12,
+          width: isSelected ? 1.5 : 1.0,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.cyanAccent.withValues(alpha: 0.2)
+                  : Colors.white10,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon,
+                color: isSelected ? Colors.cyanAccent : Colors.white70,
+                size: 22),
+          ),
+          title: Text(title,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(subtitle,
+                style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+          ),
+          trailing: isSelected
+              ? const Icon(Icons.check_circle, color: Colors.cyanAccent)
+              : (gold != null && gold > 0
+                  ? Chip(
+                      label: Text('$gold GP',
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amberAccent)),
+                      backgroundColor:
+                          Colors.amber.shade900.withValues(alpha: 0.25),
+                      side: BorderSide(
+                          color: Colors.amber.withValues(alpha: 0.5)),
+                      padding: EdgeInsets.zero,
+                    )
+                  : null),
+          onTap: () {
+            HapticService.selectionTick(context);
+            setState(() => _selectedStartingEquipmentPreset = id);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepSpells(ThemeData theme, CharacterClass curClass) {
+    final edition = _selectedRuleset == RulesetVersion.v2024
+        ? DmRulesEdition.v2024
+        : DmRulesEdition.v2014;
+    final spellClass = _findSpellClass(curClass.id.slug);
+    final curSpecies = _selectedSpecies != null
+        ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)
+        : null;
+    final curSub = _selectedSubrace != null
+        ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!)
+        : null;
+
+    final speciesBonusSpells = <String>{};
+    if (curSub != null) {
+      speciesBonusSpells.addAll(curSub.grants
+          .where((g) => g.type == GrantType.bonusSpell)
+          .map((g) => g.payload['slug']?.toString().toLowerCase() ?? ''));
+      final addSpells = curSub.customProperties['additionalSpells'];
+      if (addSpells != null) {
+        speciesBonusSpells.addAll(FeatureGrant.extractSpellNames(addSpells).map(
+            (n) => n.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')));
+      }
+    }
+    if (curSpecies != null) {
+      speciesBonusSpells.addAll(curSpecies.grants
+          .where((g) => g.type == GrantType.bonusSpell)
+          .map((g) => g.payload['slug']?.toString().toLowerCase() ?? ''));
+      final addSpells = curSpecies.customProperties['additionalSpells'];
+      if (addSpells != null) {
+        speciesBonusSpells.addAll(FeatureGrant.extractSpellNames(addSpells).map(
+            (n) => n.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')));
+      }
+    }
+
+    final allClassSpells = SpellbookLibrary.allSpells.where((s) {
+      if (s.level > 1) return false;
+      if (spellClass == null) return s.level <= 1;
+      final rules = s.getRules(edition);
+      final isClassSpell = rules.classes.contains(spellClass);
+      final isExpanded = SubclassSpellsLibrary.isExpandedSpell(
+              curClass.id.slug, _wizardSelectedSubclass, s, edition) ||
+          speciesBonusSpells.contains(s.id.toLowerCase());
+      return isClassSpell || isExpanded;
+    }).toList();
+
+    final cantrips = allClassSpells.where((s) => s.level == 0).toList();
+    final level1Spells = allClassSpells.where((s) => s.level == 1).toList();
+    final stepNumber = _getWizardStepTypes().indexOf('spells') + 1;
+
+    // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
+    final castingAbility = _getCastingAbility(curClass.id.slug);
+    final curBackground = _selectedBackground != null
+        ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!)
+        : null;
+    final calculatedBonuses = _calculateBonusScores(
+        curSpecies, curBackground, _selectedRuleset,
+        curSubrace: curSub);
+    final effectiveScores = _wizardBaseScores.withBonus(calculatedBonuses);
+    final castingMod = effectiveScores.getModifier(castingAbility);
+
+    final limits = SpellAllocationValidator.getLimitsForClass(
+      classSlug: curClass.id.slug,
+      classLevel: 1,
+      abilityModifier: castingMod,
+      edition: edition,
+    );
+
+    final maxCantrips = limits.maxCantrips;
+    final isWizard = curClass.id.slug.toLowerCase() == 'wizard';
+    final maxSpells = (isWizard && limits.maxSpellbookInitialScribe > 0)
+        ? limits.maxSpellbookInitialScribe // 6 for Wizard spellbook
+        : (limits.maxSpellsPrepared > 0
+            ? limits.maxSpellsPrepared
+            : limits.maxSpellsKnown);
+
+    final spellsSectionTitle = isWizard
+        ? 'SPELLBOOK (1ST-LEVEL SPELLS)'
+        : (limits.maxSpellsPrepared > 0
+            ? 'PREPARED 1ST-LEVEL SPELLS'
+            : '1ST-LEVEL SPELLS KNOWN');
+
+    final spellsSubtitle = isWizard
+        ? 'A Level 1 Wizard must choose exactly 6 1st-level spells to scribe into their spellbook.'
+        : (limits.maxSpellsPrepared > 0
+            ? 'Prepared limit: Level 1 + ${castingAbility.shortName} mod (${castingMod >= 0 ? "+$castingMod" : "$castingMod"}) = $maxSpells spells.'
+            : 'Spells known limit: $maxSpells spells.');
+
+    final alwaysPreparedSpells =
+        SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: curClass.id.slug,
+      subclassSlug: _wizardSelectedSubclass,
+      classLevel: 1,
+      edition: edition,
+    );
+
+    final filteredCantrips = cantrips.where((c) {
+      if (_spellSearchQuery.isEmpty) return true;
+      final q = _spellSearchQuery.toLowerCase();
+      final nameMatches = c.getName(edition).toLowerCase().contains(q);
+      final idMatches = c.id.toLowerCase().contains(q);
+      final schoolMatches = c.school.name.toLowerCase().contains(q);
+      final tagsMatch = c.tags.any((t) => t.toLowerCase().contains(q));
+      final summaryMatch = c.diffSummary?.toLowerCase().contains(q) ?? false;
+      return nameMatches ||
+          idMatches ||
+          schoolMatches ||
+          tagsMatch ||
+          summaryMatch;
+    }).toList();
+
+    final filteredLevel1Spells = level1Spells.where((s) {
+      if (_spellSearchQuery.isEmpty) return true;
+      final q = _spellSearchQuery.toLowerCase();
+      final nameMatches = s.getName(edition).toLowerCase().contains(q);
+      final idMatches = s.id.toLowerCase().contains(q);
+      final schoolMatches = s.school.name.toLowerCase().contains(q);
+      final tagsMatch = s.tags.any((t) => t.toLowerCase().contains(q));
+      final summaryMatch = s.diffSummary?.toLowerCase().contains(q) ?? false;
+      return nameMatches ||
+          idMatches ||
+          schoolMatches ||
+          tagsMatch ||
+          summaryMatch;
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Step $stepNumber: Spells & Cantrips',
+            style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+        const SizedBox(height: 6),
+        Text(
+            'Select starting cantrips and 1st-level spells for ${curClass.name} (${castingAbility.shortName} mod: ${castingMod >= 0 ? "+$castingMod" : "$castingMod"}).',
+            style: const TextStyle(fontSize: 12, color: Colors.white70)),
+        const SizedBox(height: 12),
+
+        // Subclass Always-Prepared Spells Alert Card
+        if (alwaysPreparedSpells.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.teal.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: Colors.tealAccent.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.verified,
+                        size: 14, color: Colors.tealAccent),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Subclass Granted Spells (Always Prepared, Free Quota):',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.tealAccent,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: alwaysPreparedSpells.map((s) {
+                    return Chip(
+                      visualDensity: VisualDensity.compact,
+                      avatar: DndGlyph.spell(
+                        school: s.school,
+                        level: s.level,
+                        size: 16,
+                        isDarkMode: true,
+                      ),
+                      label: Text('${s.getName(edition)} (L${s.level})',
+                          style: const TextStyle(fontSize: 11)),
+                      backgroundColor:
+                          Colors.teal.shade800.withValues(alpha: 0.4),
+                      side: BorderSide(
+                          color: Colors.tealAccent.withValues(alpha: 0.3)),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Quick Auto-Fill Recommended Spells
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            icon: const Icon(Icons.auto_fix_high, size: 16),
+            label: const Text('Select Recommended Spells',
+                style: TextStyle(fontSize: 12)),
+            onPressed: () {
+              HapticService.selectionTick(context);
+              setState(() {
+                _selectedWizardCantrips.clear();
+                _selectedWizardSpells.clear();
+                if (cantrips.isNotEmpty && maxCantrips > 0) {
+                  _selectedWizardCantrips
+                      .addAll(cantrips.take(maxCantrips).map((c) => c.id));
+                }
+                if (level1Spells.isNotEmpty && maxSpells > 0) {
+                  _selectedWizardSpells
+                      .addAll(level1Spells.take(maxSpells).map((s) => s.id));
+                }
+              });
+            },
+          ),
+        ),
+
+        // Search Bar
+        TextField(
+          decoration: InputDecoration(
+            labelText: 'Search Cantrips & Spells',
+            hintText: 'Filter by spell name, school, or keywords...',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _spellSearchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => setState(() => _spellSearchQuery = ''),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) => setState(() => _spellSearchQuery = val.trim()),
+        ),
+        const SizedBox(height: 12),
+
+        if (filteredCantrips.isEmpty &&
+            filteredLevel1Spells.isEmpty &&
+            _spellSearchQuery.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No cantrips or spells found matching "$_spellSearchQuery"',
+                style: const TextStyle(
+                    color: Colors.white54, fontStyle: FontStyle.italic),
+              ),
+            ),
+          )
+        else ...[
+          // Section 1: Cantrips
+          if (maxCantrips > 0 || filteredCantrips.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade900.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: Colors.purpleAccent.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('CANTRIPS (Level 0)',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purpleAccent)),
+                      Text(
+                        '${_selectedWizardCantrips.length} / $maxCantrips selected',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _selectedWizardCantrips.length == maxCantrips
+                              ? Colors.greenAccent
+                              : Colors.amberAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (filteredCantrips.isEmpty)
+                    Text(
+                        _spellSearchQuery.isNotEmpty
+                            ? 'No cantrips match search.'
+                            : 'No class-specific cantrips found.',
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.white54))
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: filteredCantrips.map((c) {
+                        final isSelected =
+                            _selectedWizardCantrips.contains(c.id);
+                        return FilterChip(
+                          selected: isSelected,
+                          selectedColor:
+                              Colors.purpleAccent.withValues(alpha: 0.3),
+                          label: Text(c.getName(edition)),
+                          avatar: DndGlyph.spell(
+                            school: c.school,
+                            level: 0,
+                            size: 16,
+                            isDarkMode: true,
+                          ),
+                          onSelected: (selected) {
+                            HapticService.selectionTick(context);
+                            setState(() {
+                              if (selected) {
+                                if (_selectedWizardCantrips.length <
+                                    maxCantrips) {
+                                  _selectedWizardCantrips.add(c.id);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Cannot select more than $maxCantrips cantrips for Level 1 ${curClass.name}.'),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                _selectedWizardCantrips.remove(c.id);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                ],
+              ),
+            ),
+
+          const SizedBox(height: 16),
+
+          // Section 2: 1st-Level Spells
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.cyan.shade900.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(spellsSectionTitle,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.cyanAccent)),
+                    Text(
+                      '${_selectedWizardSpells.length} / $maxSpells selected',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _selectedWizardSpells.length == maxSpells
+                            ? Colors.greenAccent
+                            : Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(spellsSubtitle,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white60,
+                        fontStyle: FontStyle.italic)),
+                const SizedBox(height: 8),
+                if (filteredLevel1Spells.isEmpty)
+                  Text(
+                      _spellSearchQuery.isNotEmpty
+                          ? 'No 1st-level spells match search.'
+                          : 'No class-specific 1st-level spells found.',
+                      style:
+                          const TextStyle(fontSize: 12, color: Colors.white54))
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: filteredLevel1Spells.map((s) {
+                      final isSelected = _selectedWizardSpells.contains(s.id);
+                      return FilterChip(
+                        selected: isSelected,
+                        selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                        label: Text(s.getName(edition)),
+                        avatar: DndGlyph.spell(
+                          school: s.school,
+                          level: 1,
+                          size: 16,
+                          isDarkMode: true,
+                        ),
+                        onSelected: (selected) {
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            if (selected) {
+                              if (_selectedWizardSpells.length < maxSpells) {
+                                _selectedWizardSpells.add(s.id);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Cannot select more than $maxSpells spells for Level 1 ${curClass.name}.'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            } else {
+                              _selectedWizardSpells.remove(s.id);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStep7Review(
+      ThemeData theme, Race? sp, CharacterClass? cls, Background? bg) {
+    if (sp == null || cls == null || bg == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Step ${_getWizardStepTypes().length}: Review & Finalize',
+              style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold, color: Colors.amberAccent)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade900.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+              border:
+                  Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.amberAccent),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Please complete all prior steps (Species, Class, Background, Ability Scores) before reviewing.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    final name = _nameController.text.trim().isEmpty
+        ? 'Adventurer'
+        : _nameController.text.trim();
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+    final hasFeat = is2024 || sp.grantsBonusFeat;
+    final selectedPkg = (_selectedStartingEquipmentPreset != null
+            ? SrdEquipmentLibrary.findPackageById(
+                _selectedStartingEquipmentPreset!)
+            : null) ??
+        SrdEquipmentLibrary.getPackagesForClass(cls.id.slug).first;
+    final stepNumber = _getWizardStepTypes().length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Step $stepNumber: Review & Finalize',
+            style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+        const SizedBox(height: 6),
+        const Text(
+            'Review your generated character summary before launching the live sheet.',
+            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        const Divider(height: 20),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(name,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.white)),
+          subtitle: Text(
+              'Level 1 ${cls.name} • ${sp.name} • ${bg.name}\nRuleset: ${_selectedRuleset.name.toUpperCase()}',
+              style: const TextStyle(color: Colors.cyanAccent)),
+        ),
+        const SizedBox(height: 8),
+        Text('Class Saving Throws: ${cls.savingThrows.join(", ")}',
+            style: const TextStyle(fontSize: 12)),
+        Builder(builder: (ctx) {
+          final reviewSkillReport = SkillTraitResolver.resolveSkills(
+            speciesSlug: _selectedSpecies,
+            subraceSlug: _selectedSubrace,
+            backgroundSlug: _selectedBackground,
+            classSlug: cls.id.slug,
+            requestedClassSkills: _wizardSelectedSkills,
+            compensatoryPicks: _compensatorySkillPicks,
+            speciesBonusSkills: _speciesBonusSkillPicks,
+            edition: _selectedRuleset == RulesetVersion.v2024
+                ? DmRulesEdition.v2024
+                : DmRulesEdition.v2014,
+          );
+          final allReviewSkills = {
+            ...reviewSkillReport.resolvedProficiencies.keys,
+            ..._speciesBonusSkillPicks
+          };
+          return Text(
+              'Skill Proficiencies: ${allReviewSkills.map((s) => s.displayName).join(", ")}',
+              style: const TextStyle(fontSize: 12));
+        }),
+        if (hasFeat && _selectedFeat != null) ...[
+          () {
+            final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!);
+            final chosenAbility = _selectedFeatAbility ??
+                (feat?.selectableAbilities.isNotEmpty == true
+                    ? feat!.selectableAbilities.first
+                    : null);
+            final skillPart = (feat != null &&
+                    feat.hasSkillProficiencyChoice &&
+                    _selectedFeatSkill != null)
+                ? ', ${_selectedFeatSkill!.displayName} Prof'
+                : '';
+            final expPart = (feat != null &&
+                    feat.hasExpertiseChoice &&
+                    _selectedFeatExpertise != null)
+                ? ', ${_selectedFeatExpertise!.displayName} Expertise'
+                : '';
+            final extra = (feat != null &&
+                    feat.hasAbilityScoreIncrease &&
+                    chosenAbility != null)
+                ? ' (+${feat.statIncreaseAmount} ${chosenAbility.shortName}${feat.grantsSavingThrowProficiency ? ', ${chosenAbility.shortName} Save Prof' : ''}$skillPart$expPart)'
+                : (skillPart.isNotEmpty || expPart.isNotEmpty
+                    ? ' (${[
+                        skillPart,
+                        expPart
+                      ].where((s) => s.isNotEmpty).join(", ").replaceFirst(", ", "")})'
+                    : '');
+            return Text(
+              '${is2024 ? 'Origin Feat' : 'Feat'}: ${feat?.name ?? _selectedFeat!.toUpperCase()}$extra',
+              style: const TextStyle(fontSize: 12, color: Colors.purpleAccent),
+            );
+          }(),
+        ],
+        if (_selectedWizardCantrips.isNotEmpty ||
+            _selectedWizardSpells.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Spells: ${_selectedWizardCantrips.length} Cantrips, ${_selectedWizardSpells.length} 1st-Level Spells',
+            style: const TextStyle(
+                fontSize: 12,
+                color: Colors.purpleAccent,
+                fontWeight: FontWeight.bold),
+          ),
+        ],
+        const SizedBox(height: 4),
+        Text(
+            'Starting Inventory: ${selectedPkg.name} (${selectedPkg.startingGold} GP)',
+            style: const TextStyle(fontSize: 12, color: Colors.cyanAccent)),
+        const SizedBox(height: 8),
+        Text(
+            'Scores: STR ${_wizardBaseScores.strength}, DEX ${_wizardBaseScores.dexterity}, CON ${_wizardBaseScores.constitution}, INT ${_wizardBaseScores.intelligence}, WIS ${_wizardBaseScores.wisdom}, CHA ${_wizardBaseScores.charisma}',
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.amberAccent)),
+        const Divider(height: 18),
+        // Languages Known
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.translate, size: 16, color: Colors.cyanAccent),
+                const SizedBox(width: 6),
+                const Text('Languages Known:',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.cyanAccent)),
+                const SizedBox(width: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                      color: Colors.cyanAccent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text('${_allBuilderLanguages.length}',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.cyanAccent)),
+                ),
+              ],
+            ),
+            TextButton.icon(
+              onPressed: () => _showBuilderAddLanguageDialog(context),
+              icon: const Icon(Icons.add, size: 14),
+              label: const Text('Add Language', style: TextStyle(fontSize: 11)),
+              style: TextButton.styleFrom(
+                  foregroundColor: Colors.cyanAccent,
+                  visualDensity: VisualDensity.compact),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: _allBuilderLanguages.map((l) {
+            final isCommon = l.toLowerCase() == 'common';
+            return Chip(
+              label: Text(l, style: const TextStyle(fontSize: 11)),
+              deleteIcon: isCommon ? null : const Icon(Icons.close, size: 12),
+              onDeleted: isCommon
+                  ? null
+                  : () {
+                      HapticService.selectionTick(context);
+                      setState(() => _builderLanguages.remove(l));
+                    },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+        // Tool Proficiencies
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.construction,
+                    size: 16, color: Colors.amberAccent),
+                const SizedBox(width: 6),
+                const Text('Tool Proficiencies:',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amberAccent)),
+                const SizedBox(width: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                      color: Colors.amberAccent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text('${_allBuilderTools.length}',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amberAccent)),
+                ),
+              ],
+            ),
+            TextButton.icon(
+              onPressed: () => _showBuilderAddToolDialog(context),
+              icon: const Icon(Icons.add, size: 14),
+              label: const Text('Add Tool', style: TextStyle(fontSize: 11)),
+              style: TextButton.styleFrom(
+                  foregroundColor: Colors.amberAccent,
+                  visualDensity: VisualDensity.compact),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        if (_allBuilderTools.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Text('None (tap "+ Add Tool" to add tool proficiency)',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white54,
+                    fontStyle: FontStyle.italic)),
+          )
+        else
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: _allBuilderTools
+                .map((t) => Chip(
+                      label: Text(t, style: const TextStyle(fontSize: 11)),
+                      deleteIcon: const Icon(Icons.close, size: 12),
+                      onDeleted: () {
+                        HapticService.selectionTick(context);
+                        setState(() => _builderToolProficiencies.remove(t));
+                      },
+                    ))
+                .toList(),
+          ),
+      ],
+    );
+  }
+
+  void _showBuilderAddLanguageDialog(BuildContext context) {
+    final customController = TextEditingController();
+    String searchQuery = '';
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final existing =
+              _allBuilderLanguages.map((l) => l.toLowerCase()).toSet();
+          final availableStandard = SrdProficienciesLibrary.standardLanguages
+              .where((l) => !existing.contains(l.toLowerCase()))
+              .where((l) => l.toLowerCase().contains(searchQuery.toLowerCase()))
+              .toList();
+          final availableExotic = SrdProficienciesLibrary.exoticLanguages
+              .where((l) => !existing.contains(l.toLowerCase()))
+              .where((l) => l.toLowerCase().contains(searchQuery.toLowerCase()))
+              .toList();
+
+          return AlertDialog(
+            title: const Text('Add Language'),
+            content: SizedBox(
+              width: 400,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: customController,
+                      decoration: const InputDecoration(
+                        labelText: 'Search or Custom Language',
+                        hintText: 'Enter language...',
+                        prefixIcon: Icon(Icons.language),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) =>
+                          setDialogState(() => searchQuery = val.trim()),
+                    ),
+                    const SizedBox(height: 12),
+                    if (availableStandard.isNotEmpty) ...[
+                      const Text('Standard Languages',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.cyanAccent)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: availableStandard.map((lang) {
+                          return ActionChip(
+                            label: Text(lang),
+                            onPressed: () {
+                              setState(() => _builderLanguages.add(lang));
+                              Navigator.of(ctx).pop();
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (availableExotic.isNotEmpty) ...[
+                      const Text('Exotic Languages',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.purpleAccent)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: availableExotic.map((lang) {
+                          return ActionChip(
+                            label: Text(lang),
+                            onPressed: () {
+                              setState(() => _builderLanguages.add(lang));
+                              Navigator.of(ctx).pop();
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel')),
+              FilledButton(
+                onPressed: () {
+                  final custom = customController.text.trim();
+                  if (custom.isNotEmpty) {
+                    setState(() => _builderLanguages.add(custom));
+                  }
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Add Custom'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showBuilderAddToolDialog(BuildContext context) {
+    final customController = TextEditingController();
+    ToolCategory selectedCategory = ToolCategory.artisansTools;
+    String searchQuery = '';
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final existing = _allBuilderTools.map((t) => t.toLowerCase()).toSet();
+          final allCategoryTools = switch (selectedCategory) {
+            ToolCategory.artisansTools => SrdProficienciesLibrary.artisansTools,
+            ToolCategory.gamingSets => SrdProficienciesLibrary.gamingSets,
+            ToolCategory.musicalInstruments =>
+              SrdProficienciesLibrary.musicalInstruments,
+            ToolCategory.kits => SrdProficienciesLibrary.kitsAndSpecialized,
+            ToolCategory.vehicles => SrdProficienciesLibrary.vehicles,
+          };
+          final availableTools = allCategoryTools
+              .where((t) => !existing.contains(t.toLowerCase()))
+              .where((t) => t.toLowerCase().contains(searchQuery.toLowerCase()))
+              .toList();
+
+          return AlertDialog(
+            title: const Text('Add Tool Proficiency'),
+            content: SizedBox(
+              width: 440,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: customController,
+                      decoration: const InputDecoration(
+                        labelText: 'Search or Custom Tool',
+                        hintText: 'Search or enter custom tool name...',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) =>
+                          setDialogState(() => searchQuery = val.trim()),
+                    ),
+                    const SizedBox(height: 12),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: ToolCategory.values.map((cat) {
+                          final isSel = selectedCategory == cat;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: ChoiceChip(
+                              label: Text(cat.displayName,
+                                  style: const TextStyle(fontSize: 11)),
+                              selected: isSel,
+                              onSelected: (_) =>
+                                  setDialogState(() => selectedCategory = cat),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (availableTools.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: availableTools.map((tool) {
+                          return ActionChip(
+                            label: Text(tool),
+                            onPressed: () {
+                              setState(
+                                  () => _builderToolProficiencies.add(tool));
+                              Navigator.of(ctx).pop();
+                            },
+                          );
+                        }).toList(),
+                      )
+                    else
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text('No matching tools in this category.',
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.white54)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel')),
+              FilledButton(
+                onPressed: () {
+                  final custom = customController.text.trim();
+                  if (custom.isNotEmpty) {
+                    setState(() => _builderToolProficiencies.add(custom));
+                  }
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Add Custom'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  AbilityScores _calculateBonusScores(
+      Race? curSpecies, Background? curBackground, RulesetVersion ruleset,
+      {Subrace? curSubrace}) {
+    if (ruleset == RulesetVersion.v2014) {
+      if (curSpecies == null && curSubrace == null)
+        return const AbilityScores.zero();
+
+      final bool hasSubraceAbilities = curSubrace != null &&
+          (curSubrace.fixedAbilityBonuses2014.isNotEmpty ||
+              curSubrace.flexibleAbilityChoiceCount > 0);
+
+      final fixed = hasSubraceAbilities
+          ? Map<String, int>.from(curSubrace.fixedAbilityBonuses2014)
+          : (curSpecies != null
+              ? Map<String, int>.from(curSpecies.fixedAbilityBonuses2014)
+              : <String, int>{});
+
+      final flexibleCount = hasSubraceAbilities
+          ? curSubrace.flexibleAbilityChoiceCount
+          : (curSpecies?.flexibleAbilityChoiceCount ?? 0);
+
+      final flexibleBonus = hasSubraceAbilities
+          ? curSubrace.flexibleAbilityBonusValue
+          : (curSpecies?.flexibleAbilityBonusValue ?? 0);
+
+      int str = fixed['strength'] ?? 0;
+      int dex = fixed['dexterity'] ?? 0;
+      int con = fixed['constitution'] ?? 0;
+      int intl = fixed['intelligence'] ?? 0;
+      int wis = fixed['wisdom'] ?? 0;
+      int cha = fixed['charisma'] ?? 0;
+
+      if (flexibleCount > 0) {
+        final activePicks = _variantHumanBonuses.take(flexibleCount).toSet();
+        if (activePicks.contains(AbilityType.strength)) str += flexibleBonus;
+        if (activePicks.contains(AbilityType.dexterity)) dex += flexibleBonus;
+        if (activePicks.contains(AbilityType.constitution))
+          con += flexibleBonus;
+        if (activePicks.contains(AbilityType.intelligence))
+          intl += flexibleBonus;
+        if (activePicks.contains(AbilityType.wisdom)) wis += flexibleBonus;
+        if (activePicks.contains(AbilityType.charisma)) cha += flexibleBonus;
+      }
+
+      return AbilityScores(
+        strength: str,
+        dexterity: dex,
+        constitution: con,
+        intelligence: intl,
+        wisdom: wis,
+        charisma: cha,
+      );
+    } else {
+      // 2024 rules: +2 to chosen primary, +1 to secondary
+      if (curBackground == null) return const AbilityScores.zero();
+      return AbilityScores(
+        strength: (_backgroundPrimaryBonus == AbilityType.strength ? 2 : 0) +
+            (_backgroundSecondaryBonus == AbilityType.strength ? 1 : 0),
+        dexterity: (_backgroundPrimaryBonus == AbilityType.dexterity ? 2 : 0) +
+            (_backgroundSecondaryBonus == AbilityType.dexterity ? 1 : 0),
+        constitution:
+            (_backgroundPrimaryBonus == AbilityType.constitution ? 2 : 0) +
+                (_backgroundSecondaryBonus == AbilityType.constitution ? 1 : 0),
+        intelligence:
+            (_backgroundPrimaryBonus == AbilityType.intelligence ? 2 : 0) +
+                (_backgroundSecondaryBonus == AbilityType.intelligence ? 1 : 0),
+        wisdom: (_backgroundPrimaryBonus == AbilityType.wisdom ? 2 : 0) +
+            (_backgroundSecondaryBonus == AbilityType.wisdom ? 1 : 0),
+        charisma: (_backgroundPrimaryBonus == AbilityType.charisma ? 2 : 0) +
+            (_backgroundSecondaryBonus == AbilityType.charisma ? 1 : 0),
+      );
+    }
+  }
+
+  void _finalizeCreatedCharacter() {
+    if (!_abilityScoreController.isReadyForCompilation) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                'Please complete all wizard steps before creating character.')),
+      );
+      return;
+    }
+
+    final curClass = SrdClassesLibrary.findBySlug(_selectedClass!,
+        ruleset: _selectedRuleset)!;
+    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies!)!;
+    final curBackground =
+        SrdBackgroundsLibrary.findBySlug(_selectedBackground!)!;
+
+    // Resolve class saves
+    final saveProficiencies = curClass.savingThrows.map((s) {
+      final match = AbilityType.values.firstWhere(
+        (a) =>
+            a.name.toLowerCase() == s.toLowerCase() ||
+            a.shortName.toLowerCase() == s.toLowerCase(),
+        orElse: () => AbilityType.strength,
+      );
+      return match;
+    }).toSet();
+
+    // Map skill proficiencies using SkillTraitResolver
+    final skillReport = SkillTraitResolver.resolveSkills(
+      speciesSlug: _selectedSpecies,
+      subraceSlug: _selectedSubrace,
+      backgroundSlug: _selectedBackground,
+      classSlug: curClass.id.slug,
+      requestedClassSkills: _wizardSelectedSkills,
+      compensatoryPicks: _compensatorySkillPicks,
+      speciesBonusSkills: _speciesBonusSkillPicks,
+      edition: _selectedRuleset == RulesetVersion.v2024
+          ? DmRulesEdition.v2024
+          : DmRulesEdition.v2014,
+    );
+    final skillMap = Map<SkillType, SkillProficiencyLevel>.from(
+        skillReport.resolvedProficiencies);
+    for (final sk in _speciesBonusSkillPicks) {
+      skillMap[sk] = SkillProficiencyLevel.proficient;
+    }
+    for (final sk in _abilityScoreController.bonusReplacementSkills) {
+      skillMap[sk] = SkillProficiencyLevel.proficient;
+    }
+    for (final s in curBackground.skillProficiencies) {
+      final clean = s
+          .toLowerCase()
+          .replaceAll(' ', '')
+          .replaceAll('_', '')
+          .replaceAll('-', '');
+      for (final st in SkillType.values) {
+        if (st.name.toLowerCase() == clean ||
+            st.displayName.toLowerCase().replaceAll(' ', '') == clean) {
+          skillMap[st] = SkillProficiencyLevel.proficient;
+          break;
+        }
+      }
+    }
+
+    // Starting equipment and purse from chosen SRD package
+    final classPackages =
+        SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
+    final selectedPkg = (_selectedStartingEquipmentPreset != null
+            ? SrdEquipmentLibrary.findPackageById(
+                _selectedStartingEquipmentPreset!)
+            : null) ??
+        classPackages.first;
+    final equipRequests =
+        List<StartingEquipmentItemRequest>.from(selectedPkg.items);
+    final startingPurse = PartyPurse(gp: selectedPkg.startingGold);
+
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+    final hasFeat = is2024 || curSpecies.grantsBonusFeat;
+    final cantripRefs = _selectedWizardCantrips.map((id) {
+      final spell = SpellbookLibrary.getSpellById(id);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: id,
+        displayName: spell?.name ?? id,
+      );
+    }).toList();
+
+    final allSelectedSpells = List<String>.from(_selectedWizardSpells);
+    final autoGrantedSubclassSpells =
+        SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: curClass.id.slug,
+      subclassSlug: _wizardSelectedSubclass,
+      classLevel: 1,
+      edition: _selectedRuleset == RulesetVersion.v2024
+          ? DmRulesEdition.v2024
+          : DmRulesEdition.v2014,
+    );
+    for (final s in autoGrantedSubclassSpells) {
+      if (!allSelectedSpells.contains(s.id)) {
+        allSelectedSpells.add(s.id);
+      }
+    }
+
+    // Auto-grant innate species & subrace cantrips and spells
+    final innateSpells = SkillTraitResolver.getInnateSpeciesSpells(
+      speciesSlug: curSpecies.id.slug,
+      subraceSlug: _selectedSubrace,
+      totalCharacterLevel: 1,
+      edition: _selectedRuleset == RulesetVersion.v2024
+          ? DmRulesEdition.v2024
+          : DmRulesEdition.v2014,
+    );
+    for (final isp in innateSpells) {
+      if (isp.isCantrip) {
+        if (!cantripRefs.any((c) => c.slug == isp.spellRef.slug)) {
+          cantripRefs.add(isp.spellRef);
+        }
+      } else {
+        if (!allSelectedSpells.contains(isp.spellRef.slug)) {
+          allSelectedSpells.add(isp.spellRef.slug);
+        }
+      }
+    }
+
+    final spellRefs = allSelectedSpells.map((id) {
+      final spell = SpellbookLibrary.getSpellById(id);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: id,
+        displayName: spell?.name ?? id,
+      );
+    }).toList();
+
+    final curSubrace = _selectedSubrace != null
+        ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!)
+        : null;
+    final calculatedBonuses = _calculateBonusScores(
+        curSpecies, curBackground, _selectedRuleset,
+        curSubrace: curSubrace);
+    var finalBonusScores = calculatedBonuses;
+    final finalSaveProficiencies = Set<AbilityType>.from(saveProficiencies);
+
+    if (hasFeat && _selectedFeat != null) {
+      final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!) ??
+          SrdFeatsLibrary.allFeats
+              .where((f) => f.id.slug == _selectedFeat!)
+              .firstOrNull;
+      if (feat != null && feat.hasAbilityScoreIncrease) {
+        final chosenAbility = _selectedFeatAbility ??
+            (feat.selectableAbilities.isNotEmpty
+                ? feat.selectableAbilities.first
+                : null);
+        if (chosenAbility != null) {
+          final amt = feat.statIncreaseAmount;
+          switch (chosenAbility) {
+            case AbilityType.strength:
+              finalBonusScores = finalBonusScores.copyWith(
+                  strength: finalBonusScores.strength + amt);
+            case AbilityType.dexterity:
+              finalBonusScores = finalBonusScores.copyWith(
+                  dexterity: finalBonusScores.dexterity + amt);
+            case AbilityType.constitution:
+              finalBonusScores = finalBonusScores.copyWith(
+                  constitution: finalBonusScores.constitution + amt);
+            case AbilityType.intelligence:
+              finalBonusScores = finalBonusScores.copyWith(
+                  intelligence: finalBonusScores.intelligence + amt);
+            case AbilityType.wisdom:
+              finalBonusScores = finalBonusScores.copyWith(
+                  wisdom: finalBonusScores.wisdom + amt);
+            case AbilityType.charisma:
+              finalBonusScores = finalBonusScores.copyWith(
+                  charisma: finalBonusScores.charisma + amt);
+          }
+          if (feat.grantsSavingThrowProficiency) {
+            finalSaveProficiencies.add(chosenAbility);
+          }
+        }
+      }
+      if (feat != null) {
+        if (feat.hasSkillProficiencyChoice && _selectedFeatSkill != null) {
+          skillMap[_selectedFeatSkill!] = SkillProficiencyLevel.proficient;
+        }
+        if (feat.hasExpertiseChoice) {
+          final eligible = <SkillType>{
+            ..._wizardSelectedSkills,
+            ..._speciesBonusSkillPicks,
+            ..._compensatorySkillPicks,
+            if (_selectedFeatSkill != null) _selectedFeatSkill!,
+          };
+          final finalExp = eligible.contains(_selectedFeatExpertise)
+              ? _selectedFeatExpertise
+              : (_selectedFeatSkill ??
+                  (eligible.isNotEmpty ? eligible.first : null));
+          if (finalExp != null) {
+            skillMap[finalExp] = SkillProficiencyLevel.expertise;
+          }
+        }
+      }
+    }
+
+    EntityReference<DomainEntity>? startingSubclassRef;
+    if (curClass.getSubclassLevel(_selectedRuleset) == 1 &&
+        curClass.subclasses.isNotEmpty) {
+      final chosenSubSlug =
+          _wizardSelectedSubclass ?? curClass.subclasses.first.id.slug;
+      final sub = curClass.subclasses.firstWhere(
+        (s) => s.id.slug == chosenSubSlug,
+        orElse: () => curClass.subclasses.first,
+      );
+      startingSubclassRef = EntityReference<DomainEntity>(
+        refType: EntityType.subclass,
+        slug: sub.id.slug,
+        displayName: sub.name,
+        customProperties: {
+          'featuresMarkdown': sub.featuresMarkdown,
+          'classSlug': sub.classSlug,
+          'shortName': sub.shortName,
+          'grants': sub.grants.map((g) => g.toMap()).toList(),
+          ...sub.customProperties,
+        },
+      );
+    }
+
+    final draft = _abilityScoreController.draft;
+    draft.characterName = _nameController.text.trim().isEmpty
+        ? 'Adventurer'
+        : _nameController.text.trim();
+    draft.rulesEdition = _selectedRuleset == RulesetVersion.v2014
+        ? DmRulesEdition.v2014
+        : DmRulesEdition.v2024;
+    draft.speciesRef = EntityReference(
+      refType: EntityType.species,
+      slug: curSpecies.id.slug,
+      displayName: curSpecies.name,
+      customProperties: {
+        if (curSpecies.flexibleAbilityPool != null)
+          'flexibleAbilityPool': curSpecies.flexibleAbilityPool,
+        if (curSpecies.flexibleAbilityChoiceCount > 0)
+          'flexibleAbilityCount': curSpecies.flexibleAbilityChoiceCount,
+        if (curSpecies.flexibleAbilityBonus > 0)
+          'flexibleAbilityBonus': curSpecies.flexibleAbilityBonus,
+        if (curSpecies.fixedAbilityBonuses2014.isNotEmpty)
+          'fixedAbilityBonuses': curSpecies.fixedAbilityBonuses2014,
+      },
+    );
+    if (_selectedSubrace != null) {
+      final chosenSub =
+          SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) ??
+              (curSpecies.subraces.isNotEmpty
+                  ? curSpecies.subraces.firstWhere(
+                      (s) => s.id.slug == _selectedSubrace,
+                      orElse: () => curSpecies.subraces.first)
+                  : null);
+      if (chosenSub != null) {
+        draft.subraceRef = EntityReference(
+          refType: EntityType.species,
+          slug: chosenSub.id.slug,
+          displayName: chosenSub.name,
+          customProperties: {
+            if (chosenSub.flexibleAbilityPool != null)
+              'flexibleAbilityPool': chosenSub.flexibleAbilityPool,
+            if (chosenSub.flexibleAbilityCount > 0)
+              'flexibleAbilityCount': chosenSub.flexibleAbilityCount,
+            if (chosenSub.flexibleAbilityBonus > 0)
+              'flexibleAbilityBonus': chosenSub.flexibleAbilityBonus,
+            if (chosenSub.fixedAbilityBonuses.isNotEmpty)
+              'fixedAbilityBonuses': chosenSub.fixedAbilityBonuses,
+          },
+        );
+      } else {
+        draft.subraceRef = null;
+      }
+    } else {
+      draft.subraceRef = null;
+    }
+    draft.pendingFlexibleAbilityChoices = _variantHumanBonuses.toList();
+    final bgProps = Map<String, dynamic>.from(curBackground.customProperties);
+    if (curBackground.skillProficiencies.isNotEmpty) {
+      bgProps['skillProficiencies'] = curBackground.skillProficiencies;
+      bgProps['skills'] = curBackground.skillProficiencies;
+    }
+    if (curBackground.toolProficiencies.isNotEmpty) {
+      bgProps['toolProficiencies'] = curBackground.toolProficiencies;
+    }
+    if (curBackground.languages.isNotEmpty) {
+      bgProps['languages'] = curBackground.languages;
+    }
+    draft.backgroundRef = EntityReference(
+      refType: EntityType.background,
+      slug: curBackground.id.slug,
+      displayName: curBackground.name,
+      customProperties: bgProps,
+    );
+    draft.startingClassRef = EntityReference(
+      refType: EntityType.classDefinition,
+      slug: curClass.id.slug,
+      displayName: curClass.name,
+    );
+    draft.startingClassHitDie = curClass.hitDie;
+    draft.baseScores = _wizardBaseScores;
+    draft.bonusScores = finalBonusScores;
+    draft.savingThrowProficiencies = finalSaveProficiencies;
+    draft.selectedSkills = skillMap;
+    draft.originFeats = [
+      if (hasFeat && _selectedFeat != null)
+        EntityReference(
+          refType: EntityType.feat,
+          slug: _selectedFeat!,
+          displayName:
+              SrdFeatsLibrary.findBySlug(_selectedFeat!)?.name ?? 'Feat',
+        ),
+    ];
+    draft.startingEquipment = equipRequests;
+    draft.startingPurse = startingPurse;
+    draft.takesStartingWealth = selectedPkg.id.startsWith('starting_wealth_');
+    draft.cantrips = cantripRefs;
+    draft.spellsKnown = spellRefs;
+    draft.spellsPrepared = spellRefs;
+    draft.startingSubclassRef = startingSubclassRef;
+    final finalFeatureOptions =
+        Map<String, List<String>>.from(_wizardSelectedFeatureOptions);
+    if (hasFeat && _selectedFeat != null && _selectedFeatOption != null) {
+      finalFeatureOptions['feat-$_selectedFeat'] = [_selectedFeatOption!];
+    }
+    draft.selectedFeatureOptions = finalFeatureOptions;
+    draft.languages = _allBuilderLanguages.toList();
+    draft.toolProficiencies = _allBuilderTools.toList();
+
+    final newChar = CharacterFactory.buildFromDraft(draft);
+    _persistenceService.saveCharacter(newChar).then((updated) {
+      if (mounted) {
+        setState(() {
+          _characterRoster = updated;
+          _character = newChar;
+          _isSelectorView = false;
+          _wizardStep = 0;
+          _recalculateStats();
+          _syncTabController();
+          _tabController.animateTo(0);
+        });
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Created ${newChar.name} successfully!')),
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // TAB 3: INVENTORY & ATOMICS LOOT TRANSFERS
+  // --------------------------------------------------------------------------
+  Widget _buildInventoryTab(ThemeData theme) {
+    final char = _character;
+    if (char == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.inventory_2_outlined,
+                  color: Colors.white38, size: 48),
+              const SizedBox(height: 12),
+              const Text('No Active Character',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              const Text(
+                  'Select or create a character to manage inventory and equipment.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                icon: const Icon(Icons.groups_outlined, size: 18),
+                label: const Text('Go to Character Roster'),
+                onPressed: () {
+                  setState(() {
+                    _isSelectorView = true;
+                    _syncTabController();
+                    _tabController.animateTo(0);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Attunement Counter Card
+        Card(
+          color: const Color(0xFF1E293B),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Colors.purpleAccent),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Attunement: ${char.attunedItemCount} / ${char.maxAttunementSlots} Slots',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
+                ),
+                Text('Gold: ${char.purse.gp} GP',
+                    style: const TextStyle(
+                        color: Colors.amberAccent,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('CHARACTER INVENTORY',
+                style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            FilledButton.tonalIcon(
+              icon: const Icon(Icons.add_shopping_cart, size: 16),
+              label: const Text('Add SRD Item'),
+              onPressed: () => _showAddSrdItemDialog(char),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        ...char.inventory.map((item) {
+          return Card(
+            color: const Color(0xFF1E293B),
+            child: ListTile(
+              title: Text(item.displayName,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(
+                'Qty: ${item.quantity} • ${item.isEquipped ? "Equipped in ${item.equippedSlot?.displayName}" : "In Backpack"}${item.requiresAttunement ? (item.isAttuned ? " • [Attuned]" : " • [Unattuned]") : ""}',
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (item.requiresAttunement)
+                    IconButton(
+                      icon: Icon(
+                          item.isAttuned ? Icons.star : Icons.star_border,
+                          color: item.isAttuned
+                              ? Colors.purpleAccent
+                              : Colors.white60),
+                      tooltip: item.isAttuned ? 'Unattune' : 'Attune',
+                      onPressed: () {
+                        try {
+                          final updated =
+                              InventoryTransactionService.attuneItem(
+                                  char, item.instanceId, !item.isAttuned);
+                          setState(() {
+                            _character = updated;
+                            _recalculateStats();
+                          });
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('$e')),
+                          );
+                        }
+                      },
+                    ),
+                  IconButton(
+                    icon: Icon(
+                        item.isEquipped
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank,
+                        color: item.isEquipped
+                            ? Colors.cyanAccent
+                            : Colors.white60),
+                    tooltip: item.isEquipped ? 'Unequip' : 'Equip',
+                    onPressed: () {
+                      final targetSlot =
+                          InventoryTransactionService.resolveDefaultSlot(item);
+                      final updated = item.isEquipped
+                          ? InventoryTransactionService.unequipItem(
+                              char, item.instanceId)
+                          : InventoryTransactionService.equipItem(
+                              char, item.instanceId, targetSlot);
+                      setState(() {
+                        _character = updated;
+                        _recalculateStats();
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+
+        if (char.inventory.isEmpty)
+          const Card(
+            color: Color(0xFF1E293B),
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'Inventory is empty. Tap "Add SRD Item" above to add gear and equipment.',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showAddSrdItemDialog(Character char) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        String searchQuery = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final allItems = MagicItemLibrary.allItems;
+            final filtered = searchQuery.trim().isEmpty
+                ? allItems.take(50).toList()
+                : allItems
+                    .where((item) =>
+                        item.name
+                            .toLowerCase()
+                            .contains(searchQuery.toLowerCase()) ||
+                        item.category.name
+                            .toLowerCase()
+                            .contains(searchQuery.toLowerCase()) ||
+                        item.tags.any((t) => t
+                            .toLowerCase()
+                            .contains(searchQuery.toLowerCase())))
+                    .toList();
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.8,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (context, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.inventory_2, color: Colors.cyanAccent),
+                              SizedBox(width: 8),
+                              Text('Equipment & Magic Items',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white)),
+                            ],
+                          ),
+                          IconButton(
+                            icon:
+                                const Icon(Icons.close, color: Colors.white70),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText:
+                              'Search SRD & homebrew weapons, armor, potions, gear...',
+                          prefixIcon: const Icon(Icons.search,
+                              color: Colors.cyanAccent),
+                          filled: true,
+                          fillColor: const Color(0xFF1E293B),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onChanged: (val) {
+                          setModalState(() => searchQuery = val);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final item = filtered[index];
+                            return Card(
+                              color: const Color(0xFF1E293B),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                title: Text(item.name,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white)),
+                                subtitle: Text(
+                                  '${item.category.name.toUpperCase()} • ${item.rarity.name}${item.cost != null ? " • ${item.cost}" : ""}\n${item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 11.5, color: Colors.white70),
+                                ),
+                                trailing: ElevatedButton.icon(
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('Add'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.cyan.shade800,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () {
+                                    final resolvedSlot =
+                                        InventoryTransactionService
+                                            .resolveDefaultSlot(
+                                      InventoryItemInstance(
+                                        instanceId: 'temp',
+                                        itemRef: EntityReference(
+                                          refType: EntityType.equipment,
+                                          slug: item.id.replaceAll('_', '-'),
+                                          displayName: item.name,
+                                        ),
+                                        customProperties: {
+                                          'category': item.category.name,
+                                          'tags': item.tags,
+                                        },
+                                      ),
+                                    );
+                                    final newInstance = InventoryItemInstance(
+                                      instanceId:
+                                          'srd-${item.id}-${DateTime.now().millisecondsSinceEpoch}',
+                                      itemRef: EntityReference(
+                                        refType: EntityType.equipment,
+                                        slug: item.id.replaceAll('_', '-'),
+                                        displayName: item.name,
+                                      ),
+                                      quantity: 1,
+                                      equippedSlot: resolvedSlot,
+                                      requiresAttunement:
+                                          item.requiresAttunement,
+                                      customProperties: {
+                                        'category': item.category.name,
+                                        'tags': item.tags,
+                                      },
+                                    );
+                                    final updatedInventory =
+                                        List<InventoryItemInstance>.from(
+                                            char.inventory)
+                                          ..add(newInstance);
+                                    final updatedChar = char.copyWith(
+                                        inventory: updatedInventory);
+                                    _persistenceService
+                                        .saveCharacter(updatedChar)
+                                        .then((_) {
+                                      if (mounted) {
+                                        setState(() {
+                                          _character = updatedChar;
+                                          _recalculateStats();
+                                        });
+                                      }
+                                    });
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(this.context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'Added ${item.name} to inventory!')),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // TAB 4: LEVEL UP & MULTICLASSING PIPELINE
+  // --------------------------------------------------------------------------
+  Widget _buildLevelUpTab(ThemeData theme) {
+    final char = _character;
+    if (char == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.upgrade, color: Colors.white38, size: 48),
+              const SizedBox(height: 12),
+              const Text('No Active Character',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              const Text('Select or create a character to advance levels.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                icon: const Icon(Icons.groups_outlined, size: 18),
+                label: const Text('Go to Character Roster'),
+                onPressed: () {
+                  setState(() {
+                    _isSelectorView = true;
+                    _syncTabController();
+                    _tabController.animateTo(0);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final primaryClass = char.progression.classes.firstOrNull;
+    final primaryClassName =
+        primaryClass?.classRef.displayName.isNotEmpty == true
+            ? primaryClass!.classRef.displayName
+            : 'Adventurer';
+    final nextLevel = char.totalLevel + 1;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Hero Level Up Launchpad Card
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF1E293B),
+                Colors.purple.shade900.withValues(alpha: 0.35),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border:
+                Border.all(color: Colors.purpleAccent.withValues(alpha: 0.5)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withValues(alpha: 0.15),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.purpleAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.upgrade,
+                        color: Colors.purpleAccent, size: 32),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Level Up ${char.name}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Current: Level ${char.totalLevel} $primaryClassName  ➔  Next: Level $nextLevel',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.purpleAccent.shade100,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.white24),
+              const SizedBox(height: 12),
+              Text(
+                'Ready to advance your character? The 5e Level Up Wizard will guide you step-by-step through:',
+                style:
+                    theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+              ),
+              const SizedBox(height: 10),
+              _buildLevelUpFeatureBullet(Icons.health_and_safety_outlined,
+                  'Hit Points & Hit Die Scaling (Average vs Interactive Roll)'),
+              _buildLevelUpFeatureBullet(Icons.auto_awesome,
+                  'Class Archetypes & Subclass Selection at Milestone Levels'),
+              _buildLevelUpFeatureBullet(Icons.fitness_center,
+                  'Ability Score Improvements (ASI) or Feats (+2 / +1+1 / Feat)'),
+              _buildLevelUpFeatureBullet(Icons.menu_book,
+                  'Spellcasting & Spell Slot Scaling according to 5e rules'),
+              _buildLevelUpFeatureBullet(Icons.alt_route,
+                  'Multiclassing with Prerequisite Verification (13+ stat requirement)'),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.purpleAccent.shade400,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.rocket_launch, size: 20),
+                  label: const Text(
+                    'LAUNCH LEVEL UP WIZARD',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        letterSpacing: 0.8),
+                  ),
+                  onPressed: () {
+                    HapticService.selectionTick(context);
+                    LevelUpWizardDialog.show(
+                      context,
+                      character: char,
+                      onLevelUpApplied: (upgraded) {
+                        _persistenceService
+                            .saveCharacter(upgraded)
+                            .then((updatedRoster) {
+                          if (mounted) {
+                            setState(() {
+                              _characterRoster = updatedRoster;
+                              _character = upgraded;
+                              _recalculateStats();
+                              _tabController.animateTo(0);
+                            });
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLevelUpFeatureBullet(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: Colors.purpleAccent.shade100),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text,
+                style: const TextStyle(fontSize: 13, color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,0 +1,182 @@
+import 'package:flutter/material.dart';
+import '../minion_stat_block.dart';
+import '../summon_preset.dart';
+import 'beast_presets.dart';
+
+class InsectSummons {
+  static const giantCentipede = MinionStatBlock(
+    id: 'insect_centipede',
+    name: 'Giant Centipede',
+    sizeDisplay: 'Small',
+    crDisplay: 'CR 1/4',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 13,
+    armorType: 'natural armor',
+    maxHp: 4,
+    hitDice: '1d6 + 1',
+    speed: '30 ft., climb 30 ft.',
+    strScore: 5,
+    dexScore: 14,
+    conScore: 12,
+    intScore: 1,
+    wisScore: 7,
+    chaScore: 3,
+    senses: 'blindsight 30 ft., passive Perception 8',
+    languages: '—',
+    xp: 50,
+    traits: [],
+    actions: [
+      CreatureAction(
+        name: 'Bite',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 4 (1d4 + 2) piercing damage, and the target must succeed on a DC 11 Constitution saving throw or take 10 (3d6) poison damage. If the poison damage reduces the target to 0 hit points, the target is stable but poisoned for 1 hour, even after regaining hit points, and is paralyzed while poisoned in this way.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '4 (1d4 + 2) piercing + 10 (3d6) poison',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    secondaryDamageDiceCount: 3,
+    secondaryDamageDiceSides: 6,
+    secondaryDamageType: 'Poison',
+    specialTrait:
+        'Bite (1d4+2 piercing + 3d6 poison, DC 11 Con save) + Blindsight 30 ft.',
+    accentColor: Color(0xFF4CAF50),
+  );
+
+  static const giantWasp = MinionStatBlock(
+    id: 'insect_wasp',
+    name: 'Giant Wasp',
+    sizeDisplay: 'Medium',
+    crDisplay: 'CR 1/2',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 12,
+    maxHp: 13,
+    hitDice: '3d8',
+    speed: '10 ft., fly 50 ft.',
+    strScore: 10,
+    dexScore: 14,
+    conScore: 10,
+    intScore: 1,
+    wisScore: 10,
+    chaScore: 3,
+    senses: 'passive Perception 10',
+    languages: '—',
+    xp: 100,
+    traits: [],
+    actions: [
+      CreatureAction(
+        name: 'Sting',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 5 (1d4 + 2) piercing damage, and the target must make a DC 11 Constitution saving throw, taking 10 (3d6) poison damage on a failed save, or half as much damage on a successful one. If the poison damage reduces the target to 0 hit points, the target is stable but poisoned for 1 hour, even after regaining hit points, and is paralyzed while poisoned in this way.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '5 (1d4 + 2) piercing + 10 (3d6) poison',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 4,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    secondaryDamageDiceCount: 3,
+    secondaryDamageDiceSides: 6,
+    secondaryDamageType: 'Poison',
+    specialTrait:
+        'Sting (1d4+2 piercing + 3d6 poison, DC 11 Con save) & Fly 50 ft.',
+    accentColor: Color(0xFFFBC02D),
+  );
+
+  static const giantScorpion = MinionStatBlock(
+    id: 'insect_scorpion',
+    name: 'Giant Scorpion',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 3',
+    typeDisplay: 'Beast',
+    alignment: 'unaligned',
+    ac: 15,
+    armorType: 'natural armor',
+    maxHp: 52,
+    hitDice: '7d10 + 14',
+    speed: '40 ft.',
+    strScore: 15,
+    dexScore: 13,
+    conScore: 15,
+    intScore: 1,
+    wisScore: 9,
+    chaScore: 3,
+    senses: 'blindsight 60 ft., passive Perception 9',
+    languages: '—',
+    xp: 700,
+    traits: [],
+    actions: [
+      CreatureAction(
+        name: 'Multiattack',
+        description:
+            'The scorpion makes three attacks: two with its claws and one with its sting.',
+      ),
+      CreatureAction(
+        name: 'Claw',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 6 (1d8 + 2) bludgeoning damage, and the target is grappled (escape DC 12). The scorpion has two claws, each of which can grapple only one target.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '6 (1d8 + 2) bludgeoning + Grapple (DC 12)',
+      ),
+      CreatureAction(
+        name: 'Sting',
+        description:
+            'Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 7 (1d10 + 2) piercing damage, and the target must make a DC 12 Constitution saving throw, taking 22 (4d10) poison damage on a failed save, or half as much damage on a successful one.',
+        attackType: 'Melee Weapon Attack',
+        attackBonus: 4,
+        reach: 'reach 5 ft.',
+        hitDamage: '7 (1d10 + 2) piercing + 22 (4d10) poison',
+      ),
+    ],
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 10,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    secondaryDamageDiceCount: 4,
+    secondaryDamageDiceSides: 10,
+    secondaryDamageType: 'Poison',
+    specialTrait:
+        'Multiattack (2 Claws + 1 Sting with 4d10 poison, DC 12 Con save)',
+    accentColor: Color(0xFFE65100),
+  );
+
+  static const giantInsectPreset = SummonPreset(
+    id: 'giant_insect',
+    spellId: 'spell_giant_insect',
+    name: 'Giant Insect',
+    category: SummonCategory.spell,
+    levelDisplay: '4th-level Transmutation',
+    castingTime: '1 Action',
+    range: '30 feet',
+    components: 'V, S',
+    duration: 'Concentration, up to 10 minutes',
+    description:
+        'You transform up to ten centipedes, three spiders, five wasps, or one scorpion into giant versions under your command.',
+    upcastRules: 'No additional count scaling in SRD 5.1.',
+    statBlocks: [
+      giantCentipede,
+      giantWasp,
+      BeastSummons.giantSpider,
+      giantScorpion
+    ],
+    budgetCalculator: _calculateGiantInsectBudget,
+    defaultMinionCount: 10,
+  );
+
+  static int _calculateGiantInsectBudget(int spellLevel) => 10;
+}

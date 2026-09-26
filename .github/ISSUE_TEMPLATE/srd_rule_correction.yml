@@ -1,0 +1,47 @@
+name: 📜 SRD Rule or Stat Block Correction
+description: Report an inaccurate or outdated 5e SRD stat block, rule difference, or modifier calculation.
+title: "[Rule Correction]: "
+labels: ["rules-srd", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to report discrepancies in 5e SRD 5.1 data, creature stat blocks, 2014 vs 2024 rule comparisons, or damage formulas.
+
+  - type: input
+    id: affected_item
+    attributes:
+      label: Affected Tool / Creature / Rule Card
+      description: Name of the spell, creature, rule card, or tool item.
+      placeholder: Wolf / Animate Objects / Two-Weapon Fighting / Exhaustion
+    validations:
+      required: true
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Rules Edition
+      options:
+        - 2014 5e SRD
+        - 2024 5e SRD / Revision
+        - Both / Comparison Rule
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_data
+    attributes:
+      label: Current Toolkit Display / Value
+      description: What does the toolkit currently show?
+      placeholder: AC 12, damage formula 2d4+1...
+    validations:
+      required: true
+
+  - type: textarea
+    id: correct_data
+    attributes:
+      label: Correct 5e SRD Data & Citation
+      description: What should it display, and what is the official citation?
+      placeholder: In SRD 5.1 p. XX, AC is 13 (natural armor) and Bite damage is 2d4+2...
+    validations:
+      required: true

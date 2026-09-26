@@ -1,0 +1,985 @@
+import 'package:flutter/material.dart';
+import '../../models/characters/srd_backgrounds_library.dart';
+import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/srd_feats_library.dart';
+import '../../models/characters/srd_species_library.dart';
+import '../../models/dm_screen_data.dart' show DmRulesEdition;
+import '../../models/domain/core_types.dart' show RulesetVersion;
+import '../../models/domain/homebrew_extended_entities.dart' show FeatureOption;
+import '../../providers/character_sheet_controller.dart';
+import '../../services/haptic_service.dart';
+import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
+import 'add_feat_dialog.dart';
+
+@immutable
+class _ExtractedFeature {
+  final String name;
+  final int? level;
+  final String descriptionMarkdown;
+
+  const _ExtractedFeature({
+    required this.name,
+    this.level,
+    required this.descriptionMarkdown,
+  });
+}
+
+/// Aggregated Identity, Traits, Feats, and Class Features Section with
+/// accessible 48x48dp touch targets and modal bottom sheet reference viewers.
+class FeaturesTraitsSection extends StatelessWidget {
+  final CharacterSheetController controller;
+
+  const FeaturesTraitsSection({
+    super.key,
+    required this.controller,
+  });
+
+  void _showFeatureDetailModal(
+    BuildContext context, {
+    required String name,
+    required String category,
+    required String descriptionMarkdown,
+    IconData icon = Icons.auto_awesome,
+    Widget? glyphWidget,
+    Color? accentColor,
+    String? featSlugToRemove,
+  }) {
+    HapticService.selectionTick(context);
+    final theme = Theme.of(context);
+    final color = accentColor ?? theme.colorScheme.primary;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 12,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                // Header with Accessibility Semantics
+                Semantics(
+                  header: true,
+                  label: 'Feature Details: $name',
+                  child: Row(
+                    children: [
+                      if (glyphWidget != null)
+                        SizedBox(width: 40, height: 40, child: glyphWidget)
+                      else
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(icon, color: color, size: 22),
+                        ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: theme.textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                category.toUpperCase(),
+                                style: TextStyle(
+                                  color: color,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Semantics(
+                        button: true,
+                        label: 'Close feature details',
+                        child: ConstrainedBox(
+                          constraints:
+                              const BoxConstraints(minWidth: 48, minHeight: 48),
+                          child: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Divider(height: 1),
+                const SizedBox(height: 14),
+
+                // Markdown Description
+                FormattedMarkdownText(
+                  descriptionMarkdown,
+                  defaultColor: theme.colorScheme.onSurface,
+                ),
+
+                const SizedBox(height: 20),
+                if (featSlugToRemove != null) ...[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 44),
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.redAccent),
+                        minimumSize: const Size(double.infinity, 44),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.delete_outline,
+                          color: Colors.redAccent, size: 18),
+                      label: const Text('Remove Feat',
+                          style: TextStyle(color: Colors.redAccent)),
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        final reasonCtrl = TextEditingController();
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (c) => AlertDialog(
+                            title: Text('Remove $name?'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    'Are you sure you want to remove "$name" from ${controller.character.name}?'),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: reasonCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText:
+                                        'Reason / Campaign Log Note (Optional)',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(c, false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent),
+                                onPressed: () => Navigator.pop(c, true),
+                                child: const Text('Remove Feat'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await controller.removeFeat(
+                            featSlugToRemove,
+                            reason: reasonCtrl.text.trim().isNotEmpty
+                                ? reasonCtrl.text.trim()
+                                : null,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureChip(
+    BuildContext context, {
+    required String name,
+    required String category,
+    required String descriptionMarkdown,
+    IconData icon = Icons.auto_awesome,
+    Widget? glyphWidget,
+    required Color color,
+    String? featSlug,
+  }) {
+    final theme = Theme.of(context);
+
+    return Semantics(
+      button: true,
+      label: '$name ($category). Tap to view details.',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _showFeatureDetailModal(
+            context,
+            name: name,
+            category: category,
+            descriptionMarkdown: descriptionMarkdown,
+            icon: icon,
+            glyphWidget: glyphWidget,
+            accentColor: color,
+            featSlugToRemove: featSlug,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: theme.colorScheme.outlineVariant
+                        .withValues(alpha: 0.6)),
+              ),
+              child: Row(
+                children: [
+                  if (glyphWidget != null)
+                    SizedBox(width: 24, height: 24, child: glyphWidget)
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(icon, color: color, size: 18),
+                    ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          category,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right,
+                      size: 18, color: theme.colorScheme.onSurfaceVariant),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static final Map<String, String> _wellKnownClassFeatureDescriptions = {
+    'helpful': 'You can take the Help action as a bonus action.',
+    'cunning action':
+        'You can take a bonus action on each of your turns in combat to take the Dash, Disengage, or Hide action.',
+    'second wind':
+        'You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.',
+    'action surge':
+        'On your turn, you can take one additional action on top of your regular action and a possible bonus action.',
+    'bardic inspiration':
+        'You can inspire others through stirring words or music. Use a bonus action on your turn to choose one creature within 60 feet.',
+    'rage':
+        'In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.',
+    'flurry of blows':
+        'Immediately after you take the Attack action on your turn, you can spend 1 ki point to make two unarmed strikes as a bonus action.',
+    'patient defense':
+        'You can spend 1 ki point to take the Dodge action as a bonus action on your turn.',
+    'step of the wind':
+        'You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn.',
+    'uncanny dodge':
+        'When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack\'s damage against you.',
+    'deflect missiles':
+        'You can use your reaction to deflect or catch the missile when you are hit by a ranged weapon attack.',
+  };
+
+  static List<_ExtractedFeature> _extractFeaturesFromMarkdown(String markdown) {
+    if (markdown.trim().isEmpty) return const [];
+
+    final List<_ExtractedFeature> result = [];
+
+    const nonFeatureTitles = {
+      'action',
+      'bonus action',
+      'reaction',
+      'special',
+      'at higher levels',
+      'hit',
+      'miss',
+      'note',
+      'saving throw',
+      'damage',
+    };
+
+    void addOrUpdateFeature({
+      required String name,
+      required String descriptionMarkdown,
+      int? level,
+    }) {
+      final cleanName = name.trim();
+      if (cleanName.isEmpty) return;
+      if (nonFeatureTitles.contains(cleanName.toLowerCase())) return;
+
+      final existingIndex = result
+          .indexWhere((r) => r.name.toLowerCase() == cleanName.toLowerCase());
+      if (existingIndex >= 0) {
+        final existing = result[existingIndex];
+        final existingIsStub =
+            existing.descriptionMarkdown.contains('Granted at level') ||
+                existing.descriptionMarkdown.length < 50;
+        final newHasContent = descriptionMarkdown.trim().isNotEmpty &&
+            !descriptionMarkdown.contains('Granted at level');
+
+        if (existingIsStub && newHasContent) {
+          result[existingIndex] = _ExtractedFeature(
+            name: cleanName,
+            level: level ?? existing.level,
+            descriptionMarkdown: descriptionMarkdown,
+          );
+        }
+      } else {
+        result.add(_ExtractedFeature(
+          name: cleanName,
+          level: level,
+          descriptionMarkdown: descriptionMarkdown,
+        ));
+      }
+    }
+
+    // Pass 1: Header blocks (# to ####) e.g. "### Feature Name (Level X)"
+    if (markdown.contains(RegExp(r'(?:^|\n)#{1,4}\s+'))) {
+      final blocks = markdown.split(RegExp(r'(?=(?:^|\n)#{1,4}\s+)'));
+      for (final block in blocks) {
+        final trimmed = block.trim();
+        if (trimmed.isEmpty) continue;
+        final lines = trimmed.split('\n');
+        final headerLine = lines.first.replaceAll(RegExp(r'^#+\s*'), '').trim();
+
+        String name = headerLine;
+        int? level;
+
+        final trailingLevel = RegExp(
+          r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
+          caseSensitive: false,
+        ).firstMatch(headerLine);
+
+        if (trailingLevel != null) {
+          name = trailingLevel.group(1)?.trim() ?? headerLine;
+          final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
+          if (lvlStr != null) level = int.tryParse(lvlStr);
+        } else {
+          final leadingLevel = RegExp(
+            r'^(?:(?:Level|Lvl)\s*(\d+)|(\d+)(?:st|nd|rd|th)\s*(?:-|–)?\s*(?:Level|lvl))\s*[:\-\)]\s*(.*)$',
+            caseSensitive: false,
+          ).firstMatch(headerLine);
+          if (leadingLevel != null) {
+            final lvlStr = leadingLevel.group(1) ?? leadingLevel.group(2);
+            if (lvlStr != null) level = int.tryParse(lvlStr);
+            name = leadingLevel.group(3)?.trim() ?? headerLine;
+          }
+        }
+
+        final body = lines.length > 1 ? lines.sublist(1).join('\n').trim() : '';
+
+        if (level == null && body.isNotEmpty) {
+          final sample = body.length > 300 ? body.substring(0, 300) : body;
+          final bodyLvlMatch = RegExp(
+            r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
+            caseSensitive: false,
+          ).firstMatch(sample);
+          if (bodyLvlMatch != null) {
+            level = int.tryParse(bodyLvlMatch.group(1)!);
+          }
+        }
+
+        // Check if this header block contains bold sub-features
+        final boldRegex = RegExp(
+            r'(?:^|\n)\s*(?:[-*]\s*)?\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
+        final subMatches = boldRegex.allMatches(body).where((m) {
+          final t = m.group(1)?.trim() ?? '';
+          return t.isNotEmpty && !nonFeatureTitles.contains(t.toLowerCase());
+        }).toList();
+
+        if (subMatches.length >= 2) {
+          for (final subM in subMatches) {
+            final subTitle = subM.group(1)?.trim() ?? '';
+            final subBody = subM.group(2)?.trim() ?? '';
+            addOrUpdateFeature(
+              name: subTitle,
+              descriptionMarkdown: '**$subTitle.** $subBody',
+              level: level,
+            );
+          }
+        } else {
+          addOrUpdateFeature(
+            name: name,
+            descriptionMarkdown: body.isNotEmpty ? body : trimmed,
+            level: level,
+          );
+        }
+      }
+    }
+
+    // Pass 2: Bold bullet / section markers "**Feature Name.** Description..."
+    final boldRegex = RegExp(
+        r'(?:^|\n)\s*(?:[-*]\s*)?\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
+    final matches = boldRegex.allMatches(markdown).toList();
+    if (matches.isNotEmpty) {
+      for (final match in matches) {
+        var title = match.group(1)?.trim() ?? '';
+        final body = match.group(2)?.trim() ?? '';
+        if (title.isEmpty || nonFeatureTitles.contains(title.toLowerCase()))
+          continue;
+
+        int? level;
+        final trailingLevel = RegExp(
+          r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
+          caseSensitive: false,
+        ).firstMatch(title);
+        if (trailingLevel != null) {
+          title = trailingLevel.group(1)?.trim() ?? title;
+          final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
+          if (lvlStr != null) level = int.tryParse(lvlStr);
+        }
+        if (level == null && body.isNotEmpty) {
+          final sample = body.length > 300 ? body.substring(0, 300) : body;
+          final lvlMatch = RegExp(
+            r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
+            caseSensitive: false,
+          ).firstMatch(sample);
+          if (lvlMatch != null) {
+            level = int.tryParse(lvlMatch.group(1)!);
+          }
+        }
+        addOrUpdateFeature(
+          name: title,
+          level: level,
+          descriptionMarkdown: '**$title.** $body',
+        );
+      }
+    }
+
+    // Pass 3: Pipe-delimited feature strings (fallback / stubs for unexpanded items)
+    final pipeRegex6 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex6.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(6) ?? '1') ?? 1;
+      if (featName.isNotEmpty) {
+        final fallbackDesc =
+            _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
+        final desc = fallbackDesc != null
+            ? '**$featName**\n\n$fallbackDesc'
+            : '**$featName**\n\n*Granted at Level $lvl.*';
+        addOrUpdateFeature(
+          name: featName,
+          level: lvl,
+          descriptionMarkdown: desc,
+        );
+      }
+    }
+
+    final pipeRegex4 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex4.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final clsName = match.group(2)?.trim() ?? '';
+      final src = match.group(3)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
+      if (featName.isNotEmpty) {
+        final fallbackDesc =
+            _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
+        final desc = fallbackDesc != null
+            ? '**$featName**\n\n$fallbackDesc'
+            : '**$featName**\n\n*Class Feature granted by $clsName ($src) at Level $lvl.*';
+        addOrUpdateFeature(
+          name: featName,
+          level: lvl,
+          descriptionMarkdown: desc,
+        );
+      }
+    }
+
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final character = controller.character;
+    final is2014 = character.rulesEdition == DmRulesEdition.v2014 ||
+        character.id.ruleset == RulesetVersion.v2014;
+
+    // Resolve species details
+    final race = SrdSpeciesLibrary.findBySlug(character.speciesRef.slug);
+    final speciesDesc = (is2014 && race?.id.slug == 'human')
+        ? '**Ability Score Increase.** Your ability scores each increase by 1.\n\n**Languages.** You can speak, read, and write Common and one extra language of your choice.'
+        : (race?.traitsMarkdown ??
+            'Inherent physical, physiological, and biological traits granted by the ${character.speciesRef.displayName} species lineage.');
+
+    // Resolve background details
+    final bgSlug = character.backgroundRef?.slug ?? '';
+    final bg =
+        bgSlug.isNotEmpty ? SrdBackgroundsLibrary.findBySlug(bgSlug) : null;
+    final bgName =
+        character.backgroundRef?.displayName ?? (bg?.name ?? 'Background');
+    final bgFeatureName =
+        character.customProperties['backgroundFeature']?.toString();
+    final bgFeatureDesc =
+        character.customProperties['backgroundFeatureDescription']?.toString();
+    var bgDesc = bg != null
+        ? SrdBackgroundsLibrary.getDescriptionForBackground(
+            bg,
+            ruleset: is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024,
+          )
+        : (is2014
+            ? 'Narrative background, starting proficiencies, and personal history.'
+            : 'Narrative background, origin identity, starting proficiencies, and personal history.');
+    if (is2014 && bgFeatureName != null && bgFeatureName.isNotEmpty) {
+      if (!bgDesc.toLowerCase().contains(bgFeatureName.toLowerCase())) {
+        final featBlock = '**Feature: $bgFeatureName**\n${bgFeatureDesc ?? ''}';
+        bgDesc = bgDesc.trim().isEmpty ? featBlock : '$bgDesc\n\n$featBlock';
+      }
+    }
+
+    // Aggregate class feature options
+    final allSelectedOptions =
+        character.progression.getAllSelectedFeatureOptions();
+    final optionItems = <Map<String, String>>[];
+    for (final entry in allSelectedOptions.entries) {
+      final decisionId = entry.key;
+      for (final optId in entry.value) {
+        final opt = SrdFeatureOptions.allOptions.firstWhere(
+          (o) => o.id == optId || o.id == optId.replaceAll('-', '_'),
+          orElse: () => SrdFeatureOptions.allOptions.firstWhere(
+            (o) => o.name.toLowerCase() == optId.toLowerCase(),
+            orElse: () => FeatureOption(
+              id: optId,
+              name: optId.replaceAll('_', ' ').replaceAll('-', ' '),
+              descriptionMarkdown:
+                  'Selected character customization option for ${decisionId.replaceAll('-', ' ')}.',
+            ),
+          ),
+        );
+        final displayCategory = decisionId.startsWith('feat-')
+            ? 'FEAT: ${decisionId.substring(5).replaceAll('-', ' ').toUpperCase()}'
+            : decisionId.replaceAll('-', ' ').toUpperCase();
+        optionItems.add({
+          'name': opt.name,
+          'category': displayCategory,
+          'description': opt.descriptionMarkdown,
+        });
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'IDENTITY & LINEAGE',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+            color: Colors.tealAccent,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Species Chip
+        _buildFeatureChip(
+          context,
+          name: '${character.speciesRef.displayName} Traits',
+          category: 'Species Lineage',
+          descriptionMarkdown: speciesDesc,
+          glyphWidget: DndGlyph.species(
+            speciesType: SpeciesType.tryParse(character.speciesRef.slug) ??
+                SpeciesType.tryParse(character.speciesRef.displayName) ??
+                SpeciesType.human,
+            size: 24,
+            isDarkMode: true,
+          ),
+          icon: Icons.fingerprint,
+          color: Colors.tealAccent,
+        ),
+
+        // Background Chip
+        _buildFeatureChip(
+          context,
+          name: bgName,
+          category: 'Background',
+          descriptionMarkdown: bgDesc,
+          glyphWidget: DndGlyph.genericUi(
+            uiType: GenericUiGlyphType.d20,
+            size: 24,
+            isDarkMode: true,
+          ),
+          icon: Icons.history_edu,
+          color: Colors.orangeAccent,
+        ),
+
+        // 2014 Background Feature Chip
+        if (is2014 && bgFeatureName != null && bgFeatureName.isNotEmpty)
+          _buildFeatureChip(
+            context,
+            name: bgFeatureName,
+            category: 'Background Feature',
+            descriptionMarkdown: bgFeatureDesc?.isNotEmpty == true
+                ? bgFeatureDesc!
+                : 'Granted by the $bgName background.',
+            glyphWidget: DndGlyph.genericUi(
+              uiType: GenericUiGlyphType.d20,
+              size: 24,
+              isDarkMode: true,
+            ),
+            icon: Icons.auto_stories,
+            color: Colors.amberAccent,
+          ),
+
+        const SizedBox(height: 12),
+        Text(
+          'CLASS FEATURES & SPECIALIZATIONS',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Class & Subclass features
+        ...character.progression.classes.expand((cls) {
+          final widgets = <Widget>[];
+
+          // 1. Resolve Class
+          final srdClass = SrdClassesLibrary.findBySlug(cls.classRef.slug) ??
+              SrdClassesLibrary.allClasses
+                  .where(
+                    (c) =>
+                        c.id.slug == cls.classRef.slug ||
+                        c.name.toLowerCase() ==
+                            cls.classRef.displayName.toLowerCase(),
+                  )
+                  .firstOrNull;
+
+          final classDesc = srdClass?.featuresMarkdown ??
+              'Core class features, weapon/armor proficiencies, and archetype specialization at level ${cls.level} of ${cls.classRef.displayName}.';
+          final clsType = DndClassType.tryParse(cls.classRef.slug) ??
+              DndClassType.tryParse(cls.classRef.displayName) ??
+              DndClassType.fighter;
+
+          final pipeRegex = RegExp(
+              r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+              multiLine: true);
+          final hasPipeFeatures = pipeRegex.hasMatch(classDesc);
+
+          if (hasPipeFeatures) {
+            final extractedClassFeatures =
+                _extractFeaturesFromMarkdown(classDesc);
+            final eligibleClassFeatures = extractedClassFeatures
+                .where((f) => f.level == null || f.level! <= cls.level)
+                .toList();
+
+            for (final feat in eligibleClassFeatures) {
+              widgets.add(_buildFeatureChip(
+                context,
+                name: feat.name,
+                category:
+                    '${cls.classRef.displayName} Feature${feat.level != null ? ' (Lvl ${feat.level})' : ''}',
+                descriptionMarkdown: feat.descriptionMarkdown,
+                glyphWidget: DndGlyph.classFeature(
+                  classType: clsType,
+                  size: 24,
+                  isDarkMode: true,
+                ),
+                icon: Icons.shield,
+                color: theme.colorScheme.primary,
+              ));
+            }
+          } else {
+            widgets.add(_buildFeatureChip(
+              context,
+              name: '${cls.classRef.displayName} Features (Lvl ${cls.level})',
+              category: 'Class Feature',
+              descriptionMarkdown: classDesc,
+              glyphWidget: DndGlyph.classFeature(
+                classType: clsType,
+                size: 24,
+                isDarkMode: true,
+              ),
+              icon: Icons.shield,
+              color: theme.colorScheme.primary,
+            ));
+          }
+
+          // 2. Resolve Subclass (if selected)
+          if (cls.subclassRef != null) {
+            final subSlug = cls.subclassRef!.slug.toLowerCase().trim();
+            final subDisplayName = cls.subclassRef!.displayName.trim();
+
+            final resolvedSubclass = SrdClassesLibrary.findSubclass(
+              subSlug,
+              classSlug: cls.classRef.slug,
+              displayName: subDisplayName,
+              ruleset: is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024,
+            );
+            final subName = resolvedSubclass?.name ??
+                (subDisplayName.isNotEmpty ? subDisplayName : 'Subclass');
+            var subFeaturesMarkdown = (resolvedSubclass != null &&
+                    resolvedSubclass.featuresMarkdown.isNotEmpty)
+                ? resolvedSubclass.featuresMarkdown
+                : (cls.subclassRef?.customProperties['featuresMarkdown']
+                        ?.toString() ??
+                    '');
+            if (resolvedSubclass != null &&
+                (subFeaturesMarkdown.isEmpty ||
+                    subFeaturesMarkdown.contains('Granted at level'))) {
+              final stitched =
+                  SrdClassesLibrary.buildFeaturesMarkdownForSubclass(
+                resolvedSubclass,
+                ruleset: is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024,
+              );
+              if (stitched.isNotEmpty) {
+                subFeaturesMarkdown = stitched;
+              }
+            }
+
+            final extractedSubFeatures =
+                _extractFeaturesFromMarkdown(subFeaturesMarkdown);
+            final cleanClassSlug = cls.classRef.slug.toLowerCase().trim();
+            final subclassMinLevel = srdClass?.getSubclassLevel(
+                    is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024) ??
+                (is2014 &&
+                        (cleanClassSlug.contains('warlock') ||
+                            cleanClassSlug.contains('cleric') ||
+                            cleanClassSlug.contains('sorcerer'))
+                    ? 1
+                    : is2014 &&
+                            (cleanClassSlug.contains('druid') ||
+                                cleanClassSlug.contains('wizard'))
+                        ? 2
+                        : 3);
+
+            final eligibleSubFeatures = extractedSubFeatures
+                .where((f) => (f.level ?? subclassMinLevel) <= cls.level)
+                .toList();
+
+            if (eligibleSubFeatures.isNotEmpty) {
+              for (final feat in eligibleSubFeatures) {
+                widgets.add(_buildFeatureChip(
+                  context,
+                  name: feat.name,
+                  category:
+                      '$subName Feature${feat.level != null ? ' (Lvl ${feat.level})' : ''}',
+                  descriptionMarkdown: feat.descriptionMarkdown,
+                  glyphWidget: DndGlyph.classFeature(
+                    classType: clsType,
+                    size: 24,
+                    isDarkMode: true,
+                  ),
+                  icon: Icons.workspace_premium,
+                  color: Colors.cyanAccent,
+                ));
+              }
+            } else {
+              if (cls.level >= subclassMinLevel) {
+                widgets.add(_buildFeatureChip(
+                  context,
+                  name: '$subName (Lvl ${cls.level})',
+                  category: '${cls.classRef.displayName} Subclass',
+                  descriptionMarkdown: subFeaturesMarkdown.isNotEmpty
+                      ? subFeaturesMarkdown
+                      : 'Specialization archetype chosen at level $subclassMinLevel.',
+                  glyphWidget: DndGlyph.classFeature(
+                    classType: clsType,
+                    size: 24,
+                    isDarkMode: true,
+                  ),
+                  icon: Icons.workspace_premium,
+                  color: Colors.cyanAccent,
+                ));
+              }
+            }
+          }
+
+          return widgets;
+        }),
+
+        // Selected options (Invocations, Fighting Styles, etc.)
+        ...optionItems.map((item) {
+          return _buildFeatureChip(
+            context,
+            name: item['name']!,
+            category: item['category']!,
+            descriptionMarkdown: item['description']!,
+            glyphWidget: DndGlyph.genericUi(
+              uiType: GenericUiGlyphType.advantage,
+              size: 24,
+              isDarkMode: true,
+            ),
+            icon: Icons.auto_awesome,
+            color: Colors.cyanAccent,
+          );
+        }),
+
+        // Feats Section
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                'FEATS (${character.feats.length})',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  color: Colors.amberAccent,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.add, size: 16, color: Colors.amberAccent),
+              label: const Text(
+                'Add Feat',
+                style: TextStyle(
+                    color: Colors.amberAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () => AddFeatDialog.show(context, controller),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        if (character.feats.isEmpty)
+          InkWell(
+            onTap: () => AddFeatDialog.show(context, controller),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade900.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.military_tech_outlined,
+                      size: 18, color: Colors.amberAccent),
+                  SizedBox(width: 8),
+                  Text(
+                    'No feats added yet. Tap to add a bonus feat.',
+                    style: TextStyle(
+                        color: Colors.amberAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...character.feats.map((feat) {
+            final srdFeat = SrdFeatsLibrary.findBySlug(feat.slug);
+            final rawCategory = srdFeat?.category ?? 'Feat';
+            final category = (is2014 && rawCategory.toLowerCase() == 'origin')
+                ? 'Feat'
+                : (srdFeat != null ? '${srdFeat.category} Feat' : 'Feat');
+            final featCat = FeatCategory.parse(category);
+            final desc = srdFeat?.descriptionMarkdown ??
+                'Feat granting specialized combat or exploration prowess.';
+
+            return _buildFeatureChip(
+              context,
+              name: feat.displayName,
+              category: category,
+              descriptionMarkdown: desc,
+              featSlug: feat.slug,
+              glyphWidget: DndGlyph.feat(
+                category: featCat,
+                featId: feat.slug,
+                displayName: feat.displayName,
+                size: 24,
+                isDarkMode: true,
+              ),
+              icon: Icons.military_tech,
+              color: Colors.amberAccent,
+            );
+          }),
+      ],
+    );
+  }
+}
