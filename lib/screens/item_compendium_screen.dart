@@ -12,6 +12,7 @@ import '../widgets/item_compendium/item_card.dart';
 import '../widgets/item_compendium/item_comparison_dialog.dart';
 import '../widgets/item_compendium/item_detail_dialog.dart';
 import '../widgets/item_compendium/item_filter_sheet.dart';
+import '../widgets/room_banner_widget.dart';
 
 enum ItemCompendiumViewMode {
   allItems('All Items', Icons.auto_fix_high),
@@ -257,7 +258,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
           ),
         ],
       ),
-      rulesEditionToggle: RulesEditionToggle(
+      headerControl: RulesEditionToggle(
         currentEdition: activeEdition,
         onEditionChanged: (newEdition) {
           if (widget.initialEdition != null) {
@@ -268,6 +269,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
           settingsProvider?.setRulesEdition(newEdition);
         },
       ),
+      sessionContextBanner: RoomBannerWidget(compact: true),
       searchHeader: CompendiumSearchHeader(
         controller: _searchController,
         searchQuery: _searchQuery,

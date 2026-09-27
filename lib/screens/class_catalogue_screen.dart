@@ -13,6 +13,7 @@ import '../widgets/common/compendium_search_header.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../widgets/room_banner_widget.dart';
 
 enum ClassViewMode {
   allClasses('All Classes', Icons.shield),
@@ -188,7 +189,7 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
         accentColor: const Color(0xFFFF7043),
         visibleCount: filteredClasses.length,
       ),
-      rulesEditionToggle: RulesEditionToggle(
+      headerControl: RulesEditionToggle(
         currentEdition: edition,
         onEditionChanged: (newEdition) {
           HapticService.selectionTick(context);
@@ -198,6 +199,7 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
           SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
         },
       ),
+      sessionContextBanner: RoomBannerWidget(compact: true),
       searchHeader: CompendiumSearchHeader(
         controller: _searchController,
         searchQuery: _searchQuery,
@@ -219,7 +221,10 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
                 ))
             .toList(),
         selectedMode: _viewMode,
-        onModeSelected: (mode) => setState(() => _viewMode = mode),
+        onModeSelected: (mode) {
+          HapticService.selectionTick(context);
+          setState(() => _viewMode = mode);
+        },
       ),
       filterArea: CodexFilterStrip<ClassRoleFilter>(
         options: ClassRoleFilter.values
@@ -229,7 +234,10 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
                 ))
             .toList(),
         selectedValue: _roleFilter,
-        onSelected: (role) => setState(() => _roleFilter = role),
+        onSelected: (role) {
+          HapticService.selectionTick(context);
+          setState(() => _roleFilter = role);
+        },
       ),
       isEmpty: filteredClasses.isEmpty,
       emptyState: EmptyStateCard(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../services/haptic_service.dart';
 
 /// Single option model within a [CodexFilterStrip].
 @immutable
@@ -49,10 +48,14 @@ class CodexFilterStrip<T> extends StatelessWidget {
   final List<CodexFilterOption<T>> options;
 
   /// Currently selected value.
-  final T selectedValue;
+  final T? selectedValue;
 
   /// Callback when a filter option is selected.
   final ValueChanged<T> onSelected;
+
+  /// Optional callback invoked when the active option is tapped again to deselect it.
+  /// If null, tapping an active chip re-invokes [onSelected] with the option's value.
+  final VoidCallback? onDeselected;
 
   /// Padding around the scrollable strip.
   final EdgeInsetsGeometry padding;
@@ -63,23 +66,40 @@ class CodexFilterStrip<T> extends StatelessWidget {
   /// Optional accent color override for the selected state.
   final Color? activeColor;
 
-  /// Whether tapping the currently selected chip deselects it.
-  final bool allowDeselect;
-
-  /// The value assigned when an option is deselected.
-  final T? deselectValue;
-
   const CodexFilterStrip({
     super.key,
     required this.options,
     required this.selectedValue,
     required this.onSelected,
+    this.onDeselected,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     this.visualDensity = VisualDensity.compact,
     this.activeColor,
-    this.allowDeselect = false,
-    this.deselectValue,
   });
+
+  /// Factory for deselectable / optional filter strips where deselection emits null.
+  ///
+  /// When tapping an already selected chip, [onSelected] is invoked with null.
+  factory CodexFilterStrip.optional({
+    Key? key,
+    required List<CodexFilterOption<T>> options,
+    required T? selectedValue,
+    required ValueChanged<T?> onSelected,
+    EdgeInsetsGeometry padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    VisualDensity visualDensity = VisualDensity.compact,
+    Color? activeColor,
+  }) {
+    return CodexFilterStrip<T>(
+      key: key,
+      options: options,
+      selectedValue: selectedValue,
+      onSelected: (val) => onSelected(val),
+      onDeselected: () => onSelected(null),
+      padding: padding,
+      visualDensity: visualDensity,
+      activeColor: activeColor,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,9 +154,8 @@ class CodexFilterStrip<T> extends StatelessWidget {
                 selectedColor: activeColor,
                 visualDensity: visualDensity,
                 onSelected: (_) {
-                  HapticService.selectionTick(context);
-                  if (allowDeselect && isSelected) {
-                    onSelected(deselectValue as T);
+                  if (isSelected && onDeselected != null) {
+                    onDeselected!();
                   } else {
                     onSelected(option.value);
                   }

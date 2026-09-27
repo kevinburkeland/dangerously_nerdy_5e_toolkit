@@ -18,6 +18,7 @@ import '../widgets/monster_codex/monster_card.dart';
 import '../widgets/monster_codex/monster_comparison_dialog.dart';
 import '../widgets/monster_codex/monster_filter_sheet.dart';
 import '../widgets/monster_codex/monster_quick_roll_dialog.dart';
+import '../widgets/room_banner_widget.dart';
 
 enum MonsterCodexViewMode {
   allMonsters('All Monsters', Icons.pets),
@@ -418,7 +419,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
           ),
         ],
       ),
-      rulesEditionToggle: RulesEditionToggle(
+      headerControl: RulesEditionToggle(
         currentEdition: activeEdition,
         onEditionChanged: (newEdition) {
           if (widget.initialEdition != null) {
@@ -429,6 +430,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
           SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
         },
       ),
+      sessionContextBanner: RoomBannerWidget(compact: true),
       searchHeader: CompendiumSearchHeader(
         controller: _searchController,
         searchQuery: _searchQuery,

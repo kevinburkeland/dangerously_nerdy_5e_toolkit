@@ -13,6 +13,7 @@ import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/feats/feat_card.dart';
 import '../widgets/feats/feat_detail_dialog.dart';
+import '../widgets/room_banner_widget.dart';
 
 enum FeatsViewMode {
   allFeats('All Feats', Icons.military_tech),
@@ -205,7 +206,7 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
         accentColor: const Color(0xFFF59E0B),
         visibleCount: filteredFeats.length,
       ),
-      rulesEditionToggle: RulesEditionToggle(
+      headerControl: RulesEditionToggle(
         currentEdition: edition,
         onEditionChanged: (newEdition) {
           HapticService.selectionTick(context);
@@ -215,6 +216,7 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
           SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
         },
       ),
+      sessionContextBanner: RoomBannerWidget(compact: true),
       searchHeader: CompendiumSearchHeader(
         controller: _searchController,
         searchQuery: _searchQuery,
@@ -238,9 +240,12 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
                 ))
             .toList(),
         selectedMode: _viewMode,
-        onModeSelected: (mode) => setState(() => _viewMode = mode),
+        onModeSelected: (mode) {
+          HapticService.selectionTick(context);
+          setState(() => _viewMode = mode);
+        },
       ),
-      filterArea: CodexFilterStrip<String?>(
+      filterArea: CodexFilterStrip<String?>.optional(
         options: [
           const CodexFilterOption<String?>(
             value: null,
@@ -252,9 +257,10 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
               )),
         ],
         selectedValue: _selectedCategory,
-        allowDeselect: true,
-        deselectValue: null,
-        onSelected: (cat) => setState(() => _selectedCategory = cat),
+        onSelected: (cat) {
+          HapticService.selectionTick(context);
+          setState(() => _selectedCategory = cat);
+        },
       ),
       isEmpty: filteredFeats.isEmpty,
       emptyState: EmptyStateCard(

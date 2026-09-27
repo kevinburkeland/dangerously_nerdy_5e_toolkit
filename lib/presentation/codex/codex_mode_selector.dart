@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../services/haptic_service.dart';
 import 'codex_view_mode.dart';
 
 /// Visual presentation style for [CodexModeSelector].
@@ -14,8 +13,7 @@ enum CodexModeSelectorStyle {
 /// Reusable horizontal view-mode selector for codex and compendium screens.
 ///
 /// Renders a scrollable strip of mode chips or segmented buttons (such as
-/// All / Bookmarks / 2024 Diffs / Homebrew) with active accenting, optional counts,
-/// and haptic feedback.
+/// All / Bookmarks / 2024 Diffs / Homebrew) with active accenting and optional counts.
 class CodexModeSelector<T> extends StatelessWidget {
   /// The view modes available in this selector.
   final List<CodexViewMode<T>> modes;
@@ -66,7 +64,6 @@ class CodexModeSelector<T> extends StatelessWidget {
               }).toList(),
               selected: {selectedMode},
               onSelectionChanged: (val) {
-                HapticService.selectionTick(context);
                 onModeSelected(val.first);
               },
             ),
@@ -160,7 +157,6 @@ class CodexModeSelector<T> extends StatelessWidget {
                   fontSize: 12.5,
                 ),
                 onSelected: (_) {
-                  HapticService.selectionTick(context);
                   onModeSelected(mode.key);
                 },
               ),

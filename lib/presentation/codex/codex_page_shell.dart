@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../widgets/room_banner_widget.dart';
 import 'codex_app_bar_title.dart';
 import 'codex_header_config.dart';
 
 /// Reusable page shell for codex and compendium screens.
 ///
 /// Consistently orchestrates the layout hierarchy:
-/// - AppBar with [CodexAppBarTitle], rules edition toggle, and screen actions
-/// - Room broadcast banner
+/// - AppBar with [CodexAppBarTitle], optional context [headerControl], and actions
+/// - Optional [sessionContextBanner] (e.g. room or campaign connection context)
 /// - Search header
 /// - View mode selector
 /// - Primary and secondary filter areas
@@ -20,16 +19,17 @@ class CodexPageShell extends StatelessWidget {
   /// Optional custom AppBar if standard AppBar is overridden.
   final PreferredSizeWidget? customAppBar;
 
-  /// Optional rules edition toggle widget placed in the AppBar actions.
-  final Widget? rulesEditionToggle;
+  /// Optional context or edition control widget placed in the AppBar actions
+  /// (e.g. rules edition toggle, campaign selector, sync indicator).
+  final Widget? headerControl;
 
-  /// Whether to display the room broadcast banner at the top of the body.
-  final bool showRoomBanner;
+  /// Optional banner widget displaying current room/session/campaign context.
+  final Widget? sessionContextBanner;
 
-  /// Custom banner widget displayed below the room banner (if any).
+  /// Custom banner widget displayed below the session context banner (if any).
   final Widget? customBanner;
 
-  /// Search header widget (typically [CompendiumSearchHeader]).
+  /// Search header widget (typically a search text field or search bar).
   final Widget searchHeader;
 
   /// View mode selector widget (typically [CodexModeSelector]).
@@ -50,7 +50,7 @@ class CodexPageShell extends StatelessWidget {
   /// Widget displayed when [isEmpty] is true (typically [EmptyStateCard]).
   final Widget? emptyState;
 
-  /// Main content widget when [isEmpty] is false (typically [ResponsiveCardGrid]).
+  /// Main content widget when [isEmpty] is false (typically [ResponsiveCardGrid] or sliver view).
   final Widget content;
 
   /// Optional FloatingActionButton (e.g. for quick roll or action triggers).
@@ -65,8 +65,8 @@ class CodexPageShell extends StatelessWidget {
     required this.searchHeader,
     required this.content,
     this.customAppBar,
-    this.rulesEditionToggle,
-    this.showRoomBanner = true,
+    this.headerControl,
+    this.sessionContextBanner,
     this.customBanner,
     this.modeSelector,
     this.filterArea,
@@ -84,7 +84,7 @@ class CodexPageShell extends StatelessWidget {
         AppBar(
           title: CodexAppBarTitle(config: headerConfig),
           actions: [
-            if (rulesEditionToggle != null) rulesEditionToggle!,
+            if (headerControl != null) headerControl!,
             if (headerConfig.actions != null) ...headerConfig.actions!,
             const SizedBox(width: 8),
           ],
@@ -95,11 +95,11 @@ class CodexPageShell extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Room Broadcast Banner
-            if (showRoomBanner)
+            // Session Context Banner (e.g. Room Connection)
+            if (sessionContextBanner != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: RoomBannerWidget(compact: true),
+                child: sessionContextBanner!,
               ),
 
             // Optional Custom Banner

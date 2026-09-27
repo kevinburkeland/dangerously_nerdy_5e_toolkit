@@ -12,6 +12,7 @@ import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/races/race_card.dart';
 import '../widgets/races/race_detail_dialog.dart';
+import '../widgets/room_banner_widget.dart';
 
 enum SpeciesViewMode {
   all('All Species', Icons.people_alt),
@@ -174,7 +175,7 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
         accentColor: const Color(0xFF10B981),
         visibleCount: filteredRaces.length,
       ),
-      rulesEditionToggle: RulesEditionToggle(
+      headerControl: RulesEditionToggle(
         currentEdition: edition,
         onEditionChanged: (newEdition) {
           HapticService.selectionTick(context);
@@ -184,6 +185,7 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
           SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
         },
       ),
+      sessionContextBanner: RoomBannerWidget(compact: true),
       searchHeader: CompendiumSearchHeader(
         controller: _searchController,
         searchQuery: _searchQuery,
@@ -208,7 +210,10 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
             .toList(),
         selectedMode: _viewMode,
         defaultAccentColor: const Color(0xFF10B981),
-        onModeSelected: (mode) => setState(() => _viewMode = mode),
+        onModeSelected: (mode) {
+          HapticService.selectionTick(context);
+          setState(() => _viewMode = mode);
+        },
       ),
       filterArea: CodexFilterStrip<String>(
         options: _sizeOptions
@@ -218,7 +223,10 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
                 ))
             .toList(),
         selectedValue: _selectedSize,
-        onSelected: (size) => setState(() => _selectedSize = size),
+        onSelected: (size) {
+          HapticService.selectionTick(context);
+          setState(() => _selectedSize = size);
+        },
       ),
       isEmpty: filteredRaces.isEmpty,
       emptyState: EmptyStateCard(

@@ -9,6 +9,7 @@ import '../widgets/common/compendium_search_header.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../widgets/room_banner_widget.dart';
 import '../widgets/spellbook/spell_card.dart';
 import '../widgets/spellbook/spell_comparison_dialog.dart';
 import '../widgets/spellbook/spell_filter_sheet.dart';
@@ -277,11 +278,12 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
             ),
         ],
       ),
-      rulesEditionToggle: RulesEditionToggle(
+      headerControl: RulesEditionToggle(
         currentEdition: edition,
         onEditionChanged: (newEdition) =>
             _onEditionChanged(context, newEdition),
       ),
+      sessionContextBanner: RoomBannerWidget(compact: true),
       searchHeader: CompendiumSearchHeader(
         controller: _searchController,
         searchQuery: _searchQuery,
