@@ -140,7 +140,7 @@ class CharacterEvaluationEngine {
     Map<String, dynamic> getItemProperties(InventoryItemInstance instance) {
       final merged = Map<String, dynamic>.from(instance.customProperties);
       if (resolver != null) {
-        final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+        final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
         if (res.isResolved && res.entity != null) {
           for (final entry in res.entity!.customProperties.entries) {
             merged.putIfAbsent(entry.key, () => entry.value);
@@ -660,8 +660,7 @@ class CharacterEvaluationEngine {
     for (final featRef in character.feats) {
       final feat = SrdFeatsLibrary.findBySlug(featRef.slug);
       if (feat != null && feat.grants.isNotEmpty) {
-        grantedExpertises
-            .addAll(GrantEvaluator.evaluateExpertiseGrants(feat.grants));
+        grantedExpertises.addAll(GrantEvaluator.evaluateExpertiseGrants(feat.grants).map(SkillType.fromLooseString).whereType<SkillType>());
       }
     }
 
@@ -846,7 +845,7 @@ class CharacterEvaluationEngine {
         if (masteryProp != null) {
           EquipmentItem? equipEntity;
           if (resolver != null) {
-            final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+            final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
             if (res.isResolved) equipEntity = res.entity;
           }
           final weaponEntity = equipEntity ??

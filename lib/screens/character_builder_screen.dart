@@ -477,7 +477,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   Future<void> _deleteCharacter(Character char) async {
     HapticService.heavyImpact(context);
-    final updated = await _persistenceService.deleteCharacter(char.id.slug);
+    await _persistenceService.deleteCharacter(char.id.slug);
+    final updated = await _persistenceService.loadCharacters();
     setState(() {
       _characterRoster = updated;
       if (_character?.id.slug == char.id.slug) {
@@ -5658,7 +5659,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     draft.toolProficiencies = _allBuilderTools.toList();
 
     final newChar = CharacterFactory.buildFromDraft(draft);
-    _persistenceService.saveCharacter(newChar).then((updated) {
+    _persistenceService.saveCharacter(newChar).then((_) async {
+      final updated = await _persistenceService.loadCharacters();
       if (mounted) {
         setState(() {
           _characterRoster = updated;
@@ -6189,7 +6191,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                       onLevelUpApplied: (upgraded) {
                         _persistenceService
                             .saveCharacter(upgraded)
-                            .then((updatedRoster) {
+                            .then((_) async {
+                          final updatedRoster = await _persistenceService.loadCharacters();
                           if (mounted) {
                             setState(() {
                               _characterRoster = updatedRoster;

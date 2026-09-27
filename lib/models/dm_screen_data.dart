@@ -1,5 +1,5 @@
 import '../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import 'domain/character_models.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 export '../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 

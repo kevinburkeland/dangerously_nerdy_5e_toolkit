@@ -13,6 +13,13 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_serv
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() {
+    CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
+    CampaignProfile.defaultPinnedRulesFallback = const {
+      'concentration',
+      'grapple_shove',
+    };
+  });
 
   group('CampaignProfile Model Unit Tests', () {
     test('Round-trip serialization toMap and fromMap preserves all fields', () {
@@ -46,7 +53,7 @@ void main() {
               initiativeScore: 15,
               currentHp: 37,
               maxHp: 37,
-              armorClass: 14,
+              defense: 14,
               isActiveTurn: true,
             ),
           ],

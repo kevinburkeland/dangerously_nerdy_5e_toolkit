@@ -140,7 +140,7 @@ void main() {
         entityLink: link,
         currentHp: 21,
         maxHp: 21,
-        armorClass: 15,
+        defense: 15,
         initiative: 17,
       );
 

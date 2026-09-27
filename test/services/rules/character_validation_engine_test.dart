@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:vtt_engine_core/models/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_draft.dart';
-import 'package:vtt_engine_core/models/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:vtt_engine_core/models/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_validation_engine.dart';

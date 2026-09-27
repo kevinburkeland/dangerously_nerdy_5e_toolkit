@@ -4,7 +4,7 @@ import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../utils/dice_formatters.dart';
 import '../../widgets/glyphs/glyph_tokens.dart';
 
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../domain/character_models.dart';
 import 'srd_summons_library.dart';
 
 enum SummonCategory { spell, magicItem }

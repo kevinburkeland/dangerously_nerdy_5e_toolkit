@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:meta/meta.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../../models/domain/character_models.dart';
 
 /// Lightweight pointer representing a single class progression level.
 @immutable

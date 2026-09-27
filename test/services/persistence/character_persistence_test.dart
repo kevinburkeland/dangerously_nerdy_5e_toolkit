@@ -51,7 +51,8 @@ void main() {
       final customChar =
           _createTestHero('gideon-dawnbringer', 'Gideon Dawnbringer');
 
-      final updated = await service.saveCharacter(customChar);
+      await service.saveCharacter(customChar);
+      final updated = await service.loadCharacters();
       expect(updated.length, 1);
       expect(updated.any((c) => c.name == 'Gideon Dawnbringer'), isTrue);
 
@@ -70,7 +71,8 @@ void main() {
       expect(initial.length, 2);
       expect(initial.any((c) => c.id.slug == 'hero-1'), isTrue);
 
-      final updated = await service.deleteCharacter('hero-1');
+      await service.deleteCharacter('hero-1');
+      final updated = await service.loadCharacters();
       expect(updated.length, 1);
       expect(updated.any((c) => c.id.slug == 'hero-1'), isFalse);
       expect(updated.any((c) => c.id.slug == 'hero-2'), isTrue);

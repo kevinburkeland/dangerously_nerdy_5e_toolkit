@@ -279,7 +279,7 @@ void main() {
         id: 'ancient-brass-dragon',
         name: 'Ancient Brass Dragon',
         entityType: 'monsterfluff',
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
         rawPayload: {
           'name': 'Ancient Brass Dragon',
           'source': 'MM',

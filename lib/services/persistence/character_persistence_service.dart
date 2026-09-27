@@ -9,7 +9,7 @@ import 'app_database_service.dart';
 
 /// Persistence service for saving, loading, and deleting characters in local storage.
 /// Implements [ICharacterRepository] for domain port compatibility.
-class CharacterPersistenceService implements ICharacterRepository {
+class CharacterPersistenceService implements ICharacterRepository<Character> {
   static const String _kSavedRosterKey = 'saved_characters_roster_v1';
   static const String _kActiveCharacterIdKey = 'saved_active_character_id_v1';
 
@@ -99,7 +99,7 @@ class CharacterPersistenceService implements ICharacterRepository {
 
   /// Saves or updates a single character in the roster.
   @override
-  Future<List<Character>> saveCharacter(Character character) async {
+  Future<void> saveCharacter(Character character) async {
     var charToSave = character;
     if (charToSave.customProperties['usedHomebrew'] == null) {
       final deps =
@@ -120,7 +120,7 @@ class CharacterPersistenceService implements ICharacterRepository {
       roster.add(charToSave);
     }
     await saveRoster(roster);
-    return roster;
+    return;
   }
 
   /// Fetches characters matching the given IDs/slugs, preserving the order of the requested IDs.
@@ -157,11 +157,11 @@ class CharacterPersistenceService implements ICharacterRepository {
 
   /// Deletes a character by slug from the roster.
   @override
-  Future<List<Character>> deleteCharacter(String characterSlug) async {
+  Future<void> deleteCharacter(String characterSlug) async {
     final roster = List<Character>.from(await loadCharacters());
     roster.removeWhere((c) => c.id.slug == characterSlug);
     await saveRoster(roster);
-    return roster;
+    return;
   }
 
   /// Loads the active character ID.

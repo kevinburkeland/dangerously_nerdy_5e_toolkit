@@ -237,7 +237,7 @@ void main() {
         ),
         currentHp: 12,
         maxHp: 12,
-        armorClass: 15,
+        defense: 15,
         initiativeScore: 18,
       );
 

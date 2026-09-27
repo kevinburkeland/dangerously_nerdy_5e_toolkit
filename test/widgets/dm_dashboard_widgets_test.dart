@@ -23,7 +23,7 @@ void main() {
         initiativeScore: 18,
         currentHp: 15,
         maxHp: 21,
-        armorClass: 15,
+        defense: 15,
         activeConditions: ['Poisoned'],
       );
 

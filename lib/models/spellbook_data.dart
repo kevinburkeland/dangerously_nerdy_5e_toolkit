@@ -9,7 +9,7 @@ import 'spells/level_3_spells.dart';
 import 'spells/level_4_spells.dart';
 import 'spells/level_5_spells.dart';
 import 'spells/high_level_spells.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import 'domain/character_models.dart';
 
 export '../services/rules/spellcasting_rules_engine.dart';
 export '../widgets/glyphs/glyph_tokens.dart';

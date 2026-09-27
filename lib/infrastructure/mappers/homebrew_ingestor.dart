@@ -351,7 +351,7 @@ class HomebrewIngestor {
   /// Ingests a raw list of homebrew race / species JSON objects into validated [Race] instances.
   static List<Race> parseCustomRaces(
     List<dynamic> rawList, {
-    domain_rules.RulesetVersion ruleset = domain_rules.RulesetVersion.srd2014,
+    domain_rules.RulesetVersion ruleset = domain_rules.RulesetVersion.v2014,
   }) {
     final validRaces = <Race>[];
 
@@ -380,7 +380,7 @@ class HomebrewIngestor {
   /// Parses a single raw homebrew race/species map into a strongly-typed [Race].
   static Race parseRace(
     Map<String, dynamic> raw, {
-    domain_rules.RulesetVersion ruleset = domain_rules.RulesetVersion.srd2014,
+    domain_rules.RulesetVersion ruleset = domain_rules.RulesetVersion.v2014,
   }) {
     final dto = HomebrewEntityDto.fromJson(raw, ruleset: ruleset);
     return mapRaceFromDto(dto);
@@ -542,7 +542,7 @@ class HomebrewIngestor {
                     subName
                         .toLowerCase()
                         .replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
-                ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+                ruleset: dto.ruleset == domain_rules.RulesetVersion.v2024
                     ? RulesetVersion.v2024
                     : RulesetVersion.v2014,
               ),
@@ -619,7 +619,7 @@ class HomebrewIngestor {
     return Race(
       id: EntityId(
         slug: dto.id,
-        ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+        ruleset: dto.ruleset == domain_rules.RulesetVersion.v2024
             ? RulesetVersion.v2024
             : RulesetVersion.v2014,
       ),
@@ -740,7 +740,7 @@ class HomebrewIngestor {
     return Background(
       id: EntityId(
         slug: dto.id,
-        ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+        ruleset: dto.ruleset == domain_rules.RulesetVersion.v2024
             ? RulesetVersion.v2024
             : RulesetVersion.v2014,
       ),
@@ -863,7 +863,7 @@ class HomebrewIngestor {
     return CharacterClass(
       id: EntityId(
         slug: dto.id,
-        ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+        ruleset: dto.ruleset == domain_rules.RulesetVersion.v2024
             ? RulesetVersion.v2024
             : RulesetVersion.v2014,
       ),

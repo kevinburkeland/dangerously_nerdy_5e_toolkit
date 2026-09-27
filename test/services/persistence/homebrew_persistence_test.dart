@@ -286,7 +286,7 @@ void main() {
         id: 'abyssal-stalker',
         name: 'Abyssal Stalker',
         entityType: 'monster',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Abyssal Stalker',
           'cr': '4',
@@ -306,7 +306,7 @@ void main() {
         id: 'abyssal-chains',
         name: 'Abyssal Chains',
         entityType: 'spell',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Abyssal Chains',
           'level': 2,
@@ -345,7 +345,7 @@ void main() {
         id: 'cave-curse',
         name: 'Cave Curse',
         entityType: 'spell',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Cave Curse',
           'level': 1,
@@ -380,7 +380,7 @@ void main() {
         id: 'sand-corsair-captain',
         name: 'Sand Corsair Captain',
         entityType: 'humanoid',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Sand Corsair Captain',
           'type': 'humanoid',
@@ -394,7 +394,7 @@ void main() {
         id: 'ancient-lich',
         name: 'Ancient Lich',
         entityType: '{type: undead, tags: [wizard]}',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Ancient Lich',
           'type': {
@@ -426,7 +426,7 @@ void main() {
         id: 'bepis-honeymaker',
         name: 'Bepis Honeymaker',
         entityType: 'monster',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Bepis Honeymaker',
           'source': 'WDH',
@@ -445,7 +445,7 @@ void main() {
         id: 'onyx',
         name: 'Onyx',
         entityType: 'monster',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Onyx',
           'source': 'AI',
@@ -564,7 +564,7 @@ void main() {
           id: 'void-blast',
           name: 'Void Blast',
           entityType: 'spell',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Void Blast',
             'level': 2,
@@ -586,7 +586,7 @@ void main() {
           id: 'void-stalker',
           name: 'Void Stalker',
           entityType: 'monster',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Void Stalker',
             'size': 'M',
@@ -600,7 +600,7 @@ void main() {
           id: 'starlight-blade',
           name: 'Starlight Blade',
           entityType: 'item',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Starlight Blade',
             'type': 'M',
@@ -612,7 +612,7 @@ void main() {
           id: 'void-weaver',
           name: 'Void Weaver',
           entityType: 'class',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Void Weaver',
             'hd': {'number': 1, 'faces': 8},
@@ -624,7 +624,7 @@ void main() {
           id: 'void-weaver-astral-path',
           name: 'Astral Path',
           entityType: 'subclass',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Astral Path',
             'className': 'Void Weaver',
@@ -635,7 +635,7 @@ void main() {
           id: 'astral-born',
           name: 'Astral Born',
           entityType: 'race',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Astral Born',
             'entries': ['Beings manifested from astral essence.'],
@@ -645,7 +645,7 @@ void main() {
           id: 'mark-of-the-astral',
           name: 'Mark of the Astral',
           entityType: 'subrace',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Mark of the Astral',
             'raceName': 'human',
@@ -658,7 +658,7 @@ void main() {
           id: 'void-touched',
           name: 'Void Touched',
           entityType: 'feat',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Void Touched',
             'entries': [
@@ -670,7 +670,7 @@ void main() {
           id: 'void-hermit',
           name: 'Void Hermit',
           entityType: 'background',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Void Hermit',
             'entries': [
@@ -682,7 +682,7 @@ void main() {
           id: 'table-void-omens',
           name: 'Table of Void Omens',
           entityType: 'table',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Table of Void Omens',
             'colLabels': ['d4', 'Omen'],

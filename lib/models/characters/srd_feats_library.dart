@@ -1,5 +1,5 @@
 import 'package:meta/meta.dart';
-import 'package:vtt_engine_core/models/core_types.dart';
+import '../domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 
 /// Comprehensive SRD 5.1 (2014) and SRD 5.2.1 (2024) Feat Library.

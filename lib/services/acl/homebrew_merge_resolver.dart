@@ -43,7 +43,7 @@ class ImportAnalysisItem<T extends DomainEntity> {
 
   String get displayName => incomingEntity.name;
   String get slug => incomingEntity.id.slug;
-  EntityType get entityType => incomingEntity.entityType;
+  EntityType get entityType => EntityType.fromString(incomingEntity.entityType.key);
 }
 
 /// Comprehensive analysis result of analyzing an incoming HomebrewBundle against local libraries & SRD canon.
@@ -247,7 +247,7 @@ class HomebrewMergeResolver {
       final srdMatch = srdIndex.checkEntity(
         slug: inc.id.slug,
         name: inc.name,
-        type: inc.entityType,
+        type: EntityType.fromString(inc.entityType.key),
       );
 
       if (srdMatch != SrdMatchResult.notSrd) {

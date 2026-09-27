@@ -25,8 +25,9 @@ class Dnd5e2014Module implements IRulesetModule {
   @override
   String get rulesetVersion => 'SRD 5.1';
 
-  @override
   String get srdCitation => 'System Reference Document 5.1 (CC-BY-4.0)';
+  @override
+  String? get legalCitation => srdCitation;
 
   @override
   IAttributeSystem get attributeSystem => const Dnd5eAttributeSystem();
@@ -120,7 +121,7 @@ class Dnd5e2014ActionEconomy implements IActionEconomy {
   @override
   ActionCost getConsumableUsageCost(String consumableType) {
     // 2014 RAW: Consuming a potion is a standard Action
-    return ActionCost.action;
+    return ActionCost.standard;
   }
 
   @override
@@ -138,7 +139,7 @@ class Dnd5e2014ActionEconomy implements IActionEconomy {
     }
     return switch (actionType) {
       'action' => currentBudget.actionsRemaining > 0,
-      'bonus_action' => currentBudget.bonusActionsRemaining > 0,
+      'bonus_action' => (currentBudget.customPools['bonus_actions'] ?? currentBudget.actionsRemaining) > 0,
       'reaction' => currentBudget.reactionsRemaining > 0,
       _ => true,
     };
@@ -162,8 +163,9 @@ class Dnd5e2024Module implements IRulesetModule {
   @override
   String get rulesetVersion => 'SRD 5.2.1';
 
-  @override
   String get srdCitation => 'System Reference Document 5.2.1 (CC-BY-4.0)';
+  @override
+  String? get legalCitation => srdCitation;
 
   @override
   IAttributeSystem get attributeSystem => const Dnd5eAttributeSystem();
@@ -246,7 +248,7 @@ class Dnd5e2024ActionEconomy implements IActionEconomy {
   @override
   ActionCost getConsumableUsageCost(String consumableType) {
     // 2024 Revised: Drinking or administering a potion is a Bonus Action
-    return ActionCost.bonusAction;
+    return ActionCost.special;
   }
 
   @override
@@ -264,7 +266,7 @@ class Dnd5e2024ActionEconomy implements IActionEconomy {
     }
     return switch (actionType) {
       'action' => currentBudget.actionsRemaining > 0,
-      'bonus_action' => currentBudget.bonusActionsRemaining > 0,
+      'bonus_action' => (currentBudget.customPools['bonus_actions'] ?? currentBudget.actionsRemaining) > 0,
       'reaction' => currentBudget.reactionsRemaining > 0,
       _ => true,
     };
@@ -279,6 +281,20 @@ class Dnd5eRestMechanic implements IRestMechanic {
   const Dnd5eRestMechanic();
 
   @override
+  RestResult resolveRest({
+    required String restType,
+    required EntityVitals currentVitals,
+    Map<String, int> spentRecoveryResources = const {},
+  }) {
+    if (restType == 'short' || restType == 'shortRest') {
+      return resolveShortRest(
+        currentVitals: currentVitals,
+        spentRecoveryResources: spentRecoveryResources,
+      );
+    }
+    return resolveLongRest(currentVitals: currentVitals);
+  }
+
   RestResult resolveShortRest({
     required EntityVitals currentVitals,
     required Map<String, int> spentRecoveryResources,
@@ -295,7 +311,6 @@ class Dnd5eRestMechanic implements IRestMechanic {
     );
   }
 
-  @override
   RestResult resolveLongRest({
     required EntityVitals currentVitals,
   }) {

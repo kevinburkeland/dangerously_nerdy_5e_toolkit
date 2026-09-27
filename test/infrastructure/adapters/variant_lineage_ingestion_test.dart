@@ -72,19 +72,19 @@ void main() {
         () {
       final dtoArtifice = HomebrewEntityDto.fromJson(
         customArtificeLineageJson,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
       expect(dtoArtifice.entityType, equals('race'));
 
       final dtoWarding = HomebrewEntityDto.fromJson(
         customWardingLineageJson,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
       expect(dtoWarding.entityType, equals('race'));
 
       final dtoHybrid = HomebrewEntityDto.fromJson(
         hybridRootAndNestedJson,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
       expect(dtoHybrid.entityType, equals('race'));
     });
@@ -94,7 +94,7 @@ void main() {
         () {
       final dtoArtifice = HomebrewEntityDto.fromJson(
         customArtificeLineageJson,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
 
       // Verify static ability bonuses in normalizedData
@@ -122,7 +122,7 @@ void main() {
         () {
       final dtoWarding = HomebrewEntityDto.fromJson(
         customWardingLineageJson,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
 
       expect(dtoWarding.normalizedData['abilities'], isNotNull);
@@ -136,7 +136,7 @@ void main() {
     test('combines root-level stats and nested choice pools seamlessly', () {
       final dto = HomebrewEntityDto.fromJson(
         hybridRootAndNestedJson,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
 
       expect(dto.normalizedData['abilities'], isNotNull);
@@ -155,7 +155,7 @@ void main() {
         () {
       final dtoArtifice = HomebrewEntityDto.fromJson(
         customArtificeLineageJson,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
 
       final race = HomebrewIngestor.mapRaceFromDto(dtoArtifice);

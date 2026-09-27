@@ -14,12 +14,12 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_sheet/abilities_and_traits_tab.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 
-class _FakeRepo implements ICharacterRepository {
+class _FakeRepo implements ICharacterRepository<Character> {
   Character? saved;
   @override
-  Future<List<Character>> saveCharacter(Character character) async {
+  Future<void> saveCharacter(Character character) async {
     saved = character;
-    return [character];
+    return;
   }
 
   @override

@@ -36,7 +36,7 @@ void main() {
 
       final parsedList = HomebrewIngestor.parseCustomBackgrounds(
         [rawBackgroundJson],
-        ruleset: domain_rules.RulesetVersion.srd2024,
+        ruleset: domain_rules.RulesetVersion.v2024,
       );
 
       expect(parsedList, hasLength(1));
@@ -70,7 +70,7 @@ void main() {
 
       final parsedList = HomebrewIngestor.parseCustomBackgrounds(
         [rawBackgroundJson],
-        ruleset: domain_rules.RulesetVersion.srd2024,
+        ruleset: domain_rules.RulesetVersion.v2024,
       );
       final bg = parsedList.first;
 
@@ -152,7 +152,7 @@ void main() {
 
       final parsedList = HomebrewIngestor.parseCustomBackgrounds(
         [raw2014BackgroundJson],
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
       );
 
       expect(parsedList, hasLength(1));

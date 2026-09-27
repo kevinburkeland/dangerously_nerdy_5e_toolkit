@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../domain/character_models.dart';
 
 /// Full metadata descriptor for a 5e Skill
 @immutable

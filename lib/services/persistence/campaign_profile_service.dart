@@ -26,7 +26,18 @@ class CampaignProfileService extends ChangeNotifier
   static final CampaignProfileService _instance =
       CampaignProfileService._internal();
   factory CampaignProfileService() => _instance;
-  CampaignProfileService._internal();
+  CampaignProfileService._internal() {
+    CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
+    CampaignProfile.defaultPinnedRulesFallback = const {
+      'concentration',
+      'grapple_shove',
+    };
+    CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
+    CampaignProfile.defaultPinnedRulesFallback = const {
+      'concentration',
+      'grapple_shove',
+    };
+  }
 
   final AppDatabaseService _db = AppDatabaseService.instance;
   final Map<String, CampaignProfile> _memoryCache = {};

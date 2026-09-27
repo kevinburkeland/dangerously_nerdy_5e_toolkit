@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../../models/domain/character_models.dart';
 
 /// Data Transfer Object for [Character], isolating full document serialization,
 /// legacy unparsed payload preservation, and external ACL boundary transformations

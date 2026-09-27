@@ -7,13 +7,13 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 
-class _FakePersistenceService implements ICharacterRepository {
+class _FakePersistenceService implements ICharacterRepository<Character> {
   Character? savedCharacter;
 
   @override
-  Future<List<Character>> saveCharacter(Character character) async {
+  Future<void> saveCharacter(Character character) async {
     savedCharacter = character;
-    return [character];
+    return;
   }
 
   @override

@@ -93,3 +93,6 @@ Thumbs.db
 # Mutation Testing
 mutation-test-report/
 mutation-test.xml
+
+# Local pubspec development overrides
+pubspec_overrides.yaml

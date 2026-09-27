@@ -10,22 +10,21 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 
-class _FakeCharRepo implements ICharacterRepository {
+class _FakeCharRepo implements ICharacterRepository<Character> {
   final Map<String, Character> storage = {};
 
   @override
   Future<List<Character>> loadCharacters() async => storage.values.toList();
 
   @override
-  Future<List<Character>> saveCharacter(Character character) async {
+  Future<void> saveCharacter(Character character) async {
     storage[character.id.slug] = character;
-    return storage.values.toList();
+    return;
   }
 
   @override
-  Future<List<Character>> deleteCharacter(String characterSlug) async {
+  Future<void> deleteCharacter(String characterSlug) async {
     storage.remove(characterSlug);
-    return storage.values.toList();
   }
 
   @override

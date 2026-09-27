@@ -33,7 +33,7 @@ void main() {
       };
 
       final dto =
-          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.srd2014);
+          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.v2014);
       expect(dto.entityType, 'class');
       expect(dto.normalizedData['skillChoiceCount'], 2);
       expect(dto.normalizedData['flexibleSkills'], isNotNull);
@@ -93,7 +93,7 @@ void main() {
       };
 
       final dto =
-          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.srd2024);
+          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.v2024);
       expect(dto.entityType, 'class');
       expect(dto.unparsedPayload.containsKey('startingProficiencies'), isFalse);
       expect(dto.unparsedPayload.containsKey('proficiencyChoices'), isFalse);
@@ -124,7 +124,7 @@ void main() {
       };
 
       final dto =
-          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.srd2014);
+          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.v2014);
       expect(dto.normalizedData['skillProficiencies'],
           containsAll(['investigation', 'insight']));
       expect(dto.normalizedData['flexibleSkills']?['count'], 1);
@@ -143,7 +143,7 @@ void main() {
       };
 
       final dto =
-          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.srd2014);
+          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.v2014);
       expect(dto.normalizedData['skillChoiceCount'], 2);
       final flex =
           dto.normalizedData['flexibleSkills'] as Map<String, dynamic>?;
@@ -182,7 +182,7 @@ void main() {
       };
 
       final dto =
-          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.srd2014);
+          HomebrewEntityDto.fromJson(json, ruleset: RulesetVersion.v2014);
       final domainClass = HomebrewIngestor.mapClassFromDto(dto);
 
       expect(domainClass.name, 'Warlord');
@@ -227,7 +227,7 @@ void main() {
 
       final classes = HomebrewIngestor.parseCustomClasses(
         rawList,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
 
       expect(classes.length, 2);

@@ -76,7 +76,8 @@ class SessionGraphService {
     required RoomEntityLink entityLink,
     required int currentHp,
     required int maxHp,
-    required int armorClass,
+    int? armorClass,
+    int? defense,
     int initiative = 10,
     int initiativeTieBreaker = 0,
   }) {
@@ -89,7 +90,7 @@ class SessionGraphService {
       initiativeTieBreaker: initiativeTieBreaker,
       currentHp: currentHp,
       maxHp: maxHp,
-      armorClass: armorClass,
+      defense: defense ?? armorClass ?? 10,
     );
   }
 

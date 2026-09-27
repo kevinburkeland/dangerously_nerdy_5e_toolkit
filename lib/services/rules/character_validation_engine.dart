@@ -1,4 +1,4 @@
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../../models/domain/character_models.dart';
 import 'package:vtt_engine_core/models/generic_tabletop_primitives.dart';
 import '../../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 import '../../models/domain/character_draft.dart';

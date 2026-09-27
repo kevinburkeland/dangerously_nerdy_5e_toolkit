@@ -195,7 +195,7 @@ void main() {
       expect(bg.descriptionMarkdown, isNotEmpty);
       expect(
           GrantEvaluator.evaluateGrantedSkills(bg.grants)
-              .map((s) => s.displayName),
+              .map((s) => SkillType.fromLooseString(s).displayName),
           containsAll(['Insight', 'Religion']));
       expect(
           bg.grants.any((g) =>

@@ -87,7 +87,7 @@ void main() {
 
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(1));
       final result = results.first;
@@ -95,7 +95,7 @@ void main() {
 
       final skip = result as IngestionSkipResult;
       expect(skip.sourceUrl, equals(url));
-      expect(skip.ruleset, equals(RulesetVersion.srd2014));
+      expect(skip.ruleset, equals(RulesetVersion.v2014));
       expect(skip.reason, contains('Weapon Mastery declarations'));
     });
 
@@ -116,14 +116,14 @@ void main() {
 
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2024).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2024).toList();
 
       expect(results.length, equals(1));
       final result = results.first;
       expect(result, isA<IngestionSkipResult>());
 
       final skip = result as IngestionSkipResult;
-      expect(skip.ruleset, equals(RulesetVersion.srd2024));
+      expect(skip.ruleset, equals(RulesetVersion.v2024));
       expect(skip.reason,
           contains('Species / Race cannot define Ability Score Increases'));
     });
@@ -145,7 +145,7 @@ void main() {
 
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2024).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2024).toList();
 
       expect(results.length, equals(1));
       final result = results.first;
@@ -154,7 +154,7 @@ void main() {
       final success = result as IngestionSuccessResult;
       expect(success.entity.name, equals('Acolyte'));
       expect(success.entity.entityType, equals('background'));
-      expect(success.ruleset, equals(RulesetVersion.srd2024));
+      expect(success.ruleset, equals(RulesetVersion.v2024));
     });
 
     test('Gracefully skips corrupted JSON without terminating stream',
@@ -176,7 +176,7 @@ void main() {
 
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url1, url2], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url1, url2], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(2));
       expect(results.any((r) => r is IngestionSkipResult), isTrue);
@@ -226,7 +226,7 @@ void main() {
       final client = MockHttpFetchClient({url: bundlePayload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(3));
       expect(results.every((r) => r is IngestionSuccessResult), isTrue);
@@ -267,7 +267,7 @@ void main() {
       final client = MockHttpFetchClient({url: arrayPayload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(2));
       expect(results.every((r) => r is IngestionSuccessResult), isTrue);
@@ -294,7 +294,7 @@ void main() {
       final client = MockHttpFetchClient({url: metaPayload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(1));
       expect(results.first, isA<IngestionSkipResult>());
@@ -315,7 +315,7 @@ void main() {
       final client = MockHttpFetchClient({url: itemPayload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(1));
       expect(results.first, isA<IngestionSuccessResult>());
@@ -357,7 +357,7 @@ void main() {
       final client = MockHttpFetchClient({url: fluffPayload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(2));
       expect(results.every((r) => r is IngestionSuccessResult), isTrue);
@@ -462,7 +462,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(3));
       expect(results.every((r) => r is IngestionSuccessResult), isTrue);
@@ -536,7 +536,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(4));
       expect(results.whereType<IngestionSkipResult>(), isEmpty);
@@ -583,7 +583,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       final successes = results.whereType<IngestionSuccessResult>().toList();
       final names = successes.map((s) => s.entity.name).toList();
@@ -645,7 +645,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       final successes = results.whereType<IngestionSuccessResult>().toList();
       expect(successes.length, equals(3));
@@ -686,7 +686,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(1));
       final success = results.first as IngestionSuccessResult;
@@ -747,7 +747,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(1));
       final success = results.first as IngestionSuccessResult;
@@ -805,7 +805,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final results = await adapter.ingestPayloadStream(
-          rawUrls: [url], ruleset: RulesetVersion.srd2014).toList();
+          rawUrls: [url], ruleset: RulesetVersion.v2014).toList();
 
       expect(results.length, equals(2));
       final bepis = results[0] as IngestionSuccessResult;
@@ -842,7 +842,7 @@ void main() {
       );
 
       final stream = adapter
-          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014);
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.v2014);
       final emitted = <IngestionResult>[];
       await for (final res in stream) {
         emitted.add(res);
@@ -903,7 +903,7 @@ void main() {
       final client = MockHttpFetchClient({url: payload});
       final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
       final stream = adapter
-          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014);
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.v2014);
       final emitted = await stream.toList();
 
       expect(emitted.length, equals(4));

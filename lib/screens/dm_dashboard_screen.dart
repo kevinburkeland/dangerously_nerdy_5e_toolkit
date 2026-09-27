@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/animated_object.dart';
 import '../models/arena/arena_condition.dart';
 import '../models/campaign_profile.dart';
+import '../models/party/party_purse.dart';
 import '../models/dm_screen_data.dart';
 import '../models/domain/character_models.dart';
 import '../models/domain/core_types.dart';
@@ -680,7 +681,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   initiativeScore: init,
                   currentHp: hp,
                   maxHp: hp,
-                  armorClass: ac,
+                  defense: ac,
                   isActiveTurn:
                       _activeProfile?.roomState.activeEncounterList.isEmpty ??
                           true,

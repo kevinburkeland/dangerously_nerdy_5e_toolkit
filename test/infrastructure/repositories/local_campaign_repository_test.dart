@@ -6,11 +6,11 @@ import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 
-class _FakeCharRepo implements ICharacterRepository {
+class _FakeCharRepo implements ICharacterRepository<Character> {
   @override
   Future<List<Character>> loadCharacters() async => [];
   @override
-  Future<List<Character>> saveCharacter(Character c) async => [c];
+  Future<void> saveCharacter(Character c) async => [c];
   @override
   Future<void> saveCharacters(List<Character> c) async {}
   @override

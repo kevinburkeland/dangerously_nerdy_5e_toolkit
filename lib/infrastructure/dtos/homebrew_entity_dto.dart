@@ -1,4 +1,4 @@
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
+import '../modules/dnd5e/rules/ruleset_edition.dart';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/homebrew/models/homebrew_entity.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
@@ -69,7 +69,7 @@ class HomebrewEntityDto {
     // 2. Explicit Ruleset Mismatch Detection
     final declaredRuleset = json['ruleset']?.toString().toLowerCase();
     if (declaredRuleset != null) {
-      if (effectiveRuleset == RulesetVersion.srd2014 &&
+      if (effectiveRuleset == RulesetVersion.v2014 &&
           (declaredRuleset.contains('2024') ||
               declaredRuleset.contains('5.2') ||
               declaredRuleset.contains('xphb'))) {
@@ -78,7 +78,7 @@ class HomebrewEntityDto {
           path: sourcePath,
         );
       }
-      if (effectiveRuleset == RulesetVersion.srd2024 &&
+      if (effectiveRuleset == RulesetVersion.v2024 &&
           (declaredRuleset.contains('2014') ||
               declaredRuleset.contains('5.1') ||
               declaredRuleset.contains('phb14'))) {
@@ -93,7 +93,7 @@ class HomebrewEntityDto {
     final entityType = _detectEntityType(json);
 
     // 4. Strict Ruleset Mechanical Boundary Enforcement
-    if (effectiveRuleset == RulesetVersion.srd2014) {
+    if (effectiveRuleset == RulesetVersion.v2014) {
       _validateSrd2014Contract(json, entityType, sourcePath);
     } else {
       _validateSrd2024Contract(json, entityType, sourcePath);

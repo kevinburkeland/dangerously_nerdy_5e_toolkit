@@ -75,7 +75,7 @@ void main() {
       final telemetrySnapshots = <HomebrewImportTelemetry>[];
       final stream = orchestrator.runImport(
         source: source,
-        ruleset: RulesetVersion.srd2014,
+        ruleset: RulesetVersion.v2014,
       );
 
       await for (final t in stream) {
@@ -98,7 +98,7 @@ void main() {
       expect(ledger.activeValues.length, equals(1));
       final item = ledger.activeValues.first;
       expect(item.name, equals('Frost Lance'));
-      expect(item.ruleset, equals(RulesetVersion.srd2014));
+      expect(item.ruleset, equals(RulesetVersion.v2014));
 
       // Assert HLC stamp exists in CRDT register
       final register = ledger.items[item.id];
@@ -139,7 +139,7 @@ void main() {
       final telemetry = await orchestrator
           .runImport(
             source: source,
-            ruleset: RulesetVersion.srd2014,
+            ruleset: RulesetVersion.v2014,
           )
           .last;
 
@@ -186,7 +186,7 @@ void main() {
       final telemetry = await orchestrator
           .runImport(
             source: source,
-            ruleset: RulesetVersion.srd2014,
+            ruleset: RulesetVersion.v2014,
           )
           .last;
 
@@ -233,7 +233,7 @@ void main() {
       final telemetry = await orchestrator
           .runImport(
             source: source,
-            ruleset: RulesetVersion.srd2014,
+            ruleset: RulesetVersion.v2014,
           )
           .last;
 

@@ -11,13 +11,13 @@ void main() {
       // 2014 RAW: Action
       expect(
         module2014.actionEconomy.getConsumableUsageCost('potion'),
-        equals(ActionCost.action),
+        equals(ActionCost.standard),
       );
 
       // 2024 Revised: Bonus Action
       expect(
         module2024.actionEconomy.getConsumableUsageCost('potion'),
-        equals(ActionCost.bonusAction),
+        equals(ActionCost.special),
       );
     });
 

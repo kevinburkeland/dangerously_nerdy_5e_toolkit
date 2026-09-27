@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../../services/rules/character_reparse_engine.dart';
@@ -9,7 +9,7 @@ import '../dtos/character_dto.dart';
 
 /// Concrete infrastructure adapter implementing [ICharacterRepository]
 /// using IndexedDB / Hive ([AppDatabaseService]) with fallback to [SharedPreferences].
-class LocalCharacterRepository implements ICharacterRepository {
+class LocalCharacterRepository implements ICharacterRepository<Character> {
   static const String _kSavedRosterKey = 'saved_characters_roster_v1';
   static const String _kActiveCharacterIdKey = 'saved_active_character_id_v1';
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:vtt_engine_core/models/core_types.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../domain/core_types.dart';
+import '../domain/character_models.dart';
 import 'package:vtt_engine_core/models/entity_reference.dart';
-import 'package:vtt_engine_core/models/spell_monster_equipment.dart';
+import '../domain/spell_monster_equipment.dart';
 import '../magic_items/magic_item_library.dart';
 
 /// Predefined SRD starting equipment package with specific items, slot mappings, and starting purse.

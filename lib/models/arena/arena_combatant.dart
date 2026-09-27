@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../domain/character_models.dart';
 import '../srd_summons/minion_stat_block.dart';
 import 'arena_condition.dart';
 import 'monster_combat_profile.dart';

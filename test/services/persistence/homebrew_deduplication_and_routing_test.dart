@@ -30,7 +30,7 @@ void main() {
           id: 'blade-ward',
           name: 'Blade Ward',
           entityType: 'spell',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Blade Ward',
             'level': 0,
@@ -58,7 +58,7 @@ void main() {
           id: 'chronoblast',
           name: 'Chronoblast',
           entityType: 'spell',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Chronoblast',
             'level': 3,
@@ -83,7 +83,7 @@ void main() {
           id: 'barbarian',
           name: 'Barbarian',
           entityType: 'class',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Barbarian',
             'hd': {'number': 1, 'faces': 12},
@@ -96,7 +96,7 @@ void main() {
           id: 'aether-weaver',
           name: 'Aether Weaver',
           entityType: 'class',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Aether Weaver',
             'hd': {'number': 1, 'faces': 8},
@@ -109,7 +109,7 @@ void main() {
           id: 'goblin',
           name: 'Goblin',
           entityType: 'monster',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Goblin',
             'size': 'S',
@@ -124,7 +124,7 @@ void main() {
           id: 'cinder-drake',
           name: 'Cinder Drake',
           entityType: 'monster',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Cinder Drake',
             'size': 'M',
@@ -159,7 +159,7 @@ void main() {
           id: 'crystal-staff-focus',
           name: 'Crystal Staff Focus',
           entityType: 'baseitem',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Crystal Staff Focus',
             'type': 'SCF',
@@ -171,7 +171,7 @@ void main() {
           id: 'solarflare-blade',
           name: 'Solarflare Blade',
           entityType: 'magicvariant',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Solarflare Blade',
             'type': 'M',
@@ -199,7 +199,7 @@ void main() {
           id: 'stellar-elf',
           name: 'Stellar Elf',
           entityType: 'subrace',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Stellar Elf',
             'raceName': 'Starfolk',
@@ -270,14 +270,14 @@ void main() {
             id: 'blade-ward',
             name: 'Blade Ward',
             entityType: 'spell',
-            ruleset: domain_rules.RulesetVersion.srd2014,
+            ruleset: domain_rules.RulesetVersion.v2014,
             rawPayload: srdPayload,
           ),
           HomebrewEntity(
             id: 'void-lance',
             name: 'Void Lance',
             entityType: 'spell',
-            ruleset: domain_rules.RulesetVersion.srd2014,
+            ruleset: domain_rules.RulesetVersion.v2014,
             rawPayload: homebrewPayload,
           ),
         ],
@@ -323,7 +323,7 @@ void main() {
           id: 'fighter-astral-striker',
           name: 'Astral Striker',
           entityType: 'subclass',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: subclassPayload,
         ),
       ]);
@@ -353,7 +353,7 @@ void main() {
         id: 'aurora-gnome',
         name: 'Aurora Gnome',
         entityType: 'subrace',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Aurora Gnome',
           'raceName': 'Star Gnomes',
@@ -364,7 +364,7 @@ void main() {
         id: 'nebula-gnome',
         name: 'Nebula Gnome',
         entityType: 'subrace',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Nebula Gnome',
           'raceName': 'Star Gnomes',
@@ -395,7 +395,7 @@ void main() {
           id: 'table-astral-omens',
           name: 'Table of Astral Omens',
           entityType: 'table',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Table of Astral Omens',
             'entityType': 'table',
@@ -410,7 +410,7 @@ void main() {
           id: 'vehicle-sand-crawler',
           name: 'Sand Crawler',
           entityType: 'vehicle',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Sand Crawler',
             'entityType': 'vehicle',
@@ -422,7 +422,7 @@ void main() {
           id: 'trap-glyph-of-blinding',
           name: 'Glyph of Blinding',
           entityType: 'trap',
-          ruleset: domain_rules.RulesetVersion.srd2014,
+          ruleset: domain_rules.RulesetVersion.v2014,
           rawPayload: {
             'name': 'Glyph of Blinding',
             'entityType': 'trap',
@@ -462,7 +462,7 @@ void main() {
         id: 'solas-the-dawnbringer',
         name: 'Solas the Dawnbringer',
         entityType: 'deity',
-        ruleset: domain_rules.RulesetVersion.srd2014,
+        ruleset: domain_rules.RulesetVersion.v2014,
         rawPayload: {
           'name': 'Solas the Dawnbringer',
           'source': 'HOMEBREW',

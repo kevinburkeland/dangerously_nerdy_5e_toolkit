@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:vtt_engine_core/currency/i_currency_system.dart';
 import 'package:vtt_engine_core/models/generic_tabletop_primitives.dart';
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../../../../models/domain/character_models.dart';
 import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import 'package:vtt_engine_core/rules/i_ruleset_module.dart';
 import '../../../../models/domain/feature_grant.dart';
@@ -35,6 +35,8 @@ class Dnd5eRulesetModule implements IRulesetModule {
       edition == DmRulesEdition.v2024 ? 'SRD 5.2.1' : 'SRD 5.1';
 
   @override
+  String? get legalCitation => srdCitation;
+
   String get srdCitation => edition == DmRulesEdition.v2024
       ? 'System Reference Document 5.2.1 (CC-BY-4.0)'
       : 'Systems Reference Document 5.1 (OGL 1.0a / CC-BY-4.0)';

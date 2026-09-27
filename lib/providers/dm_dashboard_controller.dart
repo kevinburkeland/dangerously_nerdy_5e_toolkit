@@ -26,7 +26,7 @@ import '../services/party/party_room_service.dart';
 /// and Application Services ([CombatEncounterService]) in alignment with Hexagonal Architecture.
 class DmDashboardController extends ChangeNotifier {
   final ICampaignRepository _campaignProfileService;
-  final ICharacterRepository _characterPersistenceService;
+  final ICharacterRepository<Character> _characterPersistenceService;
   final CombatEncounterService _combatEncounterService;
   final RoomSyncOrchestrator? _roomSyncOrchestrator;
   final String _nodeId;
@@ -41,7 +41,7 @@ class DmDashboardController extends ChangeNotifier {
 
   DmDashboardController({
     ICampaignRepository? campaignRepository,
-    ICharacterRepository? characterRepository,
+    ICharacterRepository<Character>? characterRepository,
     CombatEncounterService? combatEncounterService,
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
@@ -55,9 +55,11 @@ class DmDashboardController extends ChangeNotifier {
                 : AppServices.instance.campaignProfileService),
         _characterPersistenceService = characterRepository ??
             characterPersistenceService ??
-            (sl.isRegistered<ICharacterRepository>()
-                ? sl<ICharacterRepository>()
-                : CharacterPersistenceService()),
+            (sl.isRegistered<ICharacterRepository<Character>>()
+                ? sl<ICharacterRepository<Character>>()
+                : (sl.isRegistered<ICharacterRepository>()
+                    ? sl<ICharacterRepository>() as ICharacterRepository<Character>
+                    : CharacterPersistenceService())),
         _combatEncounterService = combatEncounterService ??
             (sl.isRegistered<CombatEncounterService>()
                 ? sl<CombatEncounterService>()

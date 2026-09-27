@@ -361,14 +361,14 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
               return Column(
                 children: [
                   _buildRulesetOptionTile(
-                    version: RulesetVersion.srd2014,
+                    version: RulesetVersion.v2014,
                     title: '2014 SRD 5.1',
                     subtitle: 'Legacy rules (Race ASIs, Discrete Exhaustion)',
                     colorScheme: colorScheme,
                   ),
                   const SizedBox(height: 12),
                   _buildRulesetOptionTile(
-                    version: RulesetVersion.srd2024,
+                    version: RulesetVersion.v2024,
                     title: '2024 SRD 5.2.1',
                     subtitle: 'Revised rules (Background ASIs, Masteries)',
                     colorScheme: colorScheme,
@@ -380,7 +380,7 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
               children: [
                 Expanded(
                   child: _buildRulesetOptionTile(
-                    version: RulesetVersion.srd2014,
+                    version: RulesetVersion.v2014,
                     title: '2014 SRD 5.1',
                     subtitle: 'Legacy rules (Race ASIs, Discrete Exhaustion)',
                     colorScheme: colorScheme,
@@ -389,7 +389,7 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildRulesetOptionTile(
-                    version: RulesetVersion.srd2024,
+                    version: RulesetVersion.v2024,
                     title: '2024 SRD 5.2.1',
                     subtitle: 'Revised rules (Background ASIs, Masteries)',
                     colorScheme: colorScheme,

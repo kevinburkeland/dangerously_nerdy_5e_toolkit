@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:vtt_engine_core/models/character_models.dart';
+import '../domain/character_models.dart';
 import '../srd_summons/minion_stat_block.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 import '../../services/ingestion/stat_block_acl_parser.dart';

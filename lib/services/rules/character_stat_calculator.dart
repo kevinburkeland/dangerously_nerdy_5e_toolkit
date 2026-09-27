@@ -337,7 +337,7 @@ class CharacterStatCalculator {
 
     // C.2 Apply Item Additions (checking attunement)
     for (final instance in character.equippedItems) {
-      final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+      final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
       if (res.isResolved) {
         final item = res.entity!;
         resolvedItems.add(item);
@@ -373,7 +373,7 @@ class CharacterStatCalculator {
     // C.3 Apply Ability Overrides (e.g. Gauntlets of Ogre Power)
     for (final instance in character.equippedItems) {
       if (instance.requiresAttunement && !instance.isAttuned) continue;
-      final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+      final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
       if (!res.isResolved) continue;
       final item = res.entity!;
       final props = item.customProperties;
@@ -473,7 +473,7 @@ class CharacterStatCalculator {
     // Detect equipped armor and shield
     for (final instance in character.equippedItems) {
       if (instance.requiresAttunement && !instance.isAttuned) continue;
-      final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+      final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
       if (!res.isResolved) continue;
       final item = res.entity!;
       final props = item.customProperties;
@@ -707,7 +707,7 @@ class CharacterStatCalculator {
         for (final instance in character.equippedItems) {
           if (instance.requiresAttunement && !instance.isAttuned) continue;
           final merged = Map<String, dynamic>.from(instance.customProperties);
-          final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+          final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
           if (res.isResolved && res.entity != null) {
             for (final entry in res.entity!.customProperties.entries) {
               merged.putIfAbsent(entry.key, () => entry.value);
@@ -777,7 +777,7 @@ class CharacterStatCalculator {
       if (instance.equippedSlot == EquipmentSlot.mainHand ||
           instance.equippedSlot == EquipmentSlot.offHand ||
           instance.equippedSlot == EquipmentSlot.twoHand) {
-        final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+        final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
         if (res.isResolved) {
           final item = res.entity!;
           final props = item.customProperties;
@@ -915,7 +915,7 @@ class CharacterStatCalculator {
   static bool propsArmorHeavy(Character character, ReferenceResolver resolver) {
     for (final instance in character.equippedItems) {
       if (instance.equippedSlot == EquipmentSlot.armor) {
-        final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+        final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef.cast<EquipmentItem>());
         if (res.isResolved &&
             res.entity!.customProperties['armorType']
                     ?.toString()
