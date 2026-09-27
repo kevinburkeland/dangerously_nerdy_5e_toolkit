@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/magic_items/magic_item_library.dart';
+import '../presentation/codex/codex.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
@@ -11,7 +12,6 @@ import '../widgets/item_compendium/item_card.dart';
 import '../widgets/item_compendium/item_comparison_dialog.dart';
 import '../widgets/item_compendium/item_detail_dialog.dart';
 import '../widgets/item_compendium/item_filter_sheet.dart';
-import '../widgets/room_banner_widget.dart';
 
 enum ItemCompendiumViewMode {
   allItems('All Items', Icons.auto_fix_high),
@@ -209,41 +209,13 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     final otherItemsInResults =
         filteredItems.where((item) => !pinnedIds.contains(item.id)).toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.auto_fix_high, color: pinColor, size: 24),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Semantics(
-                header: true,
-                child: Text(
-                  'Item Codex',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return CodexPageShell(
+      headerConfig: CodexHeaderConfig(
+        title: 'Item Codex',
+        icon: Icons.auto_fix_high,
+        accentColor: pinColor,
+        visibleCount: filteredItems.length,
         actions: [
-          RulesEditionToggle(
-            currentEdition: activeEdition,
-            onEditionChanged: (newEdition) {
-              if (widget.initialEdition != null) {
-                setState(() {
-                  _localEditionOverride = newEdition;
-                });
-              }
-              settingsProvider?.setRulesEdition(newEdition);
-            },
-          ),
           if (_viewMode == ItemCompendiumViewMode.myReliquary &&
               pinnedIds.isNotEmpty)
             IconButton(
@@ -285,156 +257,145 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      rulesEditionToggle: RulesEditionToggle(
+        currentEdition: activeEdition,
+        onEditionChanged: (newEdition) {
+          if (widget.initialEdition != null) {
+            setState(() {
+              _localEditionOverride = newEdition;
+            });
+          }
+          settingsProvider?.setRulesEdition(newEdition);
+        },
+      ),
+      searchHeader: CompendiumSearchHeader(
+        controller: _searchController,
+        searchQuery: _searchQuery,
+        onChanged: (val) => setState(() => _searchQuery = val.trim()),
+        onClear: () {
+          _searchController.clear();
+          setState(() => _searchQuery = '');
+        },
+        hintText: 'Search items, loot, gems, art, rarity, element...',
+        activeFilterCount: activeFilterCount,
+        filterTooltip: 'Filter Items & Loot',
+        onFilterTap: () => _openFilterSheet(context),
+      ),
+      modeSelector: CodexModeSelector<ItemCompendiumViewMode>(
+        modes: [
+          CodexViewMode(
+            key: ItemCompendiumViewMode.allItems,
+            label: 'All Items',
+            icon: Icons.auto_fix_high,
+            count: allItems.length,
+          ),
+          CodexViewMode(
+            key: ItemCompendiumViewMode.myReliquary,
+            label: 'Personal Reliquary',
+            icon: Icons.bookmark,
+            count: pinnedIds.length,
+          ),
+          CodexViewMode(
+            key: ItemCompendiumViewMode.revisions2024,
+            label: '2024 Diffs',
+            icon: Icons.auto_awesome,
+            count: diffCount,
+          ),
+        ],
+        selectedMode: _viewMode,
+        style: CodexModeSelectorStyle.segmented,
+        onModeSelected: (val) {
+          HapticService.selectionTick(context);
+          setState(() => _viewMode = val);
+        },
+      ),
+
+      filterArea: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Row(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: RoomBannerWidget(compact: true),
-            ),
-            CompendiumSearchHeader(
-              controller: _searchController,
-              searchQuery: _searchQuery,
-              onChanged: (val) => setState(() => _searchQuery = val.trim()),
-              onClear: () {
-                _searchController.clear();
-                setState(() => _searchQuery = '');
-              },
-              hintText: 'Search items, loot, gems, art, rarity, element...',
-              activeFilterCount: activeFilterCount,
-              filterTooltip: 'Filter Items & Loot',
-              onFilterTap: () => _openFilterSheet(context),
-            ),
-
-            // View Mode Segments (All Items / Personal Reliquary / 2024 Diffs)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  SegmentedButton<ItemCompendiumViewMode>(
-                    segments: [
-                      ButtonSegment(
-                        value: ItemCompendiumViewMode.allItems,
-                        label: Text('All Items (${allItems.length})',
-                            style: const TextStyle(fontSize: 12)),
-                        icon: const Icon(Icons.auto_fix_high, size: 15),
-                      ),
-                      ButtonSegment(
-                        value: ItemCompendiumViewMode.myReliquary,
-                        label: Text('Personal Reliquary (${pinnedIds.length})',
-                            style: const TextStyle(fontSize: 12)),
-                        icon: const Icon(Icons.bookmark, size: 15),
-                      ),
-                      ButtonSegment(
-                        value: ItemCompendiumViewMode.revisions2024,
-                        label: Text('2024 Diffs ($diffCount)',
-                            style: const TextStyle(fontSize: 12)),
-                        icon: const Icon(Icons.auto_awesome, size: 15),
-                      ),
-                    ],
-                    selected: {_viewMode},
-                    onSelectionChanged: (val) {
-                      HapticService.selectionTick(context);
-                      setState(() => _viewMode = val.first);
-                    },
-                  ),
-                ],
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: const Text('All Types',
+                    style: TextStyle(fontSize: 11)),
+                selected: _selectedCategory == null,
+                onSelected: (selected) {
+                  if (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() => _selectedCategory = null);
+                  }
+                },
               ),
             ),
-
-            // Item Category Horizontal Filter Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: const Text('All Types',
-                          style: TextStyle(fontSize: 11)),
-                      selected: _selectedCategory == null,
-                      onSelected: (selected) {
-                        if (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() => _selectedCategory = null);
-                        }
-                      },
+            ...ItemCategory.values.map((cat) {
+              final catColor = cat.getLegibleColor(isDark);
+              final isSelected = _selectedCategory == cat;
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  avatar: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: catColor,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                  ...ItemCategory.values.map((cat) {
-                    final catColor = cat.getLegibleColor(isDark);
-                    final isSelected = _selectedCategory == cat;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        avatar: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: catColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        label: Text(
-                          cat.displayName,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: isSelected ? null : catColor,
-                          ),
-                        ),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          HapticService.selectionTick(context);
-                          setState(
-                              () => _selectedCategory = selected ? cat : null);
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // Results count and attribution header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
-              child: Row(
-                children: [
-                  Text(
-                    '${filteredItems.length} entries',
+                  label: Text(
+                    cat.displayName,
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.5,
+                      fontSize: 11,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isSelected ? null : catColor,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '${activeEdition.label} SRD magic items',
-                    style: TextStyle(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                      fontSize: 11.5,
-                    ),
-                  ),
-                ],
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(
+                        () => _selectedCategory = selected ? cat : null);
+                  },
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+      statusHeader: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+        child: Row(
+          children: [
+            Text(
+              '${filteredItems.length} entries',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
               ),
             ),
-
-            // Content List / Grouped Slivers
-            Expanded(
-              child: filteredItems.isEmpty
-                  ? _buildEmptyState(
-                      theme,
-                      pinnedIds.isEmpty &&
-                          _viewMode == ItemCompendiumViewMode.myReliquary,
-                    )
-                  : CustomScrollView(
+            const Spacer(),
+            Text(
+              '${activeEdition.label} SRD magic items',
+              style: TextStyle(
+                color:
+                    theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                fontSize: 11.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+      isEmpty: filteredItems.isEmpty,
+      emptyState: _buildEmptyState(
+        theme,
+        pinnedIds.isEmpty &&
+            _viewMode == ItemCompendiumViewMode.myReliquary,
+      ),
+      content: CustomScrollView(
                       slivers: [
                         // Personal Reliquary Pinned Section in All Items view
                         if (_viewMode == ItemCompendiumViewMode.allItems &&
@@ -511,10 +472,6 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
                             padding: EdgeInsets.only(bottom: 24)),
                       ],
                     ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

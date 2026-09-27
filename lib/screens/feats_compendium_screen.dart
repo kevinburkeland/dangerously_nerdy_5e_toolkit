@@ -3,6 +3,7 @@ import '../models/characters/srd_feats_library.dart';
 import '../models/dm_screen_data.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/homebrew_extended_entities.dart';
+import '../presentation/codex/codex.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
@@ -12,7 +13,6 @@ import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/feats/feat_card.dart';
 import '../widgets/feats/feat_detail_dialog.dart';
-import '../widgets/room_banner_widget.dart';
 
 enum FeatsViewMode {
   allFeats('All Feats', Icons.military_tech),
@@ -187,97 +187,6 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
     }).toList();
   }
 
-  Widget _buildViewModeTabs(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: FeatsViewMode.values.map((mode) {
-          final isSelected = _viewMode == mode;
-          final primaryColor = theme.colorScheme.primary;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              avatar: Icon(
-                mode.icon,
-                size: 16,
-                color: isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-              label: Text(mode.label),
-              selected: isSelected,
-              showCheckmark: false,
-              selectedColor: isDark
-                  ? primaryColor.withValues(alpha: 0.3)
-                  : primaryColor.withValues(alpha: 0.15),
-              side: BorderSide(
-                color: isSelected
-                    ? primaryColor
-                    : theme.colorScheme.outlineVariant,
-                width: isSelected ? 1.4 : 1.0,
-              ),
-              labelStyle: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected
-                    ? (isDark ? Colors.white : primaryColor)
-                    : theme.colorScheme.onSurface,
-                fontSize: 12.5,
-              ),
-              onSelected: (_) {
-                HapticService.selectionTick(context);
-                setState(() => _viewMode = mode);
-              },
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildCategoryFilters(BuildContext context, DmRulesEdition edition) {
-    final categories = edition == DmRulesEdition.v2024
-        ? const ['Origin', 'General', 'Fighting Style', 'Epic Boon']
-        : const ['General', 'Fighting Style'];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: [
-          FilterChip(
-            label: const Text('All Categories'),
-            selected: _selectedCategory == null,
-            onSelected: (_) {
-              HapticService.selectionTick(context);
-              setState(() => _selectedCategory = null);
-            },
-            visualDensity: VisualDensity.compact,
-          ),
-          const SizedBox(width: 6),
-          ...categories.map((cat) {
-            final isSelected = _selectedCategory == cat;
-            return Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: FilterChip(
-                label: Text(cat),
-                selected: isSelected,
-                onSelected: (_) {
-                  HapticService.selectionTick(context);
-                  setState(() => _selectedCategory = isSelected ? null : cat);
-                },
-                visualDensity: VisualDensity.compact,
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final edition = _resolveEdition(context);
@@ -285,129 +194,90 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
     final allFeats = SrdFeatsLibrary.allFeats;
     final filteredFeats = _filterFeats(allFeats, edition, pinnedIds);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
-              ),
-              child: const Icon(Icons.military_tech,
-                  color: Color(0xFFF59E0B), size: 16),
-            ),
-            const SizedBox(width: 8),
-            const Flexible(
-              child: Text(
-                'Feats Compendium',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
-              ),
-              child: Text(
-                '${filteredFeats.length}',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFF59E0B),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          RulesEditionToggle(
-            currentEdition: edition,
-            onEditionChanged: (newEdition) {
-              HapticService.selectionTick(context);
-              if (widget.initialEdition != null) {
-                setState(() => _localEditionOverride = newEdition);
-              }
-              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
+    final categories = edition == DmRulesEdition.v2024
+        ? const ['Origin', 'General', 'Fighting Style', 'Epic Boon']
+        : const ['General', 'Fighting Style'];
+
+    return CodexPageShell(
+      headerConfig: CodexHeaderConfig(
+        title: 'Feats Compendium',
+        icon: Icons.military_tech,
+        accentColor: const Color(0xFFF59E0B),
+        visibleCount: filteredFeats.length,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Room Broadcast Banner (if connected to party)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: RoomBannerWidget(compact: true),
-            ),
-
-            // Search Header
-            CompendiumSearchHeader(
-              controller: _searchController,
-              searchQuery: _searchQuery,
-              hintText: 'Search feats by name, prerequisite, or effect...',
-              activeFilterCount: (_selectedCategory != null ? 1 : 0) +
-                  (_showOnlyPrerequisites ? 1 : 0) +
-                  (_showOnlyNoPrerequisites ? 1 : 0),
-              onChanged: (query) => setState(() => _searchQuery = query),
-              onClear: () => setState(() {
-                _searchController.clear();
-                _searchQuery = '';
-              }),
-              onFilterTap: null,
-            ),
-
-            // View Mode Tabs
-            _buildViewModeTabs(context),
-
-            // Category Chips
-            _buildCategoryFilters(context, edition),
-
-            const SizedBox(height: 6),
-
-            // Responsive Card Grid or Empty State
-            Expanded(
-              child: filteredFeats.isEmpty
-                  ? EmptyStateCard(
-                      title: 'No Feats Found',
-                      message:
-                          'No feats matched your current search filters or category.',
-                      icon: Icons.military_tech,
-                      actionLabel: 'Clear Filters',
-                      onAction: _clearAllFilters,
-                    )
-                  : ResponsiveCardGrid<Feat>(
-                      items: filteredFeats,
-                      itemBuilder: (context, feat) => FeatCard(
-                        feat: feat,
-                        isPinned: pinnedIds.contains(feat.id.slug),
-                        edition: edition,
-                        onTogglePin: () =>
-                            _togglePinFeat(context, feat.id.slug),
-                        onTap: () => FeatDetailDialog.show(
-                          context,
-                          feat: feat,
-                          isPinned: pinnedIds.contains(feat.id.slug),
-                          edition: edition,
-                          onTogglePin: () =>
-                              _togglePinFeat(context, feat.id.slug),
-                        ),
-                      ),
-                    ),
-            ),
-          ],
+      rulesEditionToggle: RulesEditionToggle(
+        currentEdition: edition,
+        onEditionChanged: (newEdition) {
+          HapticService.selectionTick(context);
+          if (widget.initialEdition != null) {
+            setState(() => _localEditionOverride = newEdition);
+          }
+          SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
+        },
+      ),
+      searchHeader: CompendiumSearchHeader(
+        controller: _searchController,
+        searchQuery: _searchQuery,
+        hintText: 'Search feats by name, prerequisite, or effect...',
+        activeFilterCount: (_selectedCategory != null ? 1 : 0) +
+            (_showOnlyPrerequisites ? 1 : 0) +
+            (_showOnlyNoPrerequisites ? 1 : 0),
+        onChanged: (query) => setState(() => _searchQuery = query),
+        onClear: () => setState(() {
+          _searchController.clear();
+          _searchQuery = '';
+        }),
+        onFilterTap: null,
+      ),
+      modeSelector: CodexModeSelector<FeatsViewMode>(
+        modes: FeatsViewMode.values
+            .map((mode) => CodexViewMode<FeatsViewMode>(
+                  key: mode,
+                  label: mode.label,
+                  icon: mode.icon,
+                ))
+            .toList(),
+        selectedMode: _viewMode,
+        onModeSelected: (mode) => setState(() => _viewMode = mode),
+      ),
+      filterArea: CodexFilterStrip<String?>(
+        options: [
+          const CodexFilterOption<String?>(
+            value: null,
+            label: 'All Categories',
+          ),
+          ...categories.map((cat) => CodexFilterOption<String?>(
+                value: cat,
+                label: cat,
+              )),
+        ],
+        selectedValue: _selectedCategory,
+        allowDeselect: true,
+        deselectValue: null,
+        onSelected: (cat) => setState(() => _selectedCategory = cat),
+      ),
+      isEmpty: filteredFeats.isEmpty,
+      emptyState: EmptyStateCard(
+        title: 'No Feats Found',
+        message: 'No feats matched your current search filters or category.',
+        icon: Icons.military_tech,
+        actionLabel: 'Clear Filters',
+        onAction: _clearAllFilters,
+      ),
+      content: ResponsiveCardGrid<Feat>(
+        items: filteredFeats,
+        itemBuilder: (context, feat) => FeatCard(
+          feat: feat,
+          isPinned: pinnedIds.contains(feat.id.slug),
+          edition: edition,
+          onTogglePin: () => _togglePinFeat(context, feat.id.slug),
+          onTap: () => FeatDetailDialog.show(
+            context,
+            feat: feat,
+            isPinned: pinnedIds.contains(feat.id.slug),
+            edition: edition,
+            onTogglePin: () => _togglePinFeat(context, feat.id.slug),
+          ),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import '../models/characters/srd_species_library.dart';
 import '../models/dm_screen_data.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/homebrew_extended_entities.dart';
+import '../presentation/codex/codex.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../widgets/common/compendium_search_header.dart';
@@ -11,7 +12,6 @@ import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/races/race_card.dart';
 import '../widgets/races/race_detail_dialog.dart';
-import '../widgets/room_banner_widget.dart';
 
 enum SpeciesViewMode {
   all('All Species', Icons.people_alt),
@@ -129,8 +129,9 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
       if (_selectedSize != 'All') {
         if (_selectedSize == 'Medium' && !size.contains('medium')) return false;
         if (_selectedSize == 'Small' && !size.contains('small')) return false;
-        if (_selectedSize == 'Has Lineages' && race.subraces.isEmpty)
+        if (_selectedSize == 'Has Lineages' && race.subraces.isEmpty) {
           return false;
+        }
       }
 
       // 4. Text Search Query Filter
@@ -159,63 +160,6 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
     }).toList();
   }
 
-  Widget _buildViewModeTabs(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: SpeciesViewMode.values.map((mode) {
-          final isSelected = _viewMode == mode;
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: FilterChip(
-              avatar: Icon(
-                mode.icon,
-                size: 15,
-                color: isSelected
-                    ? const Color(0xFF10B981)
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-              label: Text(mode.label),
-              selected: isSelected,
-              onSelected: (_) {
-                HapticService.selectionTick(context);
-                setState(() => _viewMode = mode);
-              },
-              visualDensity: VisualDensity.compact,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildSizeFilters(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      child: Row(
-        children: _sizeOptions.map((size) {
-          final isSelected = _selectedSize == size;
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: FilterChip(
-              label: Text(size),
-              selected: isSelected,
-              onSelected: (_) {
-                HapticService.selectionTick(context);
-                setState(() => _selectedSize = size);
-              },
-              visualDensity: VisualDensity.compact,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final edition = _resolveEdition(context);
@@ -223,109 +167,79 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
     final allRaces = SrdSpeciesLibrary.allSpecies;
     final filteredRaces = _filterRaces(allRaces, edition, pinnedIds);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.people_alt, size: 22, color: Color(0xFF10B981)),
-            const SizedBox(width: 8),
-            const Text('Species & Lineages Codex',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.3)),
-              ),
-              child: Text(
-                '${filteredRaces.length}',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF10B981),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          RulesEditionToggle(
-            currentEdition: edition,
-            onEditionChanged: (newEdition) {
-              HapticService.selectionTick(context);
-              if (widget.initialEdition != null) {
-                setState(() => _localEditionOverride = newEdition);
-              }
-              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
+    return CodexPageShell(
+      headerConfig: CodexHeaderConfig(
+        title: 'Species & Lineages Codex',
+        icon: Icons.people_alt,
+        accentColor: const Color(0xFF10B981),
+        visibleCount: filteredRaces.length,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Room Broadcast Banner (if connected to party)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: RoomBannerWidget(compact: true),
-            ),
-
-            // Search Header
-            CompendiumSearchHeader(
-              controller: _searchController,
-              searchQuery: _searchQuery,
-              hintText:
-                  'Search species by name, size, speed, traits, or lineages...',
-              activeFilterCount: (_selectedSize != 'All' ? 1 : 0),
-              onChanged: (query) => setState(() => _searchQuery = query),
-              onClear: () => setState(() {
-                _searchController.clear();
-                _searchQuery = '';
-              }),
-              onFilterTap: null,
-            ),
-
-            // View Mode Chips
-            _buildViewModeTabs(context),
-
-            // Size / Subrace Filter Chips
-            _buildSizeFilters(context),
-
-            const SizedBox(height: 6),
-
-            // Responsive Card Grid or Empty State
-            Expanded(
-              child: filteredRaces.isEmpty
-                  ? EmptyStateCard(
-                      title: 'No Species Found',
-                      message: _searchQuery.isNotEmpty
-                          ? 'No species or lineages match "$_searchQuery".'
-                          : 'No species match the selected filters.',
-                      icon: Icons.people_alt,
-                      actionLabel: 'Reset Filters',
-                      onAction: _clearAllFilters,
-                    )
-                  : ResponsiveCardGrid<Race>(
-                      items: filteredRaces,
-                      itemBuilder: (context, race) {
-                        final isPinned = pinnedIds.contains(race.id.slug);
-                        return RaceCard(
-                          race: race,
-                          isPinned: isPinned,
-                          edition: edition,
-                          onTogglePin: () =>
-                              _togglePinRace(context, race.id.slug),
-                          onTap: () => RaceDetailDialog.show(context, race,
-                              edition: edition),
-                        );
-                      },
-                    ),
-            ),
-          ],
+      rulesEditionToggle: RulesEditionToggle(
+        currentEdition: edition,
+        onEditionChanged: (newEdition) {
+          HapticService.selectionTick(context);
+          if (widget.initialEdition != null) {
+            setState(() => _localEditionOverride = newEdition);
+          }
+          SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
+        },
+      ),
+      searchHeader: CompendiumSearchHeader(
+        controller: _searchController,
+        searchQuery: _searchQuery,
+        hintText: 'Search species by name, speed, size, or trait...',
+        activeFilterCount:
+            (_selectedSize != 'All' ? 1 : 0) + (_searchQuery.isNotEmpty ? 1 : 0),
+        onChanged: (query) => setState(() => _searchQuery = query),
+        onClear: () => setState(() {
+          _searchController.clear();
+          _searchQuery = '';
+        }),
+        onFilterTap: null,
+      ),
+      modeSelector: CodexModeSelector<SpeciesViewMode>(
+        modes: SpeciesViewMode.values
+            .map((mode) => CodexViewMode<SpeciesViewMode>(
+                  key: mode,
+                  label: mode.label,
+                  icon: mode.icon,
+                  accentColor: const Color(0xFF10B981),
+                ))
+            .toList(),
+        selectedMode: _viewMode,
+        defaultAccentColor: const Color(0xFF10B981),
+        onModeSelected: (mode) => setState(() => _viewMode = mode),
+      ),
+      filterArea: CodexFilterStrip<String>(
+        options: _sizeOptions
+            .map((size) => CodexFilterOption<String>(
+                  value: size,
+                  label: size,
+                ))
+            .toList(),
+        selectedValue: _selectedSize,
+        onSelected: (size) => setState(() => _selectedSize = size),
+      ),
+      isEmpty: filteredRaces.isEmpty,
+      emptyState: EmptyStateCard(
+        title: 'No Species Found',
+        message: 'No species match your query or size filter.',
+        icon: Icons.people_outline,
+        actionLabel: 'Clear All Filters',
+        onAction: _clearAllFilters,
+      ),
+      content: ResponsiveCardGrid<Race>(
+        items: filteredRaces,
+        itemBuilder: (context, race) => RaceCard(
+          race: race,
+          edition: edition,
+          isPinned: pinnedIds.contains(race.id.slug),
+          onTogglePin: () => _togglePinRace(context, race.id.slug),
+          onTap: () => RaceDetailDialog.show(
+            context,
+            race,
+            edition: edition,
+          ),
         ),
       ),
     );

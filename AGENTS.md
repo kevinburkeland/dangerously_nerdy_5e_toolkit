@@ -32,6 +32,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── repositories/               # LocalCampaignRepository, LocalCharacterRepository
 │   │   └── resolvers/                  # CharacterTelemetryResolver
 │   ├── presentation/
+│   │   ├── codex/                      # Reusable Codex UI: CodexPageShell, CodexHeaderConfig, CodexModeSelector, CodexFilterStrip
 │   │   ├── core/                       # Accessible core widgets: AccessibleActionTile
 │   │   ├── screens/                    # Sub-screens: homebrew/HomebrewExpertOptionsView
 │   │   └── widgets/                    # Accessible badges & widgets: RoomConnectionBadge

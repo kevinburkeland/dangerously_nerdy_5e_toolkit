@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/dm_screen_data.dart';
 import '../models/spellbook_data.dart';
+import '../presentation/codex/codex.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
@@ -8,7 +9,6 @@ import '../widgets/common/compendium_search_header.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
-import '../widgets/room_banner_widget.dart';
 import '../widgets/spellbook/spell_card.dart';
 import '../widgets/spellbook/spell_comparison_dialog.dart';
 import '../widgets/spellbook/spell_filter_sheet.dart';
@@ -261,32 +261,13 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.menu_book, color: pinColor, size: 24),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Semantics(
-                header: true,
-                child: const Text(
-                  'Spellbook Companion',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return CodexPageShell(
+      headerConfig: CodexHeaderConfig(
+        title: 'Spellbook Companion',
+        icon: Icons.menu_book,
+        accentColor: pinColor,
+        visibleCount: filteredSpells.length,
         actions: [
-          RulesEditionToggle(
-            currentEdition: edition,
-            onEditionChanged: (newEdition) =>
-                _onEditionChanged(context, newEdition),
-          ),
-          const SizedBox(width: 8),
           if (pinnedIds.isNotEmpty &&
               _viewMode == SpellbookViewMode.mySpellbook)
             IconButton(
@@ -294,264 +275,237 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
               tooltip: 'Clear Personal Spellbook',
               onPressed: () => _clearAllPinnedSpells(context),
             ),
-          const SizedBox(width: 8),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      rulesEditionToggle: RulesEditionToggle(
+        currentEdition: edition,
+        onEditionChanged: (newEdition) =>
+            _onEditionChanged(context, newEdition),
+      ),
+      searchHeader: CompendiumSearchHeader(
+        controller: _searchController,
+        searchQuery: _searchQuery,
+        onChanged: (val) => setState(() => _searchQuery = val),
+        onClear: () {
+          _searchController.clear();
+          setState(() => _searchQuery = '');
+        },
+        hintText: 'Search spells, damage, components, classes...',
+        activeFilterCount: activeFilterCount,
+        filterTooltip: 'Filter Spells',
+        onFilterTap: () => _openFilterSheet(context),
+      ),
+      modeSelector: CodexModeSelector<SpellbookViewMode>(
+        modes: [
+          CodexViewMode(
+            key: SpellbookViewMode.allSpells,
+            label: 'All Spells',
+            icon: Icons.grid_view,
+            count: allSpells.length,
+          ),
+          CodexViewMode(
+            key: SpellbookViewMode.mySpellbook,
+            label: 'My Spellbook',
+            icon: Icons.bookmark,
+            count: pinnedIds.length,
+          ),
+          CodexViewMode(
+            key: SpellbookViewMode.revisions2024,
+            label: '2024 Diffs',
+            icon: Icons.auto_awesome,
+            count: allSpells.where((s) => s.isChangedIn2024).length,
+          ),
+        ],
+        selectedMode: _viewMode,
+        style: CodexModeSelectorStyle.segmented,
+        onModeSelected: (val) {
+          HapticService.selectionTick(context);
+          setState(() => _viewMode = val);
+        },
+      ),
+
+      filterArea: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Row(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: RoomBannerWidget(compact: true),
-            ),
-            // Search Bar & Filter Button
-            CompendiumSearchHeader(
-              controller: _searchController,
-              searchQuery: _searchQuery,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              onClear: () {
-                _searchController.clear();
-                setState(() => _searchQuery = '');
-              },
-              hintText: 'Search spells, damage, components, classes...',
-              activeFilterCount: activeFilterCount,
-              filterTooltip: 'Filter Spells',
-              onFilterTap: () => _openFilterSheet(context),
-            ),
-
-            // View Mode Segments (All Spells / Personal Spellbook / 2024 Revisions)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  SegmentedButton<SpellbookViewMode>(
-                    segments: [
-                      ButtonSegment(
-                        value: SpellbookViewMode.allSpells,
-                        label: Text('All Spells (${allSpells.length})',
-                            style: const TextStyle(fontSize: 12)),
-                        icon: const Icon(Icons.grid_view, size: 16),
-                      ),
-                      ButtonSegment(
-                        value: SpellbookViewMode.mySpellbook,
-                        label: Text('My Spellbook (${pinnedIds.length})',
-                            style: const TextStyle(fontSize: 12)),
-                        icon: const Icon(Icons.bookmark, size: 16),
-                      ),
-                      ButtonSegment(
-                        value: SpellbookViewMode.revisions2024,
-                        label: Text(
-                            '2024 Diffs (${allSpells.where((s) => s.isChangedIn2024).length})',
-                            style: const TextStyle(fontSize: 12)),
-                        icon: const Icon(Icons.auto_awesome, size: 16),
-                      ),
-                    ],
-                    selected: {_viewMode},
-                    onSelectionChanged: (val) {
-                      HapticService.selectionTick(context);
-                      setState(() => _viewMode = val.first);
-                    },
-                  ),
-                ],
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: const Text('All Schools',
+                    style: TextStyle(fontSize: 11)),
+                selected: _selectedSchool == null,
+                onSelected: (selected) {
+                  if (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() => _selectedSchool = null);
+                  }
+                },
               ),
             ),
-
-            // Magic School Quick Filter Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: const Text('All Schools',
-                          style: TextStyle(fontSize: 11)),
-                      selected: _selectedSchool == null,
-                      onSelected: (selected) {
-                        if (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() => _selectedSchool = null);
-                        }
-                      },
-                    ),
-                  ),
-                  ...SpellSchool.values.map((school) {
-                    final schoolColor = school.getLegibleColor(isDark);
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        avatar: Icon(school.icon, size: 13, color: schoolColor),
-                        label: Text(school.label,
-                            style: const TextStyle(fontSize: 11)),
-                        selected: _selectedSchool == school,
-                        selectedColor: schoolColor.withValues(alpha: 0.25),
-                        onSelected: (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() {
-                            _selectedSchool = selected ? school : null;
-                          });
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // Class Quick Filter Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: const Text('All Classes',
-                          style: TextStyle(fontSize: 11)),
-                      selected: _selectedClass == null,
-                      onSelected: (selected) {
-                        if (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() => _selectedClass = null);
-                        }
-                      },
-                    ),
-                  ),
-                  ...SpellClass.values.map((cls) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        avatar: Icon(cls.icon, size: 13),
-                        label: Text(cls.label,
-                            style: const TextStyle(fontSize: 11)),
-                        selected: _selectedClass == cls,
-                        onSelected: (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() {
-                            _selectedClass = selected ? cls : null;
-                          });
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // Roll Result Banner
-            if (_lastQuickRollLabel != null)
-              Container(
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: pinColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: pinColor.withValues(alpha: 0.4)),
+            ...SpellSchool.values.map((school) {
+              final schoolColor = school.getLegibleColor(isDark);
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  avatar: Icon(school.icon, size: 13, color: schoolColor),
+                  label: Text(school.label,
+                      style: const TextStyle(fontSize: 11)),
+                  selected: _selectedSchool == school,
+                  selectedColor: schoolColor.withValues(alpha: 0.25),
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      _selectedSchool = selected ? school : null;
+                    });
+                  },
                 ),
+              );
+            }),
+          ],
+        ),
+      ),
+      secondaryFilterArea: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: const Text('All Classes',
+                    style: TextStyle(fontSize: 11)),
+                selected: _selectedClass == null,
+                onSelected: (selected) {
+                  if (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() => _selectedClass = null);
+                  }
+                },
+              ),
+            ),
+            ...SpellClass.values.map((cls) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  avatar: Icon(cls.icon, size: 13),
+                  label: Text(cls.label,
+                      style: const TextStyle(fontSize: 11)),
+                  selected: _selectedClass == cls,
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      _selectedClass = selected ? cls : null;
+                    });
+                  },
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+      customBanner: _lastQuickRollLabel != null
+          ? Container(
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: pinColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: pinColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.casino, color: pinColor, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _lastQuickRollLabel!,
+                      style: TextStyle(
+                        color: pinColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, size: 16, color: pinColor),
+                    onPressed: () =>
+                        setState(() => _lastQuickRollLabel = null),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            )
+          : null,
+      isEmpty: filteredSpells.isEmpty,
+      emptyState: _buildEmptyState(
+          theme,
+          pinnedIds.isEmpty &&
+              _viewMode == SpellbookViewMode.mySpellbook),
+      content: CustomScrollView(
+        slivers: [
+          if (_viewMode == SpellbookViewMode.allSpells &&
+              pinnedSpellsInResults.isNotEmpty) ...[
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+              sliver: SliverToBoxAdapter(
                 child: Row(
                   children: [
-                    Icon(Icons.casino, color: pinColor, size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _lastQuickRollLabel!,
-                        style: TextStyle(
-                          color: pinColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
+                    Icon(Icons.bookmark,
+                        color: pinColor, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Personal Spellbook (${pinnedSpellsInResults.length})',
+                      style: TextStyle(
+                        color: pinColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, size: 16, color: pinColor),
-                      onPressed: () =>
-                          setState(() => _lastQuickRollLabel = null),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
               ),
-
-            const SizedBox(height: 6),
-
-            // Content List
-            Expanded(
-              child: filteredSpells.isEmpty
-                  ? _buildEmptyState(
-                      theme,
-                      pinnedIds.isEmpty &&
-                          _viewMode == SpellbookViewMode.mySpellbook)
-                  : CustomScrollView(
-                      slivers: [
-                        if (_viewMode == SpellbookViewMode.allSpells &&
-                            pinnedSpellsInResults.isNotEmpty) ...[
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-                            sliver: SliverToBoxAdapter(
-                              child: Row(
-                                children: [
-                                  Icon(Icons.bookmark,
-                                      color: pinColor, size: 18),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Personal Spellbook (${pinnedSpellsInResults.length})',
-                                    style: TextStyle(
-                                      color: pinColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          _buildSliverSpellCards(context, pinnedSpellsInResults,
-                              edition, pinnedIds),
-                          SliverPadding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16),
-                            sliver: SliverToBoxAdapter(
-                              child: Divider(
-                                  color: theme.colorScheme.outlineVariant
-                                      .withValues(alpha: 0.2)),
-                            ),
-                          ),
-                        ],
-                        if (_viewMode == SpellbookViewMode.allSpells &&
-                            pinnedSpellsInResults.isNotEmpty)
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                            sliver: SliverToBoxAdapter(
-                              child: Text(
-                                'Other SRD Spells (${otherSpellsInResults.length})',
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.7),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                        if (_viewMode == SpellbookViewMode.allSpells &&
-                            pinnedSpellsInResults.isNotEmpty)
-                          ..._buildGroupedLevelSlivers(
-                              context, otherSpellsInResults, edition, pinnedIds)
-                        else
-                          ..._buildGroupedLevelSlivers(
-                              context, filteredSpells, edition, pinnedIds),
-                        const SliverPadding(
-                            padding: EdgeInsets.only(bottom: 24)),
-                      ],
-                    ),
+            ),
+            _buildSliverSpellCards(context, pinnedSpellsInResults,
+                edition, pinnedIds),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 16),
+              sliver: SliverToBoxAdapter(
+                child: Divider(
+                    color: theme.colorScheme.outlineVariant
+                        .withValues(alpha: 0.2)),
+              ),
             ),
           ],
-        ),
+          if (_viewMode == SpellbookViewMode.allSpells &&
+              pinnedSpellsInResults.isNotEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  'Other SRD Spells (${otherSpellsInResults.length})',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface
+                        .withValues(alpha: 0.7),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          if (_viewMode == SpellbookViewMode.allSpells &&
+              pinnedSpellsInResults.isNotEmpty)
+            ..._buildGroupedLevelSlivers(
+                context, otherSpellsInResults, edition, pinnedIds)
+          else
+            ..._buildGroupedLevelSlivers(
+                context, filteredSpells, edition, pinnedIds),
+          const SliverPadding(
+              padding: EdgeInsets.only(bottom: 24)),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/dm_screen_data.dart';
 import '../models/monster_codex_data.dart';
 import '../models/srd_summons/minion_stat_block.dart';
+import '../presentation/codex/codex.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
@@ -17,7 +18,6 @@ import '../widgets/monster_codex/monster_card.dart';
 import '../widgets/monster_codex/monster_comparison_dialog.dart';
 import '../widgets/monster_codex/monster_filter_sheet.dart';
 import '../widgets/monster_codex/monster_quick_roll_dialog.dart';
-import '../widgets/room_banner_widget.dart';
 
 enum MonsterCodexViewMode {
   allMonsters('All Monsters', Icons.pets),
@@ -370,39 +370,14 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
     final activeFilterCount = _getActiveFilterCount();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(
-              Icons.pets,
-              color:
-                  isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'Monster Codex',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
+    return CodexPageShell(
+      headerConfig: CodexHeaderConfig(
+        title: 'Monster Codex',
+        icon: Icons.pets,
+        accentColor:
+            isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary,
+        visibleCount: filteredMonsters.length,
         actions: [
-          RulesEditionToggle(
-            currentEdition: activeEdition,
-            onEditionChanged: (newEdition) {
-              if (widget.initialEdition != null) {
-                setState(() {
-                  _localEditionOverride = newEdition;
-                });
-              }
-              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
-            },
-          ),
           if (_viewMode == MonsterCodexViewMode.myBestiary &&
               pinnedIds.isNotEmpty)
             IconButton(
@@ -443,307 +418,276 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      rulesEditionToggle: RulesEditionToggle(
+        currentEdition: activeEdition,
+        onEditionChanged: (newEdition) {
+          if (widget.initialEdition != null) {
+            setState(() {
+              _localEditionOverride = newEdition;
+            });
+          }
+          SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
+        },
+      ),
+      searchHeader: CompendiumSearchHeader(
+        controller: _searchController,
+        searchQuery: _searchQuery,
+        onChanged: (val) => setState(() => _searchQuery = val),
+        onClear: () {
+          _searchController.clear();
+          setState(() => _searchQuery = '');
+        },
+        hintText: 'Search monsters, CR, traits, actions...',
+        activeFilterCount: activeFilterCount,
+        filterTooltip: 'Filter Bestiary',
+        onFilterTap: () => _openFilterSheet(context),
+      ),
+      modeSelector: CodexModeSelector<MonsterCodexViewMode>(
+        modes: [
+          CodexViewMode<MonsterCodexViewMode>(
+            key: MonsterCodexViewMode.allMonsters,
+            label: MonsterCodexViewMode.allMonsters.label,
+            icon: MonsterCodexViewMode.allMonsters.icon,
+            count: allMonsters.length,
+          ),
+          CodexViewMode<MonsterCodexViewMode>(
+            key: MonsterCodexViewMode.myBestiary,
+            label: MonsterCodexViewMode.myBestiary.label,
+            icon: MonsterCodexViewMode.myBestiary.icon,
+            count: pinnedIds.length,
+          ),
+          CodexViewMode<MonsterCodexViewMode>(
+            key: MonsterCodexViewMode.revisions2024,
+            label: MonsterCodexViewMode.revisions2024.label,
+            icon: MonsterCodexViewMode.revisions2024.icon,
+            count: allMonsters.where((m) => m.isChangedIn2024).length,
+          ),
+          if (MonsterCodexLibrary.homebrewMonsters.isNotEmpty)
+            CodexViewMode<MonsterCodexViewMode>(
+              key: MonsterCodexViewMode.homebrew,
+              label: MonsterCodexViewMode.homebrew.label,
+              icon: MonsterCodexViewMode.homebrew.icon,
+              count: MonsterCodexLibrary.homebrewMonsters.length,
+            ),
+        ],
+        selectedMode: _viewMode,
+        style: CodexModeSelectorStyle.segmented,
+        onModeSelected: (newSelection) {
+          HapticService.selectionTick(context);
+          setState(() {
+            _viewMode = newSelection;
+          });
+        },
+      ),
+      filterArea: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Row(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: RoomBannerWidget(compact: true),
-            ),
-            // Search Bar & Filter Sheet Trigger Header
-            CompendiumSearchHeader(
-              controller: _searchController,
-              searchQuery: _searchQuery,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              onClear: () {
-                _searchController.clear();
-                setState(() => _searchQuery = '');
-              },
-              hintText: 'Search monsters, CR, traits, actions...',
-              activeFilterCount: activeFilterCount,
-              filterTooltip: 'Filter Bestiary',
-              onFilterTap: () => _openFilterSheet(context),
-            ),
-
-            // Segmented View Selector: All Monsters / My Bestiary / 2024 Diffs
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  SegmentedButton<MonsterCodexViewMode>(
-                    segments: [
-                      ButtonSegment<MonsterCodexViewMode>(
-                        value: MonsterCodexViewMode.allMonsters,
-                        label: Text(
-                          '${MonsterCodexViewMode.allMonsters.label} (${allMonsters.length})',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        icon: Icon(MonsterCodexViewMode.allMonsters.icon,
-                            size: 15),
-                      ),
-                      ButtonSegment<MonsterCodexViewMode>(
-                        value: MonsterCodexViewMode.myBestiary,
-                        label: Text(
-                          '${MonsterCodexViewMode.myBestiary.label} (${pinnedIds.length})',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        icon: Icon(MonsterCodexViewMode.myBestiary.icon,
-                            size: 15),
-                      ),
-                      ButtonSegment<MonsterCodexViewMode>(
-                        value: MonsterCodexViewMode.revisions2024,
-                        label: Text(
-                          '${MonsterCodexViewMode.revisions2024.label} (${allMonsters.where((m) => m.isChangedIn2024).length})',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        icon: Icon(MonsterCodexViewMode.revisions2024.icon,
-                            size: 15),
-                      ),
-                      if (MonsterCodexLibrary.homebrewMonsters.isNotEmpty)
-                        ButtonSegment<MonsterCodexViewMode>(
-                          value: MonsterCodexViewMode.homebrew,
-                          label: Text(
-                            '${MonsterCodexViewMode.homebrew.label} (${MonsterCodexLibrary.homebrewMonsters.length})',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          icon: Icon(MonsterCodexViewMode.homebrew.icon,
-                              size: 15),
-                        ),
-                    ],
-                    selected: {_viewMode},
-                    onSelectionChanged: (newSelection) {
-                      HapticService.selectionTick(context);
-                      setState(() {
-                        _viewMode = newSelection.first;
-                      });
-                    },
-                  ),
-                ],
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                label: const Text('All Types',
+                    style: TextStyle(fontSize: 11)),
+                selected: _selectedType == null,
+                onSelected: (selected) {
+                  if (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() => _selectedType = null);
+                  }
+                },
               ),
             ),
-
-            // Creature Type Horizontal Filter Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: const Text('All Types',
-                          style: TextStyle(fontSize: 11)),
-                      selected: _selectedType == null,
-                      onSelected: (selected) {
-                        if (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() => _selectedType = null);
-                        }
-                      },
-                    ),
-                  ),
-                  ...CreatureType.values.map((type) {
-                    final typeColor = type.getLegibleColor(isDark);
-                    final isSelected = _selectedType?.toLowerCase() ==
-                        type.displayName.toLowerCase();
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        label: Text(type.displayName,
-                            style: const TextStyle(fontSize: 11)),
-                        selected: isSelected,
-                        selectedColor: typeColor.withValues(alpha: 0.25),
-                        onSelected: (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() {
-                            _selectedType = selected ? type.displayName : null;
-                          });
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-
-            // Challenge Rating (CR) Band Quick Filter Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  for (final band in MonsterCrBand.values)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: ChoiceChip(
-                        label: Text('${band.label} (${bandCounts[band]})',
-                            style: const TextStyle(fontSize: 11)),
-                        selected: _selectedCrBand == band,
-                        onSelected: (bandCounts[band] ?? 0) == 0 &&
-                                band != MonsterCrBand.all
-                            ? null
-                            : (selected) {
-                                if (selected) {
-                                  HapticService.selectionTick(context);
-                                  setState(() => _selectedCrBand = band);
-                                }
-                              },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            // Roll Result Banner
-            if (_lastQuickRollLabel != null)
-              Container(
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: pinColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: pinColor.withValues(alpha: 0.4)),
+            ...CreatureType.values.map((type) {
+              final typeColor = type.getLegibleColor(isDark);
+              final isSelected = _selectedType?.toLowerCase() ==
+                  type.displayName.toLowerCase();
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  label: Text(type.displayName,
+                      style: const TextStyle(fontSize: 11)),
+                  selected: isSelected,
+                  selectedColor: typeColor.withValues(alpha: 0.25),
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      _selectedType = selected ? type.displayName : null;
+                    });
+                  },
                 ),
+              );
+            }),
+          ],
+        ),
+      ),
+      secondaryFilterArea: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Row(
+          children: [
+            for (final band in MonsterCrBand.values)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  label: Text('${band.label} (${bandCounts[band]})',
+                      style: const TextStyle(fontSize: 11)),
+                  selected: _selectedCrBand == band,
+                  onSelected: (bandCounts[band] ?? 0) == 0 &&
+                          band != MonsterCrBand.all
+                      ? null
+                      : (selected) {
+                          if (selected) {
+                            HapticService.selectionTick(context);
+                            setState(() => _selectedCrBand = band);
+                          }
+                        },
+                ),
+              ),
+          ],
+        ),
+      ),
+      customBanner: _lastQuickRollLabel != null
+          ? Container(
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: pinColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: pinColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.casino, color: pinColor, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _lastQuickRollLabel!,
+                      style: TextStyle(
+                        color: pinColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, size: 16, color: pinColor),
+                    onPressed: () =>
+                        setState(() => _lastQuickRollLabel = null),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            )
+          : null,
+      statusHeader: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+        child: Row(
+          children: [
+            Text(
+              '${filteredMonsters.length} entries',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w600,
+                fontSize: 12.5,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${activeEdition.label} SRD bestiary',
+              style: TextStyle(
+                color:
+                    theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                fontSize: 11.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+      isEmpty: filteredMonsters.isEmpty,
+      emptyState: _buildEmptyState(
+        theme,
+        pinnedIds.isEmpty &&
+            _viewMode == MonsterCodexViewMode.myBestiary,
+      ),
+      content: CustomScrollView(
+        slivers: [
+          // Personal Bestiary Pinned Section in All Monsters view
+          if (_viewMode == MonsterCodexViewMode.allMonsters &&
+              pinnedMonstersInResults.isNotEmpty) ...[
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+              sliver: SliverToBoxAdapter(
                 child: Row(
                   children: [
-                    Icon(Icons.casino, color: pinColor, size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _lastQuickRollLabel!,
-                        style: TextStyle(
-                          color: pinColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
+                    Icon(Icons.bookmark,
+                        color: pinColor, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Personal Bestiary (${pinnedMonstersInResults.length})',
+                      style: TextStyle(
+                        color: pinColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, size: 16, color: pinColor),
-                      onPressed: () =>
-                          setState(() => _lastQuickRollLabel = null),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
               ),
-            // Results count and attribution header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
-              child: Row(
-                children: [
-                  Text(
-                    '${filteredMonsters.length} entries',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${activeEdition.label} SRD bestiary',
-                    style: TextStyle(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                      fontSize: 11.5,
-                    ),
-                  ),
-                ],
+            ),
+            _buildSliverMonsterCards(
+              context,
+              pinnedMonstersInResults,
+              activeEdition,
+              pinnedIds,
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 16),
+              sliver: SliverToBoxAdapter(
+                child: Divider(
+                  color: theme.colorScheme.outlineVariant
+                      .withValues(alpha: 0.2),
+                ),
               ),
             ),
-
-            // Content List / Grouped Slivers
-            Expanded(
-              child: filteredMonsters.isEmpty
-                  ? _buildEmptyState(
-                      theme,
-                      pinnedIds.isEmpty &&
-                          _viewMode == MonsterCodexViewMode.myBestiary,
-                    )
-                  : CustomScrollView(
-                      slivers: [
-                        // Personal Bestiary Pinned Section in All Monsters view
-                        if (_viewMode == MonsterCodexViewMode.allMonsters &&
-                            pinnedMonstersInResults.isNotEmpty) ...[
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-                            sliver: SliverToBoxAdapter(
-                              child: Row(
-                                children: [
-                                  Icon(Icons.bookmark,
-                                      color: pinColor, size: 18),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Personal Bestiary (${pinnedMonstersInResults.length})',
-                                    style: TextStyle(
-                                      color: pinColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          _buildSliverMonsterCards(
-                            context,
-                            pinnedMonstersInResults,
-                            activeEdition,
-                            pinnedIds,
-                          ),
-                          SliverPadding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16),
-                            sliver: SliverToBoxAdapter(
-                              child: Divider(
-                                color: theme.colorScheme.outlineVariant
-                                    .withValues(alpha: 0.2),
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (_viewMode == MonsterCodexViewMode.allMonsters &&
-                            pinnedMonstersInResults.isNotEmpty)
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                            sliver: SliverToBoxAdapter(
-                              child: Text(
-                                'Other Bestiary Creatures (${otherMonstersInResults.length})',
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.7),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                        if (_viewMode == MonsterCodexViewMode.allMonsters &&
-                            pinnedMonstersInResults.isNotEmpty)
-                          ..._buildGroupedSlivers(
-                            context,
-                            otherMonstersInResults,
-                            activeEdition,
-                            pinnedIds,
-                          )
-                        else
-                          ..._buildGroupedSlivers(
-                            context,
-                            filteredMonsters,
-                            activeEdition,
-                            pinnedIds,
-                          ),
-                        const SliverPadding(
-                            padding: EdgeInsets.only(bottom: 24)),
-                      ],
-                    ),
-            ),
           ],
-        ),
+          if (_viewMode == MonsterCodexViewMode.allMonsters &&
+              pinnedMonstersInResults.isNotEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  'Other Bestiary Creatures (${otherMonstersInResults.length})',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface
+                        .withValues(alpha: 0.7),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          if (_viewMode == MonsterCodexViewMode.allMonsters &&
+              pinnedMonstersInResults.isNotEmpty)
+            ..._buildGroupedSlivers(
+              context,
+              otherMonstersInResults,
+              activeEdition,
+              pinnedIds,
+            )
+          else
+            ..._buildGroupedSlivers(
+              context,
+              filteredMonsters,
+              activeEdition,
+              pinnedIds,
+            ),
+          const SliverPadding(
+              padding: EdgeInsets.only(bottom: 24)),
+        ],
       ),
     );
   }
