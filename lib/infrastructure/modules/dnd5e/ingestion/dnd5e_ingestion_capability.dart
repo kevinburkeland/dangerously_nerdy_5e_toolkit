@@ -7,17 +7,30 @@ import '../../../../domain/ingestion/models/source_block.dart';
 import '../../../../domain/ingestion/models/source_span.dart';
 import '../../../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../../../models/domain/core_types.dart';
+import '../../../../models/domain/homebrew_extended_entities.dart';
 import '../../../../models/domain/spell_monster_equipment.dart';
 import '../../../../services/persistence/homebrew_persistence_service.dart';
+import 'dnd5e_background_descriptor.dart';
+import 'dnd5e_background_field_extractor.dart';
+import 'dnd5e_class_descriptor.dart';
+import 'dnd5e_class_field_extractor.dart';
+import 'dnd5e_feat_descriptor.dart';
+import 'dnd5e_feat_field_extractor.dart';
+import 'dnd5e_item_descriptor.dart';
+import 'dnd5e_item_field_extractor.dart';
 import 'dnd5e_monster_descriptor.dart';
 import 'dnd5e_monster_field_extractor.dart';
+import 'dnd5e_species_descriptor.dart';
+import 'dnd5e_species_field_extractor.dart';
 import 'dnd5e_spell_descriptor.dart';
 import 'dnd5e_spell_field_extractor.dart';
+import 'dnd5e_subclass_descriptor.dart';
+import 'dnd5e_subclass_field_extractor.dart';
 
 /// 5e Ruleset Ingestion Capability.
 ///
 /// Encapsulates all 5e-specific ingestion knowledge, including target descriptors,
-/// stat block / spell card extractors, domain validation, and entity construction.
+/// stat block / compendium extractors, domain validation, and entity construction.
 /// The generic ingestion engine and UI interact with 5e only through this capability.
 class Dnd5eIngestionCapability implements RulesetIngestionCapability {
   final DmRulesEdition edition;
@@ -41,14 +54,32 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
 
   static const _monsterDescriptor = Dnd5eMonsterDescriptor();
   static const _spellDescriptor = Dnd5eSpellDescriptor();
+  static const _itemDescriptor = Dnd5eItemDescriptor();
+  static const _featDescriptor = Dnd5eFeatDescriptor();
+  static const _classDescriptor = Dnd5eClassDescriptor();
+  static const _subclassDescriptor = Dnd5eSubclassDescriptor();
+  static const _speciesDescriptor = Dnd5eSpeciesDescriptor();
+  static const _backgroundDescriptor = Dnd5eBackgroundDescriptor();
 
   static const _monsterExtractor = Dnd5eMonsterFieldExtractor();
   static const _spellExtractor = Dnd5eSpellFieldExtractor();
+  static const _itemExtractor = Dnd5eItemFieldExtractor();
+  static const _featExtractor = Dnd5eFeatFieldExtractor();
+  static const _classExtractor = Dnd5eClassFieldExtractor();
+  static const _subclassExtractor = Dnd5eSubclassFieldExtractor();
+  static const _speciesExtractor = Dnd5eSpeciesFieldExtractor();
+  static const _backgroundExtractor = Dnd5eBackgroundFieldExtractor();
 
   @override
   Iterable<IngestionTargetDescriptor> get supportedTargets => const [
         _monsterDescriptor,
         _spellDescriptor,
+        _itemDescriptor,
+        _featDescriptor,
+        _classDescriptor,
+        _subclassDescriptor,
+        _speciesDescriptor,
+        _backgroundDescriptor,
       ];
 
   @override
@@ -57,6 +88,12 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     final lower = typeKey.toLowerCase().trim();
     if (lower == 'monster' || lower == 'creature') return _monsterDescriptor;
     if (lower == 'spell') return _spellDescriptor;
+    if (lower == 'item' || lower == 'equipment') return _itemDescriptor;
+    if (lower == 'feat') return _featDescriptor;
+    if (lower == 'class' || lower == 'classdefinition') return _classDescriptor;
+    if (lower == 'subclass') return _subclassDescriptor;
+    if (lower == 'species' || lower == 'race') return _speciesDescriptor;
+    if (lower == 'background') return _backgroundDescriptor;
     return null;
   }
 
@@ -69,19 +106,35 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     final lower = targetTypeKey.toLowerCase().trim();
     if (lower == 'monster' || lower == 'creature') {
       return _monsterExtractor
-          .extract(
-            blocks: blocks,
-            descriptor: _monsterDescriptor,
-            span: span,
-          )
+          .extract(blocks: blocks, descriptor: _monsterDescriptor, span: span)
           .fields;
     } else if (lower == 'spell') {
       return _spellExtractor
-          .extract(
-            blocks: blocks,
-            descriptor: _spellDescriptor,
-            span: span,
-          )
+          .extract(blocks: blocks, descriptor: _spellDescriptor, span: span)
+          .fields;
+    } else if (lower == 'item' || lower == 'equipment') {
+      return _itemExtractor
+          .extract(blocks: blocks, descriptor: _itemDescriptor, span: span)
+          .fields;
+    } else if (lower == 'feat') {
+      return _featExtractor
+          .extract(blocks: blocks, descriptor: _featDescriptor, span: span)
+          .fields;
+    } else if (lower == 'class' || lower == 'classdefinition') {
+      return _classExtractor
+          .extract(blocks: blocks, descriptor: _classDescriptor, span: span)
+          .fields;
+    } else if (lower == 'subclass') {
+      return _subclassExtractor
+          .extract(blocks: blocks, descriptor: _subclassDescriptor, span: span)
+          .fields;
+    } else if (lower == 'species' || lower == 'race') {
+      return _speciesExtractor
+          .extract(blocks: blocks, descriptor: _speciesDescriptor, span: span)
+          .fields;
+    } else if (lower == 'background') {
+      return _backgroundExtractor
+          .extract(blocks: blocks, descriptor: _backgroundDescriptor, span: span)
           .fields;
     }
     return const {};
@@ -90,7 +143,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
   @override
   CandidateValidationResult validateCandidate(IngestionCandidate candidate) {
     final errors = <String>[];
-    final warnings = <String>[...candidate.warnings];
+    final warnings = <String>[];
 
     // 1. Candidate must have a resolved type
     if (!candidate.isTypeResolved) {
@@ -118,6 +171,18 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
       _validateMonsterDomainInvariants(candidate, errors);
     } else if (lowerType == 'spell') {
       _validateSpellDomainInvariants(candidate, errors);
+    } else if (lowerType == 'item' || lowerType == 'equipment') {
+      _validateItemDomainInvariants(candidate, errors);
+    } else if (lowerType == 'feat') {
+      _validateFeatDomainInvariants(candidate, errors);
+    } else if (lowerType == 'class' || lowerType == 'classdefinition') {
+      _validateClassDomainInvariants(candidate, errors);
+    } else if (lowerType == 'subclass') {
+      _validateSubclassDomainInvariants(candidate, errors);
+    } else if (lowerType == 'species' || lowerType == 'race') {
+      _validateSpeciesDomainInvariants(candidate, errors);
+    } else if (lowerType == 'background') {
+      _validateBackgroundDomainInvariants(candidate, errors);
     }
 
     // 2. Syntactic / field-level invalid states
@@ -183,6 +248,61 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     _checkRequiredString(candidate, 'descriptionMarkdown', 'Description', errors);
   }
 
+  void _validateItemDomainInvariants(
+    IngestionCandidate candidate,
+    List<String> errors,
+  ) {
+    _checkRequiredString(candidate, 'name', 'Item Name', errors);
+    _checkRequiredString(candidate, 'itemType', 'Item Type', errors);
+    _checkRequiredString(candidate, 'rarity', 'Rarity', errors);
+    _checkRequiredString(candidate, 'descriptionMarkdown', 'Description', errors);
+  }
+
+  void _validateFeatDomainInvariants(
+    IngestionCandidate candidate,
+    List<String> errors,
+  ) {
+    _checkRequiredString(candidate, 'name', 'Feat Name', errors);
+    _checkRequiredString(candidate, 'descriptionMarkdown', 'Description', errors);
+  }
+
+  void _validateClassDomainInvariants(
+    IngestionCandidate candidate,
+    List<String> errors,
+  ) {
+    _checkRequiredString(candidate, 'name', 'Class Name', errors);
+    _checkRequiredHitDie(candidate, 'hitDie', 'Hit Die', errors);
+    _checkRequiredStringList(candidate, 'savingThrows', 'Saving Throws', errors);
+  }
+
+  void _validateSubclassDomainInvariants(
+    IngestionCandidate candidate,
+    List<String> errors,
+  ) {
+    _checkRequiredString(candidate, 'name', 'Subclass Name', errors);
+    _checkRequiredString(candidate, 'classSlug', 'Parent Class', errors);
+    _checkRequiredString(candidate, 'featuresMarkdown', 'Subclass Features', errors);
+  }
+
+  void _validateSpeciesDomainInvariants(
+    IngestionCandidate candidate,
+    List<String> errors,
+  ) {
+    _checkRequiredString(candidate, 'name', 'Species Name', errors);
+    _checkRequiredString(candidate, 'size', 'Size', errors);
+    _checkRequiredString(candidate, 'speed', 'Speed', errors);
+    _checkRequiredString(candidate, 'traitsMarkdown', 'Traits', errors);
+  }
+
+  void _validateBackgroundDomainInvariants(
+    IngestionCandidate candidate,
+    List<String> errors,
+  ) {
+    _checkRequiredString(candidate, 'name', 'Background Name', errors);
+    _checkRequiredStringList(candidate, 'skillProficiencies', 'Skill Proficiencies', errors);
+    _checkRequiredString(candidate, 'descriptionMarkdown', 'Description', errors);
+  }
+
   void _checkRequiredString(
     IngestionCandidate candidate,
     String key,
@@ -196,7 +316,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     }
     final val = field.value?.toString().trim();
     if (val == null || val.isEmpty) {
-      errors.add('$label cannot be empty.');
+      errors.add('Missing required field: $label');
     }
   }
 
@@ -212,9 +332,13 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
       return;
     }
     final val = field.value;
-    final intVal = val is int ? val : int.tryParse(val?.toString().trim() ?? '');
-    if (intVal == null || intVal <= 0) {
-      errors.add('$label must be a positive whole number.');
+    if (val is int) {
+      if (val <= 0) errors.add('$label must be greater than 0');
+      return;
+    }
+    final parsed = int.tryParse(val?.toString().trim() ?? '');
+    if (parsed == null || parsed <= 0) {
+      errors.add('Invalid $label: expected a positive integer');
     }
   }
 
@@ -230,9 +354,55 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
       return;
     }
     final val = field.value;
-    final intVal = val is int ? val : int.tryParse(val?.toString().trim() ?? '');
-    if (intVal == null || intVal < 0 || intVal > 9) {
-      errors.add('$label must be between 0 (cantrip) and 9.');
+    int? parsed;
+    if (val is int) {
+      parsed = val;
+    } else {
+      parsed = int.tryParse(val?.toString().trim() ?? '');
+    }
+    if (parsed == null || parsed < 0 || parsed > 9) {
+      errors.add('$label must be between 0 (cantrip) and 9');
+    }
+  }
+
+  void _checkRequiredHitDie(
+    IngestionCandidate candidate,
+    String key,
+    String label,
+    List<String> errors,
+  ) {
+    final field = candidate.fields[key];
+    if (field == null || field.state == IngestionFieldState.missing) {
+      errors.add('Missing required field: $label');
+      return;
+    }
+    final val = field.value?.toString().trim().toLowerCase();
+    if (val == null || !RegExp(r'^(?:1)?d(?:6|8|10|12)$').hasMatch(val)) {
+      errors.add('$label must be valid hit die notation (d6, d8, d10, d12)');
+    }
+  }
+
+  void _checkRequiredStringList(
+    IngestionCandidate candidate,
+    String key,
+    String label,
+    List<String> errors,
+  ) {
+    final field = candidate.fields[key];
+    if (field == null || field.state == IngestionFieldState.missing || field.value == null) {
+      errors.add('Missing required field: $label');
+      return;
+    }
+    if (field.value is List) {
+      final list = field.value as List;
+      if (list.isEmpty) {
+        errors.add('Missing required field: $label');
+      }
+      return;
+    }
+    final str = field.value.toString().trim();
+    if (str.isEmpty) {
+      errors.add('Missing required field: $label');
     }
   }
 
@@ -250,6 +420,21 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         return _convertMonster(candidate);
       case 'spell':
         return _convertSpell(candidate);
+      case 'item':
+      case 'equipment':
+        return _convertItem(candidate);
+      case 'feat':
+        return _convertFeat(candidate);
+      case 'class':
+      case 'classdefinition':
+        return _convertClass(candidate);
+      case 'subclass':
+        return _convertSubclass(candidate);
+      case 'species':
+      case 'race':
+        return _convertSpecies(candidate);
+      case 'background':
+        return _convertBackground(candidate);
       default:
         return DomainConversionResult.failure([
           'Unsupported domain entity type "${candidate.targetTypeKey}".',
@@ -261,7 +446,6 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     try {
       final fields = candidate.fields;
 
-      // Extract required fields - ZERO fabricated defaults!
       final name = _requireString(fields, 'name', 'Monster Name');
       final size = _requireString(fields, 'size', 'Size');
       final type = _requireString(fields, 'monsterType', 'Creature Type');
@@ -271,7 +455,6 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
       final speed = _requireString(fields, 'speed', 'Speed');
       final challengeRating = _requireString(fields, 'challengeRating', 'Challenge Rating');
 
-      // Optional fields
       final hitDieFormula = _optionalString(fields, 'hitDieFormula') ?? '';
       final actionsMarkdown = _optionalString(fields, 'actionsMarkdown') ?? '';
 
@@ -291,14 +474,13 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
             fields['legendaryActionsMarkdown']!.value.toString();
       }
 
-      // 6 Core Ability Scores
       for (final stat in [
         'strength',
         'dexterity',
         'constitution',
         'intelligence',
         'wisdom',
-        'charisma'
+        'charisma',
       ]) {
         if (fields[stat]?.value != null) {
           customProps[stat] = fields[stat]!.value;
@@ -306,10 +488,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
       }
 
       final monster = Monster(
-        id: EntityId(
-          slug: _slugify(name),
-          ruleset: _rulesetVersion,
-        ),
+        id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
         name: name,
         size: size,
         monsterType: type,
@@ -324,7 +503,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
 
       return DomainConversionResult.success(monster);
     } catch (e) {
-      return DomainConversionResult.failure(['Conversion failed: $e']);
+      return DomainConversionResult.failure(['Failed to construct Monster: $e']);
     }
   }
 
@@ -332,24 +511,18 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     try {
       final fields = candidate.fields;
 
-      // Extract required fields - ZERO fabricated defaults!
       final name = _requireString(fields, 'name', 'Spell Name');
-      final level = _requireIntInRange(fields, 'level', 'Spell Level', 0, 9);
+      final level = _requireSpellLevel(fields, 'level', 'Spell Level');
       final school = _requireString(fields, 'school', 'School of Magic');
       final castingTime = _requireString(fields, 'castingTime', 'Casting Time');
       final range = _requireString(fields, 'range', 'Range');
       final components = _requireString(fields, 'components', 'Components');
       final duration = _requireString(fields, 'duration', 'Duration');
       final description = _requireString(fields, 'descriptionMarkdown', 'Description');
-
       final higherLevels = _optionalString(fields, 'higherLevelsMarkdown');
 
-      final customProps = <String, dynamic>{
-        'sourceText': candidate.rawSource,
-      };
-
       final compLower = components.toLowerCase();
-      final spellComponents = SpellComponents(
+      final compObj = SpellComponents(
         v: compLower.contains('v'),
         s: compLower.contains('s'),
         m: compLower.contains('m'),
@@ -389,16 +562,215 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         school: school,
         castingTime: castTimeObj,
         range: range,
-        components: spellComponents,
+        components: compObj,
         duration: durationObj,
         descriptionMarkdown: description,
         higherLevelsMarkdown: higherLevels,
-        customProperties: customProps,
+        customProperties: {
+          'sourceText': candidate.rawSource,
+          'castingTimeRaw': castingTime,
+          'durationRaw': duration,
+        },
       );
 
       return DomainConversionResult.success(spell);
     } catch (e) {
-      return DomainConversionResult.failure(['Conversion failed: $e']);
+      return DomainConversionResult.failure(['Failed to construct Spell: $e']);
+    }
+  }
+
+  DomainConversionResult _convertItem(IngestionCandidate candidate) {
+    try {
+      final fields = candidate.fields;
+
+      final name = _requireString(fields, 'name', 'Item Name');
+      final itemType = _requireString(fields, 'itemType', 'Item Type');
+      final rarity = _requireString(fields, 'rarity', 'Rarity');
+      final description = _requireString(fields, 'descriptionMarkdown', 'Description');
+      final requiresAttunement = fields['requiresAttunement']?.value == true;
+      final attunementDetails = _optionalString(fields, 'attunementDetails');
+
+      final customProps = <String, dynamic>{
+        'sourceText': candidate.rawSource,
+      };
+      if (attunementDetails != null) {
+        customProps['attunementDetails'] = attunementDetails;
+      }
+
+      final item = EquipmentItem(
+        id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
+        name: name,
+        itemType: itemType,
+        rarity: rarity,
+        requiresAttunement: requiresAttunement,
+        descriptionMarkdown: description,
+        customProperties: customProps,
+      );
+
+      return DomainConversionResult.success(item);
+    } catch (e) {
+      return DomainConversionResult.failure(['Failed to construct EquipmentItem: $e']);
+    }
+  }
+
+  DomainConversionResult _convertFeat(IngestionCandidate candidate) {
+    try {
+      final fields = candidate.fields;
+
+      final name = _requireString(fields, 'name', 'Feat Name');
+      final description = _requireString(fields, 'descriptionMarkdown', 'Description');
+      final prerequisite = _optionalString(fields, 'prerequisite');
+      final category = _optionalString(fields, 'category') ?? 'General';
+
+      final customProps = <String, dynamic>{
+        'sourceText': candidate.rawSource,
+      };
+
+      final feat = Feat(
+        id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
+        name: name,
+        prerequisite: prerequisite,
+        category: category,
+        descriptionMarkdown: description,
+        customProperties: customProps,
+      );
+
+      return DomainConversionResult.success(feat);
+    } catch (e) {
+      return DomainConversionResult.failure(['Failed to construct Feat: $e']);
+    }
+  }
+
+  DomainConversionResult _convertClass(IngestionCandidate candidate) {
+    try {
+      final fields = candidate.fields;
+
+      final name = _requireString(fields, 'name', 'Class Name');
+      final hitDie = _requireString(fields, 'hitDie', 'Hit Die');
+      final savingThrows = _requireStringList(fields, 'savingThrows', 'Saving Throws');
+      final primaryAbility = _optionalString(fields, 'primaryAbility');
+      final armorProficiencies = _optionalStringList(fields, 'armorProficiencies') ?? const [];
+      final weaponProficiencies = _optionalStringList(fields, 'weaponProficiencies') ?? const [];
+      final subclassSelectionLevel = _optionalPositiveInt(fields, 'subclassSelectionLevel') ?? 3;
+      final featuresMarkdown = _optionalString(fields, 'featuresMarkdown') ?? '';
+
+      final customProps = <String, dynamic>{
+        'sourceText': candidate.rawSource,
+      };
+
+      final characterClass = CharacterClass(
+        id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
+        name: name,
+        hitDie: hitDie,
+        primaryAbility: primaryAbility,
+        savingThrows: savingThrows,
+        armorProficiencies: armorProficiencies,
+        weaponProficiencies: weaponProficiencies,
+        subclassSelectionLevel: subclassSelectionLevel,
+        featuresMarkdown: featuresMarkdown,
+        customProperties: customProps,
+      );
+
+      return DomainConversionResult.success(characterClass);
+    } catch (e) {
+      return DomainConversionResult.failure(['Failed to construct CharacterClass: $e']);
+    }
+  }
+
+  DomainConversionResult _convertSubclass(IngestionCandidate candidate) {
+    try {
+      final fields = candidate.fields;
+
+      final name = _requireString(fields, 'name', 'Subclass Name');
+      final classSlug = _requireString(fields, 'classSlug', 'Parent Class');
+      final featuresMarkdown = _requireString(fields, 'featuresMarkdown', 'Subclass Features');
+      final shortName = _optionalString(fields, 'shortName');
+
+      final customProps = <String, dynamic>{
+        'sourceText': candidate.rawSource,
+        'classSlug': classSlug,
+      };
+
+      final subclass = Subclass(
+        id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
+        name: name,
+        classSlug: classSlug,
+        shortName: shortName,
+        featuresMarkdown: featuresMarkdown,
+        customProperties: customProps,
+      );
+
+      return DomainConversionResult.success(subclass);
+    } catch (e) {
+      return DomainConversionResult.failure(['Failed to construct Subclass: $e']);
+    }
+  }
+
+  DomainConversionResult _convertSpecies(IngestionCandidate candidate) {
+    try {
+      final fields = candidate.fields;
+
+      final name = _requireString(fields, 'name', 'Species Name');
+      final size = _requireString(fields, 'size', 'Size');
+      final speed = _requireString(fields, 'speed', 'Speed');
+      final traitsMarkdown = _requireString(fields, 'traitsMarkdown', 'Traits');
+      final abilityScoreSummary = _optionalString(fields, 'abilityScoreSummary');
+      final creatureType = _optionalString(fields, 'creatureType');
+
+      final customProps = <String, dynamic>{
+        'sourceText': candidate.rawSource,
+      };
+      if (creatureType != null) {
+        customProps['creatureType'] = creatureType;
+      }
+
+      final race = Race(
+        id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
+        name: name,
+        size: size,
+        speed: speed,
+        abilityScoreSummary: abilityScoreSummary,
+        traitsMarkdown: traitsMarkdown,
+        customProperties: customProps,
+      );
+
+      return DomainConversionResult.success(race);
+    } catch (e) {
+      return DomainConversionResult.failure(['Failed to construct Species: $e']);
+    }
+  }
+
+  DomainConversionResult _convertBackground(IngestionCandidate candidate) {
+    try {
+      final fields = candidate.fields;
+
+      final name = _requireString(fields, 'name', 'Background Name');
+      final skillProficiencies = _requireStringList(fields, 'skillProficiencies', 'Skill Proficiencies');
+      final description = _requireString(fields, 'descriptionMarkdown', 'Description');
+      final toolProficiencies = _optionalStringList(fields, 'toolProficiencies') ?? const [];
+      final languages = _optionalStringList(fields, 'languages') ?? const [];
+      final abilityScoreSummary = _optionalString(fields, 'abilityScoreSummary');
+      final originFeat = _optionalString(fields, 'originFeat');
+
+      final customProps = <String, dynamic>{
+        'sourceText': candidate.rawSource,
+      };
+
+      final background = Background(
+        id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
+        name: name,
+        skillProficiencies: skillProficiencies,
+        toolProficiencies: toolProficiencies,
+        languages: languages,
+        abilityScoreSummary: abilityScoreSummary,
+        originFeat: originFeat,
+        descriptionMarkdown: description,
+        customProperties: customProps,
+      );
+
+      return DomainConversionResult.success(background);
+    } catch (e) {
+      return DomainConversionResult.failure(['Failed to construct Background: $e']);
     }
   }
 
@@ -408,12 +780,14 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     String label,
   ) {
     final field = fields[key];
-    if (field == null ||
-        field.value == null ||
-        field.value.toString().trim().isEmpty) {
-      throw FormatException('$label is required but was not provided.');
+    if (field == null || field.state == IngestionFieldState.missing) {
+      throw FormatException('Missing required field: $label');
     }
-    return field.value.toString().trim();
+    final val = field.value?.toString().trim();
+    if (val == null || val.isEmpty) {
+      throw FormatException('Missing required field: $label');
+    }
+    return val;
   }
 
   int _requirePositiveInt(
@@ -422,28 +796,108 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     String label,
   ) {
     final field = fields[key];
-    final val = field?.value;
-    final intVal = val is int ? val : int.tryParse(val?.toString().trim() ?? '');
+    if (field == null || field.state == IngestionFieldState.missing) {
+      throw FormatException('Missing required field: $label');
+    }
+    final val = field.value;
+    int? intVal;
+    if (val is int) {
+      intVal = val;
+    } else {
+      intVal = int.tryParse(val?.toString().trim() ?? '');
+    }
     if (intVal == null || intVal <= 0) {
-      throw FormatException('$label must be a positive integer.');
+      throw FormatException('Invalid positive integer for $label: "$val"');
     }
     return intVal;
   }
 
-  int _requireIntInRange(
+  int _requireSpellLevel(
     Map<String, IngestionField<dynamic>> fields,
     String key,
     String label,
-    int min,
-    int max,
+  ) {
+    final field = fields[key];
+    if (field == null || field.state == IngestionFieldState.missing) {
+      throw FormatException('Missing required field: $label');
+    }
+    final val = field.value;
+    int? intVal;
+    if (val is int) {
+      intVal = val;
+    } else {
+      intVal = int.tryParse(val?.toString().trim() ?? '');
+    }
+    if (intVal == null || intVal < 0 || intVal > 9) {
+      throw FormatException('Invalid spell level for $label: "$val"');
+    }
+    return intVal;
+  }
+
+  List<String> _requireStringList(
+    Map<String, IngestionField<dynamic>> fields,
+    String key,
+    String label,
+  ) {
+    final field = fields[key];
+    if (field == null || field.state == IngestionFieldState.missing || field.value == null) {
+      throw FormatException('Missing required field: $label');
+    }
+    if (field.value is List) {
+      final list = (field.value as List)
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (list.isEmpty) {
+        throw FormatException('Required list field $label is empty');
+      }
+      return list;
+    }
+    if (field.value is String) {
+      final str = field.value.toString().trim();
+      if (str.isEmpty) throw FormatException('Missing required field: $label');
+      return str
+          .split(RegExp(r'[,/]'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    throw FormatException('Invalid format for $label: expected list of strings');
+  }
+
+  List<String>? _optionalStringList(
+    Map<String, IngestionField<dynamic>> fields,
+    String key,
+  ) {
+    final field = fields[key];
+    if (field == null || field.value == null) return null;
+    if (field.value is List) {
+      return (field.value as List)
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    if (field.value is String) {
+      return field.value
+          .toString()
+          .split(RegExp(r'[,/]'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return null;
+  }
+
+  int? _optionalPositiveInt(
+    Map<String, IngestionField<dynamic>> fields,
+    String key,
   ) {
     final field = fields[key];
     final val = field?.value;
-    final intVal = val is int ? val : int.tryParse(val?.toString().trim() ?? '');
-    if (intVal == null || intVal < min || intVal > max) {
-      throw FormatException('$label must be an integer between $min and $max.');
-    }
-    return intVal;
+    if (val == null) return null;
+    if (val is int && val > 0) return val;
+    final parsed = int.tryParse(val.toString().trim());
+    return (parsed != null && parsed > 0) ? parsed : null;
   }
 
   String? _optionalString(
@@ -469,6 +923,18 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         await persistenceService.saveCustomMonster(entity);
       } else if (entity is Spell) {
         await persistenceService.saveCustomSpell(entity);
+      } else if (entity is EquipmentItem) {
+        await persistenceService.saveCustomItem(entity);
+      } else if (entity is Feat) {
+        await persistenceService.saveCustomFeat(entity);
+      } else if (entity is CharacterClass) {
+        await persistenceService.saveCustomClass(entity);
+      } else if (entity is Subclass) {
+        await persistenceService.saveCustomSubclass(entity);
+      } else if (entity is Race) {
+        await persistenceService.saveCustomRace(entity);
+      } else if (entity is Background) {
+        await persistenceService.saveCustomBackground(entity);
       } else {
         throw UnsupportedError('Unsupported 5e entity type: ${entity.runtimeType}');
       }
