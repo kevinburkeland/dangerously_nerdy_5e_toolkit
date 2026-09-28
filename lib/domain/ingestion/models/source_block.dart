@@ -7,6 +7,7 @@ enum SourceBlockType {
   paragraph,
   list,
   divider,
+  table,
   unknown,
 }
 

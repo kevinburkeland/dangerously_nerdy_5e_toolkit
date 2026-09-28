@@ -3,6 +3,7 @@ import '../../../../domain/ingestion/descriptors/ingestion_target_descriptor.dar
 import '../../../../domain/ingestion/engine/field_extractor.dart';
 import '../../../../domain/ingestion/models/field_state.dart';
 import '../../../../domain/ingestion/models/ingestion_field.dart';
+import '../../../../domain/ingestion/models/ingestion_section.dart';
 import '../../../../domain/ingestion/models/source_block.dart';
 import '../../../../domain/ingestion/models/source_span.dart';
 
@@ -25,6 +26,7 @@ class Dnd5eFeatFieldExtractor implements FieldExtractor {
     required List<SourceBlock> blocks,
     required IngestionTargetDescriptor descriptor,
     SourceSpan? span,
+    List<IngestionSection>? childSections,
   }) {
     final fields = <String, IngestionField<dynamic>>{};
     final consumedBlockIds = <String>{};
@@ -103,20 +105,58 @@ class Dnd5eFeatFieldExtractor implements FieldExtractor {
     }
 
     // 3. Description
+    final composedDesc = <String>[];
     if (descBlocks.isNotEmpty) {
-      final fullDesc = descBlocks.map((b) => b.rawText).join('\n\n');
+      composedDesc.add(descBlocks.map((b) => b.rawText).join('\n\n'));
+    }
+    if (childSections != null) {
+      for (final sec in childSections) {
+        if (sec.classification == 'benefit' ||
+            sec.classification == 'feature' ||
+            sec.classification == 'unknown' ||
+            sec.classification == 'descriptiveProse') {
+          final h = sec.headingText != null && sec.headingText!.trim().isNotEmpty
+              ? '### ${sec.headingText!.trim()}'
+              : '';
+          final b = sec.blocks
+              .where((bk) => bk.type != SourceBlockType.heading)
+              .map((bk) => bk.rawText)
+              .join('\n')
+              .trim();
+          if (h.isNotEmpty && b.isNotEmpty) {
+            composedDesc.add('$h\n\n$b');
+          } else if (h.isNotEmpty) {
+            composedDesc.add(h);
+          } else if (b.isNotEmpty) {
+            composedDesc.add(b);
+          } else if (sec.rawSource.trim().isNotEmpty) {
+            composedDesc.add(sec.rawSource.trim());
+          }
+        }
+      }
+    }
+
+    if (composedDesc.isNotEmpty) {
+      final fullDesc = composedDesc.join('\n\n');
+      final firstSpan = descBlocks.isNotEmpty
+          ? descBlocks.first.span
+          : (childSections?.firstOrNull?.span ?? const SourceSpan.empty());
+      final lastSpan = childSections != null && childSections.isNotEmpty
+          ? childSections.last.span
+          : (descBlocks.isNotEmpty ? descBlocks.last.span : const SourceSpan.empty());
+
       fields['descriptionMarkdown'] = IngestionField<String>.extracted(
         key: 'descriptionMarkdown',
         label: 'Description',
         value: fullDesc,
         rawText: fullDesc,
         span: SourceSpan(
-          startOffset: descBlocks.first.span.startOffset,
-          endOffset: descBlocks.last.span.endOffset,
-          startLine: descBlocks.first.span.startLine,
-          startColumn: descBlocks.first.span.startColumn,
-          endLine: descBlocks.last.span.endLine,
-          endColumn: descBlocks.last.span.endColumn,
+          startOffset: firstSpan.startOffset,
+          endOffset: lastSpan.endOffset,
+          startLine: firstSpan.startLine,
+          startColumn: firstSpan.startColumn,
+          endLine: lastSpan.endLine,
+          endColumn: lastSpan.endColumn,
           text: fullDesc,
         ),
         isRequired: true,

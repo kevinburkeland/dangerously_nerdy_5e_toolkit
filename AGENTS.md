@@ -68,6 +68,12 @@ dangerously_nerdy_5e_toolkit/
 - **Agnostic Structural Anti-Corruption Layer (ACL):** All remote repository and JSON ingestion (`GithubIngestorAdapter`) must recursively traverse incoming payloads using generic structural indicators (`name`, `entries`, `hitDie`, `stats`, `type`, `level`, actions) rather than coupling to third-party tool bundle schemas. All external pipe-delimited syntax (`Feature|Class|Source|Level`, `Spell|Source#c`) is strictly isolated into dedicated infrastructure ACL parsers (`CompendiumPipeParser`).
 - **Capability-Driven `FeatureGrant` Mechanics:** Combat calculations, attack ability substitutions, and capability resolutions MUST NOT use string pattern-matching against non-SRD classes, subclasses, or feats (`battle smith`, `hexblade`, `medium_armor_master`, `observant`, `alert`). Mechanics MUST evaluate pure data attributes: domain `FeatureGrant`s (`GrantType.attackAbilitySubstitution`, `GrantType.capabilityFlag`, `GrantType.acFormula`) or normalized capability flags (`flags['initiativeBonusMode']`, `flags['mediumArmorDexCapBonus']`, `flags['passivePerceptionBonus']`).
 
+### 0.1. Cross-Boundary Repository Invariant & Context Pivot
+When inspecting, editing, refactoring, or running commands inside an external repository (such as the extracted pure Dart engine `../vtt-engine-core`):
+- **Mandatory Ingestion:** The agent MUST view and parse `../<target-repo>/.antigravityrules` and `../<target-repo>/AGENTS.md` before making any edits.
+- **Context Suspension:** For all files inside that target boundary, the agent MUST explicitly suspend and disregard host-specific guidelines (e.g., Flutter UI widgets, D&D 5e mechanics, 48dp touch targets, SRD compendiums).
+- **Local Governance:** The target repository's rules, pure Dart constraints, and compliance gates (`test/compliance/`) take absolute precedence for that directory.
+
 ### 1. Hexagonal Architecture & Domain Purity
 - **Zero Flutter in Domain:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use `package:meta/meta.dart` for annotations like `@immutable`.
 - **Enforced via Automated Test:** `test/domain/domain_purity_test.dart` automatically audits `lib/domain/` on every CI run.

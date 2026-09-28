@@ -2,11 +2,12 @@ import 'package:meta/meta.dart';
 import 'candidate_identification.dart';
 import 'field_state.dart';
 import 'ingestion_field.dart';
+import 'ingestion_section.dart';
 import 'source_block.dart';
 import 'source_span.dart';
 
 /// A candidate game object discovered in source text, holding extracted/inferred fields,
-/// missing invariants, unassigned blocks, and user edits before domain validation.
+/// missing invariants, unassigned blocks, child sections, and user edits before domain validation.
 @immutable
 class IngestionCandidate {
   final String id;
@@ -16,7 +17,7 @@ class IngestionCandidate {
   final List<SourceBlock> blocks;
   final CandidateIdentification identification;
 
-  /// The active target type key (e.g. 'monster', 'spell', 'item').
+  /// The active target type key (e.g. 'monster', 'spell', 'item', 'class', 'subclass').
   /// Can be null if the candidate is unresolved (unknown or ambiguous).
   final String? targetTypeKey;
 
@@ -38,6 +39,20 @@ class IngestionCandidate {
   /// True if the user manually modified candidate type or fields.
   final bool isUserOverridden;
 
+  /// ID of the structural [IngestionSection] that originated this candidate, if any.
+  final String? sectionId;
+
+  /// ID of the parent [IngestionCandidate] if this is a structurally nested candidate
+  /// (e.g. Subclass candidate whose parent is a Class candidate).
+  final String? parentCandidateId;
+
+  /// IDs of nested child candidates (e.g. Subclasses under a Class).
+  final List<String> childCandidateIds;
+
+  /// Classified structural subcomponents belonging to this candidate (e.g. class features,
+  /// subclass features, progression tables, proficiencies, unknown sections).
+  final List<IngestionSection> childSections;
+
   const IngestionCandidate({
     required this.id,
     required this.span,
@@ -52,11 +67,18 @@ class IngestionCandidate {
     this.warnings = const [],
     this.errors = const [],
     this.isUserOverridden = false,
+    this.sectionId,
+    this.parentCandidateId,
+    this.childCandidateIds = const [],
+    this.childSections = const [],
   });
 
   /// True if the candidate has an explicitly resolved or chosen target type.
   bool get isTypeResolved =>
       targetTypeKey != null && targetTypeKey!.trim().isNotEmpty;
+
+  /// The extracted name if present.
+  String? get name => fields['name']?.value?.toString();
 
   /// Best display name available for this candidate.
   String get displayName {
@@ -145,6 +167,12 @@ class IngestionCandidate {
     List<String>? warnings,
     List<String>? errors,
     bool? isUserOverridden,
+    String? sectionId,
+    bool clearSectionId = false,
+    String? parentCandidateId,
+    bool clearParentCandidateId = false,
+    List<String>? childCandidateIds,
+    List<IngestionSection>? childSections,
   }) {
     return IngestionCandidate(
       id: id ?? this.id,
@@ -162,6 +190,12 @@ class IngestionCandidate {
       warnings: warnings ?? this.warnings,
       errors: errors ?? this.errors,
       isUserOverridden: isUserOverridden ?? this.isUserOverridden,
+      sectionId: clearSectionId ? null : (sectionId ?? this.sectionId),
+      parentCandidateId: clearParentCandidateId
+          ? null
+          : (parentCandidateId ?? this.parentCandidateId),
+      childCandidateIds: childCandidateIds ?? this.childCandidateIds,
+      childSections: childSections ?? this.childSections,
     );
   }
 

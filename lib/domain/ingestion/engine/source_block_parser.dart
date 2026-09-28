@@ -60,6 +60,8 @@ class SourceBlockParser {
         headingText = headingMatch.group(2)!.trim();
       } else if (_dividerPattern.hasMatch(trimmed)) {
         type = SourceBlockType.divider;
+      } else if (_isTableLine(trimmed)) {
+        type = SourceBlockType.table;
       } else if (_listPattern.hasMatch(line)) {
         type = SourceBlockType.list;
       } else if (_looksLikeStatLine(trimmed)) {
@@ -88,6 +90,10 @@ class SourceBlockParser {
       normalizedText: normalized,
       blocks: blocks,
     );
+  }
+
+  static bool _isTableLine(String text) {
+    return text.startsWith('|') && text.length > 1 && text.indexOf('|', 1) != -1;
   }
 
   static bool _looksLikeStatLine(String text) {

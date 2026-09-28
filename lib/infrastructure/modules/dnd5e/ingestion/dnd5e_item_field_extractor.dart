@@ -3,6 +3,7 @@ import '../../../../domain/ingestion/descriptors/ingestion_target_descriptor.dar
 import '../../../../domain/ingestion/engine/field_extractor.dart';
 import '../../../../domain/ingestion/models/field_state.dart';
 import '../../../../domain/ingestion/models/ingestion_field.dart';
+import '../../../../domain/ingestion/models/ingestion_section.dart';
 import '../../../../domain/ingestion/models/source_block.dart';
 import '../../../../domain/ingestion/models/source_span.dart';
 
@@ -40,6 +41,7 @@ class Dnd5eItemFieldExtractor implements FieldExtractor {
     required List<SourceBlock> blocks,
     required IngestionTargetDescriptor descriptor,
     SourceSpan? span,
+    List<IngestionSection>? childSections,
   }) {
     final fields = <String, IngestionField<dynamic>>{};
     final consumedBlockIds = <String>{};

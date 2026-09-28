@@ -1,22 +1,22 @@
 # Testing & Development Workflows
 
 ## 1. Targeted Test Commands
-
-Always prefer running targeted tests during active development rather than the entire 1,871-test suite to ensure fast feedback loops (< 5 seconds):
+Execute targeted test suites during active development for fast feedback loops (< 5s):
 
 ```bash
 # Domain purity & pure Dart rules
 flutter test test/domain/domain_purity_test.dart
+flutter test test/infrastructure/dtos/dto_purity_test.dart
 
 # CvRDT & Distributed State tests
 flutter test test/domain/crdt/
 flutter test test/infrastructure/dtos/crdt/
 flutter test test/application/services/room_state_reconciliation_service_test.dart
 
-# Application Services
+# Application Services & Orchestration
 flutter test test/application/
 
-# Infrastructure Repositories & DTOs
+# Infrastructure Repositories & Adapters
 flutter test test/infrastructure/
 
 # Legal & Product Identity Compliance Invariants
@@ -32,52 +32,31 @@ flutter test test/services/rules/
 # Compendium & ACL Ingestion
 flutter test test/services/acl/
 
-# Full test suite (1,871 passing tests)
+# Full test suite
 flutter test
 ```
 
 ## 2. Static Analysis & Lint Quality Gates
-
-Static analysis must pass with zero issues:
-
+Static analysis must pass with zero warnings or errors before committing:
 ```bash
 flutter analyze
 ```
 
-Options are defined in `analysis_options.yaml`.
-
 ## 3. Web & Production Build Verification
-
-To verify the web PWA build:
-
+To verify the production PWA bundle:
 ```bash
 ./scripts/build_web.sh
 ```
+This script compiles Flutter Web to `build/web`, injects dynamic build version timestamps into service workers and HTML for cache-busting, and verifies PWA manifest integrity.
 
-This script:
-- Compiles Flutter Web to `build/web` (with wasm optimizations if enabled).
-- Injects a dynamic build timestamp into `web/flutter_service_worker.js` and `web/index.html` to guarantee cache-busting.
-- Verifies PWA manifest and service worker integrity.
+## 4. Test Suite Reliability Directives
+- **SharedPreferences Mock Initialization:** Tests interacting with persistence services (`PartyRoomService`, `DiceRoomService`, `LocalCampaignRepository`) must invoke `SharedPreferences.setMockInitialValues({})` in `setUp()` to prevent unhandled channel errors.
+- **Homebrew Cache Invalidation:** Tests verifying homebrew persistence or compendium ingestion must invoke `HomebrewPersistenceService().invalidateAllCaches()` and `clearAllHomebrew()` in `setUp()` to eliminate cache bleed across tests.
+- **Zero Matchers in Hot Loops:** Never execute `expect()` inside high-iteration loops (e.g., 10,000 Monte Carlo runs). Matcher tracking incurs massive overhead; accumulate results and assert once outside the loop.
+- **Strict SRD Fixture Compliance:** Test names, descriptions, groups, and mock fixtures must strictly use SRD or generic homebrew terms (e.g., `Tenacious`, `Champion`, `Voidling`). Prohibited WotC Product Identity terms must never appear in test suites.
 
-## 4. Run Finalization & Living Documentation Protocol (Definition of Done)
-
-Before completing any task or feature delivery, the agent must perform the following two audit gates:
-
-### Gate 1: `README.md` & Project Documentation Synchronization
-1. **Test Verification & Metric Updates:** Run relevant tests. If the test count changes from the previous milestone (e.g., 1,871 tests), update the test counts in [README.md](file:///README.md) and [AGENTS.md](file:///AGENTS.md).
-2. **Feature Matrix & Capabilities:** If new features, P2P capabilities, screens, or mechanical rules were introduced, add them to the feature tables/checklists in [README.md](file:///README.md).
-3. **Architecture & CLI Scripts:** Update directory trees, data flow diagrams, or script instructions if project layout or tooling was altered.
-
-### Gate 2: Self-Refining AI Rules Audit
-1. **Codify New Conventions:** If a new architecture pattern (e.g., port/adapter, DTO serialization policy, CRDT message format) was introduced, document it in the corresponding rule file in `.agents/rules/`.
-2. **Prevent Regression of Fixes:** If a subtle framework quirk, platform-specific issue (Flutter Web, PWA service worker, Hive caching), or user correction was encountered during the run, codify the preventive guideline directly into `.agents/rules/<topic>.md` or [AGENTS.md](file:///AGENTS.md).
-3. **Directory Map Maintenance:** If new domain entities, application services, or widgets were added, ensure they are reflected in the Fast Codebase Navigation Index in [AGENTS.md](file:///AGENTS.md) and `.agents/rules/codebase_map.md`.
-
-## 5. Test Suite Reliability & Purity Directives
-
-- **SharedPreferences Mock Initialization:** Tests interacting with services that utilize persistent storage (`PartyRoomService`, `DiceRoomService`, `CampaignRegistryService`, `LocalCampaignRepository`) must explicitly invoke `SharedPreferences.setMockInitialValues({})` in `setUp()` to prevent unhandled `MissingPluginException` channel errors.
-- **Homebrew Persistence Cache Invalidation in Tests:** Tests that verify homebrew saving, loading, or compendium ingestion must invoke `HomebrewPersistenceService().invalidateAllCaches()` and `clearAllHomebrew()` in `setUp()` to prevent in-memory cache bleed across test suites.
-- **Zero Matcher Allocations in Hot Loops:** Never execute `expect()` inside high-iteration benchmark loops (e.g., 10,000 iterations). Matcher inspection and stack frame tracking add massive overhead that causes test flakiness under system load. Accumulate state and assert once outside the loop.
-- **Strict SRD & Legal Terminology in Tests:** Test names, descriptions, groups, and mock fixtures must strictly use SRD 5.1/5.2.1 or original generic homebrew names (e.g., `Tenacious`, `Champion`, `Voidling`). Prohibited WotC Product Identity and proprietary expansion terms (e.g., `Resilient` feat, `Divine Soul`, `Battle Master`, `Illithid`, `The Undying`) must never appear in test titles or descriptions.
-
-
+## 5. Definition of Done & Living Documentation Protocol
+Before completing any engineering task:
+1. **Test Verification:** Run relevant test suites and update test counts in README.md and AGENTS.md.
+2. **Feature Matrix:** Document any new domain features, P2P capabilities, or screens in README.md.
+3. **AI Rules Refinement:** If a new architectural convention, transport policy, or framework fix was established, codify the rule into `.agents/rules/` or AGENTS.md to prevent regressions.

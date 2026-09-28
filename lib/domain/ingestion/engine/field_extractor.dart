@@ -1,5 +1,6 @@
 import '../descriptors/ingestion_target_descriptor.dart';
 import '../models/ingestion_field.dart';
+import '../models/ingestion_section.dart';
 import '../models/source_block.dart';
 import '../models/source_span.dart';
 
@@ -19,5 +20,6 @@ abstract interface class FieldExtractor {
     required List<SourceBlock> blocks,
     required IngestionTargetDescriptor descriptor,
     SourceSpan? span,
+    List<IngestionSection>? childSections,
   });
 }

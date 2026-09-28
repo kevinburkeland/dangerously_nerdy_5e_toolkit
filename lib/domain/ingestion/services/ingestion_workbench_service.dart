@@ -1,40 +1,42 @@
 import 'package:uuid/uuid.dart';
 import '../capability/ruleset_ingestion_capability.dart';
-import '../engine/candidate_detector.dart';
+import '../engine/document_structure_parser.dart';
 import '../engine/source_block_parser.dart';
 import '../models/candidate_identification.dart';
 import '../models/ingestion_candidate.dart';
 import '../models/ingestion_document_result.dart';
 import '../models/ingestion_field.dart';
+import '../models/ingestion_section.dart';
 import '../models/source_block.dart';
 import '../models/source_span.dart';
 
 /// Application/Domain service orchestrating the multi-stage ingestion workbench pipeline:
-/// raw source → normalized blocks → candidate object identification → ruleset capability extraction
-/// → missing/invalid/ambiguous fields → editable draft → validated domain object.
+/// raw source → normalized blocks → structural document decomposition (sections)
+/// → ruleset section classification → candidate object identification
+/// → ruleset capability extraction → editable draft → validated domain object.
 ///
 /// This service is 100% ruleset-agnostic and relies on [RulesetIngestionCapability]
 /// to interpret domain semantics, validate invariants, and construct domain entities.
 class IngestionWorkbenchService {
   final SourceBlockParser _blockParser;
-  final CandidateDetector _detector;
+  final DocumentStructureParser _structureParser;
   final RulesetIngestionCapability _capability;
   final Uuid _uuid;
 
   IngestionWorkbenchService({
     required RulesetIngestionCapability capability,
     SourceBlockParser? blockParser,
-    CandidateDetector? detector,
+    DocumentStructureParser? structureParser,
     Uuid? uuid,
   })  : _capability = capability,
         _blockParser = blockParser ?? const SourceBlockParser(),
-        _detector = detector ?? const CandidateDetector(),
+        _structureParser = structureParser ?? const DocumentStructureParser(),
         _uuid = uuid ?? const Uuid();
 
   RulesetIngestionCapability get capability => _capability;
 
-  /// Parses raw text input into an [IngestionDocumentResult] with detected candidates
-  /// and unassigned blocks. Unknown and ambiguous candidates remain unresolved.
+  /// Parses raw text input into an [IngestionDocumentResult] with hierarchical sections,
+  /// detected candidates, and unassigned blocks. Unknown and ambiguous candidates remain unresolved.
   IngestionDocumentResult parse(String rawText) {
     final stopwatch = Stopwatch()..start();
 
@@ -45,44 +47,61 @@ class IngestionWorkbenchService {
     // Step 1: Syntactic parsing into blocks with character spans
     final doc = _blockParser.parse(rawText);
 
-    // Step 2: Boundary detection and candidate clustering
-    final clusters = _detector.detectClusters(doc);
+    // Step 2: Structural parsing into hierarchical sections
+    final rawSections = _structureParser.parseSections(doc);
 
-    final candidates = <IngestionCandidate>[];
-    final unassignedBlocks = <SourceBlock>[];
+    // Step 3: Ruleset capability classifies the section hierarchy
+    final classifiedSections = _capability.classifySections(rawSections);
 
-    for (final cluster in clusters) {
-      if (!cluster.isCandidate) {
-        // Collect unassigned blocks (e.g. surrounding prose, instructions, notes)
-        unassignedBlocks.addAll(cluster.blocks);
-        continue;
-      }
+    // Step 4: Capability builds domain candidates from classified sections
+    final candidates = _capability.buildCandidates(
+      classifiedSections: classifiedSections,
+      document: doc,
+    );
 
-      // Step 3: Identify candidate type without coercion!
-      // Unknown or ambiguous candidates MUST REMAIN UNRESOLVED (targetTypeKey = null).
-      final ident = cluster.identification;
-      final String? targetType = (ident.isUnknown || ident.isAmbiguous)
-          ? null
-          : ident.identifiedTypeKey;
-
-      final candidate = _buildCandidateFromBlocks(
-        blocks: cluster.blocks,
-        identification: ident,
-        targetTypeKey: targetType,
-        span: cluster.span,
-      );
-
-      candidates.add(candidate);
-    }
+    // Step 5: Collect any blocks that are unassigned to any candidate
+    final candidateSpans = candidates.map((c) => c.span).toList();
+    final unassignedBlocks = doc.blocks.where((b) {
+      if (b.type == SourceBlockType.divider) return false;
+      return !candidateSpans.any((span) =>
+          span.startOffset <= b.span.startOffset &&
+          span.endOffset >= b.span.endOffset);
+    }).toList();
 
     stopwatch.stop();
 
     return IngestionDocumentResult(
       source: doc,
       candidates: candidates,
+      sections: classifiedSections,
       unassignedBlocks: unassignedBlocks,
       parseDurationMs: stopwatch.elapsedMilliseconds,
     );
+  }
+
+  /// Reclassifies a structural section by [sectionId] to [newClassification].
+  /// Preserves user override state and updates candidate feature composition.
+  IngestionDocumentResult reclassifySection(
+    IngestionDocumentResult result,
+    String sectionId,
+    String newClassification,
+  ) {
+    final existingSection = result.findSection(sectionId);
+    if (existingSection == null) return result;
+
+    final updatedSection = existingSection.copyWith(
+      classification: newClassification,
+      isUserReclassified: true,
+    );
+
+    final updatedResult = result.updateSection(sectionId, updatedSection);
+
+    final updatedCandidates = _capability.buildCandidates(
+      classifiedSections: updatedResult.sections,
+      document: result.source,
+    );
+
+    return updatedResult.copyWith(candidates: updatedCandidates);
   }
 
   /// Explicitly resolves or changes a candidate's target type (e.g. user chooses 'Monster' or 'Spell').
@@ -98,6 +117,10 @@ class IngestionWorkbenchService {
       span: candidate.span,
       isUserOverridden: true,
       existingIgnored: candidate.ignoredBlockIds,
+      childSections: candidate.childSections,
+      sectionId: candidate.sectionId,
+      parentCandidateId: candidate.parentCandidateId,
+      childCandidateIds: candidate.childCandidateIds,
     );
 
     // Reapply any user-edited fields from previous candidate draft if keys align
@@ -158,6 +181,10 @@ class IngestionWorkbenchService {
     required SourceSpan span,
     bool isUserOverridden = false,
     Set<String> existingIgnored = const {},
+    List<IngestionSection> childSections = const [],
+    String? sectionId,
+    String? parentCandidateId,
+    List<String> childCandidateIds = const [],
   }) {
     Map<String, IngestionField<dynamic>> fields;
     List<SourceBlock> unrecognizedBlocks;
@@ -167,11 +194,11 @@ class IngestionWorkbenchService {
         targetTypeKey: targetTypeKey,
         blocks: blocks,
         span: span,
+        childSections: childSections,
       );
       // Blocks not consumed as heading or statlines remain unrecognized
       unrecognizedBlocks = blocks.where((b) {
         if (b.type == SourceBlockType.divider) return false;
-        // If a field span references this block's span, it is recognized
         final isReferenced = fields.values.any((f) =>
             f.span != null &&
             !f.span!.isEmpty &&
@@ -180,7 +207,6 @@ class IngestionWorkbenchService {
         return !isReferenced;
       }).toList();
     } else {
-      // Unresolved candidate (unknown or ambiguous)
       fields = const {};
       unrecognizedBlocks = blocks;
     }
@@ -200,6 +226,10 @@ class IngestionWorkbenchService {
       unrecognizedBlocks: unrecognizedBlocks,
       ignoredBlockIds: existingIgnored,
       isUserOverridden: isUserOverridden,
+      childSections: childSections,
+      sectionId: sectionId,
+      parentCandidateId: parentCandidateId,
+      childCandidateIds: childCandidateIds,
     );
   }
 }

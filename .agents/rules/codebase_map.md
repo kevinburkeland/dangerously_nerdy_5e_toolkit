@@ -1,29 +1,25 @@
 # Codebase Fast Lookup Map
 
-Use this cheat sheet to immediately navigate to the relevant files without expensive recursive searches:
+Use this map to navigate directly to relevant components without recursive searches:
 
 | Feature / Domain Concept | Primary File Locations | Key Classes & Models |
 |---|---|---|
-| **Domain Models (Pure Dart)** | `lib/domain/models/`, `lib/domain/models/value_objects/` | `AnimatedObject`, `CampaignProfile`, `HitPoints`, `ExhaustionState`, `WeaponMastery` |
-| **Domain Ports (Interfaces)** | `lib/domain/ports/` | `ICampaignRepository`, `ICharacterRepository`, `IPartySyncPort` |
-| **CvRDT Distributed State** | `lib/domain/crdt/`, `lib/infrastructure/dtos/crdt/` | `HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet` |
-| **State Reconciliation** | `lib/application/services/` | `RoomStateReconciliationService`, `PartyRoomService` |
-| **Encounter & Combat Service**| `lib/application/services/` | `CombatEncounterService` |
+| **Domain Models & Primitives** | `lib/domain/models/`, `lib/domain/models/value_objects/` *(Consumes `vtt_engine_core`)* | `AnimatedObject`, `CampaignProfile`, `HitPoints`, `ExhaustionState`, `WeaponMastery` |
+| **Domain Ports (Interfaces)** | `lib/domain/ports/`, `lib/domain/storage/ports/` | `ICampaignRepository`, `ICharacterRepository`, `IP2pTransportPort`, `INetworkTimePort`, `IStorageDurabilityPort` |
+| **Distributed State Primitives** | `lib/domain/crdt/`, `lib/infrastructure/dtos/crdt/` *(Consumes `vtt_engine_core`)* | `HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`, `PnCounter` |
+| **State Reconciliation** | `lib/application/services/` | `RoomStateReconciliationService`, `PartyRoomService`, `RoomSyncOrchestrator` |
+| **Encounter & Combat Service**| `lib/application/services/`, `lib/services/rules/` | `CombatEncounterService`, `ArenaCombatEngine`, `CharacterActionsResolver` |
 | **Infrastructure Repositories** | `lib/infrastructure/repositories/` | `LocalCampaignRepository`, `LocalCharacterRepository` |
-| **DTOs & Serializers** | `lib/infrastructure/dtos/` | `CharacterDto`, `CampaignProfileDto`, `AnimatedObjectDto`, `CharacterTelemetryDto` |
+| **DTOs & Serializers** | `lib/infrastructure/dtos/` | `CharacterDto`, `CampaignProfileDto`, `AnimatedObjectDto`, `HomebrewEntityDto` |
 | **Dependency Injection** | `lib/infrastructure/di/` | `injection_container.dart` (`sl` Service Locator) |
-| **Character Sheet & Builder** | `lib/screens/character_sheet_view.dart`, `lib/screens/character_builder_screen.dart`, `lib/widgets/character_sheet/`, `lib/widgets/character_builder/` | `CharacterSheetController`, `CharacterActionsResolver`, `LevelUpPipeline` |
-| **Rules & Mechanics Engines** | `lib/services/rules/` | `CombatRulesEngine`, `Dnd5eRulesEngine`, `SpellcastingRulesEngine`, `AcEngineAndInventory`, `CharacterProgressionEngine`, `TreasureGeneratorEngine` |
-| **Dice Roller & 3D Physics** | `lib/screens/dice_roller_screen.dart`, `lib/widgets/dice_roller/` | `DiceRollerScreen`, `Polyhedral3dVisualizer`, `DiceRoll`, `CustomPreset` |
-| **Multiplayer Rooms & Vault** | `lib/screens/party_room_screen.dart`, `lib/services/party/`, `lib/widgets/party/` | `PartyRoomScreen`, `LootConflictResolutionDialog`, `CryptoUtils` |
-| **Arena & Monte Carlo** | `lib/screens/arena_simulator_screen.dart`, `lib/widgets/arena/`, `lib/services/rules/arena_combat_engine.dart` | `ArenaSimulatorScreen`, `ArenaCombatEngine`, `MonsterCombatProfile` |
-| **DPR Calculator & Graph** | `lib/screens/dpr_calculator_screen.dart`, `lib/widgets/dpr/`, `lib/services/rules/dpr_calculator_engine.dart` | `DprCalculatorScreen`, `DprCalculatorEngine`, `DprChartCanvas` |
-| **Spellbook & Codices** | `lib/presentation/codex/`, `lib/screens/spellbook_screen.dart`, `lib/screens/monster_codex_screen.dart`, `lib/screens/item_compendium_screen.dart`, `lib/screens/class_catalogue_screen.dart`, `lib/screens/feats_compendium_screen.dart`, `lib/screens/species_codex_screen.dart`, `lib/screens/rules_compendium_screen.dart`, `lib/screens/table_index_screen.dart` | Unified `CodexPageShell`, compendium screens, cards, and quick-roll dialogs |
-| **Homebrew ACL & Ingestion** | `lib/screens/homebrew_studio_screen.dart`, `lib/services/acl/`, `lib/services/importers/`, `lib/widgets/homebrew/` | `CompendiumJsonIngestionPipeline`, `EntryNodeTransformer`, `LayeredPriorityStore` |
-| **Minion Tools & Summons** | `lib/screens/minion_tool_screen.dart`, `lib/widgets/minions/`, `lib/widgets/batch_attack/` | `MinionToolScreen`, `BatchAttackDialog` |
-| **UI Theme & Glyphs** | `lib/theme/app_theme.dart`, `lib/widgets/glyphs/`, `lib/widgets/app_logo.dart` | `AppTheme`, `DndGlyphPainter`, `AppLogo` |
-| **A11y Core Components** | `lib/presentation/core/` | `AccessibleActionTile` |
-| **Persistence & Database** | `lib/services/persistence/` | `AppDatabaseService`, `HomebrewPersistenceService`, `CharacterPersistenceService` |
-| **Legal & IP Compliance** | `test/infrastructure/compliance/` | `srd_legal_compliance_test.dart` |
-| **Web Build Scripts** | `scripts/build_web.sh` | PWA cache busting, service worker version injection |
-| **Automated Tests** | `test/` (unit, widget, accessibility, architecture, legal compliance) | `test/domain/domain_purity_test.dart`, `test/infrastructure/compliance/`, `test/application/` |
+| **Character Sheet & Builder** | `lib/screens/character_sheet_view.dart`, `lib/screens/character_builder_screen.dart`, `lib/widgets/character_sheet/` | `CharacterSheetController`, `CharacterValidationEngine`, `CharacterReparseEngine` |
+| **Rules & Mechanics Modules** | `lib/domain/rules/`, `lib/infrastructure/modules/dnd5e/`, `lib/services/rules/` | `Dnd5e2014Module`, `Dnd5e2024Module`, `Dnd5eCombatResolver`, `AcEngineAndInventory` |
+| **Dice Roller & 3D Physics** | `lib/screens/dice_roller_screen.dart`, `lib/widgets/dice_roller/` | `DiceRollerScreen`, `Polyhedral3dVisualizer`, `DiceRoomService` |
+| **Multiplayer Rooms & Vault** | `lib/screens/party_room_screen.dart`, `lib/services/party/`, `lib/widgets/party/` | `PartyRoomScreen`, `PartyRoomService`, `PartyPurse` |
+| **Arena & Monte Carlo DPR** | `lib/screens/arena_simulator_screen.dart`, `lib/screens/dpr_calculator_screen.dart` | `ArenaSimulatorScreen`, `DprSimulator`, `PrecomputedAttack`, `CombatEffectRider` |
+| **Compendiums & Codices** | `lib/presentation/codex/`, `lib/screens/*_codex_screen.dart`, `lib/screens/*_compendium_screen.dart` | `CodexPageShell`, compendium screens, `FormattedMarkdownText` |
+| **Homebrew ACL & Ingestion** | `lib/infrastructure/adapters/ingestion/`, `lib/infrastructure/mappers/` | `GithubIngestorAdapter`, `CompendiumPipeParser`, `StatBlockAclParser`, `HomebrewImportOrchestrator` |
+| **Minion Tools & Summons** | `lib/screens/minion_tool_screen.dart`, `lib/widgets/minions/` | `MinionToolScreen`, `BatchAttackDialog`, `AnimatedObjectInstance` |
+| **UI Theme & A11y** | `lib/theme/app_theme.dart`, `lib/presentation/core/` | `AppTheme`, `AccessibleActionTile`, `FormattedMarkdownText` |
+| **Persistence & Storage** | `lib/services/persistence/`, `lib/infrastructure/adapters/storage/` | `AppDatabaseService`, `HomebrewPersistenceService`, `StorageDurabilityCoordinator` |
+| **Compliance Invariant Tests** | `test/infrastructure/compliance/`, `test/domain/` | `srd_legal_compliance_test.dart`, `domain_purity_test.dart`, `dto_purity_test.dart` |

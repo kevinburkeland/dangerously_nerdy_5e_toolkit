@@ -1,9 +1,14 @@
 import '../../../../domain/ingestion/capability/ruleset_ingestion_capability.dart';
 import '../../../../domain/ingestion/descriptors/ingestion_target_descriptor.dart';
+import '../../../../domain/ingestion/engine/candidate_detector.dart';
+import '../../../../domain/ingestion/models/candidate_evidence.dart';
+import '../../../../domain/ingestion/models/candidate_identification.dart';
 import '../../../../domain/ingestion/models/field_state.dart';
 import '../../../../domain/ingestion/models/ingestion_candidate.dart';
 import '../../../../domain/ingestion/models/ingestion_field.dart';
+import '../../../../domain/ingestion/models/ingestion_section.dart';
 import '../../../../domain/ingestion/models/source_block.dart';
+import '../../../../domain/ingestion/models/source_document.dart';
 import '../../../../domain/ingestion/models/source_span.dart';
 import '../../../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../../../models/domain/core_types.dart';
@@ -97,47 +102,704 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     return null;
   }
 
+  static final _classHitDiePattern = RegExp(
+    r'\bHit\s+Di(?:e|ce)\s*[:]?\s*(?:1)?(d\d+)\b',
+    caseSensitive: false,
+  );
+  static final _classSavingThrowsPattern = RegExp(
+    r'\bSaving\s+Throws?\s*[:]?\s*(?:Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\b',
+    caseSensitive: false,
+  );
+  static final _subclassKeywordsPattern = RegExp(
+    r'\b(Subclass|Archetype|Domain|Circle|College|Path|Tradition|Patron|Oath|Origin)\b',
+    caseSensitive: false,
+  );
+  static final _parentClassSubtitlePattern = RegExp(
+    r'\b(?:Subclass\s+for|Archetype\s+for|Option\s+for)\s+(?:Barbarian|Bard|Cleric|Druid|Fighter|Monk|Paladin|Ranger|Rogue|Sorcerer|Warlock|Wizard)\b|\b(?:Barbarian|Bard|Cleric|Druid|Fighter|Monk|Paladin|Ranger|Rogue|Sorcerer|Warlock|Wizard)\s+(?:Archetype|Subclass|Domain|Circle|College|Path|Tradition|Patron|Sacred\s+Oath|Oath|Origin)\b',
+    caseSensitive: false,
+  );
+  static final _proficienciesHeadingPattern = RegExp(
+    r'^(?:Proficiencies|Armor\s+&\s+Weapon\s+Proficiencies|Starting\s+Proficiencies)$',
+    caseSensitive: false,
+  );
+  static final _equipmentHeadingPattern = RegExp(
+    r'^(?:Equipment|Starting\s+Equipment)$',
+    caseSensitive: false,
+  );
+  static final _descriptiveHeadingPattern = RegExp(
+    r'^(?:Description|Introduction|Overview|Creating\s+a\s+.+|Quick\s+Build)$',
+    caseSensitive: false,
+  );
+  static final _unknownHeadingPattern = RegExp(
+    r'\b(?:rules|rule|variant|optional|mechanics|note|notes|appendix|lore|history|design\s+notes)\b',
+    caseSensitive: false,
+  );
+
   @override
   Map<String, IngestionField<dynamic>> extractFields({
     required String targetTypeKey,
     required List<SourceBlock> blocks,
     SourceSpan? span,
+    List<IngestionSection>? childSections,
   }) {
     final lower = targetTypeKey.toLowerCase().trim();
     if (lower == 'monster' || lower == 'creature') {
       return _monsterExtractor
-          .extract(blocks: blocks, descriptor: _monsterDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _monsterDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     } else if (lower == 'spell') {
       return _spellExtractor
-          .extract(blocks: blocks, descriptor: _spellDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _spellDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     } else if (lower == 'item' || lower == 'equipment') {
       return _itemExtractor
-          .extract(blocks: blocks, descriptor: _itemDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _itemDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     } else if (lower == 'feat') {
       return _featExtractor
-          .extract(blocks: blocks, descriptor: _featDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _featDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     } else if (lower == 'class' || lower == 'classdefinition') {
       return _classExtractor
-          .extract(blocks: blocks, descriptor: _classDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _classDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     } else if (lower == 'subclass') {
       return _subclassExtractor
-          .extract(blocks: blocks, descriptor: _subclassDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _subclassDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     } else if (lower == 'species' || lower == 'race') {
       return _speciesExtractor
-          .extract(blocks: blocks, descriptor: _speciesDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _speciesDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     } else if (lower == 'background') {
       return _backgroundExtractor
-          .extract(blocks: blocks, descriptor: _backgroundDescriptor, span: span)
+          .extract(
+            blocks: blocks,
+            descriptor: _backgroundDescriptor,
+            span: span,
+            childSections: childSections,
+          )
           .fields;
     }
     return const {};
+  }
+
+  @override
+  List<IngestionSection> classifySections(List<IngestionSection> rootSections) {
+    final grouped = <IngestionSection>[];
+    IngestionSection? currentCandidate;
+
+    for (final sec in rootSections) {
+      final classifiedRoot = _classifyRootSection(sec);
+
+      if (_isDomainCandidateClassification(classifiedRoot.classification)) {
+        if (classifiedRoot.classification == 'subclass' &&
+            currentCandidate != null &&
+            currentCandidate.classification == 'class') {
+          // Subclass belongs under current class
+          final updatedChildren = List<IngestionSection>.from(currentCandidate.children)
+            ..add(classifiedRoot);
+          currentCandidate = currentCandidate.copyWith(
+            children: updatedChildren,
+            childSectionIds: updatedChildren.map((c) => c.id).toList(),
+          );
+        } else {
+          if (currentCandidate != null) {
+            grouped.add(_classifyChildrenForParent(currentCandidate));
+          }
+          currentCandidate = classifiedRoot;
+        }
+      } else if (currentCandidate != null) {
+        // Flat subcomponent section under active candidate
+        if (currentCandidate.classification == 'class' &&
+            currentCandidate.children.isNotEmpty &&
+            currentCandidate.children.last.classification == 'subclass') {
+          final lastSubclass = currentCandidate.children.last;
+          final updatedSubChildren = List<IngestionSection>.from(lastSubclass.children)..add(sec);
+          final updatedSubclass = lastSubclass.copyWith(
+            children: updatedSubChildren,
+            childSectionIds: updatedSubChildren.map((c) => c.id).toList(),
+          );
+          final updatedClassChildren = List<IngestionSection>.from(currentCandidate.children)
+            ..[currentCandidate.children.length - 1] = updatedSubclass;
+          currentCandidate = currentCandidate.copyWith(
+            children: updatedClassChildren,
+            childSectionIds: updatedClassChildren.map((c) => c.id).toList(),
+          );
+        } else {
+          final updatedChildren = List<IngestionSection>.from(currentCandidate.children)..add(sec);
+          currentCandidate = currentCandidate.copyWith(
+            children: updatedChildren,
+            childSectionIds: updatedChildren.map((c) => c.id).toList(),
+          );
+        }
+      } else {
+        grouped.add(_classifyChildrenForParent(classifiedRoot));
+      }
+    }
+
+    if (currentCandidate != null) {
+      grouped.add(_classifyChildrenForParent(currentCandidate));
+    }
+
+    return grouped;
+  }
+
+  bool _isDomainCandidateClassification(String? key) {
+    if (key == null) return false;
+    final lower = key.toLowerCase().trim();
+    return lower == 'class' ||
+        lower == 'subclass' ||
+        lower == 'monster' ||
+        lower == 'spell' ||
+        lower == 'item' ||
+        lower == 'feat' ||
+        lower == 'species' ||
+        lower == 'race' ||
+        lower == 'background';
+  }
+
+  IngestionSection _classifyRootSection(IngestionSection sec) {
+    if (sec.isUserReclassified) {
+      return _classifyChildrenForParent(sec);
+    }
+
+    const detector = CandidateDetector();
+    final ident = detector.identifyCluster(sec.blocks);
+
+    String classification = 'unknown';
+    double confidence = 0.0;
+    List<CandidateEvidence> evidence = ident.evidence;
+    bool isAmbiguous = ident.isAmbiguous;
+    List<String> plausible = ident.plausibleTypeKeys;
+
+    if (!ident.isUnknown && !ident.isAmbiguous && ident.identifiedTypeKey != null) {
+      if (ident.identifiedTypeKey == 'subclass' &&
+          !_parentClassSubtitlePattern.hasMatch(sec.rawSource) &&
+          !_subclassKeywordsPattern.hasMatch(sec.headingText ?? '')) {
+        classification = 'subclassFeature';
+      } else {
+        classification = ident.identifiedTypeKey!;
+      }
+      confidence = ident.confidence;
+    } else if (sec.blocks.any((b) =>
+        _classHitDiePattern.hasMatch(b.normalizedText) ||
+        _classSavingThrowsPattern.hasMatch(b.normalizedText))) {
+      classification = 'class';
+      confidence = 0.9;
+    } else if (sec.headingText != null &&
+        _parentClassSubtitlePattern.hasMatch(sec.rawSource)) {
+      classification = 'subclass';
+      confidence = 0.85;
+    }
+
+    final updated = sec.copyWith(
+      classification: classification,
+      confidence: confidence,
+      evidence: evidence,
+      isAmbiguous: isAmbiguous,
+      plausibleClassifications: plausible,
+    );
+
+    return _classifyChildrenForParent(updated);
+  }
+
+  IngestionSection _classifyChildrenForParent(IngestionSection parent) {
+    if (parent.children.isEmpty) return parent;
+
+    final classifiedChildren = <IngestionSection>[];
+
+    for (final child in parent.children) {
+      if (child.isUserReclassified) {
+        classifiedChildren.add(_classifyChildrenForParent(child));
+        continue;
+      }
+
+      String childClassification = 'unknown';
+      double confidence = 0.0;
+      final childEvidence = <CandidateEvidence>[];
+      bool isAmbiguous = false;
+      List<String> plausible = const [];
+
+      if (parent.classification == 'class') {
+        final heading = child.headingText ?? '';
+        final childRaw = child.rawSource;
+
+        // 1. Table
+        if (child.metadata['isTable'] == true ||
+            child.blocks.any((b) => b.type == SourceBlockType.table) ||
+            heading.toLowerCase().contains('table') ||
+            heading.toLowerCase().contains('progression')) {
+          childClassification = 'progressionTable';
+          confidence = 0.95;
+          childEvidence.add(const CandidateEvidence(
+            category: 'Table',
+            description: 'Identified class progression table structure',
+            weight: 0.95,
+          ));
+        }
+        // 2. Subclass
+        else if (_subclassKeywordsPattern.hasMatch(heading) ||
+            _parentClassSubtitlePattern.hasMatch(childRaw) ||
+            child.blocks.any((b) =>
+                b.normalizedText.toLowerCase().contains('subclass') ||
+                b.normalizedText.toLowerCase().contains('archetype'))) {
+          childClassification = 'subclass';
+          confidence = 0.9;
+          childEvidence.add(const CandidateEvidence(
+            category: 'Subclass Archetype',
+            description: 'Identified subclass title or archetype subtitle',
+            weight: 0.9,
+          ));
+        }
+        // 3. Proficiencies
+        else if (_proficienciesHeadingPattern.hasMatch(heading)) {
+          childClassification = 'proficiencies';
+          confidence = 0.9;
+        }
+        // 4. Starting Equipment
+        else if (_equipmentHeadingPattern.hasMatch(heading)) {
+          childClassification = 'startingEquipment';
+          confidence = 0.9;
+        }
+        // 5. Descriptive Prose
+        else if (_descriptiveHeadingPattern.hasMatch(heading)) {
+          childClassification = 'descriptiveProse';
+          confidence = 0.85;
+        }
+        // 6. Unknown section
+        else if (_unknownHeadingPattern.hasMatch(heading)) {
+          childClassification = 'unknown';
+          confidence = 0.7;
+          childEvidence.add(CandidateEvidence(
+            category: 'Non-Feature Section',
+            description: 'Identified non-feature title "$heading"',
+            weight: 0.7,
+            span: child.span,
+          ));
+        }
+        // 7. Class Feature (named heading with feature text)
+        else if (heading.isNotEmpty && child.blocks.isNotEmpty) {
+          childClassification = 'classFeature';
+          confidence = 0.8;
+          childEvidence.add(CandidateEvidence(
+            category: 'Class Feature',
+            description: 'Identified class-level feature section "$heading"',
+            weight: 0.8,
+            span: child.span,
+          ));
+        }
+      } else if (parent.classification == 'subclass') {
+        final heading = child.headingText ?? '';
+        if (child.metadata['isTable'] == true ||
+            child.blocks.any((b) => b.type == SourceBlockType.table)) {
+          childClassification = 'progressionTable';
+          confidence = 0.95;
+        } else if (_descriptiveHeadingPattern.hasMatch(heading)) {
+          childClassification = 'descriptiveProse';
+          confidence = 0.85;
+        } else if (_unknownHeadingPattern.hasMatch(heading)) {
+          childClassification = 'unknown';
+          confidence = 0.7;
+        } else if (heading.isNotEmpty && child.blocks.isNotEmpty) {
+          childClassification = 'subclassFeature';
+          confidence = 0.85;
+          childEvidence.add(CandidateEvidence(
+            category: 'Subclass Feature',
+            description: 'Identified subclass-level feature section "$heading"',
+            weight: 0.85,
+            span: child.span,
+          ));
+        }
+      } else if (parent.classification == 'species' || parent.classification == 'race') {
+        final heading = child.headingText ?? '';
+        if (child.metadata['isTable'] == true ||
+            child.blocks.any((b) => b.type == SourceBlockType.table)) {
+          childClassification = 'progressionTable';
+          confidence = 0.95;
+        } else if (_descriptiveHeadingPattern.hasMatch(heading)) {
+          childClassification = 'descriptiveProse';
+          confidence = 0.85;
+        } else if (_unknownHeadingPattern.hasMatch(heading)) {
+          childClassification = 'unknown';
+          confidence = 0.7;
+        } else if (heading.isNotEmpty && child.blocks.isNotEmpty) {
+          childClassification = 'trait';
+          confidence = 0.85;
+          childEvidence.add(CandidateEvidence(
+            category: 'Racial Trait',
+            description: 'Identified species trait section "$heading"',
+            weight: 0.85,
+            span: child.span,
+          ));
+        }
+      } else if (parent.classification == 'background') {
+        final heading = child.headingText ?? '';
+        if (child.metadata['isTable'] == true ||
+            child.blocks.any((b) => b.type == SourceBlockType.table)) {
+          childClassification = 'table';
+          confidence = 0.95;
+        } else if (_proficienciesHeadingPattern.hasMatch(heading)) {
+          childClassification = 'proficiencies';
+          confidence = 0.9;
+        } else if (_equipmentHeadingPattern.hasMatch(heading)) {
+          childClassification = 'startingEquipment';
+          confidence = 0.9;
+        } else if (_descriptiveHeadingPattern.hasMatch(heading)) {
+          childClassification = 'descriptiveProse';
+          confidence = 0.85;
+        } else if (_unknownHeadingPattern.hasMatch(heading)) {
+          childClassification = 'unknown';
+          confidence = 0.7;
+        } else if (heading.isNotEmpty && child.blocks.isNotEmpty) {
+          childClassification = 'backgroundFeature';
+          confidence = 0.85;
+          childEvidence.add(CandidateEvidence(
+            category: 'Background Feature',
+            description: 'Identified background feature section "$heading"',
+            weight: 0.85,
+            span: child.span,
+          ));
+        }
+      } else if (parent.classification == 'feat') {
+        final heading = child.headingText ?? '';
+        if (heading.toLowerCase().contains('prereq')) {
+          childClassification = 'prerequisite';
+          confidence = 0.9;
+        } else if (heading.isNotEmpty && child.blocks.isNotEmpty) {
+          childClassification = 'benefit';
+          confidence = 0.85;
+        }
+      } else if (parent.classification == 'monster') {
+        final heading = child.headingText ?? '';
+        final lower = heading.toLowerCase();
+        if (lower.contains('action') || lower.contains('attack')) {
+          childClassification = 'action';
+          confidence = 0.9;
+        } else if (lower.contains('reaction')) {
+          childClassification = 'reaction';
+          confidence = 0.9;
+        } else if (lower.contains('trait') || lower.contains('special trait')) {
+          childClassification = 'trait';
+          confidence = 0.85;
+        } else {
+          childClassification = 'unknown';
+          confidence = 0.7;
+          childEvidence.add(CandidateEvidence(
+            category: 'Non-Statblock Section',
+            description: 'Identified non-statblock heading "$heading"',
+            weight: 0.7,
+            span: child.span,
+          ));
+        }
+      } else if (parent.classification == 'spell') {
+        final heading = child.headingText ?? '';
+        if (heading.toLowerCase().contains('higher level') ||
+            heading.toLowerCase().contains('at higher levels')) {
+          childClassification = 'higherLevels';
+          confidence = 0.9;
+        } else if (heading.isNotEmpty && child.blocks.isNotEmpty) {
+          childClassification = 'description';
+          confidence = 0.85;
+        }
+      }
+
+      final updatedChild = child.copyWith(
+        classification: childClassification,
+        confidence: confidence,
+        evidence: childEvidence,
+        isAmbiguous: isAmbiguous,
+        plausibleClassifications: plausible,
+      );
+
+      classifiedChildren.add(_classifyChildrenForParent(updatedChild));
+    }
+
+    return parent.copyWith(
+      children: classifiedChildren,
+      childSectionIds: classifiedChildren.map((c) => c.id).toList(),
+    );
+  }
+
+  @override
+  List<IngestionCandidate> buildCandidates({
+    required List<IngestionSection> classifiedSections,
+    required SourceDocument document,
+  }) {
+    final candidates = <IngestionCandidate>[];
+
+    for (final root in classifiedSections) {
+      if (root.headingLevel == 0 && root.headingText == null && root.classification == 'descriptiveProse') {
+        // Pure unassigned preamble before any heading
+        continue;
+      }
+
+      if (root.classification == 'class') {
+        final subclassSections = root.children
+            .where((c) => c.classification == 'subclass')
+            .toList();
+
+        final classCandidateId = 'cand_${root.id}';
+        final subclassCandidateIds = <String>[];
+
+        // Build subclass candidates
+        final subclassCandidates = <IngestionCandidate>[];
+        for (final subSec in subclassSections) {
+          final subCandId = 'cand_${subSec.id}';
+          subclassCandidateIds.add(subCandId);
+
+          final subFields = extractFields(
+            targetTypeKey: 'subclass',
+            blocks: subSec.blocks,
+            span: subSec.span,
+            childSections: subSec.children,
+          );
+
+          // Inherit parent class slug
+          final className = root.headingText ?? 'Class';
+          if (!subFields.containsKey('classSlug') ||
+              subFields['classSlug']?.value == null ||
+              subFields['classSlug']!.value.toString().isEmpty) {
+            subFields['classSlug'] = IngestionField<String>.extracted(
+              key: 'classSlug',
+              label: 'Parent Class',
+              value: _slugify(className),
+              isRequired: true,
+            );
+          }
+
+          final subUnrecognized = subSec.children
+              .where((c) => c.classification == 'unknown')
+              .expand((c) => c.blocks)
+              .toList();
+
+          subclassCandidates.add(
+            IngestionCandidate(
+              id: subCandId,
+              span: subSec.span,
+              rawSource: subSec.rawSource,
+              normalizedSource:
+                  subSec.blocks.map((b) => b.normalizedText).join('\n'),
+              blocks: subSec.blocks,
+              identification: CandidateIdentification(
+                identifiedTypeKey: 'subclass',
+                confidence: subSec.confidence > 0 ? subSec.confidence : 0.85,
+                evidence: subSec.evidence,
+              ),
+              targetTypeKey: 'subclass',
+              fields: subFields,
+              sectionId: subSec.id,
+              parentCandidateId: classCandidateId,
+              childSections: subSec.children,
+              unrecognizedBlocks: subUnrecognized,
+            ),
+          );
+        }
+
+        final classFields = extractFields(
+          targetTypeKey: 'class',
+          blocks: root.blocks,
+          span: root.span,
+          childSections: root.children,
+        );
+
+        final classUnrecognized = root.children
+            .where((c) => c.classification == 'unknown')
+            .expand((c) => c.blocks)
+            .toList();
+
+        final classCandidate = IngestionCandidate(
+          id: classCandidateId,
+          span: root.span,
+          rawSource: root.rawSource,
+          normalizedSource:
+              root.blocks.map((b) => b.normalizedText).join('\n'),
+          blocks: root.blocks,
+          identification: CandidateIdentification(
+            identifiedTypeKey: 'class',
+            confidence: root.confidence > 0 ? root.confidence : 0.9,
+            evidence: root.evidence,
+          ),
+          targetTypeKey: 'class',
+          fields: classFields,
+          sectionId: root.id,
+          childCandidateIds: subclassCandidateIds,
+          childSections: root.children,
+          unrecognizedBlocks: classUnrecognized,
+        );
+
+        candidates.add(classCandidate);
+        candidates.addAll(subclassCandidates);
+      } else if (root.classification == 'subclass') {
+        final subFields = extractFields(
+          targetTypeKey: 'subclass',
+          blocks: root.blocks,
+          span: root.span,
+          childSections: root.children,
+        );
+        final consumedBlockSpans = subFields.values
+            .map((f) => f.span)
+            .where((s) => s != null && !s.isEmpty)
+            .cast<SourceSpan>()
+            .toList();
+
+        final unrecognizedFromBlocks = root.blocks.where((b) {
+          if (b.type == SourceBlockType.divider || b.type == SourceBlockType.heading) return false;
+          return !consumedBlockSpans.any((s) =>
+              s.startOffset <= b.span.startOffset && s.endOffset >= b.span.endOffset);
+        }).toList();
+
+        final unrecognizedFromChildren = root.children
+            .where((c) => c.classification == 'unknown')
+            .expand((c) => c.blocks)
+            .toList();
+
+        final subUnrecognized = [...unrecognizedFromBlocks, ...unrecognizedFromChildren];
+
+        candidates.add(
+          IngestionCandidate(
+            id: 'cand_${root.id}',
+            span: root.span,
+            rawSource: root.rawSource,
+            normalizedSource:
+                root.blocks.map((b) => b.normalizedText).join('\n'),
+            blocks: root.blocks,
+            identification: CandidateIdentification(
+              identifiedTypeKey: 'subclass',
+              confidence: root.confidence > 0 ? root.confidence : 0.85,
+              evidence: root.evidence,
+            ),
+            targetTypeKey: 'subclass',
+            fields: subFields,
+            sectionId: root.id,
+            childSections: root.children,
+            unrecognizedBlocks: subUnrecognized,
+          ),
+        );
+      } else if (_isSupportedCandidateType(root.classification)) {
+        final fields = extractFields(
+          targetTypeKey: root.classification,
+          blocks: root.blocks,
+          span: root.span,
+          childSections: root.children,
+        );
+
+        final consumedBlockSpans = fields.values
+            .map((f) => f.span)
+            .where((s) => s != null && !s.isEmpty)
+            .cast<SourceSpan>()
+            .toList();
+
+        final unrecognizedFromBlocks = root.blocks.where((b) {
+          if (b.type == SourceBlockType.divider || b.type == SourceBlockType.heading) return false;
+          return !consumedBlockSpans.any((s) =>
+              s.startOffset <= b.span.startOffset && s.endOffset >= b.span.endOffset);
+        }).toList();
+
+        final unrecognizedFromChildren = root.children
+            .where((c) => c.classification == 'unknown')
+            .expand((c) => c.blocks)
+            .toList();
+
+        final entityUnrecognized = [...unrecognizedFromBlocks, ...unrecognizedFromChildren];
+
+        candidates.add(
+          IngestionCandidate(
+            id: 'cand_${root.id}',
+            span: root.span,
+            rawSource: root.rawSource,
+            normalizedSource:
+                root.blocks.map((b) => b.normalizedText).join('\n'),
+            blocks: root.blocks,
+            identification: CandidateIdentification(
+              identifiedTypeKey: root.classification,
+              confidence: root.confidence > 0 ? root.confidence : 0.85,
+              evidence: root.evidence,
+            ),
+            targetTypeKey: root.classification,
+            fields: fields,
+            sectionId: root.id,
+            childSections: root.children,
+            unrecognizedBlocks: entityUnrecognized,
+          ),
+        );
+      } else if (root.isAmbiguous ||
+          (root.classification == 'unknown' &&
+              root.headingLevel > 0 &&
+              root.blocks.any((b) => b.type == SourceBlockType.heading))) {
+        // Unknown or ambiguous candidate with explicit heading
+        final ident = const CandidateDetector().identifyCluster(root.blocks);
+        candidates.add(
+          IngestionCandidate(
+            id: 'cand_${root.id}',
+            span: root.span,
+            rawSource: root.rawSource,
+            normalizedSource:
+                root.blocks.map((b) => b.normalizedText).join('\n'),
+            blocks: root.blocks,
+            identification: ident,
+            targetTypeKey: (ident.isUnknown || ident.isAmbiguous)
+                ? null
+                : ident.identifiedTypeKey,
+            fields: const {},
+            sectionId: root.id,
+            childSections: root.children,
+            unrecognizedBlocks: root.blocks,
+          ),
+        );
+      }
+    }
+
+    return candidates;
+  }
+
+  bool _isSupportedCandidateType(String? key) {
+    if (key == null) return false;
+    final lower = key.toLowerCase().trim();
+    return lower == 'class' ||
+        lower == 'subclass' ||
+        lower == 'monster' ||
+        lower == 'spell' ||
+        lower == 'item' ||
+        lower == 'feat' ||
+        lower == 'species' ||
+        lower == 'race' ||
+        lower == 'background';
   }
 
   @override
@@ -658,6 +1320,65 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         'sourceText': candidate.rawSource,
       };
 
+      final convertedSubclasses = <Subclass>[];
+
+      // Convert any subclass sections nested under this class
+      for (final sec in candidate.childSections) {
+        if (sec.classification == 'subclass') {
+          final subName = sec.headingText ?? 'Unnamed Subclass';
+          final subSlug = _slugify(subName);
+          final featureSections = sec.children
+              .where((s) => s.classification == 'subclassFeature')
+              .toList();
+          final composedFeatures = <String>[];
+          for (final f in featureSections) {
+            final h = f.headingText != null && f.headingText!.trim().isNotEmpty
+                ? '### ${f.headingText!.trim()}'
+                : '';
+            final b = f.blocks
+                .where((bk) => bk.type != SourceBlockType.heading)
+                .map((bk) => bk.rawText)
+                .join('\n')
+                .trim();
+            if (h.isNotEmpty && b.isNotEmpty) {
+              composedFeatures.add('$h\n\n$b');
+            } else if (h.isNotEmpty) {
+              composedFeatures.add(h);
+            } else if (b.isNotEmpty) {
+              composedFeatures.add(b);
+            } else if (f.rawSource.trim().isNotEmpty) {
+              composedFeatures.add(f.rawSource.trim());
+            }
+          }
+          final subFeaturesMarkdown = composedFeatures.isNotEmpty
+              ? composedFeatures.join('\n\n')
+              : sec.rawSource;
+
+          convertedSubclasses.add(
+            Subclass(
+              id: EntityId(slug: subSlug, ruleset: _rulesetVersion),
+              name: subName,
+              classSlug: _slugify(name),
+              shortName: subName,
+              featuresMarkdown: subFeaturesMarkdown,
+              customProperties: {
+                'sourceText': sec.rawSource,
+                'classSlug': _slugify(name),
+              },
+            ),
+          );
+        }
+      }
+
+      // Preserve progression table in customProperties
+      for (final sec in candidate.childSections) {
+        if (sec.classification == 'progressionTable') {
+          customProps['progressionTable'] = sec.metadata;
+          customProps['classTableGroups'] = sec.metadata;
+          customProps['rawTable'] = sec.rawSource;
+        }
+      }
+
       final characterClass = CharacterClass(
         id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
         name: name,
@@ -668,6 +1389,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         weaponProficiencies: weaponProficiencies,
         subclassSelectionLevel: subclassSelectionLevel,
         featuresMarkdown: featuresMarkdown,
+        subclasses: convertedSubclasses,
         customProperties: customProps,
       );
 

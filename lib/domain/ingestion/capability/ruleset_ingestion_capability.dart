@@ -1,7 +1,9 @@
 import '../descriptors/ingestion_target_descriptor.dart';
 import '../models/ingestion_candidate.dart';
 import '../models/ingestion_field.dart';
+import '../models/ingestion_section.dart';
 import '../models/source_block.dart';
+import '../models/source_document.dart';
 import '../models/source_span.dart';
 
 /// Validation report on whether an IngestionCandidate satisfies the domain invariants
@@ -53,11 +55,11 @@ class DomainConversionResult {
 }
 
 /// Capability interface implemented by ruleset modules (e.g. D&D 5e, Pathfinder 2e)
-/// to govern candidate extraction, domain validation, and entity construction.
+/// to govern section classification, candidate extraction, domain validation, and entity construction.
 ///
 /// This boundary guarantees that generic ingestion code does not import concrete
 /// domain entity models or define shadow domain schemas.
-abstract interface class RulesetIngestionCapability {
+abstract class RulesetIngestionCapability {
   /// Unique ruleset identifier (e.g. 'dnd5e_2024', 'dnd5e_2014', 'pf2e').
   String get rulesetId;
 
@@ -82,6 +84,18 @@ abstract interface class RulesetIngestionCapability {
     required String targetTypeKey,
     required List<SourceBlock> blocks,
     SourceSpan? span,
+    List<IngestionSection>? childSections,
+  });
+
+  /// Classifies a hierarchy of structural document sections according to ruleset conventions.
+  List<IngestionSection> classifySections(List<IngestionSection> rootSections) {
+    return rootSections;
+  }
+
+  /// Builds domain candidates from a classified section hierarchy.
+  List<IngestionCandidate> buildCandidates({
+    required List<IngestionSection> classifiedSections,
+    required SourceDocument document,
   });
 
   /// Persists a successfully converted domain [entity] into storage.

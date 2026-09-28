@@ -3,6 +3,7 @@ import '../../../../domain/ingestion/descriptors/ingestion_target_descriptor.dar
 import '../../../../domain/ingestion/engine/field_extractor.dart';
 import '../../../../domain/ingestion/models/field_state.dart';
 import '../../../../domain/ingestion/models/ingestion_field.dart';
+import '../../../../domain/ingestion/models/ingestion_section.dart';
 import '../../../../domain/ingestion/models/source_block.dart';
 import '../../../../domain/ingestion/models/source_span.dart';
 
@@ -25,6 +26,7 @@ class Dnd5eSubclassFieldExtractor implements FieldExtractor {
     required List<SourceBlock> blocks,
     required IngestionTargetDescriptor descriptor,
     SourceSpan? span,
+    List<IngestionSection>? childSections,
   }) {
     final fields = <String, IngestionField<dynamic>>{};
     final consumedBlockIds = <String>{};
@@ -92,7 +94,50 @@ class Dnd5eSubclassFieldExtractor implements FieldExtractor {
     }
 
     // 3. Features Markdown
-    if (descBlocks.isNotEmpty) {
+    final unrecognizedBlocks = <SourceBlock>[];
+
+    if (childSections != null && childSections.isNotEmpty) {
+      final featureSections =
+          childSections.where((s) => s.classification == 'subclassFeature').toList();
+      final composedFeatures = <String>[];
+      for (final sec in featureSections) {
+        final heading = sec.headingText != null && sec.headingText!.trim().isNotEmpty
+            ? '### ${sec.headingText!.trim()}'
+            : '';
+        final body = sec.blocks
+            .where((b) => b.type != SourceBlockType.heading)
+            .map((b) => b.rawText)
+            .join('\n')
+            .trim();
+        if (heading.isNotEmpty && body.isNotEmpty) {
+          composedFeatures.add('$heading\n\n$body');
+        } else if (heading.isNotEmpty) {
+          composedFeatures.add(heading);
+        } else if (body.isNotEmpty) {
+          composedFeatures.add(body);
+        } else if (sec.rawSource.trim().isNotEmpty) {
+          composedFeatures.add(sec.rawSource.trim());
+        }
+      }
+
+      final fullDesc = composedFeatures.join('\n\n');
+      if (fullDesc.isNotEmpty) {
+        fields['featuresMarkdown'] = IngestionField<String>.extracted(
+          key: 'featuresMarkdown',
+          label: 'Subclass Features',
+          value: fullDesc,
+          rawText: fullDesc,
+          span: span,
+          isRequired: true,
+        );
+      }
+
+      for (final sec in childSections) {
+        if (sec.classification == 'unknown') {
+          unrecognizedBlocks.addAll(sec.blocks);
+        }
+      }
+    } else if (descBlocks.isNotEmpty) {
       final fullDesc = descBlocks.map((b) => b.rawText).join('\n\n');
       fields['featuresMarkdown'] = IngestionField<String>.extracted(
         key: 'featuresMarkdown',
@@ -116,7 +161,10 @@ class Dnd5eSubclassFieldExtractor implements FieldExtractor {
     }
 
     _populateMissingFields(fields, descriptor);
-    return FieldExtractionResult(fields: fields);
+    return FieldExtractionResult(
+      fields: fields,
+      unrecognizedBlocks: unrecognizedBlocks,
+    );
   }
 
   void _populateMissingFields(

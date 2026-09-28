@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../domain/ingestion/capability/ruleset_ingestion_capability.dart';
 import '../../../domain/ingestion/models/ingestion_candidate.dart';
 import '../../../domain/ingestion/models/ingestion_document_result.dart';
+import '../../../domain/ingestion/models/ingestion_section.dart';
 import '../../../domain/ingestion/services/ingestion_workbench_service.dart';
 import '../../../infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart';
 import '../../../services/haptic_service.dart';
@@ -44,6 +45,8 @@ class _HomebrewWorkbenchScreenState extends State<HomebrewWorkbenchScreen>
 
   IngestionDocumentResult _parseResult = const IngestionDocumentResult.empty();
   int _selectedCandidateIndex = 0;
+  String? _selectedSectionId;
+  int _workbenchViewMode = 0; // 0: Candidates & Editor, 1: Document Structure Tree
   bool _isAutoParse = true;
   bool _isSaving = false;
 
@@ -427,20 +430,163 @@ A beam of brilliant light flashes out from your hand in a 5-foot-wide, 60-foot-l
   Widget _buildWorkbenchPane(ThemeData theme) {
     return Column(
       children: [
-        // Top candidate selector strip if multiple candidates exist
-        if (_parseResult.candidates.isNotEmpty)
-          Container(
-            height: 104,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLow,
-              border: Border(bottom: BorderSide(color: theme.dividerColor)),
+        // Mode Switcher between Candidates Drafts and Document Structure Tree
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: SegmentedButton<int>(
+                  segments: [
+                    ButtonSegment(
+                      value: 0,
+                      icon: const Icon(Icons.inventory_2_outlined, size: 16),
+                      label: Text('Candidates (${_parseResult.candidates.length})'),
+                    ),
+                    ButtonSegment(
+                      value: 1,
+                      icon: const Icon(Icons.account_tree_outlined, size: 16),
+                      label: Text('Structure (${_parseResult.sections.length})'),
+                    ),
+                  ],
+                  selected: {_workbenchViewMode},
+                  onSelectionChanged: (set) {
+                    setState(() {
+                      _workbenchViewMode = set.first;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // If Document Structure mode is selected, show hierarchical section tree
+        if (_workbenchViewMode == 1)
+          Expanded(
+            child: _buildDocumentStructureView(theme),
+          )
+        else ...[
+          // Top candidate selector strip if multiple candidates exist
+          if (_parseResult.candidates.isNotEmpty)
+            Container(
+              height: 104,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                border: Border(bottom: BorderSide(color: theme.dividerColor)),
+              ),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: _parseResult.candidates.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final candidate = _parseResult.candidates[index];
+                  return CandidateCard(
+                    candidate: candidate,
+                    isSelected: index == _selectedCandidateIndex,
+                    onSelect: () => _onSelectCandidate(index),
+                  );
+                },
+              ),
             ),
+
+          // Unassigned text banner if present
+          if (_parseResult.unassignedBlocks.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.amberAccent.withValues(alpha: 0.1),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      size: 16, color: Colors.amberAccent),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${_parseResult.unassignedBlocks.length} text block(s) were not assigned to any candidate.',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Bottom area: Candidate Editor
+          Expanded(
+            child: _buildCandidateEditor(theme),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCandidateSelectionList(ThemeData theme) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: SegmentedButton<int>(
+                  segments: [
+                    ButtonSegment(
+                      value: 0,
+                      icon: const Icon(Icons.inventory_2_outlined, size: 16),
+                      label: Text('Candidates (${_parseResult.candidates.length})'),
+                    ),
+                    ButtonSegment(
+                      value: 1,
+                      icon: const Icon(Icons.account_tree_outlined, size: 16),
+                      label: Text('Structure (${_parseResult.sections.length})'),
+                    ),
+                  ],
+                  selected: {_workbenchViewMode},
+                  onSelectionChanged: (set) {
+                    setState(() {
+                      _workbenchViewMode = set.first;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_workbenchViewMode == 1)
+          Expanded(child: _buildDocumentStructureView(theme))
+        else if (_parseResult.candidates.isEmpty)
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.search_off,
+                        size: 48, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'No candidate objects detected',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Paste text in the Source tab or select a sample above.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          Expanded(
             child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.all(12),
               itemCount: _parseResult.candidates.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final candidate = _parseResult.candidates[index];
                 return CandidateCard(
@@ -451,74 +597,7 @@ A beam of brilliant light flashes out from your hand in a 5-foot-wide, 60-foot-l
               },
             ),
           ),
-
-        // Unassigned text banner if present
-        if (_parseResult.unassignedBlocks.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.amberAccent.withValues(alpha: 0.1),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline,
-                    size: 16, color: Colors.amberAccent),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${_parseResult.unassignedBlocks.length} text block(s) were not assigned to any candidate.',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // Bottom area: Candidate Editor
-        Expanded(
-          child: _buildCandidateEditor(theme),
-        ),
       ],
-    );
-  }
-
-  Widget _buildCandidateSelectionList(ThemeData theme) {
-    if (_parseResult.candidates.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.search_off,
-                  size: 48, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(height: 12),
-              const Text(
-                'No candidate objects detected',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Paste text in the Source tab or select a sample above.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(12),
-      itemCount: _parseResult.candidates.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final candidate = _parseResult.candidates[index];
-        return CandidateCard(
-          candidate: candidate,
-          isSelected: index == _selectedCandidateIndex,
-          onSelect: () => _onSelectCandidate(index),
-        );
-      },
     );
   }
 
@@ -873,4 +952,404 @@ A beam of brilliant light flashes out from your hand in a 5-foot-wide, 60-foot-l
       ),
     );
   }
+
+  void _onReclassifySection(String sectionId, String newClassification) {
+    HapticService.selectionTick(context);
+    setState(() {
+      _parseResult = _service.reclassifySection(
+        _parseResult,
+        sectionId,
+        newClassification,
+      );
+    });
+  }
+
+  Widget _buildDocumentStructureView(ThemeData theme) {
+    if (_parseResult.sections.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.account_tree_outlined,
+                  size: 48, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(height: 12),
+              const Text(
+                'No structural sections detected',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Paste text in the Source tab to decompose into sections.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final selectedSection = _selectedSectionId != null
+        ? _parseResult.findSection(_selectedSectionId!)
+        : null;
+
+    return Column(
+      children: [
+        // Header info bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.account_tree_outlined,
+                  size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Hierarchical Document Decomposition',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    Text(
+                      'Select any section to inspect provenance or reclassify without losing text.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Section Tree List
+        Expanded(
+          flex: selectedSection != null ? 3 : 5,
+          child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            children: _parseResult.sections
+                .expand((root) => _flattenSectionTree(root, 0))
+                .map((item) =>
+                    _buildSectionTreeTile(item.section, item.depth, theme))
+                .toList(),
+          ),
+        ),
+
+        // Section Detail Inspector
+        if (selectedSection != null) ...[
+          Divider(height: 1, color: theme.dividerColor),
+          Expanded(
+            flex: 2,
+            child: _buildSectionDetailInspector(selectedSection, theme),
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<_SectionTreeItem> _flattenSectionTree(
+      IngestionSection section, int depth) {
+    final list = <_SectionTreeItem>[_SectionTreeItem(section, depth)];
+    for (final child in section.children) {
+      list.addAll(_flattenSectionTree(child, depth + 1));
+    }
+    return list;
+  }
+
+  Widget _buildSectionTreeTile(
+    IngestionSection section,
+    int depth,
+    ThemeData theme,
+  ) {
+    final isSelected = section.id == _selectedSectionId;
+    final isAmbiguous = section.isAmbiguous;
+    final isUnknown = section.classification == 'unknown';
+
+    final Color statusColor = isAmbiguous
+        ? Colors.amberAccent
+        : isUnknown
+            ? Colors.orangeAccent
+            : theme.colorScheme.primary;
+
+    final IconData statusIcon = isAmbiguous
+        ? Icons.warning_amber
+        : isUnknown
+            ? Icons.help_outline
+            : Icons.check_circle_outline;
+
+    final statusSemantics = isAmbiguous
+        ? 'Ambiguous section'
+        : isUnknown
+            ? 'Unknown section'
+            : 'Recognized section';
+
+    final displayTitle = section.headingText ??
+        (section.classification == 'progressionTable'
+            ? 'Progression Table'
+            : (section.classification == 'descriptiveProse'
+                ? 'Introductory Prose'
+                : 'Section ${section.id}'));
+
+    return Padding(
+      padding: EdgeInsets.only(left: depth * 16.0, bottom: 4),
+      child: Semantics(
+        label:
+            '$statusSemantics: $displayTitle, classified as ${section.classification}',
+        button: true,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            HapticService.selectionTick(context);
+            setState(() {
+              _selectedSectionId = section.id;
+            });
+          },
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                  : theme.colorScheme.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.dividerColor.withValues(alpha: 0.5),
+                width: isSelected ? 1.5 : 1.0,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(statusIcon, size: 16, color: statusColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        displayTitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight:
+                              depth == 0 ? FontWeight.bold : FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Span: lines ${section.span.startLine}-${section.span.endLine} • ${section.blocks.length} block(s)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    section.classification,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionDetailInspector(
+    IngestionSection section,
+    ThemeData theme,
+  ) {
+    const classificationOptions = [
+      'class',
+      'subclass',
+      'classFeature',
+      'subclassFeature',
+      'progressionTable',
+      'proficiencies',
+      'startingEquipment',
+      'trait',
+      'backgroundFeature',
+      'benefit',
+      'action',
+      'reaction',
+      'descriptiveProse',
+      'unknown',
+    ];
+
+    return Container(
+      color: theme.colorScheme.surfaceContainerLowest,
+      padding: const EdgeInsets.all(12),
+      child: ListView(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  section.headingText ?? 'Section ${section.id}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () {
+                  setState(() {
+                    _selectedSectionId = null;
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Reclassify Row
+          Row(
+            children: [
+              const Text(
+                'Classification:',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 8),
+              DropdownButton<String>(
+                value: classificationOptions.contains(section.classification)
+                    ? section.classification
+                    : 'unknown',
+                isDense: true,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+                items: classificationOptions.map((opt) {
+                  return DropdownMenuItem(
+                    value: opt,
+                    child: Text(opt),
+                  );
+                }).toList(),
+                onChanged: (newVal) {
+                  if (newVal != null && newVal != section.classification) {
+                    _onReclassifySection(section.id, newVal);
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Traceability Span Info
+          Text(
+            'Source Location: ${section.span.locationString} '
+            '(offset ${section.span.startOffset}-${section.span.endOffset}, '
+            '${section.rawSource.length} chars)',
+            style: TextStyle(
+              fontSize: 11,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (section.parentSectionId != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Parent Section: ${section.parentSectionId}',
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+
+          // Ambiguity / Plausible details
+          if (section.isAmbiguous) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.amberAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'Ambiguous Classification: Plausible options: ${section.plausibleClassifications.join(", ")}',
+                style: const TextStyle(fontSize: 11, color: Colors.amber),
+              ),
+            ),
+          ],
+
+          // Classification Evidence
+          if (section.evidence.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Classification Evidence:',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+            ...section.evidence.map((ev) => Text(
+                  '• ${ev.category}: ${ev.description} (${(ev.weight * 100).toInt()}%)',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                )),
+          ],
+
+          const SizedBox(height: 8),
+          const Text(
+            'Raw Section Source:',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: SelectableText(
+              section.rawSource,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTreeItem {
+  final IngestionSection section;
+  final int depth;
+
+  const _SectionTreeItem(this.section, this.depth);
 }
