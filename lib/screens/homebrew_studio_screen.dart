@@ -14,6 +14,7 @@ import '../presentation/screens/homebrew/homebrew_expert_options_view.dart';
 import '../widgets/homebrew/monster_builder_dialog.dart';
 import '../widgets/homebrew/spell_builder_dialog.dart';
 import '../widgets/common/formatted_markdown_text.dart';
+import '../presentation/screens/homebrew/homebrew_workbench_screen.dart';
 
 /// Comprehensive Homebrew Studio screen allowing users to create, edit, import, re-parse, and manage
 /// custom spells, monsters, magic items, classes, subclasses, races, feats, backgrounds, and rules.
@@ -569,19 +570,48 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
             icon: const Icon(Icons.file_download_outlined),
             onPressed: _openImportDialog,
           ),
+          IconButton(
+            tooltip: 'WYSIWYG Ingestion Workbench',
+            icon: const Icon(Icons.architecture_outlined),
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const HomebrewWorkbenchScreen(),
+                ),
+              );
+              _loadAll();
+            },
+          ),
           PopupMenuButton<String>(
             tooltip: 'More Options',
             icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'expert_github') {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const HomebrewExpertOptionsView(),
                   ),
                 );
+              } else if (value == 'workbench') {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const HomebrewWorkbenchScreen(),
+                  ),
+                );
+                _loadAll();
               }
             },
             itemBuilder: (ctx) => [
+              const PopupMenuItem(
+                value: 'workbench',
+                child: Row(
+                  children: [
+                    Icon(Icons.architecture_outlined, size: 20),
+                    SizedBox(width: 10),
+                    Text('WYSIWYG Ingestion Workbench'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'expert_github',
                 child: Row(
