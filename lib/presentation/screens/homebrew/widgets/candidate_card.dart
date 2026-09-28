@@ -24,10 +24,11 @@ class CandidateCard extends StatelessWidget {
     final ambiguousCount = candidate.ambiguousFields.length;
     final extractedCount = candidate.validFields.length;
 
-    final typeLabel = candidate.targetTypeKey.isNotEmpty
-        ? candidate.targetTypeKey[0].toUpperCase() +
-            candidate.targetTypeKey.substring(1)
-        : 'Unknown';
+    final typeLabel = (candidate.targetTypeKey != null &&
+            candidate.targetTypeKey!.isNotEmpty)
+        ? candidate.targetTypeKey![0].toUpperCase() +
+            candidate.targetTypeKey!.substring(1)
+        : (candidate.identification.isAmbiguous ? 'Ambiguous' : 'Unknown');
 
     final confidencePercent = (ident.confidence * 100).toStringAsFixed(0);
 
@@ -40,7 +41,8 @@ class CandidateCard extends StatelessWidget {
         onTap: onSelect,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          width: 240,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)

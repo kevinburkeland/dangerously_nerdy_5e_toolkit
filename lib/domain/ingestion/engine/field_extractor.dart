@@ -1,6 +1,7 @@
-import '../descriptors/object_descriptor.dart';
+import '../descriptors/ingestion_target_descriptor.dart';
 import '../models/ingestion_field.dart';
 import '../models/source_block.dart';
+import '../models/source_span.dart';
 
 class FieldExtractionResult {
   final Map<String, IngestionField<dynamic>> fields;
@@ -12,10 +13,11 @@ class FieldExtractionResult {
   });
 }
 
-/// Abstract contract for extracting object-specific fields from source blocks.
-abstract class FieldExtractor {
+/// Abstract contract for extracting target-specific fields from source blocks.
+abstract interface class FieldExtractor {
   FieldExtractionResult extract({
     required List<SourceBlock> blocks,
-    required ObjectDescriptor descriptor,
+    required IngestionTargetDescriptor descriptor,
+    SourceSpan? span,
   });
 }

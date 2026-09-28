@@ -1,11 +1,12 @@
-import '../descriptors/object_descriptor.dart';
-import '../models/ingestion_field.dart';
-import '../models/source_block.dart';
-import 'field_extractor.dart';
+import '../../../../domain/ingestion/descriptors/ingestion_target_descriptor.dart';
+import '../../../../domain/ingestion/engine/field_extractor.dart';
+import '../../../../domain/ingestion/models/ingestion_field.dart';
+import '../../../../domain/ingestion/models/source_block.dart';
+import '../../../../domain/ingestion/models/source_span.dart';
 
-/// Field extractor for 5e Spells.
-class SpellFieldExtractor implements FieldExtractor {
-  const SpellFieldExtractor();
+/// 5e-specific field extractor for Spells.
+class Dnd5eSpellFieldExtractor implements FieldExtractor {
+  const Dnd5eSpellFieldExtractor();
 
   static final _levelSchoolPattern1 = RegExp(
     r'^(\d+)(?:st|nd|rd|th)[- ]level\s+(\w+)(?:\s*\(([^)]+)\))?$',
@@ -44,7 +45,8 @@ class SpellFieldExtractor implements FieldExtractor {
   @override
   FieldExtractionResult extract({
     required List<SourceBlock> blocks,
-    required ObjectDescriptor descriptor,
+    required IngestionTargetDescriptor descriptor,
+    SourceSpan? span,
   }) {
     final fields = <String, IngestionField<dynamic>>{};
     final consumedBlockIds = <String>{};
@@ -253,11 +255,11 @@ class SpellFieldExtractor implements FieldExtractor {
 
   void _populateMissingFields(
     Map<String, IngestionField<dynamic>> fields,
-    ObjectDescriptor descriptor,
+    IngestionTargetDescriptor descriptor,
   ) {
     for (final desc in descriptor.fields) {
       if (!fields.containsKey(desc.key)) {
-        if (desc.isRequired) {
+        if (desc.isRequiredForRecognition) {
           fields[desc.key] = IngestionField<dynamic>.missing(
             key: desc.key,
             label: desc.label,

@@ -1,18 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/descriptors/monster_descriptor.dart';
-import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/descriptors/spell_descriptor.dart';
-import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/engine/monster_field_extractor.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/engine/source_block_parser.dart';
-import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/engine/spell_field_extractor.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/field_state.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/ingestion/dnd5e_monster_descriptor.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/ingestion/dnd5e_monster_field_extractor.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/ingestion/dnd5e_spell_descriptor.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/ingestion/dnd5e_spell_field_extractor.dart';
 
 void main() {
   group('FieldExtractor Tests', () {
     const parser = SourceBlockParser();
-    const monsterDesc = MonsterDescriptor();
-    const spellDesc = SpellDescriptor();
-    const monsterExtractor = MonsterFieldExtractor();
-    const spellExtractor = SpellFieldExtractor();
+    const monsterDesc = Dnd5eMonsterDescriptor();
+    const spellDesc = Dnd5eSpellDescriptor();
+    const monsterExtractor = Dnd5eMonsterFieldExtractor();
+    const spellExtractor = Dnd5eSpellFieldExtractor();
 
     test('missing required values remain missing and are never fabricated', () {
       const source = '''

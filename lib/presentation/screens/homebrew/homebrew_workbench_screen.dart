@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../domain/ingestion/descriptors/descriptor_registry.dart';
+import '../../../domain/ingestion/capability/ruleset_ingestion_capability.dart';
 import '../../../domain/ingestion/models/ingestion_candidate.dart';
 import '../../../domain/ingestion/models/ingestion_document_result.dart';
 import '../../../domain/ingestion/services/ingestion_workbench_service.dart';
-import '../../../models/domain/spell_monster_equipment.dart';
+import '../../../infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/persistence/homebrew_persistence_service.dart';
 import 'widgets/candidate_card.dart';
@@ -13,14 +13,19 @@ import 'widgets/unrecognized_source_view.dart';
 /// Developer and user-facing WYSIWYG Homebrew Ingestion Workbench.
 /// Provides an inspectable, correctable parsing pipeline that explicitly tracks
 /// missing, invalid, ambiguous, and unrecognized content.
+///
+/// Purely ruleset-agnostic: relies on [RulesetIngestionCapability] for schema descriptors,
+/// domain validation, and entity construction.
 class HomebrewWorkbenchScreen extends StatefulWidget {
   final String? initialSourceText;
+  final RulesetIngestionCapability? capability;
   final IngestionWorkbenchService? workbenchService;
   final HomebrewPersistenceService? persistenceService;
 
   const HomebrewWorkbenchScreen({
     super.key,
     this.initialSourceText,
+    this.capability,
     this.workbenchService,
     this.persistenceService,
   });
@@ -61,52 +66,70 @@ Casting Time: 1 action
 Range: Self (60-foot line)
 Components: V, S, M (a magnifying glass)
 Duration: Concentration, up to 1 minute
-A beam of brilliant light flashes out from your hand in a 5-foot-wide, 60-foot-long line.
-Each creature in the line must make a Constitution saving throw.
-### At Higher Levels
-When you cast this spell using a spell slot of 7th level or higher, damage increases by 1d8.
+A beam of brilliant light flashes out from your hand in a 5-foot-wide, 60-foot-long line. Each creature in the line must make a Constitution saving throw. On a failed save, a creature takes 6d8 radiant damage and is blinded for 1 minute.
 ''';
 
   @override
   void initState() {
     super.initState();
-    _service = widget.workbenchService ?? IngestionWorkbenchService();
+    final cap = widget.capability ?? const Dnd5eIngestionCapability();
+    _service = widget.workbenchService ??
+        IngestionWorkbenchService(capability: cap);
     _persistence = widget.persistenceService ?? HomebrewPersistenceService();
-    _sourceController = TextEditingController(
-      text: widget.initialSourceText ?? _sampleMonsterText,
-    );
+
     _mobileTabController = TabController(length: 3, vsync: this);
 
-    _parseSource(_sourceController.text);
+    final initialText = widget.initialSourceText ?? _sampleMonsterText;
+    _sourceController = TextEditingController(text: initialText);
+
+    // Initial parse run
+    _parseSource(initialText);
+
+    _sourceController.addListener(_onSourceChanged);
   }
 
   @override
   void dispose() {
+    _sourceController.removeListener(_onSourceChanged);
     _sourceController.dispose();
     _mobileTabController.dispose();
     super.dispose();
   }
 
+  void _onSourceChanged() {
+    if (_isAutoParse) {
+      _parseSource(_sourceController.text);
+    }
+  }
+
   void _parseSource(String text) {
+    final result = _service.parse(text);
     setState(() {
-      _parseResult = _service.parse(text);
-      if (_selectedCandidateIndex >= _parseResult.candidates.length) {
+      _parseResult = result;
+      if (_selectedCandidateIndex >= result.candidates.length) {
         _selectedCandidateIndex =
-            _parseResult.candidates.isNotEmpty ? 0 : 0;
+            result.candidates.isEmpty ? 0 : result.candidates.length - 1;
       }
     });
   }
 
-  void _onSourceChanged(String text) {
-    if (_isAutoParse) {
-      _parseSource(text);
+  void _onSelectCandidate(int index) {
+    if (index >= 0 && index < _parseResult.candidates.length) {
+      setState(() {
+        _selectedCandidateIndex = index;
+      });
+      // On mobile, auto-switch to Editor tab
+      if (_mobileTabController.index != 2) {
+        _mobileTabController.animateTo(2);
+      }
     }
   }
 
   void _onFieldEdited(String fieldKey, dynamic newValue) {
     if (_parseResult.candidates.isEmpty) return;
     final candidate = _parseResult.candidates[_selectedCandidateIndex];
-    final updated = _service.updateCandidateField(candidate, fieldKey, newValue);
+    final updated =
+        _service.updateCandidateField(candidate, fieldKey, newValue);
 
     setState(() {
       _parseResult =
@@ -156,18 +179,14 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
 
     try {
       final entity = conversion.entity!;
-      if (entity is Monster) {
-        await _persistence.saveCustomMonster(entity);
-      } else if (entity is Spell) {
-        await _persistence.saveCustomSpell(entity);
-      }
+      await _service.capability.persistEntity(entity, _persistence);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.green.shade700,
-            content: Text(
-              'Successfully created and committed ${entity.entityType.key} "${entity.name}" to Codex!',
+            content: const Text(
+              'Successfully created and committed candidate to Codex!',
             ),
             action: SnackBarAction(
               label: 'Done',
@@ -201,15 +220,36 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ingestion Workbench'),
+        title: const Text('Homebrew Ingestion Workbench'),
         actions: [
-          IconButton(
-            tooltip: _isAutoParse ? 'Live Parse: ON' : 'Live Parse: OFF',
-            icon: Icon(_isAutoParse ? Icons.flash_on : Icons.flash_off),
-            onPressed: () {
-              setState(() => _isAutoParse = !_isAutoParse);
-            },
+          // Auto-parse toggle
+          Tooltip(
+            message: _isAutoParse
+                ? 'Auto-parse on change: ACTIVE'
+                : 'Auto-parse: PAUSED (Explicit Refresh)',
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isAutoParse ? Icons.sync : Icons.sync_disabled,
+                  size: 18,
+                  color: _isAutoParse
+                      ? theme.colorScheme.primary
+                      : theme.disabledColor,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _isAutoParse ? 'Live' : 'Manual',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                Switch(
+                  value: _isAutoParse,
+                  onChanged: (val) => setState(() => _isAutoParse = val),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
           IconButton(
             tooltip: 'Run Explicit Parse',
             icon: const Icon(Icons.refresh),
@@ -359,6 +399,8 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
               controller: _sourceController,
               maxLines: null,
               expands: true,
+              keyboardType: TextInputType.multiline,
+              textAlignVertical: TextAlignVertical.top,
               style: const TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 13,
@@ -366,26 +408,17 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
               ),
               decoration: InputDecoration(
                 hintText:
-                    'Paste arbitrary 5e stat block, spell, or item source text here...',
+                    'Paste creature stat blocks, spell cards, or homebrew text here...',
                 filled: true,
-                fillColor: theme.colorScheme.surfaceContainerLow,
+                fillColor: theme.colorScheme.surfaceContainerLowest,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: theme.dividerColor),
                 ),
                 contentPadding: const EdgeInsets.all(12),
               ),
-              onChanged: _onSourceChanged,
             ),
           ),
-
-          // Unassigned source preview if any
-          if (_parseResult.hasUnassigned)
-            UnrecognizedSourceView(
-              title: 'Unassigned Source Prose',
-              explanation:
-                  'The following blocks were not associated with any candidate object.',
-              blocks: _parseResult.unassignedBlocks,
-            ),
         ],
       ),
     );
@@ -394,53 +427,52 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
   Widget _buildWorkbenchPane(ThemeData theme) {
     return Column(
       children: [
-        // Candidates Selection Bar
+        // Top candidate selector strip if multiple candidates exist
         if (_parseResult.candidates.isNotEmpty)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            height: 104,
+            padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLowest,
-              border: Border(
-                bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
-              ),
+              color: theme.colorScheme.surfaceContainerLow,
+              border: Border(bottom: BorderSide(color: theme.dividerColor)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _parseResult.candidates.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final candidate = _parseResult.candidates[index];
+                return CandidateCard(
+                  candidate: candidate,
+                  isSelected: index == _selectedCandidateIndex,
+                  onSelect: () => _onSelectCandidate(index),
+                );
+              },
+            ),
+          ),
+
+        // Unassigned text banner if present
+        if (_parseResult.unassignedBlocks.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.amberAccent.withValues(alpha: 0.1),
+            child: Row(
               children: [
-                Text(
-                  'Detected Candidates (${_parseResult.candidates.length})',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  height: 84,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _parseResult.candidates.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final c = _parseResult.candidates[index];
-                      return SizedBox(
-                        width: 240,
-                        child: CandidateCard(
-                          candidate: c,
-                          isSelected: _selectedCandidateIndex == index,
-                          onSelect: () {
-                            setState(() => _selectedCandidateIndex = index);
-                          },
-                        ),
-                      );
-                    },
+                const Icon(Icons.info_outline,
+                    size: 16, color: Colors.amberAccent),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${_parseResult.unassignedBlocks.length} text block(s) were not assigned to any candidate.',
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],
             ),
           ),
 
-        // Selected Candidate Detail Editor
+        // Bottom area: Candidate Editor
         Expanded(
           child: _buildCandidateEditor(theme),
         ),
@@ -453,10 +485,23 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-            'No candidate objects detected yet.\nPaste or type content into the Source tab.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: theme.disabledColor),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.search_off,
+                  size: 48, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(height: 12),
+              const Text(
+                'No candidate objects detected',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Paste text in the Source tab or select a sample above.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ],
           ),
         ),
       );
@@ -467,14 +512,11 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
       itemCount: _parseResult.candidates.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final c = _parseResult.candidates[index];
+        final candidate = _parseResult.candidates[index];
         return CandidateCard(
-          candidate: c,
-          isSelected: _selectedCandidateIndex == index,
-          onSelect: () {
-            setState(() => _selectedCandidateIndex = index);
-            _mobileTabController.animateTo(2); // Jump to Editor tab on mobile
-          },
+          candidate: candidate,
+          isSelected: index == _selectedCandidateIndex,
+          onSelect: () => _onSelectCandidate(index),
         );
       },
     );
@@ -483,26 +525,18 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
   Widget _buildCandidateEditor(ThemeData theme) {
     if (_parseResult.candidates.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.rule_folder_outlined,
-                size: 48, color: theme.disabledColor),
-            const SizedBox(height: 12),
-            Text(
-              'No candidate object selected.\nPaste source text to begin parsing.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: theme.disabledColor),
-            ),
-          ],
+        child: Text(
+          'No candidate objects detected in source.',
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
     }
 
     final candidate = _parseResult.candidates[_selectedCandidateIndex];
     final validation = _service.validate(candidate);
-    final descriptor =
-        DescriptorRegistry.getDescriptor(candidate.targetTypeKey);
+    final descriptor = candidate.isTypeResolved
+        ? _service.capability.getTargetDescriptor(candidate.targetTypeKey)
+        : null;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -513,7 +547,8 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
           Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.4)),
+              side:
+                  BorderSide(color: theme.dividerColor.withValues(alpha: 0.4)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -536,7 +571,9 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              '${(candidate.identification.confidence * 100).toStringAsFixed(0)}% parser confidence',
+                              candidate.isTypeResolved
+                                  ? '${(candidate.identification.confidence * 100).toStringAsFixed(0)}% parser confidence'
+                                  : candidate.identification.summaryLabel,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: theme.colorScheme.onSurfaceVariant,
@@ -553,12 +590,12 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
                         onSelected: (newType) {
                           _onChangeCandidateType(newType);
                         },
-                        itemBuilder: (context) =>
-                            DescriptorRegistry.supportedTypeKeys.map((typeKey) {
-                          final d = DescriptorRegistry.getDescriptor(typeKey);
+                        itemBuilder: (context) => _service
+                            .capability.supportedTargets
+                            .map((t) {
                           return PopupMenuItem<String>(
-                            value: typeKey,
-                            child: Text(d?.displayName ?? typeKey),
+                            value: t.typeKey,
+                            child: Text(t.displayName),
                           );
                         }).toList(),
                         child: Container(
@@ -573,7 +610,7 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
                             children: [
                               Text(
                                 descriptor?.displayName ??
-                                    candidate.targetTypeKey,
+                                    (candidate.targetTypeKey ?? 'Select Type'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
@@ -589,6 +626,68 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
                   ),
 
                   const SizedBox(height: 12),
+
+                  // Unresolved Candidate Resolution Banner
+                  if (!candidate.isTypeResolved) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amberAccent.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: Colors.amberAccent.withValues(alpha: 0.4)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.help_outline,
+                                  size: 18, color: Colors.amberAccent),
+                              const SizedBox(width: 8),
+                              Text(
+                                candidate.identification.isAmbiguous
+                                    ? 'Ambiguous Object Type'
+                                    : 'Unknown Object Type',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amberAccent,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            candidate.identification.isAmbiguous
+                                ? 'Multiple plausible types detected. Select the intended type to continue extraction:'
+                                : 'Could not confidently identify object type. Select an object type to begin extraction:',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
+                            children: (candidate.identification.isAmbiguous
+                                    ? candidate.identification.plausibleTypeKeys
+                                    : _service.capability.supportedTargets
+                                        .map((t) => t.typeKey))
+                                .map((typeKey) {
+                              final d = _service.capability
+                                  .getTargetDescriptor(typeKey);
+                              return ActionChip(
+                                avatar: const Icon(Icons.check, size: 14),
+                                label: Text(d?.displayName ?? typeKey),
+                                onPressed: () =>
+                                    _onChangeCandidateType(typeKey),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
                   // Validation Banner
                   if (validation.isValid)
@@ -638,7 +737,9 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
                                   size: 18, color: Colors.redAccent),
                               const SizedBox(width: 8),
                               Text(
-                                'Cannot create ${candidate.targetTypeKey[0].toUpperCase() + candidate.targetTypeKey.substring(1)}',
+                                candidate.isTypeResolved
+                                    ? 'Cannot create ${descriptor?.displayName ?? candidate.targetTypeKey}'
+                                    : 'Cannot create Candidate (Unresolved Type)',
                                 style: const TextStyle(
                                   color: Colors.redAccent,
                                   fontWeight: FontWeight.bold,
@@ -649,7 +750,8 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
                           ),
                           const SizedBox(height: 4),
                           ...validation.blockingErrors.map((err) => Padding(
-                                padding: const EdgeInsets.only(left: 26, top: 2),
+                                padding:
+                                    const EdgeInsets.only(left: 26, top: 2),
                                 child: Text(
                                   '• $err',
                                   style: const TextStyle(
@@ -678,13 +780,16 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.save_outlined),
                       label: Text(
                         validation.isValid
-                            ? 'Commit ${candidate.targetTypeKey[0].toUpperCase() + candidate.targetTypeKey.substring(1)} to Codex'
-                            : 'Resolve Missing/Invalid Fields to Commit',
+                            ? 'Commit ${descriptor?.displayName ?? "Entity"} to Codex'
+                            : (candidate.isTypeResolved
+                                ? 'Resolve Missing/Invalid Fields to Commit'
+                                : 'Select Object Type to Commit'),
                       ),
                       onPressed: validation.isValid && !_isSaving
                           ? () => _commitCandidate(candidate)
@@ -703,17 +808,19 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
             ExpansionTile(
               title: Text(
                 'Identification Evidence (${candidate.identification.evidence.length} signals)',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
               children: candidate.identification.evidence.map((ev) {
                 return ListTile(
                   dense: true,
-                  leading: const Icon(Icons.check, size: 14, color: Colors.greenAccent),
+                  leading: const Icon(Icons.check,
+                      size: 14, color: Colors.greenAccent),
                   title: Text(ev.category,
                       style: const TextStyle(
                           fontSize: 12, fontWeight: FontWeight.bold)),
-                  subtitle: Text(ev.description,
-                      style: const TextStyle(fontSize: 11)),
+                  subtitle:
+                      Text(ev.description, style: const TextStyle(fontSize: 11)),
                 );
               }).toList(),
             ),
@@ -726,7 +833,9 @@ When you cast this spell using a spell slot of 7th level or higher, damage incre
           ),
           const SizedBox(height: 4),
           Text(
-            'Extracted, inferred, missing, and invalid fields are displayed below. You can correct values in place.',
+            candidate.isTypeResolved
+                ? 'Extracted, inferred, missing, and invalid fields are displayed below. You can correct values in place.'
+                : 'Select an object type above to display schema fields.',
             style: TextStyle(
               fontSize: 11,
               color: theme.colorScheme.onSurfaceVariant,

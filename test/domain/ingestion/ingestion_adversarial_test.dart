@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/descriptors/field_descriptor.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/descriptors/ingestion_field_descriptor.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/field_state.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/services/ingestion_workbench_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart';
 
 void main() {
   group('Ingestion Adversarial & Edge Case Tests', () {
-    final service = IngestionWorkbenchService();
+    final service = IngestionWorkbenchService(capability: const Dnd5eIngestionCapability());
 
     test('handles reordered sections gracefully', () {
       const source = '''
@@ -107,17 +108,17 @@ Challenge 5
     });
 
     test('detects malformed dice notation in custom validator', () {
-      const desc = FieldDescriptor(
+      const desc = IngestionFieldDescriptor(
         key: 'hitDieFormula',
         label: 'Hit Dice Formula',
         valueType: FieldValueType.diceFormula,
       );
 
-      expect(desc.validate('2d6'), isNull);
-      expect(desc.validate('1d10 + 3'), isNull);
-      expect(desc.validate('dice'), contains('valid dice notation'));
-      expect(desc.validate('3d?'), contains('valid dice notation'));
-      expect(desc.validate('1d10+banana'), contains('valid dice notation'));
+      expect(desc.validateSyntactic('2d6'), isNull);
+      expect(desc.validateSyntactic('1d10 + 3'), isNull);
+      expect(desc.validateSyntactic('dice'), contains('valid dice notation'));
+      expect(desc.validateSyntactic('3d?'), contains('valid dice notation'));
+      expect(desc.validateSyntactic('1d10+banana'), contains('valid dice notation'));
     });
 
     test('unknown headings are preserved into unrecognized blocks without crashing', () {
