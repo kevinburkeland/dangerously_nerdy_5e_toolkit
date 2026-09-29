@@ -777,8 +777,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "999f8ec5282f5949e927990b7aa8ee6f5a127fa3"
-      resolved-ref: "999f8ec5282f5949e927990b7aa8ee6f5a127fa3"
+      ref: "40aad4a2d65dfbfe669a64bebdecc4fd86a93270"
+      resolved-ref: "40aad4a2d65dfbfe669a64bebdecc4fd86a93270"
       url: "https://github.com/kevinburkeland/vtt-engine-core.git"
     source: git
     version: "1.0.0"

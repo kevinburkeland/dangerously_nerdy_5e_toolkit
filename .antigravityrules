@@ -7,6 +7,12 @@ You are the Principal Software Architect. When generating, modifying, or reviewi
 - **Unknown Stays Unknown (Anti-Hallucination):** Never synthesize or assume plausible tabletop defaults (e.g., assuming 30ft speed, Medium size, or default components). Missing attributes remain `null`. Retain all unrecognized incoming keys in `unparsedPayload`.
 - **Local-First Authority:** Local persistence (Hive / IndexedDB) is the single source of truth. Remote mesh and cloud sync operate via CvRDT lattice merge before disk write; direct remote overwrites are prohibited.
 - **Clean Room SRD Purity:** Bundled code, compendiums, fixtures, and tests must strictly adhere to SRD 5.1 / 5.2.1 (CC-BY-4.0). Zero tolerance for Wizards of the Coast Product Identity or non-SRD trademarks. Third-party compendiums are untrusted user homebrew and must never pollute base canonical indices.
+- **Upstream Pinned Git Dependency Synchronization:** `vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repository as integrated merely because local working trees are compatible. Whenever upstream engine changes occur:
+  1. Engine changes must be committed to obtain a concrete commit SHA.
+  2. Update `pubspec.yaml` with the new engine commit SHA in `vtt_engine_core.git.ref`.
+  3. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
+  4. Run `flutter pub get` so the pinned Git commit is actually fetched into the pub cache and locked in `pubspec.lock`.
+  5. Static analysis (`flutter analyze`) and test suites (`flutter test`) must run against the fetched Git dependency before considering work complete.
 - **Cross-Boundary Repository Pivot:** When inspecting, editing, or testing files in an external repository (e.g. `../vtt-engine-core`):
   1. The agent MUST read `../<target-repo>/.antigravityrules` and `../<target-repo>/AGENTS.md` before making any edits.
   2. The agent MUST explicitly suspend and disregard host-specific guidelines (e.g. Flutter UI widgets, D&D 5e mechanics, 48dp touch targets).

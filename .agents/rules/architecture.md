@@ -57,3 +57,12 @@ When inspecting, editing, or executing commands in an external repository (e.g. 
 1. **Mandatory Ingestion:** The agent MUST view and parse `../<target-repo>/.antigravityrules` and `../<target-repo>/AGENTS.md` before making any modifications.
 2. **Context Suspension:** For any code inside that target repository, the agent MUST explicitly suspend and disregard host-specific guidelines (e.g. Flutter UI widgets, D&D 5e mechanics, 48dp touch targets, SRD legal compendiums).
 3. **Local Governance:** The target repository's rules, pure Dart constraints, and compliance gates (`test/compliance/`) take absolute precedence for that directory.
+
+
+## Upstream Pinned Git Dependency Synchronization
+- **Upstream Pinned Git Dependency Synchronization:** `vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repository as integrated merely because local working trees are compatible. Whenever upstream engine changes occur:
+  1. Engine changes must be committed to obtain a concrete commit SHA.
+  2. Update `pubspec.yaml` with the new engine commit SHA in `vtt_engine_core.git.ref`.
+  3. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
+  4. Run `flutter pub get` so the pinned Git commit is actually fetched into the pub cache and locked in `pubspec.lock`.
+  5. Static analysis (`flutter analyze`) and test suites (`flutter test`) must run against the fetched Git dependency before considering work complete.

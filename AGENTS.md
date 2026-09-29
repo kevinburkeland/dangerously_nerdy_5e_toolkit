@@ -109,6 +109,14 @@ When inspecting, editing, refactoring, or running commands inside an external re
 - **Firestore Security Rules & Campaign Lifecycle Management:** `firestore.rules` gracefully permits unverified App Check tokens (`isAppCheckVerified() { return true; }`), tolerates $\pm 24$-hour timestamp drift, validates non-negative coin bounds across `int` and `number`, permits 128-char node IDs and 1MB relays, and allows full room deletion. `PartyRoomService.syncAllExistingCampaignsToFirestore()` auto-syncs existing campaigns on `LandingScreen` mount. Confirmation-guarded Player Leave removes player/character in Firestore via `FieldValue.arrayRemove` and disposes dice streams; DM Delete verifies `hostKeyHash`, deletes `/rooms/{roomCode}`, and purges local state.
 - **Outbox Resilience & Shared Character Storage:** `PartyRoomService.flushOutbox` aggregates all pending coin operations across the outbox batch into a single document write to avoid Firestore batch collision exceptions, increments `retryCount` on `PartyOutboxAction`, and purges poison pills after 3 consecutive failures to prevent infinite UI spinning. `session.sharedCharacters` stores the full `character.toMap()` payload (including `maxHp`, `currentHp`, `tempHp`, `armorClass`). UI consumers opening character sheets in party rooms check local persistent storage (`CharacterPersistenceService.getCharacter`) first before remote stubs, pushing updated telemetry back on route return. `LocalCharacterRepository` maintains zero unsynchronized in-memory caches, persisting immediately and synchronously mirroring to both Hive and `SharedPreferences`.
 
+### 2. Upstream Pinned Git Dependency Synchronization
+- **Upstream Pinned Git Dependency Synchronization:** `vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repository as integrated merely because local working trees are compatible. Whenever upstream engine changes occur:
+  1. Engine changes must be committed to obtain a concrete commit SHA.
+  2. Update `pubspec.yaml` with the new engine commit SHA in `vtt_engine_core.git.ref`.
+  3. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
+  4. Run `flutter pub get` so the pinned Git commit is actually fetched into the pub cache and locked in `pubspec.lock`.
+  5. Static analysis (`flutter analyze`) and test suites (`flutter test`) must run against the fetched Git dependency before considering work complete.
+
 ### 3. Dual-Ruleset Awareness (2014 RAW vs 2024 Revised)
 - The engine supports both **2014 (SRD 5.1)** and **2024 (SRD 5.2.1)** D&D mechanics.
 - Canonical `RulesetEdition` (`lib/domain/rules/ruleset_edition.dart`) serves as the pure domain enum with lossless adapters to legacy DTO enums (`DmRulesEdition`, `RulesetVersion`).
