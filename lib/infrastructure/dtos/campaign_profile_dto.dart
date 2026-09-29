@@ -80,7 +80,10 @@ class CampaignProfileDto {
         DateTime.tryParse(lastPlayedAt) ?? createdDateTime;
 
     final parsedRoom = roomState.isNotEmpty
-        ? RoomNodeState.fromMap(roomState)
+        ? RoomNodeState.fromMap(
+            roomState,
+            minionParser: (m) => AnimatedObjectDto.fromMap(m).toDomain(),
+          )
         : RoomNodeState(
             roomId: 'room_$id',
             roomCode: 'CR-101',

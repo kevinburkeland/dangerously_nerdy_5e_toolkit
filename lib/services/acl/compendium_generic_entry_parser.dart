@@ -207,7 +207,9 @@ class CompendiumGenericEntryParser {
             .map((r) => switch (r) {
                   ConditionRider c => {
                       'type': 'condition',
-                      'condition': c.condition.name,
+                      'condition': c.condition is Enum
+                          ? (c.condition as Enum).name
+                          : c.condition.toString(),
                       'requiresSave': c.requiresSave,
                       if (c.saveDc != null) 'saveDc': c.saveDc,
                       if (c.saveAttributeKey != null)

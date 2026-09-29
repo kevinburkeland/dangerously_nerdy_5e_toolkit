@@ -21,7 +21,7 @@ dependencies:
   vtt_engine_core:
     git:
       url: https://github.com/kevinburkeland/vtt-engine-core.git
-      ref: 79192c3c0c32c8431cbe1c842685f1e5bef869fc
+      ref: 999f8ec5282f5949e927990b7aa8ee6f5a127fa3
   meta: ^1.19.0
   uuid: ^4.6.0
   flutter_webrtc: ^1.6.2+hotfix.1

@@ -776,9 +776,11 @@ packages:
   vtt_engine_core:
     dependency: "direct main"
     description:
-      path: "../vtt-engine-core"
-      relative: true
-    source: path
+      path: "."
+      ref: "999f8ec5282f5949e927990b7aa8ee6f5a127fa3"
+      resolved-ref: "999f8ec5282f5949e927990b7aa8ee6f5a127fa3"
+      url: "https://github.com/kevinburkeland/vtt-engine-core.git"
+    source: git
     version: "1.0.0"
   web:
     dependency: "direct main"
