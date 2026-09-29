@@ -4,7 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
-import 'package:vtt_engine_core/models/minion_instance.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';

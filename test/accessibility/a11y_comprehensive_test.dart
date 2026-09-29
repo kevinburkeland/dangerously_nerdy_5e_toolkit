@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vtt_engine_core/models/minion_instance.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:meta/meta.dart';
-import 'package:vtt_engine_core/models/minion_instance.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 
 /// Data Transfer Object for [MinionInstance], encapsulating JSON serialization
 /// and validation bounds in the Infrastructure layer.

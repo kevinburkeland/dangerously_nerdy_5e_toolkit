@@ -1,17 +1,16 @@
 import '../../infrastructure/modules/dnd5e/dnd5e_ruleset_module.dart';
 import 'dart:math' as math;
 import 'package:collection/collection.dart';
-import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/models/generic_tabletop_primitives.dart';
 import 'package:vtt_engine_core/rules/i_ruleset_module.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/models/value_objects/hit_points.dart';
-import 'package:flutter/foundation.dart' hide mapEquals, setEquals, listEquals;
+import 'package:flutter/foundation.dart';
 import 'package:vtt_engine_core/models/character_models.dart' as core;
 import 'package:vtt_engine_core/models/character_models.dart'
-    hide Character, CharacterResourcePool, StartingEquipmentItemRequest, ClassLevelProgression, CharacterProgression, InventoryItemInstance;
+    hide Character, CharacterResourcePool, StartingEquipmentItemRequest, InventoryItemInstance;
 export 'package:vtt_engine_core/models/character_models.dart'
-    hide Character, CharacterResourcePool, StartingEquipmentItemRequest, ClassLevelProgression, CharacterProgression, InventoryItemInstance;
+    hide Character, CharacterResourcePool, StartingEquipmentItemRequest, InventoryItemInstance;
 export '../../infrastructure/modules/dnd5e/models/dnd5e_attributes.dart';
 import '../../infrastructure/modules/dnd5e/models/dnd5e_attributes.dart';
 import '../../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
@@ -23,17 +22,23 @@ import 'spell_monster_equipment.dart';
 @immutable
 
 @immutable
-class ClassLevelProgression extends core.ClassLevelProgression {
+class ClassLevelProgression {
+  final EntityReference<DomainEntity> classRef;
+  final EntityReference<DomainEntity>? subclassRef;
+  final int level;
+  final bool isStartingClass;
+  final Map<String, List<String>> selectedFeatureOptions;
+  final Map<String, dynamic> customProperties;
   final String hitDie;
   final List<int> hitPointsRolled;
 
   const ClassLevelProgression({
-    required super.classRef,
-    super.subclassRef,
-    required super.level,
-    super.isStartingClass = false,
-    super.selectedFeatureOptions = const {},
-    super.customProperties = const {},
+    required this.classRef,
+    this.subclassRef,
+    this.level = 1,
+    this.isStartingClass = false,
+    this.selectedFeatureOptions = const {},
+    this.customProperties = const {},
     this.hitDie = 'd8',
     this.hitPointsRolled = const [],
   });
@@ -45,7 +50,6 @@ class ClassLevelProgression extends core.ClassLevelProgression {
 
   int get averageHpPerLevel => (hitDieSides ~/ 2) + 1;
 
-  @override
   ClassLevelProgression copyWith({
     EntityReference<DomainEntity>? classRef,
     EntityReference<DomainEntity>? subclassRef,
@@ -69,22 +73,42 @@ class ClassLevelProgression extends core.ClassLevelProgression {
     );
   }
 
-  @override
   Map<String, dynamic> toMap() => {
-        ...super.toMap(),
+        'classRef': classRef.toMap(),
+        'subclassRef': subclassRef?.toMap(),
+        'level': level,
+        'isStartingClass': isStartingClass,
+        'selectedFeatureOptions': selectedFeatureOptions,
+        'customProperties': customProperties,
         'hitDie': hitDie,
         'hitPointsRolled': hitPointsRolled,
       };
 
   factory ClassLevelProgression.fromMap(Map<String, dynamic> map) {
-    final coreProg = core.ClassLevelProgression.fromMap(map);
+    final rawOptions = map['selectedFeatureOptions'];
+    final parsedOptions = <String, List<String>>{};
+    if (rawOptions is Map) {
+      rawOptions.forEach((key, val) {
+        if (val is List) {
+          parsedOptions[key.toString()] = val.map((e) => e.toString()).toList();
+        } else if (val != null) {
+          parsedOptions[key.toString()] = [val.toString()];
+        }
+      });
+    }
+
     return ClassLevelProgression(
-      classRef: coreProg.classRef,
-      subclassRef: coreProg.subclassRef,
-      level: coreProg.level,
-      isStartingClass: coreProg.isStartingClass,
-      selectedFeatureOptions: coreProg.selectedFeatureOptions,
-      customProperties: coreProg.customProperties,
+      classRef: EntityReference<DomainEntity>.fromMap(
+          Map<String, dynamic>.from(map['classRef'] as Map? ?? {})),
+      subclassRef: map['subclassRef'] != null
+          ? EntityReference<DomainEntity>.fromMap(
+              Map<String, dynamic>.from(map['subclassRef'] as Map? ?? {}))
+          : null,
+      level: (map['level'] as num?)?.toInt() ?? 1,
+      isStartingClass: map['isStartingClass'] == true,
+      selectedFeatureOptions: parsedOptions,
+      customProperties:
+          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
       hitDie: map['hitDie']?.toString() ?? 'd8',
       hitPointsRolled: (map['hitPointsRolled'] as List? ?? [])
           .whereType<num>()
@@ -92,39 +116,73 @@ class ClassLevelProgression extends core.ClassLevelProgression {
           .toList(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClassLevelProgression &&
+          runtimeType == other.runtimeType &&
+          classRef == other.classRef &&
+          subclassRef == other.subclassRef &&
+          level == other.level &&
+          isStartingClass == other.isStartingClass &&
+          mapEquals(selectedFeatureOptions, other.selectedFeatureOptions) &&
+          mapEquals(customProperties, other.customProperties) &&
+          hitDie == other.hitDie &&
+          listEquals(hitPointsRolled, other.hitPointsRolled);
+
+  @override
+  int get hashCode =>
+      classRef.hashCode ^
+      (subclassRef?.hashCode ?? 0) ^
+      level.hashCode ^
+      isStartingClass.hashCode ^
+      selectedFeatureOptions.length.hashCode ^
+      customProperties.length.hashCode ^
+      hitDie.hashCode ^
+      hitPointsRolled.length.hashCode;
 }
 
 @immutable
-class CharacterProgression extends core.CharacterProgression {
+class CharacterProgression {
+  final List<ClassLevelProgression> classes;
+  final int experiencePoints;
+  final Map<int, int> manualHpRolls;
+
   const CharacterProgression({
-    required List<ClassLevelProgression> classes,
-    super.experiencePoints = 0,
-    super.manualHpRolls = const {},
-  }) : super(classes: classes);
+    required this.classes,
+    this.experiencePoints = 0,
+    this.manualHpRolls = const {},
+  });
 
-  @override
-  List<ClassLevelProgression> get classes =>
-      super.classes is List<ClassLevelProgression>
-          ? super.classes as List<ClassLevelProgression>
-          : super.classes.whereType<ClassLevelProgression>().toList();
+  int get totalLevel => classes.fold(0, (sum, c) => sum + c.level);
 
-  @override
   ClassLevelProgression? get startingClass =>
       classes.where((c) => c.isStartingClass).firstOrNull ?? classes.firstOrNull;
 
-  @override
+  ClassLevelProgression? getClass(String classSlug) =>
+      classes.where((c) => c.classRef.slug == classSlug).firstOrNull;
+
+  List<String> getSelectedOptionsForDecision(String decisionId) {
+    final results = <String>[];
+    for (final c in classes) {
+      final opts = c.selectedFeatureOptions[decisionId];
+      if (opts != null) results.addAll(opts);
+    }
+    return results;
+  }
+
   Map<String, List<String>> getAllSelectedFeatureOptions() {
     final merged = <String, List<String>>{};
     for (final c in classes) {
-      final classSlug = c.classRef.slug.toLowerCase();
-      final customDecisions = c.classRef.customProperties['featureDecisions']
+            final customDecisions = c.classRef.customProperties['featureDecisions']
               is List
           ? (c.classRef.customProperties['featureDecisions'] as List).toSet()
           : null;
 
       c.selectedFeatureOptions.forEach((k, v) {
         final normK = k.toLowerCase().replaceAll('-', '_');
-        if (k.startsWith('$classSlug-') ||
+        if (k.startsWith('-') ||
             k.startsWith('feat-') ||
             k.contains('invocation') ||
             normK == 'fighting_style' ||
@@ -139,20 +197,27 @@ class CharacterProgression extends core.CharacterProgression {
     return merged;
   }
 
-  @override
   CharacterProgression copyWith({
-    List<core.ClassLevelProgression>? classes,
+    List<ClassLevelProgression>? classes,
     int? experiencePoints,
     Map<int, int>? manualHpRolls,
   }) {
     return CharacterProgression(
       classes: classes != null
-          ? classes.map((c) => c is ClassLevelProgression ? c : ClassLevelProgression.fromMap(c.toMap())).toList()
+          ? List.unmodifiable(classes)
           : this.classes,
       experiencePoints: experiencePoints ?? this.experiencePoints,
-      manualHpRolls: manualHpRolls ?? this.manualHpRolls,
+      manualHpRolls: manualHpRolls != null
+          ? Map.unmodifiable(manualHpRolls)
+          : this.manualHpRolls,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'classes': classes.map((c) => c.toMap()).toList(),
+        'experiencePoints': experiencePoints,
+        'manualHpRolls': manualHpRolls.map((k, v) => MapEntry(k.toString(), v)),
+      };
 
   factory CharacterProgression.fromMap(Map<String, dynamic> map) {
     final rawClasses = (map['classes'] as List? ?? [])
@@ -174,6 +239,21 @@ class CharacterProgression extends core.CharacterProgression {
       manualHpRolls: parsedManualHp,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CharacterProgression &&
+          runtimeType == other.runtimeType &&
+          listEquals(classes, other.classes) &&
+          experiencePoints == other.experiencePoints &&
+          mapEquals(manualHpRolls, other.manualHpRolls);
+
+  @override
+  int get hashCode =>
+      Object.hashAll(classes) ^
+      experiencePoints.hashCode ^
+      manualHpRolls.length.hashCode;
 }
 
 
@@ -450,8 +530,8 @@ class CharacterResourcePool extends core.CharacterResourcePool {
 
   const CharacterResourcePool({
     super.vitals,
-    super.currentHp = 10,
-    super.tempHp = 0,
+    int currentHp = 10,
+    int tempHp = 0,
     this.currentHitDice = const {},
     this.spellSlots = const SpellSlotPool(),
     super.customResourcesCurrent = const {},
@@ -471,7 +551,11 @@ class CharacterResourcePool extends core.CharacterResourcePool {
             : (deathSaveFailures > 3 ? 3 : deathSaveFailures),
         _exhaustionLevel = exhaustionLevel < 0
             ? 0
-            : (exhaustionLevel > 10 ? 10 : exhaustionLevel);
+            : (exhaustionLevel > 10 ? 10 : exhaustionLevel),
+        super(
+          currentHp: currentHp,
+          tempHp: tempHp,
+        );
 
   CharacterResourcePool withVitals(EntityVitals newVitals) {
     return copyWith(
@@ -679,14 +763,14 @@ class Character extends core.Character {
           ? super.bonusScores as AbilityScores
           : AbilityScores.fromMap(super.bonusScores.toMap());
 
-  int get baseSpeedFeet => baseSpeed;
+  int get baseSpeedFeet => baseSpeed ?? 30;
 
   const Character({
     required super.id,
     required super.name,
     required super.speciesRef,
     super.backgroundRef,
-    CharacterProgression progression = const CharacterProgression(classes: []),
+    super.progression = const CharacterProgression(classes: []),
     AbilityScores baseScores = const AbilityScores.standardArray(),
     AbilityScores bonusScores = const AbilityScores.zero(),
     Map<dynamic, dynamic>? traitProficiencies,
@@ -711,7 +795,6 @@ class Character extends core.Character {
   })  : _cantrips = cantrips,
         _spellsKnown = spellsKnown,
         super(
-          progression: progression,
           baseScores: baseScores,
           bonusScores: bonusScores,
           traitProficiencies:
@@ -745,12 +828,9 @@ class Character extends core.Character {
     return result;
   }
 
-  @override
   int get totalLevel => progression.totalLevel;
-  @override
   int get proficiencyBonus => totalLevel <= 0 ? 2 : ((totalLevel - 1) ~/ 4) + 2;
 
-  @override
   String get classesSummary {
     if (progression.classes.isEmpty) return 'Adventurer';
     return progression.classes
@@ -1380,7 +1460,7 @@ class Character extends core.Character {
     String? name,
     EntityReference<DomainEntity>? speciesRef,
     EntityReference<DomainEntity>? backgroundRef,
-    core.CharacterProgression? progression,
+    dynamic progression,
     core.AttributePool? baseScores,
     core.AttributePool? bonusScores,
     Map<dynamic, dynamic>? traitProficiencies,

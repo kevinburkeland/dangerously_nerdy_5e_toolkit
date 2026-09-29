@@ -692,7 +692,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   ..add(newCombatant);
                 // Sort by initiative descending
                 list.sort(
-                    (a, b) => b.initiativeScore.compareTo(a.initiativeScore));
+                    (a, b) => (b.initiativeScore ?? 0).compareTo(a.initiativeScore ?? 0));
 
                 Navigator.pop(ctx);
                 _updateEncounter(list);
@@ -714,7 +714,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
       return p.copyWith(initiativeScore: roll);
     }).toList();
 
-    participants.sort((a, b) => b.initiativeScore.compareTo(a.initiativeScore));
+    participants.sort((a, b) => (b.initiativeScore ?? 0).compareTo(a.initiativeScore ?? 0));
     if (participants.isNotEmpty) {
       for (int i = 0; i < participants.length; i++) {
         participants[i] = participants[i].copyWith(isActiveTurn: i == 0);
@@ -1539,8 +1539,12 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isActive = p.isActiveTurn;
+    final curHp = p.currentHp ?? 10;
+    final maxHp = p.maxHp ?? 10;
+    final tempHp = p.tempHp ?? 0;
+    final isDefeated = p.isDefeated == true;
     final hpPercent =
-        (p.currentHp / (p.maxHp > 0 ? p.maxHp : 1)).clamp(0.0, 1.0);
+        (curHp / (maxHp > 0 ? maxHp : 1)).clamp(0.0, 1.0);
     final hpColor = hpPercent > 0.5
         ? Colors.greenAccent
         : (hpPercent > 0.2 ? Colors.amberAccent : Colors.redAccent);
@@ -1586,11 +1590,11 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: p.isDefeated
+                    color: isDefeated
                         ? Colors.redAccent
                         : theme.colorScheme.onSurface,
                     decoration:
-                        p.isDefeated ? TextDecoration.lineThrough : null,
+                        isDefeated ? TextDecoration.lineThrough : null,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1629,7 +1633,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'HP: ${p.currentHp}/${p.maxHp}${p.tempHp > 0 ? " (+${p.tempHp} Temp)" : ""}',
+                          'HP: $curHp/$maxHp${tempHp > 0 ? " (+$tempHp Temp)" : ""}',
                           style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,

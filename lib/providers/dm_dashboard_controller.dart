@@ -150,7 +150,7 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Active combat minions and summons isolated in [RoomNodeState].
   List<AnimatedObjectInstance> get activeMinions =>
-      _activeProfile?.roomState.activeMinions.activeValues ?? const [];
+      _activeProfile?.roomState.activeMinions.activeValues.whereType<AnimatedObjectInstance>().toList() ?? const [];
 
   void setRound(int round) {
     _currentRound = round;

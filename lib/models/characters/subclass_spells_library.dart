@@ -1,6 +1,6 @@
 import '../../models/spellbook_data.dart';
 import '../dm_screen_data.dart';
-import 'package:vtt_engine_core/models/feature_grant.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/feature_grant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'srd_classes_library.dart';
 

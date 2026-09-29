@@ -21,6 +21,19 @@ class Dnd5eRulesetModule implements IRulesetModule {
   const Dnd5eRulesetModule.v2014() : edition = DmRulesEdition.v2014;
   const Dnd5eRulesetModule.v2024() : edition = DmRulesEdition.v2024;
 
+
+  @override
+  bool hasCapability<T extends IRulesetCapability>() => getCapability<T>() != null;
+
+  @override
+  T? getCapability<T extends IRulesetCapability>() {
+    if (this is T) return this as T;
+    if (exhaustionMechanic is T) return exhaustionMechanic as T;
+    if (restMechanic is T) return restMechanic as T;
+    if (actionEconomy is T) return actionEconomy as T;
+    return null;
+  }
+
   @override
   String get moduleId =>
       edition == DmRulesEdition.v2024 ? 'dnd5e_2024' : 'dnd5e_2014';

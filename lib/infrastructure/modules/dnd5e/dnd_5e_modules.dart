@@ -17,6 +17,19 @@ class Dnd5e2014Module implements IRulesetModule {
   const Dnd5e2014Module();
 
   @override
+  bool hasCapability<T extends IRulesetCapability>() => getCapability<T>() != null;
+
+  @override
+  T? getCapability<T extends IRulesetCapability>() {
+    if (this is T) return this as T;
+    if (exhaustionMechanic is T) return exhaustionMechanic as T;
+    if (restMechanic is T) return restMechanic as T;
+    if (actionEconomy is T) return actionEconomy as T;
+    return null;
+  }
+
+
+  @override
   String get moduleId => 'dnd5e_2014';
 
   @override
@@ -153,6 +166,19 @@ class Dnd5e2014ActionEconomy implements IActionEconomy {
 /// 2024 Revised Ruleset (SRD 5.2.1) module implementation.
 class Dnd5e2024Module implements IRulesetModule {
   const Dnd5e2024Module();
+
+  @override
+  bool hasCapability<T extends IRulesetCapability>() => getCapability<T>() != null;
+
+  @override
+  T? getCapability<T extends IRulesetCapability>() {
+    if (this is T) return this as T;
+    if (exhaustionMechanic is T) return exhaustionMechanic as T;
+    if (restMechanic is T) return restMechanic as T;
+    if (actionEconomy is T) return actionEconomy as T;
+    return null;
+  }
+
 
   @override
   String get moduleId => 'dnd5e_2024';

@@ -22,12 +22,13 @@ class DmDashboardEncounterCard extends StatelessWidget {
   });
 
   Color _getHpColor(BuildContext context) {
-    if (participant.isDefeated || participant.currentHp <= 0) {
+    final cur = participant.currentHp ?? 10;
+    final max = participant.maxHp ?? 10;
+    final isDefeated = participant.isDefeated == true;
+    if (isDefeated || cur <= 0) {
       return Colors.red.shade900;
     }
-    final pct = participant.maxHp > 0
-        ? (participant.currentHp / participant.maxHp)
-        : 1.0;
+    final pct = max > 0 ? (cur / max) : 1.0;
     if (pct <= 0.25) return Colors.red;
     if (pct <= 0.5) return Colors.amber.shade700;
     return Colors.green;
@@ -47,7 +48,7 @@ class DmDashboardEncounterCard extends StatelessWidget {
           children: [
             Text(
               'Current: ${participant.currentHp} / ${participant.maxHp}'
-              '${participant.tempHp > 0 ? " (+${participant.tempHp} Temp)" : ""}',
+              '${(participant.tempHp ?? 0) > 0 ? " (+${participant.tempHp} Temp)" : ""}',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
@@ -104,11 +105,14 @@ class DmDashboardEncounterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final curHp = participant.currentHp ?? 10;
+    final maxHp = participant.maxHp ?? 10;
+    final tempHp = participant.tempHp ?? 0;
     final isTurn = participant.isActiveTurn;
-    final isDead = participant.isDefeated || participant.currentHp <= 0;
+    final isDead = (participant.isDefeated == true) || curHp <= 0;
 
-    final hpPct = participant.maxHp > 0
-        ? (participant.currentHp / participant.maxHp).clamp(0.0, 1.0)
+    final hpPct = maxHp > 0
+        ? (curHp / maxHp).clamp(0.0, 1.0)
         : 1.0;
 
     return Card(
@@ -189,8 +193,8 @@ class DmDashboardEncounterCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${participant.currentHp} / ${participant.maxHp}'
-                      '${participant.tempHp > 0 ? " (+${participant.tempHp})" : ""}',
+                      '$curHp / $maxHp'
+                      '${tempHp > 0 ? " (+$tempHp)" : ""}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,

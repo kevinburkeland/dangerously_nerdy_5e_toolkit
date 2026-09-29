@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/models/minion_instance.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import '../../models/domain/character_models.dart';
@@ -285,8 +285,8 @@ class CombatEncounterService {
         currentHp: p.hitPoints.currentHp,
         maxHp: p.hitPoints.maxHp,
         temporaryHp: p.hitPoints.tempHp,
-        isDowned: p.hitPoints.isDowned || p.isDefeated,
-        isDead: p.hitPoints.isDead || p.isDead,
+        isDowned: p.hitPoints.isDowned || (p.isDefeated == true),
+        isDead: p.hitPoints.isDead || (p.isDead == true),
       );
 
       final modification = combatResolver.resolveVitalsChange(

@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/models/entity_reference.dart';
-import 'package:vtt_engine_core/models/feature_grant.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/feature_grant.dart';
 import 'package:vtt_engine_core/simulation/combat_rider.dart';
 import 'core_types.dart';
 import '../../services/ingestion/stat_block_acl_parser.dart';
