@@ -24,10 +24,10 @@ import '../adapters/storage/campaign_snapshot_serializer_adapter.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
+import '../../models/characters/subclass_spells_library.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../../services/acl/compendium_pipe_parser.dart';
 import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
-import '../modules/dnd5e/dnd_5e_combat_resolver.dart';
 import '../adapters/system_network_time_port.dart';
 import '../mappers/room_sync_payload_mapper.dart';
 import '../repositories/local_campaign_repository.dart';
@@ -182,6 +182,21 @@ Future<void> initServiceLocator({
       (slug) => SrdClassesLibrary.findBySlug(slug);
   CharacterStatCalculator.classLookupHook =
       (slug) => SrdClassesLibrary.findBySlug(slug);
+  SpellAllocationValidator.alwaysPreparedSpellsHook = ({
+    required String classSlug,
+    String? subclassSlug,
+    required int classLevel,
+    required RulesetEdition edition,
+  }) {
+    return SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: classSlug,
+      subclassSlug: subclassSlug,
+      classLevel: classLevel,
+      edition: edition == RulesetEdition.v2024
+          ? DmRulesEdition.dnd2024
+          : DmRulesEdition.dnd2014,
+    ).map((s) => s.name).toList();
+  };
 
   if (p2pTransport != null) {
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);

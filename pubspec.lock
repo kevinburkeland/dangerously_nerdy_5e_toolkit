@@ -786,8 +786,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: dbedb322ad71f65ca49caa1607f1e49628a5c4ff
-      resolved-ref: dbedb322ad71f65ca49caa1607f1e49628a5c4ff
+      ref: a6970bc199aef188d80c08650668f6bd9857b050
+      resolved-ref: a6970bc199aef188d80c08650668f6bd9857b050
       url: "/home/kevin/Documents/vtt-ruleset-dnd5e"
     source: git
     version: "1.0.0"
