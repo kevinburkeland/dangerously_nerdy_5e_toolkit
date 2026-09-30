@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/dpr/dpr_models.dart';
 import '../../services/haptic_service.dart';
-import '../../utils/dice_formatters.dart';
 import '../common/numeric_stepper.dart';
 import 'dpr_attack_editor_card.dart';
 

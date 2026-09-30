@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import '../../models/arena/arena_condition.dart';
-import '../../models/domain/character_models.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../models/spellbook_data.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';

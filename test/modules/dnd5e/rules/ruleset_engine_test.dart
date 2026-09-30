@@ -3,24 +3,24 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/rules/
 
 void main() {
   group('RulesetEngine arbitration', () {
-    test('RulesetEngine2014 designates potion consumption as ActionCost.action',
+    test('RulesetEngine2014 designates potion consumption as DndActionCost.action',
         () {
-      final engine = RulesetEngine.forVersion(RulesetVersion.v2014);
-      expect(engine.potionConsumptionCost, equals(ActionCost.action));
+      final engine = RulesetEngine.forVersion(RulesetEdition.v2014);
+      expect(engine.potionConsumptionCost, equals(DndActionCost.action));
       expect(engine.supportsWeaponMasteries(), isFalse);
     });
 
     test(
-        'RulesetEngine2024 designates potion consumption as ActionCost.bonusAction',
+        'RulesetEngine2024 designates potion consumption as DndActionCost.bonusAction',
         () {
-      final engine = RulesetEngine.forVersion(RulesetVersion.v2024);
-      expect(engine.potionConsumptionCost, equals(ActionCost.bonusAction));
+      final engine = RulesetEngine.forVersion(RulesetEdition.v2024);
+      expect(engine.potionConsumptionCost, equals(DndActionCost.bonusAction));
       expect(engine.supportsWeaponMasteries(), isTrue);
     });
 
     test('RulesetEngine2014 exhaustion speed reductions and fatal threshold',
         () {
-      final engine = RulesetEngine.forVersion(RulesetVersion.v2014);
+      final engine = RulesetEngine.forVersion(RulesetEdition.v2014);
 
       expect(engine.calculateExhaustionD20Penalty(0), equals(0));
       expect(engine.calculateExhaustionD20Penalty(3), equals(0));
@@ -38,7 +38,7 @@ void main() {
     test(
         'RulesetEngine2024 scales d20 penalty linearly by -2 per level and triggers death at level 6',
         () {
-      final engine = RulesetEngine.forVersion(RulesetVersion.v2024);
+      final engine = RulesetEngine.forVersion(RulesetEdition.v2024);
 
       expect(engine.calculateExhaustionD20Penalty(0), equals(0));
       expect(engine.calculateExhaustionD20Penalty(1), equals(2));
@@ -80,19 +80,19 @@ void main() {
           RulesetEdition.fromString('srd52'), equals(RulesetEdition.dnd2024));
 
       // Bi-directional conversion with RulesetVersion
-      expect(RulesetVersion.v2014.toEdition(), equals(RulesetEdition.dnd2014));
-      expect(RulesetVersion.v2024.toEdition(), equals(RulesetEdition.dnd2024));
-      expect(RulesetVersion.fromEdition(RulesetEdition.dnd2014),
-          equals(RulesetVersion.v2014));
-      expect(RulesetVersion.fromEdition(RulesetEdition.dnd2024),
-          equals(RulesetVersion.v2024));
+      expect(RulesetEdition.v2014.toEdition(), equals(RulesetEdition.dnd2014));
+      expect(RulesetEdition.v2024.toEdition(), equals(RulesetEdition.dnd2024));
+      expect(RulesetEdition.fromEdition(RulesetEdition.dnd2014),
+          equals(RulesetEdition.v2014));
+      expect(RulesetEdition.fromEdition(RulesetEdition.dnd2024),
+          equals(RulesetEdition.v2024));
 
       // RulesetEngine.forEdition instantiates correct engine
       final engine2014 = RulesetEngine.forEdition(RulesetEdition.dnd2014);
-      expect(engine2014.potionConsumptionCost, equals(ActionCost.action));
+      expect(engine2014.potionConsumptionCost, equals(DndActionCost.action));
 
       final engine2024 = RulesetEngine.forEdition(RulesetEdition.dnd2024);
-      expect(engine2024.potionConsumptionCost, equals(ActionCost.bonusAction));
+      expect(engine2024.potionConsumptionCost, equals(DndActionCost.bonusAction));
     });
   });
 }

@@ -1,9 +1,5 @@
 import 'package:flutter/foundation.dart';
 import '../dm_screen_data.dart';
-import 'character_models.dart' show AbilityType, SkillType;
-import 'core_types.dart';
-import 'entity_reference.dart';
-import 'feature_grant.dart';
 
 /// Types of class decision points encountered during character creation and progression.
 enum FeatureChoiceType {

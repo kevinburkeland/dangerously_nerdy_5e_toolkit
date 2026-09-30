@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../infrastructure/repositories/local_character_repository.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/core_types.dart';
-import '../../models/domain/entity_reference.dart';
 import '../../models/magic_items/magic_item_data.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/fluff/entity_fluff_service.dart';

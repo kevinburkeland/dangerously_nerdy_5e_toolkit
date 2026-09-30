@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../models/domain/core_types.dart';
-import '../../models/domain/entity_reference.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/homebrew_other_category.dart';
 import '../../services/acl/homebrew_merge_resolver.dart';

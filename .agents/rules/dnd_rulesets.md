@@ -3,7 +3,7 @@
 ## 1. Dual-Edition Architectural Invariants
 The toolkit natively supports both the **2014 Rules As Written (SRD 5.1)** and the **2024 Revised Rules (SRD 5.2.1)**.
 - **Never Assume a Single Edition:** Rules logic must never assume 2014 or 2024 as the sole truth. Always resolve edition-specific behavior through explicit edition context (`RulesetEdition` / `DmRulesEdition`).
-- **Engine Core Decoupling:** D&D mechanics belong outside the generic engine core. Agnostic contracts reside in `vtt_engine_core`; all 5e rules live in `lib/infrastructure/modules/dnd5e/` and `lib/services/rules/`.
+- **Engine Core Decoupling:** D&D mechanics belong outside the generic engine core. Agnostic contracts reside in `vtt_engine_core`; reusable 5e rules live in `package:vtt_ruleset_dnd5e`, with application host integration living in the toolkit.
 - **Immutable Character Edition:** Character sheets are locked to their initial edition (`dnd2014` vs `dnd2024`). Silent runtime cross-edition translation of existing characters is strictly prohibited.
 - **Unknown Stays Unknown (Anti-Hallucination):** Rules logic must never infer, hallucinate, or synthesize tabletop defaults for missing attributes.
 

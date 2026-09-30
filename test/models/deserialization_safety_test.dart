@@ -5,7 +5,6 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profil
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 
 void main() {

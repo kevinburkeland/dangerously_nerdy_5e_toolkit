@@ -7,7 +7,6 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 
 class _FakeCharRepo implements ICharacterRepository<Character> {

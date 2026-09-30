@@ -1,6 +1,5 @@
 import 'package:vtt_engine_core/models/core_types.dart' as core;
 import '../../models/domain/core_types.dart';
-import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 
 /// Priority tier enumeration for deterministic evaluation order.

@@ -4,7 +4,6 @@ import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
-import '../../utils/dice_formatters.dart';
 import '../common/diff_highlight_banner.dart';
 import '../dm_reference/rules_edition_toggle.dart';
 import '../glyphs/dnd_glyph.dart';

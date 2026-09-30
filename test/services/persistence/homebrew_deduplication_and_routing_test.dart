@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/homebrew/models/homebrew_entity.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart'
     as domain_rules;
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_other_category.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';

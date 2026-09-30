@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/level_up_wizard_dialog.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../models/domain/character_models.dart';
 import '../../screens/character_sheet_view.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_loot_item.dart';

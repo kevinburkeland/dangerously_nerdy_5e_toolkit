@@ -2,9 +2,8 @@
 
 Welcome, AI Agent / Software Architect. This document serves as the primary operating manual and navigation index for the `dangerously_nerdy_5e_toolkit` codebase.
 
-Following the extraction of the system-agnostic engine `vtt_engine_core` (`../vtt-engine-core`), this repository is:
-- A consuming application of `vtt_engine_core`
-- A concrete D&D 5e dual-ruleset implementation (2014 RAW & 2024 Revised)
+Following the extraction of the system-agnostic engine `vtt_engine_core` (`../vtt-engine-core`) and the standalone D&D 5e ruleset module `vtt_ruleset_dnd5e` (`../vtt-ruleset-dnd5e`), this repository is:
+- A consuming application of `vtt_engine_core` and `vtt_ruleset_dnd5e`
 - An application orchestration and synchronization layer
 - An infrastructure and transport adapter layer
 - A Flutter-based tabletop presentation layer
@@ -90,17 +89,27 @@ The following components reside in `../vtt-engine-core` and are consumed via `pa
 - **Agnostic Simulation:** `ISimulationStrategy`, `DprSimulator`, `PrecomputedAttack`, `CombatEffectRider`
 - **Storage Durability Contracts:** `IStorageDurabilityPort`, `IPhysicalSnapshotPort`, `ICampaignSnapshotSerializerPort`, `EngineProfile`, `StorageSnapshotBundle`
 
+### External Ruleset Ownership (`vtt_ruleset_dnd5e`)
+The following components reside in `../vtt-ruleset-dnd5e` and are consumed via `package:vtt_ruleset_dnd5e`:
+- **Ruleset Module & Capabilities:** `Dnd5eRulesetModule`, `Dnd5e2014Module`, `Dnd5e2024Module`
+- **Combat Resolution:** `Dnd5eCombatResolver`, attack declaration & hit/damage resolution
+- **Currency & Attributes:** `Dnd5eCurrencySystem`, `Dnd5eAttributeSystem`, `Dnd5eScoreMath`
+- **Character Progression & Evaluation:** `CharacterProgressionEngine`, `CharacterEvaluationEngine`, `CharacterStatCalculator`
+- **Spellcasting Engine:** `SpellcastingRulesEngine`, `SpellAllocationValidator`, multiclass slot progression
+- **Mechanics & States:** `ExhaustionState`, `WeaponMastery`, rest mechanics, action economy
+- **Canonical Domain Models:** `CharacterProgression`, `FeatureGrant`, `DndActionCost`, `SpellSchool`, `SpellClass`
+
 ---
 
 ## 🛡️ Core Engineering Directives
 
 ### 1. Architectural Boundaries & Semantic Ownership
-- **Semantic Ownership Principle:** Ownership follows semantics, not reuse. A concept does not belong in `vtt_engine_core` merely because the toolkit uses it broadly; D&D-specific reusable logic remains toolkit-owned. Ruleset-agnostic concepts belong in the engine. Do not reimplement generic engine infrastructure locally merely because the toolkit needs customization; extend or adapt engine contracts at the ruleset/application boundary.
+- **Semantic Ownership Principle:** Reusable D&D mechanics belong in `vtt-ruleset-dnd5e`. Application orchestration and platform integration belong in the toolkit. Generic tabletop concepts belong in `vtt-engine-core`. Ownership follows semantics, not convenience or current call-site count. The toolkit should not silently re-grow a second internal D&D rules engine. Do not reimplement generic engine infrastructure locally merely because the toolkit needs customization; extend or adapt engine contracts at the ruleset/application boundary.
 - **Architectural Dependency Direction:**
   ```
   vtt_engine_core (Agnostic Core)
   ↑
-  D&D 5e Ruleset Module & Domain (lib/infrastructure/modules/dnd5e/, lib/models/, lib/domain/ingestion/, lib/services/rules/)
+  vtt_ruleset_dnd5e (Reusable D&D 5e Domain & Rules Engine)
   ↑
   Application Orchestration (lib/application/services/, lib/application/storage/)
   ↑
@@ -113,13 +122,14 @@ The following components reside in `../vtt-engine-core` and are consumed via `pa
   - Compatibility barrels in `lib/models/domain/` exist solely to preserve legacy import paths; do not treat them as canonical domain definitions.
 
 ### 2. Upstream Pinned Git Dependency Synchronization Protocol
-`vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repositories as integrated merely because local working trees are compatible. When making upstream changes:
-1. Complete and verify engine modifications in `../vtt-engine-core` (`dart analyze`, `dart test`).
-2. Commit engine changes with DCO sign-off (`git commit -s`) to produce a concrete commit SHA on `main`.
-3. Update `pubspec.yaml` in this repository with the exact engine commit SHA in `vtt_engine_core.git.ref`.
-4. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
-5. Run `flutter pub get` so the pinned Git commit is actually fetched into the pub cache and locked in `pubspec.lock`.
-6. Run `flutter analyze` and the relevant test suite against the fetched Git dependency before considering work complete.
+`vtt_engine_core` and `vtt_ruleset_dnd5e` are consumed strictly via pinned Git dependencies (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repositories as integrated merely because local working trees are compatible. When making upstream changes:
+1. Complete and verify changes in the upstream repository (`../vtt-engine-core` or `../vtt-ruleset-dnd5e`) with `dart analyze` and `dart test`.
+2. Commit upstream changes with DCO sign-off (`git commit -s`) to produce concrete commit SHAs on `main`.
+3. If `vtt-engine-core` changed, synchronize `vtt-ruleset-dnd5e` first, verify it, and commit.
+4. Update `pubspec.yaml` in this repository with the exact commit SHAs in `vtt_engine_core.git.ref` and `vtt_ruleset_dnd5e.git.ref`.
+5. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
+6. Run `flutter pub get` so the pinned Git commits are actually fetched into the pub cache and locked in `pubspec.lock`.
+7. Run `flutter analyze` and the test suite against the fetched Git dependencies before considering work complete.
 
 ### 3. Cross-Boundary Repository Pivot Protocol
 When inspecting, editing, refactoring, or running commands inside `../vtt-engine-core`:

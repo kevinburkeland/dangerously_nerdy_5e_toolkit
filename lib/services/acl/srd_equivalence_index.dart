@@ -3,7 +3,6 @@ import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_equipment_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
-import '../../models/domain/core_types.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/spellbook_data.dart';

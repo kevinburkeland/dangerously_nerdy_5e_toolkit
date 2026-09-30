@@ -5,10 +5,10 @@ Use this map to navigate directly to relevant components across the toolkit and 
 | Feature / Domain Concept | Primary File Locations | Key Classes & Models |
 |---|---|---|
 | **Agnostic Engine Core** | `vtt_engine_core` (`../vtt-engine-core`) | `HybridLogicalClock`, `CrdtOrSet`, `PnCounter`, `HitPoints`, `CoreTypes`, `CampaignProfile`, `PartyPurse`, `IP2pTransportPort`, `IRulesetModule`, `ICombatResolver` |
+| **Reusable D&D 5e Ruleset** | `vtt_ruleset_dnd5e` (`../vtt-ruleset-dnd5e`) | `Dnd5eRulesetModule`, `Dnd5e2014Module`, `Dnd5e2024Module`, `Dnd5eCombatResolver`, `Dnd5eCurrencySystem`, `Dnd5eAttributeSystem`, `CharacterProgressionEngine`, `CharacterEvaluationEngine`, `SpellcastingRulesEngine`, `ExhaustionState`, `WeaponMastery`, `FeatureGrant` |
 | **D&D 5e Domain Models** | `lib/models/` (`characters/`, `spells/`, `monster_codex/`, `magic_items/`, `tables/`, `arena/`, `dpr/`) | `Character`, `CharacterClass`, `Spell`, `Monster`, `MagicItem`, `WeaponMastery`, `AnimatedObject`, `ExhaustionState` |
 | **Ingestion Engine Domain** | `lib/domain/ingestion/` | `DocumentStructureParser`, `CandidateDetector`, `FieldExtractor`, `SourceBlockParser`, `IngestionWorkbenchService` |
-| **Pluggable 5e Ruleset Module** | `lib/infrastructure/modules/dnd5e/` *(Implements engine SPI)* | `Dnd5e2014Module`, `Dnd5e2024Module`, `Dnd5eCombatResolver`, `Dnd5eCurrencySystem` |
-| **5e Rules & Mechanics Engines** | `lib/services/rules/` | `Dnd5eRulesEngine`, `AcEngineAndInventory`, `CharacterActionsResolver`, `CharacterProgressionEngine`, `CharacterReparseEngine`, `CharacterStatCalculator`, `CharacterValidationEngine` |
+| **Toolkit Rules Adapters** | `lib/infrastructure/modules/dnd5e/`, `lib/services/rules/` *(Adapts ruleset to app)* | `Dnd5eAnimatedObjectAdapter`, `CharacterActionsResolver`, `CharacterReparseEngine`, `CharacterValidationEngine` |
 | **State Reconciliation** | `lib/application/services/` | `RoomStateReconciliationService`, `PartyRoomService`, `RoomSyncOrchestrator`, `ClockSyncService` |
 | **Encounter & Combat Service** | `lib/application/services/`, `lib/services/rules/` | `CombatEncounterService`, `ArenaCombatEngine`, `CharacterActionsResolver` |
 | **Infrastructure Repositories** | `lib/infrastructure/repositories/` *(Implements engine ports)* | `LocalCampaignRepository`, `LocalCharacterRepository` |

@@ -4,8 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';

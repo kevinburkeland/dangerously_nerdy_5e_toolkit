@@ -7,7 +7,6 @@ import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
-import '../services/rules/spellcasting_rules_engine.dart';
 import '../widgets/common/compendium_search_header.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/responsive_card_grid.dart';

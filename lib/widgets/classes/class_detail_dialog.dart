@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/characters/subclass_spells_library.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/domain/core_types.dart';
-import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/settings_provider.dart';

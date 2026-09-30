@@ -2,28 +2,29 @@
 
 You are the Principal Software Architect. When generating, modifying, or reviewing code in this repository, strictly enforce the following engineering directives:
 
-## 1. Upstream Engine Boundary & Semantic Ownership
+## 1. Upstream Engine & Ruleset Boundaries
 - **Agnostic Core Boundary (`vtt_engine_core`):** Standalone tabletop domain models (`HitPoints`, `CoreTypes`, `CampaignProfile`, `PartyPurse`), storage snapshot contracts, ruleset SPI (`IRulesetModule`, `ICombatResolver`), and CvRDT primitives are provided by `vtt_engine_core` (`../vtt-engine-core`). Never re-implement or introduce D&D 5e-specific mechanics into agnostic engine primitives.
-- **Semantic Ownership Principle:** Ownership follows semantics, not reuse. A concept does not belong in `vtt_engine_core` merely because the toolkit uses it broadly; D&D-specific reusable logic remains toolkit-owned. Ruleset-agnostic concepts belong in the engine. Do not reimplement generic engine infrastructure locally merely because the toolkit needs customization; extend or adapt engine contracts at the ruleset/application boundary.
+- **Standalone Ruleset Boundary (`vtt_ruleset_dnd5e`):** Reusable D&D 5e mechanics, progression engines, spellcasting rules, combat arbitration, and canonical 5e domain models are owned by `vtt_ruleset_dnd5e` (`../vtt-ruleset-dnd5e`). The toolkit consumes `vtt_ruleset_dnd5e` as an external dependency and MUST NOT silently re-grow a second internal D&D rules engine.
+- **Semantic Ownership Principle:** Reusable D&D mechanics belong in `vtt-ruleset-dnd5e`. Application orchestration and platform integration belong in the toolkit. Generic tabletop concepts belong in `vtt-engine-core`. Ownership follows semantics, not convenience or current call-site count.
 - **Architecture Dependency Direction:**
   `vtt_engine_core` (Agnostic Core)
   ↑
-  D&D 5e Ruleset Module & Domain (`lib/infrastructure/modules/dnd5e/`, `lib/models/`, `lib/domain/ingestion/`, `lib/services/rules/`)
+  `vtt_ruleset_dnd5e` (Reusable D&D 5e Domain & Rules Engine)
   ↑
   Application Orchestration (`lib/application/services/`, `lib/application/storage/`)
   ↑
   Presentation (`lib/presentation/`, `lib/screens/`, `lib/widgets/`)
-- **Upstream Pinned Git Dependency Synchronization:** `vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repository as integrated merely because local working trees are compatible. When upstream engine changes occur:
-  1. Engine changes must be committed with DCO sign-off (`git commit -s`) to produce a concrete commit SHA on `main`.
-  2. Update `pubspec.yaml` with the new engine commit SHA in `vtt_engine_core.git.ref`.
+- **Upstream Pinned Git Dependency Synchronization:** `vtt_engine_core` and `vtt_ruleset_dnd5e` are consumed strictly via pinned Git dependencies (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat repositories as integrated merely because local working trees are compatible. When upstream changes occur:
+  1. Changes must be committed with DCO sign-off (`git commit -s`) to produce concrete commit SHAs on `main` in upstream repositories.
+  2. Update `pubspec.yaml` with the new commit SHAs in `vtt_engine_core.git.ref` and `vtt_ruleset_dnd5e.git.ref`.
   3. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
-  4. Run `flutter pub get` so the pinned Git commit is actually fetched into the pub cache and locked in `pubspec.lock`.
-  5. Static analysis (`flutter analyze`) and test suites (`flutter test`) must run against the fetched Git dependency before considering work complete.
-- **Cross-Boundary Repository Pivot Protocol:** When inspecting, editing, or testing files in an external repository (such as `../vtt-engine-core`):
+  4. Run `flutter pub get` so pinned Git commits are actually fetched into the pub cache and locked in `pubspec.lock`.
+  5. Static analysis (`flutter analyze`) and test suites (`flutter test`) must run against the fetched Git dependencies before considering work complete.
+- **Cross-Boundary Repository Pivot Protocol:** When inspecting, editing, or testing files in an external repository (such as `../vtt-engine-core` or `../vtt-ruleset-dnd5e`):
   1. The agent MUST read `../<target-repo>/.antigravityrules` and `../<target-repo>/AGENTS.md` before making any edits.
-  2. The agent MUST explicitly suspend and disregard host-specific guidelines (e.g., Flutter UI widgets, D&D 5e mechanics, 48dp touch targets, SRD compendiums) unless the target repository's own rules independently require them.
-  3. The target repository's rules, pure Dart constraints, and compliance gates (`test/compliance/`) take absolute precedence for that directory.
-  4. Never introduce D&D mechanics or UI into `vtt_engine_core` merely to simplify toolkit code.
+  2. The agent MUST explicitly suspend and disregard host-specific guidelines (e.g., Flutter UI widgets, 48dp touch targets, presentation screens) unless the target repository's own rules independently require them.
+  3. The target repository's rules, pure Dart constraints, and compliance gates take absolute precedence for that directory.
+  4. Never introduce D&D mechanics or UI into `vtt_engine_core`, and never introduce Flutter/UI/infrastructure dependencies into `vtt_ruleset_dnd5e`.
 
 ## 2. Legal Boundaries & Anti-Hallucination
 - **Clean Room SRD Purity:** Bundled code, compendiums, fixtures, and tests must strictly adhere to SRD 5.1 / 5.2.1 (CC-BY-4.0). Zero tolerance for Wizards of the Coast Product Identity or non-SRD trademarks. Third-party compendiums are untrusted user homebrew and must never pollute base canonical indices.

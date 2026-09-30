@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'core_types.dart';
-import 'character_models.dart' show AbilityType;
 
 /// Categories of character combat actions
 enum CombatActionCategory {

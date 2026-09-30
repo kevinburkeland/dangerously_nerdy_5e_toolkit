@@ -1,7 +1,6 @@
 import '../../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 import 'core_types.dart';
 import 'character_models.dart';
-import 'entity_reference.dart';
 import 'feature_grant.dart';
 import 'spell_monster_equipment.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';

@@ -1,13 +1,14 @@
-import '../../models/domain/entity_reference.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'layered_priority_repository.dart';
 
 /// Dynamic Reference Resolver that walks the active priority repository stack.
-class ReferenceResolver {
+class ReferenceResolver implements IEntityResolver {
   final LayeredPriorityRepository _repository;
 
   ReferenceResolver(this._repository);
 
   /// Resolves a reference returning a DomainEntity (or UnresolvedReference Null-Object).
+  @override
   DomainEntity resolve(EntityReference ref) {
     final found = _repository.lookup(
       ref.slug,
@@ -28,6 +29,7 @@ class ReferenceResolver {
   }
 
   /// Strongly typed resolution returning a ResolutionResult container.
+  @override
   ResolutionResult<T> resolveTyped<T extends DomainEntity>(
       EntityReference<T> ref) {
     final found = _repository.lookup<T>(

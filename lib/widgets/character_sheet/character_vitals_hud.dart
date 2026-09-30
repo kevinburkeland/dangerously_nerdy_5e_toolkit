@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/arena/arena_condition.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/domain/character_models.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';

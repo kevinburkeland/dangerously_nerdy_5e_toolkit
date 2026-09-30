@@ -14,7 +14,6 @@ import '../services/party/party_room_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/party/campaign_dialogs.dart';
 import '../widgets/party/loot_conflict_resolution_dialog.dart';
-import '../models/domain/character_models.dart';
 import '../services/persistence/character_persistence_service.dart';
 import 'character_sheet_view.dart';
 import 'dice_roller_screen.dart';

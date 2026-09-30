@@ -1,7 +1,6 @@
 import '../modules/dnd5e/rules/ruleset_edition.dart';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/homebrew/models/homebrew_entity.dart';
-import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
 
 /// Validation exception thrown when homebrew schema violates ruleset contracts.
 class HomebrewValidationException implements Exception {

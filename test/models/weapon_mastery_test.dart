@@ -22,7 +22,7 @@ void main() {
 
     test('validates ruleset 2014 disallows weapon mastery', () {
       final eligible = WeaponMasteryValidator.isEligible(
-        ruleset: RulesetVersion.v2014,
+        ruleset: RulesetEdition.v2014,
         hasWeaponMasteryFeature: true,
         isProficientWithWeapon: true,
         hasMasteryUnlockedForWeapon: true,
@@ -30,7 +30,7 @@ void main() {
       expect(eligible, isFalse);
 
       final reason = WeaponMasteryValidator.getEligibilityFailureReason(
-        ruleset: RulesetVersion.v2014,
+        ruleset: RulesetEdition.v2014,
         hasWeaponMasteryFeature: true,
         isProficientWithWeapon: true,
         hasMasteryUnlockedForWeapon: true,
@@ -42,7 +42,7 @@ void main() {
       // Missing weapon mastery class feature
       expect(
         WeaponMasteryValidator.isEligible(
-          ruleset: RulesetVersion.v2024,
+          ruleset: RulesetEdition.v2024,
           hasWeaponMasteryFeature: false,
           isProficientWithWeapon: true,
           hasMasteryUnlockedForWeapon: true,
@@ -53,7 +53,7 @@ void main() {
       // Missing weapon proficiency
       expect(
         WeaponMasteryValidator.isEligible(
-          ruleset: RulesetVersion.v2024,
+          ruleset: RulesetEdition.v2024,
           hasWeaponMasteryFeature: true,
           isProficientWithWeapon: false,
           hasMasteryUnlockedForWeapon: true,
@@ -64,7 +64,7 @@ void main() {
       // Mastery not unlocked for specific weapon
       expect(
         WeaponMasteryValidator.isEligible(
-          ruleset: RulesetVersion.v2024,
+          ruleset: RulesetEdition.v2024,
           hasWeaponMasteryFeature: true,
           isProficientWithWeapon: true,
           hasMasteryUnlockedForWeapon: false,
@@ -75,7 +75,7 @@ void main() {
       // All requirements met
       expect(
         WeaponMasteryValidator.isEligible(
-          ruleset: RulesetVersion.v2024,
+          ruleset: RulesetEdition.v2024,
           hasWeaponMasteryFeature: true,
           isProficientWithWeapon: true,
           hasMasteryUnlockedForWeapon: true,
@@ -85,7 +85,7 @@ void main() {
 
       expect(
         WeaponMasteryValidator.getEligibilityFailureReason(
-          ruleset: RulesetVersion.v2024,
+          ruleset: RulesetEdition.v2024,
           hasWeaponMasteryFeature: true,
           isProficientWithWeapon: true,
           hasMasteryUnlockedForWeapon: true,

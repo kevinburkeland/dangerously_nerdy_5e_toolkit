@@ -4,7 +4,6 @@ import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_proficiencies_library.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/core_types.dart';
-import '../../models/domain/entity_reference.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/character_sheet_controller.dart';

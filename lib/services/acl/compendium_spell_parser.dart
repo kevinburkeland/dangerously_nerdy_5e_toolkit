@@ -1,6 +1,4 @@
 import '../../infrastructure/mappers/homebrew_ingestor.dart';
-import '../../models/domain/core_types.dart';
-import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
 import 'entry_tag_transformer.dart';
 

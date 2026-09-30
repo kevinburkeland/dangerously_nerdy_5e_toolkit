@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';

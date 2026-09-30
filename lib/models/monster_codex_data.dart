@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'arena/monster_combat_profile.dart';
 import 'dm_screen_data.dart';
-import 'domain/spell_monster_equipment.dart';
 import 'dpr/dpr_models.dart';
 import 'monster_codex/bestiary/bestiary_cr_0_to_quarter.dart';
 import 'monster_codex/bestiary/bestiary_cr_five_to_eight.dart';

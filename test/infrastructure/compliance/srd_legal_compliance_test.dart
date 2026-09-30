@@ -8,7 +8,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_spell_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
 import 'canonical_srd_allowlists.dart';

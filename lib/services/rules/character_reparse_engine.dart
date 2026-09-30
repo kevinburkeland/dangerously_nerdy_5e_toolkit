@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:collection/collection.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
-import '../../models/domain/entity_reference.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/characters/srd_classes_library.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';

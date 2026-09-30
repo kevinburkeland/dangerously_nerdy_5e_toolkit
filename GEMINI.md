@@ -22,16 +22,21 @@ For full system architecture, fast navigation indexes, and detailed engineering 
    - Never re-implement or leak D&D 5e-specific mechanics into engine primitives.
    - Pinned Git dependency synchronization protocol (`git.ref` in `pubspec.yaml`) is mandatory.
 
-2. **Semantic Ownership Principle:**
-   - Ownership follows semantics, not reuse. A concept does not belong in `vtt_engine_core` merely because the toolkit uses it broadly; D&D-specific reusable logic remains toolkit-owned.
-   - Extend or adapt engine contracts (`IRulesetModule`, `ICombatResolver`, `ISimulationStrategy`, `IP2pTransportPort`) at the ruleset/application boundary rather than reimplementing generic engine infrastructure locally.
+2. **Standalone Ruleset Module Boundary (`vtt_ruleset_dnd5e`):**
+   - Reusable D&D 5e mechanics, progression engines, spellcasting rules, combat resolution, and canonical 5e domain models reside in `../vtt-ruleset-dnd5e`.
+   - Consumed by the toolkit via pinned Git dependency (`package:vtt_ruleset_dnd5e`).
+   - The toolkit must not silently re-grow an internal D&D rules engine.
 
-3. **Dependency Direction:**
-   - `vtt_engine_core` -> D&D 5e Ruleset Module & Domain -> Application Orchestration -> Infrastructure -> Presentation.
-   - Zero Flutter in `lib/domain/` and `lib/infrastructure/dtos/` (`package:meta/meta.dart` only).
+3. **Semantic Ownership Principle:**
+   - Reusable D&D mechanics belong in `vtt-ruleset-dnd5e`. Application orchestration and platform integration belong in the toolkit. Generic tabletop concepts belong in `vtt-engine-core`. Ownership follows semantics, not convenience or current call-site count.
+   - Extend or adapt engine contracts at the ruleset/application boundary rather than reimplementing generic engine infrastructure locally.
 
-4. **Cross-Boundary Repository Pivot Protocol:**
-   - When inspecting or editing `../vtt-engine-core`, read its `.antigravityrules` and `AGENTS.md`, suspend toolkit-specific assumptions, and adhere strictly to engine-local governance.
+4. **Dependency Direction:**
+   - `vtt_engine_core` -> `vtt_ruleset_dnd5e` -> Application Orchestration -> Infrastructure -> Presentation.
+   - Zero Flutter in `vtt_ruleset_dnd5e` or toolkit `lib/domain/` and `lib/infrastructure/dtos/` (`package:meta/meta.dart` only).
+
+5. **Cross-Boundary Repository Pivot Protocol:**
+   - When inspecting or editing `../vtt-engine-core` or `../vtt-ruleset-dnd5e`, read the target repo's `.antigravityrules` and `AGENTS.md`, suspend toolkit-specific assumptions, and adhere strictly to target repo local governance.
 
 5. **Clean Room SRD Purity & Anti-Hallucination:**
    - Bundled code and fixtures adhere strictly to SRD 5.1 / 5.2.1 (CC-BY-4.0) with zero Wizards of the Coast Product Identity.

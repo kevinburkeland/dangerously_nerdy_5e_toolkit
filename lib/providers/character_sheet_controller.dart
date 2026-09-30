@@ -3,10 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/dice_roll.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
-import '../models/domain/character_models.dart';
-import '../models/domain/core_types.dart';
-import '../models/domain/entity_reference.dart';
-import '../models/domain/spell_monster_equipment.dart';
 import '../models/characters/srd_feats_library.dart';
 import '../models/domain/homebrew_extended_entities.dart';
 import '../models/party/campaign_membership.dart';
@@ -20,13 +16,10 @@ import '../infrastructure/repositories/local_character_repository.dart';
 import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/debounced_storage_service.dart';
 import '../services/repository/reference_resolver.dart';
-import '../services/rules/character_evaluation_engine.dart';
 import '../services/rules/character_homebrew_validator.dart';
-import '../services/rules/character_progression_engine.dart';
 import '../services/rules/character_reparse_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/skill_trait_resolver.dart';
-import '../models/domain/feature_grant.dart';
 import '../utils/secure_random.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,

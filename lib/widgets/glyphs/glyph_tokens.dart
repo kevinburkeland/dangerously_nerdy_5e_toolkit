@@ -1,40 +1,54 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show SpellSchool;
 import '../../models/dm_screen_data.dart';
 
-/// Semantic spell schools conforming to the Style Guide & 5e SRD.
-enum SpellSchool {
-  abjuration('Abjuration', Color(0xFF3B82F6), Color(0xFFEFF6FF),
-      Color(0xFF1E3A8A), GlyphFrameShape.circle),
-  conjuration('Conjuration', Color(0xFFA855F7), Color(0xFFFAF5FF),
-      Color(0xFF581C87), GlyphFrameShape.hexagon),
-  divination('Divination', Color(0xFF0EA5E9), Color(0xFFF0F9FF),
-      Color(0xFF0C4A6E), GlyphFrameShape.eye),
-  enchantment('Enchantment', Color(0xFFF43F5E), Color(0xFFFFF1F2),
-      Color(0xFF881337), GlyphFrameShape.softRhombus),
-  evocation('Evocation', Color(0xFFF97316), Color(0xFFFFF7ED),
-      Color(0xFF7C2D12), GlyphFrameShape.diamond),
-  illusion('Illusion', Color(0xFF6366F1), Color(0xFFEEF2FF), Color(0xFF312E81),
-      GlyphFrameShape.overlappingCircle),
-  necromancy('Necromancy', Color(0xFF10B981), Color(0xFFECFDF5),
-      Color(0xFF064E3B), GlyphFrameShape.invertedTriangle),
-  transmutation('Transmutation', Color(0xFFF59E0B), Color(0xFFFFFBEB),
-      Color(0xFF78350F), GlyphFrameShape.upwardTriangle);
+/// Semantic spell school UI styling and glyph mapping conforming to the Style Guide.
+extension SpellSchoolUiExtension on SpellSchool {
+  Color get primaryColor => switch (this) {
+        SpellSchool.abjuration => const Color(0xFF3B82F6),
+        SpellSchool.conjuration => const Color(0xFFA855F7),
+        SpellSchool.divination => const Color(0xFF0EA5E9),
+        SpellSchool.enchantment => const Color(0xFFF43F5E),
+        SpellSchool.evocation => const Color(0xFFF97316),
+        SpellSchool.illusion => const Color(0xFF6366F1),
+        SpellSchool.necromancy => const Color(0xFF10B981),
+        SpellSchool.transmutation => const Color(0xFFF59E0B),
+      };
 
-  final String displayName;
-  final Color primaryColor;
-  final Color lightFillTint;
-  final Color darkFillTint;
-  final GlyphFrameShape frameShape;
+  Color get lightFillTint => switch (this) {
+        SpellSchool.abjuration => const Color(0xFFEFF6FF),
+        SpellSchool.conjuration => const Color(0xFFFAF5FF),
+        SpellSchool.divination => const Color(0xFFF0F9FF),
+        SpellSchool.enchantment => const Color(0xFFFFF1F2),
+        SpellSchool.evocation => const Color(0xFFFFF7ED),
+        SpellSchool.illusion => const Color(0xFFEEF2FF),
+        SpellSchool.necromancy => const Color(0xFFECFDF5),
+        SpellSchool.transmutation => const Color(0xFFFFFBEB),
+      };
 
-  const SpellSchool(
-    this.displayName,
-    this.primaryColor,
-    this.lightFillTint,
-    this.darkFillTint,
-    this.frameShape,
-  );
+  Color get darkFillTint => switch (this) {
+        SpellSchool.abjuration => const Color(0xFF1E3A8A),
+        SpellSchool.conjuration => const Color(0xFF581C87),
+        SpellSchool.divination => const Color(0xFF0C4A6E),
+        SpellSchool.enchantment => const Color(0xFF881337),
+        SpellSchool.evocation => const Color(0xFF7C2D12),
+        SpellSchool.illusion => const Color(0xFF312E81),
+        SpellSchool.necromancy => const Color(0xFF064E3B),
+        SpellSchool.transmutation => const Color(0xFF78350F),
+      };
+
+  GlyphFrameShape get frameShape => switch (this) {
+        SpellSchool.abjuration => GlyphFrameShape.circle,
+        SpellSchool.conjuration => GlyphFrameShape.hexagon,
+        SpellSchool.divination => GlyphFrameShape.eye,
+        SpellSchool.enchantment => GlyphFrameShape.softRhombus,
+        SpellSchool.evocation => GlyphFrameShape.diamond,
+        SpellSchool.illusion => GlyphFrameShape.overlappingCircle,
+        SpellSchool.necromancy => GlyphFrameShape.invertedTriangle,
+        SpellSchool.transmutation => GlyphFrameShape.upwardTriangle,
+      };
 
   /// Returns a high-contrast version of the primary color guaranteed legible on dark or light backgrounds.
   Color getLegibleColor(bool isDarkMode) {

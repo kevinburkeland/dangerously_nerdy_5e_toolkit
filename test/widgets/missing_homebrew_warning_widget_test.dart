@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_homebrew_validator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/missing_homebrew_warning_widget.dart';
 

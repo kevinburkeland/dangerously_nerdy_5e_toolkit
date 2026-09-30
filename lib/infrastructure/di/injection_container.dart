@@ -21,6 +21,11 @@ import '../adapters/p2p/firebase_signaling_adapter.dart';
 import '../adapters/p2p/local_wifi_adapter.dart';
 import '../adapters/p2p/webrtc_mesh_adapter.dart';
 import '../adapters/storage/campaign_snapshot_serializer_adapter.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
+import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/srd_feats_library.dart';
+import '../../models/magic_items/magic_item_library.dart';
+import '../../services/acl/compendium_pipe_parser.dart';
 import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import '../modules/dnd5e/dnd_5e_combat_resolver.dart';
 import '../adapters/system_network_time_port.dart';
@@ -158,6 +163,25 @@ Future<void> initServiceLocator({
 
   // Injected ruleset baseline provider for animated objects
   AnimatedObjectStats.defaultProvider = Dnd5eAnimatedObjectAdapter.getStats;
+
+  // Wire ruleset domain extraction hooks to toolkit compendiums
+  FeatureGrant.spellDescriptorExtractor =
+      CompendiumPipeParser.extractSpellDescriptors;
+  FeatureGrant.spellNameExtractor = CompendiumPipeParser.extractSpellNames;
+  FeatureGrant.bonusSpellsExtractor = CompendiumPipeParser.extractBonusSpells;
+
+  CharacterEvaluationEngine.magicItemLookupHook = (idOrName) =>
+      MagicItemLibrary.findById(idOrName) ??
+      MagicItemLibrary.findById('item_$idOrName') ??
+      MagicItemLibrary.findByName(idOrName);
+  CharacterEvaluationEngine.featLookupHook =
+      (slug) => SrdFeatsLibrary.findBySlug(slug);
+  CharacterEvaluationEngine.classLookupHook =
+      (slug) => SrdClassesLibrary.findBySlug(slug);
+  CharacterProgressionEngine.classLookupHook =
+      (slug) => SrdClassesLibrary.findBySlug(slug);
+  CharacterStatCalculator.classLookupHook =
+      (slug) => SrdClassesLibrary.findBySlug(slug);
 
   if (p2pTransport != null) {
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);

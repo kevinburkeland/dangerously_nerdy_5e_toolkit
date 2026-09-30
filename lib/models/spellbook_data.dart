@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/rules/spellcasting_rules_engine.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
 import 'dm_screen_data.dart';
 import 'spells/cantrips.dart';
@@ -9,25 +8,23 @@ import 'spells/level_3_spells.dart';
 import 'spells/level_4_spells.dart';
 import 'spells/level_5_spells.dart';
 import 'spells/high_level_spells.dart';
-import 'domain/character_models.dart';
 
 export '../services/rules/spellcasting_rules_engine.dart';
 export '../widgets/glyphs/glyph_tokens.dart';
 
-enum SpellClass {
-  bard('Bard', Icons.music_note),
-  cleric('Cleric', Icons.health_and_safety_outlined),
-  druid('Druid', Icons.eco_outlined),
-  paladin('Paladin', Icons.shield),
-  ranger('Ranger', Icons.track_changes),
-  sorcerer('Sorcerer', Icons.flash_on),
-  warlock('Warlock', Icons.dark_mode_outlined),
-  wizard('Wizard', Icons.auto_awesome);
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show SpellClass;
 
-  final String label;
-  final IconData icon;
-
-  const SpellClass(this.label, this.icon);
+extension SpellClassUiExtension on SpellClass {
+  IconData get icon => switch (this) {
+        SpellClass.bard => Icons.music_note,
+        SpellClass.cleric => Icons.health_and_safety_outlined,
+        SpellClass.druid => Icons.eco_outlined,
+        SpellClass.paladin => Icons.shield,
+        SpellClass.ranger => Icons.track_changes,
+        SpellClass.sorcerer => Icons.flash_on,
+        SpellClass.warlock => Icons.dark_mode_outlined,
+        SpellClass.wizard => Icons.auto_awesome,
+      };
 }
 
 /// Detailed rules information for a specific rules edition of a spell.

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/domain/core_types.dart';
-import '../models/domain/entity_reference.dart';
 import '../models/domain/character_models.dart';
 import '../providers/character_sheet_controller.dart';
 import '../services/persistence/character_persistence_service.dart';

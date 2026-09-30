@@ -1,5 +1,4 @@
 import '../../models/domain/core_types.dart';
-import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 
 /// Result of transforming community compendium entries and inline tags

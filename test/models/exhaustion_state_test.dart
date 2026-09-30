@@ -5,7 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/rules/
 void main() {
   group('ExhaustionState', () {
     test('calculates 2024 linear penalties correctly', () {
-      const state = ExhaustionState(level: 3, ruleset: RulesetVersion.v2024);
+      const state = ExhaustionState(level: 3, ruleset: RulesetEdition.v2024);
 
       expect(state.clampedLevel, equals(3));
       expect(state.d20Penalty, equals(6));
@@ -18,7 +18,7 @@ void main() {
     });
 
     test('calculates 2014 cumulative tier descriptions correctly', () {
-      const state = ExhaustionState(level: 3, ruleset: RulesetVersion.v2014);
+      const state = ExhaustionState(level: 3, ruleset: RulesetEdition.v2014);
 
       expect(state.clampedLevel, equals(3));
       expect(state.d20Penalty, equals(0));
@@ -36,9 +36,9 @@ void main() {
 
     test('handles level 6 death on both rulesets', () {
       const state2014 =
-          ExhaustionState(level: 6, ruleset: RulesetVersion.v2014);
+          ExhaustionState(level: 6, ruleset: RulesetEdition.v2014);
       const state2024 =
-          ExhaustionState(level: 6, ruleset: RulesetVersion.v2024);
+          ExhaustionState(level: 6, ruleset: RulesetEdition.v2024);
 
       expect(state2014.isDead, isTrue);
       expect(state2024.isDead, isTrue);
@@ -48,7 +48,7 @@ void main() {
 
     test('increment, decrement, and reset helpers behave predictably', () {
       var state =
-          const ExhaustionState(level: 0, ruleset: RulesetVersion.v2024);
+          const ExhaustionState(level: 0, ruleset: RulesetEdition.v2024);
       expect(state.clampedLevel, equals(0));
 
       state = state.increment();

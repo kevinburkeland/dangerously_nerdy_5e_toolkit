@@ -31,10 +31,11 @@
 └────────────────────────────┘
 ```
 
-### 1.1. Upstream Engine Boundary & Semantic Ownership
-- **Semantic Ownership Principle:** Ownership follows semantics, not reuse. A concept does not belong in `vtt_engine_core` merely because the toolkit uses it broadly; D&D-specific reusable logic remains toolkit-owned. Ruleset-agnostic concepts belong in the engine.
+### 1.1. Upstream Engine & Ruleset Boundaries & Semantic Ownership
+- **Semantic Ownership Principle:** Reusable D&D mechanics belong in `vtt-ruleset-dnd5e`. Application orchestration and platform integration belong in the toolkit. Generic tabletop concepts belong in `vtt-engine-core`. Ownership follows semantics, not convenience or current call-site count. The toolkit should not silently re-grow a second internal D&D rules engine.
 - **Engine Extension Rule:** Do not reimplement generic engine infrastructure locally merely because the toolkit needs customization. Extend or adapt engine contracts (`IRulesetModule`, `ICombatResolver`, `ISimulationStrategy`, `IP2pTransportPort`) at the ruleset/application boundary.
 - **Agnostic Core (`vtt_engine_core`):** Standalone tabletop domain models (`HitPoints`, `CoreTypes`, `CampaignProfile`, `PartyPurse`), CvRDT primitives (`HybridLogicalClock`, `CrdtOrSet`, `PnCounter`, `CrdtLwwRegister`), storage durability contracts, and ruleset SPI reside in `vtt_engine_core`.
+- **Reusable Ruleset Module (`vtt_ruleset_dnd5e`):** Canonical D&D 5e dual-ruleset implementation, progression engines, spellcasting rules, combat arbitration, and canonical 5e domain models reside in `vtt_ruleset_dnd5e`.
 
 ### 1.2. Domain Layer (`lib/domain/`, `lib/models/`, `lib/services/rules/`)
 - **Zero Flutter Engine Runtime:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use pure Dart (`package:meta/meta.dart`). Enforced by `test/domain/domain_purity_test.dart`.
@@ -75,10 +76,11 @@ When inspecting, editing, or executing commands in an external repository (such 
 4. **Core Isolation:** Never introduce D&D 5e mechanics or Flutter UI into `vtt_engine_core` merely to simplify toolkit code.
 
 ### 1.8. Upstream Pinned Git Dependency Synchronization
-- `vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`.
-- Whenever upstream engine changes occur:
-  1. Commit engine changes with DCO sign-off (`git commit -s`) to produce a concrete commit SHA on `main`.
-  2. Update `pubspec.yaml` with the new engine commit SHA in `vtt_engine_core.git.ref`.
-  3. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
-  4. Run `flutter pub get` so the pinned Git commit is actually fetched into the pub cache and locked in `pubspec.lock`.
-  5. Run `flutter analyze` and `flutter test` against the fetched Git dependency before considering work complete.
+- `vtt_engine_core` and `vtt_ruleset_dnd5e` are consumed strictly via pinned Git dependencies (`ref: <commit-sha>`) in `pubspec.yaml`.
+- Whenever upstream changes occur:
+  1. Commit upstream changes with DCO sign-off (`git commit -s`) to produce concrete commit SHAs on `main` in `../vtt-engine-core` or `../vtt-ruleset-dnd5e`.
+  2. If engine changed, update and verify `vtt-ruleset-dnd5e` first and commit.
+  3. Update `pubspec.yaml` with the new commit SHAs in `vtt_engine_core.git.ref` and `vtt_ruleset_dnd5e.git.ref`.
+  4. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
+  5. Run `flutter pub get` so the pinned Git commits are actually fetched into the pub cache and locked in `pubspec.lock`.
+  6. Run `flutter analyze` and `flutter test` against the fetched Git dependencies before considering work complete.

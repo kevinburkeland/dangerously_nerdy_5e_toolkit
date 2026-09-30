@@ -1,9 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_draft.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver.dart';
 

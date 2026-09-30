@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/domain/character_models.dart';
-import '../../models/domain/core_types.dart';
-import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../common/edition_diff_badge.dart';

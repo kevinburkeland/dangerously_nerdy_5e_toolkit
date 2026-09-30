@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../models/domain/character_models.dart';
 import '../../models/domain/loot_models.dart';
-import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/party_purse.dart';
 
 /// Result container for atomic loot transactions

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../domain/core_types.dart';
 import '../domain/character_models.dart';
-import 'package:vtt_engine_core/models/entity_reference.dart';
 import '../domain/spell_monster_equipment.dart';
 import '../magic_items/magic_item_library.dart';
 

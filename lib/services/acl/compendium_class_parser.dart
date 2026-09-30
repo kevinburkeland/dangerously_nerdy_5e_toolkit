@@ -1,5 +1,4 @@
 import '../../models/characters/srd_classes_library.dart';
-import '../../models/domain/character_models.dart' show SkillType;
 import '../../models/domain/core_types.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';

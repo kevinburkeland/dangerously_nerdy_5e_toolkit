@@ -4,7 +4,6 @@ import '../models/dm_screen_data.dart' show DmRulesEdition;
 import '../models/domain/core_types.dart';
 import '../models/domain/character_models.dart';
 import '../models/domain/character_draft.dart';
-import '../models/domain/entity_reference.dart';
 import '../models/characters/srd_backgrounds_library.dart';
 import '../models/characters/srd_species_library.dart';
 import '../services/rules/character_factory.dart';
