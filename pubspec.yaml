@@ -20,12 +20,12 @@ dependencies:
   url_launcher: ^6.3.0
   vtt_engine_core:
     git:
-      url: /home/kevin/Documents/vtt-engine-core
+      url: https://github.com/kevinburkeland/vtt-engine-core.git
       ref: 9d6f2cff1079886a1789c47bb667bd5a46f0f268
   vtt_ruleset_dnd5e:
     git:
-      url: /home/kevin/Documents/vtt-ruleset-dnd5e
-      ref: a6970bc199aef188d80c08650668f6bd9857b050
+      url: https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git
+      ref: db9bea46d0bdc34fa90338ab5da066008a15fc7c
   meta: ^1.19.0
   uuid: ^4.6.0
   flutter_webrtc: ^1.6.2+hotfix.1
