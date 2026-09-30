@@ -2,38 +2,40 @@
 
 This document details the application-level synchronization services, transport waterfall, and state reconciliation rules connecting local persistence with peer-to-peer and cloud networks.
 
-## 1. Application State Reconciliation
-Located at `lib/application/services/room_state_reconciliation_service.dart`:
-- **Sub-Resource Merging Over Full-Document Overwrite:** Inbound `room_sync_full` payloads merge sub-resources independently via `reconcileProfile()` (notes via LWW, currency via PN-Counter, minions keyed by `m.id`, encounters keyed by `participantId`, change logs).
+## 1. Architectural Ownership
+- **Agnostic CRDT Mathematics (`vtt_engine_core`):** Pure CRDT primitives (`HybridLogicalClock`, `CrdtOrSet`, `PnCounter`, `CrdtLwwRegister`) and transport port contracts (`IP2pTransportPort`, `TransportState`) reside in `vtt_engine_core`.
+- **Application Coordination (Toolkit):** Multi-device synchronization orchestration (`RoomSyncOrchestrator`), transport cascading (`CascadingTransportRouter`), and room state reconciliation (`RoomStateReconciliationService`) reside in `lib/application/services/`.
+
+---
+
+## 2. Core Convergence & Correctness Invariants
+- **CvRDT Convergence:** Replicated state must converge deterministically across all nodes under supported join-semilattice merge operations ($A \sqcup B = B \sqcup A$ and $A \sqcup A = A$).
+- **Differential Decrement Enforcement:** All coin reductions in `partyPurse` MUST calculate the delta against `effectiveCounter` and record negative decrements (`counter.decrement(nodeId, delta)`). Never re-seed counters with positive scalars via `PnCounter.withInitialValue()`.
 - **Authoritative Milestone Pruning:** Pruning must be decoupled from unverified local clocks. Pruning thresholds are anchored to authoritative server/ledger snapshot timestamps via `executeMilestonePrune`. When extreme clock drift causes `threshold >= networkTime`, pruning is deferred gracefully via `safePrune`.
-- **Clock Skew Compensation:** `ClockSyncService` calculates physical time skew (`offsetMs = networkTime - localTime`) and injects it into outbound broadcast timestamps.
+- **Local Persistence Authority:** Local persistence (Hive / IndexedDB) is the single source of truth. Remote mesh and cloud sync operate via CvRDT lattice merge before disk write; direct remote overwrites are prohibited.
+- **Narrow Mutex Critical Section:** `RoomSyncOrchestrator` uses `_syncMutex.protect()` strictly for in-memory CRDT joins and profile reconciliation. Disk persistence (`saveProfileImmediate`) executes asynchronously *outside* the mutex lock to prevent lock contention and re-entrant deadlocks.
+- **Deadlock Immunity via Asynchronous Microtasks:** Reactive broadcast `StreamController`s across persistence repositories and transport services MUST specify `sync: false`. Inbound transport payloads must be dispatched asynchronously via `scheduleMicrotask()`.
 
-## 2. Currency Convergence & crdt_purse_delta Protocol
-Located at `lib/models/party/party_purse.dart` and `lib/application/services/room_sync_orchestrator.dart`:
-- **Differential Decrement Enforcement:** All coin reductions MUST calculate delta against `effectiveCounter` and record negative decrements (`counter.decrement(nodeId, delta)`). Never re-seed counters with positive scalars via `PnCounter.withInitialValue()`.
-- **Focused Delta Protocol:** Routine currency modifications broadcast lightweight `crdt_purse_delta` packets, merging directly into the local profile via `RoomSyncOrchestrator._handleIncomingPurseDelta` without full document dumps.
-- **Vault Dispersal Wealth Conservation:** Dispersing coins from the party vault reserve (`isVaultDispersal: true`) withdraws shares from `partyPurse` via `withdrawCoins(...)`, strictly conserving total party wealth.
+---
 
-## 3. Concurrency Mutex & Re-entrant Deadlock Immunity
-Located at `lib/application/services/room_sync_orchestrator.dart`:
-- **Narrow Critical Section:** `RoomSyncOrchestrator` uses `_syncMutex.protect()` strictly for in-memory CRDT joins and profile reconciliation. Disk persistence (`saveProfileImmediate`) executes asynchronously outside the mutex lock.
-- **Echo Loop Suppression:** Outbound frames are stamped with monotonic sequence numbers and originating node IDs. Outbound sync is skipped if the profile matches `_lastInboundProfile` or if the mutex is locked. Reconstructed entities implement value-based `operator ==` and `hashCode`.
-- **Asymmetric LRU Deduplication:** Payloads enforce a 500-entry `LinkedHashMap<String, bool>` SHA-256 LRU cache and a 30-second sliding lookback window (`inboundTimestamp >= localTime - 30000`). Unrecognized payloads (`UnknownSyncMessage`) are rejected before updating the cache.
-- **Asynchronous Microtask Dispatch:** Reactive broadcast `StreamController`s in persistence and transport layers MUST specify `sync: false`. Inbound transport payloads are dispatched via `scheduleMicrotask()`.
-
-## 4. 4-Tier Transport Waterfall & WebRTC Signaling
-Located at `lib/application/services/cascading_transport_router.dart` and `lib/infrastructure/adapters/p2p/`:
-- **Waterfall Sequence:**
+## 3. Deliberate Application Protocol Policies
+- **Sub-Resource Merging Over Full-Document Overwrite:** Inbound `room_sync_full` payloads merge sub-resources independently via `reconcileProfile()` (notes via LWW, currency via PN-Counter, minions keyed by `m.id`, encounters keyed by `participantId`, change logs) rather than replacing the entire `CampaignProfile`.
+- **`crdt_purse_delta` Protocol:** Routine currency modifications broadcast lightweight `crdt_purse_delta` packets, merging directly into the local profile via `RoomSyncOrchestrator._handleIncomingPurseDelta` without requiring full document broadcasts.
+- **Vault Dispersal Wealth Conservation:** Dispersing coins from the shared party vault reserve (`isVaultDispersal: true`) withdraws shares from `partyPurse` via `withdrawCoins(...)`, strictly conserving total party wealth without currency inflation.
+- **4-Tier Transport Waterfall & Dynamic Step-Up:**
   1. Tier 1: Local Wi-Fi (`LocalWifiAdapter`)
   2. Tier 2: WebRTC P2P Mesh (`WebRtcMeshAdapter`)
   3. Tier 3: Firebase Cloud Relay (`FirebaseFallbackAdapter`)
   4. Tier 4: Offline Mode
-- **Dynamic Step-Up Probing:** When degraded to Tier 3 or 4, periodically probe higher-tier adapters (`probeHigherTiers()`) via `IP2pTransportPort.probeViability()`.
-- **Ephemeral Signaling Cleanup:** Handshake documents in Firestore are strictly ephemeral. `cleanUpPeerSignaling(peerId)` is partitioned per peer and triggered only after the DataChannel reaches `RTCDataChannelState.RTCDataChannelOpen` or ICE reaches `completed`.
-- **W3C Polite Peer Glare Rollback:** On crossing offers (`have-local-offer` when receiving a remote offer), resolve collisions using lexicographical node ID comparison (`localNodeId.compareTo(peerId)`). The polite peer rolls back its local offer (`RTCSessionDescription('', 'rollback')`) and accepts the incoming offer.
-- **Transient ICE Resilience:** Prune peer connections strictly on `RTCIceConnectionStateFailed`. Never prune on transient `RTCIceConnectionStateDisconnected`.
+  When operating on Tier 3 or 4, the router periodically probes higher-tier viability (`probeHigherTiers()`) via `IP2pTransportPort.probeViability()`, stepping back up to WebRTC mesh when available.
+- **W3C Polite Peer Glare Rollback:** On crossing offers (`have-local-offer` when receiving an inbound remote offer), collisions resolve using deterministic lexicographical node ID comparison (`localNodeId.compareTo(peerId)`). The polite peer rolls back its local offer (`RTCSessionDescription('', 'rollback')`) and accepts the incoming offer.
+- **Stateless Room Stub Rehydration & 30-Day Lease:** Whenever a participant connects (host init, player join, or screen mount), touch `/rooms/{roomCode}` with `isStateless: true` and reset the 30-day lease (`expiresAt: now + 30 days`) via `SetOptions(merge: true)`. Confirmed non-existent rooms without active presence reject cleanly without phantom record creation.
 
-## 5. Local Persistence Authority & Stateless Rehydration
-- **Local Storage Priority:** UI consumers opening character sheets in party rooms query local persistent storage (`CharacterPersistenceService.getCharacter`) first before remote `session.sharedCharacters`.
-- **Complete Character Serialization:** Shared party sessions serialize the full `character.toMap()` payload (including evaluated vitals `maxHp`, `currentHp`, `tempHp`, `armorClass`) to prevent remote default hydration leaks.
-- **Stateless Room Stub Rehydration:** Any participant connect touches `/rooms/{roomCode}` with `isStateless: true` and resets the 30-day lease (`expiresAt: now + 30 days`) via `SetOptions(merge: true)`. Confirmed empty rooms reject cleanly without phantom record generation.
+---
+
+## 4. Current Implementation Notes (Operational Parameters)
+- **Sliding Lookback Window & LRU Deduplication:** Inbound transport frames enforce a 30-second sliding lookback window (`inboundTimestamp >= localTime - 30000`) and a 500-entry `LinkedHashMap<String, bool>` SHA-256 LRU cache. Malformed or unrecognized payloads (`UnknownSyncMessage`) are discarded before updating the LRU cache.
+- **Clock Skew Compensation:** `ClockSyncService` calculates physical time skew (`offsetMs = networkTime - localTime`) and injects it into outbound broadcast timestamps.
+- **Echo Loop Suppression:** Outbound frames are stamped with monotonic sequence numbers and originating node IDs. Outbound sync is skipped if the profile matches `_lastInboundProfile` or if the mutex is locked. Reconstructed entities implement value-based `operator ==` and `hashCode`.
+- **Ephemeral Signaling Cleanup:** Handshake documents in Firestore are partitioned by peer ID (`cleanUpPeerSignaling(peerId)`) and triggered only after the DataChannel reaches `RTCDataChannelState.RTCDataChannelOpen` or ICE reaches `completed`.
+- **Transient ICE Resilience:** Peer connections are pruned strictly on `RTCIceConnectionStateFailed`. Pruning is avoided during transient `RTCIceConnectionStateDisconnected`.

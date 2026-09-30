@@ -10,59 +10,75 @@
                             │ uses
 ┌───────────────────────────▼────────────────────────────┐
 │                    Application Layer                   │
-│               lib/application/services/                │
+│        lib/application/services/, lib/application/storage/
 └──────────────┬───────────────────────────┬─────────────┘
                │ uses                      │ orchestrates
 ┌──────────────▼─────────────┐ ┌───────────▼─────────────┐
-│        Domain Layer        │ │  Infrastructure Layer   │
-│ lib/domain/                │ │  lib/infrastructure/    │
-│  (consumes vtt_engine_core)│ │   - dtos/ & dtos/crdt/  │
-│  - rules/ & simulation/    │ │   - repositories/       │
-│  - modules/dnd5e/          │ │   - adapters/ & mappers/│
-│  - ports/ (Interfaces)     │ │   - di/                 │
-└────────────────────────────┘ └─────────────────────────┘
+│    Domain & Rules Layer    │ │  Infrastructure Layer   │
+│ - lib/domain/ingestion/    │ │  lib/infrastructure/    │
+│ - lib/models/ (5e Models)  │ │   - dtos/ & dtos/crdt/  │
+│ - lib/services/rules/      │ │   - repositories/       │
+│ - lib/infrastructure/      │ │   - adapters/ & mappers/│
+│     modules/dnd5e/         │ │   - storage/ & di/      │
+│  (consumes vtt_engine_core)│ └─────────────────────────┘
+└──────────────▲─────────────┘
+               │ implements SPI / consumes
+┌──────────────┴─────────────┐
+│      vtt_engine_core       │
+│ (Agnostic tabletop engine: │
+│  crdt, models, ports,      │
+│  rules SPI, simulation)    │
+└────────────────────────────┘
 ```
 
-### 1.1. Domain Layer (`lib/domain/`)
-- **Zero Flutter Engine Runtime:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use `package:meta/meta.dart` for `@immutable`. Enforced automatically by `test/domain/domain_purity_test.dart`.
-- **Engine Core Decoupling:** Standalone engine contracts (CRDT primitives, agnostic tabletop value objects, storage snapshot ports) are consumed from `vtt_engine_core` (`../vtt-engine-core`). Domain logic in this repository provides the D&D 5e-specific ruleset implementations (`lib/infrastructure/modules/dnd5e/`, `lib/domain/rules/`).
-- **No I/O Imports:** No persistence (Hive, SQLite), network (HTTP, WebSockets, Firebase), or device platform channel imports are permitted in `lib/domain/`.
-- **Pure Models & Copy-Transforms:** All entities and value objects must have `const` constructors and `copyWith()` mutators. In-place mutating methods (`takeDamage`, `heal`, `applyHeal`, `grantTempHp`) are strictly forbidden; use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`).
-- **Ports (Dependency Inversion):** Abstract repository, transport, and time ports reside in `lib/domain/ports/`. Ports must import pure domain contracts only; never import application services or infrastructure DTOs.
+### 1.1. Upstream Engine Boundary & Semantic Ownership
+- **Semantic Ownership Principle:** Ownership follows semantics, not reuse. A concept does not belong in `vtt_engine_core` merely because the toolkit uses it broadly; D&D-specific reusable logic remains toolkit-owned. Ruleset-agnostic concepts belong in the engine.
+- **Engine Extension Rule:** Do not reimplement generic engine infrastructure locally merely because the toolkit needs customization. Extend or adapt engine contracts (`IRulesetModule`, `ICombatResolver`, `ISimulationStrategy`, `IP2pTransportPort`) at the ruleset/application boundary.
+- **Agnostic Core (`vtt_engine_core`):** Standalone tabletop domain models (`HitPoints`, `CoreTypes`, `CampaignProfile`, `PartyPurse`), CvRDT primitives (`HybridLogicalClock`, `CrdtOrSet`, `PnCounter`, `CrdtLwwRegister`), storage durability contracts, and ruleset SPI reside in `vtt_engine_core`.
 
-### 1.2. Application Layer (`lib/application/`)
-- Orchestrates workflows between Domain logic and Infrastructure ports.
-- Application services (e.g., `RoomStateReconciliationService`, `CombatEncounterService`, `RoomSyncOrchestrator`, `StorageDurabilityCoordinator`) hold no long-term persistent state; they process domain events, invoke rules, and delegate I/O to ports.
+### 1.2. Domain Layer (`lib/domain/`, `lib/models/`, `lib/services/rules/`)
+- **Zero Flutter Engine Runtime:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use pure Dart (`package:meta/meta.dart`). Enforced by `test/domain/domain_purity_test.dart`.
+- **Domain Ingestion Engine (`lib/domain/ingestion/`):** Pure Dart document structure parser, candidate detector, and field extraction ASTs.
+- **D&D 5e Domain Models (`lib/models/`):** Strongly typed 5e entities (`characters/`, `spells/`, `monster_codex/`, `magic_items/`, `weapon_mastery.dart`, `animated_object.dart`, `exhaustion_state.dart`).
+- **Compatibility Re-export Barrels (`lib/models/domain/`):** Provide backward-compatible re-exports for historical import paths. These barrels must not be confused with canonical ownership.
+- **D&D 5e Rules Engines (`lib/services/rules/`):** Concrete rules evaluation (`Dnd5eRulesEngine`, `AcEngineAndInventory`, `CharacterActionsResolver`, `CharacterProgressionEngine`, `CharacterReparseEngine`, `SpellcastingRulesEngine`).
+- **Pure Models & Copy-Transforms:** Entities and value objects must have `const` constructors and `copyWith()` mutators. In-place mutating methods (`takeDamage`, `heal`, `applyHeal`, `grantTempHp`) are strictly forbidden; use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`).
+
+### 1.3. Application Layer (`lib/application/`)
+- Orchestrates workflows between domain rules, engine abstractions, and infrastructure ports.
+- Application services (e.g., `RoomStateReconciliationService`, `CombatEncounterService`, `RoomSyncOrchestrator`, `StorageDurabilityCoordinator`, `PartyRoomService`) hold no long-term persistent state; they process domain events, coordinate CRDT state, invoke rules, and delegate I/O to ports.
 - Application services MUST NOT import infrastructure DTOs or concrete adapters directly.
 
-### 1.3. Infrastructure Layer (`lib/infrastructure/`)
-- Implements domain ports defined in `lib/domain/ports/`.
-- **Repositories (`lib/infrastructure/repositories/`):** Persistence implementations (e.g., `LocalCampaignRepository`, `LocalCharacterRepository`).
-- **Adapters (`lib/infrastructure/adapters/`):** Transport (`WebRtcMeshAdapter`, `FirebaseFallbackAdapter`), storage serializers, and network ingestors (`GithubIngestorAdapter`).
+### 1.4. Infrastructure Layer (`lib/infrastructure/`)
+- Implements engine and toolkit ports.
+- **Pluggable D&D 5e Ruleset Module (`lib/infrastructure/modules/dnd5e/`):** Implements `vtt_engine_core`'s `IRulesetModule` and `ICombatResolver` (`Dnd5e2014Module`, `Dnd5e2024Module`, `Dnd5eCombatResolver`, `Dnd5eCurrencySystem`).
+- **Repositories (`lib/infrastructure/repositories/`):** Persistence implementations (`LocalCampaignRepository`, `LocalCharacterRepository`) satisfying `ICampaignRepository` and `ICharacterRepository`.
+- **Adapters (`lib/infrastructure/adapters/`):** Transport (`LocalWifiAdapter`, `WebRtcMeshAdapter`, `FirebaseFallbackAdapter`), signaling (`FirebaseSignalingAdapter`), storage serializers (`CampaignSnapshotSerializerAdapter`), and remote ingestors (`GithubIngestorAdapter`).
 - **DTOs (`lib/infrastructure/dtos/`):** Translate wire/disk JSON to domain models and vice versa. Files in `lib/infrastructure/dtos/` must not import Flutter; use `package:meta/meta.dart` for `@immutable` (enforced by `test/infrastructure/dtos/dto_purity_test.dart`).
 - **Dependency Injection (`lib/infrastructure/di/`):** Service Locator (`injection_container.dart` / `sl`) registers singletons and factories. Downcasting ports to concrete implementations (e.g., `transportPort as CascadingTransportRouter`) is strictly prohibited.
 
-### 1.4. Presentation Layer (`lib/presentation/`, `lib/screens/`, `lib/widgets/`)
+### 1.5. Presentation Layer (`lib/presentation/`, `lib/screens/`, `lib/widgets/`)
 - User interface and rendering only.
-- Zero business logic, rule evaluations, or dice math. All mechanics are delegated to application services or domain rules. State consumption routes through providers/controllers (`lib/providers/`).
+- Zero business logic, rule evaluations, or raw dice math. All mechanics are delegated to application services or domain rules. State consumption routes through providers and controllers (`lib/providers/`).
 
-### 1.5. Clean Room Anti-Corruption Layer (ACL)
+### 1.6. Clean Room Anti-Corruption Layer (ACL)
 - **Zero Third-Party Tool Coupling:** Core logic must not contain proprietary site keys, splatbook abbreviations, or tool-specific bundle names.
 - **Agnostic Structural Ingestion:** Ingestion adapters dynamically traverse payloads using generic structural indicators (`name`, `entries`, `hitDie`, `stats`, `type`, `level`, `actions`).
 - **External Syntax Isolation:** External pipe-delimited syntax (`Feature|Class|Source|Level`, `Spell|Source#c`) is isolated into dedicated infrastructure ACL parsers (`CompendiumPipeParser`).
 - **Capability-Driven Mechanics:** Combat calculations, attack substitutions, and capabilities must resolve via domain `FeatureGrant`s (`GrantType.attackAbilitySubstitution`, `GrantType.capabilityFlag`) or normalized capability flags (`flags['initiativeBonusMode']`). Never pattern match on non-SRD class, subclass, or feat names.
 
-### 1.6. Cross-Boundary Repository Pivot Protocol
-When inspecting, editing, or executing commands in an external repository (e.g. `../vtt-engine-core`):
+### 1.7. Cross-Boundary Repository Pivot Protocol
+When inspecting, editing, or executing commands in an external repository (such as `../vtt-engine-core`):
 1. **Mandatory Ingestion:** The agent MUST view and parse `../<target-repo>/.antigravityrules` and `../<target-repo>/AGENTS.md` before making any modifications.
-2. **Context Suspension:** For any code inside that target repository, the agent MUST explicitly suspend and disregard host-specific guidelines (e.g. Flutter UI widgets, D&D 5e mechanics, 48dp touch targets, SRD legal compendiums).
+2. **Context Suspension:** For any code inside that target repository, the agent MUST explicitly suspend and disregard host-specific guidelines (e.g., Flutter UI widgets, D&D 5e mechanics, 48dp touch targets, SRD legal compendiums).
 3. **Local Governance:** The target repository's rules, pure Dart constraints, and compliance gates (`test/compliance/`) take absolute precedence for that directory.
+4. **Core Isolation:** Never introduce D&D 5e mechanics or Flutter UI into `vtt_engine_core` merely to simplify toolkit code.
 
-
-## Upstream Pinned Git Dependency Synchronization
-- **Upstream Pinned Git Dependency Synchronization:** `vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repository as integrated merely because local working trees are compatible. Whenever upstream engine changes occur:
-  1. Engine changes must be committed to obtain a concrete commit SHA.
+### 1.8. Upstream Pinned Git Dependency Synchronization
+- `vtt_engine_core` is consumed strictly via a pinned Git dependency (`ref: <commit-sha>`) in `pubspec.yaml`.
+- Whenever upstream engine changes occur:
+  1. Commit engine changes with DCO sign-off (`git commit -s`) to produce a concrete commit SHA on `main`.
   2. Update `pubspec.yaml` with the new engine commit SHA in `vtt_engine_core.git.ref`.
   3. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
   4. Run `flutter pub get` so the pinned Git commit is actually fetched into the pub cache and locked in `pubspec.lock`.
-  5. Static analysis (`flutter analyze`) and test suites (`flutter test`) must run against the fetched Git dependency before considering work complete.
+  5. Run `flutter analyze` and `flutter test` against the fetched Git dependency before considering work complete.

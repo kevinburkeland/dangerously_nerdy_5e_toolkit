@@ -8,29 +8,29 @@ Execute targeted test suites during active development for fast feedback loops (
 flutter test test/domain/domain_purity_test.dart
 flutter test test/infrastructure/dtos/dto_purity_test.dart
 
-# CvRDT & Distributed State tests
-flutter test test/domain/crdt/
-flutter test test/infrastructure/dtos/crdt/
+# Application state reconciliation & CRDT DTOs
 flutter test test/application/services/room_state_reconciliation_service_test.dart
+flutter test test/infrastructure/dtos/crdt_dtos_test.dart
 
-# Application Services & Orchestration
+# Application services & orchestration
 flutter test test/application/
 
-# Infrastructure Repositories & Adapters
+# Infrastructure adapters, repositories & D&D 5e module
 flutter test test/infrastructure/
 
-# Legal & Product Identity Compliance Invariants
-flutter test test/infrastructure/compliance/
+# Legal & product identity compliance invariants
+flutter test test/infrastructure/compliance/srd_legal_compliance_test.dart
 
-# Accessibility & Dynamic Type Scaling (2.0x)
+# Accessibility & dynamic type scaling (2.0x)
 flutter test test/accessibility/
 
-# Character Sheet & Action Economy
+# Character sheet & action economy
 flutter test test/widgets/character_sheet/
 flutter test test/services/rules/
 
-# Compendium & ACL Ingestion
-flutter test test/services/acl/
+# Compendium & ACL ingestion
+flutter test test/services/ingestion/
+flutter test test/services/importers/
 
 # Full test suite
 flutter test
@@ -57,6 +57,5 @@ This script compiles Flutter Web to `build/web`, injects dynamic build version t
 
 ## 5. Definition of Done & Living Documentation Protocol
 Before completing any engineering task:
-1. **Test Verification:** Run relevant test suites and update test counts in README.md and AGENTS.md.
-2. **Feature Matrix:** Document any new domain features, P2P capabilities, or screens in README.md.
-3. **AI Rules Refinement:** If a new architectural convention, transport policy, or framework fix was established, codify the rule into `.agents/rules/` or AGENTS.md to prevent regressions.
+1. **Verification:** Ensure static analysis (`flutter analyze`) reports zero issues and relevant test suites pass.
+2. **Living Documentation:** Update living documentation (`README.md`, `AGENTS.md`, or `.agents/rules/`) when architecture, public behavior, or documented capabilities change. Do not perform documentation churn for routine internal code changes.
