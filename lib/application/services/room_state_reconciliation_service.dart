@@ -6,7 +6,7 @@ import '../../models/domain/loot_models.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_event.dart';
 
-/// Application service orchestrating safe CRDT state reconciliation, tombstone pruning,
+/// Application service orchestrating CRDT state reconciliation, tombstone retention/causal safety policies,
 /// and deterministic field-level campaign profile merging.
 class RoomStateReconciliationService {
   final int Function() _networkTimeProvider;
@@ -15,54 +15,55 @@ class RoomStateReconciliationService {
     required int Function() networkTimeProvider,
   }) : _networkTimeProvider = networkTimeProvider;
 
-  /// Prunes an OR-Set only if the provided threshold timestamp has been globally
-  /// acknowledged by the milestone snapshot ledger and is strictly older than network time.
+  /// Retains all tombstones in [targetSet] indefinitely until causal stability can be proven.
   ///
-  /// If [globallyAcknowledgedThreshold] is in the present or future relative to network time
-  /// (due to transient clock skew or late clock sync), gracefully defers pruning and returns [targetSet]
-  /// intact rather than throwing an unhandled exception or prematurely wiping tombstones.
-  CrdtOrSet<T> safePrune<T>(
-    CrdtOrSet<T> targetSet,
-    HybridLogicalClock globallyAcknowledgedThreshold, {
-    int safeBufferMs = 0,
-  }) {
-    final currentNetworkTime = _networkTimeProvider();
-    final horizon = currentNetworkTime - safeBufferMs;
-    if (globallyAcknowledgedThreshold.physicalTime >= horizon) {
-      // Gracefully defer pruning to prevent premature tombstone deletion during clock skew
-      return targetSet;
-    }
-
-    return targetSet.prune(globallyAcknowledgedThreshold);
+  /// In an open or partially-connected distributed system, elapsed time, network time,
+  /// and heartbeat timeouts cannot prove that an offline replica has received and observed
+  /// a deletion. Pruning tombstones prematurely allows reconnecting replicas to resurrect
+  /// deleted entities.
+  ///
+  /// Future extension point: True causal compaction requires protocol-level causal
+  /// acknowledgement (e.g., per-replica version vectors or consensus-based compaction epochs)
+  /// proving that every replica in the system has observed the deletion before a tombstone
+  /// can be safely collected.
+  CrdtOrSet<T> retainTombstones<T>(CrdtOrSet<T> targetSet) {
+    return targetSet;
   }
 
-  /// Prunes tombstones using an authoritative milestone timestamp provided by the ledger/server.
+  /// Retains tombstones indefinitely.
   ///
-  /// If [serverAcknowledgedEpochMs] is in the present or future relative to network time
-  /// (e.g. clock skew, late sync, or drift), pruning is gracefully deferred to prevent immediate
-  /// tombstone deletion that resurrects entities on reconnecting clients.
+  /// Deprecated: Wall-clock or elapsed-time thresholds cannot guarantee that all replicas have
+  /// causally observed the deletion. Pruning based on time alone causes deleted entities to be
+  /// resurrected when offline replicas reconnect with older additions.
+  ///
+  /// This method is retained for API compatibility, but does not prune tombstones based on elapsed time.
+  @Deprecated('Elapsed time does not guarantee causal acknowledgement. Tombstones are retained indefinitely.')
+  CrdtOrSet<T> safePrune<T>(
+    CrdtOrSet<T> targetSet,
+    HybridLogicalClock candidateThreshold, {
+    int safeBufferMs = 0,
+  }) {
+    // Correctness over premature compaction: elapsed time does not prove causal acknowledgement.
+    // Retain tombstones indefinitely to prevent stale replica resurrection.
+    return retainTombstones(targetSet);
+  }
+
+  /// Retains tombstones indefinitely.
+  ///
+  /// Deprecated: Milestone timestamps do not guarantee causal acknowledgement by offline replicas.
+  /// Pruning based on milestone age or network time alone causes deleted entities to be resurrected
+  /// when an offline replica reconnects.
+  ///
+  /// This method is retained for API compatibility, but does not prune tombstones based on elapsed time.
+  @Deprecated('Milestone timestamps do not guarantee causal acknowledgement. Tombstones are retained indefinitely.')
   CrdtOrSet<T> executeMilestonePrune<T>(
     CrdtOrSet<T> targetSet,
-    int serverAcknowledgedEpochMs,
+    int milestoneEpochMs,
     String hostNodeId, {
     int safeBufferMs = 0,
   }) {
-    final currentNetworkTime = _networkTimeProvider();
-    final horizon = currentNetworkTime - safeBufferMs;
-
-    // Boundary safety: if the acknowledged milestone timestamp is at or beyond the safe horizon,
-    // gracefully defer pruning rather than wiping active tombstones up to the present millisecond.
-    if (serverAcknowledgedEpochMs >= horizon) {
-      return targetSet;
-    }
-
-    final threshold = HybridLogicalClock(
-      physicalTime: serverAcknowledgedEpochMs,
-      logicalCounter: 0,
-      nodeId: hostNodeId,
-    );
-
-    return targetSet.prune(threshold);
+    // Correctness over premature compaction: retain tombstones indefinitely.
+    return retainTombstones(targetSet);
   }
 
   /// Reconciles an incoming remote [CampaignProfile] with the [local] campaign state.

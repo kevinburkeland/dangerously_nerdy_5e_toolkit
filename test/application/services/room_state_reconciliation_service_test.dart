@@ -33,41 +33,7 @@ void main() {
     );
 
     test(
-        'Pruning Safety Test: gracefully defers pruning when threshold physical time >= current network time',
-        () {
-      const now = 100000;
-      final timeSyncedService = RoomStateReconciliationService(
-        networkTimeProvider: () => now,
-      );
-
-      const futureThreshold = HybridLogicalClock(
-        physicalTime: 160000,
-        logicalCounter: 0,
-        nodeId: 'nodeLeader',
-      );
-      const equalThreshold = HybridLogicalClock(
-        physicalTime: 100000,
-        logicalCounter: 0,
-        nodeId: 'nodeLeader',
-      );
-
-      final targetSet = CrdtOrSet<String>(
-        tombstones: {
-          'item-1': const HybridLogicalClock(
-              physicalTime: 50000, logicalCounter: 0, nodeId: 'nodeA'),
-        },
-      );
-
-      // Does not throw StateError; defers pruning and preserves targetSet
-      final deferred1 = timeSyncedService.safePrune(targetSet, futureThreshold);
-      expect(deferred1.tombstones.containsKey('item-1'), isTrue);
-
-      final deferred2 = timeSyncedService.safePrune(targetSet, equalThreshold);
-      expect(deferred2.tombstones.containsKey('item-1'), isTrue);
-    });
-
-    test(
-        'safePrune successfully prunes historical tombstones when threshold is safely in past',
+        'Tombstone Safety: safePrune retains tombstones indefinitely even when candidate threshold is safely in past',
         () {
       const pastTs1 = HybridLogicalClock(
           physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
@@ -90,16 +56,17 @@ void main() {
         },
       );
 
-      final pruned = service.safePrune(setWithTombstones, historicalThreshold);
+      final result = service.safePrune(setWithTombstones, historicalThreshold);
 
-      expect(pruned.tombstones.containsKey('tomb-1'), isFalse);
-      expect(pruned.tombstones.containsKey('tomb-2'), isFalse);
-      expect(pruned.tombstones.containsKey('tomb-3'), isTrue);
-      expect(pruned.tombstones['tomb-3'], equals(recentTs));
+      // Elapsed time does not prove causal acknowledgement; all tombstones are retained
+      expect(result.tombstones.containsKey('tomb-1'), isTrue);
+      expect(result.tombstones.containsKey('tomb-2'), isTrue);
+      expect(result.tombstones.containsKey('tomb-3'), isTrue);
+      expect(result.tombstones['tomb-3'], equals(recentTs));
     });
 
     test(
-        'Milestone Pruning Safety: executeMilestonePrune translates epoch ms and prunes tombstones',
+        'Tombstone Safety: executeMilestonePrune retains tombstones indefinitely without time-based garbage collection',
         () {
       const pastTs1 = HybridLogicalClock(
           physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
@@ -116,24 +83,26 @@ void main() {
         },
       );
 
-      // Server acknowledges snapshot at epoch 3000
-      final pruned = service.executeMilestonePrune(
+      // Milestone timestamp in past (3000 ms)
+      final result = service.executeMilestonePrune(
         setWithTombstones,
         3000,
         'server-host',
       );
 
-      expect(pruned.tombstones.containsKey('old-tomb-1'), isFalse);
-      expect(pruned.tombstones.containsKey('old-tomb-2'), isFalse);
-      expect(pruned.tombstones.containsKey('active-tomb'), isTrue);
-      expect(pruned.tombstones['active-tomb'], equals(recentTs));
+      // Milestone age does not prove causal observation across offline replicas; all tombstones retained
+      expect(result.tombstones.containsKey('old-tomb-1'), isTrue);
+      expect(result.tombstones.containsKey('old-tomb-2'), isTrue);
+      expect(result.tombstones.containsKey('active-tomb'), isTrue);
+      expect(result.tombstones['active-tomb'], equals(recentTs));
     });
 
     test(
-        'Milestone Pruning Safety: executeMilestonePrune defers pruning when epoch >= network time',
+        'Network time advancement alone cannot make a tombstone eligible for deletion',
         () {
-      final skewService = RoomStateReconciliationService(
-        networkTimeProvider: () => 5000,
+      // Network clock advances far into future (days / years ahead)
+      final farFutureService = RoomStateReconciliationService(
+        networkTimeProvider: () => 9999999999999,
       );
 
       const pastTs = HybridLogicalClock(
@@ -142,16 +111,185 @@ void main() {
         tombstones: {'tomb-1': pastTs},
       );
 
-      // Server acknowledges snapshot at epoch 6000 (ahead of network time 5000 due to skew)
-      final deferred = skewService.executeMilestonePrune(
+      final result1 = farFutureService.safePrune(
         setWithTombstones,
-        6000,
-        'server-host',
+        const HybridLogicalClock(
+            physicalTime: 5000000, logicalCounter: 0, nodeId: 'host'),
+      );
+      final result2 = farFutureService.executeMilestonePrune(
+        setWithTombstones,
+        5000000,
+        'host',
       );
 
-      // Must not wipe tombstones up to currentNetworkTime - 1; must defer pruning
-      expect(deferred.tombstones.containsKey('tomb-1'), isTrue);
-      expect(deferred.tombstones.length, equals(1));
+      expect(result1.tombstones.containsKey('tomb-1'), isTrue);
+      expect(result2.tombstones.containsKey('tomb-1'), isTrue);
+    });
+
+    test(
+        'Heartbeat expiry / TTL lookback alone cannot make a tombstone eligible for deletion',
+        () {
+      const now = 100000;
+      final serviceWithClock = RoomStateReconciliationService(
+        networkTimeProvider: () => now,
+      );
+
+      // Ancient tombstone 10x past standard heartbeat TTL
+      const ancientTombstoneTs = HybridLogicalClock(
+          physicalTime: 0, logicalCounter: 0, nodeId: 'nodeA');
+      final setWithTombstones = CrdtOrSet<String>(
+        tombstones: {'expired-heartbeat-tomb': ancientTombstoneTs},
+      );
+
+      final result = serviceWithClock.safePrune(
+        setWithTombstones,
+        const HybridLogicalClock(
+            physicalTime: 80000, logicalCounter: 0, nodeId: 'host'),
+        safeBufferMs: 20000,
+      );
+
+      expect(
+          result.tombstones.containsKey('expired-heartbeat-tomb'), isTrue);
+    });
+
+    test(
+        'Causal Safety: retainTombstones explicitly retains all set entries without modification',
+        () {
+      final setWithTombstones = CrdtOrSet<String>(
+        tombstones: {
+          't1': const HybridLogicalClock(
+              physicalTime: 100, logicalCounter: 0, nodeId: 'n1'),
+          't2': const HybridLogicalClock(
+              physicalTime: 200, logicalCounter: 0, nodeId: 'n2'),
+        },
+      );
+
+      final retained = service.retainTombstones(setWithTombstones);
+      expect(retained.tombstones.length, equals(2));
+      expect(retained.tombstones.containsKey('t1'), isTrue);
+      expect(retained.tombstones.containsKey('t2'), isTrue);
+    });
+
+    test(
+        'Regression: Stale offline replica cannot resurrect deleted entity after maintenance cycle',
+        () {
+      // 1. Replica A adds entity X
+      const tsAdd = HybridLogicalClock(
+          physicalTime: 1000, logicalCounter: 0, nodeId: 'replica-A');
+      var setA = const CrdtOrSet<String>.empty().add('entity-x', 'entity-x', tsAdd);
+      expect(setA.items.containsKey('entity-x'), isTrue);
+      expect(setA.activeValues, contains('entity-x'));
+
+      // 2. Replica B learns about X
+      var setB = const CrdtOrSet<String>.empty().merge(setA);
+      expect(setB.items.containsKey('entity-x'), isTrue);
+      expect(setB.activeValues, contains('entity-x'));
+
+      // 3. Replica B removes X, creating a tombstone
+      const tsRemove = HybridLogicalClock(
+          physicalTime: 2000, logicalCounter: 0, nodeId: 'replica-B');
+      setB = setB.remove('entity-x', tsRemove);
+      expect(setB.items.containsKey('entity-x'), isFalse);
+      expect(setB.activeValues, isNot(contains('entity-x')));
+      expect(setB.tombstones.containsKey('entity-x'), isTrue);
+
+      // 4. Replica A goes offline before learning about the removal.
+      // Replica A still has setA with entity X at tsAdd (1000).
+
+      // 5. Significant simulated time passes (e.g. 60 seconds)
+      const simulatedNow = 60000;
+      final hostReconciliation = RoomStateReconciliationService(
+        networkTimeProvider: () => simulatedNow,
+      );
+
+      // 6. Host milestone / maintenance path runs on Replica B
+      setB = hostReconciliation.executeMilestonePrune(
+        setB,
+        simulatedNow - 20000,
+        'replica-B',
+      );
+
+      // 7. Replica A reconnects carrying its stale pre-deletion add
+      final reconciledOnB = setB.merge(setA);
+
+      // 8. Invariant: entity X MUST remain deleted
+      expect(reconciledOnB.items.containsKey('entity-x'), isFalse,
+          reason: 'Entity X must not be resurrected by stale offline replica');
+      expect(reconciledOnB.activeValues, isNot(contains('entity-x')));
+      expect(reconciledOnB.tombstones.containsKey('entity-x'), isTrue);
+
+      // Contrast: Demonstrate that the old time-based pruning behavior would fail this test
+      const flawedPruneThreshold = HybridLogicalClock(
+          physicalTime: 40000, logicalCounter: 0, nodeId: 'replica-B');
+      final flawedSetB = setB.prune(flawedPruneThreshold);
+      expect(flawedSetB.tombstones.isEmpty, isTrue,
+          reason: 'Low-level prune deleted the tombstone based on elapsed time');
+      final flawedReconciliation = flawedSetB.merge(setA);
+      expect(flawedReconciliation.items.containsKey('entity-x'), isTrue,
+          reason: 'Proves the flaw: old time-based pruning resurrected deleted state');
+      expect(flawedReconciliation.activeValues, contains('entity-x'));
+    });
+
+    test(
+        'Legitimate newer re-add succeeds when re-add has a strictly newer HLC than the tombstone',
+        () {
+      // 1. Entity X deleted at T2
+      const tsRemove = HybridLogicalClock(
+          physicalTime: 2000, logicalCounter: 0, nodeId: 'peerA');
+      var set = const CrdtOrSet<String>.empty()
+          .add('item-1', 'item-1', const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'peerA'))
+          .remove('item-1', tsRemove);
+      expect(set.items.containsKey('item-1'), isFalse);
+      expect(set.activeValues, isEmpty);
+      expect(set.tombstones.containsKey('item-1'), isTrue);
+
+      // 2. Entity X legitimately re-added with strictly newer HLC at T3 (3000 > 2000)
+      const tsReAdd = HybridLogicalClock(
+          physicalTime: 3000, logicalCounter: 0, nodeId: 'peerB');
+      set = set.add('item-1', 'item-1-revived', tsReAdd);
+
+      // 3. New add wins because tsReAdd > tsRemove
+      expect(set.items.containsKey('item-1'), isTrue);
+      expect(set.activeValues, equals(['item-1-revived']));
+      expect(set.items['item-1']!.timestamp, equals(tsReAdd));
+    });
+
+    test(
+        'Ordinary CRDT merge convergence remains commutative, associative, and idempotent',
+        () {
+      const ts1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'n1');
+      const ts2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'n2');
+      const ts3 = HybridLogicalClock(physicalTime: 3000, logicalCounter: 0, nodeId: 'n3');
+
+      final setA = const CrdtOrSet<String>.empty()
+          .add('a', 'a', ts1)
+          .add('b', 'b', ts2)
+          .remove('b', ts3);
+      final setB = const CrdtOrSet<String>.empty()
+          .add('b', 'b', ts1)
+          .add('c', 'c', ts2);
+      final setC = const CrdtOrSet<String>.empty()
+          .add('d', 'd', ts3)
+          .remove('a', ts2);
+
+      // Commutativity: A ⊔ B == B ⊔ A
+      final ab = setA.merge(setB);
+      final ba = setB.merge(setA);
+      expect(ab.items, equals(ba.items));
+      expect(ab.tombstones, equals(ba.tombstones));
+      expect(ab.activeValues.toSet(), equals(ba.activeValues.toSet()));
+
+      // Idempotence: A ⊔ A == A
+      final aa = setA.merge(setA);
+      expect(aa.items, equals(setA.items));
+      expect(aa.tombstones, equals(setA.tombstones));
+
+      // Associativity: (A ⊔ B) ⊔ C == A ⊔ (B ⊔ C)
+      final abThenC = (setA.merge(setB)).merge(setC);
+      final aThenBc = setA.merge(setB.merge(setC));
+      expect(abThenC.items, equals(aThenBc.items));
+      expect(abThenC.tombstones, equals(aThenBc.tombstones));
+      expect(abThenC.activeValues.toSet(), equals(aThenBc.activeValues.toSet()));
     });
 
     test(

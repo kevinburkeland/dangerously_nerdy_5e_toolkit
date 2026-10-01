@@ -2,9 +2,9 @@
 
 When implementing network synchronization, offline capabilities, or multi-user features, adhere to these constraints:
 
-## 1. Tombstone Pruning
-Collections (like active room minions) use an Observed-Remove Set (`CrdtOrSet`). Deleting an item requires leaving a Tombstone. 
-- **Rule:** The AI must always implement a `prune(HybridLogicalClock threshold)` method to prevent memory leaks from infinite tombstone accumulation.
+## 1. Tombstone Retention & Causal Safety
+Collections (like active room minions) use an Observed-Remove Set (`CrdtOrSet`). Deleting an item requires leaving a Tombstone.
+- **Rule:** Tombstones MUST NOT be garbage-collected based solely on elapsed wall-clock time, network time, or heartbeat timeouts. An offline replica may reconnect with a pre-deletion addition, resurrecting deleted state if the tombstone was pruned. In the absence of protocol-level causal acknowledgement (e.g. vector clocks confirming observation across all replicas), tombstones are retained indefinitely. Low-level `prune(threshold)` primitives must not be invoked on elapsed-time heuristics.
 
 ## 2. Deterministic Tie-Breaking
 When two offline devices mutate the same field at the exact same physical millisecond:

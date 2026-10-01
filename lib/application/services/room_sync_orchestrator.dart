@@ -444,22 +444,19 @@ class RoomSyncOrchestrator {
     });
   }
 
-  /// Host milestone flush execution: prunes tombstones and commits state.
+  /// Host milestone flush execution: persists room state snapshot.
+  ///
+  /// Note: Automatic tombstone pruning is intentionally disabled during milestone flushes.
+  /// Elapsed network time or heartbeat horizons cannot guarantee that offline replicas
+  /// have observed deletions; pruning tombstones without causal stability leads to
+  /// state resurrection when offline replicas reconnect. Tombstones are retained indefinitely.
   Future<void> executeHostMilestoneFlush() async {
     final activeProfile = campaignRepo.activeProfile;
     if (activeProfile == null) return;
 
-    final authoritativeTimestamp =
-        _localTimeProvider() - (heartbeatTtl.inMilliseconds * 2);
-
-    // Prune tracked CRDT tombstones older than the milestone snapshot
-    if (_trackedRulesSet.tombstones.isNotEmpty) {
-      _trackedRulesSet = reconciliationService.executeMilestonePrune<String>(
-        _trackedRulesSet,
-        authoritativeTimestamp,
-        localNodeId,
-      );
-    }
+    // Retain tracked CRDT tombstones indefinitely; elapsed time does not prove causal acknowledgement.
+    _trackedRulesSet =
+        reconciliationService.retainTombstones<String>(_trackedRulesSet);
 
     // Persist immediately to establish the snapshot boundary
     _isApplyingRemoteSync = true;

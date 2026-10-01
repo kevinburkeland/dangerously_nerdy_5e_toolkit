@@ -376,7 +376,7 @@ void main() {
     });
 
     test(
-        'Host Milestone Prune Test: host flushes snapshot and prunes historical tombstones',
+        'Host Milestone Flush Test: host flushes snapshot and retains tombstones indefinitely',
         () async {
       final hostOrchestrator = RoomSyncOrchestrator(
         router: router,
@@ -411,10 +411,10 @@ void main() {
       // Execute host milestone flush
       await hostOrchestrator.executeHostMilestoneFlush();
 
-      // Verify old tombstone was pruned, recent tombstone preserved
+      // Verify tombstones are retained indefinitely; elapsed time does not prove causal acknowledgement
       expect(
           hostOrchestrator.trackedRulesSet.tombstones.containsKey('old_rule'),
-          isFalse);
+          isTrue);
       expect(
           hostOrchestrator.trackedRulesSet.tombstones
               .containsKey('recent_rule'),
@@ -721,7 +721,7 @@ void main() {
     });
 
     test(
-        'Buffered Milestone Pruning Horizon: subtracts 2x heartbeat TTL from authoritative timestamp',
+        'Host Milestone Snapshot Flush: preserves all tombstones regardless of heartbeat TTL or elapsed time',
         () async {
       final now = clockSyncService.currentNetworkTimeMs;
       final hostOrchestrator = RoomSyncOrchestrator(
@@ -735,9 +735,8 @@ void main() {
         heartbeatTtl: const Duration(seconds: 10), // lookback = 20,000 ms
       );
 
-      // 2 * 10s TTL = 20,000 ms lookback window:
-      // veryOldTs: 50,000ms in the past (older than lookback window) -> pruned
-      // recentTombstoneWithinLookback: 5,000ms in the past (within lookback window) -> PRESERVED
+      // Heartbeat TTL and elapsed time cannot prove causal acknowledgement by offline replicas.
+      // Both ancient tombstones and recent tombstones must be preserved.
       final veryOldTs = HybridLogicalClock(
           physicalTime: now - 50000, logicalCounter: 0, nodeId: 'dm-host-1');
       final recentTombstoneWithinLookback = HybridLogicalClock(
@@ -757,12 +756,110 @@ void main() {
       expect(
           hostOrchestrator.trackedRulesSet.tombstones
               .containsKey('rule-ancient'),
-          isFalse);
+          isTrue);
       // Recent tombstone within the 2x TTL window is PRESERVED for transient reconnects
       expect(
           hostOrchestrator.trackedRulesSet.tombstones
               .containsKey('rule-recent-disconnect'),
           isTrue);
+    });
+
+    test(
+        'Offline Reconnection Regression: stale offline replica cannot resurrect deleted entity after host milestone flushes',
+        () async {
+      int simulatedNow = 100000;
+      final hostOrchestrator = RoomSyncOrchestrator(
+        router: router,
+        campaignRepo: mockRepo,
+        reconciliationService: reconciliationService,
+        clockSyncService: clockSyncService,
+        localTimeProvider: () => simulatedNow,
+        isHost: true,
+        hostNodeId: 'dm-host-1',
+        heartbeatTtl: const Duration(seconds: 10),
+      );
+
+      // 1. Initial state: rule-flank is added at T1
+      const tsAdd = HybridLogicalClock(
+        physicalTime: 1000,
+        logicalCounter: 0,
+        nodeId: 'replica-A',
+      );
+      hostOrchestrator.trackedRulesSet =
+          const CrdtOrSet<String>.empty().add('rule-flank', 'rule-flank', tsAdd);
+
+      // 2. Replica B removes rule-flank at T2 (2000 > 1000), producing a tombstone
+      const tsRemove = HybridLogicalClock(
+        physicalTime: 2000,
+        logicalCounter: 0,
+        nodeId: 'replica-B',
+      );
+      final remoteDeletionSet = const CrdtOrSet<String>.empty()
+          .add('rule-flank', 'rule-flank', tsAdd)
+          .remove('rule-flank', tsRemove);
+
+      final deletionDeltaMap =
+          CrdtOrSetDto.toMap<String>(remoteDeletionSet, (v) => v);
+      final deletionJson = jsonEncode({
+        'type': 'crdt_or_set_delta',
+        'payload': deletionDeltaMap,
+        'timestamp': 1700000002000,
+      });
+
+      // Host receives deletion and updates its set
+      await hostOrchestrator.handleIncomingPayload(deletionJson);
+      expect(
+          hostOrchestrator.trackedRulesSet.items.containsKey('rule-flank'),
+          isFalse);
+      expect(
+          hostOrchestrator.trackedRulesSet.tombstones.containsKey('rule-flank'),
+          isTrue);
+
+      // 3. Replica A went offline before receiving the deletion.
+      // Replica A still holds rule-flank with timestamp tsAdd (1000).
+
+      // 4. Significant simulated time elapses (simulatedNow advances by 60s)
+      simulatedNow += 60000;
+
+      // 5. Host executes milestone flush (in old implementation, this wiped the tombstone)
+      await hostOrchestrator.executeHostMilestoneFlush();
+
+      // Verify the tombstone was preserved by milestone flush
+      expect(
+          hostOrchestrator.trackedRulesSet.tombstones.containsKey('rule-flank'),
+          isTrue);
+
+      // 6. Replica A reconnects and broadcasts its stale pre-deletion state
+      final staleOfflineSet =
+          const CrdtOrSet<String>.empty().add('rule-flank', 'rule-flank', tsAdd);
+      final staleDeltaMap =
+          CrdtOrSetDto.toMap<String>(staleOfflineSet, (v) => v);
+      final staleJson = jsonEncode({
+        'type': 'crdt_or_set_delta',
+        'origin_node_id': 'replica-A',
+        'payload': staleDeltaMap,
+        'timestamp': 1700000062000,
+      });
+
+      await hostOrchestrator.handleIncomingPayload(staleJson);
+
+      // 7. INVARIANT: rule-flank MUST remain deleted. Stale replica must NOT resurrect it!
+      expect(
+        hostOrchestrator.trackedRulesSet.items.containsKey('rule-flank'),
+        isFalse,
+        reason:
+            'Tombstone must prevent stale pre-deletion add from resurrecting rule-flank',
+      );
+      expect(
+        hostOrchestrator.trackedRulesSet.activeValues,
+        isNot(contains('rule-flank')),
+      );
+      expect(
+        hostOrchestrator.trackedRulesSet.tombstones.containsKey('rule-flank'),
+        isTrue,
+      );
+
+      hostOrchestrator.stopSynchronization();
     });
 
     test(
