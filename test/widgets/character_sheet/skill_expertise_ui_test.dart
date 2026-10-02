@@ -49,6 +49,15 @@ Character _createTestWarlock({
 }
 
 void main() {
+  setUpAll(() {
+    CharacterEvaluationEngine.featLookupHook =
+        (slug) => SrdFeatsLibrary.findBySlug(slug);
+  });
+
+  tearDownAll(() {
+    CharacterEvaluationEngine.featLookupHook = null;
+  });
+
   group('Skill Expertise Controller & UI Tests', () {
     test(
         'CharacterSheetController.setSkillProficiency updates stats to 2x proficiency bonus',
