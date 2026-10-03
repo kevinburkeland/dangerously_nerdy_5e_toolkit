@@ -228,6 +228,6 @@ Future<void> initServiceLocator({
         clockSyncService: sl<ClockSyncService>(),
         diceRoomService: DiceRoomService(),
         payloadMapper: sl<IRoomSyncPayloadPort>(),
-        localNodeId: localNodeId,
+        replicaId: resolvedReplicaId,
       ));
 }

@@ -35,14 +35,14 @@ void main() {
           roomCode: 'CR-101',
           title: 'Shadow Gates',
           description: 'Dark fog surrounds the gates.',
-          entityLinks: const [
+          entityLinks: [
             RoomEntityLink(
               refType: SessionRefType.monster,
               entityId: 'monster_wolf',
               displayName: 'Dire Wolf',
             ),
           ],
-          activeEncounter: const [
+          activeEncounter: [
             EncounterParticipant(
               participantId: 'p_1',
               entityLink: RoomEntityLink(

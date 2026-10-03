@@ -737,7 +737,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
 
   Widget _buildVaultTab(
       PartySessionState? session, TabletopColors tabletop, bool isDark) {
-    final purse = session?.partyPurse ?? const PartyPurse();
+    final purse = session?.partyPurse ?? const PartyPurse.empty();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -920,7 +920,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
   Widget _buildActiveCharacterBanner(
       PartySessionState? session, ColorScheme colorScheme, bool isDark) {
     final roster = session?.characterRoster ?? const [];
-    final myPurse = session?.getMemberPurse(_playerName) ?? const PartyPurse();
+    final myPurse = session?.getMemberPurse(_playerName) ?? const PartyPurse.empty();
     final isLinked =
         session?.sharedCharacters.containsKey(_playerName) == true ||
             (_currentMembership?.characterId != null &&
@@ -1351,7 +1351,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
                   label:
                       const Text('Disperse...', style: TextStyle(fontSize: 11)),
                   onPressed: () {
-                    final purse = session?.partyPurse ?? const PartyPurse();
+                    final purse = session?.partyPurse ?? const PartyPurse.empty();
                     DisperseLootDialog.show(
                       context,
                       initialRoomCode: _roomCode,
@@ -1366,7 +1366,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
             const Divider(height: 14),
             ...allMembers.map((member) {
               final purse =
-                  session?.getMemberPurse(member) ?? const PartyPurse();
+                  session?.getMemberPurse(member) ?? const PartyPurse.empty();
               final isMe = member == _playerName;
 
               return Container(

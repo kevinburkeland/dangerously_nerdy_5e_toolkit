@@ -18,31 +18,31 @@ void main() {
     late CampaignProfileService campaignProfileService;
     late PartyRoomService partyService;
 
-    const testCharacter1 = Character(
-      id: EntityId(slug: 'hero_valeros', ruleset: RulesetVersion.v2024),
+    final testCharacter1 = Character(
+      id: const EntityId(slug: 'hero_valeros', ruleset: RulesetVersion.v2024),
       name: 'Valeros the Fighter',
-      speciesRef: EntityReference(
+      speciesRef: const EntityReference(
         slug: 'human',
         refType: EntityType.species,
         displayName: 'Human',
       ),
-      progression: CharacterProgression(classes: []),
-      baseScores: AbilityScores.standardArray(),
-      resources: CharacterResourcePool(currentHp: 45),
+      progression: const CharacterProgression(classes: []),
+      baseScores: const AbilityScores.standardArray(),
+      resources: const CharacterResourcePool(currentHp: 45),
       purse: PartyPurse(gp: 15, sp: 5),
     );
 
-    const testCharacter2 = Character(
-      id: EntityId(slug: 'hero_seward', ruleset: RulesetVersion.v2024),
+    final testCharacter2 = Character(
+      id: const EntityId(slug: 'hero_seward', ruleset: RulesetVersion.v2024),
       name: 'Dr. Seward',
-      speciesRef: EntityReference(
+      speciesRef: const EntityReference(
         slug: 'human',
         refType: EntityType.species,
         displayName: 'Human',
       ),
-      progression: CharacterProgression(classes: []),
-      baseScores: AbilityScores.standardArray(),
-      resources: CharacterResourcePool(currentHp: 32),
+      progression: const CharacterProgression(classes: []),
+      baseScores: const AbilityScores.standardArray(),
+      resources: const CharacterResourcePool(currentHp: 32),
       purse: PartyPurse(gp: 50),
     );
 
@@ -148,7 +148,7 @@ void main() {
       // Disperse 100 GP across Valeros and Party Reserve (50 GP each)
       await partyService.disperseCoinsToParty(
         roomCode: session.roomCode,
-        purseToDisperse: const PartyPurse(gp: 100),
+        purseToDisperse: PartyPurse(gp: 100),
         recipientCharacters: ['Valeros the Fighter'],
         performedBy: 'DM Kevin',
         includePartyReserve: true,
@@ -182,7 +182,7 @@ void main() {
       // Disperse 200 GP liquidated without party reserve
       await partyService.disperseCoinsToParty(
         roomCode: session.roomCode,
-        purseToDisperse: const PartyPurse(gp: 200),
+        purseToDisperse: PartyPurse(gp: 200),
         recipientCharacters: ['Dr. Seward'],
         performedBy: 'DM Vlad',
         includePartyReserve: false,
@@ -275,7 +275,7 @@ void main() {
       await partyService.updateMemberPurse(
         roomCode: session.roomCode,
         characterName: 'Valeros the Fighter',
-        newPurse: const PartyPurse(pp: 2, gp: 100, sp: 20),
+        newPurse: PartyPurse(pp: 2, gp: 100, sp: 20),
         performedBy: 'DM Kevin',
       );
 

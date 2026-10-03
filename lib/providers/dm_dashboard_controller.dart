@@ -411,7 +411,7 @@ class DmDashboardController extends ChangeNotifier {
   }
 
   /// Shared party treasury / reserve purse for the active campaign.
-  PartyPurse get partyPurse => _activeProfile?.partyPurse ?? const PartyPurse();
+  PartyPurse get partyPurse => _activeProfile?.partyPurse ?? const PartyPurse.empty();
 
   /// Combined wealth across the campaign shared party purse and all linked character personal purses.
   PartyPurse get totalPartyWealth {

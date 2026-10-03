@@ -1026,7 +1026,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
       stream: PartyRoomService().streamSession(membership.roomCode),
       builder: (context, snapshot) {
         final session = snapshot.data;
-        final stashPurse = session?.partyPurse ?? const PartyPurse();
+        final stashPurse = session?.partyPurse ?? const PartyPurse.empty();
 
         return Container(
           margin: const EdgeInsets.only(bottom: 14),

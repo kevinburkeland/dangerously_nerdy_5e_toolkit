@@ -48,7 +48,7 @@ class CharacterCreationRequest {
     this.toolProficiencies = const [],
     this.languages = const ['Common'],
     this.startingEquipment = const [],
-    this.startingPurse = const PartyPurse(),
+    this.startingPurse = const PartyPurse.empty(),
     this.cantrips = const [],
     this.spellsKnown = const [],
     this.spellsPrepared = const [],

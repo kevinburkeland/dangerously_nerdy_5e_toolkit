@@ -406,7 +406,7 @@ void main() {
       // 10 PP / 4 = 2 PP each, 2 PP remainder -> Reserve gets 2+2 = 4 PP
       // 100 GP / 4 = 25 GP each, 0 remainder -> Reserve gets 25 GP
       // 11 SP / 4 = 2 SP each, 3 SP remainder -> Reserve gets 2+3 = 5 SP
-      const purseToDisperse = PartyPurse(
+      final purseToDisperse = PartyPurse(
         pp: 10,
         gp: 100,
         sp: 11,
@@ -451,7 +451,7 @@ void main() {
       // 2 players + 1 reserve = 3 shares: 400 / 3 = 133 GP each, 1 GP remainder
       await partyService.disperseCoinsToParty(
         roomCode: session.roomCode,
-        purseToDisperse: const PartyPurse(gp: 100),
+        purseToDisperse: PartyPurse(gp: 100),
         liquidatedGemsAndArtGp: 300.0,
         includeLiquidatedInSplit: true,
         recipientCharacters: recipients,
@@ -491,7 +491,7 @@ void main() {
       // Vault remaining = 100 - 66 = 34 GP (33 reserve share + 1 remainder).
       await partyService.disperseCoinsToParty(
         roomCode: session.roomCode,
-        purseToDisperse: const PartyPurse(gp: 100),
+        purseToDisperse: PartyPurse(gp: 100),
         recipientCharacters: recipients,
         performedBy: 'DM',
         includePartyReserve: true,
@@ -533,7 +533,7 @@ void main() {
       // Vault remaining = 0 GP.
       await partyService.disperseCoinsToParty(
         roomCode: session.roomCode,
-        purseToDisperse: const PartyPurse(gp: 50),
+        purseToDisperse: PartyPurse(gp: 50),
         recipientCharacters: recipients,
         performedBy: 'DM',
         includePartyReserve: false,
@@ -558,7 +558,7 @@ void main() {
       await partyService.updateMemberPurse(
         roomCode: session.roomCode,
         characterName: 'Dain',
-        newPurse: const PartyPurse(gp: 100),
+        newPurse: PartyPurse(gp: 100),
         performedBy: 'Dain',
       );
 
@@ -615,13 +615,13 @@ void main() {
       await partyService.updateMemberPurse(
         roomCode: session.roomCode,
         characterName: 'Kaelen',
-        newPurse: const PartyPurse(gp: 50),
+        newPurse: PartyPurse(gp: 50),
         performedBy: 'DM',
       );
       await partyService.updateMemberPurse(
         roomCode: session.roomCode,
         characterName: 'Corin',
-        newPurse: const PartyPurse(gp: 10),
+        newPurse: PartyPurse(gp: 10),
         performedBy: 'DM',
       );
 
@@ -952,12 +952,12 @@ void main() {
           equals(50));
 
       // A character links to the campaign
-      const dummyChar = Character(
-        id: EntityId(slug: 'test-link-char', ruleset: RulesetVersion.v2024),
+      final dummyChar = Character(
+        id: const EntityId(slug: 'test-link-char', ruleset: RulesetVersion.v2024),
         name: 'Dain Ironfoot',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
             slug: 'dwarf', refType: EntityType.species, displayName: 'Dwarf'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(
@@ -970,8 +970,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 25),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 25),
         purse: PartyPurse(gp: 15),
       );
 

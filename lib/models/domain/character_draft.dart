@@ -63,7 +63,7 @@ class CharacterDraft {
     List<String>? toolProficiencies,
     List<String>? languages,
     List<StartingEquipmentItemRequest>? startingEquipment,
-    this.startingPurse = const PartyPurse(),
+    this.startingPurse = const PartyPurse.empty(),
     this.takesStartingWealth = false,
     List<EntityReference<Spell>>? cantrips,
     List<EntityReference<Spell>>? spellsKnown,

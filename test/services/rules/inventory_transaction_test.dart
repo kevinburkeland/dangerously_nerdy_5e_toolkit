@@ -8,15 +8,15 @@ void main() {
     late Character baseCharacter;
 
     setUp(() {
-      baseCharacter = const Character(
-        id: EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
+      baseCharacter = Character(
+        id: const EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
         name: 'Warrior',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -27,9 +27,9 @@ void main() {
             hitDie: 'd10',
           ),
         ]),
-        baseScores: AbilityScores.standardArray(),
+        baseScores: const AbilityScores.standardArray(),
         inventory: [
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'inst-sword',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -39,7 +39,7 @@ void main() {
             isEquipped: true,
             equippedSlot: EquipmentSlot.mainHand,
           ),
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'inst-shield',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -49,7 +49,7 @@ void main() {
             isEquipped: true,
             equippedSlot: EquipmentSlot.shield,
           ),
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'inst-greatsword',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -58,7 +58,7 @@ void main() {
             ),
             isEquipped: false,
           ),
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'inst-ring1',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -68,7 +68,7 @@ void main() {
             requiresAttunement: true,
             isAttuned: false,
           ),
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'inst-ring2',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -78,7 +78,7 @@ void main() {
             requiresAttunement: true,
             isAttuned: true,
           ),
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'inst-ring3',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -88,7 +88,7 @@ void main() {
             requiresAttunement: true,
             isAttuned: true,
           ),
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'inst-ring4',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -99,7 +99,7 @@ void main() {
             isAttuned: true,
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 12),
+        resources: const CharacterResourcePool(currentHp: 12),
         purse: PartyPurse(gp: 50),
       );
     });
@@ -269,11 +269,11 @@ void main() {
     });
 
     test('atomic loot transfer from LootContainer to Character', () {
-      const chest = LootContainer(
+      final chest = LootContainer(
         containerId: 'chest-01',
         name: 'Dungeon Chest',
         items: [
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'chest-item-potion',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -292,7 +292,7 @@ void main() {
         destinationCharacter: baseCharacter,
         instanceId: 'chest-item-potion',
         quantity: 2,
-        currency: const PartyPurse(gp: 40),
+        currency: PartyPurse(gp: 40),
         nodeId: 'test_node_loot',
       );
 

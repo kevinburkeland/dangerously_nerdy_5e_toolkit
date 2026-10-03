@@ -44,15 +44,15 @@ void main() {
     test(
         'creates 2014 ruleset Level 1 Fighter with Racial ASI and starting equipment',
         () {
-      const request = CharacterCreationRequest(
+      final request = CharacterCreationRequest(
         characterName: 'Thorek Stonehelm',
         ruleset: RulesetVersion.v2014,
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'mountain-dwarf',
           displayName: 'Mountain Dwarf',
         ),
-        backgroundRef: EntityReference(
+        backgroundRef: const EntityReference(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -60,14 +60,14 @@ void main() {
         startingClassSlug: 'fighter',
         startingClassDisplayName: 'Fighter',
         startingClassHitDie: 'd10',
-        baseScores: AbilityScores
+        baseScores: const AbilityScores
             .standardArray(), // STR 15, DEX 14, CON 13, INT 12, WIS 10, CHA 8
-        bonusScores: AbilityScores(
+        bonusScores: const AbilityScores(
           strength: 2, // 2014 Mountain Dwarf +2 STR
           constitution: 2, // +2 CON
         ),
         startingEquipment: [
-          StartingEquipmentItemRequest(
+          const StartingEquipmentItemRequest(
             itemRef: EntityReference(
               refType: EntityType.equipment,
               slug: 'chain-mail',
@@ -77,7 +77,7 @@ void main() {
             equipImmediately: true,
             defaultSlot: EquipmentSlot.armor,
           ),
-          StartingEquipmentItemRequest(
+          const StartingEquipmentItemRequest(
             itemRef: EntityReference(
               refType: EntityType.equipment,
               slug: 'longsword',

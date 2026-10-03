@@ -78,7 +78,7 @@ void main() {
           roomId: 'r1',
           roomCode: 'CR-1',
           title: 'Arena Room',
-          activeEncounter: const [
+          activeEncounter: [
             EncounterParticipant(
               participantId: 'p1',
               entityLink: RoomEntityLink(
@@ -145,7 +145,7 @@ void main() {
           roomId: 'r1',
           roomCode: 'CR-1',
           title: 'Room',
-          activeEncounter: const [
+          activeEncounter: [
             EncounterParticipant(
               participantId: 'p1',
               entityLink: RoomEntityLink(

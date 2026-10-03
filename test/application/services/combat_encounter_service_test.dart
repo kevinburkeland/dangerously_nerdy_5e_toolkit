@@ -306,7 +306,7 @@ void main() {
     });
 
     test('nextTurn and prevTurn cycle active turn and round count', () {
-      const p1 = EncounterParticipant(
+      final p1 = EncounterParticipant(
         participantId: 'p1',
         entityLink: RoomEntityLink(
           refType: SessionRefType.character,
@@ -317,7 +317,7 @@ void main() {
         maxHp: 20,
         isActiveTurn: true,
       );
-      const p2 = EncounterParticipant(
+      final p2 = EncounterParticipant(
         participantId: 'p2',
         entityLink: RoomEntityLink(
           refType: SessionRefType.monster,
@@ -361,7 +361,7 @@ void main() {
     test(
         'applyParticipantDamageOrHeal handles damage absorption and defeat status',
         () {
-      const p1 = EncounterParticipant(
+      final p1 = EncounterParticipant(
         participantId: 'p1',
         entityLink: RoomEntityLink(
           refType: SessionRefType.character,
@@ -484,7 +484,7 @@ void main() {
     });
 
     test('toggleParticipantCondition adds and removes conditions', () {
-      const p1 = EncounterParticipant(
+      final p1 = EncounterParticipant(
         participantId: 'p1',
         entityLink: RoomEntityLink(
           refType: SessionRefType.character,
@@ -525,7 +525,7 @@ void main() {
         networkTimeProvider: () => fixedNetworkTime,
       );
 
-      const p1 = EncounterParticipant(
+      final p1 = EncounterParticipant(
         participantId: 'p1',
         entityLink: RoomEntityLink(
           refType: SessionRefType.character,

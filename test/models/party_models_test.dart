@@ -8,7 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_event.dart';
 void main() {
   group('Party Models & Mathematical Integrity', () {
     test('PartyPurse GP conversion math is exact according to 5e rules', () {
-      const purse = PartyPurse(
+      final purse = PartyPurse(
         pp: 10, // 100 GP
         gp: 50, // 50 GP
         ep: 20, // 10 GP
@@ -19,13 +19,13 @@ void main() {
       expect(purse.totalGpEquivalent, equals(175.0));
       expect(purse.isEmpty, isFalse);
 
-      const empty = PartyPurse();
+      final empty = PartyPurse();
       expect(empty.isEmpty, isTrue);
       expect(empty.totalGpEquivalent, equals(0.0));
     });
 
     test('PartyPurse coin deposit and withdraw operations clamp correctly', () {
-      var purse = const PartyPurse(gp: 100, sp: 50);
+      var purse = PartyPurse(gp: 100, sp: 50);
       purse = purse.depositCoins(gp: 25, cp: 100, nodeId: 'test_node');
       expect(purse.gp, equals(125));
       expect(purse.cp, equals(100));
@@ -39,7 +39,7 @@ void main() {
     test(
         'PartyPurse splitShares evenly distributes coins and calculates remainders',
         () {
-      const purse = PartyPurse(
+      final purse = PartyPurse(
         pp: 10,
         gp: 25,
         ep: 5,
@@ -63,7 +63,7 @@ void main() {
     });
 
     test('PartyPurse splitShares with liquidated gems and art objects', () {
-      const purse = PartyPurse(gp: 100);
+      final purse = PartyPurse(gp: 100);
       final split = purse.splitShares(4,
           includeLiquidatedGemsAndArt: true, liquidatedGemsAndArtGp: 300.0);
 
@@ -130,7 +130,7 @@ void main() {
         roomCode: 'ROOM-ABCDEF',
         campaignName: 'Crown City Vault Heist',
         hostKeyHash: 'hash-abc-123',
-        partyPurse: const PartyPurse(gp: 500),
+        partyPurse: PartyPurse(gp: 500),
         activePlayers: ['Alice', 'Bob'],
         characterRoster: ['Alice (Rogue)', 'Bob (Cleric)', 'Charlie (Wizard)'],
         version: 3,
@@ -166,8 +166,8 @@ void main() {
 
     test('PartyPurse add and deduct methods combine coin denominations cleanly',
         () {
-      const purse1 = PartyPurse(pp: 2, gp: 50, ep: 10, sp: 20, cp: 100);
-      const purse2 = PartyPurse(pp: 1, gp: 25, ep: 5, sp: 10, cp: 50);
+      final purse1 = PartyPurse(pp: 2, gp: 50, ep: 10, sp: 20, cp: 100);
+      final purse2 = PartyPurse(pp: 1, gp: 25, ep: 5, sp: 10, cp: 50);
 
       final sum = purse1.add(purse2, nodeId: 'test_node');
       expect(sum.pp, equals(3));
@@ -184,7 +184,7 @@ void main() {
       expect(diff.cp, equals(100));
 
       // Overdrawing clamps at 0
-      const largePurse = PartyPurse(gp: 500);
+      final largePurse = PartyPurse(gp: 500);
       final overdrawn = diff.deduct(largePurse, nodeId: 'test_node');
       expect(overdrawn.gp, equals(0));
       expect(overdrawn.pp, equals(2));
@@ -194,7 +194,7 @@ void main() {
         'PartyPurse deductGpEquivalent makes change and repacks into optimal denominations',
         () {
       // Coin Breakdown Deduct Test: 1 PP = 10 GP; deduct 0.5 GP (5 SP) => 9.5 GP (9 GP, 1 EP)
-      const purse = PartyPurse(pp: 1);
+      final purse = PartyPurse(pp: 1);
       final result = purse.deductGpEquivalent(0.5, nodeId: 'test_node');
 
       expect(result.pp, equals(0));
@@ -232,8 +232,8 @@ void main() {
         roomCode: 'ROOM-123456',
         campaignName: 'Shadows of the Vampire',
         hostKeyHash: 'hash-123',
-        partyPurse: const PartyPurse(gp: 1000),
-        memberPurses: const {
+        partyPurse: PartyPurse(gp: 1000),
+        memberPurses: {
           'Iselde': PartyPurse(gp: 150, sp: 20),
           'Kaelen': PartyPurse(pp: 5, gp: 300),
         },

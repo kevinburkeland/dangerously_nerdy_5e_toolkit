@@ -112,7 +112,7 @@ void main() {
       );
 
       // PartyPurse mutations reject 'local'
-      const purse = PartyPurse(gp: 100);
+      final purse = PartyPurse(gp: 100);
       expect(
         () => purse.depositCoins(gp: 50, nodeId: 'local'),
         throwsArgumentError,
@@ -130,11 +130,11 @@ void main() {
         throwsArgumentError,
       );
       expect(
-        () => purse.add(const PartyPurse(gp: 10), nodeId: 'local'),
+        () => purse.add(PartyPurse(gp: 10), nodeId: 'local'),
         throwsArgumentError,
       );
       expect(
-        () => purse.deduct(const PartyPurse(gp: 10), nodeId: 'local'),
+        () => purse.deduct(PartyPurse(gp: 10), nodeId: 'local'),
         throwsArgumentError,
       );
       expect(
@@ -168,7 +168,7 @@ void main() {
       await partyService.updateMemberPurse(
         roomCode: roomCode,
         characterName: 'Valeros',
-        newPurse: const PartyPurse(gp: 75, sp: 20),
+        newPurse: PartyPurse(gp: 75, sp: 20),
         performedBy: 'DM',
       );
 
@@ -327,12 +327,12 @@ void main() {
       expect(() => LocalCampaignRepository().loadAllProfiles(), throwsStateError);
 
       // InventoryTransactionService currency transfer fails loudly
-      const container = LootContainer(
+      final container = LootContainer(
         containerId: 'cont_1',
         name: 'Chest',
         purse: PartyPurse(gp: 50),
         items: [
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'item_1',
             itemRef: EntityReference(
               slug: 'potion',
@@ -347,7 +347,7 @@ void main() {
           sourceContainer: container,
           destinationCharacter: testChar,
           instanceId: 'item_1',
-          currency: const PartyPurse(gp: 10),
+          currency: PartyPurse(gp: 10),
         ),
         throwsStateError,
       );
@@ -442,21 +442,21 @@ void main() {
       expect(persistencePartyService.localNodeId, equals(authoritativeId.value));
 
       // InventoryTransactionService
-      const testChar = Character(
-        id: EntityId(slug: 'hero_inv_1', ruleset: RulesetVersion.v2024),
+      final testChar = Character(
+        id: const EntityId(slug: 'hero_inv_1', ruleset: RulesetVersion.v2024),
         name: 'Hero Inv',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
         purse: PartyPurse(gp: 10),
       );
-      const container = LootContainer(
+      final container = LootContainer(
         containerId: 'chest_inv_1',
         name: 'Chest Inv',
         purse: PartyPurse(gp: 50),
         items: [
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'item_inv_1',
             itemRef: EntityReference(
               slug: 'potion',
@@ -471,7 +471,7 @@ void main() {
         sourceContainer: container,
         destinationCharacter: testChar,
         instanceId: 'item_inv_1',
-        currency: const PartyPurse(gp: 15),
+        currency: PartyPurse(gp: 15),
         replicaId: authoritativeId,
       );
       expect(transferResult.updatedCharacter.purse.gp, equals(25));

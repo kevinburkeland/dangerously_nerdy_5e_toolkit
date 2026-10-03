@@ -296,13 +296,13 @@ void main() {
         'PartyPurse Reconciliation: Spending money to 0 does not resurrect remote currency',
         () {
       // Local spent all 100 GP
-      final local = const PartyPurse()
+      final local = const PartyPurse.empty()
           .depositCoins(gp: 100, nodeId: 'host')
           .withdrawCoins(gp: 100, nodeId: 'peer_local');
       expect(local.gp, 0);
 
       // Remote still has the unspent 100 GP
-      final remote = const PartyPurse().depositCoins(gp: 100, nodeId: 'host');
+      final remote = const PartyPurse.empty().depositCoins(gp: 100, nodeId: 'host');
       expect(remote.gp, 100);
 
       // Merge local and remote
@@ -323,10 +323,10 @@ void main() {
         'PartyPurse Reconciliation: Concurrent deposits across peers converge via PN-counter',
         () {
       // Peer A deposits 100 GP
-      final purseA = const PartyPurse().depositCoins(gp: 100, nodeId: 'peerA');
+      final purseA = const PartyPurse.empty().depositCoins(gp: 100, nodeId: 'peerA');
 
       // Peer B deposits 50 GP
-      final purseB = const PartyPurse().depositCoins(gp: 50, nodeId: 'peerB');
+      final purseB = const PartyPurse.empty().depositCoins(gp: 50, nodeId: 'peerB');
 
       final merged = service.reconcileProfile(
         local: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')
@@ -366,7 +366,7 @@ void main() {
         tempHp: 0,
       );
 
-      const encounterParticipant = EncounterParticipant(
+      final encounterParticipant = EncounterParticipant(
         participantId: 'goblin-scout-1',
         entityLink: RoomEntityLink(
           refType: SessionRefType.monster,

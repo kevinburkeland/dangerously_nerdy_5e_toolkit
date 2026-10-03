@@ -280,7 +280,7 @@ void main() {
     test(
         'saveHomebrewEntitiesBatch saves monsters and spells and synchronizes runtime libraries',
         () async {
-      const monsterEntity = HomebrewEntity(
+      final monsterEntity = HomebrewEntity(
         id: 'abyssal-stalker',
         name: 'Abyssal Stalker',
         entityType: 'monster',
@@ -300,7 +300,7 @@ void main() {
         },
       );
 
-      const spellEntity = HomebrewEntity(
+      final spellEntity = HomebrewEntity(
         id: 'abyssal-chains',
         name: 'Abyssal Chains',
         entityType: 'spell',
@@ -339,7 +339,7 @@ void main() {
     test(
         'saveHomebrewEntitiesBatch with syncLibraries: false writes to disk without updating runtime library until syncToLibraries is called',
         () async {
-      const spellEntity = HomebrewEntity(
+      final spellEntity = HomebrewEntity(
         id: 'cave-curse',
         name: 'Cave Curse',
         entityType: 'spell',
@@ -374,7 +374,7 @@ void main() {
     test(
         'saveHomebrewEntitiesBatch classifies monsters with creature types or CR as monsters, not other entries',
         () async {
-      const humanoidMonster = HomebrewEntity(
+      final humanoidMonster = HomebrewEntity(
         id: 'sand-corsair-captain',
         name: 'Sand Corsair Captain',
         entityType: 'humanoid',
@@ -388,7 +388,7 @@ void main() {
         },
       );
 
-      const nestedTypeMonster = HomebrewEntity(
+      final nestedTypeMonster = HomebrewEntity(
         id: 'ancient-lich',
         name: 'Ancient Lich',
         entityType: '{type: undead, tags: [wizard]}',
@@ -420,7 +420,7 @@ void main() {
     test(
         'saveHomebrewEntitiesBatch saves NPC monsters with _copy (Bepis Honeymaker) as monsters and never as races',
         () async {
-      const bepisEntity = HomebrewEntity(
+      final bepisEntity = HomebrewEntity(
         id: 'bepis-honeymaker',
         name: 'Bepis Honeymaker',
         entityType: 'monster',
@@ -439,7 +439,7 @@ void main() {
         },
       );
 
-      const onyxEntity = HomebrewEntity(
+      final onyxEntity = HomebrewEntity(
         id: 'onyx',
         name: 'Onyx',
         entityType: 'monster',
@@ -558,7 +558,7 @@ void main() {
         () async {
       // 1. Seed a comprehensive predefined import across all categories
       final predefinedEntities = [
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'void-blast',
           name: 'Void Blast',
           entityType: 'spell',
@@ -580,7 +580,7 @@ void main() {
             'entries': ['A ray of concentrated gravity strikes the target.'],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'void-stalker',
           name: 'Void Stalker',
           entityType: 'monster',
@@ -594,7 +594,7 @@ void main() {
             'ac': [16],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'starlight-blade',
           name: 'Starlight Blade',
           entityType: 'item',
@@ -606,7 +606,7 @@ void main() {
             'entries': ['A rapier forged from fallen star metal.'],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'void-weaver',
           name: 'Void Weaver',
           entityType: 'class',
@@ -618,7 +618,7 @@ void main() {
             'classFeatures': [],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'void-weaver-astral-path',
           name: 'Astral Path',
           entityType: 'subclass',
@@ -629,7 +629,7 @@ void main() {
             'subclassFeatures': ['Traverse the astral planar currents.'],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'astral-born',
           name: 'Astral Born',
           entityType: 'race',
@@ -639,7 +639,7 @@ void main() {
             'entries': ['Beings manifested from astral essence.'],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'mark-of-the-astral',
           name: 'Mark of the Astral',
           entityType: 'subrace',
@@ -652,7 +652,7 @@ void main() {
             ],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'void-touched',
           name: 'Void Touched',
           entityType: 'feat',
@@ -664,7 +664,7 @@ void main() {
             ],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'void-hermit',
           name: 'Void Hermit',
           entityType: 'background',
@@ -676,7 +676,7 @@ void main() {
             ],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'table-void-omens',
           name: 'Table of Void Omens',
           entityType: 'table',

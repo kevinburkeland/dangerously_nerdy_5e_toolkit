@@ -2606,7 +2606,7 @@ class _MemberCoinTransactionDialogState
     try {
       final session = await _partyService.streamSession(widget.roomCode).first;
       final currentPurse =
-          session?.getMemberPurse(widget.characterName) ?? const PartyPurse();
+          session?.getMemberPurse(widget.characterName) ?? const PartyPurse.empty();
 
       final newPurse = widget.isDeposit
           ? currentPurse.depositCoins(

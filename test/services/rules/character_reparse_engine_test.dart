@@ -31,7 +31,7 @@ void main() {
         baseScores: AbilityScores.standardArray(),
         bonusScores: AbilityScores.zero(),
         startingEquipment: [],
-        startingPurse: PartyPurse(),
+        startingPurse: PartyPurse.empty(),
       );
 
       final char = CharacterFactory.createLevel1Character(request);
@@ -153,7 +153,7 @@ void main() {
         baseScores: AbilityScores.standardArray(),
         bonusScores: AbilityScores.zero(),
         startingEquipment: [],
-        startingPurse: PartyPurse(),
+        startingPurse: PartyPurse.empty(),
       );
 
       final char = CharacterFactory.createLevel1Character(request);
@@ -198,7 +198,7 @@ void main() {
         baseScores: AbilityScores.standardArray(),
         bonusScores: AbilityScores.zero(),
         startingEquipment: [],
-        startingPurse: PartyPurse(),
+        startingPurse: PartyPurse.empty(),
       );
 
       final char = CharacterFactory.createLevel1Character(request);
@@ -256,7 +256,7 @@ void main() {
         baseScores: AbilityScores.standardArray(),
         bonusScores: AbilityScores.zero(),
         startingEquipment: [],
-        startingPurse: PartyPurse(),
+        startingPurse: PartyPurse.empty(),
       );
 
       final char = CharacterFactory.createLevel1Character(request);
@@ -298,7 +298,7 @@ void main() {
         ),
         bonusScores: AbilityScores.zero(),
         startingEquipment: [],
-        startingPurse: PartyPurse(),
+        startingPurse: PartyPurse.empty(),
       );
 
       final char = CharacterFactory.createLevel1Character(request);

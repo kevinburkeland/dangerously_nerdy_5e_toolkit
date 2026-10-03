@@ -409,7 +409,8 @@ class RoomSyncOrchestrator {
           last.partyPurse != profile.partyPurse &&
           last.name == profile.name &&
           last.notesMarkdown == profile.notesMarkdown &&
-          last.pinnedRuleIds == profile.pinnedRuleIds &&
+          const SetEquality()
+              .equals(last.pinnedRuleIds, profile.pinnedRuleIds) &&
           last.roomState == profile.roomState &&
           const ListEquality()
               .equals(last.partyCharacterIds, profile.partyCharacterIds)) {
@@ -426,7 +427,8 @@ class RoomSyncOrchestrator {
       // Focused CRDT delta: if only pinnedRuleIds mutated, emit crdt_or_set_delta
       if (last != null &&
           last.id == profile.id &&
-          last.pinnedRuleIds != profile.pinnedRuleIds &&
+          !const SetEquality()
+              .equals(last.pinnedRuleIds, profile.pinnedRuleIds) &&
           last.partyPurse == profile.partyPurse &&
           last.name == profile.name &&
           last.notesMarkdown == profile.notesMarkdown &&

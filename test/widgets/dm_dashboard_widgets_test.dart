@@ -12,7 +12,7 @@ void main() {
   group('DmDashboardEncounterCard Widget Tests', () {
     testWidgets('renders combatant details, initiative, and HP',
         (tester) async {
-      const participant = EncounterParticipant(
+      final participant = EncounterParticipant(
         participantId: 'p1',
         entityLink: RoomEntityLink(
           refType: SessionRefType.monster,
@@ -27,7 +27,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: DmDashboardEncounterCard(participant: participant),
           ),
@@ -42,7 +42,7 @@ void main() {
 
     testWidgets('opens HP adjustment dialog on HP button tap', (tester) async {
       int? deltaReceived;
-      const participant = EncounterParticipant(
+      final participant = EncounterParticipant(
         participantId: 'p1',
         entityLink: RoomEntityLink(
           refType: SessionRefType.monster,

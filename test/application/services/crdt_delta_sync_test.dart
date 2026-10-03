@@ -159,7 +159,7 @@ void main() {
         () {
       // Both nodes start with an initial shared purse of 100 GP
       final initialPurse =
-          const PartyPurse().setCoins(gp: 100, nodeId: 'node_init');
+          const PartyPurse.empty().setCoins(gp: 100, nodeId: 'node_init');
 
       // Node A deposits 50 GP and withdraws 10 GP during partition
       var purseA = initialPurse
@@ -222,14 +222,14 @@ void main() {
       final baseProfile =
           CampaignProfile.defaultProfile(id: 'camp_delta', nodeId: 'test_node')
               .copyWith(
-        partyPurse: const PartyPurse()
+        partyPurse: const PartyPurse.empty()
             .setCoins(gp: 100, nodeId: 'node_init')
             .modifyCoin('gp', 50, nodeId: 'node-orchestrator'),
       );
       mockRepo.activeProfile = baseProfile;
 
       // Remote peer concurrently deposited 35 GP
-      final remotePurse = const PartyPurse()
+      final remotePurse = const PartyPurse.empty()
           .setCoins(gp: 100, nodeId: 'node_init')
           .modifyCoin('gp', 35, nodeId: 'node-remote');
 
@@ -257,13 +257,13 @@ void main() {
       final baseProfile =
           CampaignProfile.defaultProfile(id: 'camp_full', nodeId: 'test_node')
               .copyWith(
-        partyPurse: const PartyPurse()
+        partyPurse: const PartyPurse.empty()
             .setCoins(gp: 50, nodeId: 'node_init')
             .modifyCoin('gp', 20, nodeId: 'node-local'),
       );
       mockRepo.activeProfile = baseProfile;
 
-      final remotePurse = const PartyPurse()
+      final remotePurse = const PartyPurse.empty()
           .setCoins(gp: 50, nodeId: 'node_init')
           .modifyCoin('gp', 80, nodeId: 'node-remote');
       final remoteProfile = baseProfile.copyWith(

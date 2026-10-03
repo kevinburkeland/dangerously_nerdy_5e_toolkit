@@ -58,7 +58,7 @@ void main() {
       final hero = _createHeroWithPurse(
         id: 'hero_purse_1',
         name: 'Dain Goldfinger',
-        purse: const PartyPurse(gp: 50, sp: 20),
+        purse: PartyPurse(gp: 50, sp: 20),
       );
       final persistence = CharacterPersistenceService();
       await persistence.saveCharacter(hero);
@@ -81,7 +81,7 @@ void main() {
       final hero = _createHeroWithPurse(
         id: 'hero_sylas',
         name: 'Sylas',
-        purse: const PartyPurse(pp: 2, gp: 100, sp: 50),
+        purse: PartyPurse(pp: 2, gp: 100, sp: 50),
       );
       final partyService = PartyRoomService();
       await partyService.createCampaign(
@@ -109,12 +109,12 @@ void main() {
       final hero1 = _createHeroWithPurse(
         id: 'hero_valen',
         name: 'Valen',
-        purse: const PartyPurse(gp: 40),
+        purse: PartyPurse(gp: 40),
       );
       final hero2 = _createHeroWithPurse(
         id: 'hero_boromir',
         name: 'Kaelen',
-        purse: const PartyPurse(gp: 80),
+        purse: PartyPurse(gp: 80),
       );
       final persistence = CharacterPersistenceService();
       await persistence.saveCharacter(hero1);
@@ -126,7 +126,7 @@ void main() {
         name: 'Gondor Defense',
         nodeId: 'test_node',
       ).copyWith(
-        partyPurse: const PartyPurse(gp: 500),
+        partyPurse: PartyPurse(gp: 500),
         partyCharacterIds: [hero1.id.slug, hero2.id.slug],
       );
       await profileService.saveProfileImmediate(profile);
@@ -173,7 +173,7 @@ void main() {
       final hero = _createHeroWithPurse(
         id: 'hero_frodo',
         name: 'Corin Hilltopper',
-        purse: const PartyPurse(gp: 25),
+        purse: PartyPurse(gp: 25),
       );
       await CharacterPersistenceService().saveCharacter(hero);
 
@@ -182,7 +182,7 @@ void main() {
         name: 'Shire Journey',
         nodeId: 'test_node',
       ).copyWith(
-        partyPurse: const PartyPurse(gp: 150),
+        partyPurse: PartyPurse(gp: 150),
         partyCharacterIds: [hero.id.slug],
       );
       await CampaignProfileService().saveProfileImmediate(profile);

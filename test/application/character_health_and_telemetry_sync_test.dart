@@ -51,7 +51,7 @@ void main() {
       currentHp: 38,
       tempHp: 5,
     ),
-    purse: const PartyPurse().setCoins(gp: 75, sp: 20, nodeId: 'init'),
+    purse: const PartyPurse.empty().setCoins(gp: 75, sp: 20, nodeId: 'init'),
   );
 
   setUp(() async {

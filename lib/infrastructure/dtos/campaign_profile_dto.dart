@@ -90,12 +90,12 @@ class CampaignProfileDto {
             title: '$name Staging',
           );
 
-    PartyPurse purse = const PartyPurse();
+    PartyPurse purse = const PartyPurse.empty();
     if (partyPurse.isNotEmpty) {
       try {
         purse = PartyPurse.fromMap(partyPurse);
       } catch (_) {
-        purse = const PartyPurse();
+        purse = const PartyPurse.empty();
       }
     }
 

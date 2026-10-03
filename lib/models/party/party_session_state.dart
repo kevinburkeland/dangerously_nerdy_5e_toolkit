@@ -17,24 +17,34 @@ class PartySessionState {
   final DateTime lastUpdated;
   final DateTime expiresAt;
 
-  const PartySessionState({
+  PartySessionState({
     required this.roomCode,
     required this.campaignName,
     required this.hostKeyHash,
-    this.partyPurse = const PartyPurse(),
-    this.memberPurses = const {},
-    this.activePlayers = const [],
-    this.characterRoster = const [],
-    this.sharedCharacters = const {},
-    this.partyTelemetry = const {},
+    this.partyPurse = const PartyPurse.empty(),
+    Map<String, PartyPurse> memberPurses = const {},
+    List<String> activePlayers = const [],
+    List<String> characterRoster = const [],
+    Map<String, Map<String, dynamic>> sharedCharacters = const {},
+    Map<String, CharacterTelemetryDto> partyTelemetry = const {},
     this.version = 1,
     required this.lastUpdated,
     required this.expiresAt,
-  });
+  })  : memberPurses = Map<String, PartyPurse>.unmodifiable(
+            Map<String, PartyPurse>.from(memberPurses)),
+        activePlayers = List<String>.unmodifiable(activePlayers),
+        characterRoster = List<String>.unmodifiable(characterRoster),
+        sharedCharacters = Map<String, Map<String, dynamic>>.unmodifiable(
+            sharedCharacters.map(
+          (k, v) => MapEntry(
+              k, Map<String, dynamic>.unmodifiable(Map<String, dynamic>.from(v))),
+        )),
+        partyTelemetry = Map<String, CharacterTelemetryDto>.unmodifiable(
+            Map<String, CharacterTelemetryDto>.from(partyTelemetry));
 
   /// Helper to retrieve or initialize a character's personal coin store
   PartyPurse getMemberPurse(String characterName) {
-    return memberPurses[characterName] ?? const PartyPurse();
+    return memberPurses[characterName] ?? const PartyPurse.empty();
   }
 
   /// Helper to retrieve telemetry for a character or member
@@ -97,7 +107,7 @@ class PartySessionState {
         ? PartyPurse.fromMap(rawPurse)
         : (rawPurse is Map
             ? PartyPurse.fromMap(Map<String, dynamic>.from(rawPurse))
-            : const PartyPurse());
+            : const PartyPurse.empty());
 
     final rawMemberPurses = map['memberPurses'];
     final Map<String, PartyPurse> memberPurses = {};

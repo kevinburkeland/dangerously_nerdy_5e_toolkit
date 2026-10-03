@@ -275,7 +275,7 @@ void main() {
     test(
         'saveHomebrewEntitiesBatch persists remote fluff entities into EntityFluffService',
         () async {
-      const remoteFluffEntity = HomebrewEntity(
+      final remoteFluffEntity = HomebrewEntity(
         id: 'ancient-brass-dragon',
         name: 'Ancient Brass Dragon',
         entityType: 'monsterfluff',

@@ -65,7 +65,7 @@ void main() {
         edition: DmRulesEdition.v2024,
         createdAt: now,
         lastPlayedAt: now,
-        roomState: const RoomNodeState(
+        roomState: RoomNodeState(
             roomId: 'r_1', roomCode: 'R-1', title: 'Sun Haven'),
         partyCharacterIds: const ['hero_valen', 'hero_sylas'],
         notesMarkdown: '# Secret Ring Lore',
@@ -106,7 +106,7 @@ void main() {
         edition: DmRulesEdition.v2024,
         createdAt: now,
         lastPlayedAt: now,
-        roomState: const RoomNodeState(
+        roomState: RoomNodeState(
             roomId: 'r_deepmine', roomCode: 'DM-1', title: 'Deep Mine Gates'),
         partyCharacterIds: const ['hero_dain'],
         notesMarkdown: '# Initial Undisturbed Notes',
@@ -162,7 +162,7 @@ void main() {
         edition: DmRulesEdition.v2024,
         createdAt: DateTime.now(),
         lastPlayedAt: DateTime(2025, 1, 1),
-        roomState: const RoomNodeState(
+        roomState: RoomNodeState(
             roomId: 'r_spire', roomCode: 'SPI-1', title: 'Spire Tower'),
         partyCharacterIds: const ['hero_alden'],
         notesMarkdown: '# Wizard Council',
@@ -190,7 +190,7 @@ void main() {
         edition: DmRulesEdition.v2024,
         createdAt: DateTime.now(),
         lastPlayedAt: DateTime.now(),
-        roomState: const RoomNodeState(
+        roomState: RoomNodeState(
             roomId: 'r_s', roomCode: 'S-1', title: 'Chamber'),
         partyCharacterIds: const [],
         nodeId: 'test_node',

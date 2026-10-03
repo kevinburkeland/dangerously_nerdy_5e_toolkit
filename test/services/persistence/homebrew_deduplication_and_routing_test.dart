@@ -25,7 +25,7 @@ void main() {
         () async {
       final batch = [
         // SRD Spell to be dropped
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'blade-ward',
           name: 'Blade Ward',
           entityType: 'spell',
@@ -53,7 +53,7 @@ void main() {
           },
         ),
         // Homebrew Spell to be preserved
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'chronoblast',
           name: 'Chronoblast',
           entityType: 'spell',
@@ -78,7 +78,7 @@ void main() {
           },
         ),
         // SRD Class to be dropped
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'barbarian',
           name: 'Barbarian',
           entityType: 'class',
@@ -91,7 +91,7 @@ void main() {
           },
         ),
         // Homebrew Class to be preserved
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'aether-weaver',
           name: 'Aether Weaver',
           entityType: 'class',
@@ -104,7 +104,7 @@ void main() {
           },
         ),
         // SRD Monster to be dropped
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'goblin',
           name: 'Goblin',
           entityType: 'monster',
@@ -119,7 +119,7 @@ void main() {
           },
         ),
         // Homebrew Monster to be preserved
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'cinder-drake',
           name: 'Cinder Drake',
           entityType: 'monster',
@@ -154,7 +154,7 @@ void main() {
         'saveHomebrewEntitiesBatch routes baseitem and magicvariant to items category',
         () async {
       final batch = [
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'crystal-staff-focus',
           name: 'Crystal Staff Focus',
           entityType: 'baseitem',
@@ -166,7 +166,7 @@ void main() {
             'entries': ['A resonant arcane focus carved from quartz.'],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'solarflare-blade',
           name: 'Solarflare Blade',
           entityType: 'magicvariant',
@@ -194,7 +194,7 @@ void main() {
     test('saveHomebrewEntitiesBatch routes subrace into races category',
         () async {
       final batch = [
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'stellar-elf',
           name: 'Stellar Elf',
           entityType: 'subrace',
@@ -348,7 +348,7 @@ void main() {
     test(
         'saveHomebrewEntitiesBatch merges multiple subraces under parent race without duplicate races',
         () async {
-      const subrace1 = HomebrewEntity(
+      final subrace1 = HomebrewEntity(
         id: 'aurora-gnome',
         name: 'Aurora Gnome',
         entityType: 'subrace',
@@ -359,7 +359,7 @@ void main() {
           'entries': ['Dwellers of glacial tundras.'],
         },
       );
-      const subrace2 = HomebrewEntity(
+      final subrace2 = HomebrewEntity(
         id: 'nebula-gnome',
         name: 'Nebula Gnome',
         entityType: 'subrace',
@@ -390,7 +390,7 @@ void main() {
         'reparseAllHomebrew preserves categories for Table, Vehicle, Trap, and Hazard in otherEntries',
         () async {
       final entries = [
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'table-astral-omens',
           name: 'Table of Astral Omens',
           entityType: 'table',
@@ -405,7 +405,7 @@ void main() {
             ],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'vehicle-sand-crawler',
           name: 'Sand Crawler',
           entityType: 'vehicle',
@@ -417,7 +417,7 @@ void main() {
             'entries': ['An armored rolling land ship.'],
           },
         ),
-        const HomebrewEntity(
+        HomebrewEntity(
           id: 'trap-glyph-of-blinding',
           name: 'Glyph of Blinding',
           entityType: 'trap',
@@ -457,7 +457,7 @@ void main() {
     test(
         'reparseAllHomebrew preserves Deities without misclassifying as eldritch invocations',
         () async {
-      const deity = HomebrewEntity(
+      final deity = HomebrewEntity(
         id: 'solas-the-dawnbringer',
         name: 'Solas the Dawnbringer',
         entityType: 'deity',

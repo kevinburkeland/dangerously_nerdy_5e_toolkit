@@ -189,7 +189,7 @@ void main() {
       edition: DmRulesEdition.v2024,
       createdAt: DateTime.utc(2026, 1, 1),
       lastPlayedAt: DateTime.utc(2026, 1, 1),
-      roomState: const RoomNodeState(
+      roomState: RoomNodeState(
         roomId: 'room-123',
         roomCode: 'CR-101',
         title: 'Tavern Staging',
@@ -880,7 +880,7 @@ void main() {
       final now = DateTime.now().millisecondsSinceEpoch;
       // Remote payload has updated party purse
       final remoteProfile = baseProfile.copyWith(
-        partyPurse: const PartyPurse()
+        partyPurse: const PartyPurse.empty()
             .setCoins(gp: 750, pp: 5, nodeId: 'node_remote'),
         notesMarkdown: '', // Remote did not edit notes (blank)
       );

@@ -19,7 +19,7 @@ void main() {
           roomId: 'r1',
           roomCode: 'TOMB',
           title: 'Tomb Entrance',
-          activeEncounter: const [
+          activeEncounter: [
             EncounterParticipant(
               participantId: 'c1',
               entityLink: RoomEntityLink(

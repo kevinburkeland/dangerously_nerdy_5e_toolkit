@@ -251,7 +251,7 @@ class PartyRoomService {
       roomCode: roomCode,
       campaignName: cleanName,
       hostKeyHash: hostKeyHash,
-      partyPurse: const PartyPurse(),
+      partyPurse: const PartyPurse.empty(),
       activePlayers: [cleanPlayer],
       version: 1,
       lastUpdated: now,
@@ -421,7 +421,7 @@ class PartyRoomService {
               roomCode: matchedCode,
               campaignName: 'Party Campaign ($matchedCode)',
               hostKeyHash: '',
-              partyPurse: const PartyPurse(),
+              partyPurse: const PartyPurse.empty(),
               activePlayers: const [],
               lastUpdated: DateTime.now(),
               expiresAt: DateTime.now().add(defaultLootExpiration),
@@ -441,7 +441,7 @@ class PartyRoomService {
               roomCode: matchedCode,
               campaignName: 'Party Campaign ($matchedCode)',
               hostKeyHash: '',
-              partyPurse: const PartyPurse(),
+              partyPurse: const PartyPurse.empty(),
               activePlayers: const [],
               lastUpdated: DateTime.now(),
               expiresAt: DateTime.now().add(defaultLootExpiration),
@@ -657,7 +657,7 @@ class PartyRoomService {
           roomCode: cleanCode,
           campaignName: cName,
           hostKeyHash: hostKeyHash,
-          partyPurse: const PartyPurse(),
+          partyPurse: const PartyPurse.empty(),
           activePlayers: const [],
           version: 1,
           lastUpdated: now,
@@ -747,7 +747,7 @@ class PartyRoomService {
         roomCode: clean,
         campaignName: membership?.campaignName ?? 'Party Campaign',
         hostKeyHash: '',
-        partyPurse: const PartyPurse(),
+        partyPurse: const PartyPurse.empty(),
         activePlayers: [targetName],
         characterRoster: [targetName],
         memberPurses: {
@@ -1083,7 +1083,7 @@ class PartyRoomService {
       roomCode: cleanCode,
       campaignName: cName,
       hostKeyHash: hostKeyHash,
-      partyPurse: existing?.partyPurse ?? const PartyPurse(),
+      partyPurse: existing?.partyPurse ?? const PartyPurse.empty(),
       activePlayers: [playerName],
       version: (existing?.version ?? 0) + 1,
       lastUpdated: now,
@@ -1466,7 +1466,7 @@ class PartyRoomService {
         roomCode: clean,
         campaignName: membership?.campaignName ?? 'Party Campaign',
         hostKeyHash: '',
-        partyPurse: const PartyPurse(),
+        partyPurse: const PartyPurse.empty(),
         activePlayers: [trimmedName],
         characterRoster: [trimmedName],
         version: 1,
@@ -1532,7 +1532,7 @@ class PartyRoomService {
         roomCode: clean,
         campaignName: membership?.campaignName ?? 'Party Campaign',
         hostKeyHash: '',
-        partyPurse: const PartyPurse(),
+        partyPurse: const PartyPurse.empty(),
         activePlayers: [playerName],
         characterRoster: [trimmed],
         version: 1,
@@ -1744,7 +1744,7 @@ class PartyRoomService {
         roomCode: clean,
         campaignName: membership?.campaignName ?? 'Party Campaign',
         hostKeyHash: '',
-        partyPurse: const PartyPurse(),
+        partyPurse: const PartyPurse.empty(),
         activePlayers: [playerName],
         version: 1,
         lastUpdated: DateTime.now(),
@@ -1837,7 +1837,7 @@ class PartyRoomService {
         roomCode: clean,
         campaignName: membership?.campaignName ?? 'Party Campaign',
         hostKeyHash: '',
-        partyPurse: const PartyPurse(),
+        partyPurse: const PartyPurse.empty(),
         activePlayers: [playerName],
         version: 1,
         lastUpdated: DateTime.now(),
@@ -2230,7 +2230,7 @@ class PartyRoomService {
         roomCode: clean,
         campaignName: membership?.campaignName ?? 'Party Campaign',
         hostKeyHash: '',
-        partyPurse: const PartyPurse(),
+        partyPurse: const PartyPurse.empty(),
         activePlayers: [performedBy],
         version: 1,
         lastUpdated: DateTime.now(),
@@ -2250,7 +2250,7 @@ class PartyRoomService {
       final remainderGp = (totalGp - (perShareGp * shareCount)).round();
 
       for (final recipient in recipients) {
-        final prev = updatedMemberPurses[recipient] ?? const PartyPurse();
+        final prev = updatedMemberPurses[recipient] ?? const PartyPurse.empty();
         updatedMemberPurses[recipient] =
             prev.depositCoins(gp: perShareGp, nodeId: localNodeId);
         await _syncCoinsToCharacter(
@@ -2293,7 +2293,7 @@ class PartyRoomService {
       final cpRem = purseToDisperse.cp % shareCount;
 
       for (final recipient in recipients) {
-        final prev = updatedMemberPurses[recipient] ?? const PartyPurse();
+        final prev = updatedMemberPurses[recipient] ?? const PartyPurse.empty();
         updatedMemberPurses[recipient] = prev.depositCoins(
           pp: ppPerShare,
           gp: gpPerShare,

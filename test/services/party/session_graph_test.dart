@@ -90,13 +90,13 @@ void main() {
     });
 
     test('binds entity links to room node', () {
-      var room = const RoomNodeState(
+      var room = RoomNodeState(
         roomId: 'room-101',
         roomCode: 'DUNGEON-A',
         title: 'Ancient Crypt',
       );
 
-      const linkRogue = RoomEntityLink(
+      final linkRogue = RoomEntityLink(
         refType: SessionRefType.character,
         entityId: 'shadow',
         displayName: 'Shadow the Rogue',
@@ -126,7 +126,7 @@ void main() {
     });
 
     test('instantiates isolated combat clone participant', () {
-      const link = RoomEntityLink(
+      final link = RoomEntityLink(
         refType: SessionRefType.monster,
         entityId: 'goblin-boss',
         displayName: 'Goblin Boss',
@@ -148,11 +148,11 @@ void main() {
     });
 
     test('distributes room container loot to target character atomically', () {
-      const initialChest = LootContainer(
+      final initialChest = LootContainer(
         containerId: 'chest-crypt',
         name: 'Gilded Sarcophagus Chest',
         items: [
-          InventoryItemInstance(
+          const InventoryItemInstance(
             instanceId: 'item-ruby',
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -166,7 +166,7 @@ void main() {
         purse: PartyPurse(gp: 250),
       );
 
-      var room = const RoomNodeState(
+      var room = RoomNodeState(
         roomId: 'room-crypt',
         roomCode: 'CRYPT-01',
         title: 'Crypt',
@@ -179,7 +179,7 @@ void main() {
         targetCharacter: rogue,
         itemInstanceId: 'item-ruby',
         quantity: 1,
-        currency: const PartyPurse(gp: 100),
+        currency: PartyPurse(gp: 100),
       );
 
       final updatedRoom = transferOutcome.updatedRoom;
