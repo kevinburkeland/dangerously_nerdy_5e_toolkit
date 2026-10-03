@@ -123,7 +123,10 @@ class PartyRoomService {
     return _customInstance!;
   }
 
-  factory PartyRoomService({ReplicaId? replicaId, String? localNodeId}) {
+  factory PartyRoomService({
+    ReplicaId? replicaId,
+    @Deprecated('Use replicaId instead') String? localNodeId,
+  }) {
     if (replicaId != null || localNodeId != null) {
       return PartyRoomService._internal(
         replicaId: replicaId,
@@ -133,20 +136,21 @@ class PartyRoomService {
     return _instance;
   }
 
-  final String localNodeId;
+  final ReplicaId replicaId;
+  String get localNodeId => replicaId.value;
   final CampaignRegistryService _registry;
   final DiceRoomService _diceRoomService;
   final CharacterPersistenceService _characterPersistenceService;
   final CampaignProfileService _campaignProfileService;
 
-  static String _resolveNodeId(ReplicaId? replicaId, String? localNodeId) {
-    if (replicaId != null) return replicaId.value;
+  static ReplicaId _resolveReplicaId(ReplicaId? replicaId, String? localNodeId) {
+    if (replicaId != null) return replicaId;
     if (localNodeId != null &&
         localNodeId.trim().isNotEmpty &&
         localNodeId.trim().toLowerCase() != 'local') {
-      return localNodeId.trim();
+      return ReplicaId(localNodeId.trim());
     }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
     throw StateError(
       'PartyRoomService requires an authoritative ReplicaId. '
       'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
@@ -155,12 +159,12 @@ class PartyRoomService {
 
   PartyRoomService._internal({
     ReplicaId? replicaId,
-    String? localNodeId,
+    @Deprecated('Use replicaId instead') String? localNodeId,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : localNodeId = _resolveNodeId(replicaId, localNodeId),
+  })  : replicaId = _resolveReplicaId(replicaId, localNodeId),
         _registry = registry ?? CampaignRegistryService(),
         _diceRoomService = diceRoomService ?? DiceRoomService(),
         _characterPersistenceService =
@@ -171,12 +175,12 @@ class PartyRoomService {
   @visibleForTesting
   PartyRoomService.newInstance({
     ReplicaId? replicaId,
-    String? localNodeId,
+    @Deprecated('Use replicaId instead') String? localNodeId,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : localNodeId = _resolveNodeId(replicaId, localNodeId),
+  })  : replicaId = _resolveReplicaId(replicaId, localNodeId),
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),

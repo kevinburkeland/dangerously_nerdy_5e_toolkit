@@ -316,17 +316,17 @@ class InventoryTransactionService {
     return character.copyWith(inventory: inventory);
   }
 
-  /// Atomically transfers an item and/or currency from a LootContainer to a Character
-  static String _resolveNodeId(String? nodeId) {
+  static ReplicaId _resolveReplicaId(ReplicaId? replicaId, [String? nodeId]) {
+    if (replicaId != null) return replicaId;
     if (nodeId != null &&
         nodeId.trim().isNotEmpty &&
         nodeId.trim().toLowerCase() != 'local') {
-      return nodeId.trim();
+      return ReplicaId(nodeId.trim());
     }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
     throw StateError(
       'InventoryTransactionService requires an authoritative ReplicaId for currency transfer. '
-      'Ensure initServiceLocator() has completed or pass nodeId explicitly.',
+      'Ensure initServiceLocator() has completed or pass replicaId explicitly.',
     );
   }
 
@@ -336,7 +336,8 @@ class InventoryTransactionService {
     required String instanceId,
     int quantity = 1,
     PartyPurse? currency,
-    String? nodeId,
+    ReplicaId? replicaId,
+    @Deprecated('Use replicaId instead') String? nodeId,
   }) {
     final containerItems =
         List<InventoryItemInstance>.from(sourceContainer.items);
@@ -375,11 +376,11 @@ class InventoryTransactionService {
     var updatedContainerPurse = sourceContainer.purse;
     var updatedCharPurse = destinationCharacter.purse;
     if (currency != null && currency.totalGpEquivalent > 0) {
-      final effectiveNodeId = _resolveNodeId(nodeId);
+      final effectiveReplica = _resolveReplicaId(replicaId, nodeId);
       updatedContainerPurse =
-          updatedContainerPurse.deduct(currency, nodeId: effectiveNodeId);
+          updatedContainerPurse.deduct(currency, nodeId: effectiveReplica.value);
       updatedCharPurse =
-          updatedCharPurse.add(currency, nodeId: effectiveNodeId);
+          updatedCharPurse.add(currency, nodeId: effectiveReplica.value);
     }
 
     final updatedContainer = sourceContainer.copyWith(
@@ -405,7 +406,8 @@ class InventoryTransactionService {
     required String instanceId,
     int quantity = 1,
     PartyPurse? currency,
-    String? nodeId,
+    ReplicaId? replicaId,
+    @Deprecated('Use replicaId instead') String? nodeId,
   }) {
     final charInventory =
         List<InventoryItemInstance>.from(sourceCharacter.inventory);
@@ -444,11 +446,11 @@ class InventoryTransactionService {
     var updatedContainerPurse = destinationContainer.purse;
     var updatedCharPurse = sourceCharacter.purse;
     if (currency != null && currency.totalGpEquivalent > 0) {
-      final effectiveNodeId = _resolveNodeId(nodeId);
+      final effectiveReplica = _resolveReplicaId(replicaId, nodeId);
       updatedCharPurse =
-          updatedCharPurse.deduct(currency, nodeId: effectiveNodeId);
+          updatedCharPurse.deduct(currency, nodeId: effectiveReplica.value);
       updatedContainerPurse =
-          updatedContainerPurse.add(currency, nodeId: effectiveNodeId);
+          updatedContainerPurse.add(currency, nodeId: effectiveReplica.value);
     }
 
 

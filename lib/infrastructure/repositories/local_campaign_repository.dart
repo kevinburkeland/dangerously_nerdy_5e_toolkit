@@ -70,6 +70,10 @@ class LocalCampaignRepository implements ICampaignRepository {
 
   @override
   Future<List<CampaignProfile>> loadAllProfiles() async {
+    // Validate authoritative replica identity BEFORE entering persistence try/catch
+    // so a missing ReplicaId fails loudly without rethrowing unrelated persistence errors.
+    final nodeId = _effectiveNodeId;
+
     try {
       List<String> indexList = [];
       final dbIndex =
@@ -136,7 +140,7 @@ class LocalCampaignRepository implements ICampaignRepository {
       } else if (profiles.isNotEmpty) {
         _activeProfileId = profiles.first.id;
       } else {
-        final def = CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
+        final def = CampaignProfile.defaultProfile(nodeId: nodeId);
         _memoryCache[def.id] = def;
         profiles.add(def);
         _activeProfileId = def.id;
@@ -148,7 +152,6 @@ class LocalCampaignRepository implements ICampaignRepository {
       _emitState();
       return profiles;
     } catch (e, st) {
-      if (e is StateError) rethrow;
       LoggingService().logNonFatal(
         e,
         st,

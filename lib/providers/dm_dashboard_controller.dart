@@ -27,7 +27,7 @@ class DmDashboardController extends ChangeNotifier {
   final ICharacterRepository<Character> _characterPersistenceService;
   final CombatEncounterService _combatEncounterService;
   final RoomSyncOrchestrator? _roomSyncOrchestrator;
-  final String _nodeId;
+  final ReplicaId _replicaId;
 
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
@@ -37,14 +37,14 @@ class DmDashboardController extends ChangeNotifier {
   bool _isLoading = true;
   int _currentRound = 1;
 
-  static String _resolveNodeId(ReplicaId? replicaId, String? nodeId) {
-    if (replicaId != null) return replicaId.value;
-    if (nodeId != null &&
-        nodeId.trim().isNotEmpty &&
-        nodeId.trim().toLowerCase() != 'local') {
-      return nodeId.trim();
+  static ReplicaId _resolveReplicaId(ReplicaId? replicaId, [String? legacyNodeId]) {
+    if (replicaId != null) return replicaId;
+    if (legacyNodeId != null &&
+        legacyNodeId.trim().isNotEmpty &&
+        legacyNodeId.trim().toLowerCase() != 'local') {
+      return ReplicaId(legacyNodeId.trim());
     }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
     throw StateError(
       'DmDashboardController requires an authoritative ReplicaId. '
       'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
@@ -59,8 +59,8 @@ class DmDashboardController extends ChangeNotifier {
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
     ReplicaId? replicaId,
-    String? nodeId,
-  })  : _nodeId = _resolveNodeId(replicaId, nodeId),
+    @Deprecated('Use replicaId instead') String? nodeId,
+  })  : _replicaId = _resolveReplicaId(replicaId, nodeId),
         _campaignProfileService = campaignRepository ??
             campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
@@ -90,14 +90,15 @@ class DmDashboardController extends ChangeNotifier {
                     combatResolver: sl.isRegistered<ICombatResolver>()
                         ? sl<ICombatResolver>()
                         : const Dnd5eCombatResolver(),
-                    localNodeId: _resolveNodeId(replicaId, nodeId),
+                    localNodeId: _resolveReplicaId(replicaId, nodeId).value,
                   )),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()
                 ? sl<RoomSyncOrchestrator>()
                 : null);
 
-  String get nodeId => _nodeId;
+  ReplicaId get replicaId => _replicaId;
+  String get nodeId => _replicaId.value;
 
   CombatEncounterService get combatEncounterService => _combatEncounterService;
   ICampaignRepository get campaignRepository => _campaignProfileService;
@@ -195,7 +196,7 @@ class DmDashboardController extends ChangeNotifier {
     _activeProfile = active ??
         (_allProfiles.isNotEmpty
             ? _allProfiles.first
-            : CampaignProfile.defaultProfile(nodeId: _nodeId));
+            : CampaignProfile.defaultProfile(nodeId: _replicaId.value));
     await _loadPartyCharacters();
 
     _isLoading = false;
@@ -416,7 +417,7 @@ class DmDashboardController extends ChangeNotifier {
   PartyPurse get totalPartyWealth {
     var total = partyPurse;
     for (final char in partyCharacters) {
-      total = total.add(char.purse, nodeId: _nodeId);
+      total = total.add(char.purse, nodeId: _replicaId.value);
     }
     return total;
   }
@@ -425,7 +426,7 @@ class DmDashboardController extends ChangeNotifier {
   Future<void> modifyPartyPurseCoin(String coinKey, int delta) async {
     if (_activeProfile == null || delta == 0) return;
     final curPurse = _activeProfile!.partyPurse;
-    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _nodeId);
+    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _replicaId.value);
     _activeProfile = _activeProfile!.copyWith(partyPurse: newPurse);
     notifyListeners();
     await _campaignProfileService.saveProfileImmediate(_activeProfile!);
@@ -442,7 +443,7 @@ class DmDashboardController extends ChangeNotifier {
     if (char == null || delta == 0) return;
 
     final curPurse = char.purse;
-    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _nodeId);
+    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _replicaId.value);
     final updated = char.copyWith(purse: newPurse);
     _partyCharactersMap[characterId] = updated;
     _resolvedTelemetryMap.remove(characterId);

@@ -26,6 +26,10 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_import_orchestrator.dart';
+import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';
+import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -378,7 +382,150 @@ void main() {
         }
       }
     });
+
+    test('10. LocalCampaignRepository narrows StateError: missing replica identity throws StateError loudly, but unrelated persistence StateErrors are handled gracefully',
+        () async {
+      // 1. Missing replica identity throws StateError immediately
+      sl.reset();
+      expect(sl.isRegistered<ReplicaId>(), isFalse);
+      final repo = LocalCampaignRepository();
+      expect(() => repo.loadAllProfiles(), throwsStateError);
+
+      // 2. Authoritative replica identity is present, but an unrelated StateError arises inside the persistence layer
+      final authoritativeId = ReplicaId('dm_test_node_repo');
+      sl.registerSingleton<ReplicaId>(authoritativeId);
+
+      final failingDb = _FailingStateErrorDatabaseService();
+      final repoWithDbError = LocalCampaignRepository(db: failingDb);
+
+      // Invariant: Unrelated StateError inside persistence must NOT be rethrown;
+      // repository logs non-fatal error and returns an empty list as intended.
+      final result = await repoWithDbError.loadAllProfiles();
+      expect(result, isEmpty);
+    });
+
+    test('11. Replicated-state writers consume authoritative ReplicaId via type-safe constructors/methods',
+        () {
+      final authoritativeId = ReplicaId('dm_prod_replica_99');
+      sl.registerSingleton<ReplicaId>(authoritativeId);
+
+      // DmDashboardController
+      final dmController = DmDashboardController(replicaId: authoritativeId);
+      expect(dmController.replicaId, equals(authoritativeId));
+      expect(dmController.nodeId, equals(authoritativeId.value));
+      expect(dmController.combatEncounterService.localNodeId, equals(authoritativeId.value));
+
+      // RoomSyncOrchestrator
+      final orchestrator = RoomSyncOrchestrator(
+        replicaId: authoritativeId,
+        campaignRepo: _TestMockCampaignRepo(),
+        reconciliationService: RoomStateReconciliationService(
+          networkTimeProvider: () => 1000,
+        ),
+        clockSyncService: ClockSyncService(
+          networkTimePort: _TestMockTimePort(),
+        ),
+        transportPort: _TestMockTransportPort(),
+        payloadMapper: const RoomSyncPayloadMapper(),
+      );
+      expect(orchestrator.replicaId, equals(authoritativeId));
+      expect(orchestrator.localNodeId, equals(authoritativeId.value));
+
+      // Application PartyRoomService
+      final appPartyService = app_party.PartyRoomService(replicaId: authoritativeId);
+      expect(appPartyService.replicaId, equals(authoritativeId));
+      expect(appPartyService.localNodeId, equals(authoritativeId.value));
+
+      // Persistence PartyRoomService
+      final persistencePartyService = PartyRoomService(replicaId: authoritativeId);
+      expect(persistencePartyService.replicaId, equals(authoritativeId));
+      expect(persistencePartyService.localNodeId, equals(authoritativeId.value));
+
+      // InventoryTransactionService
+      const testChar = Character(
+        id: EntityId(slug: 'hero_inv_1', ruleset: RulesetVersion.v2024),
+        name: 'Hero Inv',
+        speciesRef: EntityReference(
+            slug: 'human', refType: EntityType.species, displayName: 'Human'),
+        progression: CharacterProgression(classes: []),
+        baseScores: AbilityScores.standardArray(),
+        purse: PartyPurse(gp: 10),
+      );
+      const container = LootContainer(
+        containerId: 'chest_inv_1',
+        name: 'Chest Inv',
+        purse: PartyPurse(gp: 50),
+        items: [
+          InventoryItemInstance(
+            instanceId: 'item_inv_1',
+            itemRef: EntityReference(
+              slug: 'potion',
+              refType: EntityType.equipment,
+              displayName: 'Potion',
+            ),
+          ),
+        ],
+      );
+
+      final transferResult = InventoryTransactionService.transferFromContainerToCharacter(
+        sourceContainer: container,
+        destinationCharacter: testChar,
+        instanceId: 'item_inv_1',
+        currency: const PartyPurse(gp: 15),
+        replicaId: authoritativeId,
+      );
+      expect(transferResult.updatedCharacter.purse.gp, equals(25));
+      expect(transferResult.updatedContainer.purse.gp, equals(35));
+    });
+
+    test('12. HomebrewImportOrchestrator maintains an ephemeral in-memory ledger and does not bind or contaminate the durable ReplicaId',
+        () async {
+      final authoritativeId = ReplicaId('durable_app_replica_42');
+      sl.reset();
+      sl.registerSingleton<ReplicaId>(authoritativeId);
+
+      // Orchestrator initializes with an ephemeral session-scoped UUID
+      final orchestrator = HomebrewImportOrchestrator(
+        ingestorPort: _TestMockIngestorPort(),
+        retainLedger: false, // Production configuration in HomebrewExpertOptionsView
+      );
+
+      // Invariant: The ephemeral session ID must NOT match or overwrite the durable ReplicaId
+      expect(orchestrator.nodeId, isNotEmpty);
+      expect(orchestrator.nodeId, isNot(equals(authoritativeId.value)));
+      expect(sl<ReplicaId>(), equals(authoritativeId));
+
+      // Invariant: Ephemeral ledger remains strictly in-memory and is not persisted to database
+      final telemetry = await orchestrator.runImport(
+        source: const GithubRepoSource(owner: 'test', repo: 'brew'),
+        ruleset: RulesetVersion.v2024,
+      ).last;
+
+      expect(telemetry.isCompleted, isTrue);
+      expect(sl<ReplicaId>(), equals(authoritativeId));
+    });
   });
+}
+
+class _FailingStateErrorDatabaseService extends AppDatabaseService {
+  _FailingStateErrorDatabaseService() : super.custom();
+
+  @override
+  dynamic get(String boxName, String key, {dynamic defaultValue}) {
+    throw StateError('Simulated unexpected persistence state error');
+  }
+}
+
+class _TestMockIngestorPort implements IGithubIngestorPort {
+  @override
+  Future<List<String>> discoverJsonManifest(GithubRepoSource source) async => [];
+
+  @override
+  Stream<IngestionResult> ingestPayloadStream({
+    required List<String> rawUrls,
+    required RulesetVersion ruleset,
+  }) =>
+      const Stream.empty();
 }
 
 class _TestMockTimePort implements INetworkTimePort {

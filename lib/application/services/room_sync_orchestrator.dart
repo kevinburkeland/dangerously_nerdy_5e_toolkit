@@ -30,10 +30,11 @@ class RoomSyncOrchestrator {
   final DiceRoomService diceRoomService;
   final IRoomSyncPayloadPort payloadMapper;
   final bool isHost;
-  final String localNodeId;
+  final ReplicaId replicaId;
+  String get localNodeId => replicaId.value;
 
   /// Backwards-compatible alias for [localNodeId].
-  @Deprecated('Use localNodeId instead')
+  @Deprecated('Use replicaId instead')
   String get hostNodeId => localNodeId;
   final Duration telemetryInterval;
   final Duration milestoneInterval;
@@ -72,22 +73,22 @@ class RoomSyncOrchestrator {
   /// Reactive stream broadcasting sync errors, dead letters, and schema mismatches.
   Stream<SyncErrorEvent> get deadLetterStream => _deadLetterController.stream;
 
-  static String _resolveNodeId(
+  static ReplicaId _resolveReplicaId(
     ReplicaId? replicaId,
     String? localNodeId,
     String? hostNodeId,
   ) {
-    if (replicaId != null) return replicaId.value;
+    if (replicaId != null) return replicaId;
     final candidate = localNodeId ?? hostNodeId;
     if (candidate != null &&
         candidate.trim().isNotEmpty &&
         candidate.trim().toLowerCase() != 'local') {
-      return candidate.trim();
+      return ReplicaId(candidate.trim());
     }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
     throw StateError(
       'RoomSyncOrchestrator requires an authoritative ReplicaId. '
-      'Ensure initServiceLocator() has completed or inject replicaId/localNodeId explicitly.',
+      'Ensure initServiceLocator() has completed or inject replicaId explicitly.',
     );
   }
 
@@ -102,12 +103,12 @@ class RoomSyncOrchestrator {
     int Function()? localTimeProvider,
     this.isHost = false,
     ReplicaId? replicaId,
-    String? localNodeId,
-    @Deprecated('Use localNodeId instead') String? hostNodeId,
+    @Deprecated('Use replicaId instead') String? localNodeId,
+    @Deprecated('Use replicaId instead') String? hostNodeId,
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
     Duration? heartbeatTtl,
-  })  : localNodeId = _resolveNodeId(replicaId, localNodeId, hostNodeId),
+  })  : replicaId = _resolveReplicaId(replicaId, localNodeId, hostNodeId),
         transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         payloadMapper = payloadMapper ??

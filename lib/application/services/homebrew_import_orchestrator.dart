@@ -67,6 +67,23 @@ typedef EntityBatchPersister = Future<void> Function(
 
 /// Application service orchestrating discovery, streaming ACL ingestion,
 /// and CRDT ledger state reconciliation for GitHub homebrew repositories.
+/// Application service coordinating GitHub homebrew ingestion, streaming parsing,
+/// in-memory deduplication, and batch persistence.
+///
+/// ### Architectural Boundary: Ephemeral In-Memory Ledger
+/// The [nodeId] and [HybridLogicalClock] used within this orchestrator are
+/// **intentionally ephemeral** and strictly scoped to a single import run.
+/// The internal [CrdtOrSet] ledger is utilized solely for transient in-memory
+/// deduplication and streaming progress telemetry ([HomebrewImportTelemetry.crdtLedger])
+/// during an active import session.
+///
+/// In standard production usage (e.g. `HomebrewExpertOptionsView`), [retainLedger]
+/// is set to `false`, and the ledger is discarded upon completion. Ingested entities
+/// are persisted directly to local storage via [HomebrewPersistenceService], not as
+/// replicated CRDT registers.
+///
+/// Therefore, this ledger does NOT cross durable replica boundaries, is never
+/// persisted as replicated state, and does NOT consume the authoritative application [ReplicaId].
 class HomebrewImportOrchestrator {
   static const int defaultBatchSize = 50;
   static const int telemetryThrottleIntervalMs = 100;
