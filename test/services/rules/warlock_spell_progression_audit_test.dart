@@ -290,7 +290,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       // Character at Level 3 Warlock with 4 spells known and 2 cantrips
-      final lvl3Warlock = Character(
+      const lvl3Warlock = Character(
         id: EntityId(slug: 'warlock_hud_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock HUD Test',
         speciesRef: EntityReference.empty(
@@ -346,7 +346,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(
               character: lvl3Warlock,
@@ -393,7 +393,7 @@ void main() {
         'CharacterSheetController.removeSpell purges spell from allocatedSpells as well as spellsKnown',
         () async {
       final mockPersistence = _MockAuditPersistence();
-      final testChar = Character(
+      const testChar = Character(
         id: EntityId(slug: 'warlock_sheet_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock Sheet Test',
         speciesRef: EntityReference.empty(

@@ -91,7 +91,7 @@ void main() {
     test(
         'Single-class half-caster (Paladin/Ranger) 2014 spell slot tables grant Level 2 slots at class level 5',
         () {
-      final paladinChar = Character(
+      const paladinChar = Character(
         id: EntityId(slug: 'holy-warrior', ruleset: RulesetVersion.v2014),
         name: 'Holy Warrior',
         speciesRef: EntityReference.empty(
@@ -125,7 +125,7 @@ void main() {
     test(
         'Single-class 1/3-caster (Eldritch Knight) grants 3 1st slots at L4 and 2nd slots at L7',
         () {
-      final ekCharLevel4 = Character(
+      const ekCharLevel4 = Character(
         id: EntityId(slug: 'arcane-fighter', ruleset: RulesetVersion.v2014),
         name: 'Arcane Fighter',
         speciesRef: EntityReference.empty(
@@ -188,7 +188,7 @@ void main() {
       final resolver = ReferenceResolver(repo);
 
       // Hill Dwarf Draconic Sorcerer Level 5
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'dwarf-sorcerer', ruleset: RulesetVersion.v2014),
         name: 'Dwarf Sorcerer',
         speciesRef: EntityReference.empty(
@@ -231,7 +231,7 @@ void main() {
         'ASI clamps inherent score to getAbilityScoreMaximum while preserving item overrides',
         () {
       // Character with base 19 Strength and a generic magical item setting effective Strength to 21
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'mighty-hero', ruleset: RulesetVersion.v2014),
         name: 'Mighty Hero',
         speciesRef: EntityReference.empty(
@@ -280,7 +280,7 @@ void main() {
     test(
         'Inherent ability score maximum dynamically expands for Level 20 Barbarian capstone and custom treatises',
         () {
-      final barbarian20 = Character(
+      const barbarian20 = Character(
         id: EntityId(slug: 'primal-warrior', ruleset: RulesetVersion.v2014),
         name: 'Primal Warrior',
         speciesRef: EntityReference.empty(
@@ -328,7 +328,7 @@ void main() {
       final resolver = ReferenceResolver(repo);
 
       // Started as Monk 1, multiclassed into Barbarian 1
-      final monkFirst = Character(
+      const monkFirst = Character(
         id: EntityId(slug: 'monk-barb', ruleset: RulesetVersion.v2014),
         name: 'Monk Barbarian',
         speciesRef: EntityReference.empty(

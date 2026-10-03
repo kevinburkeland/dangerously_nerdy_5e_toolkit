@@ -342,7 +342,7 @@ void main() {
         );
         baseLayer.registerEntity(leatherArmor);
 
-        final characterWithoutArmor = Character(
+        const characterWithoutArmor = Character(
           id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
           name: 'Fighter Hero',
           speciesRef: EntityReference.empty(
@@ -401,7 +401,7 @@ void main() {
 
       test('Draconic Sorcerer subclass grants base AC 13 + DEX when unarmored',
           () {
-        final sorcerer = Character(
+        const sorcerer = Character(
           id: EntityId(slug: 'draconic-sorc', ruleset: RulesetVersion.v2024),
           name: 'Dragon Sorcerer',
           speciesRef: EntityReference.empty(
@@ -441,7 +441,7 @@ void main() {
       test(
           'LevelUpRequest preserves and aggregates selectedFeatureOptions across level ups',
           () {
-        final baseFighter = Character(
+        const baseFighter = Character(
           id: EntityId(slug: 'fighter-prog', ruleset: RulesetVersion.v2024),
           name: 'Fighter Progression',
           speciesRef: EntityReference.empty(

@@ -37,7 +37,7 @@ void main() {
     test('Initial loadData resolves relational characters by foreign key IDs',
         () async {
       // 1. Seed Character database with top-level characters
-      final hero1 = Character(
+      const hero1 = Character(
         id: EntityId(slug: 'hero_valen', ruleset: RulesetVersion.v2024),
         name: 'Valen',
         speciesRef: EntityReference.empty(
@@ -46,7 +46,7 @@ void main() {
         baseScores: AbilityScores.standardArray(),
         resources: CharacterResourcePool(currentHp: 50),
       );
-      final hero2 = Character(
+      const hero2 = Character(
         id: EntityId(slug: 'hero_sylas', ruleset: RulesetVersion.v2024),
         name: 'Sylas',
         speciesRef: EntityReference.empty(
@@ -88,7 +88,7 @@ void main() {
     test(
         'modifyCharacterHp updates Character in persistence without re-saving CampaignProfile',
         () async {
-      final hero = Character(
+      const hero = Character(
         id: EntityId(slug: 'hero_dain', ruleset: RulesetVersion.v2024),
         name: 'Dain',
         speciesRef: EntityReference.empty(
@@ -139,7 +139,7 @@ void main() {
     test(
         'toggleSpellSlot mutates spell slots in Character without touching CampaignProfile',
         () async {
-      final wizard = Character(
+      const wizard = Character(
         id: EntityId(slug: 'hero_alden', ruleset: RulesetVersion.v2024),
         name: 'Alden',
         speciesRef: EntityReference.empty(

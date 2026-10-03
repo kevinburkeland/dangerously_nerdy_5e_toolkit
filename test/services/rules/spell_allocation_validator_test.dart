@@ -387,7 +387,7 @@ void main() {
     test(
         'validateSpellAllocations accepts class-warlock-mystic-arcanum grant key',
         () {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'warlock-hero', ruleset: RulesetVersion.v2024),
         name: 'Warlock Hero',
         speciesRef: EntityReference.empty(

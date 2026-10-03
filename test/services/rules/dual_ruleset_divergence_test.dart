@@ -101,7 +101,7 @@ void main() {
     test(
         'Constitution increase from 14 (+2) to 16 (+3) retroactively scales all Hit Dice',
         () {
-      final fighter = Character(
+      const fighter = Character(
         id: EntityId(slug: 'fighter_hero', ruleset: RulesetVersion.v2024),
         name: 'Valeros',
         speciesRef: EntityReference.empty(
@@ -225,7 +225,7 @@ void main() {
     });
 
     test('Tough feat correctly adds 2 HP per total level', () {
-      final hero = Character(
+      const hero = Character(
         id: EntityId(slug: 'tough_barb', ruleset: RulesetVersion.v2024),
         name: 'Conan',
         speciesRef: EntityReference.empty(
@@ -317,7 +317,7 @@ void main() {
     test(
         'CharacterStatCalculator applies 2024 exhaustion penalties to speed and attack/skill rolls',
         () {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'exhausted_rogue', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
         speciesRef: EntityReference.empty(
@@ -379,7 +379,7 @@ void main() {
         () {
       const s2024 = Ruleset2024Strategy();
 
-      final fighterChar = Character(
+      const fighterChar = Character(
         id: EntityId(slug: 'f1', ruleset: RulesetVersion.v2024),
         name: 'Knight',
         speciesRef: EntityReference.empty(
@@ -422,7 +422,7 @@ void main() {
               mastery: WeaponMasteryProperty.topple),
           false);
 
-      final wizardChar = Character(
+      const wizardChar = Character(
         id: EntityId(slug: 'w1', ruleset: RulesetVersion.v2024),
         name: 'Mage',
         speciesRef: EntityReference.empty(
@@ -489,7 +489,7 @@ void main() {
     test(
         'Character serialization toMap and fromMap preserves rulesEdition and custom properties',
         () {
-      final original = Character(
+      const original = Character(
         id: EntityId(slug: 'schema_test_char', ruleset: RulesetVersion.v2024),
         name: 'Archmage Eldrin',
         speciesRef: EntityReference.empty(
@@ -554,7 +554,7 @@ void main() {
     test(
         'CharacterSheetController manages ruleset switching, HP modification, and debounced saving',
         () async {
-      final char = Character(
+      const char = Character(
         id: EntityId(slug: 'controller_test', ruleset: RulesetVersion.v2014),
         name: 'Grom',
         speciesRef: EntityReference.empty(

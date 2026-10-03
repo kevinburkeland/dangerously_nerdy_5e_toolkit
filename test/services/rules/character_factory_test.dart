@@ -106,7 +106,7 @@ void main() {
     test(
         'creates 2024 ruleset Level 1 Wizard with Origin Feat and Background ASI',
         () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Eldrin the Wise',
         ruleset: RulesetVersion.v2024,
         speciesRef: EntityReference.empty(

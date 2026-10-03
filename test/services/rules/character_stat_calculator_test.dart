@@ -134,7 +134,7 @@ void main() {
     });
 
     test('computes unarmored AC (10 + DEX mod)', () {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-rogue', ruleset: RulesetVersion.v2024),
         name: 'Test Rogue',
         speciesRef: EntityReference.empty(
@@ -172,7 +172,7 @@ void main() {
     });
 
     test('computes Barbarian Unarmored Defense (10 + DEX + CON)', () {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
         name: 'Test Barbarian',
         speciesRef: EntityReference.empty(
@@ -504,7 +504,7 @@ void main() {
     test(
         '4-Phase Pipeline: Phase A bounds scores [1, 30] and Phase B ingests embedded bonus scores',
         () {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-phase-ab', ruleset: RulesetVersion.v2024),
         name: 'Phase AB Test',
         speciesRef: EntityReference.empty(

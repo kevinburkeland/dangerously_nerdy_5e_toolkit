@@ -10,7 +10,7 @@ void main() {
   testWidgets(
       'SkillsSavesMatrix renders all 6 saves, 18 skills, and allows Advantage toggling',
       (tester) async {
-    final character = Character(
+    const character = Character(
       id: EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
       name: 'Rogue Scout',
       speciesRef: EntityReference<DomainEntity>.empty(

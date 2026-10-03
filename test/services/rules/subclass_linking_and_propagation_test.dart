@@ -218,7 +218,7 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'my-custom-warlock', ruleset: RulesetVersion.v2014),
         name: 'Generic Custom Warlock',
         speciesRef: EntityReference.empty(
@@ -328,14 +328,14 @@ void main() {
 
       // A legacy or un-hydrated character with no customProperties on subclassRef
       final unhydratedChar = Character(
-        id: EntityId(slug: 'legacy-warlock', ruleset: RulesetVersion.v2014),
+        id: const EntityId(slug: 'legacy-warlock', ruleset: RulesetVersion.v2014),
         name: 'Legacy Warlock',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference.empty(
+              classRef: const EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
@@ -351,14 +351,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 14,
             constitution: 14,
             intelligence: 10,
             wisdom: 12,
             charisma: 16),
-        resources: CharacterResourcePool(currentHp: 10),
+        resources: const CharacterResourcePool(currentHp: 10),
       );
 
       final healedChar = CharacterReparseEngine.reparse(unhydratedChar);
@@ -458,7 +458,7 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(stubSub);
 
-      final charLevel6 = Character(
+      const charLevel6 = Character(
         id: EntityId(slug: 'mariner-warlock-6', ruleset: RulesetVersion.v2014),
         name: 'Mariner Warlock',
         speciesRef: EntityReference.empty(
@@ -576,7 +576,7 @@ void main() {
       SrdClassesLibrary.addCustomSubclass(paladinSub);
 
       // Verify druid character gets the bonus action
-      final druidChar = Character(
+      const druidChar = Character(
         id: EntityId(slug: 'blight-druid-2', ruleset: RulesetVersion.v2014),
         name: 'Blight Druid',
         speciesRef: EntityReference.empty(
@@ -624,7 +624,7 @@ void main() {
           reason: 'Druid Blight Bloom should be extracted as a Bonus Action');
 
       // Verify paladin character gets the reaction
-      final paladinChar = Character(
+      const paladinChar = Character(
         id: EntityId(slug: 'justice-paladin-3', ruleset: RulesetVersion.v2014),
         name: 'Justice Paladin',
         speciesRef: EntityReference.empty(

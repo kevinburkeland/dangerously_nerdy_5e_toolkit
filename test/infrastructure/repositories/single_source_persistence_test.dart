@@ -68,7 +68,7 @@ void main() {
     campRepo.dispose();
   });
 
-  final testHero = Character(
+  const testHero = Character(
     id: EntityId(slug: 'char_test_hero', ruleset: RulesetVersion.v2024),
     name: 'Thorek Ironbreaker',
     speciesRef: EntityReference.empty(
@@ -84,7 +84,7 @@ void main() {
     resources: CharacterResourcePool(),
   );
 
-  final legacyHero = Character(
+  const legacyHero = Character(
     id: EntityId(slug: 'legacy_wizard', ruleset: RulesetVersion.v2024),
     name: 'Alden the Grey',
     speciesRef: EntityReference.empty(

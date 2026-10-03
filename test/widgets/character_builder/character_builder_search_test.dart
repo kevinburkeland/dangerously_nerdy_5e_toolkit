@@ -158,7 +158,7 @@ void main() {
       SrdFeatsLibrary.addCustomFeat(alertFeat);
       addTearDown(() => SrdFeatsLibrary.removeCustomFeat('alert'));
 
-      final char = Character(
+      const char = Character(
         id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2014),
         name: 'Fighter Hero',
         speciesRef: EntityReference.empty(
@@ -189,7 +189,7 @@ void main() {
                 onPressed: () {
                   showDialog(
                     context: ctx,
-                    builder: (_) => LevelUpWizardDialog(character: char),
+                    builder: (_) => const LevelUpWizardDialog(character: char),
                   );
                 },
                 child: const Text('Open Wizard'),
@@ -248,7 +248,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final wizardChar = Character(
+      const wizardChar = Character(
         id: EntityId(slug: 'wizard-hero', ruleset: RulesetVersion.v2024),
         name: 'Wizard Hero',
         speciesRef: EntityReference.empty(
@@ -280,7 +280,7 @@ void main() {
                   showDialog(
                     context: ctx,
                     builder: (_) =>
-                        LevelUpWizardDialog(character: wizardChar),
+                        const LevelUpWizardDialog(character: wizardChar),
                   );
                 },
                 child: const Text('Open Wizard'),

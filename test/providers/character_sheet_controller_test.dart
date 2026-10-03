@@ -397,7 +397,7 @@ void main() {
     test(
         'Multiclass Hit Die Recovery Test: greedy allocation to highest die face',
         () async {
-      final multiclassChar = Character(
+      const multiclassChar = Character(
         id: EntityId(slug: 'multi-hero', ruleset: RulesetVersion.v2024),
         name: 'MultiHero',
         speciesRef: EntityReference<DomainEntity>.empty(
@@ -473,7 +473,7 @@ void main() {
         'Dynamic Max HP Healing Test: healing clamps against dynamically evaluated max HP',
         () async {
       // Base CON 10 with level 1 base max HP 10, boosted to evaluated max HP 25 via Tough feat and level progression
-      final buffedChar = Character(
+      const buffedChar = Character(
         id: EntityId(slug: 'dynamic-hp-hero', ruleset: RulesetVersion.v2024),
         name: 'BuffedHero',
         speciesRef: EntityReference<DomainEntity>.empty(

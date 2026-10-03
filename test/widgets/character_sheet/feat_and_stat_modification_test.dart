@@ -92,7 +92,7 @@ void main() {
 
       expect(controller.character.feats.isEmpty, isTrue);
 
-      final athleteRef = EntityReference<DomainEntity>.empty(
+      const athleteRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'athlete',
         displayName: 'Athlete',
@@ -115,7 +115,7 @@ void main() {
         () async {
       final controller = CharacterSheetController(character: baseCharacter);
 
-      final athleteRef = EntityReference<DomainEntity>.empty(
+      const athleteRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'athlete',
         displayName: 'Athlete',
@@ -144,7 +144,7 @@ void main() {
       expect(
           controller.character.skillProficiencies[SkillType.athletics], isNull);
 
-      final versatileSpecialistRef = EntityReference<DomainEntity>.empty(
+      const versatileSpecialistRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'versatile-specialist',
         displayName: 'Versatile Specialist',
@@ -196,7 +196,7 @@ void main() {
       );
 
       // 3. Add a feat
-      final toughRef = EntityReference<DomainEntity>.empty(
+      const toughRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'tough',
         displayName: 'Tough',

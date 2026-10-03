@@ -91,7 +91,7 @@ void main() {
     });
 
     testWidgets('renders party member vitals and AC', (tester) async {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'valeros', ruleset: RulesetVersion.v2024),
         name: 'Valeros',
         speciesRef: EntityReference.empty(
@@ -128,7 +128,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DmDashboardPartyHud(partyRoster: [character]),
           ),

@@ -221,7 +221,7 @@ void main() {
       expect(dmController.combatEncounterService.localNodeId, equals(expectedNodeId));
 
       // CharacterSheetController
-      final testChar = Character(
+      const testChar = Character(
         id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
         name: 'Hero',
         speciesRef: EntityReference.empty(
@@ -283,7 +283,7 @@ void main() {
       CampaignProfileService.resetForTesting();
       expect(sl.isRegistered<ReplicaId>(), isFalse);
 
-      final testChar = Character(
+      const testChar = Character(
         id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
         name: 'Hero',
         speciesRef: EntityReference.empty(

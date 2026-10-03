@@ -34,7 +34,7 @@ void main() {
       expect(SpellbookLibrary.getSpellById('mystic-spark')!.level, 0);
 
       // Create a character with allocated mystic-spark
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'char-123', ruleset: RulesetVersion.homebrew),
         name: 'Sparky',
         speciesRef: EntityReference<Race>.empty(

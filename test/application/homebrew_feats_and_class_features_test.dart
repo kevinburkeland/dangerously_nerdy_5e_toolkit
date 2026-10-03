@@ -127,7 +127,7 @@ void main() {
       );
       SrdFeatsLibrary.addCustomFeat(testFeat);
 
-      final char = Character(
+      const char = Character(
         id: EntityId(slug: 'test-hero', ruleset: RulesetVersion.v2014),
         name: 'Test Hero',
         speciesRef: EntityReference.empty(
@@ -234,7 +234,7 @@ void main() {
       );
       SrdClassesLibrary.addCustomClass(customClass);
 
-      final hero = Character(
+      const hero = Character(
         id: EntityId(slug: 'expert-hero', ruleset: RulesetVersion.v2014),
         name: 'Expert Hero',
         speciesRef: EntityReference.empty(

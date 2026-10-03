@@ -47,7 +47,7 @@ void main() {
       // Character: Level 4 Warlock leveling to Level 5.
       // Already selected: Armor of Shadows and Fiendish Vigor at Level 2.
       // Already known spells: Eldritch Blast (cantrip), Hex (level 1), Hellish Rebuke (level 1).
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2014),
         name: 'Test Warlock',
         speciesRef: EntityReference.empty(

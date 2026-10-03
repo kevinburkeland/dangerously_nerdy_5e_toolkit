@@ -16,7 +16,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       // Level 2 Wizard leveling to Level 3 (unlocks 2nd-level spells)
-      final wizard = Character(
+      const wizard = Character(
         id: EntityId(slug: 'wizard-lvl-2', ruleset: RulesetVersion.v2024),
         name: 'Arcane Apprentice',
         speciesRef: EntityReference.empty(
@@ -74,7 +74,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: wizard),
           ),
@@ -116,7 +116,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final wizard = Character(
+      const wizard = Character(
         id: EntityId(slug: 'wizard-lvl-2', ruleset: RulesetVersion.v2024),
         name: 'Arcane Apprentice',
         speciesRef: EntityReference.empty(
@@ -152,7 +152,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: wizard),
           ),
@@ -215,7 +215,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final warlock = Character(
+      const warlock = Character(
         id: EntityId(slug: 'warlock-test-swap', ruleset: RulesetVersion.v2024),
         name: 'Warlock Swapper',
         speciesRef: EntityReference.empty(
@@ -253,7 +253,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: warlock),
           ),

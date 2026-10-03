@@ -23,7 +23,7 @@ void main() {
       expect(resolver, isA<IEntityResolver>());
 
       // 3. Verify character evaluation executes through external ruleset engine
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'composition-test-hero', ruleset: RulesetVersion.v2024),
         name: 'Sir Galahad',
         speciesRef: EntityReference.empty(

@@ -28,21 +28,21 @@ void main() {
       );
 
       final character = Character(
-        id: EntityId(slug: 'tiefling_cleric', ruleset: RulesetVersion.v2024),
+        id: const EntityId(slug: 'tiefling_cleric', ruleset: RulesetVersion.v2024),
         name: 'Tiefling Cleric',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 10,
             constitution: 10,
             intelligence: 10,
             wisdom: 10,
             charisma: 10),
-        progression: CharacterProgression(classes: []),
-        resources: CharacterResourcePool(),
+        progression: const CharacterProgression(classes: []),
+        resources: const CharacterResourcePool(),
         allocatedSpells: {
           'infernal_legacy': [thaumaturgyRef],
           'celestial_bloodline': [sacredFlameRef],
@@ -66,13 +66,13 @@ void main() {
     test(
         'Natively granted cantrips and spellsKnown are merged without duplicates',
         () {
-      final lightRef = EntityReference<Spell>.empty(
+      const lightRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'light',
         displayName: 'Light',
       );
 
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'aasimar_wizard', ruleset: RulesetVersion.v2024),
         name: 'Aasimar Wizard',
         speciesRef: EntityReference.empty(

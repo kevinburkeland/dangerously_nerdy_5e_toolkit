@@ -187,7 +187,7 @@ void main() {
 
       repository.addLayer(baseLayer);
 
-      final missingRef = EntityReference<Spell>.empty(
+      const missingRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'wish',
         displayName: 'Wish',

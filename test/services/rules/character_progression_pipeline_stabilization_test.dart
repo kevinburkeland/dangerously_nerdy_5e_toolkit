@@ -106,18 +106,18 @@ void main() {
     test(
         'Phase 2: Origin-keyed spell allocations track grants and detect orphan spells',
         () {
-      final cantripRef = EntityReference<Spell>.empty(
+      const cantripRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fire-bolt',
         displayName: 'Fire Bolt',
       );
-      final wizardCantripRef = EntityReference<Spell>.empty(
+      const wizardCantripRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'mage-hand',
         displayName: 'Mage Hand',
       );
 
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'elf-wizard', ruleset: RulesetVersion.v2014),
         name: 'Elaris',
         speciesRef: EntityReference<DomainEntity>.empty(
@@ -234,7 +234,7 @@ void main() {
         'Phase 4: Ruleset-aware spell slot math rounds half-casters differently in 2014 vs 2024 and isolates Warlock',
         () {
       // 1 Paladin / 1 Sorcerer in 2014 vs 2024
-      final multiclassChar2014 = Character(
+      const multiclassChar2014 = Character(
         id: EntityId(slug: 'palsorc-2014', ruleset: RulesetVersion.v2014),
         name: 'Gish 2014',
         speciesRef: EntityReference<DomainEntity>.empty(

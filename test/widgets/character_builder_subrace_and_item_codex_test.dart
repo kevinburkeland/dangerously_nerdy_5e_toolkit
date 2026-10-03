@@ -144,7 +144,7 @@ void main() {
 
     test('CharacterSheetController adds and removes inventory items seamlessly',
         () async {
-      final initialChar = Character(
+      const initialChar = Character(
         id: EntityId(slug: 'test-adventurer', ruleset: RulesetVersion.v2024),
         name: 'Test Adventurer',
         speciesRef: EntityReference.empty(

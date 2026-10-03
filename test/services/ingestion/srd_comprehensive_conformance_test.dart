@@ -326,17 +326,17 @@ void main() {
       repository.saveOverride('campaign-overrides', customGoblin);
 
       // Verify Campaign Overrides Resolve First
-      final fireballRef = EntityReference<Spell>.empty(
+      const fireballRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fireball',
         displayName: 'Fireball',
       );
-      final potionRef = EntityReference<EquipmentItem>.empty(
+      const potionRef = EntityReference<EquipmentItem>.empty(
         refType: EntityType.equipment,
         slug: 'potion-of-healing',
         displayName: 'Potion of Healing',
       );
-      final goblinRef = EntityReference<Monster>.empty(
+      const goblinRef = EntityReference<Monster>.empty(
         refType: EntityType.monster,
         slug: 'goblin',
         displayName: 'Goblin',

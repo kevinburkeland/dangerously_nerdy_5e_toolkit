@@ -34,7 +34,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2024),
         name: 'Warlock Hero',
         speciesRef: EntityReference.empty(
@@ -152,7 +152,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-fiend-warlock', ruleset: RulesetVersion.v2024),
         name: 'Fiend Warlock',
         speciesRef: EntityReference.empty(
@@ -192,7 +192,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: character),
           ),
@@ -223,7 +223,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final barbarian = Character(
+      const barbarian = Character(
         id: EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
         name: 'Barbarian',
         speciesRef: EntityReference.empty(
@@ -257,7 +257,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: barbarian),
           ),
@@ -286,7 +286,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final bard = Character(
+      const bard = Character(
         id: EntityId(slug: 'test-bard', ruleset: RulesetVersion.v2024),
         name: 'Elven Minstrel',
         speciesRef: EntityReference.empty(
@@ -324,7 +324,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: bard),
           ),
@@ -360,7 +360,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final warlock = Character(
+      const warlock = Character(
         id: EntityId(slug: 'test-warlock-10', ruleset: RulesetVersion.v2024),
         name: 'High Warlock',
         speciesRef: EntityReference.empty(
@@ -400,7 +400,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: warlock),
           ),
@@ -599,7 +599,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final cleric = Character(
+      const cleric = Character(
         id: EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
         name: 'Life Cleric',
         speciesRef: EntityReference.empty(
@@ -637,7 +637,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: cleric),
           ),
@@ -670,7 +670,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final warlock2014 = Character(
+      const warlock2014 = Character(
         id: EntityId(slug: 'test-warlock-2014', ruleset: RulesetVersion.v2014),
         name: 'Classic Warlock',
         speciesRef: EntityReference.empty(
@@ -708,7 +708,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: warlock2014),
           ),
@@ -738,7 +738,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final paladin2014 = Character(
+      const paladin2014 = Character(
         id: EntityId(slug: 'test-paladin-2014', ruleset: RulesetVersion.v2014),
         name: 'Classic Paladin',
         speciesRef: EntityReference.empty(
@@ -772,7 +772,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: paladin2014),
           ),
@@ -819,7 +819,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final wizard = Character(
+      const wizard = Character(
         id: EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
         name: 'Wizard Scholar',
         speciesRef: EntityReference.empty(
@@ -877,7 +877,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: wizard),
           ),
@@ -937,7 +937,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final warlock = Character(
+      const warlock = Character(
         id: EntityId(slug: 'test-warlock-swap', ruleset: RulesetVersion.v2024),
         name: 'Warlock Swapper',
         speciesRef: EntityReference.empty(

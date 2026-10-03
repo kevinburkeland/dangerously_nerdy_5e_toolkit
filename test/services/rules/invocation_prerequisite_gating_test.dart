@@ -264,7 +264,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       // Create a Level 1 Warlock leveling up to Level 2 without Eldritch Blast
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2014),
         name: 'Test Warlock',
         speciesRef: EntityReference.empty(

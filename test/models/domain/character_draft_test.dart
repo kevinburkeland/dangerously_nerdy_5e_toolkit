@@ -186,17 +186,17 @@ void main() {
       expect(controller.draft.backgroundRef, isNull);
       expect(controller.draft.characterName, isNull);
 
-      final elfRef = EntityReference.empty(
+      const elfRef = EntityReference.empty(
         refType: EntityType.species,
         slug: 'elf',
         displayName: 'Elf',
       );
-      final wizardRef = EntityReference.empty(
+      const wizardRef = EntityReference.empty(
         refType: EntityType.classDefinition,
         slug: 'wizard',
         displayName: 'Wizard',
       );
-      final acolyteRef = EntityReference.empty(
+      const acolyteRef = EntityReference.empty(
         refType: EntityType.background,
         slug: 'acolyte',
         displayName: 'Acolyte',

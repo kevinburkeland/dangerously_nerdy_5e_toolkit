@@ -12,7 +12,7 @@ void main() {
     test(
         'reparses 2014 Acolyte and populates missing backgroundFeature and description',
         () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Faithful Cleric',
         ruleset: RulesetVersion.v2014,
         speciesRef: EntityReference.empty(
@@ -75,7 +75,7 @@ void main() {
       addTearDown(() =>
           SrdBackgroundsLibrary.removeCustomBackground('homebrew-inquisitor'));
 
-      final char = Character(
+      const char = Character(
         id: EntityId(slug: 'inquisitor-test', ruleset: RulesetVersion.v2014),
         name: 'Inquisitor Vane',
         rulesEdition: DmRulesEdition.v2014,
@@ -134,7 +134,7 @@ void main() {
 
     test('heals contaminated 18-skill allowedSkills list to true class skills',
         () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Wizard Scholar',
         ruleset: RulesetVersion.v2014,
         speciesRef: EntityReference.empty(
@@ -179,7 +179,7 @@ void main() {
     });
 
     test('re-resolves armor and weapon proficiencies granted by feats', () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Armored Mage',
         ruleset: RulesetVersion.v2014,
         speciesRef: EntityReference.empty(
@@ -237,7 +237,7 @@ void main() {
     });
 
     test('merges innate species cantrips and spells into spellsKnown', () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Tiefling Rogue',
         ruleset: RulesetVersion.v2014,
         speciesRef: EntityReference.empty(
@@ -272,7 +272,7 @@ void main() {
     });
 
     test('recomputes maxHp and clamps currentHp when out of bounds', () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Sturdy Barbarian',
         ruleset: RulesetVersion.v2014,
         speciesRef: EntityReference.empty(

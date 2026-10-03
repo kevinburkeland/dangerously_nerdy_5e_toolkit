@@ -8,7 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation
 void main() {
   group('CharacterEvaluationEngine Tests', () {
     test('Calculates standard unarmored AC (10 + DEX)', () {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2024),
         name: 'Rogue Hero',
         speciesRef: EntityReference<DomainEntity>.empty(
@@ -201,7 +201,7 @@ void main() {
     test(
         'Monk Unarmored Defense calculates 10 + DEX + WIS (disallowed if shield equipped)',
         () {
-      final characterNoShield = Character(
+      const characterNoShield = Character(
         id: EntityId(slug: 'monk-1', ruleset: RulesetVersion.v2024),
         name: 'Li',
         speciesRef: EntityReference<DomainEntity>.empty(
@@ -381,7 +381,7 @@ void main() {
         'Character evaluation scales attunement slots dynamically via customProperties and feats',
         () {
       // Base character: standard 3 slots
-      final baseChar = Character(
+      const baseChar = Character(
         id: EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2024),
         name: 'Novice Hero',
         speciesRef: EntityReference<DomainEntity>.empty(
@@ -448,7 +448,7 @@ void main() {
     test(
         'Calculates Skill modifiers and Proficiency multipliers (Proficient & Expertise)',
         () {
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'rogue-expert', ruleset: RulesetVersion.v2024),
         name: 'Master Thief',
         speciesRef: EntityReference<DomainEntity>.empty(

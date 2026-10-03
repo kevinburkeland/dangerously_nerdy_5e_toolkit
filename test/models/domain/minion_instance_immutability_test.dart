@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
-import 'package:vtt_engine_core/models/entity_reference.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/loot_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';

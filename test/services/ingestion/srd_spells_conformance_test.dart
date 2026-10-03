@@ -169,13 +169,13 @@ void main() {
       repository.addLayer(layer2014);
 
       // 1. True Strike: 2014 has concentration, 2024 does not
-      final trueStrike2014Ref = EntityReference<Spell>.empty(
+      const trueStrike2014Ref = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'true-strike',
         displayName: 'True Strike',
         rulesetPreferred: RulesetVersion.v2014,
       );
-      final trueStrike2024Ref = EntityReference<Spell>.empty(
+      const trueStrike2024Ref = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'true-strike',
         displayName: 'True Strike',
@@ -191,13 +191,13 @@ void main() {
       expect(ts2024.entity!.duration.requiresConcentration, isFalse);
 
       // 2. Cure Wounds: 2014 (1d8) vs 2024 (2d8)
-      final cureWounds2014Ref = EntityReference<Spell>.empty(
+      const cureWounds2014Ref = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'cure-wounds',
         displayName: 'Cure Wounds',
         rulesetPreferred: RulesetVersion.v2014,
       );
-      final cureWounds2024Ref = EntityReference<Spell>.empty(
+      const cureWounds2024Ref = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'cure-wounds',
         displayName: 'Cure Wounds',

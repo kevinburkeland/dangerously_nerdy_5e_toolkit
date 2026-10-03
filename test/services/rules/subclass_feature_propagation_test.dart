@@ -202,7 +202,7 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-fighter', ruleset: RulesetVersion.homebrew),
         name: 'Test Fighter',
         speciesRef: EntityReference.empty(
@@ -346,7 +346,7 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      final character = Character(
+      const character = Character(
         id: EntityId(slug: 'test-char', ruleset: RulesetVersion.homebrew),
         name: 'Void Warrior',
         speciesRef: EntityReference.empty(
@@ -423,7 +423,7 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      final character = Character(
+      const character = Character(
         id: EntityId(
             slug: 'test-astral-char', ruleset: RulesetVersion.homebrew),
         name: 'Astral Sentinel',

@@ -287,7 +287,7 @@ void main() {
 
     test('Warlock Pact Magic slots are pooled correctly with standard slots',
         () {
-      final warlockSorcerer = Character(
+      const warlockSorcerer = Character(
         id: EntityId(slug: 'coffelock', ruleset: RulesetVersion.v2024),
         name: 'Coffeelock',
         speciesRef: EntityReference.empty(
@@ -349,7 +349,7 @@ void main() {
     });
 
     test('Multiclass validation rejects if attribute score is below 13', () {
-      final weakMage = Character(
+      const weakMage = Character(
         id: EntityId(slug: 'weak_mage', ruleset: RulesetVersion.v2024),
         name: 'Weak Mage',
         speciesRef: EntityReference.empty(
@@ -399,7 +399,7 @@ void main() {
     test(
         'Level 1 Character creation populates starting spell slots for spellcasters',
         () {
-      final wizardCreation = CharacterCreationRequest(
+      const wizardCreation = CharacterCreationRequest(
         characterName: 'Archmage Eldrin',
         speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
@@ -483,7 +483,7 @@ void main() {
     test(
         'applyLevelUp merges newToolProficiencies and newLanguages without duplicates',
         () {
-      final initialCharacter = Character(
+      const initialCharacter = Character(
         id: EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
         speciesRef: EntityReference.empty(

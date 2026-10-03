@@ -36,7 +36,7 @@ void main() {
     test(
         'CharacterPersistenceService migrates legacy SharedPreferences and persists to database',
         () async {
-      final legacyChar = Character(
+      const legacyChar = Character(
         id: EntityId(slug: 'legacy-hero', ruleset: RulesetVersion.v2024),
         name: 'Legacy Hero',
         speciesRef: EntityReference.empty(
@@ -63,7 +63,7 @@ void main() {
       expect(loaded.first.id.slug, equals('legacy-hero'));
 
       // Save a new character
-      final newChar = Character(
+      const newChar = Character(
         id: EntityId(slug: 'new-mage', ruleset: RulesetVersion.v2024),
         name: 'New Mage',
         speciesRef: EntityReference.empty(

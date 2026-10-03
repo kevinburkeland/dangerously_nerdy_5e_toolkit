@@ -11,7 +11,7 @@ void main() {
     testWidgets(
         'Barbarian with Path of the Berserker displays both Class and Subclass features',
         (tester) async {
-      final barbarianChar = Character(
+      const barbarianChar = Character(
         id: EntityId(slug: 'barbarian-hero', ruleset: RulesetVersion.v2024),
         name: 'Grom',
         rulesEdition: DmRulesEdition.v2024,
@@ -96,7 +96,7 @@ You gain resistance to critical hits and cannot be moved against your will.
       SrdClassesLibrary.addCustomSubclass(testSub);
 
       // Character is level 3
-      final fighterLevel3 = Character(
+      const fighterLevel3 = Character(
         id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
         name: 'Vael',
         rulesEdition: DmRulesEdition.v2024,

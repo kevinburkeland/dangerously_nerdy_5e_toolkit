@@ -11,7 +11,7 @@ void main() {
     testWidgets(
         '2014 Acolyte displays Shelter of the Faithful and omits Origin Feat & Ability Scores',
         (tester) async {
-      final character2014 = Character(
+      const character2014 = Character(
         id: EntityId(slug: 'cleric-2014', ruleset: RulesetVersion.v2014),
         name: 'Brother Thomas',
         rulesEdition: DmRulesEdition.v2014,
@@ -107,7 +107,7 @@ void main() {
     testWidgets(
         '2014 Homebrew Veteran displays Veteran Acumen without Origin Feat',
         (tester) async {
-      final character2014 = Character(
+      const character2014 = Character(
         id: EntityId(slug: 'fighter-2014', ruleset: RulesetVersion.v2014),
         name: 'Captain Marcus',
         rulesEdition: DmRulesEdition.v2014,
@@ -177,7 +177,7 @@ void main() {
 
     testWidgets('2024 Acolyte still displays 2024 Origin Feat & Ability Scores',
         (tester) async {
-      final character2024 = Character(
+      const character2024 = Character(
         id: EntityId(slug: 'cleric-2024', ruleset: RulesetVersion.v2024),
         name: 'Sister Sarah',
         rulesEdition: DmRulesEdition.v2024,

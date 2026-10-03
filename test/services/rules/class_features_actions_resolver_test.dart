@@ -12,7 +12,7 @@ void main() {
     test(
         'Paladin level 3 features translate to Actions and Bonus/Special actions',
         () {
-      final paladin2024 = Character(
+      const paladin2024 = Character(
         id: EntityId(slug: 'pally-test', ruleset: RulesetVersion.v2024),
         name: 'Sir Arthur',
         speciesRef: EntityReference.empty(
@@ -55,7 +55,7 @@ void main() {
     test(
         'Cleric level 2 Light Domain translates Turn Undead, Radiance of Dawn, and Warding Flare',
         () {
-      final clericLight = Character(
+      const clericLight = Character(
         id: EntityId(slug: 'cleric-light', ruleset: RulesetVersion.v2024),
         name: 'Sister Dawn',
         speciesRef: EntityReference.empty(
@@ -103,7 +103,7 @@ void main() {
 
     test('Druid Moon Druid gets Combat Wild Shape as Bonus Action and healing',
         () {
-      final moonDruid = Character(
+      const moonDruid = Character(
         id: EntityId(slug: 'druid-moon', ruleset: RulesetVersion.v2024),
         name: 'Ursoc',
         speciesRef: EntityReference.empty(
@@ -150,7 +150,7 @@ void main() {
     test(
         'Rogue Level 5 translates Sneak Attack, Cunning Action, Steady Aim, and Uncanny Dodge',
         () {
-      final rogue5 = Character(
+      const rogue5 = Character(
         id: EntityId(slug: 'rogue-5', ruleset: RulesetVersion.v2024),
         name: 'Vax',
         speciesRef: EntityReference.empty(
@@ -198,7 +198,7 @@ void main() {
     test(
         'Monk Level 5 translates Deflect Missiles to Reactions and Stunning Strike to Special',
         () {
-      final monk5 = Character(
+      const monk5 = Character(
         id: EntityId(slug: 'monk-5', ruleset: RulesetVersion.v2024),
         name: 'Oogway',
         speciesRef: EntityReference.empty(
@@ -243,7 +243,7 @@ void main() {
     test(
         'Wizard Level 2 translates Arcane Recovery (Action) and Arcane Ward (Special)',
         () {
-      final wizardAbjurer = Character(
+      const wizardAbjurer = Character(
         id: EntityId(slug: 'wiz-abjurer', ruleset: RulesetVersion.v2024),
         name: 'Arcanist',
         speciesRef: EntityReference.empty(
@@ -286,7 +286,7 @@ void main() {
 
     test('Fighting Style: Protection and Interception translate to Reactions',
         () {
-      final fighterProtection = Character(
+      const fighterProtection = Character(
         id: EntityId(slug: 'fighter-prot', ruleset: RulesetVersion.v2024),
         name: 'Shield Master',
         speciesRef: EntityReference.empty(
@@ -326,7 +326,7 @@ void main() {
     test(
         'Warlock level 11 with Moderately Armored feat does NOT receive Fighting Style: Protection reaction',
         () {
-      final warlock = Character(
+      const warlock = Character(
         id: EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2014),
         name: 'Eldritch Scholar',
         speciesRef: EntityReference.empty(
@@ -410,7 +410,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       // Character is Level 3 Blood Knight:
       // Should have: Dread Presence (Action, Lvl 1), Blood Surge (Bonus Action, Lvl 3)
       // Should NOT have: Unholy Retribution (Lvl 7 gated)
-      final characterLvl3 = Character(
+      const characterLvl3 = Character(
         id: EntityId(slug: 'blood-knight-3', ruleset: RulesetVersion.v2024),
         name: 'Vampiric Champion',
         speciesRef: EntityReference.empty(
@@ -473,7 +473,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       );
       SrdClassesLibrary.addCustomSubclass(customSubclass);
 
-      final characterWarden = Character(
+      const characterWarden = Character(
         id: EntityId(slug: 'fighter-warden', ruleset: RulesetVersion.v2024),
         name: 'Warden Fighter',
         speciesRef: EntityReference.empty(
@@ -533,7 +533,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       );
       SrdClassesLibrary.addCustomClass(customClass);
 
-      final characterAdept = Character(
+      const characterAdept = Character(
         id: EntityId(slug: 'force-adept-char', ruleset: RulesetVersion.v2024),
         name: 'Kineticist',
         speciesRef: EntityReference.empty(
@@ -614,7 +614,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       // Psychic Thrust (Action, Lvl 1): YES
       // Thought Shield (Reaction, Lvl 2): YES
       // Psionic Leap (Bonus Action, Lvl 6): NO (gated)
-      final psionChar = Character(
+      const psionChar = Character(
         id: EntityId(slug: 'psion-char', ruleset: RulesetVersion.v2024),
         name: 'Mindbender',
         speciesRef: EntityReference.empty(
