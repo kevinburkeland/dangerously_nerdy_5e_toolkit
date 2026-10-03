@@ -4,6 +4,7 @@ import '../application/services/combat_encounter_service.dart';
 import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import '../models/animated_object.dart';
 import '../models/campaign_profile.dart';
 import '../models/dm_screen_data.dart';
@@ -44,8 +45,12 @@ class DmDashboardController extends ChangeNotifier {
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
+    ReplicaId? replicaId,
     String? nodeId,
-  })  : _nodeId = nodeId ?? const Uuid().v4(),
+  })  : _nodeId = replicaId?.value ??
+            nodeId ??
+            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null) ??
+            const Uuid().v4(),
         _campaignProfileService = campaignRepository ??
             campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
@@ -75,12 +80,18 @@ class DmDashboardController extends ChangeNotifier {
                     combatResolver: sl.isRegistered<ICombatResolver>()
                         ? sl<ICombatResolver>()
                         : const Dnd5eCombatResolver(),
-                    localNodeId: const Uuid().v4(),
+                    localNodeId: replicaId?.value ??
+                        nodeId ??
+                        (sl.isRegistered<ReplicaId>()
+                            ? sl<ReplicaId>().value
+                            : const Uuid().v4()),
                   )),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()
                 ? sl<RoomSyncOrchestrator>()
                 : null);
+
+  String get nodeId => _nodeId;
 
   CombatEncounterService get combatEncounterService => _combatEncounterService;
   ICampaignRepository get campaignRepository => _campaignProfileService;
@@ -399,7 +410,7 @@ class DmDashboardController extends ChangeNotifier {
   PartyPurse get totalPartyWealth {
     var total = partyPurse;
     for (final char in partyCharacters) {
-      total = total.add(char.purse);
+      total = total.add(char.purse, nodeId: _nodeId);
     }
     return total;
   }

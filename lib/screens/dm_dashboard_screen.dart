@@ -307,7 +307,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                     final newProf = CampaignProfile.defaultProfile(
                       name: finalName,
                       edition: edition,
-                      nodeId: 'dm_dashboard',
+                      nodeId: _controller.nodeId,
                     );
                     final service = AppServices.instance.campaignProfileService;
                     await service.saveProfileImmediate(newProf);
@@ -567,8 +567,8 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
 
   void _updateEncounter(List<EncounterParticipant> list) {
     if (_activeProfile == null) return;
-    final updatedRoom =
-        _activeProfile!.roomState.copyWith(activeEncounter: list);
+    final updatedRoom = _activeProfile!.roomState
+        .copyWith(activeEncounter: list, nodeId: _controller.nodeId);
     setState(() {
       _activeProfile = _activeProfile!.copyWith(roomState: updatedRoom);
     });

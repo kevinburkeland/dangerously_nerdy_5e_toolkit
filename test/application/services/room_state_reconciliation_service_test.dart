@@ -298,7 +298,7 @@ void main() {
       // Local spent all 100 GP
       final local = const PartyPurse()
           .depositCoins(gp: 100, nodeId: 'host')
-          .withdrawCoins(gp: 100, nodeId: 'local');
+          .withdrawCoins(gp: 100, nodeId: 'peer_local');
       expect(local.gp, 0);
 
       // Remote still has the unspent 100 GP

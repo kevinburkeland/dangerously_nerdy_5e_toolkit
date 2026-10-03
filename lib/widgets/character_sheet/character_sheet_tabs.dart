@@ -995,7 +995,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                   ep: ep,
                   sp: sp,
                   cp: cp,
-                  nodeId: 'local',
+                  nodeId: widget.controller.nodeId,
                 );
 
                 await widget.controller.updatePurse(updated);
@@ -1222,7 +1222,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                   ep: ep,
                   sp: sp,
                   cp: cp,
-                  nodeId: 'local',
+                  nodeId: widget.controller.nodeId,
                 );
                 await widget.controller.updatePurse(updatedPersonal);
 
@@ -1332,7 +1332,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                   ep: ep,
                   sp: sp,
                   cp: cp,
-                  nodeId: 'local',
+                  nodeId: widget.controller.nodeId,
                 );
                 await widget.controller.updatePurse(updatedPersonal);
 

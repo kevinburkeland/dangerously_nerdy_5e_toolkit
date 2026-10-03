@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
-import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import 'package:vtt_engine_core/vtt_engine_core.dart';
+import '../di/injection_container.dart';
 import '../../services/app_services.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';
@@ -41,10 +40,18 @@ class LocalCampaignRepository implements ICampaignRepository {
   final StreamController<List<CampaignProfile>> _allProfilesController =
       StreamController<List<CampaignProfile>>.broadcast();
 
+  final ReplicaId? _replicaId;
+
   LocalCampaignRepository({
     AppDatabaseService? db,
     ICharacterRepository? characterRepo,
-  }) : _db = db ?? AppDatabaseService.instance;
+    ReplicaId? replicaId,
+  })  : _db = db ?? AppDatabaseService.instance,
+        _replicaId = replicaId;
+
+  String get _effectiveNodeId =>
+      _replicaId?.value ??
+      (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : 'local_repo');
 
   @override
   String? get activeProfileId => _activeProfileId;
@@ -124,7 +131,7 @@ class LocalCampaignRepository implements ICampaignRepository {
       } else if (profiles.isNotEmpty) {
         _activeProfileId = profiles.first.id;
       } else {
-        final def = CampaignProfile.defaultProfile(nodeId: 'local_repo');
+        final def = CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
         _memoryCache[def.id] = def;
         profiles.add(def);
         _activeProfileId = def.id;

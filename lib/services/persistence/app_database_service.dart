@@ -12,6 +12,8 @@ class AppDatabaseService {
   static const String boxCampaignProfiles = 'dn_campaign_profiles_v1';
   static const String boxHomebrew = 'dn_homebrew_store_v1';
   static const String boxHomebrewRaw = 'dn_homebrew_raw_v1';
+  static const String boxMetadata = 'dn_metadata_v1';
+  static const String keyReplicaId = 'dn_replica_id';
 
   static final AppDatabaseService instance = AppDatabaseService._internal();
   factory AppDatabaseService({LoggingService? logger}) {
@@ -42,6 +44,7 @@ class AppDatabaseService {
         Hive.openBox<dynamic>(boxCampaignProfiles),
         Hive.openBox<dynamic>(boxHomebrew),
         Hive.openBox<dynamic>(boxHomebrewRaw),
+        Hive.openBox<dynamic>(boxMetadata),
       ]);
       _initialized = true;
       _logger.logInfo(
@@ -155,6 +158,7 @@ class AppDatabaseService {
       boxCampaignProfiles,
       boxHomebrew,
       boxHomebrewRaw,
+      boxMetadata,
     ]) {
       if (Hive.isBoxOpen(boxName)) {
         await Hive.box<dynamic>(boxName).clear();

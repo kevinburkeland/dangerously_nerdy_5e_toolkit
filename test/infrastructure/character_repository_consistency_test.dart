@@ -78,7 +78,7 @@ void main() {
 
       final updatedHero = heroA.copyWith(
         resources: heroA.resources.copyWith(currentHp: 28, tempHp: 0),
-        purse: heroA.purse.setCoins(gp: 45, nodeId: 'local'),
+        purse: heroA.purse.setCoins(gp: 45, nodeId: 'test_node'),
       );
 
       await repository.saveRoster([updatedHero]);

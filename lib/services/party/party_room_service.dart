@@ -17,6 +17,8 @@ import '../dice_room_service.dart';
 import '../persistence/character_persistence_service.dart';
 import '../persistence/campaign_profile_service.dart';
 import 'campaign_registry_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../infrastructure/di/injection_container.dart';
 
 class CampaignNotFoundException implements Exception {
   final String message;
@@ -112,8 +114,25 @@ class PartyOutboxAction {
 class PartyRoomService {
   static const Duration defaultLootExpiration = Duration(days: 30);
 
-  static final PartyRoomService _instance = PartyRoomService._internal();
-  factory PartyRoomService() => _instance;
+  static PartyRoomService? _customInstance;
+  static PartyRoomService get _instance {
+    if (_customInstance != null) return _customInstance!;
+    if (sl.isRegistered<PartyRoomService>()) {
+      return sl<PartyRoomService>();
+    }
+    _customInstance = PartyRoomService._internal();
+    return _customInstance!;
+  }
+
+  factory PartyRoomService({ReplicaId? replicaId, String? localNodeId}) {
+    if (replicaId != null || localNodeId != null) {
+      return PartyRoomService._internal(
+        replicaId: replicaId,
+        localNodeId: localNodeId,
+      );
+    }
+    return _instance;
+  }
 
   final String localNodeId;
   final CampaignRegistryService _registry;
@@ -121,21 +140,36 @@ class PartyRoomService {
   final CharacterPersistenceService _characterPersistenceService;
   final CampaignProfileService _campaignProfileService;
 
-  PartyRoomService._internal({String? localNodeId})
-      : localNodeId = localNodeId ?? const Uuid().v4(),
-        _registry = CampaignRegistryService(),
-        _diceRoomService = DiceRoomService(),
-        _characterPersistenceService = CharacterPersistenceService(),
-        _campaignProfileService = CampaignProfileService();
-
-  @visibleForTesting
-  PartyRoomService.newInstance({
+  PartyRoomService._internal({
+    ReplicaId? replicaId,
     String? localNodeId,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : localNodeId = localNodeId ?? const Uuid().v4(),
+  })  : localNodeId = replicaId?.value ??
+            localNodeId ??
+            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null) ??
+            const Uuid().v4(),
+        _registry = registry ?? CampaignRegistryService(),
+        _diceRoomService = diceRoomService ?? DiceRoomService(),
+        _characterPersistenceService =
+            characterPersistenceService ?? CharacterPersistenceService(),
+        _campaignProfileService =
+            campaignProfileService ?? CampaignProfileService();
+
+  @visibleForTesting
+  PartyRoomService.newInstance({
+    ReplicaId? replicaId,
+    String? localNodeId,
+    CampaignRegistryService? registry,
+    DiceRoomService? diceRoomService,
+    CharacterPersistenceService? characterPersistenceService,
+    CampaignProfileService? campaignProfileService,
+  })  : localNodeId = replicaId?.value ??
+            localNodeId ??
+            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null) ??
+            const Uuid().v4(),
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),
@@ -146,6 +180,10 @@ class PartyRoomService {
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
             campaignProfileService ?? CampaignProfileService();
+
+  static void resetCustomInstanceForTesting() {
+    _customInstance = null;
+  }
 
   bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;
 
@@ -1550,7 +1588,8 @@ class PartyRoomService {
       // Transfer any remaining personal coins of the deleted character into the party reserve
       final deletedPurse = updatedPurses.remove(trimmed);
       if (deletedPurse != null && !deletedPurse.isEmpty) {
-        updatedPartyPurse = updatedPartyPurse.add(deletedPurse);
+        updatedPartyPurse =
+            updatedPartyPurse.add(deletedPurse, nodeId: localNodeId);
       }
 
       final updatedSession = current.copyWith(
@@ -1621,7 +1660,8 @@ class PartyRoomService {
       for (final removedKey in removedKeys) {
         final deletedPurse = updatedPurses.remove(removedKey);
         if (deletedPurse != null && !deletedPurse.isEmpty) {
-          updatedPartyPurse = updatedPartyPurse.add(deletedPurse);
+          updatedPartyPurse =
+              updatedPartyPurse.add(deletedPurse, nodeId: localNodeId);
         }
       }
 

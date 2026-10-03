@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../../models/domain/loot_models.dart';
 import '../../models/party/party_purse.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../infrastructure/di/injection_container.dart';
 
 /// Result container for atomic loot transactions
 @immutable
@@ -321,7 +323,12 @@ class InventoryTransactionService {
     required String instanceId,
     int quantity = 1,
     PartyPurse? currency,
+    String? nodeId,
   }) {
+    final effectiveNodeId = nodeId ??
+        (sl.isRegistered<ReplicaId>()
+            ? sl<ReplicaId>().value
+            : 'inventory_transfer');
     final containerItems =
         List<InventoryItemInstance>.from(sourceContainer.items);
     final itemIndex =
@@ -359,8 +366,10 @@ class InventoryTransactionService {
     var updatedContainerPurse = sourceContainer.purse;
     var updatedCharPurse = destinationCharacter.purse;
     if (currency != null && currency.totalGpEquivalent > 0) {
-      updatedContainerPurse = updatedContainerPurse.deduct(currency);
-      updatedCharPurse = updatedCharPurse.add(currency);
+      updatedContainerPurse =
+          updatedContainerPurse.deduct(currency, nodeId: effectiveNodeId);
+      updatedCharPurse =
+          updatedCharPurse.add(currency, nodeId: effectiveNodeId);
     }
 
     final updatedContainer = sourceContainer.copyWith(
@@ -386,7 +395,12 @@ class InventoryTransactionService {
     required String instanceId,
     int quantity = 1,
     PartyPurse? currency,
+    String? nodeId,
   }) {
+    final effectiveNodeId = nodeId ??
+        (sl.isRegistered<ReplicaId>()
+            ? sl<ReplicaId>().value
+            : 'inventory_transfer');
     final charInventory =
         List<InventoryItemInstance>.from(sourceCharacter.inventory);
     final itemIndex =
@@ -424,8 +438,10 @@ class InventoryTransactionService {
     var updatedContainerPurse = destinationContainer.purse;
     var updatedCharPurse = sourceCharacter.purse;
     if (currency != null && currency.totalGpEquivalent > 0) {
-      updatedCharPurse = updatedCharPurse.deduct(currency);
-      updatedContainerPurse = updatedContainerPurse.add(currency);
+      updatedCharPurse =
+          updatedCharPurse.deduct(currency, nodeId: effectiveNodeId);
+      updatedContainerPurse =
+          updatedContainerPurse.add(currency, nodeId: effectiveNodeId);
     }
 
     final updatedContainer = destinationContainer.copyWith(
@@ -441,6 +457,7 @@ class InventoryTransactionService {
     return LootTransferResult(
       updatedContainer: updatedContainer,
       updatedCharacter: updatedChar,
+
     );
   }
 }

@@ -12,6 +12,8 @@ import '../services/dice_room_service.dart';
 import '../services/party/campaign_registry_service.dart';
 import '../services/party/party_room_service.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../infrastructure/di/injection_container.dart';
 import '../infrastructure/repositories/local_character_repository.dart';
 import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/debounced_storage_service.dart';
@@ -28,6 +30,7 @@ class CharacterSheetController extends ChangeNotifier {
   final ICharacterRepository _persistenceService;
   final DebouncedStorageService _debouncedStorage;
   final ReferenceResolver? _resolver;
+  final ReplicaId _replicaId;
 
   late Character _character;
   late EvaluatedCharacterStats _stats;
@@ -38,12 +41,20 @@ class CharacterSheetController extends ChangeNotifier {
     ICharacterRepository? persistenceService,
     DebouncedStorageService? debouncedStorage,
     ReferenceResolver? resolver,
+    ReplicaId? replicaId,
   })  : _character = character,
         _persistenceService = persistenceService ?? LocalCharacterRepository(),
         _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
-        _resolver = resolver {
+        _resolver = resolver,
+        _replicaId = replicaId ??
+            (sl.isRegistered<ReplicaId>()
+                ? sl<ReplicaId>()
+                : ReplicaId('character_controller')) {
     _recalculateStats();
   }
+
+  ReplicaId get replicaId => _replicaId;
+  String get nodeId => _replicaId.value;
 
   Character get character => _character;
   EvaluatedCharacterStats get stats => _stats;
@@ -165,7 +176,7 @@ class CharacterSheetController extends ChangeNotifier {
   /// Modifies a single coin denomination in the character's purse (clamped >= 0).
   Future<void> modifyPurseCoin(String coinKey, int delta) async {
     final curPurse = _character.purse;
-    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: 'local');
+    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: nodeId);
     await updatePurse(newPurse);
   }
 

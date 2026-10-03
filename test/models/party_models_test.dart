@@ -26,11 +26,12 @@ void main() {
 
     test('PartyPurse coin deposit and withdraw operations clamp correctly', () {
       var purse = const PartyPurse(gp: 100, sp: 50);
-      purse = purse.depositCoins(gp: 25, cp: 100);
+      purse = purse.depositCoins(gp: 25, cp: 100, nodeId: 'test_node');
       expect(purse.gp, equals(125));
       expect(purse.cp, equals(100));
 
-      purse = purse.withdrawCoins(gp: 200, sp: 20); // 200 > 125, clamps at 0
+      purse = purse.withdrawCoins(
+          gp: 200, sp: 20, nodeId: 'test_node'); // 200 > 125, clamps at 0
       expect(purse.gp, equals(0));
       expect(purse.sp, equals(30));
     });
@@ -168,14 +169,14 @@ void main() {
       const purse1 = PartyPurse(pp: 2, gp: 50, ep: 10, sp: 20, cp: 100);
       const purse2 = PartyPurse(pp: 1, gp: 25, ep: 5, sp: 10, cp: 50);
 
-      final sum = purse1.add(purse2);
+      final sum = purse1.add(purse2, nodeId: 'test_node');
       expect(sum.pp, equals(3));
       expect(sum.gp, equals(75));
       expect(sum.ep, equals(15));
       expect(sum.sp, equals(30));
       expect(sum.cp, equals(150));
 
-      final diff = sum.deduct(purse2);
+      final diff = sum.deduct(purse2, nodeId: 'test_node');
       expect(diff.pp, equals(2));
       expect(diff.gp, equals(50));
       expect(diff.ep, equals(10));
@@ -184,7 +185,7 @@ void main() {
 
       // Overdrawing clamps at 0
       const largePurse = PartyPurse(gp: 500);
-      final overdrawn = diff.deduct(largePurse);
+      final overdrawn = diff.deduct(largePurse, nodeId: 'test_node');
       expect(overdrawn.gp, equals(0));
       expect(overdrawn.pp, equals(2));
     });
@@ -194,7 +195,7 @@ void main() {
         () {
       // Coin Breakdown Deduct Test: 1 PP = 10 GP; deduct 0.5 GP (5 SP) => 9.5 GP (9 GP, 1 EP)
       const purse = PartyPurse(pp: 1);
-      final result = purse.deductGpEquivalent(0.5);
+      final result = purse.deductGpEquivalent(0.5, nodeId: 'test_node');
 
       expect(result.pp, equals(0));
       expect(result.gp, equals(9));
@@ -204,16 +205,17 @@ void main() {
       expect(result.totalGpEquivalent, equals(9.5));
 
       // Deduct zero or negative cost returns same purse
-      expect(purse.deductGpEquivalent(0), equals(purse));
-      expect(purse.deductGpEquivalent(-5.0), equals(purse));
+      expect(purse.deductGpEquivalent(0, nodeId: 'test_node'), equals(purse));
+      expect(
+          purse.deductGpEquivalent(-5.0, nodeId: 'test_node'), equals(purse));
 
       // Exact balance deduction returns empty purse
-      final exactResult = purse.deductGpEquivalent(10.0);
+      final exactResult = purse.deductGpEquivalent(10.0, nodeId: 'test_node');
       expect(exactResult.isEmpty, isTrue);
 
       // Insufficient funds throws StateError
       expect(
-        () => purse.deductGpEquivalent(15.0),
+        () => purse.deductGpEquivalent(15.0, nodeId: 'test_node'),
         throwsA(isA<StateError>().having(
           (e) => e.message,
           'message',

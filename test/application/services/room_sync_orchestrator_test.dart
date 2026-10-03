@@ -875,7 +875,8 @@ void main() {
       final now = DateTime.now().millisecondsSinceEpoch;
       // Remote payload has updated party purse
       final remoteProfile = baseProfile.copyWith(
-        partyPurse: const PartyPurse().setCoins(gp: 750, pp: 5),
+        partyPurse: const PartyPurse()
+            .setCoins(gp: 750, pp: 5, nodeId: 'node_remote'),
         notesMarkdown: '', // Remote did not edit notes (blank)
       );
 

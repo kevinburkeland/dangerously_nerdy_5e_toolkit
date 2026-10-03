@@ -158,7 +158,8 @@ void main() {
     test('PartyPurse PN-Counter CvRDT convergence across network partitions',
         () {
       // Both nodes start with an initial shared purse of 100 GP
-      final initialPurse = const PartyPurse().setCoins(gp: 100);
+      final initialPurse =
+          const PartyPurse().setCoins(gp: 100, nodeId: 'node_init');
 
       // Node A deposits 50 GP and withdraws 10 GP during partition
       var purseA = initialPurse
@@ -222,14 +223,14 @@ void main() {
           CampaignProfile.defaultProfile(id: 'camp_delta', nodeId: 'test_node')
               .copyWith(
         partyPurse: const PartyPurse()
-            .setCoins(gp: 100)
+            .setCoins(gp: 100, nodeId: 'node_init')
             .modifyCoin('gp', 50, nodeId: 'node-orchestrator'),
       );
       mockRepo.activeProfile = baseProfile;
 
       // Remote peer concurrently deposited 35 GP
       final remotePurse = const PartyPurse()
-          .setCoins(gp: 100)
+          .setCoins(gp: 100, nodeId: 'node_init')
           .modifyCoin('gp', 35, nodeId: 'node-remote');
 
       final deltaPayload = jsonEncode({
@@ -257,13 +258,13 @@ void main() {
           CampaignProfile.defaultProfile(id: 'camp_full', nodeId: 'test_node')
               .copyWith(
         partyPurse: const PartyPurse()
-            .setCoins(gp: 50)
+            .setCoins(gp: 50, nodeId: 'node_init')
             .modifyCoin('gp', 20, nodeId: 'node-local'),
       );
       mockRepo.activeProfile = baseProfile;
 
       final remotePurse = const PartyPurse()
-          .setCoins(gp: 50)
+          .setCoins(gp: 50, nodeId: 'node_init')
           .modifyCoin('gp', 80, nodeId: 'node-remote');
       final remoteProfile = baseProfile.copyWith(
         name: 'Updated Campaign Title',

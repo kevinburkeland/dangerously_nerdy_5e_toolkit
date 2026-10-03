@@ -1,17 +1,12 @@
-import 'package:uuid/uuid.dart';
+import 'package:vtt_engine_core/vtt_engine_core.dart';
+import '../../services/party/party_room_service.dart';
+import '../storage/local_replica_identity_store.dart';
 import '../../application/services/cascading_transport_router.dart';
 import '../../application/services/clock_sync_service.dart';
 import '../../application/services/combat_encounter_service.dart';
 import '../../application/services/room_state_reconciliation_service.dart';
 import '../../application/services/room_sync_orchestrator.dart';
 import '../../application/storage/storage_durability_coordinator.dart';
-import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
-import 'package:vtt_engine_core/ports/i_character_repository.dart';
-import 'package:vtt_engine_core/ports/i_network_time_port.dart';
-import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
-import 'package:vtt_engine_core/storage/ports/i_campaign_snapshot_serializer_port.dart';
-import 'package:vtt_engine_core/storage/ports/i_physical_snapshot_port.dart';
-import 'package:vtt_engine_core/storage/ports/i_storage_durability_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
@@ -27,7 +22,6 @@ import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/subclass_spells_library.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../../services/acl/compendium_pipe_parser.dart';
-import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import '../adapters/system_network_time_port.dart';
 import '../mappers/room_sync_payload_mapper.dart';
 import '../repositories/local_campaign_repository.dart';
@@ -85,6 +79,7 @@ class InjectionContainer {
   void reset() {
     _factories.clear();
     _singletons.clear();
+    PartyRoomService.resetCustomInstanceForTesting();
   }
 }
 
@@ -99,15 +94,24 @@ Future<void> initServiceLocator({
   IP2pTransportPort? p2pTransport,
   IStorageDurabilityPort? storageDurabilityPort,
   IPhysicalSnapshotPort? physicalSnapshotPort,
+  ReplicaId? replicaId,
 }) async {
   final db = databaseService ?? AppDatabaseService.instance;
   sl.registerSingleton<AppDatabaseService>(db);
 
+  final resolvedReplicaId = replicaId ??
+      await LocalReplicaIdentityStore(db: db).getOrCreateReplicaId();
+  sl.registerSingleton<ReplicaId>(resolvedReplicaId);
+
   final charRepo = characterRepo ?? LocalCharacterRepository(db: db);
   sl.registerSingleton<ICharacterRepository>(charRepo);
 
-  final campRepo =
-      campaignRepo ?? LocalCampaignRepository(db: db, characterRepo: charRepo);
+  final campRepo = campaignRepo ??
+      LocalCampaignRepository(
+        db: db,
+        characterRepo: charRepo,
+        replicaId: resolvedReplicaId,
+      );
   sl.registerSingleton<ICampaignRepository>(campRepo);
 
   sl.registerLazySingleton<IStorageDurabilityPort>(
@@ -141,7 +145,7 @@ Future<void> initServiceLocator({
 
   sl.registerLazySingleton<ICombatResolver>(() => const Dnd5eCombatResolver());
 
-  final localNodeId = const Uuid().v4();
+  final localNodeId = resolvedReplicaId.value;
 
   sl.registerLazySingleton<CombatEncounterService>(() => CombatEncounterService(
         characterRepo: sl<ICharacterRepository>(),
@@ -150,6 +154,11 @@ Future<void> initServiceLocator({
         networkTimeProvider: () => sl<ClockSyncService>().currentNetworkTimeMs,
         localNodeId: localNodeId,
       ));
+
+  final partyRoomService = PartyRoomService(
+    replicaId: resolvedReplicaId,
+  );
+  sl.registerSingleton<PartyRoomService>(partyRoomService);
 
   sl.registerLazySingleton<RoomStateReconciliationService>(
     () => RoomStateReconciliationService(

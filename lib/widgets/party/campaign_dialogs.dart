@@ -2609,8 +2609,22 @@ class _MemberCoinTransactionDialogState
           session?.getMemberPurse(widget.characterName) ?? const PartyPurse();
 
       final newPurse = widget.isDeposit
-          ? currentPurse.depositCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp)
-          : currentPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+          ? currentPurse.depositCoins(
+              cp: cp,
+              sp: sp,
+              ep: ep,
+              gp: gp,
+              pp: pp,
+              nodeId: _partyService.localNodeId,
+            )
+          : currentPurse.withdrawCoins(
+              cp: cp,
+              sp: sp,
+              ep: ep,
+              gp: gp,
+              pp: pp,
+              nodeId: _partyService.localNodeId,
+            );
 
       await _partyService.updateMemberPurse(
         roomCode: widget.roomCode,

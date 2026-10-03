@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/dtos/campaign_profile_dto.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/session_graph_models.dart';
@@ -25,19 +27,25 @@ class CampaignProfileService extends ChangeNotifier
 
   static final CampaignProfileService _instance =
       CampaignProfileService._internal();
-  factory CampaignProfileService() => _instance;
-  CampaignProfileService._internal() {
-    CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
-    CampaignProfile.defaultPinnedRulesFallback = const {
-      'concentration',
-      'grapple_shove',
-    };
+  factory CampaignProfileService({ReplicaId? replicaId}) {
+    if (replicaId != null) {
+      _instance._replicaId = replicaId;
+    }
+    return _instance;
+  }
+  CampaignProfileService._internal({ReplicaId? replicaId})
+      : _replicaId = replicaId {
     CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
     CampaignProfile.defaultPinnedRulesFallback = const {
       'concentration',
       'grapple_shove',
     };
   }
+
+  ReplicaId? _replicaId;
+  String get _effectiveNodeId =>
+      _replicaId?.value ??
+      (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : 'campaign_service');
 
   final AppDatabaseService _db = AppDatabaseService.instance;
   final Map<String, CampaignProfile> _memoryCache = {};
@@ -186,7 +194,7 @@ class CampaignProfileService extends ChangeNotifier
 
     // Default Fallback
     final defaultProfile =
-        CampaignProfile.defaultProfile(nodeId: 'campaign_service');
+        CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
     await saveProfileImmediate(defaultProfile);
     _initialized = true;
     return [defaultProfile];
@@ -230,7 +238,7 @@ class CampaignProfileService extends ChangeNotifier
     }
 
     final freshDefault =
-        CampaignProfile.defaultProfile(nodeId: 'campaign_service');
+        CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
     await saveProfileImmediate(freshDefault);
     await switchProfile(freshDefault.id);
     return freshDefault;
@@ -244,7 +252,7 @@ class CampaignProfileService extends ChangeNotifier
     final newProfile = CampaignProfile.defaultProfile(
       name: name,
       edition: edition,
-      nodeId: 'campaign_service',
+      nodeId: _effectiveNodeId,
     );
     await saveProfileImmediate(newProfile);
     await switchProfile(newProfile.id);
@@ -377,14 +385,14 @@ class CampaignProfileService extends ChangeNotifier
         : '${source?.name ?? "Campaign"} (Copy)';
 
     final cloned =
-        (source ?? CampaignProfile.defaultProfile(nodeId: 'campaign_service'))
+        (source ?? CampaignProfile.defaultProfile(nodeId: _effectiveNodeId))
             .copyWith(
       id: newId,
       name: targetName,
       createdAt: now,
       lastPlayedAt: now,
       roomState: (source?.roomState ??
-              CampaignProfile.defaultProfile(nodeId: 'campaign_service')
+              CampaignProfile.defaultProfile(nodeId: _effectiveNodeId)
                   .roomState)
           .copyWith(
         roomId: 'room_$newId',
@@ -431,7 +439,7 @@ class CampaignProfileService extends ChangeNotifier
           await switchProfile(indexList.first);
         } else {
           final fresh =
-              CampaignProfile.defaultProfile(nodeId: 'campaign_service');
+              CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
           await saveProfileImmediate(fresh);
           await switchProfile(fresh.id);
         }
