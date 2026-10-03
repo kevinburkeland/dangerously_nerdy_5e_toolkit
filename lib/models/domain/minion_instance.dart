@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/models/value_objects/hit_points.dart';
+import 'package:vtt_engine_core/utils/deep_immutable.dart';
 
 /// Pure domain categorical classification of minion and entity sizes.
 /// Decoupled from concrete ruleset combat statistics.
@@ -224,7 +225,7 @@ class MinionInstance {
               maxHp: maxHp ?? 10,
               tempHp: tempHp,
             ),
-        customProperties = Map.unmodifiable(customProperties ?? const {});
+        customProperties = deepFreezeMap(customProperties);
 
   int get currentHp => hitPoints.currentHp;
 

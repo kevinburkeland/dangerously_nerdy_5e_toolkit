@@ -21,7 +21,7 @@ Character _createTestCharacter({
   return Character(
     id: const EntityId(slug: 'test-char', ruleset: RulesetVersion.v2014),
     name: 'Test Character',
-    speciesRef: const EntityReference<DomainEntity>(
+    speciesRef: const EntityReference<DomainEntity>.empty(
       refType: EntityType.species,
       slug: 'human',
       displayName: 'Human',
@@ -31,7 +31,7 @@ Character _createTestCharacter({
           ? classes
           : [
               const ClassLevelProgression(
-                classRef: EntityReference<DomainEntity>(
+                classRef: EntityReference<DomainEntity>.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter',
@@ -72,7 +72,7 @@ void main() {
         () {
       final studdedLeather = InventoryItemInstance(
         instanceId: 'item-armor',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           displayName: 'Studded Leather Armor',
           slug: 'studded-leather-armor',
@@ -91,7 +91,7 @@ void main() {
 
       final shield = InventoryItemInstance(
         instanceId: 'item-shield',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           displayName: 'Shield',
           slug: 'shield',
@@ -111,7 +111,7 @@ void main() {
     test('Heavy armor ignores DEX modifier', () {
       final chainMail = InventoryItemInstance(
         instanceId: 'item-chain-mail',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           displayName: 'Chain Mail',
           slug: 'chain-mail',
@@ -134,7 +134,7 @@ void main() {
         () {
       final scaleMail = InventoryItemInstance(
         instanceId: 'item-scale-mail',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           displayName: 'Scale Mail',
           slug: 'scale-mail',
@@ -169,7 +169,7 @@ void main() {
     test('Barbarian Unarmored Defense adds CON modifier and works with shields',
         () {
       const barbarianClass = ClassLevelProgression(
-        classRef: EntityReference<DomainEntity>(
+        classRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.classDefinition,
           slug: 'barbarian',
           displayName: 'Barbarian',
@@ -189,7 +189,7 @@ void main() {
 
       final shield = InventoryItemInstance(
         instanceId: 'item-shield',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           displayName: 'Shield',
           slug: 'shield',
@@ -206,7 +206,7 @@ void main() {
     test('Monk Unarmored Defense adds WIS modifier but is negated by shields',
         () {
       const monkClass = ClassLevelProgression(
-        classRef: EntityReference<DomainEntity>(
+        classRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.classDefinition,
           slug: 'monk',
           displayName: 'Monk',
@@ -226,7 +226,7 @@ void main() {
 
       final shield = InventoryItemInstance(
         instanceId: 'item-shield',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           displayName: 'Shield',
           slug: 'shield',
@@ -242,12 +242,12 @@ void main() {
 
     test('Draconic Sorcerer sets base unarmored AC to 13', () {
       const sorcererClass = ClassLevelProgression(
-        classRef: EntityReference<DomainEntity>(
+        classRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.classDefinition,
           slug: 'sorcerer',
           displayName: 'Sorcerer',
         ),
-        subclassRef: EntityReference<DomainEntity>(
+        subclassRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.subclass,
           slug: 'draconic-bloodline',
           displayName: 'Draconic Bloodline',
@@ -268,7 +268,7 @@ void main() {
     test('Defense Fighting Style adds +1 AC while wearing armor', () {
       final leatherArmor = InventoryItemInstance(
         instanceId: 'item-leather',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           displayName: 'Leather Armor',
           slug: 'leather-armor',
@@ -282,7 +282,7 @@ void main() {
         inventory: [leatherArmor],
         classes: [
           const ClassLevelProgression(
-            classRef: EntityReference<DomainEntity>(
+            classRef: EntityReference<DomainEntity>.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -342,7 +342,7 @@ void main() {
         'Jack of All Trades adds half proficiency bonus to initiative for untrained',
         () {
       const bardClass = ClassLevelProgression(
-        classRef: EntityReference<DomainEntity>(
+        classRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.classDefinition,
           slug: 'bard',
           displayName: 'Bard',
@@ -390,7 +390,7 @@ void main() {
         'Untrained skill modifier evaluates half-proficiency if Jack of All Trades is active',
         () {
       const bardClass = ClassLevelProgression(
-        classRef: EntityReference<DomainEntity>(
+        classRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.classDefinition,
           slug: 'bard',
           displayName: 'Bard',
@@ -464,7 +464,7 @@ void main() {
         'hasAgonizingBlast exposes flag and injects CHA modifier into Eldritch Blast damage',
         () {
       const warlockClass = ClassLevelProgression(
-        classRef: EntityReference<DomainEntity>(
+        classRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.classDefinition,
           slug: 'warlock',
           displayName: 'Warlock',

@@ -71,7 +71,7 @@ void main() {
     testCharacter = Character(
       id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
       name: 'Valeros',
-      speciesRef: const EntityReference<DomainEntity>(
+      speciesRef: const EntityReference<DomainEntity>.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
@@ -79,7 +79,7 @@ void main() {
       progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
-            classRef: EntityReference<DomainEntity>(
+            classRef: EntityReference<DomainEntity>.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -109,7 +109,7 @@ void main() {
       inventory: [
         InventoryItemInstance(
           instanceId: 'item-1',
-          itemRef: const EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>.empty(
             refType: EntityType.equipment,
             slug: 'ring-of-protection',
             displayName: 'Ring of Protection',
@@ -119,7 +119,7 @@ void main() {
         ),
         InventoryItemInstance(
           instanceId: 'item-2',
-          itemRef: const EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>.empty(
             refType: EntityType.equipment,
             slug: 'cloak-of-elvenkind',
             displayName: 'Cloak of Elvenkind',
@@ -129,7 +129,7 @@ void main() {
         ),
         InventoryItemInstance(
           instanceId: 'item-3',
-          itemRef: const EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>.empty(
             refType: EntityType.equipment,
             slug: 'boots-of-speed',
             displayName: 'Boots of Speed',
@@ -139,7 +139,7 @@ void main() {
         ),
         InventoryItemInstance(
           instanceId: 'item-4',
-          itemRef: const EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>.empty(
             refType: EntityType.equipment,
             slug: 'amulet-of-health',
             displayName: 'Amulet of Health',
@@ -397,10 +397,10 @@ void main() {
     test(
         'Multiclass Hit Die Recovery Test: greedy allocation to highest die face',
         () async {
-      const multiclassChar = Character(
+      final multiclassChar = Character(
         id: EntityId(slug: 'multi-hero', ruleset: RulesetVersion.v2024),
         name: 'MultiHero',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -408,7 +408,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -418,7 +418,7 @@ void main() {
               isStartingClass: true,
             ),
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'wizard',
                 displayName: 'Wizard',
@@ -427,7 +427,7 @@ void main() {
               hitDie: 'd6',
             ),
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'rogue',
                 displayName: 'Rogue',
@@ -473,10 +473,10 @@ void main() {
         'Dynamic Max HP Healing Test: healing clamps against dynamically evaluated max HP',
         () async {
       // Base CON 10 with level 1 base max HP 10, boosted to evaluated max HP 25 via Tough feat and level progression
-      const buffedChar = Character(
+      final buffedChar = Character(
         id: EntityId(slug: 'dynamic-hp-hero', ruleset: RulesetVersion.v2024),
         name: 'BuffedHero',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -484,7 +484,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -497,7 +497,7 @@ void main() {
           ],
         ),
         feats: [
-          EntityReference<DomainEntity>(
+          EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'tough', // +2 HP per level => +4 HP => 21 + 4 = 25
             displayName: 'Tough',

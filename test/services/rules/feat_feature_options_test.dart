@@ -18,7 +18,7 @@ Character _createTestChar({
   return Character(
     id: EntityId(slug: slug, ruleset: RulesetVersion.v2014),
     name: name,
-    speciesRef: const EntityReference<DomainEntity>(
+    speciesRef: const EntityReference<DomainEntity>.empty(
       refType: EntityType.species,
       slug: 'human',
       displayName: 'Human',
@@ -172,7 +172,7 @@ void main() {
       const progression = CharacterProgression(
         classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -204,7 +204,7 @@ void main() {
         name: 'Occult Scholar',
         classes: [
           const ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -217,7 +217,7 @@ void main() {
           ),
         ],
         feats: const [
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'homebrew-invocation-adept',
             displayName: 'Homebrew Invocation Adept',
@@ -237,7 +237,7 @@ void main() {
         name: 'Occult Scholar',
         classes: [
           const ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -250,7 +250,7 @@ void main() {
           ),
         ],
         feats: const [
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'homebrew-invocation-adept',
             displayName: 'Homebrew Invocation Adept',
@@ -286,7 +286,7 @@ void main() {
         name: 'Eldritch Knight',
         classes: [
           const ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -303,7 +303,7 @@ void main() {
       const levelUpRequest = LevelUpRequest(
         targetClassSlug: 'fighter',
         asiOrFeat: AsiOrFeatChoice.feat(
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'homebrew-invocation-adept',
             displayName: 'Homebrew Invocation Adept',
@@ -335,7 +335,7 @@ void main() {
         name: 'Gondor',
         classes: [
           const ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -349,7 +349,7 @@ void main() {
       final controller = CharacterSheetController(character: baseChar);
 
       await controller.addFeat(
-        const EntityReference(
+        const EntityReference.empty(
           refType: EntityType.feat,
           slug: 'homebrew-invocation-adept',
           displayName: 'Homebrew Invocation Adept',

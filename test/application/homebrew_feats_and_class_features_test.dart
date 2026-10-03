@@ -127,15 +127,15 @@ void main() {
       );
       SrdFeatsLibrary.addCustomFeat(testFeat);
 
-      const char = Character(
+      final char = Character(
         id: EntityId(slug: 'test-hero', ruleset: RulesetVersion.v2014),
         name: 'Test Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
@@ -161,7 +161,7 @@ void main() {
           isFalse);
 
       await controller.addFeat(
-        const EntityReference(
+        const EntityReference.empty(
             refType: EntityType.feat,
             slug: 'ironclad-artisan',
             displayName: 'Ironclad Artisan'),
@@ -234,15 +234,15 @@ void main() {
       );
       SrdClassesLibrary.addCustomClass(customClass);
 
-      const hero = Character(
+      final hero = Character(
         id: EntityId(slug: 'expert-hero', ruleset: RulesetVersion.v2014),
         name: 'Expert Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'custom-expert',
                   displayName: 'Sidekick Expert'),

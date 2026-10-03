@@ -81,7 +81,7 @@ void main() {
       level1Wizard = const Character(
         id: EntityId(slug: 'gandalf', ruleset: RulesetVersion.v2024),
         name: 'Gandalf',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -89,7 +89,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'wizard',
                 displayName: 'Wizard',
@@ -109,15 +109,15 @@ void main() {
           currentHitDice: {'d6': 1},
         ),
         cantrips: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_fire_bolt',
               displayName: 'Fire Bolt'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_light',
               displayName: 'Light'),
@@ -251,7 +251,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'wizard',
                 displayName: 'Wizard',

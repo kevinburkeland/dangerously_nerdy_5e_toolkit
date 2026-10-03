@@ -16,14 +16,14 @@ void main() {
       testFighter = const Character(
         id: EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2024),
         name: 'Galahad',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -155,7 +155,7 @@ void main() {
       final level3Fighter = testFighter.copyWith(
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',

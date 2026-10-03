@@ -11,14 +11,14 @@ void main() {
       baseCharacter = Character(
         id: const EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
         name: 'Warrior',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -31,7 +31,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-sword',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword',
@@ -41,7 +41,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-shield',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield',
@@ -51,7 +51,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-greatsword',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'greatsword',
               displayName: 'Greatsword',
@@ -60,7 +60,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-ring1',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'ring-1',
               displayName: 'Ring of Warmth',
@@ -70,7 +70,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-ring2',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'ring-2',
               displayName: 'Ring of Feather Falling',
@@ -80,7 +80,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-ring3',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'ring-3',
               displayName: 'Ring of Mind Shielding',
@@ -90,7 +90,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-ring4',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'ring-4',
               displayName: 'Ring of Invisibility',
@@ -160,7 +160,7 @@ void main() {
           ...baseCharacter.inventory,
           InventoryItemInstance(
             instanceId: 'inst-bag-of-holding',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'bag-of-holding',
               displayName: 'Bag of Holding',
@@ -170,7 +170,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-periapt',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'periapt-of-wound-closure',
               displayName: 'Periapt of Wound Closure',
@@ -180,7 +180,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-bracers',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'bracers-of-defense',
               displayName: 'Bracers of Defense',
@@ -275,7 +275,7 @@ void main() {
         items: [
           InventoryItemInstance(
             instanceId: 'chest-item-potion',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'potion-of-healing',
               displayName: 'Potion of Healing',

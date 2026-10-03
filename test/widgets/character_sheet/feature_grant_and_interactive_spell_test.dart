@@ -41,12 +41,12 @@ void main() {
       warlockWithAgonizing = const Character(
         id: EntityId(slug: 'warlock-agonizing', ruleset: RulesetVersion.v2024),
         name: 'Malakor',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        backgroundRef: EntityReference<DomainEntity>(
+        backgroundRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -55,7 +55,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -75,7 +75,7 @@ void main() {
           dexterity: 12,
         ),
         feats: [
-          EntityReference<DomainEntity>(
+          EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'alert',
             displayName: 'Alert',
@@ -86,7 +86,7 @@ void main() {
       warlockWithoutAgonizing = const Character(
         id: EntityId(slug: 'warlock-plain', ruleset: RulesetVersion.v2024),
         name: 'Novice Warlock',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -95,7 +95,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -191,7 +191,7 @@ void main() {
       warlock = const Character(
         id: EntityId(slug: 'warlock-hero', ruleset: RulesetVersion.v2024),
         name: 'Malakor',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
@@ -200,7 +200,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -323,12 +323,12 @@ void main() {
       character = const Character(
         id: EntityId(slug: 'warlock-traits', ruleset: RulesetVersion.v2024),
         name: 'Malakor',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        backgroundRef: EntityReference<DomainEntity>(
+        backgroundRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -337,7 +337,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -353,7 +353,7 @@ void main() {
         ),
         baseScores: AbilityScores(charisma: 16),
         feats: [
-          EntityReference<DomainEntity>(
+          EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'grappler',
             displayName: 'Grappler',

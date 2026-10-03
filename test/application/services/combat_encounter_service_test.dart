@@ -133,7 +133,7 @@ void main() {
       testChar = const Character(
         id: EntityId(slug: 'fighter_bob', ruleset: RulesetVersion.v2024),
         name: 'Bob the Fighter',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -149,7 +149,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',

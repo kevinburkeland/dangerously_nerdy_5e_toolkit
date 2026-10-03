@@ -49,7 +49,7 @@ void main() {
       expect(draft.isReadyForCompilation, isFalse);
 
       // Step: Assign class second
-      draft.startingClassRef = const EntityReference(
+      draft.startingClassRef = const EntityReference.empty(
         refType: EntityType.classDefinition,
         slug: 'fighter',
         displayName: 'Fighter',
@@ -59,7 +59,7 @@ void main() {
       expect(draft.isReadyForCompilation, isFalse);
 
       // Step: Assign species third
-      draft.speciesRef = const EntityReference(
+      draft.speciesRef = const EntityReference.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
@@ -68,7 +68,7 @@ void main() {
       expect(draft.isReadyForCompilation, isFalse);
 
       // Step: Assign background fourth
-      draft.backgroundRef = const EntityReference(
+      draft.backgroundRef = const EntityReference.empty(
         refType: EntityType.background,
         slug: 'acolyte',
         displayName: 'Acolyte',
@@ -98,7 +98,7 @@ void main() {
       );
 
       // Partially filled
-      draft.speciesRef = const EntityReference(
+      draft.speciesRef = const EntityReference.empty(
         refType: EntityType.species,
         slug: 'elf',
         displayName: 'Elf',
@@ -119,17 +119,17 @@ void main() {
       final draft = CharacterDraft()
         ..characterName = 'Gildor Inglorion'
         ..rulesEdition = DmRulesEdition.v2024
-        ..speciesRef = const EntityReference(
+        ..speciesRef = const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         )
-        ..backgroundRef = const EntityReference(
+        ..backgroundRef = const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
         )
-        ..startingClassRef = const EntityReference(
+        ..startingClassRef = const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'wizard',
           displayName: 'Wizard',
@@ -186,17 +186,17 @@ void main() {
       expect(controller.draft.backgroundRef, isNull);
       expect(controller.draft.characterName, isNull);
 
-      const elfRef = EntityReference(
+      final elfRef = EntityReference.empty(
         refType: EntityType.species,
         slug: 'elf',
         displayName: 'Elf',
       );
-      const wizardRef = EntityReference(
+      final wizardRef = EntityReference.empty(
         refType: EntityType.classDefinition,
         slug: 'wizard',
         displayName: 'Wizard',
       );
-      const acolyteRef = EntityReference(
+      final acolyteRef = EntityReference.empty(
         refType: EntityType.background,
         slug: 'acolyte',
         displayName: 'Acolyte',

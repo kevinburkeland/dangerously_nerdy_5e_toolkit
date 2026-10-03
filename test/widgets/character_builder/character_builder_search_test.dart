@@ -158,15 +158,15 @@ void main() {
       SrdFeatsLibrary.addCustomFeat(alertFeat);
       addTearDown(() => SrdFeatsLibrary.removeCustomFeat('alert'));
 
-      const char = Character(
+      final char = Character(
         id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2014),
         name: 'Fighter Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
@@ -189,7 +189,7 @@ void main() {
                 onPressed: () {
                   showDialog(
                     context: ctx,
-                    builder: (_) => const LevelUpWizardDialog(character: char),
+                    builder: (_) => LevelUpWizardDialog(character: char),
                   );
                 },
                 child: const Text('Open Wizard'),
@@ -248,15 +248,15 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      const wizardChar = Character(
+      final wizardChar = Character(
         id: EntityId(slug: 'wizard-hero', ruleset: RulesetVersion.v2024),
         name: 'Wizard Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'wizard',
                   displayName: 'Wizard'),
@@ -280,7 +280,7 @@ void main() {
                   showDialog(
                     context: ctx,
                     builder: (_) =>
-                        const LevelUpWizardDialog(character: wizardChar),
+                        LevelUpWizardDialog(character: wizardChar),
                   );
                 },
                 child: const Text('Open Wizard'),

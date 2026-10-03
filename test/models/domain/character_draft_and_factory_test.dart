@@ -37,7 +37,7 @@ void main() {
       final draft = CharacterDraft();
 
       // Step 1: Assign Class first (Modern 2024 order)
-      draft.startingClassRef = const EntityReference(
+      draft.startingClassRef = const EntityReference.empty(
         refType: EntityType.classDefinition,
         slug: 'fighter',
         displayName: 'Fighter',
@@ -48,7 +48,7 @@ void main() {
       expect(draft.isReadyForCompilation, isFalse);
 
       // Step 2: Assign Background second
-      draft.backgroundRef = const EntityReference(
+      draft.backgroundRef = const EntityReference.empty(
         refType: EntityType.background,
         slug: 'acolyte',
         displayName: 'Acolyte',
@@ -57,7 +57,7 @@ void main() {
       expect(draft.isReadyForCompilation, isFalse);
 
       // Step 3: Assign Species third
-      draft.speciesRef = const EntityReference(
+      draft.speciesRef = const EntityReference.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
@@ -85,17 +85,17 @@ void main() {
     test('isReadyForCompilation requires non-empty name string', () {
       final draft = CharacterDraft(
         characterName: '   ',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'wizard',
           displayName: 'Wizard',
         ),
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -120,7 +120,7 @@ void main() {
         () {
       final incompleteDraft = CharacterDraft(
         characterName: 'Incomplete Hero',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -144,18 +144,18 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Valeros',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'fighter',
           displayName: 'Fighter',
         ),
         startingClassHitDie: 'd10',
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -186,7 +186,7 @@ void main() {
         },
         languages: const ['Common', 'Orc'],
         originFeats: [
-          const EntityReference(
+          const EntityReference.empty(
             refType: EntityType.feat,
             slug: 'alert',
             displayName: 'Alert',
@@ -227,18 +227,18 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Malygos',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'wizard',
           displayName: 'Wizard',
         ),
         startingClassHitDie: 'd6',
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -260,29 +260,29 @@ void main() {
           charisma: 0,
         ),
         cantrips: [
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'fire-bolt',
             displayName: 'Fire Bolt',
           ),
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'mage-hand',
             displayName: 'Mage Hand',
           ),
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'light',
             displayName: 'Light',
           ),
         ],
         spellsKnown: [
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'magic-missile',
             displayName: 'Magic Missile',
           ),
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'shield',
             displayName: 'Shield',

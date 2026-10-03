@@ -34,17 +34,17 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2024),
         name: 'Warlock Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         cantrips: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'eldritch-blast',
             displayName: 'Eldritch Blast',
@@ -53,7 +53,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
@@ -152,25 +152,25 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-fiend-warlock', ruleset: RulesetVersion.v2024),
         name: 'Fiend Warlock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'fiend-patron',
                   displayName: 'The Fiend'),
@@ -192,7 +192,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: character),
           ),
@@ -223,19 +223,19 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const barbarian = Character(
+      final barbarian = Character(
         id: EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
         name: 'Barbarian',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'orc', displayName: 'Orc'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'barbarian',
                   displayName: 'Barbarian'),
@@ -257,7 +257,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: barbarian),
           ),
@@ -286,23 +286,23 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const bard = Character(
+      final bard = Character(
         id: EntityId(slug: 'test-bard', ruleset: RulesetVersion.v2024),
         name: 'Elven Minstrel',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'entertainer',
             displayName: 'Entertainer'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'bard',
                   displayName: 'Bard'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'college_of_lore',
                   displayName: 'College of Lore'),
@@ -324,7 +324,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: bard),
           ),
@@ -360,25 +360,25 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const warlock = Character(
+      final warlock = Character(
         id: EntityId(slug: 'test-warlock-10', ruleset: RulesetVersion.v2024),
         name: 'High Warlock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'the_fiend',
                   displayName: 'The Fiend'),
@@ -400,7 +400,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: warlock),
           ),
@@ -432,7 +432,7 @@ void main() {
       // Create level 10 Warlock with 10 spells known
       final initialSpellsKnown = List.generate(
         10,
-        (i) => EntityReference<Spell>(
+        (i) => EntityReference<Spell>.empty(
           refType: EntityType.spell,
           slug: 'test_warlock_spell_$i',
           displayName: 'Test Warlock Spell $i',
@@ -443,22 +443,22 @@ void main() {
         id: const EntityId(
             slug: 'test-warlock-10-arcanum', ruleset: RulesetVersion.v2024),
         name: 'Arcanum Warlock',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'the_fiend',
                   displayName: 'The Fiend'),
@@ -469,19 +469,19 @@ void main() {
           ],
         ),
         cantrips: const [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_minor_illusion',
               displayName: 'Minor Illusion'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_prestidigitation',
               displayName: 'Prestidigitation'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
@@ -599,23 +599,23 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const cleric = Character(
+      final cleric = Character(
         id: EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
         name: 'Life Cleric',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'cleric',
                   displayName: 'Cleric'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'life_domain',
                   displayName: 'Life Domain'),
@@ -637,7 +637,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: cleric),
           ),
@@ -670,23 +670,23 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const warlock2014 = Character(
+      final warlock2014 = Character(
         id: EntityId(slug: 'test-warlock-2014', ruleset: RulesetVersion.v2014),
         name: 'Classic Warlock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'the_fiend',
                   displayName: 'The Fiend'),
@@ -708,7 +708,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: warlock2014),
           ),
@@ -738,19 +738,19 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const paladin2014 = Character(
+      final paladin2014 = Character(
         id: EntityId(slug: 'test-paladin-2014', ruleset: RulesetVersion.v2014),
         name: 'Classic Paladin',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'noble',
             displayName: 'Noble'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'paladin',
                   displayName: 'Paladin'),
@@ -772,7 +772,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: paladin2014),
           ),
@@ -819,19 +819,19 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const wizard = Character(
+      final wizard = Character(
         id: EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
         name: 'Wizard Scholar',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'acolyte',
             displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'wizard',
                   displayName: 'Wizard'),
@@ -842,25 +842,25 @@ void main() {
           ],
         ),
         cantrips: [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_fire_bolt',
               displayName: 'Fire Bolt'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_prestidigitation',
               displayName: 'Prestidigitation'),
         ],
         spellsPrepared: [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_shield',
               displayName: 'Shield'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_magic_missile',
               displayName: 'Magic Missile'),
@@ -877,7 +877,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: wizard),
           ),
@@ -937,25 +937,25 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      const warlock = Character(
+      final warlock = Character(
         id: EntityId(slug: 'test-warlock-swap', ruleset: RulesetVersion.v2024),
         name: 'Warlock Swapper',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
             refType: EntityType.background,
             slug: 'charlatan',
             displayName: 'Charlatan'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'the_fiend',
                   displayName: 'The Fiend'),
@@ -966,21 +966,21 @@ void main() {
           ],
         ),
         cantrips: [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_minor_illusion',
               displayName: 'Minor Illusion'),
         ],
         spellsKnown: [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_witch_bolt',
               displayName: 'Witch Bolt'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'spell_arms_of_hadar',
               displayName: 'Arms of Hadar'),

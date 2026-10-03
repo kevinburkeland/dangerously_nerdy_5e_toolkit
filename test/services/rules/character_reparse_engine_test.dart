@@ -12,15 +12,15 @@ void main() {
     test(
         'reparses 2014 Acolyte and populates missing backgroundFeature and description',
         () {
-      const request = CharacterCreationRequest(
+      final request = CharacterCreationRequest(
         characterName: 'Faithful Cleric',
         ruleset: RulesetVersion.v2014,
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -75,16 +75,16 @@ void main() {
       addTearDown(() =>
           SrdBackgroundsLibrary.removeCustomBackground('homebrew-inquisitor'));
 
-      const char = Character(
+      final char = Character(
         id: EntityId(slug: 'inquisitor-test', ruleset: RulesetVersion.v2014),
         name: 'Inquisitor Vane',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference<DomainEntity>(
+        backgroundRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'homebrew-inquisitor',
           displayName: 'Homebrew Inquisitor',
@@ -93,7 +93,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'rogue',
                 displayName: 'Rogue',
@@ -134,15 +134,15 @@ void main() {
 
     test('heals contaminated 18-skill allowedSkills list to true class skills',
         () {
-      const request = CharacterCreationRequest(
+      final request = CharacterCreationRequest(
         characterName: 'Wizard Scholar',
         ruleset: RulesetVersion.v2014,
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
           refType: EntityType.background,
           slug: 'sage',
           displayName: 'Sage',
@@ -179,15 +179,15 @@ void main() {
     });
 
     test('re-resolves armor and weapon proficiencies granted by feats', () {
-      const request = CharacterCreationRequest(
+      final request = CharacterCreationRequest(
         characterName: 'Armored Mage',
         ruleset: RulesetVersion.v2014,
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
           refType: EntityType.background,
           slug: 'sage',
           displayName: 'Sage',
@@ -214,7 +214,7 @@ void main() {
       );
       SrdFeatsLibrary.addCustomFeat(armorFeat);
 
-      final featRef = EntityReference<DomainEntity>(
+      final featRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: armorFeat.slug,
         displayName: armorFeat.name,
@@ -237,15 +237,15 @@ void main() {
     });
 
     test('merges innate species cantrips and spells into spellsKnown', () {
-      const request = CharacterCreationRequest(
+      final request = CharacterCreationRequest(
         characterName: 'Tiefling Rogue',
         ruleset: RulesetVersion.v2014,
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
         ),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
           refType: EntityType.background,
           slug: 'criminal',
           displayName: 'Criminal',
@@ -272,15 +272,15 @@ void main() {
     });
 
     test('recomputes maxHp and clamps currentHp when out of bounds', () {
-      const request = CharacterCreationRequest(
+      final request = CharacterCreationRequest(
         characterName: 'Sturdy Barbarian',
         ruleset: RulesetVersion.v2014,
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
           refType: EntityType.background,
           slug: 'soldier',
           displayName: 'Soldier',

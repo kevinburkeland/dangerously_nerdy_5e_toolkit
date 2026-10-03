@@ -27,7 +27,7 @@ void main() {
         id: const EntityId(
             slug: 'barbarian-hero', ruleset: RulesetVersion.v2014),
         name: 'Conan',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -35,7 +35,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'barbarian',
                 displayName: 'Barbarian',
@@ -69,7 +69,7 @@ void main() {
         () {
       final headbandItem = InventoryItemInstance(
         instanceId: 'item-headband-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'headband-of-intellect',
           displayName: 'Headband of Intellect',
@@ -106,21 +106,21 @@ void main() {
     test(
         'Phase 2: Origin-keyed spell allocations track grants and detect orphan spells',
         () {
-      const cantripRef = EntityReference<Spell>(
+      final cantripRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fire-bolt',
         displayName: 'Fire Bolt',
       );
-      const wizardCantripRef = EntityReference<Spell>(
+      final wizardCantripRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'mage-hand',
         displayName: 'Mage Hand',
       );
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'elf-wizard', ruleset: RulesetVersion.v2014),
         name: 'Elaris',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'high-elf',
           displayName: 'High Elf',
@@ -128,7 +128,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'wizard',
                 displayName: 'Wizard',
@@ -180,7 +180,7 @@ void main() {
       var char = const Character(
         id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2014),
         name: 'Arthur',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -188,7 +188,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -234,10 +234,10 @@ void main() {
         'Phase 4: Ruleset-aware spell slot math rounds half-casters differently in 2014 vs 2024 and isolates Warlock',
         () {
       // 1 Paladin / 1 Sorcerer in 2014 vs 2024
-      const multiclassChar2014 = Character(
+      final multiclassChar2014 = Character(
         id: EntityId(slug: 'palsorc-2014', ruleset: RulesetVersion.v2014),
         name: 'Gish 2014',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -245,7 +245,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'paladin',
                 displayName: 'Paladin',
@@ -255,7 +255,7 @@ void main() {
               isStartingClass: true,
             ),
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'sorcerer',
                 displayName: 'Sorcerer',
@@ -289,7 +289,7 @@ void main() {
           classes: [
             ...multiclassChar2024.progression.classes,
             const ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -316,7 +316,7 @@ void main() {
       final initialChar = Character(
         id: const EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2014),
         name: 'Hero',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
@@ -324,7 +324,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'rogue',
                 displayName: 'Rogue',
@@ -340,7 +340,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'item-dagger',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger',
@@ -360,7 +360,7 @@ void main() {
           () => (updatedChar.inventory as dynamic).add(
                 InventoryItemInstance(
                   instanceId: 'item-2',
-                  itemRef: const EntityReference<EquipmentItem>(
+                  itemRef: const EntityReference<EquipmentItem>.empty(
                     refType: EntityType.equipment,
                     slug: 'shortsword',
                     displayName: 'Shortsword',

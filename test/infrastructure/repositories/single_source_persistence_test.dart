@@ -68,10 +68,10 @@ void main() {
     campRepo.dispose();
   });
 
-  const testHero = Character(
+  final testHero = Character(
     id: EntityId(slug: 'char_test_hero', ruleset: RulesetVersion.v2024),
     name: 'Thorek Ironbreaker',
-    speciesRef: EntityReference(
+    speciesRef: EntityReference.empty(
         refType: EntityType.species, slug: 'dwarf', displayName: 'Dwarf'),
     baseScores: AbilityScores(
         strength: 14,
@@ -84,10 +84,10 @@ void main() {
     resources: CharacterResourcePool(),
   );
 
-  const legacyHero = Character(
+  final legacyHero = Character(
     id: EntityId(slug: 'legacy_wizard', ruleset: RulesetVersion.v2024),
     name: 'Alden the Grey',
-    speciesRef: EntityReference(
+    speciesRef: EntityReference.empty(
         refType: EntityType.species, slug: 'human', displayName: 'Human'),
     baseScores: AbilityScores(
         strength: 10,

@@ -13,7 +13,7 @@ void main() {
       testCharacter = const Character(
         id: EntityId(slug: 'alden_custom', ruleset: RulesetVersion.v2024),
         name: 'Alden the Homebrewed',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'custom_maiar',
           displayName: 'Maiar',
@@ -22,7 +22,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'custom_istar',
                 displayName: 'Istar',

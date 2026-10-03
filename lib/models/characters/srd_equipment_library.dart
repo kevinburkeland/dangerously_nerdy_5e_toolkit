@@ -44,7 +44,7 @@ class SrdEquipmentLibrary {
       icon: Icons.sports_kabaddi,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'greataxe',
               displayName: 'Greataxe'),
@@ -53,21 +53,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.twoHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'handaxe',
               displayName: 'Handaxe'),
           quantity: 2,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'javelin',
               displayName: 'Javelin'),
           quantity: 4,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'explorers-pack',
               displayName: 'Explorer\'s Pack'),
@@ -85,7 +85,7 @@ class SrdEquipmentLibrary {
       icon: Icons.fitness_center,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'warhammer',
               displayName: 'Warhammer'),
@@ -94,7 +94,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword'),
@@ -103,21 +103,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.offHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'handaxe',
               displayName: 'Handaxe'),
           quantity: 2,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'javelin',
               displayName: 'Javelin'),
           quantity: 4,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'explorers-pack',
               displayName: 'Explorer\'s Pack'),
@@ -139,7 +139,7 @@ class SrdEquipmentLibrary {
       icon: Icons.music_note,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'rapier',
               displayName: 'Rapier'),
@@ -148,7 +148,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'leather-armor',
               displayName: 'Leather Armor'),
@@ -157,19 +157,19 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment, slug: 'lute', displayName: 'Lute'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'entertainers-pack',
               displayName: 'Entertainer\'s Pack'),
@@ -187,7 +187,7 @@ class SrdEquipmentLibrary {
       icon: Icons.auto_stories,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword'),
@@ -196,7 +196,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'leather-armor',
               displayName: 'Leather Armor'),
@@ -205,19 +205,19 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment, slug: 'lute', displayName: 'Lute'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'diplomats-pack',
               displayName: 'Diplomat\'s Pack'),
@@ -239,7 +239,7 @@ class SrdEquipmentLibrary {
       icon: Icons.shield,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'scale-mail',
               displayName: 'Scale Mail'),
@@ -248,7 +248,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'warhammer',
               displayName: 'Warhammer'),
@@ -257,7 +257,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield'),
@@ -266,14 +266,14 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.offHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'holy-symbol',
               displayName: 'Holy Symbol'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'priests-pack',
               displayName: 'Priest\'s Pack'),
@@ -291,7 +291,7 @@ class SrdEquipmentLibrary {
       icon: Icons.healing,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'chain-mail',
               displayName: 'Chain Mail'),
@@ -300,14 +300,14 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment, slug: 'mace', displayName: 'Mace'),
           quantity: 1,
           equipImmediately: true,
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield'),
@@ -316,28 +316,28 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.offHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'light-crossbow',
               displayName: 'Light Crossbow'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'crossbow-bolts',
               displayName: 'Crossbow Bolts (20)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'holy-symbol',
               displayName: 'Holy Symbol'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'priests-pack',
               displayName: 'Priest\'s Pack'),
@@ -359,7 +359,7 @@ class SrdEquipmentLibrary {
       icon: Icons.park,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'leather-armor',
               displayName: 'Leather Armor'),
@@ -368,7 +368,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'scimitar',
               displayName: 'Scimitar'),
@@ -377,7 +377,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Wooden Shield'),
@@ -386,21 +386,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.offHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'druidic-focus',
               displayName: 'Druidic Focus'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'herbalism-kit',
               displayName: 'Herbalism Kit'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'explorers-pack',
               displayName: 'Explorer\'s Pack'),
@@ -422,7 +422,7 @@ class SrdEquipmentLibrary {
       icon: Icons.shield,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'chain-mail',
               displayName: 'Chain Mail'),
@@ -431,7 +431,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword'),
@@ -440,7 +440,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield'),
@@ -449,21 +449,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.offHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'light-crossbow',
               displayName: 'Light Crossbow'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'crossbow-bolts',
               displayName: 'Crossbow Bolts (20)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dungeoneers-pack',
               displayName: 'Dungeoneer\'s Pack'),
@@ -481,7 +481,7 @@ class SrdEquipmentLibrary {
       icon: Icons.sports_kabaddi,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'chain-mail',
               displayName: 'Chain Mail'),
@@ -490,7 +490,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'greatsword',
               displayName: 'Greatsword'),
@@ -499,14 +499,14 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.twoHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'handaxe',
               displayName: 'Handaxe'),
           quantity: 2,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'explorers-pack',
               displayName: 'Explorer\'s Pack'),
@@ -524,7 +524,7 @@ class SrdEquipmentLibrary {
       icon: Icons.track_changes,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'leather-armor',
               displayName: 'Leather Armor'),
@@ -533,7 +533,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longbow',
               displayName: 'Longbow'),
@@ -542,21 +542,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.twoHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'arrows',
               displayName: 'Arrows (20)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shortsword',
               displayName: 'Shortsword'),
           quantity: 2,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dungeoneers-pack',
               displayName: 'Dungeoneer\'s Pack'),
@@ -578,7 +578,7 @@ class SrdEquipmentLibrary {
       icon: Icons.sports_mma,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shortsword',
               displayName: 'Shortsword'),
@@ -587,12 +587,12 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment, slug: 'dart', displayName: 'Dart'),
           quantity: 10,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dungeoneers-pack',
               displayName: 'Dungeoneer\'s Pack'),
@@ -610,7 +610,7 @@ class SrdEquipmentLibrary {
       icon: Icons.directions_walk,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'spear',
               displayName: 'Spear'),
@@ -619,12 +619,12 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment, slug: 'dart', displayName: 'Dart'),
           quantity: 10,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'explorers-pack',
               displayName: 'Explorer\'s Pack'),
@@ -646,7 +646,7 @@ class SrdEquipmentLibrary {
       icon: Icons.shield,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'chain-mail',
               displayName: 'Chain Mail'),
@@ -655,7 +655,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword'),
@@ -664,7 +664,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield'),
@@ -673,21 +673,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.offHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'javelin',
               displayName: 'Javelin'),
           quantity: 5,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'holy-symbol',
               displayName: 'Holy Symbol'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'priests-pack',
               displayName: 'Priest\'s Pack'),
@@ -709,7 +709,7 @@ class SrdEquipmentLibrary {
       icon: Icons.explore,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'scale-mail',
               displayName: 'Scale Mail'),
@@ -718,7 +718,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shortsword',
               displayName: 'Shortsword'),
@@ -727,21 +727,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longbow',
               displayName: 'Longbow'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'arrows',
               displayName: 'Arrows (20)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dungeoneers-pack',
               displayName: 'Dungeoneer\'s Pack'),
@@ -763,7 +763,7 @@ class SrdEquipmentLibrary {
       icon: Icons.visibility_off,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'leather-armor',
               displayName: 'Leather Armor'),
@@ -772,7 +772,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'rapier',
               displayName: 'Rapier'),
@@ -781,35 +781,35 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shortbow',
               displayName: 'Shortbow'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'arrows',
               displayName: 'Arrows (20)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger'),
           quantity: 2,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'thieves-tools',
               displayName: 'Thieves\' Tools'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'burglars-pack',
               displayName: 'Burglar\'s Pack'),
@@ -831,7 +831,7 @@ class SrdEquipmentLibrary {
       icon: Icons.flash_on,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'light-crossbow',
               displayName: 'Light Crossbow'),
@@ -840,28 +840,28 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.twoHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'crossbow-bolts',
               displayName: 'Crossbow Bolts (20)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'arcane-focus',
               displayName: 'Arcane Focus (Wand)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger'),
           quantity: 2,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dungeoneers-pack',
               displayName: 'Dungeoneer\'s Pack'),
@@ -883,7 +883,7 @@ class SrdEquipmentLibrary {
       icon: Icons.auto_awesome,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'leather-armor',
               displayName: 'Leather Armor'),
@@ -892,7 +892,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'light-crossbow',
               displayName: 'Light Crossbow'),
@@ -901,28 +901,28 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.twoHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'crossbow-bolts',
               displayName: 'Crossbow Bolts (20)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'arcane-focus',
               displayName: 'Arcane Focus (Orb)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger'),
           quantity: 2,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'scholars-pack',
               displayName: 'Scholar\'s Pack'),
@@ -944,7 +944,7 @@ class SrdEquipmentLibrary {
       icon: Icons.menu_book,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'quarterstaff',
               displayName: 'Quarterstaff'),
@@ -953,21 +953,21 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'arcane-focus',
               displayName: 'Arcane Focus (Crystal)'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'spellbook',
               displayName: 'Spellbook'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'scholars-pack',
               displayName: 'Scholar\'s Pack'),
@@ -985,7 +985,7 @@ class SrdEquipmentLibrary {
       icon: Icons.explore,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger'),
@@ -994,28 +994,28 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'component-pouch',
               displayName: 'Component Pouch'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'spellbook',
               displayName: 'Spellbook'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'potion-of-healing',
               displayName: 'Potion of Healing'),
           quantity: 1,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'explorers-pack',
               displayName: 'Explorer\'s Pack'),
@@ -1037,7 +1037,7 @@ class SrdEquipmentLibrary {
       icon: Icons.shield,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'chain-mail',
               displayName: 'Chain Mail'),
@@ -1046,7 +1046,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword'),
@@ -1055,7 +1055,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield'),
@@ -1075,7 +1075,7 @@ class SrdEquipmentLibrary {
       icon: Icons.sports_kabaddi,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'breastplate',
               displayName: 'Breastplate'),
@@ -1084,7 +1084,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'greatsword',
               displayName: 'Greatsword'),
@@ -1093,7 +1093,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.twoHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'potion-of-healing',
               displayName: 'Potion of Healing'),
@@ -1111,7 +1111,7 @@ class SrdEquipmentLibrary {
       icon: Icons.track_changes,
       items: [
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'leather-armor',
               displayName: 'Leather Armor'),
@@ -1120,7 +1120,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.armor,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shortsword',
               displayName: 'Shortsword'),
@@ -1129,7 +1129,7 @@ class SrdEquipmentLibrary {
           defaultSlot: EquipmentSlot.mainHand,
         ),
         StartingEquipmentItemRequest(
-          itemRef: EntityReference(
+          itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longbow',
               displayName: 'Longbow'),

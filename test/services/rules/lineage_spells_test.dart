@@ -136,7 +136,7 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Artisan Hero',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -147,12 +147,12 @@ void main() {
           displayName: subrace.name,
           customProperties: subrace.customProperties,
         ),
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
           refType: EntityType.background,
           slug: 'artisan',
           displayName: 'Guild Artisan',
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'wizard',
           displayName: 'Wizard',

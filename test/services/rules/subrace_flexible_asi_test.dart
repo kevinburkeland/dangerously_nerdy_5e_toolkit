@@ -39,7 +39,7 @@ void main() {
     test(
         'CharacterDraft.reconcile in 2014 mode honors flexibleAbilityPool and does not default to Strength',
         () {
-      const subraceRef = EntityReference<DomainEntity>(
+      final subraceRef = EntityReference<DomainEntity>(
         refType: EntityType.species,
         slug: 'custom-forge-lineage',
         displayName: 'Lineage of the Forge',
@@ -54,7 +54,7 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Arcane Scholar',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -73,7 +73,7 @@ void main() {
     test(
         'CharacterDraft.reconcile purges invalid selections outside the flexibleAbilityPool',
         () {
-      const subraceRef = EntityReference<DomainEntity>(
+      final subraceRef = EntityReference<DomainEntity>(
         refType: EntityType.species,
         slug: 'custom-forge-lineage',
         displayName: 'Lineage of the Forge',
@@ -86,7 +86,7 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Arcane Scholar',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -104,7 +104,7 @@ void main() {
     test(
         'CharacterDraft.reconcile retains valid selections inside flexibleAbilityPool',
         () {
-      const subraceRef = EntityReference<DomainEntity>(
+      final subraceRef = EntityReference<DomainEntity>(
         refType: EntityType.species,
         slug: 'custom-forge-lineage',
         displayName: 'Lineage of the Forge',
@@ -117,7 +117,7 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Arcane Scholar',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -134,7 +134,7 @@ void main() {
     test(
         'CharacterDraft.reconcile computes speciesBonusScores from base species + subrace + flexible choices and sets bonusScores in 2014 mode',
         () {
-      const subraceRef = EntityReference<DomainEntity>(
+      final subraceRef = EntityReference<DomainEntity>(
         refType: EntityType.species,
         slug: 'custom-forge-lineage',
         displayName: 'Lineage of the Forge',
@@ -149,7 +149,7 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Arcane Scholar',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -183,7 +183,7 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Modern Acolyte',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',

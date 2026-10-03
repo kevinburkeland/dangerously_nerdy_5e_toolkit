@@ -217,7 +217,7 @@ void main() {
       return const Character(
         id: EntityId(slug: 'shadow-rogue', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -245,7 +245,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'rogue',
                 displayName: 'Rogue',
@@ -281,7 +281,7 @@ void main() {
         targetClassSlug: 'rogue',
         hpChoice: HpProgressionChoice.average(), // 5 for d8
         asiOrFeat: AsiOrFeatChoice.feat(
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'tenacious',
             displayName: 'Tenacious',
@@ -334,7 +334,7 @@ void main() {
         targetClassSlug: 'rogue',
         hpChoice: HpProgressionChoice.average(),
         asiOrFeat: AsiOrFeatChoice.feat(
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'athlete',
             displayName: 'Athlete',
@@ -366,7 +366,7 @@ void main() {
         targetClassSlug: 'rogue',
         hpChoice: HpProgressionChoice.average(),
         asiOrFeat: AsiOrFeatChoice.feat(
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'mystic-initiate',
             displayName: 'Mystic Initiate',
@@ -458,7 +458,7 @@ void main() {
         targetClassSlug: 'rogue',
         hpChoice: HpProgressionChoice.average(),
         asiOrFeat: AsiOrFeatChoice.feat(
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'versatile-specialist',
             displayName: 'Versatile Specialist',
@@ -492,7 +492,7 @@ void main() {
         targetClassSlug: 'rogue',
         hpChoice: HpProgressionChoice.average(),
         asiOrFeat: AsiOrFeatChoice.feat(
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'versatile-specialist',
             displayName: 'Versatile Specialist',

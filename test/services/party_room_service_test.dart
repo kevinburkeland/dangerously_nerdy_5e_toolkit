@@ -955,12 +955,12 @@ void main() {
       final dummyChar = Character(
         id: const EntityId(slug: 'test-link-char', ruleset: RulesetVersion.v2024),
         name: 'Dain Ironfoot',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             slug: 'dwarf', refType: EntityType.species, displayName: 'Dwarf'),
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   slug: 'fighter',
                   refType: EntityType.classDefinition,
                   displayName: 'Fighter'),

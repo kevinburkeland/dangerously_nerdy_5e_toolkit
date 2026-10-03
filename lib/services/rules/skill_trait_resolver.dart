@@ -455,7 +455,7 @@ class SkillTraitResolver {
     if (slug.contains('tiefling')) {
       if (!spells.any((s) => s.spellRef.slug == 'thaumaturgy')) {
         spells.add(const InnateSpeciesSpell(
-          spellRef: EntityReference<Spell>(
+          spellRef: EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'thaumaturgy',
               displayName: 'Thaumaturgy'),
@@ -467,7 +467,7 @@ class SkillTraitResolver {
       if (totalCharacterLevel >= 3 &&
           !spells.any((s) => s.spellRef.slug == 'hellish-rebuke')) {
         spells.add(const InnateSpeciesSpell(
-          spellRef: EntityReference<Spell>(
+          spellRef: EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'hellish-rebuke',
               displayName: 'Hellish Rebuke'),
@@ -478,7 +478,7 @@ class SkillTraitResolver {
       if (totalCharacterLevel >= 5 &&
           !spells.any((s) => s.spellRef.slug == 'darkness')) {
         spells.add(const InnateSpeciesSpell(
-          spellRef: EntityReference<Spell>(
+          spellRef: EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'darkness',
               displayName: 'Darkness'),
@@ -492,7 +492,7 @@ class SkillTraitResolver {
     if (subSlug.contains('drow') || slug.contains('drow')) {
       if (!spells.any((s) => s.spellRef.slug == 'dancing-lights')) {
         spells.add(const InnateSpeciesSpell(
-          spellRef: EntityReference<Spell>(
+          spellRef: EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'dancing-lights',
               displayName: 'Dancing Lights'),
@@ -504,7 +504,7 @@ class SkillTraitResolver {
       if (totalCharacterLevel >= 3 &&
           !spells.any((s) => s.spellRef.slug == 'faerie-fire')) {
         spells.add(const InnateSpeciesSpell(
-          spellRef: EntityReference<Spell>(
+          spellRef: EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'faerie-fire',
               displayName: 'Faerie Fire'),
@@ -515,7 +515,7 @@ class SkillTraitResolver {
       if (totalCharacterLevel >= 5 &&
           !spells.any((s) => s.spellRef.slug == 'darkness')) {
         spells.add(const InnateSpeciesSpell(
-          spellRef: EntityReference<Spell>(
+          spellRef: EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'darkness',
               displayName: 'Darkness'),
@@ -529,7 +529,7 @@ class SkillTraitResolver {
     if (subSlug.contains('forest') && slug.contains('gnome')) {
       if (!spells.any((s) => s.spellRef.slug == 'minor-illusion')) {
         spells.add(const InnateSpeciesSpell(
-          spellRef: EntityReference<Spell>(
+          spellRef: EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'minor-illusion',
               displayName: 'Minor Illusion'),

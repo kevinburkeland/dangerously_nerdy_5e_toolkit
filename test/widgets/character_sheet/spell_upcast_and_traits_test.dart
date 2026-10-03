@@ -63,12 +63,12 @@ void main() {
     baseCharacter = const Character(
       id: EntityId(slug: 'hero-caster', ruleset: RulesetVersion.v2024),
       name: 'Eldritch Scholar',
-      speciesRef: EntityReference(
+      speciesRef: EntityReference.empty(
           refType: EntityType.species, slug: 'elf', displayName: 'High Elf'),
       progression: CharacterProgression(
         classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter'),

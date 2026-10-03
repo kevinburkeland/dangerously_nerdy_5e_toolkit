@@ -21,12 +21,12 @@ Character _createTestHero(String slug, String name) {
     CharacterCreationRequest(
       characterName: name,
       ruleset: RulesetVersion.v2024,
-      speciesRef: const EntityReference(
+      speciesRef: const EntityReference.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
       ),
-      backgroundRef: const EntityReference(
+      backgroundRef: const EntityReference.empty(
         refType: EntityType.background,
         slug: 'acolyte',
         displayName: 'Acolyte',

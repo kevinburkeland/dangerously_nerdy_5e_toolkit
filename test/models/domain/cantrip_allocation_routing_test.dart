@@ -8,29 +8,29 @@ void main() {
     test(
         'Non-cantrip named grant keys correctly route 0th-level spells to cantrips getter',
         () {
-      const thaumaturgyRef = EntityReference<Spell>(
+      final thaumaturgyRef = EntityReference<Spell>(
         refType: EntityType.spell,
         slug: 'thaumaturgy',
         displayName: 'Thaumaturgy',
         customProperties: {'level': 0, 'isCantrip': true},
       );
-      const sacredFlameRef = EntityReference<Spell>(
+      final sacredFlameRef = EntityReference<Spell>(
         refType: EntityType.spell,
         slug: 'sacred-flame',
         displayName: 'Sacred Flame',
         customProperties: {'level': 0, 'isCantrip': true},
       );
-      const blessRef = EntityReference<Spell>(
+      final blessRef = EntityReference<Spell>(
         refType: EntityType.spell,
         slug: 'bless',
         displayName: 'Bless',
         customProperties: {'level': 1},
       );
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'tiefling_cleric', ruleset: RulesetVersion.v2024),
         name: 'Tiefling Cleric',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
@@ -66,16 +66,16 @@ void main() {
     test(
         'Natively granted cantrips and spellsKnown are merged without duplicates',
         () {
-      const lightRef = EntityReference<Spell>(
+      final lightRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'light',
         displayName: 'Light',
       );
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'aasimar_wizard', ruleset: RulesetVersion.v2024),
         name: 'Aasimar Wizard',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'aasimar',
             displayName: 'Aasimar'),

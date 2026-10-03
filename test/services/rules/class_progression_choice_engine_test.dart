@@ -79,7 +79,7 @@ void main() {
 
       test('ClassLevelProgression serializes selectedFeatureOptions', () {
         const slice = ClassLevelProgression(
-          classRef: EntityReference(
+          classRef: EntityReference.empty(
             refType: EntityType.classDefinition,
             slug: 'fighter',
             displayName: 'Fighter',
@@ -342,14 +342,14 @@ void main() {
         );
         baseLayer.registerEntity(leatherArmor);
 
-        const characterWithoutArmor = Character(
+        final characterWithoutArmor = Character(
           id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
           name: 'Fighter Hero',
-          speciesRef: EntityReference(
+          speciesRef: EntityReference.empty(
               refType: EntityType.species, slug: 'human', displayName: 'Human'),
           progression: CharacterProgression(classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
@@ -381,7 +381,7 @@ void main() {
           inventory: [
             InventoryItemInstance(
               instanceId: 'armor-1',
-              itemRef: const EntityReference(
+              itemRef: const EntityReference.empty(
                   refType: EntityType.equipment,
                   slug: 'leather-armor',
                   displayName: 'Leather Armor'),
@@ -401,18 +401,18 @@ void main() {
 
       test('Draconic Sorcerer subclass grants base AC 13 + DEX when unarmored',
           () {
-        const sorcerer = Character(
+        final sorcerer = Character(
           id: EntityId(slug: 'draconic-sorc', ruleset: RulesetVersion.v2024),
           name: 'Dragon Sorcerer',
-          speciesRef: EntityReference(
+          speciesRef: EntityReference.empty(
               refType: EntityType.species, slug: 'human', displayName: 'Human'),
           progression: CharacterProgression(classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'sorcerer',
                   displayName: 'Sorcerer'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'draconic-sorcery',
                   displayName: 'Draconic Sorcery'),
@@ -441,14 +441,14 @@ void main() {
       test(
           'LevelUpRequest preserves and aggregates selectedFeatureOptions across level ups',
           () {
-        const baseFighter = Character(
+        final baseFighter = Character(
           id: EntityId(slug: 'fighter-prog', ruleset: RulesetVersion.v2024),
           name: 'Fighter Progression',
-          speciesRef: EntityReference(
+          speciesRef: EntityReference.empty(
               refType: EntityType.species, slug: 'human', displayName: 'Human'),
           progression: CharacterProgression(classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),

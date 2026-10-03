@@ -11,16 +11,16 @@ void main() {
     testWidgets(
         '2014 Acolyte displays Shelter of the Faithful and omits Origin Feat & Ability Scores',
         (tester) async {
-      const character2014 = Character(
+      final character2014 = Character(
         id: EntityId(slug: 'cleric-2014', ruleset: RulesetVersion.v2014),
         name: 'Brother Thomas',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference<DomainEntity>(
+        backgroundRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -29,7 +29,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'cleric',
                 displayName: 'Cleric',
@@ -42,7 +42,7 @@ void main() {
         ),
         baseScores: AbilityScores(wisdom: 16),
         feats: [
-          EntityReference<DomainEntity>(
+          EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'alert',
             displayName: 'Alert',
@@ -107,16 +107,16 @@ void main() {
     testWidgets(
         '2014 Homebrew Veteran displays Veteran Acumen without Origin Feat',
         (tester) async {
-      const character2014 = Character(
+      final character2014 = Character(
         id: EntityId(slug: 'fighter-2014', ruleset: RulesetVersion.v2014),
         name: 'Captain Marcus',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'dwarf',
           displayName: 'Dwarf',
         ),
-        backgroundRef: EntityReference<DomainEntity>(
+        backgroundRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'homebrew-veteran',
           displayName: 'Homebrew Veteran',
@@ -125,7 +125,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -177,16 +177,16 @@ void main() {
 
     testWidgets('2024 Acolyte still displays 2024 Origin Feat & Ability Scores',
         (tester) async {
-      const character2024 = Character(
+      final character2024 = Character(
         id: EntityId(slug: 'cleric-2024', ruleset: RulesetVersion.v2024),
         name: 'Sister Sarah',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        backgroundRef: EntityReference<DomainEntity>(
+        backgroundRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -195,7 +195,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'cleric',
                 displayName: 'Cleric',

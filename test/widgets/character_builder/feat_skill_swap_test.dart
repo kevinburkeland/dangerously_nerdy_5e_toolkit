@@ -20,7 +20,7 @@ void main() {
     return const Character(
       id: EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2014),
       name: 'Rogue Hero',
-      speciesRef: EntityReference(
+      speciesRef: EntityReference.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
@@ -28,7 +28,7 @@ void main() {
       progression: CharacterProgression(
         classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'rogue',
               displayName: 'Rogue',

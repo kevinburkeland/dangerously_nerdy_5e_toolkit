@@ -16,7 +16,7 @@ void main() {
       return Character(
         id: const EntityId(slug: 'test-char', ruleset: RulesetVersion.v2024),
         name: 'Test Character',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: speciesSlug,
           displayName: speciesSlug.toUpperCase(),
@@ -24,7 +24,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: classSlug,
                 displayName: classSlug.toUpperCase(),
@@ -77,7 +77,7 @@ void main() {
     test('Light Armor: Leather base 11 + full DEX mod', () {
       final leatherArmor = InventoryItemInstance(
         instanceId: 'armor-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'leather-armor',
           displayName: 'Leather Armor',
@@ -98,7 +98,7 @@ void main() {
     test('Medium Armor: Scale Mail base 14 + DEX capped at +2', () {
       final scaleMail = InventoryItemInstance(
         instanceId: 'armor-2',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'scale-mail',
           displayName: 'Scale Mail',
@@ -120,7 +120,7 @@ void main() {
     test('Heavy Armor: Plate base 18 ignores DEX mod', () {
       final plate = InventoryItemInstance(
         instanceId: 'armor-3',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'plate-armor',
           displayName: 'Plate Armor',
@@ -141,7 +141,7 @@ void main() {
     test('Shield adds +2 to AC', () {
       final plate = InventoryItemInstance(
         instanceId: 'armor-3',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'plate-armor',
           displayName: 'Plate Armor',
@@ -156,7 +156,7 @@ void main() {
 
       final shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'shield',
           displayName: 'Shield',
@@ -177,7 +177,7 @@ void main() {
     test('Equipping two-handed weapon auto-unequips shield and offhand', () {
       final longsword = InventoryItemInstance(
         instanceId: 'weapon-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
             refType: EntityType.equipment,
             slug: 'longsword',
             displayName: 'Longsword'),
@@ -187,7 +187,7 @@ void main() {
 
       final shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
             refType: EntityType.equipment,
             slug: 'shield',
             displayName: 'Shield'),
@@ -197,7 +197,7 @@ void main() {
 
       final greatsword = InventoryItemInstance(
         instanceId: 'weapon-2',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
             refType: EntityType.equipment,
             slug: 'greatsword',
             displayName: 'Greatsword'),

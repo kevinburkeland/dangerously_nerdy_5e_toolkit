@@ -20,7 +20,7 @@ void main() {
       baseCharacter = const Character(
         id: EntityId(slug: 'hero-bob', ruleset: RulesetVersion.v2024),
         name: 'Bob the Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -44,7 +44,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -92,7 +92,7 @@ void main() {
 
       expect(controller.character.feats.isEmpty, isTrue);
 
-      const athleteRef = EntityReference<DomainEntity>(
+      final athleteRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'athlete',
         displayName: 'Athlete',
@@ -115,7 +115,7 @@ void main() {
         () async {
       final controller = CharacterSheetController(character: baseCharacter);
 
-      const athleteRef = EntityReference<DomainEntity>(
+      final athleteRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'athlete',
         displayName: 'Athlete',
@@ -144,7 +144,7 @@ void main() {
       expect(
           controller.character.skillProficiencies[SkillType.athletics], isNull);
 
-      const versatileSpecialistRef = EntityReference<DomainEntity>(
+      final versatileSpecialistRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'versatile-specialist',
         displayName: 'Versatile Specialist',
@@ -196,7 +196,7 @@ void main() {
       );
 
       // 3. Add a feat
-      const toughRef = EntityReference<DomainEntity>(
+      final toughRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'tough',
         displayName: 'Tough',

@@ -17,7 +17,7 @@ void main() {
         () {
       final plateItem = InventoryItemInstance(
         instanceId: 'plate-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'plate-plus-3',
           displayName: 'Plate Armor +3',
@@ -33,7 +33,7 @@ void main() {
         () {
       final shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'shield-plus-1',
           displayName: 'Shield +1',
@@ -44,7 +44,7 @@ void main() {
 
       final sword = InventoryItemInstance(
         instanceId: 'sword-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'longsword',
           displayName: 'Longsword +1',
@@ -55,7 +55,7 @@ void main() {
 
       final greatsword = InventoryItemInstance(
         instanceId: 'gs-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'greatsword',
           displayName: 'Greatsword',
@@ -66,7 +66,7 @@ void main() {
 
       final ring = InventoryItemInstance(
         instanceId: 'ring-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'ring-of-protection',
           displayName: 'Ring of Protection',
@@ -95,7 +95,7 @@ void main() {
       final baseCharacter = Character(
         id: const EntityId(slug: 'test-knight', ruleset: RulesetVersion.v2024),
         name: 'Sir Galahad',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -103,7 +103,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -126,7 +126,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-plus-3-inst',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'plate-plus-3',
               displayName: 'Plate Armor +3',
@@ -160,7 +160,7 @@ void main() {
       final baseCharacter = Character(
         id: const EntityId(slug: 'test-knight-2', ruleset: RulesetVersion.v2024),
         name: 'Sir Lancelot',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -168,7 +168,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -191,7 +191,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-plus-3-bare',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'plate-plus-3',
               displayName: 'Plate Armor +3',
@@ -215,7 +215,7 @@ void main() {
       final baseCharacter = Character(
         id: const EntityId(slug: 'controller-knight', ruleset: RulesetVersion.v2024),
         name: 'Dame Brienne',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -223,7 +223,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'paladin',
                 displayName: 'Paladin',
@@ -246,7 +246,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-3-ctrl',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'plate-plus-3',
               displayName: 'Plate Armor +3',

@@ -202,19 +202,19 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-fighter', ruleset: RulesetVersion.homebrew),
         name: 'Test Fighter',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'rift-warden', // without class prefix
                 displayName: 'Rift Warden',
@@ -346,19 +346,19 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-char', ruleset: RulesetVersion.homebrew),
         name: 'Void Warrior',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'void-warden',
                 displayName: 'Void Warden',
@@ -423,20 +423,20 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
+      final character = Character(
         id: EntityId(
             slug: 'test-astral-char', ruleset: RulesetVersion.homebrew),
         name: 'Astral Sentinel',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'astral-knight',
                 displayName: 'Astral Knight',
@@ -534,16 +534,16 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
         id: const EntityId(
             slug: 'test-solar-char', ruleset: RulesetVersion.homebrew),
         name: 'Solar Champion',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: const EntityReference(
+              classRef: const EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: customSub.id.slug,
                 displayName: customSub.name,

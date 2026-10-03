@@ -16,14 +16,14 @@ void main() {
       baseWizard = const Character(
         id: EntityId(slug: 'alden', ruleset: RulesetVersion.v2024),
         name: 'Alden',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -96,7 +96,7 @@ void main() {
         const LevelUpRequest(
           targetClassSlug: 'wizard',
           hpChoice: HpProgressionChoice.average(),
-          asiOrFeat: AsiOrFeatChoice.feat(EntityReference(
+          asiOrFeat: AsiOrFeatChoice.feat(EntityReference.empty(
             refType: EntityType.feat,
             slug: 'tough',
             displayName: 'Tough',
@@ -156,14 +156,14 @@ void main() {
       var char = const Character(
         id: EntityId(slug: 'gish', ruleset: RulesetVersion.v2024),
         name: 'Gish',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -173,7 +173,7 @@ void main() {
             isStartingClass: true,
           ),
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'paladin',
               displayName: 'Paladin',

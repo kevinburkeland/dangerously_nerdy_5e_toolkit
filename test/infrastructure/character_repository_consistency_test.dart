@@ -13,7 +13,7 @@ void main() {
   final heroA = Character(
     id: const EntityId(slug: 'valen', ruleset: RulesetVersion.v2024),
     name: 'Valen',
-    speciesRef: const EntityReference<DomainEntity>(
+    speciesRef: const EntityReference<DomainEntity>.empty(
       refType: EntityType.species,
       slug: 'human',
       displayName: 'Human',
@@ -21,7 +21,7 @@ void main() {
     progression: const CharacterProgression(
       classes: [
         ClassLevelProgression(
-          classRef: EntityReference<DomainEntity>(
+          classRef: EntityReference<DomainEntity>.empty(
             refType: EntityType.classDefinition,
             slug: 'ranger',
             displayName: 'Ranger',

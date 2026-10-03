@@ -37,21 +37,21 @@ void main() {
 
     test('Wizard Level 1 validates exactly 6 spellbook spells', () {
       final cantrips = [
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'fire-bolt',
             displayName: 'Fire Bolt'),
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'mage-hand',
             displayName: 'Mage Hand'),
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell, slug: 'light', displayName: 'Light'),
       ];
 
       final spellbookValid = List.generate(
         6,
-        (i) => EntityReference<Spell>(
+        (i) => EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'spell-$i',
             displayName: 'Spell $i'),
@@ -275,14 +275,14 @@ void main() {
       for (int i = 1; i <= 11; i++) {
         final s = _makeTestSpell('pact-spell-$i', 'Pact Spell $i', 5);
         baseLayer.registerEntity(s);
-        regularSpells.add(EntityReference<Spell>(
+        regularSpells.add(EntityReference<Spell>.empty(
             refType: EntityType.spell, slug: s.id.slug, displayName: s.name));
       }
 
       // Register 1 Level-6 Mystic Arcanum spell
       final arcanum = _makeTestSpell('eyebite', 'Eyebite', 6);
       baseLayer.registerEntity(arcanum);
-      final arcanumRef = EntityReference<Spell>(
+      final arcanumRef = EntityReference<Spell>.empty(
           refType: EntityType.spell,
           slug: arcanum.id.slug,
           displayName: arcanum.name);
@@ -305,7 +305,7 @@ void main() {
       // Invalid: 12 regular spells + 1 arcanum = exceeds 11 maxSpellsKnown
       final extraSpell = _makeTestSpell('pact-spell-12', 'Pact Spell 12', 5);
       baseLayer.registerEntity(extraSpell);
-      final extraRef = EntityReference<Spell>(
+      final extraRef = EntityReference<Spell>.empty(
           refType: EntityType.spell,
           slug: extraSpell.id.slug,
           displayName: extraSpell.name);
@@ -342,15 +342,15 @@ void main() {
       baseLayer.registerEntity(arcanum7);
       baseLayer.registerEntity(invalid8);
 
-      final ref6 = EntityReference<Spell>(
+      final ref6 = EntityReference<Spell>.empty(
           refType: EntityType.spell,
           slug: arcanum6.id.slug,
           displayName: arcanum6.name);
-      final ref7 = EntityReference<Spell>(
+      final ref7 = EntityReference<Spell>.empty(
           refType: EntityType.spell,
           slug: arcanum7.id.slug,
           displayName: arcanum7.name);
-      final ref8 = EntityReference<Spell>(
+      final ref8 = EntityReference<Spell>.empty(
           refType: EntityType.spell,
           slug: invalid8.id.slug,
           displayName: invalid8.name);
@@ -387,10 +387,10 @@ void main() {
     test(
         'validateSpellAllocations accepts class-warlock-mystic-arcanum grant key',
         () {
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'warlock-hero', ruleset: RulesetVersion.v2024),
         name: 'Warlock Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
@@ -405,7 +405,7 @@ void main() {
             CharacterResourcePool(currentHp: 50, currentHitDice: {'d8': 11}),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock'),
@@ -416,7 +416,7 @@ void main() {
         ]),
         allocatedSpells: {
           'class-warlock-mystic-arcanum': [
-            EntityReference<Spell>(
+            EntityReference<Spell>.empty(
                 refType: EntityType.spell,
                 slug: 'eyebite',
                 displayName: 'Eyebite'),
@@ -447,23 +447,23 @@ void main() {
       // Character prepares 6 regular spells + 4 domain spells = 10 total
       final regularPrepared = List.generate(
         6,
-        (i) => EntityReference<Spell>(
+        (i) => EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'reg-spell-$i',
             displayName: 'Reg Spell $i'),
       );
       final domainSpells = [
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell, slug: 'bless', displayName: 'Bless'),
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'cure-wounds',
             displayName: 'Cure Wounds'),
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'lesser-restoration',
             displayName: 'Lesser Restoration'),
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'spiritual-weapon',
             displayName: 'Spiritual Weapon'),

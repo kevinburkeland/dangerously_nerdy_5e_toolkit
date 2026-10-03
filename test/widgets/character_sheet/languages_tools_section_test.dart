@@ -14,7 +14,7 @@ void main() {
       testCharacter = const Character(
         id: EntityId(slug: 'rogue-tester', ruleset: RulesetVersion.v2024),
         name: 'Shadowfoot',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
@@ -24,7 +24,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'rogue',
                 displayName: 'Rogue',

@@ -21,7 +21,7 @@ void main() {
     final testCharacter1 = Character(
       id: const EntityId(slug: 'hero_valeros', ruleset: RulesetVersion.v2024),
       name: 'Valeros the Fighter',
-      speciesRef: const EntityReference(
+      speciesRef: const EntityReference.empty(
         slug: 'human',
         refType: EntityType.species,
         displayName: 'Human',
@@ -35,7 +35,7 @@ void main() {
     final testCharacter2 = Character(
       id: const EntityId(slug: 'hero_seward', ruleset: RulesetVersion.v2024),
       name: 'Dr. Seward',
-      speciesRef: const EntityReference(
+      speciesRef: const EntityReference.empty(
         slug: 'human',
         refType: EntityType.species,
         displayName: 'Human',

@@ -24,7 +24,7 @@ void main() {
     }) {
       final rodItem = InventoryItemInstance(
         instanceId: 'rod-$rodBonus-123',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'item-rod-of-the-pact-keeper-plus-$rodBonus',
           displayName: 'Rod of the Pact Keeper +$rodBonus',
@@ -37,14 +37,14 @@ void main() {
       return Character(
         id: const EntityId(slug: 'warlock-hero', ruleset: RulesetVersion.v2014),
         name: 'Warlock Hero',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),

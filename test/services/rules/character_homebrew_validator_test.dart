@@ -16,7 +16,7 @@ void main() {
       baseSrdCharacter = CharacterFactory.createLevel1Character(
         const CharacterCreationRequest(
           characterName: 'Thorek Standard',
-          speciesRef: EntityReference(
+          speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'dwarf',
             displayName: 'Dwarf',
@@ -51,7 +51,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'blood-hunter',
                 displayName: 'Blood Hunter',
@@ -90,7 +90,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'blood-hunter',
                 displayName: 'Blood Hunter',
@@ -113,12 +113,12 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
               ),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'rift-warden',
                 displayName: 'Rift Warden',
@@ -143,7 +143,7 @@ void main() {
 
     test('Detects missing custom species', () {
       final customChar = baseSrdCharacter.copyWith(
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'voidling',
           displayName: 'Voidling',
@@ -162,7 +162,7 @@ void main() {
     test('Detects missing custom feat', () {
       final customChar = baseSrdCharacter.copyWith(
         feats: [
-          const EntityReference(
+          const EntityReference.empty(
             refType: EntityType.feat,
             slug: 'custom_ancient_rune',
             displayName: 'Ancient Rune',
@@ -183,7 +183,7 @@ void main() {
     test('Detects missing custom spell', () {
       final customChar = baseSrdCharacter.copyWith(
         cantrips: [
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'custom_gravitic_crush',
             displayName: 'Gravitic Crush',
@@ -206,7 +206,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst_sword_99',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'custom_blade_of_the_ruin',
               displayName: 'Blade of the Ruin',
@@ -257,14 +257,14 @@ void main() {
         'collectHomebrewDependencies gathers all homebrew references from character',
         () {
       final customChar = baseSrdCharacter.copyWith(
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'custom_grung',
           displayName: 'Grung',
           rulesetPreferred: RulesetVersion.homebrew,
         ),
         feats: [
-          const EntityReference(
+          const EntityReference.empty(
             refType: EntityType.feat,
             slug: 'custom_poisoner_expert',
             displayName: 'Poisoner Expert',
@@ -290,7 +290,7 @@ void main() {
         'CharacterSheetController exposes missingHomebrewReport and hasMissingHomebrew',
         () {
       final customChar = baseSrdCharacter.copyWith(
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'custom_automaton',
           displayName: 'Automaton',

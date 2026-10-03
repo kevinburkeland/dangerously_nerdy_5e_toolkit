@@ -83,12 +83,12 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Aria Greenleaf',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'druid',
           displayName: 'Druid',

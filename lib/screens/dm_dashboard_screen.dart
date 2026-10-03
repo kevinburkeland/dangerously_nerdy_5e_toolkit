@@ -940,14 +940,14 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                                               slug: 'hero_$now',
                                               ruleset: RulesetVersion.v2024),
                                           name: name,
-                                          speciesRef: const EntityReference(
+                                          speciesRef: const EntityReference.empty(
                                               slug: 'human',
                                               refType: EntityType.species,
                                               displayName: 'Human'),
                                           progression: CharacterProgression(
                                             classes: [
                                               ClassLevelProgression(
-                                                classRef: const EntityReference(
+                                                classRef: const EntityReference.empty(
                                                   slug: 'fighter',
                                                   refType: EntityType
                                                       .classDefinition,

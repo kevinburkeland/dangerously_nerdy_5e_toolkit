@@ -43,7 +43,7 @@ void main() {
         initialEdition: DmRulesEdition.v2024,
       );
 
-      controller.addOriginFeat(const EntityReference<DomainEntity>(
+      controller.addOriginFeat(const EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'magic-initiate',
         displayName: 'Magic Initiate',
@@ -70,7 +70,7 @@ void main() {
         charisma: 10,
       ));
 
-      controller.addOriginFeat(const EntityReference<DomainEntity>(
+      controller.addOriginFeat(const EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'grappler',
         displayName: 'Grappler',

@@ -47,15 +47,15 @@ void main() {
       // Character: Level 4 Warlock leveling to Level 5.
       // Already selected: Armor of Shadows and Fiendish Vigor at Level 2.
       // Already known spells: Eldritch Blast (cantrip), Hex (level 1), Hellish Rebuke (level 1).
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2014),
         name: 'Test Warlock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             slug: 'human', displayName: 'Human', refType: EntityType.species),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   slug: 'warlock',
                   displayName: 'Warlock',
                   refType: EntityType.classDefinition),
@@ -76,15 +76,15 @@ void main() {
             wisdom: 12,
             charisma: 16),
         cantrips: [
-          EntityReference(
+          EntityReference.empty(
               slug: 'eldritch-blast',
               displayName: 'Eldritch Blast',
               refType: EntityType.spell),
         ],
         spellsKnown: [
-          EntityReference(
+          EntityReference.empty(
               slug: 'hex', displayName: 'Hex', refType: EntityType.spell),
-          EntityReference(
+          EntityReference.empty(
               slug: 'hellish-rebuke',
               displayName: 'Hellish Rebuke',
               refType: EntityType.spell),

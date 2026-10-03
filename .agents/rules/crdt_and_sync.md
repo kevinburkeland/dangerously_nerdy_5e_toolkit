@@ -39,3 +39,10 @@ This document details the application-level synchronization services, transport 
 - **Echo Loop Suppression:** Outbound frames are stamped with monotonic sequence numbers and originating node IDs. Outbound sync is skipped if the profile matches `_lastInboundProfile` or if the mutex is locked. Reconstructed entities implement value-based `operator ==` and `hashCode`.
 - **Ephemeral Signaling Cleanup:** Handshake documents in Firestore are partitioned by peer ID (`cleanUpPeerSignaling(peerId)`) and triggered only after the DataChannel reaches `RTCDataChannelState.RTCDataChannelOpen` or ICE reaches `completed`.
 - **Transient ICE Resilience:** Peer connections are pruned strictly on `RTCIceConnectionStateFailed`. Pruning is avoided during transient `RTCIceConnectionStateDisconnected`.
+
+---
+
+## 5. CRDT Structural Immutability vs Transitive Payload Immutability
+- **CRDT Structural Immutability:** Generic CRDT primitives (`CrdtOrSet<T>`, `CrdtLwwRegister<T>`, `PnCounter`) enforce structural immutability of the container itself; elements, registers, and tombstones cannot be mutated in place, and operations produce new unmodifiable containers.
+- **Transitive Payload Immutability:** Generic CRDTs do not clone arbitrary payload objects of type `T`. It is not sufficient for the immediate CRDT wrapper or immediate parent object to be immutable if a child value still retains mutable aliases. A value already incorporated into replicated state must not be logically alterable through any caller-owned mutable collection reachable through that value graph.
+- **Boundary Responsibility:** Concrete replicated payload models (`MinionInstance`, `RoomNodeState`, `EntityReference`, `InventoryItemInstance`, `LootContainer`) and ingestion/deserialization boundaries (`RoomNodeState.fromMap`, `RoomNodeState.fromLists`, `RoomNodeState.copyWith`) must deeply defensively freeze nested collections (`deepFreezeMap`, `deepFreezeList`, `deepFreezeSet`, `deepFreezeValue`) before CRDT stamping. Raw mutable collections or un-frozen JSON maps must never enter replicated state graphs.

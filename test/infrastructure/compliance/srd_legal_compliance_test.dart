@@ -462,14 +462,14 @@ void main() {
         expect(userSpell.customProperties['classes'],
             containsAll(['Sorcerer', 'Warlock', 'Wizard']));
 
-        const customReference = EntityReference(
+        final customReference = EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'artificer',
           displayName: 'Artificer',
         );
         expect(customReference.displayName, equals('Artificer'));
 
-        const speciesReference = EntityReference(
+        final speciesReference = EntityReference.empty(
           refType: EntityType.species,
           slug: 'aasimar',
           displayName: 'Aasimar',

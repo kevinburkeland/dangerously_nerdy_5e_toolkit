@@ -144,15 +144,15 @@ void main() {
 
     test('CharacterSheetController adds and removes inventory items seamlessly',
         () async {
-      const initialChar = Character(
+      final initialChar = Character(
         id: EntityId(slug: 'test-adventurer', ruleset: RulesetVersion.v2024),
         name: 'Test Adventurer',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
@@ -177,7 +177,7 @@ void main() {
 
       final newItem = InventoryItemInstance(
         instanceId: 'inst-1',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
             refType: EntityType.equipment,
             slug: 'dagger',
             displayName: 'Dagger'),

@@ -16,7 +16,7 @@ Character _createTestWarlock({
     id: const EntityId(
         slug: 'warlock-test-char', ruleset: RulesetVersion.v2014),
     name: 'Eldritch Envoy',
-    speciesRef: const EntityReference<DomainEntity>(
+    speciesRef: const EntityReference<DomainEntity>.empty(
       refType: EntityType.species,
       slug: 'human',
       displayName: 'Human',
@@ -32,7 +32,7 @@ Character _createTestWarlock({
     progression: const CharacterProgression(
       classes: [
         ClassLevelProgression(
-          classRef: EntityReference(
+          classRef: EntityReference.empty(
             refType: EntityType.classDefinition,
             slug: 'warlock',
             displayName: 'Warlock',
@@ -235,7 +235,7 @@ void main() {
 
       final character = _createTestWarlock().copyWith(
         feats: const [
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'custom-persuasion-master',
             displayName: 'Custom Persuasion Master',

@@ -20,17 +20,17 @@ void main() {
       final draft = CharacterDraft()
         ..characterName = 'Archmage Aldous the Elder'
         ..rulesEdition = DmRulesEdition.v2024
-        ..speciesRef = const EntityReference(
+        ..speciesRef = const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         )
-        ..backgroundRef = const EntityReference(
+        ..backgroundRef = const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
         )
-        ..startingClassRef = const EntityReference(
+        ..startingClassRef = const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'wizard',
           displayName: 'Wizard',
@@ -66,7 +66,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'staff-1',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'staff-of-the-magi',
               displayName: 'Staff of the Magi',
@@ -75,7 +75,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'robe-1',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'robe-of-the-archmagi',
               displayName: 'Robe of the Archmagi',
@@ -209,17 +209,17 @@ void main() {
       final draft = CharacterDraft()
         ..characterName = 'Sir Reginald'
         ..rulesEdition = DmRulesEdition.v2024
-        ..speciesRef = const EntityReference(
+        ..speciesRef = const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         )
-        ..backgroundRef = const EntityReference(
+        ..backgroundRef = const EntityReference.empty(
           refType: EntityType.background,
           slug: 'noble',
           displayName: 'Noble',
         )
-        ..startingClassRef = const EntityReference(
+        ..startingClassRef = const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'paladin',
           displayName: 'Paladin',

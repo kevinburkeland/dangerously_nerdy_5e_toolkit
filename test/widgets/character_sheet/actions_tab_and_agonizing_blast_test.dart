@@ -22,7 +22,7 @@ void main() {
       // Create warlock with Rod of the Pact Keeper +1 equipped & attuned, and Agonizing Blast invocation
       final rodItem = InventoryItemInstance(
         instanceId: 'rod-pact-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'item-rod-of-the-pact-keeper-plus-1',
           displayName: 'Rod of the Pact Keeper +1',
@@ -36,14 +36,14 @@ void main() {
         id: const EntityId(
             slug: 'warlock-agonizing-rod', ruleset: RulesetVersion.v2024),
         name: 'Warlock Master',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
@@ -123,7 +123,7 @@ void main() {
         () {
       final rodItem = InventoryItemInstance(
         instanceId: 'rod-pact-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'item-rod-of-the-pact-keeper-plus-1',
           displayName: 'Rod of the Pact Keeper +1',
@@ -135,7 +135,7 @@ void main() {
 
       final dagger = InventoryItemInstance(
         instanceId: 'dagger-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'dagger',
           displayName: 'Dagger',
@@ -151,7 +151,7 @@ void main() {
 
       final offhandDagger = InventoryItemInstance(
         instanceId: 'dagger-2',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'dagger',
           displayName: 'Offhand Dagger',
@@ -169,12 +169,12 @@ void main() {
       final rogueWarlock = Character(
         id: const EntityId(slug: 'rogue-warlock', ruleset: RulesetVersion.v2024),
         name: 'Shadow Caster',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'rogue',
                   displayName: 'Rogue'),
@@ -183,7 +183,7 @@ void main() {
               isStartingClass: true,
             ),
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
@@ -199,19 +199,19 @@ void main() {
         ),
         inventory: [rodItem, dagger, offhandDagger],
         cantrips: [
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'spell_eldritch_blast',
             displayName: 'Eldritch Blast',
           ),
         ],
         spellsPrepared: [
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'spell_misty_step',
             displayName: 'Misty Step',
           ),
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'spell_hellish_rebuke',
             displayName: 'Hellish Rebuke',
@@ -270,14 +270,14 @@ void main() {
       final warlock = Character(
         id: const EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2024),
         name: 'Action Hero',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
@@ -291,7 +291,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'rod-1',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'item-rod-of-the-pact-keeper-plus-1',
               displayName: 'Rod of the Pact Keeper +1',
@@ -302,7 +302,7 @@ void main() {
           ),
         ],
         cantrips: [
-          const EntityReference<Spell>(
+          const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'spell_eldritch_blast',
             displayName: 'Eldritch Blast',

@@ -12,7 +12,7 @@ void main() {
       final rogueDraft = CharacterDraft(
         characterName: 'Shadow Walker',
         rulesEdition: DmRulesEdition.v2014,
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'rogue',
           displayName: 'Rogue',
@@ -23,7 +23,7 @@ void main() {
       final druidDraft = CharacterDraft(
         characterName: 'Verdant Keeper',
         rulesEdition: DmRulesEdition.v2014,
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'druid',
           displayName: 'Druid',
@@ -38,7 +38,7 @@ void main() {
       final customDraft = CharacterDraft(
         characterName: 'Gearwright',
         rulesEdition: DmRulesEdition.v2014,
-        startingClassRef: const EntityReference(
+        startingClassRef: EntityReference(
           refType: EntityType.classDefinition,
           slug: 'arcane-crafter',
           displayName: 'Arcane Crafter',
@@ -79,17 +79,17 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Tinkering Crafter',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
           refType: EntityType.background,
           slug: 'artisan',
           displayName: 'Guild Artisan',
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: EntityReference(
           refType: EntityType.classDefinition,
           slug: 'arcane-crafter',
           displayName: 'Arcane Crafter',

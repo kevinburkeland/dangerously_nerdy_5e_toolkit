@@ -21,12 +21,12 @@ void main() {
       baseCharacter = Character(
         id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
         name: 'Valerius',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: const EntityReference<DomainEntity>(
+        backgroundRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -34,7 +34,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
@@ -56,7 +56,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-1',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'plate-armor',
               displayName: 'Plate Armor',
@@ -70,7 +70,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'ring-1',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'ring-prot',
               displayName: 'Ring of Protection',

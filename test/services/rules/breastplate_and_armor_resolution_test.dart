@@ -101,7 +101,7 @@ void main() {
       final character = Character(
         id: const EntityId(slug: 'hero-ranger', ruleset: RulesetVersion.v2024),
         name: 'Ranger',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -110,7 +110,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'ranger',
                 displayName: 'Ranger',
@@ -131,7 +131,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'bp-inst',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'breastplate',
               displayName: 'Breastplate',
@@ -157,7 +157,7 @@ void main() {
       final character = Character(
         id: const EntityId(slug: 'hero-cleric', ruleset: RulesetVersion.v2024),
         name: 'Cleric',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'dwarf',
           displayName: 'Dwarf',
@@ -166,7 +166,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'cleric',
                 displayName: 'Cleric',
@@ -187,7 +187,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'bp1-inst',
-            itemRef: const EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>.empty(
               refType: EntityType.equipment,
               slug: 'breastplate-plus-1',
               displayName: 'Breastplate +1',
@@ -232,7 +232,7 @@ void main() {
         () {
       final shortbow = InventoryItemInstance(
         instanceId: 'sb-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'shortbow',
           displayName: 'Shortbow',
@@ -243,7 +243,7 @@ void main() {
 
       final lightXbow = InventoryItemInstance(
         instanceId: 'lxb-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>.empty(
           refType: EntityType.equipment,
           slug: 'light-crossbow',
           displayName: 'Light Crossbow',

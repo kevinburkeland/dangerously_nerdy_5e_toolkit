@@ -12,7 +12,7 @@ void main() {
         'Draft Reconciliation Test: switching rulesEdition to 2014 strips origin feats and resets background bonuses',
         () {
       final draft = CharacterDraft(rulesEdition: RulesetEdition.v2024);
-      draft.originFeats.add(const EntityReference<DomainEntity>(
+      draft.originFeats.add(const EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'alert',
         displayName: 'Alert',
@@ -47,7 +47,7 @@ void main() {
           charisma: 10,
         ),
       );
-      draft.originFeats.add(const EntityReference<DomainEntity>(
+      draft.originFeats.add(const EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'grappler',
         displayName: 'Grappler',
@@ -86,7 +86,7 @@ void main() {
           charisma: 10,
         ),
       );
-      draft.originFeats.add(const EntityReference<DomainEntity>(
+      draft.originFeats.add(const EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'grappler',
         displayName: 'Grappler',
@@ -100,7 +100,7 @@ void main() {
       final draft = CharacterDraft(
         rulesEdition: RulesetEdition.v2024,
       );
-      draft.originFeats.add(const EntityReference<DomainEntity>(
+      draft.originFeats.add(const EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
         slug: 'grappler',
         displayName: 'Grappler',
@@ -114,19 +114,19 @@ void main() {
         'Skill Overlap Resolver: calculateSkillRefunds accurately detects overlaps across sources',
         () {
       final draftNoCollision = CharacterDraft(
-        backgroundRef: const EntityReference(
+        backgroundRef: EntityReference(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
           grantedSkills: [SkillType.insight, SkillType.religion],
         ),
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
           grantedSkills: [SkillType.perception],
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: EntityReference(
           refType: EntityType.classDefinition,
           slug: 'fighter',
           displayName: 'Fighter',
@@ -139,13 +139,13 @@ void main() {
 
       // 1 Collision: Elf (Perception) + Sailor (Perception, Athletics)
       final draftOneCollision = CharacterDraft(
-        backgroundRef: const EntityReference(
+        backgroundRef: EntityReference(
           refType: EntityType.background,
           slug: 'sailor',
           displayName: 'Sailor',
           grantedSkills: [SkillType.athletics, SkillType.perception],
         ),
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
@@ -158,19 +158,19 @@ void main() {
       // Class choice pool does not collide: Background (Perception, Athletics) + Species (Perception) = 1 collision
       // Fighter choice pool containing Athletics does not grant a refund; the player picks another choice.
       final draftClassChoicePool = CharacterDraft(
-        backgroundRef: const EntityReference(
+        backgroundRef: EntityReference(
           refType: EntityType.background,
           slug: 'sailor',
           displayName: 'Sailor',
           grantedSkills: [SkillType.athletics, SkillType.perception],
         ),
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
           grantedSkills: [SkillType.perception],
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: EntityReference(
           refType: EntityType.classDefinition,
           slug: 'fighter',
           displayName: 'Fighter',
@@ -183,19 +183,19 @@ void main() {
 
       // 2 Collisions when Class has fixed auto-granted skills: Background + Species + Fixed Class
       final draftTwoCollisionsFixed = CharacterDraft(
-        backgroundRef: const EntityReference(
+        backgroundRef: EntityReference(
           refType: EntityType.background,
           slug: 'sailor',
           displayName: 'Sailor',
           grantedSkills: [SkillType.athletics, SkillType.perception],
         ),
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
           grantedSkills: [SkillType.perception],
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: EntityReference(
           refType: EntityType.classDefinition,
           slug: 'fighter',
           displayName: 'Fighter',

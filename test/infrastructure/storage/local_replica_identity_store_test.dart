@@ -221,10 +221,10 @@ void main() {
       expect(dmController.combatEncounterService.localNodeId, equals(expectedNodeId));
 
       // CharacterSheetController
-      const testChar = Character(
+      final testChar = Character(
         id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
         progression: CharacterProgression(classes: []),
         baseScores: AbilityScores.standardArray(),
@@ -283,10 +283,10 @@ void main() {
       CampaignProfileService.resetForTesting();
       expect(sl.isRegistered<ReplicaId>(), isFalse);
 
-      const testChar = Character(
+      final testChar = Character(
         id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
         progression: CharacterProgression(classes: []),
         baseScores: AbilityScores.standardArray(),
@@ -334,7 +334,7 @@ void main() {
         items: [
           InventoryItemInstance(
             instanceId: 'item_1',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               slug: 'potion',
               refType: EntityType.equipment,
               displayName: 'Potion',
@@ -445,7 +445,7 @@ void main() {
       final testChar = Character(
         id: const EntityId(slug: 'hero_inv_1', ruleset: RulesetVersion.v2024),
         name: 'Hero Inv',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
         progression: const CharacterProgression(classes: []),
         baseScores: const AbilityScores.standardArray(),
@@ -458,7 +458,7 @@ void main() {
         items: [
           InventoryItemInstance(
             instanceId: 'item_inv_1',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               slug: 'potion',
               refType: EntityType.equipment,
               displayName: 'Potion',

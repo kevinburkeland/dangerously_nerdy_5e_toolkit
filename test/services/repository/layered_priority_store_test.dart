@@ -72,7 +72,7 @@ void main() {
 
       repository.addLayer(baseLayer);
 
-      const ref = EntityReference<Spell>(
+      const ref = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fireball',
         displayName: 'Fireball',
@@ -100,7 +100,7 @@ void main() {
       repository.addLayer(layer2024);
       repository.addLayer(layer2014);
 
-      const ref2014 = EntityReference<Spell>(
+      const ref2014 = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fireball',
         displayName: 'Fireball',
@@ -133,7 +133,7 @@ void main() {
       // Save full CoW clone in campaign layer
       repository.saveOverride('campaign-1', customFireballOverride);
 
-      const ref = EntityReference<Spell>(
+      const ref = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fireball',
         displayName: 'Fireball',
@@ -166,7 +166,7 @@ void main() {
       // Disable top layer
       repository.setLayerActive('campaign-1', false);
 
-      const ref = EntityReference<Spell>(
+      const ref = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fireball',
         displayName: 'Fireball',
@@ -187,7 +187,7 @@ void main() {
 
       repository.addLayer(baseLayer);
 
-      const missingRef = EntityReference<Spell>(
+      final missingRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'wish',
         displayName: 'Wish',

@@ -21,14 +21,14 @@ void main() {
       rogue = const Character(
         id: EntityId(slug: 'shadow', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'rogue',
               displayName: 'Rogue',
@@ -57,14 +57,14 @@ void main() {
       cleric = const Character(
         id: EntityId(slug: 'solaris', ruleset: RulesetVersion.v2024),
         name: 'Solaris',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'cleric',
               displayName: 'Cleric',
@@ -154,7 +154,7 @@ void main() {
         items: [
           InventoryItemInstance(
             instanceId: 'item-ruby',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'ruby-of-the-war-mage',
               displayName: 'Ruby of the War Mage',

@@ -11,11 +11,11 @@ void main() {
     testWidgets(
         'Barbarian with Path of the Berserker displays both Class and Subclass features',
         (tester) async {
-      const barbarianChar = Character(
+      final barbarianChar = Character(
         id: EntityId(slug: 'barbarian-hero', ruleset: RulesetVersion.v2024),
         name: 'Grom',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -24,12 +24,12 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'barbarian',
                 displayName: 'Barbarian',
               ),
-              subclassRef: EntityReference<DomainEntity>(
+              subclassRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.subclass,
                 slug: 'path-of-the-berserker',
                 displayName: 'Path of the Berserker',
@@ -96,11 +96,11 @@ You gain resistance to critical hits and cannot be moved against your will.
       SrdClassesLibrary.addCustomSubclass(testSub);
 
       // Character is level 3
-      const fighterLevel3 = Character(
+      final fighterLevel3 = Character(
         id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
         name: 'Vael',
         rulesEdition: DmRulesEdition.v2024,
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -109,12 +109,12 @@ You gain resistance to critical hits and cannot be moved against your will.
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',
               ),
-              subclassRef: EntityReference<DomainEntity>(
+              subclassRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.subclass,
                 slug: 'test-guardian',
                 displayName: 'Iron Guardian',

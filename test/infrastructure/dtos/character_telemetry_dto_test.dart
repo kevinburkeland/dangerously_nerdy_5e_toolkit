@@ -142,17 +142,17 @@ void main() {
       final draft = CharacterDraft()
         ..characterName = 'Eldrin Shadowcloak'
         ..rulesEdition = DmRulesEdition.v2024
-        ..speciesRef = const EntityReference(
+        ..speciesRef = const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         )
-        ..backgroundRef = const EntityReference(
+        ..backgroundRef = const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
         )
-        ..startingClassRef = const EntityReference(
+        ..startingClassRef = const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'rogue',
           displayName: 'Rogue',
@@ -175,7 +175,7 @@ void main() {
 
       final equippedItem = InventoryItemInstance(
         instanceId: 'rapier-1',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           slug: 'rapier',
           displayName: 'Rapier',
@@ -184,7 +184,7 @@ void main() {
       );
       final backpackItem = InventoryItemInstance(
         instanceId: 'potion-1',
-        itemRef: const EntityReference(
+        itemRef: const EntityReference.empty(
           refType: EntityType.equipment,
           slug: 'potion-of-healing',
           displayName: 'Potion of Healing',

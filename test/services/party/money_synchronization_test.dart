@@ -23,12 +23,12 @@ Character _createHeroWithPurse(
   return Character(
     id: EntityId(slug: id, ruleset: RulesetVersion.v2024),
     name: name,
-    speciesRef: const EntityReference(
+    speciesRef: const EntityReference.empty(
         slug: 'human', refType: EntityType.species, displayName: 'Human'),
     progression: const CharacterProgression(
       classes: [
         ClassLevelProgression(
-          classRef: EntityReference(
+          classRef: EntityReference.empty(
               slug: 'fighter',
               refType: EntityType.classDefinition,
               displayName: 'Fighter'),

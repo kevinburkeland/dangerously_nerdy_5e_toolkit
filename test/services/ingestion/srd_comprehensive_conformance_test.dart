@@ -136,7 +136,7 @@ void main() {
       if (item.sourceSpellId != null && item.sourceSpellId!.isNotEmpty) {
         final spell = SpellbookLibrary.getSpellById(item.sourceSpellId!);
         if (spell != null) {
-          innateSpells.add(EntityReference<Spell>(
+          innateSpells.add(EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: slugify(spell.name),
             displayName: spell.name,
@@ -326,17 +326,17 @@ void main() {
       repository.saveOverride('campaign-overrides', customGoblin);
 
       // Verify Campaign Overrides Resolve First
-      const fireballRef = EntityReference<Spell>(
+      final fireballRef = EntityReference<Spell>.empty(
         refType: EntityType.spell,
         slug: 'fireball',
         displayName: 'Fireball',
       );
-      const potionRef = EntityReference<EquipmentItem>(
+      final potionRef = EntityReference<EquipmentItem>.empty(
         refType: EntityType.equipment,
         slug: 'potion-of-healing',
         displayName: 'Potion of Healing',
       );
-      const goblinRef = EntityReference<Monster>(
+      final goblinRef = EntityReference<Monster>.empty(
         refType: EntityType.monster,
         slug: 'goblin',
         displayName: 'Goblin',

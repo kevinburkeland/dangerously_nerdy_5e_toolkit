@@ -18,7 +18,7 @@ void main() {
       var warlock = const Character(
         id: EntityId(slug: 'warlock_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock Test',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
@@ -26,7 +26,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -43,19 +43,19 @@ void main() {
           currentHitDice: {'d8': 1},
         ),
         cantrips: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
         ],
         spellsKnown: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_hellish_rebuke',
               displayName: 'Hellish Rebuke'),
@@ -70,7 +70,7 @@ void main() {
         targetClassDisplayName: 'WARLOCK',
         targetClassHitDie: 'd8',
         newSpells: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_armor_of_agathys',
               displayName: 'Armor of Agathys'),
@@ -91,11 +91,11 @@ void main() {
         targetClassDisplayName: 'WARLOCK',
         targetClassHitDie: 'd8',
         newSpells: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_misty_step',
               displayName: 'Misty Step'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_darkness',
               displayName: 'Darkness'),
@@ -134,7 +134,7 @@ void main() {
       var warlock = const Character(
         id: EntityId(slug: 'warlock_test_2', ruleset: RulesetVersion.v2014),
         name: 'Warlock Test 2',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
@@ -142,7 +142,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -159,15 +159,15 @@ void main() {
           currentHitDice: {'d8': 1},
         ),
         cantrips: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
         ],
         spellsKnown: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_arms_of_hadar',
               displayName: 'Arms of Hadar'),
@@ -180,7 +180,7 @@ void main() {
         targetClassDisplayName: 'WARLOCK',
         targetClassHitDie: 'd8',
         newSpells: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_armor_of_agathys',
               displayName: 'Armor of Agathys'),
@@ -199,11 +199,11 @@ void main() {
         targetClassDisplayName: 'WARLOCK',
         targetClassHitDie: 'd8',
         newSpells: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_misty_step',
               displayName: 'Misty Step'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_darkness',
               displayName: 'Darkness'),
@@ -228,13 +228,13 @@ void main() {
         targetClassDisplayName: 'WARLOCK',
         targetClassHitDie: 'd8',
         newCantrips: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_chill_touch',
               displayName: 'Chill Touch'),
         ],
         newSpells: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_hold_person',
               displayName: 'Hold Person'),
@@ -290,10 +290,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       // Character at Level 3 Warlock with 4 spells known and 2 cantrips
-      const lvl3Warlock = Character(
+      final lvl3Warlock = Character(
         id: EntityId(slug: 'warlock_hud_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock HUD Test',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
@@ -301,7 +301,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -318,27 +318,27 @@ void main() {
           currentHitDice: {'d8': 3},
         ),
         cantrips: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
         ],
         spellsKnown: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_armor_of_agathys',
               displayName: 'Armor of Agathys'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_misty_step',
               displayName: 'Misty Step'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_darkness',
               displayName: 'Darkness'),
@@ -346,7 +346,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(
               character: lvl3Warlock,
@@ -393,10 +393,10 @@ void main() {
         'CharacterSheetController.removeSpell purges spell from allocatedSpells as well as spellsKnown',
         () async {
       final mockPersistence = _MockAuditPersistence();
-      const testChar = Character(
+      final testChar = Character(
         id: EntityId(slug: 'warlock_sheet_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock Sheet Test',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
@@ -404,7 +404,7 @@ void main() {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                 refType: EntityType.classDefinition,
                 slug: 'warlock',
                 displayName: 'Warlock',
@@ -422,20 +422,20 @@ void main() {
         ),
         allocatedSpells: {
           'class-warlock-spells': [
-            EntityReference<Spell>(
+            EntityReference<Spell>.empty(
                 refType: EntityType.spell,
                 slug: 'spell_hex',
                 displayName: 'Hex'),
-            EntityReference<Spell>(
+            EntityReference<Spell>.empty(
                 refType: EntityType.spell,
                 slug: 'spell_darkness',
                 displayName: 'Darkness'),
           ],
         },
         spellsKnown: [
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>(
+          EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_darkness',
               displayName: 'Darkness'),
@@ -454,7 +454,7 @@ void main() {
 
       // Remove darkness from sheet
       await controller.removeSpell(
-        const EntityReference<Spell>(
+        const EntityReference<Spell>.empty(
             refType: EntityType.spell,
             slug: 'spell_darkness',
             displayName: 'Darkness'),

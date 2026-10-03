@@ -47,12 +47,12 @@ void main() {
       final request = CharacterCreationRequest(
         characterName: 'Thorek Stonehelm',
         ruleset: RulesetVersion.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'mountain-dwarf',
           displayName: 'Mountain Dwarf',
         ),
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -68,7 +68,7 @@ void main() {
         ),
         startingEquipment: [
           const StartingEquipmentItemRequest(
-            itemRef: EntityReference(
+            itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'chain-mail',
               displayName: 'Chain Mail',
@@ -78,7 +78,7 @@ void main() {
             defaultSlot: EquipmentSlot.armor,
           ),
           const StartingEquipmentItemRequest(
-            itemRef: EntityReference(
+            itemRef: EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword',
@@ -106,15 +106,15 @@ void main() {
     test(
         'creates 2024 ruleset Level 1 Wizard with Origin Feat and Background ASI',
         () {
-      const request = CharacterCreationRequest(
+      final request = CharacterCreationRequest(
         characterName: 'Eldrin the Wise',
         ruleset: RulesetVersion.v2024,
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'high-elf',
           displayName: 'High Elf',
         ),
-        backgroundRef: EntityReference(
+        backgroundRef: EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -135,21 +135,21 @@ void main() {
           constitution: 1, // +1 CON -> 14 (+2 mod)
         ),
         originFeats: [
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.feat,
             slug: 'magic-initiate-cleric',
             displayName: 'Magic Initiate (Cleric)',
           ),
         ],
         cantrips: [
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.spell,
             slug: 'fire-bolt',
             displayName: 'Fire Bolt',
           ),
         ],
         spellsKnown: [
-          EntityReference(
+          EntityReference.empty(
             refType: EntityType.spell,
             slug: 'mage-armor',
             displayName: 'Mage Armor',

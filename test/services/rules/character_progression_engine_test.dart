@@ -22,14 +22,14 @@ void main() {
       var fighter = const Character(
         id: EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
         name: 'Warrior',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -80,7 +80,7 @@ void main() {
         const LevelUpRequest(
           targetClassSlug: 'fighter',
           hpChoice: HpProgressionChoice.average(),
-          subclassRef: EntityReference(
+          subclassRef: EntityReference.empty(
             refType: EntityType.subclass,
             slug: 'champion',
             displayName: 'Champion',
@@ -123,14 +123,14 @@ void main() {
       var wizard = const Character(
         id: EntityId(slug: 'mage', ruleset: RulesetVersion.v2024),
         name: 'Mage',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -209,14 +209,14 @@ void main() {
       var paladin = const Character(
         id: EntityId(slug: 'gish', ruleset: RulesetVersion.v2024),
         name: 'Holy Sorcerer',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'paladin',
               displayName: 'Paladin',
@@ -287,17 +287,17 @@ void main() {
 
     test('Warlock Pact Magic slots are pooled correctly with standard slots',
         () {
-      const warlockSorcerer = Character(
+      final warlockSorcerer = Character(
         id: EntityId(slug: 'coffelock', ruleset: RulesetVersion.v2024),
         name: 'Coffeelock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'sorcerer',
               displayName: 'Sorcerer',
@@ -307,7 +307,7 @@ void main() {
             isStartingClass: true,
           ),
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'warlock',
               displayName: 'Warlock',
@@ -349,17 +349,17 @@ void main() {
     });
 
     test('Multiclass validation rejects if attribute score is below 13', () {
-      const weakMage = Character(
+      final weakMage = Character(
         id: EntityId(slug: 'weak_mage', ruleset: RulesetVersion.v2024),
         name: 'Weak Mage',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -399,9 +399,9 @@ void main() {
     test(
         'Level 1 Character creation populates starting spell slots for spellcasters',
         () {
-      const wizardCreation = CharacterCreationRequest(
+      final wizardCreation = CharacterCreationRequest(
         characterName: 'Archmage Eldrin',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         startingClassSlug: 'wizard',
         startingClassDisplayName: 'Wizard',
@@ -415,29 +415,29 @@ void main() {
             charisma: 10),
         bonusScores: AbilityScores(),
         cantrips: [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'fire_bolt',
               displayName: 'Fire Bolt'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'mage_hand',
               displayName: 'Mage Hand'),
         ],
         spellsKnown: [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'magic_missile',
               displayName: 'Magic Missile'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell, slug: 'shield', displayName: 'Shield'),
         ],
         spellsPrepared: [
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell,
               slug: 'magic_missile',
               displayName: 'Magic Missile'),
-          EntityReference(
+          EntityReference.empty(
               refType: EntityType.spell, slug: 'shield', displayName: 'Shield'),
         ],
       );
@@ -456,11 +456,11 @@ void main() {
         const LevelUpRequest(
           targetClassSlug: 'wizard',
           newSpells: [
-            EntityReference(
+            EntityReference.empty(
                 refType: EntityType.spell,
                 slug: 'misty_step',
                 displayName: 'Misty Step'),
-            EntityReference(
+            EntityReference.empty(
                 refType: EntityType.spell,
                 slug: 'scorching_ray',
                 displayName: 'Scorching Ray'),
@@ -483,10 +483,10 @@ void main() {
     test(
         'applyLevelUp merges newToolProficiencies and newLanguages without duplicates',
         () {
-      const initialCharacter = Character(
+      final initialCharacter = Character(
         id: EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
@@ -495,7 +495,7 @@ void main() {
         toolProficiencies: ["Thieves' Tools"],
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'rogue',
               displayName: 'Rogue',

@@ -65,7 +65,7 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
       active = const Character(
         id: EntityId(slug: 'hero-default', ruleset: RulesetVersion.v2024),
         name: 'Adventurer',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -73,7 +73,7 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference<DomainEntity>(
+              classRef: EntityReference<DomainEntity>.empty(
                 refType: EntityType.classDefinition,
                 slug: 'fighter',
                 displayName: 'Fighter',

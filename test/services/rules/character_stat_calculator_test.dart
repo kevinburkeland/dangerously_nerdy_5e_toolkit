@@ -134,17 +134,17 @@ void main() {
     });
 
     test('computes unarmored AC (10 + DEX mod)', () {
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-rogue', ruleset: RulesetVersion.v2024),
         name: 'Test Rogue',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'rogue',
               displayName: 'Rogue',
@@ -172,17 +172,17 @@ void main() {
     });
 
     test('computes Barbarian Unarmored Defense (10 + DEX + CON)', () {
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
         name: 'Test Barbarian',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'barbarian',
               displayName: 'Barbarian',
@@ -211,14 +211,14 @@ void main() {
       final character = Character(
         id: const EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
         name: 'Test Cleric',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'dwarf',
           displayName: 'Dwarf',
         ),
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'cleric',
               displayName: 'Cleric',
@@ -239,7 +239,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-breastplate',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'breastplate',
               displayName: 'Breastplate',
@@ -249,7 +249,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-shield',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield',
@@ -274,14 +274,14 @@ void main() {
       final charUnattuned = Character(
         id: const EntityId(slug: 'test-fighter', ruleset: RulesetVersion.v2024),
         name: 'Test Fighter',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -302,7 +302,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-ring',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'ring-of-protection',
               displayName: 'Ring of Protection',
@@ -325,7 +325,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-ring',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'ring-of-protection',
               displayName: 'Ring of Protection',
@@ -347,14 +347,14 @@ void main() {
       final character = Character(
         id: const EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
         name: 'Test Wizard',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'gnome',
           displayName: 'Gnome',
         ),
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'wizard',
               displayName: 'Wizard',
@@ -375,7 +375,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-gauntlets',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'gauntlets-of-ogre-power',
               displayName: 'Gauntlets of Ogre Power',
@@ -399,14 +399,14 @@ void main() {
       final character = Character(
         id: const EntityId(slug: 'test-duelist', ruleset: RulesetVersion.v2024),
         name: 'Test Duelist',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -427,7 +427,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-rapier',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'rapier',
               displayName: 'Rapier',
@@ -454,14 +454,14 @@ void main() {
       final character = Character(
         id: const EntityId(slug: 'test-missing', ruleset: RulesetVersion.v2024),
         name: 'Test Missing Gear',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -482,7 +482,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-deleted-sword',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'deleted-legendary-blade',
               displayName: 'Deleted Legendary Blade',
@@ -504,17 +504,17 @@ void main() {
     test(
         '4-Phase Pipeline: Phase A bounds scores [1, 30] and Phase B ingests embedded bonus scores',
         () {
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'test-phase-ab', ruleset: RulesetVersion.v2024),
         name: 'Phase AB Test',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
           refType: EntityType.species,
           slug: 'dwarf',
           displayName: 'Dwarf',
         ),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -560,14 +560,14 @@ void main() {
       final character = Character(
         id: const EntityId(slug: 'test-phase-c', ruleset: RulesetVersion.v2024),
         name: 'Phase C Test',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         progression: const CharacterProgression(classes: [
           ClassLevelProgression(
-            classRef: EntityReference(
+            classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
               slug: 'fighter',
               displayName: 'Fighter',
@@ -588,7 +588,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-gauntlets',
-            itemRef: const EntityReference(
+            itemRef: const EntityReference.empty(
               refType: EntityType.equipment,
               slug: 'gauntlets-of-ogre-power',
               displayName: 'Gauntlets of Ogre Power',

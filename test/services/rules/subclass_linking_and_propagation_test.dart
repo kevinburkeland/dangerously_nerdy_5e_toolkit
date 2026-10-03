@@ -165,12 +165,12 @@ void main() {
         id: const EntityId(
             slug: 'my-custom-warlock', ruleset: RulesetVersion.v2014),
         name: 'Generic Custom Warlock',
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: const EntityReference(
+              classRef: const EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
@@ -218,19 +218,19 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'my-custom-warlock', ruleset: RulesetVersion.v2014),
         name: 'Generic Custom Warlock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'the-abyssal-mariner',
                 displayName: 'The Abyssal Mariner',
@@ -327,15 +327,15 @@ void main() {
       SrdClassesLibrary.addCustomSubclass(customSub);
 
       // A legacy or un-hydrated character with no customProperties on subclassRef
-      const unhydratedChar = Character(
+      final unhydratedChar = Character(
         id: EntityId(slug: 'legacy-warlock', ruleset: RulesetVersion.v2014),
         name: 'Legacy Warlock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
@@ -458,19 +458,19 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(stubSub);
 
-      const charLevel6 = Character(
+      final charLevel6 = Character(
         id: EntityId(slug: 'mariner-warlock-6', ruleset: RulesetVersion.v2014),
         name: 'Mariner Warlock',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'warlock',
                   displayName: 'Warlock'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'the-abyssal-mariner',
                 displayName: 'The Abyssal Mariner',
@@ -576,19 +576,19 @@ void main() {
       SrdClassesLibrary.addCustomSubclass(paladinSub);
 
       // Verify druid character gets the bonus action
-      const druidChar = Character(
+      final druidChar = Character(
         id: EntityId(slug: 'blight-druid-2', ruleset: RulesetVersion.v2014),
         name: 'Blight Druid',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'druid',
                   displayName: 'Druid'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'circle-of-the-blight',
                 displayName: 'Circle of the Blight',
@@ -624,19 +624,19 @@ void main() {
           reason: 'Druid Blight Bloom should be extracted as a Bonus Action');
 
       // Verify paladin character gets the reaction
-      const paladinChar = Character(
+      final paladinChar = Character(
         id: EntityId(slug: 'justice-paladin-3', ruleset: RulesetVersion.v2014),
         name: 'Justice Paladin',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'paladin',
                   displayName: 'Paladin'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                 refType: EntityType.subclass,
                 slug: 'oath-of-justice',
                 displayName: 'Oath of Justice',

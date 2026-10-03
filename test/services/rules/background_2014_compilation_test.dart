@@ -43,7 +43,7 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Father Bryan',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
@@ -51,13 +51,13 @@ void main() {
             'fixedAbilityBonuses': {'str': 1, 'wis': 1},
           },
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'cleric',
           displayName: 'Cleric',
         ),
         startingClassHitDie: 'd8',
-        backgroundRef: const EntityReference(
+        backgroundRef: const EntityReference.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
@@ -145,18 +145,18 @@ void main() {
       final draft = CharacterDraft(
         characterName: 'Brogur Stonebreaker',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'dwarf',
           displayName: 'Dwarf',
         ),
-        startingClassRef: const EntityReference(
+        startingClassRef: const EntityReference.empty(
           refType: EntityType.classDefinition,
           slug: 'fighter',
           displayName: 'Fighter',
         ),
         startingClassHitDie: 'd10',
-        backgroundRef: const EntityReference(
+        backgroundRef: EntityReference(
           refType: EntityType.background,
           slug: 'custom-deepdelver',
           displayName: 'Custom Deepdelver',

@@ -91,15 +91,15 @@ void main() {
     test(
         'Single-class half-caster (Paladin/Ranger) 2014 spell slot tables grant Level 2 slots at class level 5',
         () {
-      const paladinChar = Character(
+      final paladinChar = Character(
         id: EntityId(slug: 'holy-warrior', ruleset: RulesetVersion.v2014),
         name: 'Holy Warrior',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'paladin',
                   displayName: 'Paladin'),
@@ -125,19 +125,19 @@ void main() {
     test(
         'Single-class 1/3-caster (Eldritch Knight) grants 3 1st slots at L4 and 2nd slots at L7',
         () {
-      const ekCharLevel4 = Character(
+      final ekCharLevel4 = Character(
         id: EntityId(slug: 'arcane-fighter', ruleset: RulesetVersion.v2014),
         name: 'Arcane Fighter',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'eldritch_knight',
                   displayName: 'Eldritch Knight'),
@@ -160,11 +160,11 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'eldritch_knight',
                   displayName: 'Eldritch Knight'),
@@ -188,21 +188,21 @@ void main() {
       final resolver = ReferenceResolver(repo);
 
       // Hill Dwarf Draconic Sorcerer Level 5
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'dwarf-sorcerer', ruleset: RulesetVersion.v2014),
         name: 'Dwarf Sorcerer',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species,
             slug: 'hill-dwarf',
             displayName: 'Hill Dwarf'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'sorcerer',
                   displayName: 'Sorcerer'),
-              subclassRef: EntityReference(
+              subclassRef: EntityReference.empty(
                   refType: EntityType.subclass,
                   slug: 'draconic_bloodline',
                   displayName: 'Draconic Bloodline'),
@@ -231,15 +231,15 @@ void main() {
         'ASI clamps inherent score to getAbilityScoreMaximum while preserving item overrides',
         () {
       // Character with base 19 Strength and a generic magical item setting effective Strength to 21
-      const character = Character(
+      final character = Character(
         id: EntityId(slug: 'mighty-hero', ruleset: RulesetVersion.v2014),
         name: 'Mighty Hero',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'fighter',
                   displayName: 'Fighter'),
@@ -280,15 +280,15 @@ void main() {
     test(
         'Inherent ability score maximum dynamically expands for Level 20 Barbarian capstone and custom treatises',
         () {
-      const barbarian20 = Character(
+      final barbarian20 = Character(
         id: EntityId(slug: 'primal-warrior', ruleset: RulesetVersion.v2014),
         name: 'Primal Warrior',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'barbarian',
                   displayName: 'Barbarian'),
@@ -328,15 +328,15 @@ void main() {
       final resolver = ReferenceResolver(repo);
 
       // Started as Monk 1, multiclassed into Barbarian 1
-      const monkFirst = Character(
+      final monkFirst = Character(
         id: EntityId(slug: 'monk-barb', ruleset: RulesetVersion.v2014),
         name: 'Monk Barbarian',
-        speciesRef: EntityReference(
+        speciesRef: EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'monk',
                   displayName: 'Monk'),
@@ -345,7 +345,7 @@ void main() {
               isStartingClass: true,
             ),
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'barbarian',
                   displayName: 'Barbarian'),
@@ -375,7 +375,7 @@ void main() {
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'barbarian',
                   displayName: 'Barbarian'),
@@ -384,7 +384,7 @@ void main() {
               isStartingClass: true,
             ),
             ClassLevelProgression(
-              classRef: EntityReference(
+              classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
                   slug: 'monk',
                   displayName: 'Monk'),
