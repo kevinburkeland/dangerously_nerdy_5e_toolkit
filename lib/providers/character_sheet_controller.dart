@@ -36,6 +36,15 @@ class CharacterSheetController extends ChangeNotifier {
   late EvaluatedCharacterStats _stats;
   bool _isSaving = false;
 
+  static ReplicaId _resolveReplicaId(ReplicaId? replicaId) {
+    if (replicaId != null) return replicaId;
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
+    throw StateError(
+      'CharacterSheetController requires an authoritative ReplicaId. '
+      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+    );
+  }
+
   CharacterSheetController({
     required Character character,
     ICharacterRepository? persistenceService,
@@ -46,10 +55,7 @@ class CharacterSheetController extends ChangeNotifier {
         _persistenceService = persistenceService ?? LocalCharacterRepository(),
         _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
         _resolver = resolver,
-        _replicaId = replicaId ??
-            (sl.isRegistered<ReplicaId>()
-                ? sl<ReplicaId>()
-                : ReplicaId('character_controller')) {
+        _replicaId = _resolveReplicaId(replicaId) {
     _recalculateStats();
   }
 

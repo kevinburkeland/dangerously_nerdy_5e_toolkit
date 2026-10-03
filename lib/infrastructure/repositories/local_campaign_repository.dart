@@ -49,9 +49,14 @@ class LocalCampaignRepository implements ICampaignRepository {
   })  : _db = db ?? AppDatabaseService.instance,
         _replicaId = replicaId;
 
-  String get _effectiveNodeId =>
-      _replicaId?.value ??
-      (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : 'local_repo');
+  String get _effectiveNodeId {
+    if (_replicaId != null) return _replicaId.value;
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    throw StateError(
+      'LocalCampaignRepository requires an authoritative ReplicaId. '
+      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+    );
+  }
 
   @override
   String? get activeProfileId => _activeProfileId;
@@ -143,6 +148,7 @@ class LocalCampaignRepository implements ICampaignRepository {
       _emitState();
       return profiles;
     } catch (e, st) {
+      if (e is StateError) rethrow;
       LoggingService().logNonFatal(
         e,
         st,

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
 import '../application/services/combat_encounter_service.dart';
 import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
@@ -38,6 +37,20 @@ class DmDashboardController extends ChangeNotifier {
   bool _isLoading = true;
   int _currentRound = 1;
 
+  static String _resolveNodeId(ReplicaId? replicaId, String? nodeId) {
+    if (replicaId != null) return replicaId.value;
+    if (nodeId != null &&
+        nodeId.trim().isNotEmpty &&
+        nodeId.trim().toLowerCase() != 'local') {
+      return nodeId.trim();
+    }
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    throw StateError(
+      'DmDashboardController requires an authoritative ReplicaId. '
+      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+    );
+  }
+
   DmDashboardController({
     ICampaignRepository? campaignRepository,
     ICharacterRepository<Character>? characterRepository,
@@ -47,10 +60,7 @@ class DmDashboardController extends ChangeNotifier {
     RoomSyncOrchestrator? roomSyncOrchestrator,
     ReplicaId? replicaId,
     String? nodeId,
-  })  : _nodeId = replicaId?.value ??
-            nodeId ??
-            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null) ??
-            const Uuid().v4(),
+  })  : _nodeId = _resolveNodeId(replicaId, nodeId),
         _campaignProfileService = campaignRepository ??
             campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
@@ -80,11 +90,7 @@ class DmDashboardController extends ChangeNotifier {
                     combatResolver: sl.isRegistered<ICombatResolver>()
                         ? sl<ICombatResolver>()
                         : const Dnd5eCombatResolver(),
-                    localNodeId: replicaId?.value ??
-                        nodeId ??
-                        (sl.isRegistered<ReplicaId>()
-                            ? sl<ReplicaId>().value
-                            : const Uuid().v4()),
+                    localNodeId: _resolveNodeId(replicaId, nodeId),
                   )),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()
@@ -189,7 +195,7 @@ class DmDashboardController extends ChangeNotifier {
     _activeProfile = active ??
         (_allProfiles.isNotEmpty
             ? _allProfiles.first
-            : CampaignProfile.defaultProfile(nodeId: 'dm_dashboard'));
+            : CampaignProfile.defaultProfile(nodeId: _nodeId));
     await _loadPartyCharacters();
 
     _isLoading = false;

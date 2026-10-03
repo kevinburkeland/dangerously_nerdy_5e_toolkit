@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:mutex/mutex.dart';
-import 'package:uuid/uuid.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
@@ -14,6 +13,8 @@ import 'clock_sync_service.dart';
 import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../infrastructure/di/injection_container.dart';
 import '../../services/dice_room_service.dart';
 
 /// Application service orchestrating bidirectional synchronization between
@@ -71,6 +72,25 @@ class RoomSyncOrchestrator {
   /// Reactive stream broadcasting sync errors, dead letters, and schema mismatches.
   Stream<SyncErrorEvent> get deadLetterStream => _deadLetterController.stream;
 
+  static String _resolveNodeId(
+    ReplicaId? replicaId,
+    String? localNodeId,
+    String? hostNodeId,
+  ) {
+    if (replicaId != null) return replicaId.value;
+    final candidate = localNodeId ?? hostNodeId;
+    if (candidate != null &&
+        candidate.trim().isNotEmpty &&
+        candidate.trim().toLowerCase() != 'local') {
+      return candidate.trim();
+    }
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    throw StateError(
+      'RoomSyncOrchestrator requires an authoritative ReplicaId. '
+      'Ensure initServiceLocator() has completed or inject replicaId/localNodeId explicitly.',
+    );
+  }
+
   RoomSyncOrchestrator({
     IP2pTransportPort? transportPort,
     CascadingTransportRouter? router,
@@ -81,12 +101,13 @@ class RoomSyncOrchestrator {
     IRoomSyncPayloadPort? payloadMapper,
     int Function()? localTimeProvider,
     this.isHost = false,
+    ReplicaId? replicaId,
     String? localNodeId,
     @Deprecated('Use localNodeId instead') String? hostNodeId,
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
     Duration? heartbeatTtl,
-  })  : localNodeId = localNodeId ?? hostNodeId ?? const Uuid().v4(),
+  })  : localNodeId = _resolveNodeId(replicaId, localNodeId, hostNodeId),
         transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         payloadMapper = payloadMapper ??

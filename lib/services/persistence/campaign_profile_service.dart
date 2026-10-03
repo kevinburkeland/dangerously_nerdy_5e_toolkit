@@ -43,9 +43,22 @@ class CampaignProfileService extends ChangeNotifier
   }
 
   ReplicaId? _replicaId;
-  String get _effectiveNodeId =>
-      _replicaId?.value ??
-      (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : 'campaign_service');
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _instance._replicaId = null;
+    _instance._memoryCache.clear();
+    _instance._activeProfileId = null;
+    _instance._initialized = false;
+  }
+  String get _effectiveNodeId {
+    if (_replicaId != null) return _replicaId!.value;
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    throw StateError(
+      'CampaignProfileService requires an authoritative ReplicaId. '
+      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+    );
+  }
 
   final AppDatabaseService _db = AppDatabaseService.instance;
   final Map<String, CampaignProfile> _memoryCache = {};
@@ -164,7 +177,7 @@ class CampaignProfileService extends ChangeNotifier
             name: m.campaignName.trim().isNotEmpty
                 ? m.campaignName.trim()
                 : 'Campaign ${m.roomCode}',
-            nodeId: m.roomCode,
+            nodeId: _effectiveNodeId,
           ).copyWith(
             partyCharacterIds: savedCharacters.map((c) => c.id.slug).toList(),
             roomState: RoomNodeState(

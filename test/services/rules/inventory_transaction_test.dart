@@ -293,6 +293,7 @@ void main() {
         instanceId: 'chest-item-potion',
         quantity: 2,
         currency: const PartyPurse(gp: 40),
+        nodeId: 'test_node_loot',
       );
 
       // Chest has 1 potion left and 60 gp

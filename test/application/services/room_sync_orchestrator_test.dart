@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uuid/uuid.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connection_telemetry.dart';
@@ -13,6 +12,8 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/crdt/crdt_or_set_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
@@ -198,6 +199,9 @@ void main() {
     );
 
     setUp(() async {
+      sl.reset();
+      sl.registerSingleton<ReplicaId>(ReplicaId('test_orchestrator_node'));
+
       mockWifi = MockTransportPort()..initializeShouldThrow = true;
       mockWebRtc = MockTransportPort();
       mockFallback = MockTransportPort();
@@ -236,6 +240,7 @@ void main() {
     tearDown(() {
       orchestrator.stopSynchronization();
       mockRepo.dispose();
+      sl.reset();
     });
 
     test(
@@ -973,28 +978,27 @@ void main() {
     });
 
     test(
-        'Eliminate Static Node Identity: constructor generates unique UUID v4 when localNodeId is null',
+        'Eliminate Static Node Identity: constructor throws StateError when replica identity is missing',
         () {
-      final orch1 = RoomSyncOrchestrator(
-        transportPort: mockWebRtc,
-        campaignRepo: mockRepo,
-        reconciliationService: reconciliationService,
-        clockSyncService: clockSyncService,
-      );
-      final orch2 = RoomSyncOrchestrator(
-        transportPort: mockWebRtc,
-        campaignRepo: mockRepo,
-        reconciliationService: reconciliationService,
-        clockSyncService: clockSyncService,
+      sl.reset();
+      expect(
+        () => RoomSyncOrchestrator(
+          transportPort: mockWebRtc,
+          campaignRepo: mockRepo,
+          reconciliationService: reconciliationService,
+          clockSyncService: clockSyncService,
+        ),
+        throwsStateError,
       );
 
-      expect(orch1.localNodeId, isNot(equals('dm-host-prime')));
-      expect(orch2.localNodeId, isNot(equals('dm-host-prime')));
-      expect(orch1.localNodeId, isNot(equals(orch2.localNodeId)));
-      // Standard UUID v4 length is 36 (8-4-4-4-12)
-      expect(orch1.localNodeId.length, equals(36));
-      expect(Uuid.isValidUUID(fromString: orch1.localNodeId), isTrue);
-      expect(Uuid.isValidUUID(fromString: orch2.localNodeId), isTrue);
+      final orch1 = RoomSyncOrchestrator(
+        replicaId: ReplicaId('explicit_orch_1'),
+        transportPort: mockWebRtc,
+        campaignRepo: mockRepo,
+        reconciliationService: reconciliationService,
+        clockSyncService: clockSyncService,
+      );
+      expect(orch1.localNodeId, equals('explicit_orch_1'));
     });
 
     test(

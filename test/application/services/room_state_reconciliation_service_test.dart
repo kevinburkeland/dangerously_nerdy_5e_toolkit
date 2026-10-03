@@ -11,10 +11,10 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 
 void main() {
   group('PartyRoomService Tests', () {
-    test('initializes with a valid UUIDv4 node ID and creates local timestamps',
+    test('initializes with a valid node ID and creates local timestamps',
         () {
-      final service1 = PartyRoomService();
-      final service2 = PartyRoomService();
+      final service1 = PartyRoomService(nodeId: 'node-alpha-1');
+      final service2 = PartyRoomService(nodeId: 'node-beta-2');
 
       expect(service1.localNodeId, isNotEmpty);
       expect(service2.localNodeId, isNotEmpty);

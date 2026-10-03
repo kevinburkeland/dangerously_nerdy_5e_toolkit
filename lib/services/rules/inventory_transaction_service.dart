@@ -317,6 +317,19 @@ class InventoryTransactionService {
   }
 
   /// Atomically transfers an item and/or currency from a LootContainer to a Character
+  static String _resolveNodeId(String? nodeId) {
+    if (nodeId != null &&
+        nodeId.trim().isNotEmpty &&
+        nodeId.trim().toLowerCase() != 'local') {
+      return nodeId.trim();
+    }
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    throw StateError(
+      'InventoryTransactionService requires an authoritative ReplicaId for currency transfer. '
+      'Ensure initServiceLocator() has completed or pass nodeId explicitly.',
+    );
+  }
+
   static LootTransferResult transferFromContainerToCharacter({
     required LootContainer sourceContainer,
     required Character destinationCharacter,
@@ -325,10 +338,6 @@ class InventoryTransactionService {
     PartyPurse? currency,
     String? nodeId,
   }) {
-    final effectiveNodeId = nodeId ??
-        (sl.isRegistered<ReplicaId>()
-            ? sl<ReplicaId>().value
-            : 'inventory_transfer');
     final containerItems =
         List<InventoryItemInstance>.from(sourceContainer.items);
     final itemIndex =
@@ -366,6 +375,7 @@ class InventoryTransactionService {
     var updatedContainerPurse = sourceContainer.purse;
     var updatedCharPurse = destinationCharacter.purse;
     if (currency != null && currency.totalGpEquivalent > 0) {
+      final effectiveNodeId = _resolveNodeId(nodeId);
       updatedContainerPurse =
           updatedContainerPurse.deduct(currency, nodeId: effectiveNodeId);
       updatedCharPurse =
@@ -397,10 +407,6 @@ class InventoryTransactionService {
     PartyPurse? currency,
     String? nodeId,
   }) {
-    final effectiveNodeId = nodeId ??
-        (sl.isRegistered<ReplicaId>()
-            ? sl<ReplicaId>().value
-            : 'inventory_transfer');
     final charInventory =
         List<InventoryItemInstance>.from(sourceCharacter.inventory);
     final itemIndex =
@@ -438,11 +444,13 @@ class InventoryTransactionService {
     var updatedContainerPurse = destinationContainer.purse;
     var updatedCharPurse = sourceCharacter.purse;
     if (currency != null && currency.totalGpEquivalent > 0) {
+      final effectiveNodeId = _resolveNodeId(nodeId);
       updatedCharPurse =
           updatedCharPurse.deduct(currency, nodeId: effectiveNodeId);
       updatedContainerPurse =
           updatedContainerPurse.add(currency, nodeId: effectiveNodeId);
     }
+
 
     final updatedContainer = destinationContainer.copyWith(
       items: containerItems,

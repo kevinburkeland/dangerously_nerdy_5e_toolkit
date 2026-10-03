@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_pa
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 class MockP2pTransport implements IP2pTransportPort {
   final List<String> broadcasted = [];
@@ -316,6 +317,7 @@ void main() {
       const roomCode = 'ROOM-ORCH-4';
 
       final orchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_dice_orch_node'),
         transportPort: mockTransport,
         campaignRepo: MockCampaignRepo(),
         reconciliationService: RoomStateReconciliationService(

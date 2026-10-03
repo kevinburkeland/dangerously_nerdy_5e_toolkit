@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:uuid/uuid.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_event.dart';
 import '../../models/party/party_loot_item.dart';
@@ -140,6 +139,20 @@ class PartyRoomService {
   final CharacterPersistenceService _characterPersistenceService;
   final CampaignProfileService _campaignProfileService;
 
+  static String _resolveNodeId(ReplicaId? replicaId, String? localNodeId) {
+    if (replicaId != null) return replicaId.value;
+    if (localNodeId != null &&
+        localNodeId.trim().isNotEmpty &&
+        localNodeId.trim().toLowerCase() != 'local') {
+      return localNodeId.trim();
+    }
+    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
+    throw StateError(
+      'PartyRoomService requires an authoritative ReplicaId. '
+      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+    );
+  }
+
   PartyRoomService._internal({
     ReplicaId? replicaId,
     String? localNodeId,
@@ -147,10 +160,7 @@ class PartyRoomService {
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : localNodeId = replicaId?.value ??
-            localNodeId ??
-            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null) ??
-            const Uuid().v4(),
+  })  : localNodeId = _resolveNodeId(replicaId, localNodeId),
         _registry = registry ?? CampaignRegistryService(),
         _diceRoomService = diceRoomService ?? DiceRoomService(),
         _characterPersistenceService =
@@ -166,10 +176,7 @@ class PartyRoomService {
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : localNodeId = replicaId?.value ??
-            localNodeId ??
-            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null) ??
-            const Uuid().v4(),
+  })  : localNodeId = _resolveNodeId(replicaId, localNodeId),
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),
