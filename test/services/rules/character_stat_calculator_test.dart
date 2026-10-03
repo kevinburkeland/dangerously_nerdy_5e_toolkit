@@ -208,15 +208,15 @@ void main() {
     });
 
     test('computes Medium Armor with DEX capped at +2, plus Shield', () {
-      const character = Character(
-        id: EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
         name: 'Test Cleric',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'dwarf',
           displayName: 'Dwarf',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -228,7 +228,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 14,
           dexterity: 16, // +3 mod (should be capped at +2 for medium)
           constitution: 14,
@@ -239,7 +239,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-breastplate',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'breastplate',
               displayName: 'Breastplate',
@@ -249,7 +249,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'inst-shield',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield',
@@ -258,7 +258,7 @@ void main() {
             equippedSlot: EquipmentSlot.shield,
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 38),
+        resources: const CharacterResourcePool(currentHp: 38),
       );
 
       final stats = CharacterStatCalculator.compute(character, resolver);
@@ -271,15 +271,15 @@ void main() {
 
     test('attunement requirement enforces stat bonus only when attuned', () {
       // Unattuned Ring of Protection
-      const charUnattuned = Character(
-        id: EntityId(slug: 'test-fighter', ruleset: RulesetVersion.v2024),
+      final charUnattuned = Character(
+        id: const EntityId(slug: 'test-fighter', ruleset: RulesetVersion.v2024),
         name: 'Test Fighter',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -291,7 +291,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 16,
           dexterity: 10,
           constitution: 14,
@@ -302,7 +302,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-ring',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'ring-of-protection',
               displayName: 'Ring of Protection',
@@ -313,7 +313,7 @@ void main() {
             isAttuned: false, // NOT ATTUNED
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 12),
+        resources: const CharacterResourcePool(currentHp: 12),
       );
 
       final statsUnattuned =
@@ -322,10 +322,10 @@ void main() {
 
       // Attuned Ring of Protection
       final charAttuned = charUnattuned.copyWith(
-        inventory: const [
+        inventory: [
           InventoryItemInstance(
             instanceId: 'inst-ring',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'ring-of-protection',
               displayName: 'Ring of Protection',
@@ -344,15 +344,15 @@ void main() {
     });
 
     test('Gauntlets of Ogre Power overrides STR to 19 when attuned', () {
-      const character = Character(
-        id: EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
         name: 'Test Wizard',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'gnome',
           displayName: 'Gnome',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -364,7 +364,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 8, // base -1 mod
           dexterity: 14,
           constitution: 12,
@@ -375,7 +375,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-gauntlets',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'gauntlets-of-ogre-power',
               displayName: 'Gauntlets of Ogre Power',
@@ -386,7 +386,7 @@ void main() {
             isAttuned: true,
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 7),
+        resources: const CharacterResourcePool(currentHp: 7),
       );
 
       final stats = CharacterStatCalculator.compute(character, resolver);
@@ -396,15 +396,15 @@ void main() {
     });
 
     test('finesse weapon picks DEX over STR when DEX is higher', () {
-      const character = Character(
-        id: EntityId(slug: 'test-duelist', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'test-duelist', ruleset: RulesetVersion.v2024),
         name: 'Test Duelist',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -416,7 +416,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10, // +0
           dexterity: 16, // +3
           constitution: 14,
@@ -427,7 +427,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-rapier',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'rapier',
               displayName: 'Rapier',
@@ -436,7 +436,7 @@ void main() {
             equippedSlot: EquipmentSlot.mainHand,
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 12),
+        resources: const CharacterResourcePool(currentHp: 12),
       );
 
       final stats = CharacterStatCalculator.compute(character, resolver);
@@ -451,15 +451,15 @@ void main() {
     test(
         'missing equipment reference falls back gracefully to UnresolvedReference stub without crash',
         () {
-      const character = Character(
-        id: EntityId(slug: 'test-missing', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'test-missing', ruleset: RulesetVersion.v2024),
         name: 'Test Missing Gear',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -471,7 +471,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 14,
           dexterity: 12,
           constitution: 14,
@@ -482,7 +482,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-deleted-sword',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'deleted-legendary-blade',
               displayName: 'Deleted Legendary Blade',
@@ -491,7 +491,7 @@ void main() {
             equippedSlot: EquipmentSlot.mainHand,
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 12),
+        resources: const CharacterResourcePool(currentHp: 12),
       );
 
       final stats = CharacterStatCalculator.compute(character, resolver);
@@ -557,15 +557,15 @@ void main() {
     test(
         '4-Phase Pipeline: Phase C applies additions then overrides then clamps ceiling',
         () {
-      const character = Character(
-        id: EntityId(slug: 'test-phase-c', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'test-phase-c', ruleset: RulesetVersion.v2024),
         name: 'Phase C Test',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -577,7 +577,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 10,
           constitution: 10,
@@ -588,7 +588,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'inst-gauntlets',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'gauntlets-of-ogre-power',
               displayName: 'Gauntlets of Ogre Power',
@@ -599,7 +599,7 @@ void main() {
             isAttuned: true,
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 10),
+        resources: const CharacterResourcePool(currentHp: 10),
       );
 
       final stats = CharacterStatCalculator.compute(character, resolver);

@@ -204,9 +204,9 @@ void main() {
     test('Detects missing custom equipment / item in inventory', () {
       final customChar = baseSrdCharacter.copyWith(
         inventory: [
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst_sword_99',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'custom_blade_of_the_ruin',
               displayName: 'Blade of the Ruin',

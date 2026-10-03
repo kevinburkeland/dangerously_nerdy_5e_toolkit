@@ -175,9 +175,9 @@ void main() {
       final controller = CharacterSheetController(character: initialChar);
       expect(controller.character.inventory, isEmpty);
 
-      const newItem = InventoryItemInstance(
+      final newItem = InventoryItemInstance(
         instanceId: 'inst-1',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
             refType: EntityType.equipment,
             slug: 'dagger',
             displayName: 'Dagger'),

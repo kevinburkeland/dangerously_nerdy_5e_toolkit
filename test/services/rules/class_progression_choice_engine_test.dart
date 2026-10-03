@@ -379,9 +379,9 @@ void main() {
 
         final characterWithArmor = characterWithoutArmor.copyWith(
           inventory: [
-            const InventoryItemInstance(
+            InventoryItemInstance(
               instanceId: 'armor-1',
-              itemRef: EntityReference(
+              itemRef: const EntityReference(
                   refType: EntityType.equipment,
                   slug: 'leather-armor',
                   displayName: 'Leather Armor'),

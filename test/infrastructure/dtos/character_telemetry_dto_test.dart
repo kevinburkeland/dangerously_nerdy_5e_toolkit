@@ -173,18 +173,18 @@ void main() {
 
       var character = CharacterFactory.buildFromDraft(draft);
 
-      const equippedItem = InventoryItemInstance(
+      final equippedItem = InventoryItemInstance(
         instanceId: 'rapier-1',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           slug: 'rapier',
           displayName: 'Rapier',
         ),
         isEquipped: true,
       );
-      const backpackItem = InventoryItemInstance(
+      final backpackItem = InventoryItemInstance(
         instanceId: 'potion-1',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           slug: 'potion-of-healing',
           displayName: 'Potion of Healing',

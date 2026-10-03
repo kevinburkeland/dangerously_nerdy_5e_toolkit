@@ -70,9 +70,9 @@ void main() {
     test(
         'Level 1 character with 16 DEX and studded leather has 15 AC, increments to 17 with shield',
         () {
-      const studdedLeather = InventoryItemInstance(
+      final studdedLeather = InventoryItemInstance(
         instanceId: 'item-armor',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           displayName: 'Studded Leather Armor',
           slug: 'studded-leather-armor',
@@ -89,9 +89,9 @@ void main() {
       // 12 (studded leather base) + 3 (DEX 16) = 15
       expect(charWithoutShield.armorClass, equals(15));
 
-      const shield = InventoryItemInstance(
+      final shield = InventoryItemInstance(
         instanceId: 'item-shield',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           displayName: 'Shield',
           slug: 'shield',
@@ -109,9 +109,9 @@ void main() {
     });
 
     test('Heavy armor ignores DEX modifier', () {
-      const chainMail = InventoryItemInstance(
+      final chainMail = InventoryItemInstance(
         instanceId: 'item-chain-mail',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           displayName: 'Chain Mail',
           slug: 'chain-mail',
@@ -132,9 +132,9 @@ void main() {
     test(
         'Medium armor caps DEX at 2, but Homebrew Armor Expert raises cap to 3',
         () {
-      const scaleMail = InventoryItemInstance(
+      final scaleMail = InventoryItemInstance(
         instanceId: 'item-scale-mail',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           displayName: 'Scale Mail',
           slug: 'scale-mail',
@@ -187,9 +187,9 @@ void main() {
       // 10 + 2 (DEX) + 3 (CON) = 15
       expect(char.armorClass, equals(15));
 
-      const shield = InventoryItemInstance(
+      final shield = InventoryItemInstance(
         instanceId: 'item-shield',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           displayName: 'Shield',
           slug: 'shield',
@@ -224,9 +224,9 @@ void main() {
       // 10 + 3 (DEX) + 3 (WIS) = 16
       expect(char.armorClass, equals(16));
 
-      const shield = InventoryItemInstance(
+      final shield = InventoryItemInstance(
         instanceId: 'item-shield',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           displayName: 'Shield',
           slug: 'shield',
@@ -266,9 +266,9 @@ void main() {
     });
 
     test('Defense Fighting Style adds +1 AC while wearing armor', () {
-      const leatherArmor = InventoryItemInstance(
+      final leatherArmor = InventoryItemInstance(
         instanceId: 'item-leather',
-        itemRef: EntityReference(
+        itemRef: const EntityReference(
           refType: EntityType.equipment,
           displayName: 'Leather Armor',
           slug: 'leather-armor',

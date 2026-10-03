@@ -20,9 +20,9 @@ void main() {
         'InteractiveSpellTile displays +3 Cha damage for spell-eldritch-blast slug and boosted attack with Rod',
         (tester) async {
       // Create warlock with Rod of the Pact Keeper +1 equipped & attuned, and Agonizing Blast invocation
-      const rodItem = InventoryItemInstance(
+      final rodItem = InventoryItemInstance(
         instanceId: 'rod-pact-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'item-rod-of-the-pact-keeper-plus-1',
           displayName: 'Rod of the Pact Keeper +1',
@@ -32,15 +32,15 @@ void main() {
         requiresAttunement: true,
       );
 
-      const warlock = Character(
-        id: EntityId(
+      final warlock = Character(
+        id: const EntityId(
             slug: 'warlock-agonizing-rod', ruleset: RulesetVersion.v2024),
         name: 'Warlock Master',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(
@@ -56,13 +56,13 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           charisma: 16, // +3 mod
           dexterity: 14,
           constitution: 14,
         ),
         inventory: [rodItem],
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(character: warlock);
@@ -121,9 +121,9 @@ void main() {
     test(
         'CharacterActionsResolver resolves actions, bonus actions, reactions, and magic items',
         () {
-      const rodItem = InventoryItemInstance(
+      final rodItem = InventoryItemInstance(
         instanceId: 'rod-pact-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'item-rod-of-the-pact-keeper-plus-1',
           displayName: 'Rod of the Pact Keeper +1',
@@ -133,9 +133,9 @@ void main() {
         requiresAttunement: true,
       );
 
-      const dagger = InventoryItemInstance(
+      final dagger = InventoryItemInstance(
         instanceId: 'dagger-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'dagger',
           displayName: 'Dagger',
@@ -149,9 +149,9 @@ void main() {
         },
       );
 
-      const offhandDagger = InventoryItemInstance(
+      final offhandDagger = InventoryItemInstance(
         instanceId: 'dagger-2',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'dagger',
           displayName: 'Offhand Dagger',
@@ -166,12 +166,12 @@ void main() {
         },
       );
 
-      const rogueWarlock = Character(
-        id: EntityId(slug: 'rogue-warlock', ruleset: RulesetVersion.v2024),
+      final rogueWarlock = Character(
+        id: const EntityId(slug: 'rogue-warlock', ruleset: RulesetVersion.v2024),
         name: 'Shadow Caster',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(
@@ -192,32 +192,32 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           dexterity: 16, // +3
           charisma: 16, // +3
           constitution: 12,
         ),
         inventory: [rodItem, dagger, offhandDagger],
         cantrips: [
-          EntityReference<Spell>(
+          const EntityReference<Spell>(
             refType: EntityType.spell,
             slug: 'spell_eldritch_blast',
             displayName: 'Eldritch Blast',
           ),
         ],
         spellsPrepared: [
-          EntityReference<Spell>(
+          const EntityReference<Spell>(
             refType: EntityType.spell,
             slug: 'spell_misty_step',
             displayName: 'Misty Step',
           ),
-          EntityReference<Spell>(
+          const EntityReference<Spell>(
             refType: EntityType.spell,
             slug: 'spell_hellish_rebuke',
             displayName: 'Hellish Rebuke',
           ),
         ],
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(character: rogueWarlock);
@@ -267,14 +267,14 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      const warlock = Character(
-        id: EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2024),
+      final warlock = Character(
+        id: const EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2024),
         name: 'Action Hero',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
             refType: EntityType.species,
             slug: 'tiefling',
             displayName: 'Tiefling'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(
@@ -287,11 +287,11 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(charisma: 16, dexterity: 14),
+        baseScores: const AbilityScores(charisma: 16, dexterity: 14),
         inventory: [
           InventoryItemInstance(
             instanceId: 'rod-1',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'item-rod-of-the-pact-keeper-plus-1',
               displayName: 'Rod of the Pact Keeper +1',
@@ -302,13 +302,13 @@ void main() {
           ),
         ],
         cantrips: [
-          EntityReference<Spell>(
+          const EntityReference<Spell>(
             refType: EntityType.spell,
             slug: 'spell_eldritch_blast',
             displayName: 'Eldritch Blast',
           ),
         ],
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(character: warlock);

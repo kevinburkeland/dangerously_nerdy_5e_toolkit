@@ -67,9 +67,9 @@ void main() {
     test(
         'Phase 1: Magic items (Headband of Intellect) affect effective scores but NOT multiclassing prerequisites',
         () {
-      const headbandItem = InventoryItemInstance(
+      final headbandItem = InventoryItemInstance(
         instanceId: 'item-headband-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'headband-of-intellect',
           displayName: 'Headband of Intellect',
@@ -86,7 +86,7 @@ void main() {
 
       final barbarian = createBarbarian(
         baseInt: 8,
-        inventory: const [headbandItem],
+        inventory: [headbandItem],
       );
 
       // Raw INT should remain 8, but Effective INT becomes 19
@@ -313,15 +313,15 @@ void main() {
     test(
         'Phase 5: Deep immutability enforces unmodifiable collections and value equality',
         () {
-      const initialChar = Character(
-        id: EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2014),
+      final initialChar = Character(
+        id: const EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2014),
         name: 'Hero',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>(
@@ -335,12 +335,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(),
+        resources: const CharacterResourcePool(),
         inventory: [
           InventoryItemInstance(
             instanceId: 'item-dagger',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'dagger',
               displayName: 'Dagger',
@@ -358,9 +358,9 @@ void main() {
           throwsA(isA<UnsupportedError>()));
       expect(
           () => (updatedChar.inventory as dynamic).add(
-                const InventoryItemInstance(
+                InventoryItemInstance(
                   instanceId: 'item-2',
-                  itemRef: EntityReference<EquipmentItem>(
+                  itemRef: const EntityReference<EquipmentItem>(
                     refType: EntityType.equipment,
                     slug: 'shortsword',
                     displayName: 'Shortsword',

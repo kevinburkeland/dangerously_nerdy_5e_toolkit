@@ -18,20 +18,20 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
 
-      baseCharacter = const Character(
-        id: EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
+      baseCharacter = Character(
+        id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
         name: 'Valerius',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference<DomainEntity>(
+        backgroundRef: const EntityReference<DomainEntity>(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>(
@@ -45,7 +45,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 16, // Mod +3
           dexterity: 14, // Mod +2
           constitution: 14, // Mod +2
@@ -56,7 +56,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-1',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'plate-armor',
               displayName: 'Plate Armor',
@@ -70,7 +70,7 @@ void main() {
           ),
           InventoryItemInstance(
             instanceId: 'ring-1',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'ring-prot',
               displayName: 'Ring of Protection',
@@ -83,7 +83,7 @@ void main() {
             },
           ),
         ],
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 28,
           tempHp: 0,
           currentHitDice: {'d10': 3},

@@ -176,12 +176,12 @@ void main() {
       repo.addLayer(baseLayer);
       final resolver = ReferenceResolver(repo);
 
-      const wizard = Character(
-        id: EntityId(slug: 'fragile_wizard', ruleset: RulesetVersion.v2024),
+      final wizard = Character(
+        id: const EntityId(slug: 'fragile_wizard', ruleset: RulesetVersion.v2024),
         name: 'Kaelen',
-        speciesRef: EntityReference(
+        speciesRef: const EntityReference(
             refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
                 refType: EntityType.classDefinition,
@@ -193,7 +193,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 8,
           dexterity: 14,
           constitution: 10, // +0 mod
@@ -204,7 +204,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'item_amulet_1',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
                 refType: EntityType.equipment,
                 slug: 'amulet_of_health',
                 displayName: 'Amulet of Health'),
@@ -213,7 +213,7 @@ void main() {
             requiresAttunement: true,
           ),
         ],
-        resources: CharacterResourcePool(currentHp: 18),
+        resources: const CharacterResourcePool(currentHp: 18),
       );
 
       final stats = CharacterStatCalculator.compute(wizard, resolver);
@@ -457,10 +457,10 @@ void main() {
       const strategy = Ruleset2014Strategy();
 
       // STR 10: Carry Capacity = 150 lbs, Encumbered > 50 lbs, Heavily Encumbered > 100 lbs
-      const inventory = [
+      final inventory = [
         InventoryItemInstance(
           instanceId: 'armor_plate',
-          itemRef: EntityReference(
+          itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'plate',
               displayName: 'Plate Armor'),

@@ -75,9 +75,9 @@ void main() {
     });
 
     test('Light Armor: Leather base 11 + full DEX mod', () {
-      const leatherArmor = InventoryItemInstance(
+      final leatherArmor = InventoryItemInstance(
         instanceId: 'armor-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'leather-armor',
           displayName: 'Leather Armor',
@@ -96,9 +96,9 @@ void main() {
     });
 
     test('Medium Armor: Scale Mail base 14 + DEX capped at +2', () {
-      const scaleMail = InventoryItemInstance(
+      final scaleMail = InventoryItemInstance(
         instanceId: 'armor-2',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'scale-mail',
           displayName: 'Scale Mail',
@@ -118,9 +118,9 @@ void main() {
     });
 
     test('Heavy Armor: Plate base 18 ignores DEX mod', () {
-      const plate = InventoryItemInstance(
+      final plate = InventoryItemInstance(
         instanceId: 'armor-3',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'plate-armor',
           displayName: 'Plate Armor',
@@ -139,9 +139,9 @@ void main() {
     });
 
     test('Shield adds +2 to AC', () {
-      const plate = InventoryItemInstance(
+      final plate = InventoryItemInstance(
         instanceId: 'armor-3',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'plate-armor',
           displayName: 'Plate Armor',
@@ -154,9 +154,9 @@ void main() {
         },
       );
 
-      const shield = InventoryItemInstance(
+      final shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'shield',
           displayName: 'Shield',
@@ -175,9 +175,9 @@ void main() {
     });
 
     test('Equipping two-handed weapon auto-unequips shield and offhand', () {
-      const longsword = InventoryItemInstance(
+      final longsword = InventoryItemInstance(
         instanceId: 'weapon-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: 'longsword',
             displayName: 'Longsword'),
@@ -185,9 +185,9 @@ void main() {
         equippedSlot: EquipmentSlot.mainHand,
       );
 
-      const shield = InventoryItemInstance(
+      final shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: 'shield',
             displayName: 'Shield'),
@@ -195,9 +195,9 @@ void main() {
         equippedSlot: EquipmentSlot.shield,
       );
 
-      const greatsword = InventoryItemInstance(
+      final greatsword = InventoryItemInstance(
         instanceId: 'weapon-2',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: 'greatsword',
             displayName: 'Greatsword'),

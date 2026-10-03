@@ -68,15 +68,15 @@ void main() {
   late CharacterSheetController controller;
 
   setUp(() {
-    testCharacter = const Character(
-      id: EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
+    testCharacter = Character(
+      id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
       name: 'Valeros',
-      speciesRef: EntityReference<DomainEntity>(
+      speciesRef: const EntityReference<DomainEntity>(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
       ),
-      progression: CharacterProgression(
+      progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
             classRef: EntityReference<DomainEntity>(
@@ -90,7 +90,7 @@ void main() {
           ),
         ],
       ),
-      baseScores: AbilityScores(
+      baseScores: const AbilityScores(
         strength: 16,
         dexterity: 14,
         constitution: 14,
@@ -98,7 +98,7 @@ void main() {
         wisdom: 12,
         charisma: 8,
       ),
-      resources: CharacterResourcePool(
+      resources: const CharacterResourcePool(
         currentHp: 10,
         tempHp: 4,
         currentHitDice: {'d10': 1},
@@ -109,7 +109,7 @@ void main() {
       inventory: [
         InventoryItemInstance(
           instanceId: 'item-1',
-          itemRef: EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: 'ring-of-protection',
             displayName: 'Ring of Protection',
@@ -119,7 +119,7 @@ void main() {
         ),
         InventoryItemInstance(
           instanceId: 'item-2',
-          itemRef: EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: 'cloak-of-elvenkind',
             displayName: 'Cloak of Elvenkind',
@@ -129,7 +129,7 @@ void main() {
         ),
         InventoryItemInstance(
           instanceId: 'item-3',
-          itemRef: EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: 'boots-of-speed',
             displayName: 'Boots of Speed',
@@ -139,7 +139,7 @@ void main() {
         ),
         InventoryItemInstance(
           instanceId: 'item-4',
-          itemRef: EntityReference<EquipmentItem>(
+          itemRef: const EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: 'amulet-of-health',
             displayName: 'Amulet of Health',

@@ -332,9 +332,9 @@ void main() {
         name: 'Chest',
         purse: PartyPurse(gp: 50),
         items: [
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'item_1',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               slug: 'potion',
               refType: EntityType.equipment,
               displayName: 'Potion',
@@ -456,9 +456,9 @@ void main() {
         name: 'Chest Inv',
         purse: PartyPurse(gp: 50),
         items: [
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'item_inv_1',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               slug: 'potion',
               refType: EntityType.equipment,
               displayName: 'Potion',

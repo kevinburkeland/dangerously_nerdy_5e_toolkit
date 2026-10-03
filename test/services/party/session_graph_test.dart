@@ -152,9 +152,9 @@ void main() {
         containerId: 'chest-crypt',
         name: 'Gilded Sarcophagus Chest',
         items: [
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'item-ruby',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'ruby-of-the-war-mage',
               displayName: 'Ruby of the War Mage',

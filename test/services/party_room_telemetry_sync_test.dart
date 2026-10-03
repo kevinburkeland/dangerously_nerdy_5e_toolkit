@@ -64,18 +64,18 @@ void main() {
           'featuresMarkdown': longFeatures,
         },
         inventory: [
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'staff-1',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'staff-of-the-magi',
               displayName: 'Staff of the Magi',
             ),
             isEquipped: true,
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'robe-1',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'robe-of-the-archmagi',
               displayName: 'Robe of the Archmagi',

@@ -98,16 +98,16 @@ void main() {
         'CharacterEvaluationEngine calculates AC for bare Breastplate with DEX capping at +2',
         () {
       // Character with 18 DEX (+4 mod) wearing Breastplate (bare instance, no customProperties)
-      const character = Character(
-        id: EntityId(slug: 'hero-ranger', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'hero-ranger', ruleset: RulesetVersion.v2024),
         name: 'Ranger',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        resources: CharacterResourcePool(currentHp: 10),
-        progression: CharacterProgression(
+        resources: const CharacterResourcePool(currentHp: 10),
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>(
@@ -120,7 +120,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 18,
           constitution: 14,
@@ -131,7 +131,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'bp-inst',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'breastplate',
               displayName: 'Breastplate',
@@ -230,9 +230,9 @@ void main() {
     test(
         'InventoryTransactionService assigns two-handed slot to shortbow and light crossbow',
         () {
-      const shortbow = InventoryItemInstance(
+      final shortbow = InventoryItemInstance(
         instanceId: 'sb-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'shortbow',
           displayName: 'Shortbow',
@@ -241,9 +241,9 @@ void main() {
       expect(InventoryTransactionService.resolveDefaultSlot(shortbow),
           equals(EquipmentSlot.twoHand));
 
-      const lightXbow = InventoryItemInstance(
+      final lightXbow = InventoryItemInstance(
         instanceId: 'lxb-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'light-crossbow',
           displayName: 'Light Crossbow',

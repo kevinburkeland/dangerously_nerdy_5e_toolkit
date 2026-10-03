@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import '../../infrastructure/dtos/character_telemetry_dto.dart';
-import 'party_purse.dart';
 
 /// Root campaign room document state stored at /rooms/{roomCode}
 class PartySessionState {
@@ -36,8 +36,7 @@ class PartySessionState {
         characterRoster = List<String>.unmodifiable(characterRoster),
         sharedCharacters = Map<String, Map<String, dynamic>>.unmodifiable(
             sharedCharacters.map(
-          (k, v) => MapEntry(
-              k, Map<String, dynamic>.unmodifiable(Map<String, dynamic>.from(v))),
+          (k, v) => MapEntry(k, deepFreezeMap(v)),
         )),
         partyTelemetry = Map<String, CharacterTelemetryDto>.unmodifiable(
             Map<String, CharacterTelemetryDto>.from(partyTelemetry));

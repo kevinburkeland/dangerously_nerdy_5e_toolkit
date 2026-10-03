@@ -123,5 +123,72 @@ void main() {
       expect(() => (copied.activePlayers as dynamic).add('Eve'),
           throwsUnsupportedError);
     });
+
+    test(
+        'Realistic PartySessionState.sharedCharacters deep nested immutability & anti-aliasing',
+        () {
+      final itemProps = <String, dynamic>{
+        'magic': false,
+      };
+      final itemMap = <String, dynamic>{
+        'name': 'Sword',
+        'properties': itemProps,
+      };
+      final inventoryList = <dynamic>[itemMap];
+      final resourcesMap = <String, dynamic>{
+        'hp': 20,
+      };
+      final characterData = <String, dynamic>{
+        'name': 'Aragorn',
+        'resources': resourcesMap,
+        'inventory': inventoryList,
+      };
+
+      final shared = <String, Map<String, dynamic>>{
+        'char-1': characterData,
+      };
+
+      final state = PartySessionState(
+        roomCode: 'ROOM1',
+        campaignName: 'Fellowship',
+        hostKeyHash: 'hash',
+        sharedCharacters: shared,
+        lastUpdated: DateTime(2026, 1, 1),
+        expiresAt: DateTime(2026, 1, 2),
+      );
+
+      // Mutate external nested maps and lists after construction
+      resourcesMap['hp'] = 999;
+      itemProps['magic'] = true;
+      itemMap['name'] = 'Broken Hilt';
+      inventoryList.add({'name': 'Shield'});
+      shared['char-2'] = {'name': 'Legolas'};
+
+      // Verify PartySessionState remains completely unmodified
+      final storedChar = state.sharedCharacters['char-1']!;
+      expect(storedChar['name'], 'Aragorn');
+      expect((storedChar['resources'] as Map)['hp'], 20);
+
+      final storedInventory = storedChar['inventory'] as List;
+      expect(storedInventory.length, 1);
+      final storedItem = storedInventory.first as Map;
+      expect(storedItem['name'], 'Sword');
+      expect((storedItem['properties'] as Map)['magic'], false);
+      expect(state.sharedCharacters.containsKey('char-2'), isFalse);
+
+      // Verify nested collections cannot be mutated through the public object
+      expect(
+        () => (storedChar['resources'] as Map)['hp'] = 999,
+        throwsUnsupportedError,
+      );
+      expect(
+        () => (storedChar['inventory'] as List).clear(),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => (storedItem['properties'] as Map)['magic'] = true,
+        throwsUnsupportedError,
+      );
+    });
   });
 }

@@ -15,9 +15,9 @@ void main() {
     test(
         'InventoryTransactionService.resolveDefaultSlot correctly classifies Plate Armor +3 as armor',
         () {
-      const plateItem = InventoryItemInstance(
+      final plateItem = InventoryItemInstance(
         instanceId: 'plate-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'plate-plus-3',
           displayName: 'Plate Armor +3',
@@ -31,9 +31,9 @@ void main() {
     test(
         'InventoryTransactionService.resolveDefaultSlot classifies weapons, shields, and rings properly',
         () {
-      const shield = InventoryItemInstance(
+      final shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'shield-plus-1',
           displayName: 'Shield +1',
@@ -42,9 +42,9 @@ void main() {
       expect(InventoryTransactionService.resolveDefaultSlot(shield),
           equals(EquipmentSlot.shield));
 
-      const sword = InventoryItemInstance(
+      final sword = InventoryItemInstance(
         instanceId: 'sword-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'longsword',
           displayName: 'Longsword +1',
@@ -53,9 +53,9 @@ void main() {
       expect(InventoryTransactionService.resolveDefaultSlot(sword),
           equals(EquipmentSlot.mainHand));
 
-      const greatsword = InventoryItemInstance(
+      final greatsword = InventoryItemInstance(
         instanceId: 'gs-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'greatsword',
           displayName: 'Greatsword',
@@ -64,9 +64,9 @@ void main() {
       expect(InventoryTransactionService.resolveDefaultSlot(greatsword),
           equals(EquipmentSlot.twoHand));
 
-      const ring = InventoryItemInstance(
+      final ring = InventoryItemInstance(
         instanceId: 'ring-1',
-        itemRef: EntityReference<EquipmentItem>(
+        itemRef: const EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'ring-of-protection',
           displayName: 'Ring of Protection',
@@ -92,15 +92,15 @@ void main() {
     test(
         'Equipping Plate Armor +3 calculates AC 21 and does NOT generate a weapon attack profile',
         () {
-      const baseCharacter = Character(
-        id: EntityId(slug: 'test-knight', ruleset: RulesetVersion.v2024),
+      final baseCharacter = Character(
+        id: const EntityId(slug: 'test-knight', ruleset: RulesetVersion.v2024),
         name: 'Sir Galahad',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>(
@@ -114,8 +114,8 @@ void main() {
           ],
         ),
         rulesEdition: DmRulesEdition.v2024,
-        resources: CharacterResourcePool(currentHp: 10),
-        baseScores: AbilityScores(
+        resources: const CharacterResourcePool(currentHp: 10),
+        baseScores: const AbilityScores(
           strength: 16,
           dexterity: 14,
           constitution: 14,
@@ -126,7 +126,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-plus-3-inst',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'plate-plus-3',
               displayName: 'Plate Armor +3',
@@ -157,15 +157,15 @@ void main() {
     test(
         'Plate Armor +3 without explicit customProperties still resolves standard armor base AC 18 and +3 bonus',
         () {
-      const baseCharacter = Character(
-        id: EntityId(slug: 'test-knight-2', ruleset: RulesetVersion.v2024),
+      final baseCharacter = Character(
+        id: const EntityId(slug: 'test-knight-2', ruleset: RulesetVersion.v2024),
         name: 'Sir Lancelot',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>(
@@ -179,8 +179,8 @@ void main() {
           ],
         ),
         rulesEdition: DmRulesEdition.v2024,
-        resources: CharacterResourcePool(currentHp: 10),
-        baseScores: AbilityScores(
+        resources: const CharacterResourcePool(currentHp: 10),
+        baseScores: const AbilityScores(
           strength: 16,
           dexterity: 12,
           constitution: 14,
@@ -191,7 +191,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-plus-3-bare',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'plate-plus-3',
               displayName: 'Plate Armor +3',
@@ -212,15 +212,15 @@ void main() {
     test(
         'CharacterSheetController.toggleEquipItem equips Plate Armor +3 into EquipmentSlot.armor',
         () async {
-      const baseCharacter = Character(
-        id: EntityId(slug: 'controller-knight', ruleset: RulesetVersion.v2024),
+      final baseCharacter = Character(
+        id: const EntityId(slug: 'controller-knight', ruleset: RulesetVersion.v2024),
         name: 'Dame Brienne',
-        speciesRef: EntityReference<DomainEntity>(
+        speciesRef: const EntityReference<DomainEntity>(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>(
@@ -234,8 +234,8 @@ void main() {
           ],
         ),
         rulesEdition: DmRulesEdition.v2024,
-        resources: CharacterResourcePool(currentHp: 10),
-        baseScores: AbilityScores(
+        resources: const CharacterResourcePool(currentHp: 10),
+        baseScores: const AbilityScores(
           strength: 18,
           dexterity: 10,
           constitution: 16,
@@ -246,7 +246,7 @@ void main() {
         inventory: [
           InventoryItemInstance(
             instanceId: 'plate-3-ctrl',
-            itemRef: EntityReference<EquipmentItem>(
+            itemRef: const EntityReference<EquipmentItem>(
               refType: EntityType.equipment,
               slug: 'plate-plus-3',
               displayName: 'Plate Armor +3',

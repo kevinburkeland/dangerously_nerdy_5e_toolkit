@@ -29,9 +29,9 @@ void main() {
         ]),
         baseScores: const AbilityScores.standardArray(),
         inventory: [
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-sword',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'longsword',
               displayName: 'Longsword',
@@ -39,9 +39,9 @@ void main() {
             isEquipped: true,
             equippedSlot: EquipmentSlot.mainHand,
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-shield',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'shield',
               displayName: 'Shield',
@@ -49,18 +49,18 @@ void main() {
             isEquipped: true,
             equippedSlot: EquipmentSlot.shield,
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-greatsword',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'greatsword',
               displayName: 'Greatsword',
             ),
             isEquipped: false,
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-ring1',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'ring-1',
               displayName: 'Ring of Warmth',
@@ -68,9 +68,9 @@ void main() {
             requiresAttunement: true,
             isAttuned: false,
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-ring2',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'ring-2',
               displayName: 'Ring of Feather Falling',
@@ -78,9 +78,9 @@ void main() {
             requiresAttunement: true,
             isAttuned: true,
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-ring3',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'ring-3',
               displayName: 'Ring of Mind Shielding',
@@ -88,9 +88,9 @@ void main() {
             requiresAttunement: true,
             isAttuned: true,
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-ring4',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'ring-4',
               displayName: 'Ring of Invisibility',
@@ -158,9 +158,9 @@ void main() {
       final charWithWondrous = baseCharacter.copyWith(
         inventory: [
           ...baseCharacter.inventory,
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-bag-of-holding',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'bag-of-holding',
               displayName: 'Bag of Holding',
@@ -168,9 +168,9 @@ void main() {
             isEquipped: false,
             customProperties: {'category': 'wondrous'},
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-periapt',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'periapt-of-wound-closure',
               displayName: 'Periapt of Wound Closure',
@@ -178,9 +178,9 @@ void main() {
             isEquipped: false,
             customProperties: {'category': 'wondrous'},
           ),
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'inst-bracers',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'bracers-of-defense',
               displayName: 'Bracers of Defense',
@@ -273,9 +273,9 @@ void main() {
         containerId: 'chest-01',
         name: 'Dungeon Chest',
         items: [
-          const InventoryItemInstance(
+          InventoryItemInstance(
             instanceId: 'chest-item-potion',
-            itemRef: EntityReference(
+            itemRef: const EntityReference(
               refType: EntityType.equipment,
               slug: 'potion-of-healing',
               displayName: 'Potion of Healing',

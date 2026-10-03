@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:meta/meta.dart';
+import 'package:vtt_engine_core/utils/deep_immutable.dart';
 import '../../models/domain/character_models.dart';
 
 /// Lightweight pointer representing a single class progression level.
@@ -109,8 +110,7 @@ class CharacterTelemetryDto {
         spellSlots = Map.unmodifiable(Map<String, int>.from(spellSlots)),
         featSlugs = List.unmodifiable(featSlugs),
         equippedItemSlugs = List.unmodifiable(equippedItemSlugs),
-        unparsedPayload =
-            Map.unmodifiable(Map<String, dynamic>.from(unparsedPayload)),
+        unparsedPayload = deepFreezeMap(unparsedPayload),
         currentHp = currentHp.clamp(0, 999),
         maxHp = maxHp.clamp(1, 999),
         tempHp = tempHp.clamp(0, 999),
@@ -568,7 +568,7 @@ extension CharacterTelemetryDtoX on Character {
       armorClass: queryStat('ac'),
       speed: baseSpeedFeet,
       level: totalLevel,
-      passivePerception: passivePerc,
+      passivePerception: passivePerc.toInt(),
       exhaustionLevel: resources.exhaustionLevel,
       deathSaveSuccesses: resources.deathSaveSuccesses,
       deathSaveFailures: resources.deathSaveFailures,
