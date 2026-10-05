@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/utils/crypto_utils.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/party/campaign_dialogs.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -60,9 +61,12 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
       partyService = PartyRoomService.newInstance(
+        replicaId: ReplicaId('claim_dm_passkey_replica'),
         registry: registry,
         diceRoomService: diceService,
       );
+      PartyRoomService.setCustomInstanceForTesting(partyService);
+      addTearDown(PartyRoomService.resetCustomInstanceForTesting);
     });
 
     testWidgets('Renders ClaimDmPasskeyDialog with inputs and ChoiceChips',
@@ -110,6 +114,7 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
       // Separate player registry
       final playerRegistry = CampaignRegistryService.newInstance();
       PartyRoomService.newInstance(
+        replicaId: ReplicaId('claim_dm_passkey_player_replica'),
         registry: playerRegistry,
         diceRoomService: diceService,
       );

@@ -75,7 +75,7 @@ class DmDashboardController extends ChangeNotifier {
                     combatResolver: sl.isRegistered<ICombatResolver>()
                         ? sl<ICombatResolver>()
                         : const Dnd5eCombatResolver(),
-                    localNodeId: replicaId.value,
+                    replicaId: replicaId,
                   )),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()

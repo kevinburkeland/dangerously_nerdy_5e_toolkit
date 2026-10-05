@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -48,12 +49,14 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      final testReplica = ReplicaId('campaign_link_test_replica');
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
       characterService = CharacterPersistenceService();
-      campaignProfileService = CampaignProfileService();
+      campaignProfileService = CampaignProfileService(replicaId: testReplica);
 
       partyService = PartyRoomService.newInstance(
+        replicaId: testReplica,
         registry: registry,
         diceRoomService: diceService,
         characterPersistenceService: characterService,

@@ -15,6 +15,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/fluff/entity_fluff_service
 import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_importer_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
@@ -25,6 +27,7 @@ void main() {
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      CampaignProfileService(replicaId: ReplicaId('homebrew_export_test_replica'));
       persistence = HomebrewPersistenceService();
       SrdSpeciesLibrary.setCustomSpecies([]);
       SrdSpeciesLibrary.setCustomSubraces([]);

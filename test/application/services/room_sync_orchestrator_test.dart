@@ -390,7 +390,7 @@ void main() {
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
         isHost: true,
-        hostNodeId: 'dm-host-prime',
+        replicaId: ReplicaId('dm-host-prime'),
         milestoneInterval: const Duration(milliseconds: 100),
       );
 
@@ -741,7 +741,7 @@ void main() {
         clockSyncService: clockSyncService,
         localTimeProvider: () => now,
         isHost: true,
-        hostNodeId: 'dm-host-1',
+        replicaId: ReplicaId('dm-host-1'),
         heartbeatTtl: const Duration(seconds: 10), // lookback = 20,000 ms
       );
 
@@ -785,7 +785,7 @@ void main() {
         clockSyncService: clockSyncService,
         localTimeProvider: () => simulatedNow,
         isHost: true,
-        hostNodeId: 'dm-host-1',
+        replicaId: ReplicaId('dm-host-1'),
         heartbeatTtl: const Duration(seconds: 10),
       );
 
@@ -984,19 +984,8 @@ void main() {
     });
 
     test(
-        'Eliminate Static Node Identity: constructor throws StateError when replica identity is missing',
+        'Eliminate Static Node Identity: constructor requires explicit ReplicaId',
         () {
-      sl.reset();
-      expect(
-        () => RoomSyncOrchestrator(
-          transportPort: mockWebRtc,
-          campaignRepo: mockRepo,
-          reconciliationService: reconciliationService,
-          clockSyncService: clockSyncService,
-        ),
-        throwsStateError,
-      );
-
       final orch1 = RoomSyncOrchestrator(
         replicaId: ReplicaId('explicit_orch_1'),
         transportPort: mockWebRtc,
@@ -1004,6 +993,7 @@ void main() {
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
       );
+      expect(orch1.replicaId, equals(ReplicaId('explicit_orch_1')));
       expect(orch1.localNodeId, equals('explicit_orch_1'));
     });
 
@@ -1016,7 +1006,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: throwingReconciliation,
         clockSyncService: clockSyncService,
-        localNodeId: 'test-node-local',
+        replicaId: ReplicaId('test-node-local'),
       );
 
       SyncErrorEvent? receivedError;

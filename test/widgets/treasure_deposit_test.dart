@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/tables/treasure_hoard_view.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_currency_system.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +28,12 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       registry = CampaignRegistryService();
-      partyService = PartyRoomService();
+      partyService = PartyRoomService.newInstance(
+        replicaId: ReplicaId('treasure_deposit_replica'),
+        registry: registry,
+      );
+      PartyRoomService.setCustomInstanceForTesting(partyService);
+      addTearDown(PartyRoomService.resetCustomInstanceForTesting);
     });
 
     testWidgets('Depositing generated hoard into connected campaign vault',

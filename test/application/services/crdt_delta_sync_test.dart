@@ -151,7 +151,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
-        hostNodeId: 'node-orchestrator',
+        replicaId: ReplicaId('node-orchestrator'),
         payloadMapper: const RoomSyncPayloadMapper(),
       );
     });

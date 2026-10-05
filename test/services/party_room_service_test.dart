@@ -6,6 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,7 @@ void main() {
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
       partyService = PartyRoomService.newInstance(
+        replicaId: ReplicaId('party_service_test_replica'),
         registry: registry,
         diceRoomService: diceService,
       );

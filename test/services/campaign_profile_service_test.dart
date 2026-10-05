@@ -10,6 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -180,6 +181,9 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       AppServices.reset();
+      CampaignProfileService(
+        replicaId: ReplicaId('campaign_profile_test_replica'),
+      );
     });
 
     test('loadAllProfiles creates default My Campaign when storage is empty',

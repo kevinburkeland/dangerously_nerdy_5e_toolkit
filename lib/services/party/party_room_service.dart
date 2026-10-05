@@ -119,10 +119,6 @@ class PartyRoomService {
     if (sl.isRegistered<PartyRoomService>()) {
       return sl<PartyRoomService>();
     }
-    if (sl.isRegistered<ReplicaId>()) {
-      _customInstance = PartyRoomService._internal(replicaId: sl<ReplicaId>());
-      return _customInstance!;
-    }
     throw StateError(
       'PartyRoomService requires an authoritative ReplicaId. '
       'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
@@ -131,16 +127,14 @@ class PartyRoomService {
 
   factory PartyRoomService({
     ReplicaId? replicaId,
-    @Deprecated('Use replicaId instead') String? localNodeId,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
   }) {
-    if (replicaId != null || localNodeId != null) {
+    if (replicaId != null) {
       return PartyRoomService._internal(
         replicaId: replicaId,
-        localNodeId: localNodeId,
         registry: registry,
         diceRoomService: diceRoomService,
         characterPersistenceService: characterPersistenceService,
@@ -157,29 +151,13 @@ class PartyRoomService {
   final CharacterPersistenceService _characterPersistenceService;
   final CampaignProfileService _campaignProfileService;
 
-  static ReplicaId _resolveReplicaId(ReplicaId? replicaId, String? localNodeId) {
-    if (replicaId != null) return replicaId;
-    if (localNodeId != null &&
-        localNodeId.trim().isNotEmpty &&
-        localNodeId.trim().toLowerCase() != 'local') {
-      return ReplicaId(localNodeId.trim());
-    }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
-    throw StateError(
-      'PartyRoomService requires an authoritative ReplicaId. '
-      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
-    );
-  }
-
   PartyRoomService._internal({
-    ReplicaId? replicaId,
-    @Deprecated('Use replicaId instead') String? localNodeId,
+    required this.replicaId,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : replicaId = _resolveReplicaId(replicaId, localNodeId),
-        _registry = registry ?? CampaignRegistryService(),
+  })  : _registry = registry ?? CampaignRegistryService(),
         _diceRoomService = diceRoomService ?? DiceRoomService(),
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
@@ -189,12 +167,15 @@ class PartyRoomService {
   @visibleForTesting
   PartyRoomService.newInstance({
     ReplicaId? replicaId,
-    @Deprecated('Use replicaId instead') String? localNodeId,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : replicaId = _resolveReplicaId(replicaId, localNodeId),
+  })  : replicaId = replicaId ??
+            (throw StateError(
+              'PartyRoomService requires an authoritative ReplicaId. '
+              'Pass replicaId explicitly.',
+            )),
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),
@@ -208,6 +189,11 @@ class PartyRoomService {
 
   static void resetCustomInstanceForTesting() {
     _customInstance = null;
+  }
+
+  @visibleForTesting
+  static void setCustomInstanceForTesting(PartyRoomService? instance) {
+    _customInstance = instance;
   }
 
   bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;

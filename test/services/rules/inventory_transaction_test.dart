@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/loot_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/inventory_transaction_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   group('InventoryTransactionService Tests', () {
@@ -293,7 +294,7 @@ void main() {
         instanceId: 'chest-item-potion',
         quantity: 2,
         currency: PartyPurse(gp: 40),
-        nodeId: 'test_node_loot',
+        replicaId: ReplicaId('test_node_loot'),
       );
 
       // Chest has 1 potion left and 60 gp
@@ -305,6 +306,62 @@ void main() {
       expect(transferredItem.itemRef.slug, equals('potion-of-healing'));
       expect(transferredItem.quantity, equals(2));
       expect(result.updatedCharacter.purse.gp, equals(90));
+    });
+
+    test(
+        'Currency-bearing transfer requires typed ReplicaId and throws StateError if omitted',
+        () {
+      final chest = LootContainer(
+        containerId: 'chest_req_test',
+        name: 'Iron Chest',
+        items: [
+          InventoryItemInstance(
+            instanceId: 'chest-item-1',
+            itemRef: const EntityReference.empty(
+              slug: 'potion-of-healing',
+              refType: EntityType.item,
+              displayName: 'Potion of Healing',
+            ),
+            quantity: 2,
+          ),
+        ],
+        purse: PartyPurse(gp: 100),
+      );
+
+      // transferFromContainerToCharacter with currency and null replicaId
+      expect(
+        () => InventoryTransactionService.transferFromContainerToCharacter(
+          sourceContainer: chest,
+          destinationCharacter: baseCharacter,
+          instanceId: 'chest-item-1',
+          currency: PartyPurse(gp: 10),
+          replicaId: null,
+        ),
+        throwsStateError,
+      );
+
+      // transferFromCharacterToContainer with currency and null replicaId
+      expect(
+        () => InventoryTransactionService.transferFromCharacterToContainer(
+          sourceCharacter: baseCharacter,
+          destinationContainer: chest,
+          instanceId: 'base-item-1',
+          currency: PartyPurse(gp: 10),
+          replicaId: null,
+        ),
+        throwsStateError,
+      );
+
+      // Item-only transfer without currency succeeds even with null replicaId
+      final itemOnlyResult =
+          InventoryTransactionService.transferFromContainerToCharacter(
+        sourceContainer: chest,
+        destinationCharacter: baseCharacter,
+        instanceId: 'chest-item-1',
+        quantity: 1,
+        replicaId: null,
+      );
+      expect(itemOnlyResult.updatedContainer.items.first.quantity, equals(1));
     });
   });
 }

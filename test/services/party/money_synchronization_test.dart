@@ -51,6 +51,12 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
+    CampaignProfileService(replicaId: ReplicaId('money_sync_replica'));
+    final partyService = PartyRoomService.newInstance(
+      replicaId: ReplicaId('money_sync_replica'),
+    );
+    PartyRoomService.setCustomInstanceForTesting(partyService);
+    addTearDown(PartyRoomService.resetCustomInstanceForTesting);
   });
 
   group('Money Synchronization Tests', () {

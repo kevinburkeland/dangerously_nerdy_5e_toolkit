@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
@@ -15,14 +16,15 @@ import '../../services/rules/character_evaluation_engine.dart';
 class CombatEncounterService {
   final ICharacterRepository characterRepo;
   final ICampaignRepository campaignRepo;
-  final String localNodeId;
+  final ReplicaId replicaId;
+  String get localNodeId => replicaId.value;
   final ICombatResolver combatResolver;
   final int Function() _networkTimeProvider;
 
   CombatEncounterService({
     required this.characterRepo,
     required this.campaignRepo,
-    required this.localNodeId,
+    required this.replicaId,
     required this.combatResolver,
     int Function()? networkTimeProvider,
   }) : _networkTimeProvider = networkTimeProvider ??
@@ -160,7 +162,7 @@ class CombatEncounterService {
         ? currentMinion.applyDamage(delta.abs())
         : currentMinion.applyHealing(delta);
     final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp;
-    final hlc = _nextHlc(nodeId: localNodeId, previousClock: prevTs);
+    final hlc = _nextHlc(previousClock: prevTs);
     final updatedMinions =
         profile.roomState.activeMinions.add(minionId, updated, hlc);
     final updatedRoom =
@@ -179,7 +181,7 @@ class CombatEncounterService {
     final prevTs =
         profile.roomState.activeMinions.items[minion.id]?.timestamp ??
             profile.roomState.activeMinions.tombstones[minion.id];
-    final hlc = _nextHlc(nodeId: localNodeId, previousClock: prevTs);
+    final hlc = _nextHlc(previousClock: prevTs);
     final updatedMinions =
         profile.roomState.activeMinions.add(minion.id, minion, hlc);
     final updatedRoom =
@@ -197,7 +199,7 @@ class CombatEncounterService {
   }) async {
     final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp ??
         profile.roomState.activeMinions.tombstones[minionId];
-    final hlc = _nextHlc(nodeId: localNodeId, previousClock: prevTs);
+    final hlc = _nextHlc(previousClock: prevTs);
     final updatedMinions =
         profile.roomState.activeMinions.remove(minionId, hlc);
     final updatedRoom =
@@ -209,22 +211,20 @@ class CombatEncounterService {
   }
 
   HybridLogicalClock _nextHlc({
-    String? nodeId,
     HybridLogicalClock? previousClock,
   }) {
-    final effectiveNodeId = nodeId ?? localNodeId;
     final nowMs = _networkTimeProvider();
     if (previousClock != null && previousClock.physicalTime >= nowMs) {
       return HybridLogicalClock(
         physicalTime: previousClock.physicalTime,
         logicalCounter: previousClock.logicalCounter + 1,
-        nodeId: effectiveNodeId,
+        nodeId: localNodeId,
       );
     }
     return HybridLogicalClock(
       physicalTime: nowMs,
       logicalCounter: 0,
-      nodeId: effectiveNodeId,
+      nodeId: localNodeId,
     );
   }
 
@@ -357,7 +357,7 @@ class CombatEncounterService {
           (lastClock != null && (prevTs == null || lastClock.isAfter(prevTs)))
               ? lastClock
               : prevTs;
-      final hlc = _nextHlc(nodeId: localNodeId, previousClock: base);
+      final hlc = _nextHlc(previousClock: base);
       lastClock = hlc;
       updatedEncounter = updatedEncounter.remove(id, hlc);
     }
@@ -368,7 +368,7 @@ class CombatEncounterService {
           (lastClock != null && (prevTs == null || lastClock.isAfter(prevTs)))
               ? lastClock
               : prevTs;
-      final hlc = _nextHlc(nodeId: localNodeId, previousClock: base);
+      final hlc = _nextHlc(previousClock: base);
       lastClock = hlc;
       updatedEncounter = updatedEncounter.add(p.participantId, p, hlc);
     }

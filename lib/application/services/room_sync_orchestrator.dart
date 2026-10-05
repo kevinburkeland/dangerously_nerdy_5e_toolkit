@@ -72,24 +72,6 @@ class RoomSyncOrchestrator {
   /// Reactive stream broadcasting sync errors, dead letters, and schema mismatches.
   Stream<SyncErrorEvent> get deadLetterStream => _deadLetterController.stream;
 
-  static ReplicaId _resolveReplicaId(
-    ReplicaId? replicaId,
-    String? localNodeId,
-    String? hostNodeId,
-  ) {
-    if (replicaId != null) return replicaId;
-    final candidate = localNodeId ?? hostNodeId;
-    if (candidate != null &&
-        candidate.trim().isNotEmpty &&
-        candidate.trim().toLowerCase() != 'local') {
-      return ReplicaId(candidate.trim());
-    }
-    throw StateError(
-      'RoomSyncOrchestrator requires an authoritative ReplicaId. '
-      'Ensure initServiceLocator() has completed or inject replicaId explicitly.',
-    );
-  }
-
   RoomSyncOrchestrator({
     IP2pTransportPort? transportPort,
     CascadingTransportRouter? router,
@@ -100,14 +82,11 @@ class RoomSyncOrchestrator {
     IRoomSyncPayloadPort? payloadMapper,
     int Function()? localTimeProvider,
     this.isHost = false,
-    ReplicaId? replicaId,
-    @Deprecated('Use replicaId instead') String? localNodeId,
-    @Deprecated('Use replicaId instead') String? hostNodeId,
+    required this.replicaId,
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
     Duration? heartbeatTtl,
-  })  : replicaId = _resolveReplicaId(replicaId, localNodeId, hostNodeId),
-        transportPort = transportPort ?? router!,
+  })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         payloadMapper = payloadMapper ??
             IRoomSyncPayloadPort.defaultProvider?.call() ??

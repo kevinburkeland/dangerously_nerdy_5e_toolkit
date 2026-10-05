@@ -5,6 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart'
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
@@ -126,7 +127,7 @@ void main() {
       service = CombatEncounterService(
         characterRepo: charRepo,
         campaignRepo: campaignRepo,
-        localNodeId: 'node-test-1',
+        replicaId: ReplicaId('node-test-1'),
         combatResolver: const Dnd5eCombatResolver(),
       );
 
@@ -520,7 +521,7 @@ void main() {
       final timedService = CombatEncounterService(
         characterRepo: charRepo,
         campaignRepo: campaignRepo,
-        localNodeId: 'node-timed-test',
+        replicaId: ReplicaId('node-timed-test'),
         combatResolver: const Dnd5eCombatResolver(),
         networkTimeProvider: () => fixedNetworkTime,
       );

@@ -147,14 +147,12 @@ Future<void> initServiceLocator({
 
   sl.registerLazySingleton<ICombatResolver>(() => const Dnd5eCombatResolver());
 
-  final localNodeId = resolvedReplicaId.value;
-
   sl.registerLazySingleton<CombatEncounterService>(() => CombatEncounterService(
         characterRepo: sl<ICharacterRepository>(),
         campaignRepo: sl<ICampaignRepository>(),
         combatResolver: sl<ICombatResolver>(),
         networkTimeProvider: () => sl<ClockSyncService>().currentNetworkTimeMs,
-        localNodeId: localNodeId,
+        replicaId: resolvedReplicaId,
       ));
 
   final partyRoomService = PartyRoomService(

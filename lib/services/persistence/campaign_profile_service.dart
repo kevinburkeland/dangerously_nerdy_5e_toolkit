@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
-import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/dtos/campaign_profile_dto.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/session_graph_models.dart';
@@ -53,7 +52,6 @@ class CampaignProfileService extends ChangeNotifier
   }
   String get _effectiveNodeId {
     if (_replicaId != null) return _replicaId!.value;
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
     throw StateError(
       'CampaignProfileService requires an authoritative ReplicaId. '
       'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',

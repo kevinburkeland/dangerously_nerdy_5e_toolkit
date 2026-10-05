@@ -6,6 +6,9 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
 
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -19,6 +22,11 @@ void main() {
   group('LandingScreen Campaign Carousel & Hub Section', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      final partyService = PartyRoomService.newInstance(
+        replicaId: ReplicaId('landing_screen_replica'),
+      );
+      PartyRoomService.setCustomInstanceForTesting(partyService);
+      addTearDown(PartyRoomService.resetCustomInstanceForTesting);
     });
 
     testWidgets('Displays empty campaign placeholder when no campaigns exist',

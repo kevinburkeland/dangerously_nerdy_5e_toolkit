@@ -62,7 +62,12 @@ void main() {
     await characterRepo.saveCharacter(testHero);
 
     registry = CampaignRegistryService();
-    roomService = PartyRoomService();
+    roomService = PartyRoomService.newInstance(
+      replicaId: ReplicaId('test_hero_replica'),
+      registry: registry,
+    );
+    PartyRoomService.setCustomInstanceForTesting(roomService);
+    addTearDown(PartyRoomService.resetCustomInstanceForTesting);
 
     // Create a mock campaign membership linking Barek
     final membership = CampaignMembership(

@@ -24,7 +24,6 @@ import 'settings_screen.dart';
 import '../presentation/common/site_footer.dart';
 
 import '../infrastructure/di/injection_container.dart';
-import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -45,8 +44,6 @@ class _LandingScreenState extends State<LandingScreen> {
     _tools = LandingToolRegistry.defaultTools;
     if (sl.isRegistered<PartyRoomService>()) {
       sl<PartyRoomService>().syncAllExistingCampaignsToFirestore();
-    } else if (sl.isRegistered<ReplicaId>()) {
-      PartyRoomService(replicaId: sl<ReplicaId>()).syncAllExistingCampaignsToFirestore();
     }
   }
 

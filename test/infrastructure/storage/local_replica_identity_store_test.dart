@@ -23,9 +23,11 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/inventory_transactio
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/loot_models.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -375,6 +377,7 @@ void main() {
       final dmController = DmDashboardController(replicaId: authoritativeId);
       expect(dmController.replicaId, equals(authoritativeId));
       expect(dmController.nodeId, equals(authoritativeId.value));
+      expect(dmController.combatEncounterService.replicaId, equals(authoritativeId));
       expect(dmController.combatEncounterService.localNodeId, equals(authoritativeId.value));
 
       // RoomSyncOrchestrator
@@ -439,6 +442,135 @@ void main() {
       expect(transferResult.updatedCharacter.purse.gp, equals(25));
       expect(transferResult.updatedContainer.purse.gp, equals(35));
     });
+
+    test(
+        '14. CombatEncounterService requires ReplicaId and stamps HLC timestamps containing replicaId.value',
+        () async {
+      final authoritativeId = ReplicaId('combat_writer_replica_77');
+      final mockRepo = _TestMockCampaignRepo();
+      final combatService = CombatEncounterService(
+        characterRepo: _TestMockCharRepo(),
+        campaignRepo: mockRepo,
+        replicaId: authoritativeId,
+        combatResolver: const Dnd5eCombatResolver(),
+      );
+
+      expect(combatService.replicaId, equals(authoritativeId));
+      expect(combatService.localNodeId, equals(authoritativeId.value));
+
+      final baseProfile = CampaignProfile.defaultProfile(nodeId: authoritativeId.value);
+      final updatedProfile = await combatService.addMinion(
+        profile: baseProfile,
+        minion: MinionInstance(
+          id: 'minion_1',
+          name: 'Skeleton',
+          size: EntitySize.medium,
+          maxHp: 13,
+          currentHp: 13,
+        ),
+      );
+
+      // Verify that HLC timestamp emitted on activeMinions has nodeId == authoritativeId.value
+      expect(updatedProfile.roomState.activeMinions.items.length, equals(1));
+      final reg = updatedProfile.roomState.activeMinions.items.values.first;
+      expect(reg.timestamp.nodeId, equals(authoritativeId.value));
+    });
+
+    test(
+        '15. Separately constructed production mutation services share the exact same injected ReplicaId without secret discovery',
+        () {
+      final authoritativeId = ReplicaId('shared_runtime_replica_123');
+
+      final orch = RoomSyncOrchestrator(
+        replicaId: authoritativeId,
+        campaignRepo: _TestMockCampaignRepo(),
+        reconciliationService: RoomStateReconciliationService(
+          networkTimeProvider: () => 1000,
+        ),
+        clockSyncService: ClockSyncService(
+          networkTimePort: _TestMockTimePort(),
+        ),
+        transportPort: _TestMockTransportPort(),
+        payloadMapper: const RoomSyncPayloadMapper(),
+      );
+
+      final combat = CombatEncounterService(
+        characterRepo: _TestMockCharRepo(),
+        campaignRepo: _TestMockCampaignRepo(),
+        replicaId: authoritativeId,
+        combatResolver: const Dnd5eCombatResolver(),
+      );
+
+      final party = PartyRoomService(replicaId: authoritativeId);
+
+      expect(orch.replicaId, equals(authoritativeId));
+      expect(combat.replicaId, equals(authoritativeId));
+      expect(party.replicaId, equals(authoritativeId));
+    });
+
+    test(
+        '16. InventoryTransactionService currency transfers require ReplicaId in both directions',
+        () {
+      final testChar = Character(
+        id: const EntityId(slug: 'hero_both_dir', ruleset: RulesetVersion.v2024),
+        name: 'Hero',
+        speciesRef: const EntityReference.empty(
+            slug: 'human', refType: EntityType.species, displayName: 'Human'),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
+        purse: PartyPurse(gp: 50),
+        inventory: [
+          InventoryItemInstance(
+            instanceId: 'char_item_1',
+            itemRef: const EntityReference.empty(
+              slug: 'potion',
+              refType: EntityType.equipment,
+              displayName: 'Potion',
+            ),
+          ),
+        ],
+      );
+
+      final container = LootContainer(
+        containerId: 'chest_both_dir',
+        name: 'Chest',
+        purse: PartyPurse(gp: 50),
+        items: [
+          InventoryItemInstance(
+            instanceId: 'chest_item_1',
+            itemRef: const EntityReference.empty(
+              slug: 'gem',
+              refType: EntityType.equipment,
+              displayName: 'Gem',
+            ),
+          ),
+        ],
+      );
+
+      // Container to character with currency and null replicaId -> StateError
+      expect(
+        () => InventoryTransactionService.transferFromContainerToCharacter(
+          sourceContainer: container,
+          destinationCharacter: testChar,
+          instanceId: 'chest_item_1',
+          currency: PartyPurse(gp: 10),
+          replicaId: null,
+        ),
+        throwsStateError,
+      );
+
+      // Character to container with currency and null replicaId -> StateError
+      expect(
+        () => InventoryTransactionService.transferFromCharacterToContainer(
+          sourceCharacter: testChar,
+          destinationContainer: container,
+          instanceId: 'char_item_1',
+          currency: PartyPurse(gp: 10),
+          replicaId: null,
+        ),
+        throwsStateError,
+      );
+    });
   });
 }
 
@@ -478,15 +610,23 @@ class _TestMockTransportPort implements IP2pTransportPort {
   Future<void> disconnect() async {}
 }
 
+class _TestMockCharRepo implements ICharacterRepository<Character> {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _TestMockCampaignRepo implements ICampaignRepository {
-  @override
-  CampaignProfile? get activeProfile => null;
+  CampaignProfile? savedProfile;
 
   @override
-  String? get activeProfileId => null;
+  CampaignProfile? get activeProfile => savedProfile;
 
   @override
-  List<CampaignProfile> get allProfiles => [];
+  String? get activeProfileId => savedProfile?.id;
+
+  @override
+  List<CampaignProfile> get allProfiles =>
+      savedProfile != null ? [savedProfile!] : [];
 
   @override
   Stream<CampaignProfile?> watchActiveProfile() => const Stream.empty();
@@ -495,23 +635,31 @@ class _TestMockCampaignRepo implements ICampaignRepository {
   Stream<List<CampaignProfile>> watchAllProfiles() => const Stream.empty();
 
   @override
-  Future<CampaignProfile?> getActiveProfile() async => null;
+  Future<CampaignProfile?> getActiveProfile() async => savedProfile;
 
   @override
-  Future<CampaignProfile?> getProfile(String id) async => null;
+  Future<CampaignProfile?> getProfile(String id) async =>
+      savedProfile?.id == id ? savedProfile : null;
 
   @override
-  Future<List<CampaignProfile>> loadAllProfiles() async => [];
+  Future<List<CampaignProfile>> loadAllProfiles() async =>
+      savedProfile != null ? [savedProfile!] : [];
 
   @override
-  Future<void> saveProfile(CampaignProfile profile) async {}
+  Future<void> saveProfile(CampaignProfile profile) async {
+    savedProfile = profile;
+  }
 
   @override
-  Future<void> saveProfileImmediate(CampaignProfile profile) async {}
+  Future<void> saveProfileImmediate(CampaignProfile profile) async {
+    savedProfile = profile;
+  }
 
   @override
   Future<void> setActiveProfileId(String id) async {}
 
   @override
-  Future<void> deleteProfile(String profileId) async {}
+  Future<void> deleteProfile(String profileId) async {
+    if (savedProfile?.id == profileId) savedProfile = null;
+  }
 }

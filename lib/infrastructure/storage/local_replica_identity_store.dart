@@ -23,8 +23,8 @@ class LocalReplicaIdentityStore {
 
   /// Generates a fresh, unique, in-memory [ReplicaId] for the current executing runtime.
   ///
-  /// In accordance with Pass 1.3, this identity is NEVER read from or persisted to
-  /// durable storage for reuse as an active writer identity.
+  /// Deprecated: Call [createRuntimeReplicaId] at application composition/bootstrap instead.
+  @Deprecated('Use createRuntimeReplicaId() at composition root instead')
   Future<ReplicaId> getOrCreateReplicaId() async {
     return createRuntimeReplicaId();
   }

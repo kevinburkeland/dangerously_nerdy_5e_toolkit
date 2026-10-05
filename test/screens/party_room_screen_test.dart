@@ -90,7 +90,12 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       registry = CampaignRegistryService.newInstance();
-      partyService = PartyRoomService.newInstance(registry: registry);
+      partyService = PartyRoomService.newInstance(
+        replicaId: ReplicaId('party_room_screen_test_replica'),
+        registry: registry,
+      );
+      PartyRoomService.setCustomInstanceForTesting(partyService);
+      addTearDown(PartyRoomService.resetCustomInstanceForTesting);
     });
 
     testWidgets('Renders header, coin purse card, and tabs', (tester) async {

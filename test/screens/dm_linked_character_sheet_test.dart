@@ -11,6 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 Widget _buildTestApp({required Widget home}) {
   return MaterialApp(
@@ -60,6 +61,12 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
+    CampaignProfileService(replicaId: ReplicaId('dm_linked_sheet_replica'));
+    final partyService = PartyRoomService.newInstance(
+      replicaId: ReplicaId('dm_linked_sheet_replica'),
+    );
+    PartyRoomService.setCustomInstanceForTesting(partyService);
+    addTearDown(PartyRoomService.resetCustomInstanceForTesting);
   });
 
   group('DM Linked Character Sheet & Modification Tests', () {
