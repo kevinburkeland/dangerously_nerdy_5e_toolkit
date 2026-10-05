@@ -9,6 +9,7 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_adapters.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/inventory_transaction_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   group('Plate Armor +3 and Armor Classification Tests', () {
@@ -257,7 +258,10 @@ void main() {
         ],
       );
 
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(
+        character: baseCharacter,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
 
       await controller.toggleEquipItem('plate-3-ctrl');
 

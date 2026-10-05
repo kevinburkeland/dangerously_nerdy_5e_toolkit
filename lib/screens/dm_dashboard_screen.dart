@@ -19,6 +19,8 @@ import 'character_sheet_view.dart';
 import 'rules_compendium_screen.dart';
 import '../widgets/party/party_vitality_hud.dart';
 import '../presentation/widgets/room_connection_badge.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../infrastructure/di/injection_container.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
 class DmDashboardScreen extends StatefulWidget {
@@ -34,7 +36,8 @@ class DmDashboardScreen extends StatefulWidget {
 }
 
 class _DmDashboardScreenState extends State<DmDashboardScreen> {
-  final DmDashboardController _controller = DmDashboardController();
+  final DmDashboardController _controller =
+      DmDashboardController(replicaId: sl<ReplicaId>());
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
   bool _isLoading = true;

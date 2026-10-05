@@ -10,6 +10,7 @@ import '../../application/storage/storage_durability_coordinator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
+import '../../services/persistence/campaign_profile_service.dart';
 import '../adapters/p2p/firebase_fallback_adapter.dart';
 import '../modules/dnd5e/dnd_5e_animated_object_adapter.dart';
 import '../adapters/p2p/firebase_signaling_adapter.dart';
@@ -100,8 +101,9 @@ Future<void> initServiceLocator({
   sl.registerSingleton<AppDatabaseService>(db);
 
   final resolvedReplicaId = replicaId ??
-      await LocalReplicaIdentityStore(db: db).getOrCreateReplicaId();
+      LocalReplicaIdentityStore.createRuntimeReplicaId();
   sl.registerSingleton<ReplicaId>(resolvedReplicaId);
+  CampaignProfileService(replicaId: resolvedReplicaId);
 
   final charRepo = characterRepo ?? LocalCharacterRepository(db: db);
   sl.registerSingleton<ICharacterRepository>(charRepo);

@@ -5,6 +5,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipme
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplicaId = ReplicaId('test_runner_replica');
 
 class _FakePersistenceService implements ICharacterRepository<Character> {
   Character? savedCharacter;
@@ -154,6 +157,7 @@ void main() {
     controller = CharacterSheetController(
       character: testCharacter,
       persistenceService: fakePersistence,
+      replicaId: _testReplicaId,
     );
   });
 
@@ -458,6 +462,7 @@ void main() {
       final mcController = CharacterSheetController(
         character: multiclassChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       // Level 3 total: diceBudget = math.max(1, 3 ~/ 2) = 1 die
@@ -519,6 +524,7 @@ void main() {
       final dynController = CharacterSheetController(
         character: buffedChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       expect(dynController.stats.maxHp, equals(25));
@@ -543,6 +549,7 @@ void main() {
       final spellCtrl = CharacterSheetController(
         character: spellChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       expect(
@@ -593,6 +600,7 @@ void main() {
       final casterCtrl = CharacterSheetController(
         character: casterChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       // Cast 2nd level spell using 4th level slot
@@ -622,6 +630,7 @@ void main() {
       final chargeCtrl = CharacterSheetController(
         character: chargeChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       expect(chargeCtrl.getResourceCharges('Action Surge'), equals(1));
@@ -648,6 +657,7 @@ void main() {
       final warlockCtrl = CharacterSheetController(
         character: warlockChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       await warlockCtrl.expendPactSlot();
@@ -679,6 +689,7 @@ void main() {
       final warlockCtrl = CharacterSheetController(
         character: warlockChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       // Level 2 regular slot doesn't exist, but pactMagicSlotLevel is 2
@@ -717,6 +728,7 @@ void main() {
       final warlockCtrl = CharacterSheetController(
         character: warlockChar,
         persistenceService: fakePersistence,
+        replicaId: _testReplicaId,
       );
 
       final roll = await warlockCtrl.castSpell(agathysSpell,

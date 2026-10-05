@@ -6,6 +6,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_ent
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   group('CharacterActionsResolver Class Features Translation', () {
@@ -34,7 +37,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: paladin2024);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: paladin2024);
       final stats = CharacterEvaluationEngine.evaluate(paladin2024);
       final resolved = CharacterActionsResolver.resolve(
         character: paladin2024,
@@ -81,7 +84,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: clericLight);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: clericLight);
       final stats = CharacterEvaluationEngine.evaluate(clericLight);
       final resolved = CharacterActionsResolver.resolve(
         character: clericLight,
@@ -129,7 +132,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: moonDruid);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: moonDruid);
       final stats = CharacterEvaluationEngine.evaluate(moonDruid);
       final resolved = CharacterActionsResolver.resolve(
         character: moonDruid,
@@ -172,7 +175,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: rogue5);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: rogue5);
       final stats = CharacterEvaluationEngine.evaluate(rogue5);
       final resolved = CharacterActionsResolver.resolve(
         character: rogue5,
@@ -220,7 +223,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: monk5);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: monk5);
       final stats = CharacterEvaluationEngine.evaluate(monk5);
       final resolved = CharacterActionsResolver.resolve(
         character: monk5,
@@ -269,7 +272,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: wizardAbjurer);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: wizardAbjurer);
       final stats = CharacterEvaluationEngine.evaluate(wizardAbjurer);
       final resolved = CharacterActionsResolver.resolve(
         character: wizardAbjurer,
@@ -311,7 +314,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: fighterProtection);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: fighterProtection);
       final stats = CharacterEvaluationEngine.evaluate(fighterProtection);
       final resolved = CharacterActionsResolver.resolve(
         character: fighterProtection,
@@ -370,7 +373,7 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: warlock);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: warlock);
       final stats = CharacterEvaluationEngine.evaluate(warlock);
       final resolved = CharacterActionsResolver.resolve(
         character: warlock,
@@ -432,7 +435,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: characterLvl3);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: characterLvl3);
       final stats = CharacterEvaluationEngine.evaluate(characterLvl3);
       final resolved = CharacterActionsResolver.resolve(
         character: characterLvl3,
@@ -499,7 +502,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: characterWarden);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: characterWarden);
       final stats = CharacterEvaluationEngine.evaluate(characterWarden);
       final resolved = CharacterActionsResolver.resolve(
         character: characterWarden,
@@ -555,7 +558,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: characterAdept);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: characterAdept);
       final stats = CharacterEvaluationEngine.evaluate(characterAdept);
       final resolved = CharacterActionsResolver.resolve(
         character: characterAdept,
@@ -636,7 +639,7 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: psionChar);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: psionChar);
       final stats = CharacterEvaluationEngine.evaluate(psionChar);
       final resolved = CharacterActionsResolver.resolve(
         character: psionChar,

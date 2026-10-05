@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/level_up_wizard_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_header_banner.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 class _MockPersistenceService implements CharacterPersistenceService {
   Character? savedCharacter;
@@ -198,6 +199,7 @@ void main() {
       final controller = CharacterSheetController(
         character: level1Wizard,
         persistenceService: mockPersistence,
+        replicaId: ReplicaId('test_runner_replica'),
       );
 
       await tester.pumpWidget(
@@ -245,6 +247,7 @@ void main() {
       final controller = CharacterSheetController(
         character: level1Wizard,
         persistenceService: mockPersistence,
+        replicaId: ReplicaId('test_runner_replica'),
       );
 
       final levelUpCandidate = level1Wizard.copyWith(

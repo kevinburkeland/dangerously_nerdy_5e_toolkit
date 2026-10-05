@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
@@ -13,8 +14,8 @@ void main() {
   group('PartyRoomService Tests', () {
     test('initializes with a valid node ID and creates local timestamps',
         () {
-      final service1 = PartyRoomService(nodeId: 'node-alpha-1');
-      final service2 = PartyRoomService(nodeId: 'node-beta-2');
+      final service1 = PartyRoomService(replicaId: ReplicaId('node-alpha-1'));
+      final service2 = PartyRoomService(replicaId: ReplicaId('node-beta-2'));
 
       expect(service1.localNodeId, isNotEmpty);
       expect(service2.localNodeId, isNotEmpty);
@@ -297,12 +298,13 @@ void main() {
         () {
       // Local spent all 100 GP
       final local = const PartyPurse.empty()
-          .depositCoins(gp: 100, nodeId: 'host')
-          .withdrawCoins(gp: 100, nodeId: 'peer_local');
+          .depositCoins(gp: 100, replicaId: ReplicaId('host'))
+          .withdrawCoins(gp: 100, replicaId: ReplicaId('peer_local'));
       expect(local.gp, 0);
 
       // Remote still has the unspent 100 GP
-      final remote = const PartyPurse.empty().depositCoins(gp: 100, nodeId: 'host');
+      final remote = const PartyPurse.empty()
+          .depositCoins(gp: 100, replicaId: ReplicaId('host'));
       expect(remote.gp, 100);
 
       // Merge local and remote
@@ -323,10 +325,12 @@ void main() {
         'PartyPurse Reconciliation: Concurrent deposits across peers converge via PN-counter',
         () {
       // Peer A deposits 100 GP
-      final purseA = const PartyPurse.empty().depositCoins(gp: 100, nodeId: 'peerA');
+      final purseA = const PartyPurse.empty()
+          .depositCoins(gp: 100, replicaId: ReplicaId('peerA'));
 
       // Peer B deposits 50 GP
-      final purseB = const PartyPurse.empty().depositCoins(gp: 50, nodeId: 'peerB');
+      final purseB = const PartyPurse.empty()
+          .depositCoins(gp: 50, replicaId: ReplicaId('peerB'));
 
       final merged = service.reconcileProfile(
         local: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')

@@ -119,18 +119,32 @@ class PartyRoomService {
     if (sl.isRegistered<PartyRoomService>()) {
       return sl<PartyRoomService>();
     }
-    _customInstance = PartyRoomService._internal();
-    return _customInstance!;
+    if (sl.isRegistered<ReplicaId>()) {
+      _customInstance = PartyRoomService._internal(replicaId: sl<ReplicaId>());
+      return _customInstance!;
+    }
+    throw StateError(
+      'PartyRoomService requires an authoritative ReplicaId. '
+      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+    );
   }
 
   factory PartyRoomService({
     ReplicaId? replicaId,
     @Deprecated('Use replicaId instead') String? localNodeId,
+    CampaignRegistryService? registry,
+    DiceRoomService? diceRoomService,
+    CharacterPersistenceService? characterPersistenceService,
+    CampaignProfileService? campaignProfileService,
   }) {
     if (replicaId != null || localNodeId != null) {
       return PartyRoomService._internal(
         replicaId: replicaId,
         localNodeId: localNodeId,
+        registry: registry,
+        diceRoomService: diceRoomService,
+        characterPersistenceService: characterPersistenceService,
+        campaignProfileService: campaignProfileService,
       );
     }
     return _instance;
@@ -1600,7 +1614,7 @@ class PartyRoomService {
       final deletedPurse = updatedPurses.remove(trimmed);
       if (deletedPurse != null && !deletedPurse.isEmpty) {
         updatedPartyPurse =
-            updatedPartyPurse.add(deletedPurse, nodeId: localNodeId);
+            updatedPartyPurse.add(deletedPurse, replicaId: replicaId);
       }
 
       final updatedSession = current.copyWith(
@@ -1672,7 +1686,7 @@ class PartyRoomService {
         final deletedPurse = updatedPurses.remove(removedKey);
         if (deletedPurse != null && !deletedPurse.isEmpty) {
           updatedPartyPurse =
-              updatedPartyPurse.add(deletedPurse, nodeId: localNodeId);
+              updatedPartyPurse.add(deletedPurse, replicaId: replicaId);
         }
       }
 
@@ -1757,7 +1771,7 @@ class PartyRoomService {
       ep: ep,
       gp: gp,
       pp: pp,
-      nodeId: localNodeId,
+      replicaId: replicaId,
     );
     _localRooms[clean] = current.copyWith(
       partyPurse: updatedPurse,
@@ -1904,7 +1918,7 @@ class PartyRoomService {
       ep: ep,
       gp: gp,
       pp: pp,
-      nodeId: localNodeId,
+      replicaId: replicaId,
     );
     _localRooms[clean] = current.copyWith(
       partyPurse: updatedPurse,
@@ -2018,7 +2032,7 @@ class PartyRoomService {
           ep: ep,
           sp: sp,
           cp: cp,
-          nodeId: localNodeId,
+          replicaId: replicaId,
         );
         final updatedChar = matched.copyWith(purse: updatedPurse);
         await _characterPersistenceService.saveCharacter(updatedChar);
@@ -2252,7 +2266,7 @@ class PartyRoomService {
       for (final recipient in recipients) {
         final prev = updatedMemberPurses[recipient] ?? const PartyPurse.empty();
         updatedMemberPurses[recipient] =
-            prev.depositCoins(gp: perShareGp, nodeId: localNodeId);
+            prev.depositCoins(gp: perShareGp, replicaId: replicaId);
         await _syncCoinsToCharacter(
           roomCode: clean,
           characterIdentifier: recipient,
@@ -2266,16 +2280,16 @@ class PartyRoomService {
         final totalGpWithdrawn = perShareGp * recipients.length;
         updatedPartyPurse = updatedPartyPurse.withdrawCoins(
           gp: math.min(updatedPartyPurse.gp, totalGpWithdrawn),
-          nodeId: localNodeId,
+          replicaId: replicaId,
         );
       } else {
         // External loot drop: deposit reserve share or remainder
         if (includePartyReserve) {
           updatedPartyPurse = updatedPartyPurse.depositCoins(
-              gp: perShareGp + remainderGp, nodeId: localNodeId);
+              gp: perShareGp + remainderGp, replicaId: replicaId);
         } else if (remainderGp > 0) {
           updatedPartyPurse = updatedPartyPurse.depositCoins(
-              gp: remainderGp, nodeId: localNodeId);
+              gp: remainderGp, replicaId: replicaId);
         }
       }
     } else {
@@ -2300,7 +2314,7 @@ class PartyRoomService {
           ep: epPerShare,
           sp: spPerShare,
           cp: cpPerShare,
-          nodeId: localNodeId,
+          replicaId: replicaId,
         );
         await _syncCoinsToCharacter(
           roomCode: clean,
@@ -2327,7 +2341,7 @@ class PartyRoomService {
           ep: epWithdrawn,
           sp: spWithdrawn,
           cp: cpWithdrawn,
-          nodeId: localNodeId,
+          replicaId: replicaId,
         );
       } else {
         // External loot drop: deposit reserve share or remainder
@@ -2338,7 +2352,7 @@ class PartyRoomService {
             ep: epPerShare + epRem,
             sp: spPerShare + spRem,
             cp: cpPerShare + cpRem,
-            nodeId: localNodeId,
+            replicaId: replicaId,
           );
         } else {
           // Remainder always goes to party reserve so nothing is lost
@@ -2348,7 +2362,7 @@ class PartyRoomService {
             ep: epRem,
             sp: spRem,
             cp: cpRem,
-            nodeId: localNodeId,
+            replicaId: replicaId,
           );
         }
       }
@@ -2474,7 +2488,7 @@ class PartyRoomService {
         ep: ep,
         gp: gp,
         pp: pp,
-        nodeId: localNodeId,
+        replicaId: replicaId,
       );
       final updatedPartyPurse = current.partyPurse.depositCoins(
         cp: cp,
@@ -2482,7 +2496,7 @@ class PartyRoomService {
         ep: ep,
         gp: gp,
         pp: pp,
-        nodeId: localNodeId,
+        replicaId: replicaId,
       );
 
       final updatedMap = Map<String, PartyPurse>.from(current.memberPurses);
@@ -2549,7 +2563,7 @@ class PartyRoomService {
         ep: ep,
         gp: gp,
         pp: pp,
-        nodeId: localNodeId,
+        replicaId: replicaId,
       );
       final currentMemberPurse = current.getMemberPurse(trimmedName);
       final updatedMemberPurse = currentMemberPurse.depositCoins(
@@ -2558,7 +2572,7 @@ class PartyRoomService {
         ep: ep,
         gp: gp,
         pp: pp,
-        nodeId: localNodeId,
+        replicaId: replicaId,
       );
 
       final updatedMap = Map<String, PartyPurse>.from(current.memberPurses);

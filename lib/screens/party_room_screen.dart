@@ -771,6 +771,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
           _partySplitCount,
           includeLiquidatedGemsAndArt: _includeLiquidatedInSplit,
           liquidatedGemsAndArtGp: gemsAndArtTotal,
+          replicaId: _partyService.replicaId,
         );
 
         return ListView(

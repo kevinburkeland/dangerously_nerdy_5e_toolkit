@@ -11,6 +11,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_reparse_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   setUp(() {
@@ -251,7 +254,10 @@ void main() {
         resources: CharacterResourcePool(currentHp: 10),
       );
 
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(
+        character: character,
+        replicaId: _testReplica,
+      );
       final stats = CharacterEvaluationEngine.evaluate(character);
       final resolved = CharacterActionsResolver.resolve(
         character: character,
@@ -491,7 +497,10 @@ void main() {
         resources: CharacterResourcePool(currentHp: 40),
       );
 
-      final controller = CharacterSheetController(character: charLevel6);
+      final controller = CharacterSheetController(
+        character: charLevel6,
+        replicaId: _testReplica,
+      );
       final stats = CharacterEvaluationEngine.evaluate(charLevel6);
       final resolved = CharacterActionsResolver.resolve(
         character: charLevel6,
@@ -609,7 +618,10 @@ void main() {
         resources: CharacterResourcePool(currentHp: 16),
       );
 
-      final druidController = CharacterSheetController(character: druidChar);
+      final druidController = CharacterSheetController(
+        character: druidChar,
+        replicaId: _testReplica,
+      );
       final druidStats = CharacterEvaluationEngine.evaluate(druidChar);
       final druidResolved = CharacterActionsResolver.resolve(
         character: druidChar,
@@ -657,8 +669,10 @@ void main() {
         resources: CharacterResourcePool(currentHp: 28),
       );
 
-      final paladinController =
-          CharacterSheetController(character: paladinChar);
+      final paladinController = CharacterSheetController(
+        character: paladinChar,
+        replicaId: _testReplica,
+      );
       final paladinStats = CharacterEvaluationEngine.evaluate(paladinChar);
       final paladinResolved = CharacterActionsResolver.resolve(
         character: paladinChar,

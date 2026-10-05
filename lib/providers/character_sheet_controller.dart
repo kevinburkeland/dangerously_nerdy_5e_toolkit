@@ -13,7 +13,6 @@ import '../services/party/campaign_registry_service.dart';
 import '../services/party/party_room_service.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
-import '../infrastructure/di/injection_container.dart';
 import '../infrastructure/repositories/local_character_repository.dart';
 import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/debounced_storage_service.dart';
@@ -36,26 +35,17 @@ class CharacterSheetController extends ChangeNotifier {
   late EvaluatedCharacterStats _stats;
   bool _isSaving = false;
 
-  static ReplicaId _resolveReplicaId(ReplicaId? replicaId) {
-    if (replicaId != null) return replicaId;
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
-    throw StateError(
-      'CharacterSheetController requires an authoritative ReplicaId. '
-      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
-    );
-  }
-
   CharacterSheetController({
     required Character character,
+    required ReplicaId replicaId,
     ICharacterRepository? persistenceService,
     DebouncedStorageService? debouncedStorage,
     ReferenceResolver? resolver,
-    ReplicaId? replicaId,
   })  : _character = character,
+        _replicaId = replicaId,
         _persistenceService = persistenceService ?? LocalCharacterRepository(),
         _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
-        _resolver = resolver,
-        _replicaId = _resolveReplicaId(replicaId) {
+        _resolver = resolver {
     _recalculateStats();
   }
 
@@ -182,7 +172,7 @@ class CharacterSheetController extends ChangeNotifier {
   /// Modifies a single coin denomination in the character's purse (clamped >= 0).
   Future<void> modifyPurseCoin(String coinKey, int delta) async {
     final curPurse = _character.purse;
-    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: nodeId);
+    final newPurse = curPurse.modifyCoin(coinKey, delta, replicaId: _replicaId);
     await updatePurse(newPurse);
   }
 

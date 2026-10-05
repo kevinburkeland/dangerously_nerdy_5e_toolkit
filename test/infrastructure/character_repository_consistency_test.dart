@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_currency_system.dart';
@@ -44,7 +45,11 @@ void main() {
       currentHp: 44,
       tempHp: 7,
     ),
-    purse: const PartyPurse.empty().setCoins(gp: 120, sp: 50, nodeId: 'init'),
+    purse: const PartyPurse.empty().setCoins(
+      gp: 120,
+      sp: 50,
+      replicaId: ReplicaId('test_init_node'),
+    ),
   );
 
   setUp(() {
@@ -78,7 +83,10 @@ void main() {
 
       final updatedHero = heroA.copyWith(
         resources: heroA.resources.copyWith(currentHp: 28, tempHp: 0),
-        purse: heroA.purse.setCoins(gp: 45, nodeId: 'test_node'),
+        purse: heroA.purse.setCoins(
+          gp: 45,
+          replicaId: ReplicaId('test_node'),
+        ),
       );
 
       await repository.saveRoster([updatedHero]);

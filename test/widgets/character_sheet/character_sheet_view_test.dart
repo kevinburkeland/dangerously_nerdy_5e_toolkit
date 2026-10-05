@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipme
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_sheet_view.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -90,7 +91,10 @@ void main() {
         ),
       );
 
-      controller = CharacterSheetController(character: baseCharacter);
+      controller = CharacterSheetController(
+        character: baseCharacter,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
     });
 
     tearDown(() {

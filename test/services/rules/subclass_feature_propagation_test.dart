@@ -12,6 +12,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compen
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_homebrew_validator.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   setUp(() {
@@ -380,7 +383,7 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
         resources: CharacterResourcePool(currentHp: 28),
       );
 
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character);
       final stats = CharacterEvaluationEngine.evaluate(character);
       final resolved = CharacterActionsResolver.resolve(
         character: character,
@@ -452,7 +455,7 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
         resources: CharacterResourcePool(currentHp: 28),
       );
 
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character);
       final stats = CharacterEvaluationEngine.evaluate(character);
       final resolved = CharacterActionsResolver.resolve(
         character: character,
@@ -559,7 +562,7 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
         resources: const CharacterResourcePool(currentHp: 28),
       );
 
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character);
       final stats = CharacterEvaluationEngine.evaluate(character);
       final resolved = CharacterActionsResolver.resolve(
         character: character,

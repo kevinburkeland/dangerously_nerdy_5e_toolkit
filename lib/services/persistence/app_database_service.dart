@@ -13,6 +13,8 @@ class AppDatabaseService {
   static const String boxHomebrew = 'dn_homebrew_store_v1';
   static const String boxHomebrewRaw = 'dn_homebrew_raw_v1';
   static const String boxMetadata = 'dn_metadata_v1';
+  /// Deprecated historical key for persisted device identity.
+  /// Architectural Invariant (Pass 1.3): Must NEVER be used as the active CRDT writer [ReplicaId].
   static const String keyReplicaId = 'dn_replica_id';
 
   static final AppDatabaseService instance = AppDatabaseService._internal();

@@ -5,6 +5,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_backgrounds_l
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/features_traits_section.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   group('FeaturesTraitsSection 2014 RAW Background & Feats Tests', () {
@@ -50,7 +53,7 @@ void main() {
         ],
       );
 
-      final controller = CharacterSheetController(character: character2014);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character2014);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -154,7 +157,7 @@ void main() {
       addTearDown(() =>
           SrdBackgroundsLibrary.removeCustomBackground('homebrew-veteran'));
 
-      final controller = CharacterSheetController(character: character2014);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character2014);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -209,7 +212,7 @@ void main() {
         baseScores: AbilityScores(wisdom: 16),
       );
 
-      final controller = CharacterSheetController(character: character2024);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character2024);
 
       await tester.pumpWidget(
         MaterialApp(

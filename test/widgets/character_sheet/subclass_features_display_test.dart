@@ -5,6 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_ent
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/features_traits_section.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   group('FeaturesTraitsSection Subclass Features Display Tests', () {
@@ -43,7 +44,10 @@ void main() {
         baseScores: AbilityScores(strength: 16),
       );
 
-      final controller = CharacterSheetController(character: barbarianChar);
+      final controller = CharacterSheetController(
+        character: barbarianChar,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -128,7 +132,10 @@ You gain resistance to critical hits and cannot be moved against your will.
         baseScores: AbilityScores(strength: 16),
       );
 
-      final controller = CharacterSheetController(character: fighterLevel3);
+      final controller = CharacterSheetController(
+        character: fighterLevel3,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
 
       await tester.pumpWidget(
         MaterialApp(

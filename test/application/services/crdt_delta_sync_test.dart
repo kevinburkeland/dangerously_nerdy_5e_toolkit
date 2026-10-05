@@ -10,6 +10,7 @@ import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 class MockTransportPort implements IP2pTransportPort {
   final List<String> broadcastedPayloads = [];
@@ -158,18 +159,18 @@ void main() {
     test('PartyPurse PN-Counter CvRDT convergence across network partitions',
         () {
       // Both nodes start with an initial shared purse of 100 GP
-      final initialPurse =
-          const PartyPurse.empty().setCoins(gp: 100, nodeId: 'node_init');
+      final initialPurse = const PartyPurse.empty()
+          .setCoins(gp: 100, replicaId: ReplicaId('node_init'));
 
       // Node A deposits 50 GP and withdraws 10 GP during partition
       var purseA = initialPurse
-          .modifyCoin('gp', 50, nodeId: 'node_a')
-          .modifyCoin('gp', -10, nodeId: 'node_a');
+          .modifyCoin('gp', 50, replicaId: ReplicaId('node_a'))
+          .modifyCoin('gp', -10, replicaId: ReplicaId('node_a'));
 
       // Node B concurrently deposits 30 GP and withdraws 5 GP during partition
       var purseB = initialPurse
-          .modifyCoin('gp', 30, nodeId: 'node_b')
-          .modifyCoin('gp', -5, nodeId: 'node_b');
+          .modifyCoin('gp', 30, replicaId: ReplicaId('node_b'))
+          .modifyCoin('gp', -5, replicaId: ReplicaId('node_b'));
 
       // Individual partitioned balances
       expect(purseA.gp, equals(140)); // 100 + 50 - 10
@@ -200,7 +201,7 @@ void main() {
 
       // Mutate only partyPurse
       final updatedPurse = baseProfile.partyPurse
-          .modifyCoin('gp', 250, nodeId: 'node-orchestrator');
+          .modifyCoin('gp', 250, replicaId: ReplicaId('node-orchestrator'));
       final updatedProfile = baseProfile.copyWith(partyPurse: updatedPurse);
 
       await orchestrator.handleLocalProfileChange(updatedProfile);
@@ -223,15 +224,15 @@ void main() {
           CampaignProfile.defaultProfile(id: 'camp_delta', nodeId: 'test_node')
               .copyWith(
         partyPurse: const PartyPurse.empty()
-            .setCoins(gp: 100, nodeId: 'node_init')
-            .modifyCoin('gp', 50, nodeId: 'node-orchestrator'),
+            .setCoins(gp: 100, replicaId: ReplicaId('node_init'))
+            .modifyCoin('gp', 50, replicaId: ReplicaId('node-orchestrator')),
       );
       mockRepo.activeProfile = baseProfile;
 
       // Remote peer concurrently deposited 35 GP
       final remotePurse = const PartyPurse.empty()
-          .setCoins(gp: 100, nodeId: 'node_init')
-          .modifyCoin('gp', 35, nodeId: 'node-remote');
+          .setCoins(gp: 100, replicaId: ReplicaId('node_init'))
+          .modifyCoin('gp', 35, replicaId: ReplicaId('node-remote'));
 
       final deltaPayload = jsonEncode({
         'type': 'crdt_purse_delta',
@@ -258,14 +259,14 @@ void main() {
           CampaignProfile.defaultProfile(id: 'camp_full', nodeId: 'test_node')
               .copyWith(
         partyPurse: const PartyPurse.empty()
-            .setCoins(gp: 50, nodeId: 'node_init')
-            .modifyCoin('gp', 20, nodeId: 'node-local'),
+            .setCoins(gp: 50, replicaId: ReplicaId('node_init'))
+            .modifyCoin('gp', 20, replicaId: ReplicaId('node-local')),
       );
       mockRepo.activeProfile = baseProfile;
 
       final remotePurse = const PartyPurse.empty()
-          .setCoins(gp: 50, nodeId: 'node_init')
-          .modifyCoin('gp', 80, nodeId: 'node-remote');
+          .setCoins(gp: 50, replicaId: ReplicaId('node_init'))
+          .modifyCoin('gp', 80, replicaId: ReplicaId('node-remote'));
       final remoteProfile = baseProfile.copyWith(
         name: 'Updated Campaign Title',
         partyPurse: remotePurse,

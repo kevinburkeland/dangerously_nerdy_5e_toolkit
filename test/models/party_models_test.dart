@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_loot_item.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_session_state.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_event.dart';
@@ -25,13 +26,14 @@ void main() {
     });
 
     test('PartyPurse coin deposit and withdraw operations clamp correctly', () {
+      final testNode = ReplicaId('test_node');
       var purse = PartyPurse(gp: 100, sp: 50);
-      purse = purse.depositCoins(gp: 25, cp: 100, nodeId: 'test_node');
+      purse = purse.depositCoins(gp: 25, cp: 100, replicaId: testNode);
       expect(purse.gp, equals(125));
       expect(purse.cp, equals(100));
 
       purse = purse.withdrawCoins(
-          gp: 200, sp: 20, nodeId: 'test_node'); // 200 > 125, clamps at 0
+          gp: 200, sp: 20, replicaId: testNode); // 200 > 125, clamps at 0
       expect(purse.gp, equals(0));
       expect(purse.sp, equals(30));
     });
@@ -47,7 +49,7 @@ void main() {
         cp: 9,
       );
 
-      final split = purse.splitShares(4);
+      final split = purse.splitShares(4, replicaId: ReplicaId('test_split_node'));
       expect(split.playerCount, equals(4));
       expect(split.ppPerPlayer, equals(2)); // 10 ~/ 4 = 2, rem = 2
       expect(split.gpPerPlayer, equals(6)); // 25 ~/ 4 = 6, rem = 1
@@ -65,7 +67,9 @@ void main() {
     test('PartyPurse splitShares with liquidated gems and art objects', () {
       final purse = PartyPurse(gp: 100);
       final split = purse.splitShares(4,
-          includeLiquidatedGemsAndArt: true, liquidatedGemsAndArtGp: 300.0);
+          replicaId: ReplicaId('test_split_node'),
+          includeLiquidatedGemsAndArt: true,
+          liquidatedGemsAndArtGp: 300.0);
 
       expect(split.liquidatedGemsAndArtIncluded, isTrue);
       expect(split.totalGpEquivalent, equals(400.0));
@@ -166,17 +170,18 @@ void main() {
 
     test('PartyPurse add and deduct methods combine coin denominations cleanly',
         () {
+      final testNode = ReplicaId('test_node');
       final purse1 = PartyPurse(pp: 2, gp: 50, ep: 10, sp: 20, cp: 100);
       final purse2 = PartyPurse(pp: 1, gp: 25, ep: 5, sp: 10, cp: 50);
 
-      final sum = purse1.add(purse2, nodeId: 'test_node');
+      final sum = purse1.add(purse2, replicaId: testNode);
       expect(sum.pp, equals(3));
       expect(sum.gp, equals(75));
       expect(sum.ep, equals(15));
       expect(sum.sp, equals(30));
       expect(sum.cp, equals(150));
 
-      final diff = sum.deduct(purse2, nodeId: 'test_node');
+      final diff = sum.deduct(purse2, replicaId: testNode);
       expect(diff.pp, equals(2));
       expect(diff.gp, equals(50));
       expect(diff.ep, equals(10));
@@ -185,7 +190,7 @@ void main() {
 
       // Overdrawing clamps at 0
       final largePurse = PartyPurse(gp: 500);
-      final overdrawn = diff.deduct(largePurse, nodeId: 'test_node');
+      final overdrawn = diff.deduct(largePurse, replicaId: testNode);
       expect(overdrawn.gp, equals(0));
       expect(overdrawn.pp, equals(2));
     });
@@ -193,9 +198,10 @@ void main() {
     test(
         'PartyPurse deductGpEquivalent makes change and repacks into optimal denominations',
         () {
+      final testNode = ReplicaId('test_node');
       // Coin Breakdown Deduct Test: 1 PP = 10 GP; deduct 0.5 GP (5 SP) => 9.5 GP (9 GP, 1 EP)
       final purse = PartyPurse(pp: 1);
-      final result = purse.deductGpEquivalent(0.5, nodeId: 'test_node');
+      final result = purse.deductGpEquivalent(0.5, replicaId: testNode);
 
       expect(result.pp, equals(0));
       expect(result.gp, equals(9));
@@ -205,17 +211,17 @@ void main() {
       expect(result.totalGpEquivalent, equals(9.5));
 
       // Deduct zero or negative cost returns same purse
-      expect(purse.deductGpEquivalent(0, nodeId: 'test_node'), equals(purse));
+      expect(purse.deductGpEquivalent(0, replicaId: testNode), equals(purse));
       expect(
-          purse.deductGpEquivalent(-5.0, nodeId: 'test_node'), equals(purse));
+          purse.deductGpEquivalent(-5.0, replicaId: testNode), equals(purse));
 
       // Exact balance deduction returns empty purse
-      final exactResult = purse.deductGpEquivalent(10.0, nodeId: 'test_node');
+      final exactResult = purse.deductGpEquivalent(10.0, replicaId: testNode);
       expect(exactResult.isEmpty, isTrue);
 
       // Insufficient funds throws StateError
       expect(
-        () => purse.deductGpEquivalent(15.0, nodeId: 'test_node'),
+        () => purse.deductGpEquivalent(15.0, replicaId: testNode),
         throwsA(isA<StateError>().having(
           (e) => e.message,
           'message',
@@ -281,7 +287,8 @@ void main() {
           reason: 'PN-counter must be re-seeded to 30');
 
       // Subsequent deposit of 5 GP should compute 35 GP
-      final updated = purse.depositCoins(gp: 5, nodeId: 'deviceB');
+      final updated =
+          purse.depositCoins(gp: 5, replicaId: ReplicaId('deviceB'));
       expect(updated.gp, equals(35));
     });
 

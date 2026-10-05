@@ -10,6 +10,7 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
@@ -258,6 +259,7 @@ void main() {
     final mockTransport = MockP2pTransport();
     sl.registerSingleton<IP2pTransportPort>(mockTransport);
     final orchestrator = RoomSyncOrchestrator(
+      replicaId: ReplicaId('test_banner_node'),
       transportPort: mockTransport,
       campaignRepo: MockCampaignRepo(),
       reconciliationService: RoomStateReconciliationService(

@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/level_up_wizard_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/add_feat_dialog.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -65,7 +66,10 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       final char = createTestRogueLvl3();
-      final controller = CharacterSheetController(character: char);
+      final controller = CharacterSheetController(
+        character: char,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
 
       const versatileSpecialist = Feat(
         id: EntityId(

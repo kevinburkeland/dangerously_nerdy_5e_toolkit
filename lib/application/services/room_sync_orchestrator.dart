@@ -14,7 +14,6 @@ import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
-import '../../infrastructure/di/injection_container.dart';
 import '../../services/dice_room_service.dart';
 
 /// Application service orchestrating bidirectional synchronization between
@@ -85,7 +84,6 @@ class RoomSyncOrchestrator {
         candidate.trim().toLowerCase() != 'local') {
       return ReplicaId(candidate.trim());
     }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
     throw StateError(
       'RoomSyncOrchestrator requires an authoritative ReplicaId. '
       'Ensure initServiceLocator() has completed or inject replicaId explicitly.',

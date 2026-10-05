@@ -8,6 +8,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_ent
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/skills_saves_matrix.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 Character _createTestWarlock({
   Map<SkillType, SkillProficiencyLevel> skillProficiencies = const {},
@@ -63,7 +66,7 @@ void main() {
         'CharacterSheetController.setSkillProficiency updates stats to 2x proficiency bonus',
         () async {
       final character = _createTestWarlock();
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character);
 
       // Initially no proficiency in persuasion -> modifier is just +4 (CHA)
       expect(controller.stats.proficiencyBonus, equals(4));
@@ -99,7 +102,7 @@ void main() {
         'CharacterSheetController.cycleSkillProficiency cycles through none, proficient, expertise',
         () async {
       final character = _createTestWarlock();
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character);
 
       expect(controller.character.skillProficiencies[SkillType.persuasion],
           isNull);
@@ -133,7 +136,7 @@ void main() {
           SkillType.persuasion: SkillProficiencyLevel.expertise,
         },
       );
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -165,7 +168,7 @@ void main() {
         'Tapping the skill pip cycles proficiency level directly in the UI',
         (tester) async {
       final character = _createTestWarlock();
-      final controller = CharacterSheetController(character: character);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: character);
 
       await tester.pumpWidget(
         MaterialApp(

@@ -37,30 +37,15 @@ class DmDashboardController extends ChangeNotifier {
   bool _isLoading = true;
   int _currentRound = 1;
 
-  static ReplicaId _resolveReplicaId(ReplicaId? replicaId, [String? legacyNodeId]) {
-    if (replicaId != null) return replicaId;
-    if (legacyNodeId != null &&
-        legacyNodeId.trim().isNotEmpty &&
-        legacyNodeId.trim().toLowerCase() != 'local') {
-      return ReplicaId(legacyNodeId.trim());
-    }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
-    throw StateError(
-      'DmDashboardController requires an authoritative ReplicaId. '
-      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
-    );
-  }
-
   DmDashboardController({
+    required ReplicaId replicaId,
     ICampaignRepository? campaignRepository,
     ICharacterRepository<Character>? characterRepository,
     CombatEncounterService? combatEncounterService,
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
-    ReplicaId? replicaId,
-    @Deprecated('Use replicaId instead') String? nodeId,
-  })  : _replicaId = _resolveReplicaId(replicaId, nodeId),
+  })  : _replicaId = replicaId,
         _campaignProfileService = campaignRepository ??
             campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
@@ -90,7 +75,7 @@ class DmDashboardController extends ChangeNotifier {
                     combatResolver: sl.isRegistered<ICombatResolver>()
                         ? sl<ICombatResolver>()
                         : const Dnd5eCombatResolver(),
-                    localNodeId: _resolveReplicaId(replicaId, nodeId).value,
+                    localNodeId: replicaId.value,
                   )),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()
@@ -417,7 +402,7 @@ class DmDashboardController extends ChangeNotifier {
   PartyPurse get totalPartyWealth {
     var total = partyPurse;
     for (final char in partyCharacters) {
-      total = total.add(char.purse, nodeId: _replicaId.value);
+      total = total.add(char.purse, replicaId: _replicaId);
     }
     return total;
   }
@@ -426,7 +411,7 @@ class DmDashboardController extends ChangeNotifier {
   Future<void> modifyPartyPurseCoin(String coinKey, int delta) async {
     if (_activeProfile == null || delta == 0) return;
     final curPurse = _activeProfile!.partyPurse;
-    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _replicaId.value);
+    final newPurse = curPurse.modifyCoin(coinKey, delta, replicaId: _replicaId);
     _activeProfile = _activeProfile!.copyWith(partyPurse: newPurse);
     notifyListeners();
     await _campaignProfileService.saveProfileImmediate(_activeProfile!);
@@ -443,7 +428,7 @@ class DmDashboardController extends ChangeNotifier {
     if (char == null || delta == 0) return;
 
     final curPurse = char.purse;
-    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _replicaId.value);
+    final newPurse = curPurse.modifyCoin(coinKey, delta, replicaId: _replicaId);
     final updated = char.copyWith(purse: newPurse);
     _partyCharactersMap[characterId] = updated;
     _resolvedTelemetryMap.remove(characterId);

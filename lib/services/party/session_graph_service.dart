@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import '../../models/domain/loot_models.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_purse.dart';
@@ -167,6 +168,7 @@ class SessionGraphService {
     required String itemInstanceId,
     int quantity = 1,
     PartyPurse? currency,
+    ReplicaId? replicaId,
   }) {
     final containerIdx =
         room.containers.indexWhere((c) => c.containerId == containerId);
@@ -182,6 +184,7 @@ class SessionGraphService {
       instanceId: itemInstanceId,
       quantity: quantity,
       currency: currency,
+      replicaId: replicaId,
     );
 
     final updatedContainers = List<LootContainer>.from(room.containers);

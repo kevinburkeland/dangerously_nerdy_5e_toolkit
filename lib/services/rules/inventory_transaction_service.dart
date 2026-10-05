@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../models/domain/loot_models.dart';
 import '../../models/party/party_purse.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
-import '../../infrastructure/di/injection_container.dart';
 
 /// Result container for atomic loot transactions
 @immutable
@@ -323,7 +322,6 @@ class InventoryTransactionService {
         nodeId.trim().toLowerCase() != 'local') {
       return ReplicaId(nodeId.trim());
     }
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>();
     throw StateError(
       'InventoryTransactionService requires an authoritative ReplicaId for currency transfer. '
       'Ensure initServiceLocator() has completed or pass replicaId explicitly.',
@@ -378,9 +376,9 @@ class InventoryTransactionService {
     if (currency != null && currency.totalGpEquivalent > 0) {
       final effectiveReplica = _resolveReplicaId(replicaId, nodeId);
       updatedContainerPurse =
-          updatedContainerPurse.deduct(currency, nodeId: effectiveReplica.value);
+          updatedContainerPurse.deduct(currency, replicaId: effectiveReplica);
       updatedCharPurse =
-          updatedCharPurse.add(currency, nodeId: effectiveReplica.value);
+          updatedCharPurse.add(currency, replicaId: effectiveReplica);
     }
 
     final updatedContainer = sourceContainer.copyWith(
@@ -448,9 +446,9 @@ class InventoryTransactionService {
     if (currency != null && currency.totalGpEquivalent > 0) {
       final effectiveReplica = _resolveReplicaId(replicaId, nodeId);
       updatedCharPurse =
-          updatedCharPurse.deduct(currency, nodeId: effectiveReplica.value);
+          updatedCharPurse.deduct(currency, replicaId: effectiveReplica);
       updatedContainerPurse =
-          updatedContainerPurse.add(currency, nodeId: effectiveReplica.value);
+          updatedContainerPurse.add(currency, replicaId: effectiveReplica);
     }
 
 

@@ -8,6 +8,9 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/add_feat_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/modify_ability_scores_dialog.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -67,7 +70,7 @@ void main() {
     test(
         'Direct Ability Score Modification on CharacterSheetController updates stats',
         () async {
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(character: baseCharacter, replicaId: _testReplica);
 
       expect(controller.character.baseScores.strength, equals(14));
       expect(controller.stats.effectiveScores.strength, equals(14));
@@ -88,7 +91,7 @@ void main() {
     test(
         'Adding a Feat updates character feats and applies ability score boost',
         () async {
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(character: baseCharacter, replicaId: _testReplica);
 
       expect(controller.character.feats.isEmpty, isTrue);
 
@@ -113,7 +116,7 @@ void main() {
 
     test('Removing a Feat removes it and reverses associated ability bonuses',
         () async {
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(character: baseCharacter, replicaId: _testReplica);
 
       const athleteRef = EntityReference<DomainEntity>.empty(
         refType: EntityType.feat,
@@ -138,7 +141,7 @@ void main() {
     test(
         'Versatile Specialist feat: supports selecting the same skill for proficiency and expertise',
         () async {
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(character: baseCharacter, replicaId: _testReplica);
 
       // Initially character has no athletics proficiency
       expect(
@@ -185,7 +188,7 @@ void main() {
       ).copyWith(partyCharacterIds: ['hero-bob']);
       await CampaignProfileService().saveProfileImmediate(profile);
 
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(character: baseCharacter, replicaId: _testReplica);
 
       // 2. Modify ability score
       await controller.modifyAbilityScore(
@@ -242,7 +245,7 @@ void main() {
 
     testWidgets('ModifyAbilityScoresDialog renders and allows adjusting scores',
         (tester) async {
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(character: baseCharacter, replicaId: _testReplica);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -284,7 +287,7 @@ void main() {
 
     testWidgets('AddFeatDialog renders search and custom feat option',
         (tester) async {
-      final controller = CharacterSheetController(character: baseCharacter);
+      final controller = CharacterSheetController(character: baseCharacter, replicaId: _testReplica);
 
       await tester.pumpWidget(
         MaterialApp(

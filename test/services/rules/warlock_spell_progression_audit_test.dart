@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progression_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/spell_allocation_validator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/level_up_wizard_dialog.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   group('Warlock Spell Progression & Untraining Audit', () {
@@ -445,6 +446,7 @@ void main() {
       final controller = CharacterSheetController(
         character: testChar,
         persistenceService: mockPersistence,
+        replicaId: ReplicaId('test_runner_replica'),
       );
 
       expect(controller.character.spellsKnown.length, 2);

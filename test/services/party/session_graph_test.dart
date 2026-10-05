@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/loot_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/session_graph_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
@@ -180,6 +181,7 @@ void main() {
         itemInstanceId: 'item-ruby',
         quantity: 1,
         currency: PartyPurse(gp: 100),
+        replicaId: ReplicaId('test_session_replica'),
       );
 
       final updatedRoom = transferOutcome.updatedRoom;

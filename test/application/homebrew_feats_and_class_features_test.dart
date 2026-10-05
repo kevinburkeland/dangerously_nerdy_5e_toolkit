@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
@@ -154,7 +155,10 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: char);
+      final controller = CharacterSheetController(
+        character: char,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
 
       expect(
           controller.character.toolProficiencies.contains("Brewer's Supplies"),
@@ -261,7 +265,10 @@ void main() {
         resources: CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: hero);
+      final controller = CharacterSheetController(
+        character: hero,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
       final stats = CharacterEvaluationEngine.evaluate(hero);
 
       final resolvedWithCustom = CharacterActionsResolver.resolve(

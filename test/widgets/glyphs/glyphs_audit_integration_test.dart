@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/classes/class_card.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/classes/class_detail_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/feats/feat_card.dart';
@@ -67,7 +68,10 @@ void main() {
       ),
     );
 
-    testController = CharacterSheetController(character: testCharacter);
+    testController = CharacterSheetController(
+      character: testCharacter,
+      replicaId: ReplicaId('test_runner_replica'),
+    );
 
     testSpell = const Spell(
       id: EntityId(slug: 'fireball', ruleset: RulesetVersion.v2024),

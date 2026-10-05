@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
-import '../di/injection_container.dart';
 import '../../services/app_services.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';
@@ -40,23 +39,17 @@ class LocalCampaignRepository implements ICampaignRepository {
   final StreamController<List<CampaignProfile>> _allProfilesController =
       StreamController<List<CampaignProfile>>.broadcast();
 
-  final ReplicaId? _replicaId;
+  final ReplicaId _replicaId;
 
   LocalCampaignRepository({
     AppDatabaseService? db,
     ICharacterRepository? characterRepo,
-    ReplicaId? replicaId,
+    required ReplicaId replicaId,
   })  : _db = db ?? AppDatabaseService.instance,
         _replicaId = replicaId;
 
-  String get _effectiveNodeId {
-    if (_replicaId != null) return _replicaId.value;
-    if (sl.isRegistered<ReplicaId>()) return sl<ReplicaId>().value;
-    throw StateError(
-      'LocalCampaignRepository requires an authoritative ReplicaId. '
-      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
-    );
-  }
+  ReplicaId get replicaId => _replicaId;
+  String get _effectiveNodeId => _replicaId.value;
 
   @override
   String? get activeProfileId => _activeProfileId;

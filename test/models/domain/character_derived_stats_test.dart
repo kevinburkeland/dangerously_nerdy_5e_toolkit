@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipme
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_builder_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 Character _createTestCharacter({
   AbilityScores baseScores = const AbilityScores(),
@@ -481,7 +482,10 @@ void main() {
         classes: [warlockClass],
       );
 
-      final controller = CharacterSheetController(character: char);
+      final controller = CharacterSheetController(
+        character: char,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
 
       expect(controller.hasAgonizingBlast, isTrue);
 

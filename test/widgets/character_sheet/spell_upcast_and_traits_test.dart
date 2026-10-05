@@ -9,6 +9,9 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/spellbook/spell_card.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive_spell_tile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_sheet/abilities_and_traits_tab.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 class _FakeRepo implements ICharacterRepository<Character> {
   Character? saved;
@@ -203,7 +206,7 @@ void main() {
     testWidgets(
         'Cantrips roll immediately without triggering upcast bottom sheet',
         (tester) async {
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: baseCharacter, persistenceService: fakeRepo);
 
       const cantrip = Spell(
@@ -253,7 +256,7 @@ void main() {
     testWidgets(
         'Leveled spell triggers upcast sheet, selecting 4th level decrements 4th leaving 2nd untouched',
         (tester) async {
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: baseCharacter, persistenceService: fakeRepo);
 
       const leveledSpell = Spell(
@@ -318,7 +321,7 @@ void main() {
           ),
         ),
       );
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: charWith3rdSlots, persistenceService: fakeRepo);
 
       const firstLevelSpell = Spell(
@@ -384,7 +387,7 @@ void main() {
     testWidgets(
         'SpellCard Cast button invokes upcasting bottom sheet on Level 1+ spell',
         (tester) async {
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: baseCharacter, persistenceService: fakeRepo);
       final spellItem = SpellbookLibrary.getSpellById('shield')!;
 
@@ -438,7 +441,7 @@ void main() {
           ),
         ),
       );
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: warlockChar, persistenceService: fakeRepo);
 
       const agathys = Spell(
@@ -498,7 +501,7 @@ void main() {
           ),
         ),
       );
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: warlockChar, persistenceService: fakeRepo);
 
       const agathys = Spell(
@@ -549,7 +552,7 @@ void main() {
           ),
         ),
       );
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: multiclassChar, persistenceService: fakeRepo);
 
       const agathys = Spell(
@@ -611,7 +614,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final controller = CharacterSheetController(
+      final controller = CharacterSheetController(replicaId: _testReplica, 
           character: baseCharacter, persistenceService: fakeRepo);
 
       await tester.pumpWidget(

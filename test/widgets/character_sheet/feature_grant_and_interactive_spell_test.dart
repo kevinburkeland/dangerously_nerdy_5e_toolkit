@@ -6,6 +6,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipme
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive_spell_tile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/features_traits_section.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   group('Feature Grant Combat Injection & CharacterSheetController Tests', () {
@@ -116,9 +119,9 @@ void main() {
     test('Evaluates capability flags accurately from selected feature options',
         () {
       final ctrlWith =
-          CharacterSheetController(character: warlockWithAgonizing);
+          CharacterSheetController(replicaId: _testReplica, character: warlockWithAgonizing);
       final ctrlWithout =
-          CharacterSheetController(character: warlockWithoutAgonizing);
+          CharacterSheetController(replicaId: _testReplica, character: warlockWithoutAgonizing);
 
       expect(ctrlWith.hasCapabilityFlag('eldritchBlastChaDamage'), isTrue);
       expect(ctrlWithout.hasCapabilityFlag('eldritchBlastChaDamage'), isFalse);
@@ -129,9 +132,9 @@ void main() {
         'Injects Charisma modifier into Eldritch Blast damage roll when Agonizing Blast is active',
         () {
       final ctrlWith =
-          CharacterSheetController(character: warlockWithAgonizing);
+          CharacterSheetController(replicaId: _testReplica, character: warlockWithAgonizing);
       final ctrlWithout =
-          CharacterSheetController(character: warlockWithoutAgonizing);
+          CharacterSheetController(replicaId: _testReplica, character: warlockWithoutAgonizing);
 
       // Level 2 Warlock with Cha 16 (+3 mod) & Agonizing Blast: 1d10 + 3
       final rollWith = ctrlWith.rollSpellDamage(eldritchBlast);
@@ -148,7 +151,7 @@ void main() {
         'Calculates spell attack roll using character evaluated spellAttackBonus',
         () {
       final ctrlWith =
-          CharacterSheetController(character: warlockWithAgonizing);
+          CharacterSheetController(replicaId: _testReplica, character: warlockWithAgonizing);
       // Level 2 (prof +2) + Cha 16 (+3) = +5 spell attack bonus
       expect(ctrlWith.stats.spellAttackBonus, equals(5));
 
@@ -219,7 +222,7 @@ void main() {
         ),
       );
 
-      controller = CharacterSheetController(character: warlock);
+      controller = CharacterSheetController(replicaId: _testReplica, character: warlock);
     });
 
     testWidgets(
@@ -361,7 +364,7 @@ void main() {
         ],
       );
 
-      controller = CharacterSheetController(character: character);
+      controller = CharacterSheetController(replicaId: _testReplica, character: character);
     });
 
     testWidgets(

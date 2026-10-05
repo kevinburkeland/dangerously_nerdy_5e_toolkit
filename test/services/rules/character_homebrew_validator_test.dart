@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_homebrew_validator.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   group('CharacterHomebrewValidator Tests', () {
@@ -298,7 +299,10 @@ void main() {
         ),
       );
 
-      final controller = CharacterSheetController(character: customChar);
+      final controller = CharacterSheetController(
+        character: customChar,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
       expect(controller.hasMissingHomebrew, isTrue);
       expect(controller.missingHomebrewReport.count, equals(1));
       expect(controller.missingHomebrewReport.missingItems.first.slug,

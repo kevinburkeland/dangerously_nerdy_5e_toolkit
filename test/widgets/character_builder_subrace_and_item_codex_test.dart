@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_ent
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_species_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver.dart';
@@ -172,7 +173,10 @@ void main() {
         resources: CharacterResourcePool(currentHp: 10),
       );
 
-      final controller = CharacterSheetController(character: initialChar);
+      final controller = CharacterSheetController(
+        character: initialChar,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
       expect(controller.character.inventory, isEmpty);
 
       final newItem = InventoryItemInstance(

@@ -3,6 +3,7 @@ import 'package:mutex/mutex.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 
@@ -44,7 +45,10 @@ void main() {
     test(
         'broadcasts state updates through watchActiveProfile and watchAllProfiles on save',
         () async {
-      final repo = LocalCampaignRepository(characterRepo: _FakeCharRepo());
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('test_repo_node'),
+        characterRepo: _FakeCharRepo(),
+      );
       addTearDown(repo.dispose);
 
       final activeProfileEvents = <CampaignProfile?>[];
@@ -70,7 +74,10 @@ void main() {
     });
 
     test('setActiveProfileId updates active profile stream', () async {
-      final repo = LocalCampaignRepository(characterRepo: _FakeCharRepo());
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('test_repo_node'),
+        characterRepo: _FakeCharRepo(),
+      );
       addTearDown(repo.dispose);
 
       final p1 =
@@ -94,7 +101,10 @@ void main() {
     test(
         'saveProfileImmediate emits profile updates asynchronously on microtask queue',
         () async {
-      final repo = LocalCampaignRepository(characterRepo: _FakeCharRepo());
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('test_repo_node'),
+        characterRepo: _FakeCharRepo(),
+      );
       addTearDown(repo.dispose);
 
       bool synchronousFlag = false;
@@ -127,7 +137,10 @@ void main() {
     test(
         'rapidly chaining saveProfileImmediate within a Mutex does not deadlock or throw StateError',
         () async {
-      final repo = LocalCampaignRepository(characterRepo: _FakeCharRepo());
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('test_repo_node'),
+        characterRepo: _FakeCharRepo(),
+      );
       addTearDown(repo.dispose);
 
       final mutex = Mutex();

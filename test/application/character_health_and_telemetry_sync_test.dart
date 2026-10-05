@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
@@ -51,7 +52,8 @@ void main() {
       currentHp: 38,
       tempHp: 5,
     ),
-    purse: const PartyPurse.empty().setCoins(gp: 75, sp: 20, nodeId: 'init'),
+    purse:
+        const PartyPurse.empty().setCoins(gp: 75, sp: 20, replicaId: ReplicaId('init')),
   );
 
   setUp(() async {
@@ -107,6 +109,7 @@ void main() {
         () async {
       final controller = CharacterSheetController(
         character: testHero,
+        replicaId: ReplicaId('test_hero_node'),
         persistenceService: characterRepo,
       );
 
@@ -142,6 +145,7 @@ void main() {
         () async {
       final controller = CharacterSheetController(
         character: testHero,
+        replicaId: ReplicaId('test_hero_node'),
         persistenceService: characterRepo,
       );
 

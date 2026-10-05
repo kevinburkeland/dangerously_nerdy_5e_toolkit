@@ -10,6 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 Widget _buildTestApp({required Widget home}) {
   return MaterialApp(
@@ -64,7 +65,10 @@ void main() {
       await persistence.saveCharacter(hero);
 
       final controller = CharacterSheetController(
-          character: hero, persistenceService: persistence);
+        character: hero,
+        persistenceService: persistence,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
       expect(controller.character.purse.gp, equals(50));
 
       await controller.modifyPurseCoin('gp', 25);
@@ -135,6 +139,7 @@ void main() {
       final controller = DmDashboardController(
         campaignProfileService: profileService,
         characterPersistenceService: persistence,
+        replicaId: ReplicaId('test_dm_replica'),
       );
       await controller.loadData();
 

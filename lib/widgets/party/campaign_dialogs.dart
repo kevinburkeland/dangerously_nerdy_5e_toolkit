@@ -2615,7 +2615,7 @@ class _MemberCoinTransactionDialogState
               ep: ep,
               gp: gp,
               pp: pp,
-              nodeId: _partyService.localNodeId,
+              replicaId: _partyService.replicaId,
             )
           : currentPurse.withdrawCoins(
               cp: cp,
@@ -2623,7 +2623,7 @@ class _MemberCoinTransactionDialogState
               ep: ep,
               gp: gp,
               pp: pp,
-              nodeId: _partyService.localNodeId,
+              replicaId: _partyService.replicaId,
             );
 
       await _partyService.updateMemberPurse(

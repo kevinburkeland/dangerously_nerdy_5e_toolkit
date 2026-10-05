@@ -227,6 +227,7 @@ void main() {
       );
 
       orchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_orchestrator_node'),
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -473,6 +474,7 @@ void main() {
         () async {
       final genericMock = MockTransportPort();
       final genericOrchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_generic_node'),
         transportPort: genericMock,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -508,6 +510,7 @@ void main() {
         ..peerLastSeen = {'peerA': 1000, 'peerB': 2000};
 
       final genericOrchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_generic_node'),
         transportPort: genericMock,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -534,6 +537,7 @@ void main() {
       await router.initializeRoom('CR-101', 'localNode1');
 
       orchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_orchestrator_node'),
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -603,6 +607,7 @@ void main() {
 
     test('Default telemetryInterval is 2 seconds', () {
       final defaultOrchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_default_node'),
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -881,7 +886,7 @@ void main() {
       // Remote payload has updated party purse
       final remoteProfile = baseProfile.copyWith(
         partyPurse: const PartyPurse.empty()
-            .setCoins(gp: 750, pp: 5, nodeId: 'node_remote'),
+            .setCoins(gp: 750, pp: 5, replicaId: ReplicaId('node_remote')),
         notesMarkdown: '', // Remote did not edit notes (blank)
       );
 
@@ -944,6 +949,7 @@ void main() {
         () async {
       final throwingReconciliationService = ThrowingReconciliationService();
       final testOrchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_orchestrator_node'),
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: throwingReconciliationService,

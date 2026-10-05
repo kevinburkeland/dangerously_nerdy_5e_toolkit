@@ -5,6 +5,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_vitals_hud.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/short_rest_dialog.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   group('ShortRestDialog Widget Tests', () {
@@ -42,7 +45,7 @@ void main() {
         ),
       );
 
-      controller = CharacterSheetController(character: baseCharacter);
+      controller = CharacterSheetController(replicaId: _testReplica, character: baseCharacter);
     });
 
     testWidgets('Renders Hit Dice steppers and allows incrementing spent dice',
@@ -96,7 +99,7 @@ void main() {
         resources: baseCharacter.resources.copyWith(currentHitDice: {'d10': 1}),
       );
       final singleDieController =
-          CharacterSheetController(character: singleDieChar);
+          CharacterSheetController(replicaId: _testReplica, character: singleDieChar);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -140,7 +143,7 @@ void main() {
           exhaustionLevel: 1,
         ),
       );
-      final testController = CharacterSheetController(character: damagedChar);
+      final testController = CharacterSheetController(replicaId: _testReplica, character: damagedChar);
 
       await tester.pumpWidget(
         MaterialApp(

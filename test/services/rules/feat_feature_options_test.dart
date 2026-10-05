@@ -7,6 +7,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progressio
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 Character _createTestChar({
   required String slug,
@@ -258,7 +261,10 @@ void main() {
         ],
       );
 
-      final controller = CharacterSheetController(character: char);
+      final controller = CharacterSheetController(
+        character: char,
+        replicaId: _testReplica,
+      );
       final stats = CharacterEvaluationEngine.evaluate(char);
       final resolved = CharacterActionsResolver.resolve(
         character: char,
@@ -346,7 +352,10 @@ void main() {
         ],
       );
 
-      final controller = CharacterSheetController(character: baseChar);
+      final controller = CharacterSheetController(
+        character: baseChar,
+        replicaId: _testReplica,
+      );
 
       await controller.addFeat(
         const EntityReference.empty(

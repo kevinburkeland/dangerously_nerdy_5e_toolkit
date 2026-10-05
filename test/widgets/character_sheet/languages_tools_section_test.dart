@@ -4,6 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/languages_tools_section.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   group('LanguagesToolsSection Widget Tests', () {
@@ -43,7 +44,10 @@ void main() {
         resources: CharacterResourcePool(currentHp: 20),
       );
 
-      controller = CharacterSheetController(character: testCharacter);
+      controller = CharacterSheetController(
+        character: testCharacter,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
     });
 
     testWidgets('Renders languages and tool proficiencies cards properly',

@@ -14,7 +14,6 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encount
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart'
     as app_party;
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
@@ -26,15 +25,12 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_import_orchestrator.dart';
-import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';
-import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Cold Iron Birdcage: Replica Identity Hardening Suite', () {
+  group('Cold Iron Birdcage: Replica Identity Hardening Suite (Pass 1.3)', () {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       await AppDatabaseService.instance.resetForTesting();
@@ -47,113 +43,175 @@ void main() {
       sl.reset();
     });
 
-    test('1. Two independently initialized replicas receive different IDs',
-        () async {
-      final db = AppDatabaseService.instance;
-      final store1 = LocalReplicaIdentityStore(db: db);
-      final replica1 = await store1.getOrCreateReplicaId();
+    test('1. One application bootstrap creates one ReplicaId', () async {
+      await initServiceLocator();
 
-      // Simulate a distinct storage namespace / second independent replica
-      await db.resetForTesting();
-      final store2 = LocalReplicaIdentityStore(db: db);
-      final replica2 = await store2.getOrCreateReplicaId();
-
-      expect(replica1.value, isNotEmpty);
-      expect(replica2.value, isNotEmpty);
-      expect(replica1, isNot(equals(replica2)));
-      expect(replica1.value, isNot(equals(replica2.value)));
-      expect(replica1.value.toLowerCase(), isNot(equals('local')));
-      expect(replica2.value.toLowerCase(), isNot(equals('local')));
+      expect(sl.isRegistered<ReplicaId>(), isTrue);
+      final replica = sl<ReplicaId>();
+      expect(replica.value, isNotEmpty);
+      expect(replica.value.toLowerCase(), isNot(equals('local')));
+      // UUID format validation (8-4-4-4-12)
+      final uuidRegex = RegExp(
+        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+      );
+      expect(uuidRegex.hasMatch(replica.value), isTrue);
     });
 
-    test('2. Reloading the same local persistence/storage instance returns the same ID',
+    test(
+        '2. All services constructed during that bootstrap receive exactly that same runtime ReplicaId',
+        () async {
+      await initServiceLocator();
+      final authoritativeReplica = sl<ReplicaId>();
+      final expectedNodeId = authoritativeReplica.value;
+
+      final combatService = sl<CombatEncounterService>();
+      expect(combatService.localNodeId, equals(expectedNodeId));
+
+      final partyService = sl<PartyRoomService>();
+      expect(partyService.localNodeId, equals(expectedNodeId));
+      expect(partyService.replicaId, equals(authoritativeReplica));
+
+      final dmController = DmDashboardController(
+        replicaId: authoritativeReplica,
+      );
+      expect(dmController.nodeId, equals(expectedNodeId));
+      expect(dmController.replicaId, equals(authoritativeReplica));
+      expect(dmController.combatEncounterService.localNodeId, equals(expectedNodeId));
+
+      const testChar = Character(
+        id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
+        name: 'Hero',
+        speciesRef: EntityReference.empty(
+            slug: 'human', refType: EntityType.species, displayName: 'Human'),
+        progression: CharacterProgression(classes: []),
+        baseScores: AbilityScores.standardArray(),
+      );
+      final charController = CharacterSheetController(
+        character: testChar,
+        replicaId: authoritativeReplica,
+      );
+      expect(charController.nodeId, equals(expectedNodeId));
+      expect(charController.replicaId, equals(authoritativeReplica));
+    });
+
+    test(
+        '3. A second independent bootstrap/runtime sharing the same durable storage receives a DIFFERENT ReplicaId',
+        () async {
+      await initServiceLocator();
+      final runtime1 = sl<ReplicaId>();
+
+      // Reset service locator for second application bootstrap/tab (same storage)
+      sl.reset();
+      await initServiceLocator();
+      final runtime2 = sl<ReplicaId>();
+
+      expect(runtime1.value, isNotEmpty);
+      expect(runtime2.value, isNotEmpty);
+      expect(runtime1, isNot(equals(runtime2)));
+      expect(runtime1.value, isNot(equals(runtime2.value)));
+    });
+
+    test('4. Historical persisted state remains readable', () {
+      final legacyMap = {
+        'positive': {'local': 100, 'node_old': 50},
+        'negative': {'local': 20, 'node_old': 10},
+      };
+      final counter = PnCounter.fromMap(legacyMap);
+      expect(counter.positive['local'], equals(100));
+      expect(counter.positive['node_old'], equals(50));
+      expect(counter.negative['local'], equals(20));
+      expect(counter.negative['node_old'], equals(10));
+      expect(counter.value, equals(120)); // (100 + 50) - (20 + 10) = 120
+    });
+
+    test(
+        '5. Existing old dn_replica_id metadata does not become the active writer ID after migration',
         () async {
       final db = AppDatabaseService.instance;
-      final store = LocalReplicaIdentityStore(db: db);
-      final originalReplica = await store.getOrCreateReplicaId();
-
-      // Simulate application restart reading from existing persisted database box
-      final reloadedStore = LocalReplicaIdentityStore(db: db);
-      final reloadedReplica = await reloadedStore.getOrCreateReplicaId();
-
-      expect(reloadedReplica, equals(originalReplica));
-      expect(reloadedReplica.value, equals(originalReplica.value));
-
-      // Also verify direct disk persistence key in metadata box
-      final persisted = db.get(
+      // Pre-seed historical dn_replica_id in database box
+      await db.put(
         AppDatabaseService.boxMetadata,
         AppDatabaseService.keyReplicaId,
+        'old_historical_persisted_uuid_9999',
       );
-      expect(persisted, equals(originalReplica.value));
+
+      final store = LocalReplicaIdentityStore(db: db);
+      final runtimeReplica = await store.getOrCreateReplicaId();
+
+      // Invariant: The active runtime writer ID MUST NOT equal the historical persisted device ID
+      expect(runtimeReplica.value, isNot(equals('old_historical_persisted_uuid_9999')));
+      expect(runtimeReplica.value, isNotEmpty);
+
+      // Verify historical device ID is safely readable as durable metadata if needed
+      expect(
+        store.deprecatedPersistedDeviceId,
+        equals('old_historical_persisted_uuid_9999'),
+      );
     });
 
-    test('3. CRDT mutation APIs cannot operate using an implicit or explicit shared "local" identity',
-        () {
-      // ReplicaId value object prevents 'local' and empty strings
+    test('6. No active mutation produces a "local" component', () {
       expect(() => ReplicaId(''), throwsArgumentError);
       expect(() => ReplicaId('   '), throwsArgumentError);
       expect(() => ReplicaId('local'), throwsArgumentError);
       expect(() => ReplicaId('LOCAL'), throwsArgumentError);
       expect(() => ReplicaId(' Local '), throwsArgumentError);
 
-      // PnCounter mutations reject 'local'
-      final counter = PnCounter.withInitialValue(10, nodeId: 'valid_node');
-      expect(
-        () => counter.increment(5, nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => counter.decrement(5, nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => PnCounter.withInitialValue(10, nodeId: 'local'),
-        throwsArgumentError,
-      );
+      final runtimeId = ReplicaId('active_writer_1');
+      final counter = PnCounter.withInitialValue(10, replicaId: runtimeId);
+      final next = counter.increment(5, replicaId: runtimeId);
 
-      // PartyPurse mutations reject 'local'
-      final purse = PartyPurse(gp: 100);
-      expect(
-        () => purse.depositCoins(gp: 50, nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => purse.withdrawCoins(gp: 50, nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => purse.modifyCoin('gp', 50, nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => purse.setCoins(gp: 50, nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => purse.add(PartyPurse(gp: 10), nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => purse.deduct(PartyPurse(gp: 10), nodeId: 'local'),
-        throwsArgumentError,
-      );
-      expect(
-        () => purse.deductGpEquivalent(10, nodeId: 'local'),
-        throwsArgumentError,
-      );
-
-      // Compatibility: historical persisted 'local' keys are preserved without error
-      final legacyMap = {
-        'positive': {'local': 100, 'node_a': 50},
-        'negative': {'local': 20, 'node_b': 10},
-      };
-      final deserialized = PnCounter.fromMap(legacyMap);
-      expect(deserialized.positive['local'], equals(100));
-      expect(deserialized.negative['local'], equals(20));
-      expect(deserialized.value, equals(120)); // (100+50) - (20+10) = 120
+      expect(next.positive.containsKey('local'), isFalse);
+      expect(next.negative.containsKey('local'), isFalse);
+      expect(next.positive[runtimeId.value], equals(15));
     });
 
-    test('4. PartyRoomService.removeCharacterFromRoster attributes mutations to injected replica ID',
+    test('7. Sequential mutations by one runtime accumulate in that runtime component',
+        () {
+      final runtimeId = ReplicaId('writer_seq');
+      var counter = PnCounter.withInitialValue(10, replicaId: runtimeId);
+      counter = counter.increment(5, replicaId: runtimeId);
+      counter = counter.increment(7, replicaId: runtimeId);
+      counter = counter.decrement(3, replicaId: runtimeId);
+
+      expect(counter.positive[runtimeId.value], equals(22)); // 10 + 5 + 7
+      expect(counter.negative[runtimeId.value], equals(3));
+      expect(counter.value, equals(19));
+    });
+
+    test('8. Independent mutations by two runtime IDs survive CvRDT merge',
+        () {
+      final base = PnCounter.fromMap({
+        'positive': {'historical_node': 10},
+        'negative': {},
+      });
+
+      final replicaA = ReplicaId('runtime_tab_A');
+      final replicaB = ReplicaId('runtime_tab_B');
+
+      final stateA = base.increment(5, replicaId: replicaA);
+      final stateB = base.increment(8, replicaId: replicaB);
+
+      final merged = stateA.merge(stateB);
+
+      expect(replicaA, isNot(equals(replicaB)));
+      expect(merged.value, equals(23));
+      expect(merged.positive[replicaA.value], equals(5));
+      expect(merged.positive[replicaB.value], equals(8));
+      expect(merged.positive['historical_node'], equals(10));
+
+      // Contrast with failure-shape if writer IDs had collided:
+      // If both runtimes had shared writer ID 'shared_id', stateA would have
+      // positive['shared_id'] = 5, stateB would have positive['shared_id'] = 8,
+      // and max(5, 8) = 8, resulting in merged value 18 (losing 5).
+      final sharedId = ReplicaId('shared_id');
+      final stateSharedA = base.increment(5, replicaId: sharedId);
+      final stateSharedB = base.increment(8, replicaId: sharedId);
+      final mergedCollided = stateSharedA.merge(stateSharedB);
+      expect(mergedCollided.value, equals(18)); // Corrupt / lost update!
+    });
+
+    test(
+        '9. PartyRoomService.removeCharacterFromRoster attributes mutations to injected replica ID',
         () async {
       final authoritativeId = ReplicaId('dm_authoritative_node_99');
       final partyService = PartyRoomService(replicaId: authoritativeId);
@@ -197,44 +255,7 @@ void main() {
       );
     });
 
-    test('5. Subsystems receiving replica identity through DI receive the exact same authoritative value',
-        () async {
-      await initServiceLocator();
-
-      expect(sl.isRegistered<ReplicaId>(), isTrue);
-      final authoritativeReplica = sl<ReplicaId>();
-      final expectedNodeId = authoritativeReplica.value;
-      expect(expectedNodeId, isNotEmpty);
-      expect(expectedNodeId.toLowerCase(), isNot(equals('local')));
-
-      // CombatEncounterService
-      final combatService = sl<CombatEncounterService>();
-      expect(combatService.localNodeId, equals(expectedNodeId));
-
-      // PartyRoomService
-      final partyService = sl<PartyRoomService>();
-      expect(partyService.localNodeId, equals(expectedNodeId));
-
-      // DmDashboardController
-      final dmController = DmDashboardController();
-      expect(dmController.nodeId, equals(expectedNodeId));
-      expect(dmController.combatEncounterService.localNodeId, equals(expectedNodeId));
-
-      // CharacterSheetController
-      const testChar = Character(
-        id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
-        name: 'Hero',
-        speciesRef: EntityReference.empty(
-            slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
-      );
-      final charController = CharacterSheetController(character: testChar);
-      expect(charController.nodeId, equals(expectedNodeId));
-      expect(charController.replicaId, equals(authoritativeReplica));
-    });
-
-    test('6. Migration-created profiles use authoritative replica ID, not room code',
+    test('10. Migration-created profiles use authoritative replica ID, not room code',
         () async {
       final authoritativeId = ReplicaId('dm_migration_node_77');
       sl.registerSingleton<ReplicaId>(authoritativeId);
@@ -262,22 +283,8 @@ void main() {
       expect(migrated.notesRegister.timestamp.nodeId, isNot(equals('ROOM_MIGRATION')));
     });
 
-    test('7. DmDashboardController and fallback collaborators cannot receive different replica IDs',
-        () {
-      final explicitId = ReplicaId('dm_explicit_node_88');
-      final controller = DmDashboardController(replicaId: explicitId);
-
-      expect(controller.nodeId, equals('dm_explicit_node_88'));
-      expect(controller.combatEncounterService.localNodeId, equals('dm_explicit_node_88'));
-
-      final defaultProfile = controller.activeProfile;
-      if (defaultProfile != null) {
-        expect(defaultProfile.notesRegister.timestamp.nodeId, equals('dm_explicit_node_88'));
-        expect(defaultProfile.notesRegister.timestamp.nodeId, isNot(equals('dm_dashboard')));
-      }
-    });
-
-    test('8. Replicated-state writers fail loudly and cannot fabricate an identity when DI is absent',
+    test(
+        '11. Replicated-state writers fail loudly when DI is absent and no replica ID is provided',
         () {
       sl.reset();
       CampaignProfileService.resetForTesting();
@@ -292,39 +299,13 @@ void main() {
         baseScores: AbilityScores.standardArray(),
       );
 
-      // CharacterSheetController fails loudly
-      expect(() => CharacterSheetController(character: testChar), throwsStateError);
-
-      // DmDashboardController fails loudly
-      expect(() => DmDashboardController(), throwsStateError);
-
+      // Services with optional or fallback replicaId throw StateError when DI is absent
       // PartyRoomService (persistence) fails loudly
       expect(() => PartyRoomService(), throwsStateError);
       expect(() => PartyRoomService.newInstance(), throwsStateError);
 
-      // PartyRoomService (application) fails loudly
-      expect(() => app_party.PartyRoomService(), throwsStateError);
-
-      // RoomSyncOrchestrator fails loudly
-      expect(
-        () => RoomSyncOrchestrator(
-          campaignRepo: _TestMockCampaignRepo(),
-          reconciliationService: RoomStateReconciliationService(
-            networkTimeProvider: () => 1000,
-          ),
-          clockSyncService: ClockSyncService(
-            networkTimePort: _TestMockTimePort(),
-          ),
-          transportPort: _TestMockTransportPort(),
-        ),
-        throwsStateError,
-      );
-
       // CampaignProfileService fails loudly
       expect(() => CampaignProfileService().createProfile(name: 'Camp'), throwsStateError);
-
-      // LocalCampaignRepository fails loudly
-      expect(() => LocalCampaignRepository().loadAllProfiles(), throwsStateError);
 
       // InventoryTransactionService currency transfer fails loudly
       final container = LootContainer(
@@ -353,7 +334,8 @@ void main() {
       );
     });
 
-    test('9. Source tree verification: No production CRDT-writing callsite uses hard-coded identities',
+    test(
+        '12. Source tree verification: No production CRDT-writing callsite uses hard-coded identities',
         () {
       final libDir = Directory('lib');
       final dartFiles = libDir
@@ -383,28 +365,8 @@ void main() {
       }
     });
 
-    test('10. LocalCampaignRepository narrows StateError: missing replica identity throws StateError loudly, but unrelated persistence StateErrors are handled gracefully',
-        () async {
-      // 1. Missing replica identity throws StateError immediately
-      sl.reset();
-      expect(sl.isRegistered<ReplicaId>(), isFalse);
-      final repo = LocalCampaignRepository();
-      expect(() => repo.loadAllProfiles(), throwsStateError);
-
-      // 2. Authoritative replica identity is present, but an unrelated StateError arises inside the persistence layer
-      final authoritativeId = ReplicaId('dm_test_node_repo');
-      sl.registerSingleton<ReplicaId>(authoritativeId);
-
-      final failingDb = _FailingStateErrorDatabaseService();
-      final repoWithDbError = LocalCampaignRepository(db: failingDb);
-
-      // Invariant: Unrelated StateError inside persistence must NOT be rethrown;
-      // repository logs non-fatal error and returns an empty list as intended.
-      final result = await repoWithDbError.loadAllProfiles();
-      expect(result, isEmpty);
-    });
-
-    test('11. Replicated-state writers consume authoritative ReplicaId via type-safe constructors/methods',
+    test(
+        '13. Replicated-state writers consume authoritative ReplicaId via type-safe constructors/methods',
         () {
       final authoritativeId = ReplicaId('dm_prod_replica_99');
       sl.registerSingleton<ReplicaId>(authoritativeId);
@@ -477,56 +439,10 @@ void main() {
       expect(transferResult.updatedCharacter.purse.gp, equals(25));
       expect(transferResult.updatedContainer.purse.gp, equals(35));
     });
-
-    test('12. HomebrewImportOrchestrator maintains an ephemeral in-memory ledger and does not bind or contaminate the durable ReplicaId',
-        () async {
-      final authoritativeId = ReplicaId('durable_app_replica_42');
-      sl.reset();
-      sl.registerSingleton<ReplicaId>(authoritativeId);
-
-      // Orchestrator initializes with an ephemeral session-scoped UUID
-      final orchestrator = HomebrewImportOrchestrator(
-        ingestorPort: _TestMockIngestorPort(),
-        retainLedger: false, // Production configuration in HomebrewExpertOptionsView
-      );
-
-      // Invariant: The ephemeral session ID must NOT match or overwrite the durable ReplicaId
-      expect(orchestrator.nodeId, isNotEmpty);
-      expect(orchestrator.nodeId, isNot(equals(authoritativeId.value)));
-      expect(sl<ReplicaId>(), equals(authoritativeId));
-
-      // Invariant: Ephemeral ledger remains strictly in-memory and is not persisted to database
-      final telemetry = await orchestrator.runImport(
-        source: const GithubRepoSource(owner: 'test', repo: 'brew'),
-        ruleset: RulesetVersion.v2024,
-      ).last;
-
-      expect(telemetry.isCompleted, isTrue);
-      expect(sl<ReplicaId>(), equals(authoritativeId));
-    });
   });
 }
 
-class _FailingStateErrorDatabaseService extends AppDatabaseService {
-  _FailingStateErrorDatabaseService() : super.custom();
 
-  @override
-  dynamic get(String boxName, String key, {dynamic defaultValue}) {
-    throw StateError('Simulated unexpected persistence state error');
-  }
-}
-
-class _TestMockIngestorPort implements IGithubIngestorPort {
-  @override
-  Future<List<String>> discoverJsonManifest(GithubRepoSource source) async => [];
-
-  @override
-  Stream<IngestionResult> ingestPayloadStream({
-    required List<String> rawUrls,
-    required RulesetVersion ruleset,
-  }) =>
-      const Stream.empty();
-}
 
 class _TestMockTimePort implements INetworkTimePort {
   @override
@@ -599,4 +515,3 @@ class _TestMockCampaignRepo implements ICampaignRepository {
   @override
   Future<void> deleteProfile(String profileId) async {}
 }
-

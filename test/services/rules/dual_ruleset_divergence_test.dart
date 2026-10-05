@@ -5,6 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resol
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/debounced_storage_service.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -578,6 +579,7 @@ void main() {
       final controller = CharacterSheetController(
         character: char,
         debouncedStorage: debouncedStorage,
+        replicaId: ReplicaId('test_runner_replica'),
       );
 
       expect(controller.rulesEdition, DmRulesEdition.v2014);

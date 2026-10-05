@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/character_models.dart';
 import '../providers/character_sheet_controller.dart';
+import '../infrastructure/di/injection_container.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
 import '../widgets/character_sheet/character_header_banner.dart';
@@ -42,7 +44,10 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
       _controller = widget.controller!;
       _isLoading = false;
     } else if (widget.character != null) {
-      _controller = CharacterSheetController(character: widget.character!);
+      _controller = CharacterSheetController(
+        character: widget.character!,
+        replicaId: sl<ReplicaId>(),
+      );
       _isLoading = false;
     } else {
       _loadDefaultOrSavedCharacter();
@@ -93,6 +98,7 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
       setState(() {
         _controller = CharacterSheetController(
           character: active,
+          replicaId: sl<ReplicaId>(),
           persistenceService: service,
         );
         _isLoading = false;

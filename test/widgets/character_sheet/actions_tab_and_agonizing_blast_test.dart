@@ -9,6 +9,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_re
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_sheet_tabs.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive_spell_tile.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+
+final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
   setUp(() {
@@ -65,7 +68,7 @@ void main() {
         resources: const CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: warlock);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: warlock);
 
       // Spell entity matching the catalog format: slug has 'spell-eldritch-blast'
       const eldritchBlast = Spell(
@@ -220,7 +223,7 @@ void main() {
         resources: const CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: rogueWarlock);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: rogueWarlock);
       final stats = CharacterEvaluationEngine.evaluate(rogueWarlock);
       final resolved = CharacterActionsResolver.resolve(
         character: rogueWarlock,
@@ -311,7 +314,7 @@ void main() {
         resources: const CharacterResourcePool(),
       );
 
-      final controller = CharacterSheetController(character: warlock);
+      final controller = CharacterSheetController(replicaId: _testReplica, character: warlock);
 
       await tester.pumpWidget(
         MaterialApp(

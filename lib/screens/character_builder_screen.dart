@@ -22,6 +22,8 @@ import '../services/rules/skill_trait_resolver.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
 import '../providers/settings_provider.dart';
+import '../infrastructure/di/injection_container.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import '../widgets/common/formatted_markdown_text.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
@@ -558,6 +560,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       if (_sheetController == null) {
         _sheetController = CharacterSheetController(
           character: char,
+          replicaId: sl<ReplicaId>(),
           persistenceService: _persistenceService,
           resolver: _resolver,
         );

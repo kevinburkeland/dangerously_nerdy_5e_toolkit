@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/level_up_wizard_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_header_banner.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   group('LevelUpWizardDialog & Sheet Integration Widget Tests', () {
@@ -56,7 +57,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final controller = CharacterSheetController(character: testFighter);
+      final controller = CharacterSheetController(
+        character: testFighter,
+        replicaId: ReplicaId('test_runner_replica'),
+      );
 
       await tester.pumpWidget(
         MaterialApp(

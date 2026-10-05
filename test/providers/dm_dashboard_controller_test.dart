@@ -11,6 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
@@ -31,6 +32,7 @@ void main() {
       controller = DmDashboardController(
         campaignProfileService: campaignService,
         characterPersistenceService: characterService,
+        replicaId: ReplicaId('test_dm_node'),
       );
     });
 
@@ -292,6 +294,7 @@ void main() {
         () {
       final mockTransport = _MockTransportPort();
       final orchestrator = RoomSyncOrchestrator(
+        replicaId: ReplicaId('test_dm_node'),
         transportPort: mockTransport,
         campaignRepo: campaignService,
         reconciliationService: RoomStateReconciliationService(
@@ -307,6 +310,7 @@ void main() {
         campaignProfileService: campaignService,
         characterPersistenceService: characterService,
         roomSyncOrchestrator: orchestrator,
+        replicaId: ReplicaId('test_dm_node'),
       );
 
       expect(orchController.roomSyncOrchestrator, equals(orchestrator));

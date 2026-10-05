@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
@@ -60,7 +61,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     mockDb = _RecordingDatabaseService();
     charRepo = LocalCharacterRepository(db: mockDb);
-    campRepo = LocalCampaignRepository(db: mockDb, characterRepo: charRepo);
+    campRepo = LocalCampaignRepository(
+        replicaId: ReplicaId('test_camp_node'),
+        db: mockDb,
+        characterRepo: charRepo);
   });
 
   tearDown(() async {

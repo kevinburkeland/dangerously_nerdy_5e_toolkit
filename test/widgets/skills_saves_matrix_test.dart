@@ -5,6 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/skills_saves_matrix.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 void main() {
   testWidgets(
@@ -54,6 +55,7 @@ void main() {
     final controller = CharacterSheetController(
       character: character,
       persistenceService: CharacterPersistenceService(),
+      replicaId: ReplicaId('test_runner_replica'),
     );
 
     await tester.pumpWidget(
