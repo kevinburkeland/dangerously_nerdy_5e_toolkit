@@ -16,6 +16,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/homebrew_entity_dto.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Homebrew Feats & Class Features Directives (SRD Compliant)', () {
     test('Feat parser extracts armor and tool proficiencies from homebrew JSON',
         () {

@@ -38,8 +38,8 @@ You are the Principal Software Architect. When generating, modifying, or reviewi
 
 ## 4. Distributed State & Transport Correctness
 - **Local-First Authority:** Local persistence (Hive / IndexedDB) is the single source of truth. Remote mesh and cloud sync operate via CvRDT lattice merge before disk write; direct remote overwrites are prohibited.
-- **Narrow Mutex Critical Section:** `RoomSyncOrchestrator` uses `_syncMutex` strictly for in-memory CRDT joins and profile reconciliation. Disk persistence executes asynchronously outside the lock to prevent re-entrant deadlocks.
-- **PN-Counter Differential Decrements:** Party currency denominations converge via `PnCounter`. Balances decrement differentially against `effectiveCounter` (`counter.decrement(nodeId, delta)`); never re-seed counters with positive scalars.
+- **Mathematically Signed PN-Counter & Differential Decrements:** Party currency denominations converge via mathematically signed `PnCounter` (`positiveSum - negativeSum`) with monotonically non-negative component totals. Currency non-negativity is clamped at the `PartyPurse` boundary (`math.max(0, counter.value)`). Balances set or decrement differentially against the underlying signed value (`counter.decrement(nodeId, delta)`); never re-seed counters with positive scalars.
+- **Deterministic CRDT Reconstruction:** Deserialization of `HybridLogicalClock` and CRDT primitives must be deterministic, throwing `FormatException` on missing/malformed time rather than substituting current wall-clock time. Merging identical HLC timestamps with divergent payloads is an invariant violation that fails loudly (`StateError`). OR-Sets strictly enforce Add-Wins on equal timestamps.
 - **Deduplication & Packet Hygiene:** Enforce SHA-256 LRU deduplication and sliding lookback window on inbound transport frames. Malformed or unrecognized payloads are rejected before updating deduplication caches.
 
 ## 5. Performance & Pre-Computation

@@ -264,15 +264,16 @@ void main() {
     });
 
     test(
-        'PartyPurse.fromMap prioritizes scalar increment over stale counter and re-seeds',
+        'PartyPurse.fromMap treats counter as authoritative when both counter and scalar exist',
         () {
-      // Simulate Firestore snapshot after FieldValue.increment added 20 GP (total 30 GP),
-      // while the nested gpCounter still had old {local: 10}.
-      final staleMap = <String, dynamic>{
+      // Counter exists ({deviceA: 10}), while scalar field has mismatching value (30).
+      // Under Pass 3.0, the counter is strictly authoritative; redundant scalars must NOT
+      // synthesize unsafe "cloud" repair writes.
+      final map = <String, dynamic>{
         'cp': 0,
         'sp': 0,
         'ep': 0,
-        'gp': 30, // Updated by atomic increment
+        'gp': 30, // Redundant scalar
         'pp': 0,
         'gpCounter': {
           'positive': {'deviceA': 10},
@@ -280,16 +281,16 @@ void main() {
         },
       };
 
-      final purse = PartyPurse.fromMap(staleMap);
-      expect(purse.gp, equals(30),
-          reason: 'Scalar value must take precedence over stale counter');
-      expect(purse.effectiveGpCounter.value, equals(30),
-          reason: 'PN-counter must be re-seeded to 30');
+      final purse = PartyPurse.fromMap(map);
+      expect(purse.gp, equals(10),
+          reason: 'Counter must be authoritative over redundant scalar');
+      expect(purse.effectiveGpCounter.value, equals(10));
+      expect(purse.effectiveGpCounter.positive.containsKey('cloud'), isFalse);
 
-      // Subsequent deposit of 5 GP should compute 35 GP
+      // Subsequent deposit of 5 GP on deviceB computes 15 GP
       final updated =
           purse.depositCoins(gp: 5, replicaId: ReplicaId('deviceB'));
-      expect(updated.gp, equals(35));
+      expect(updated.gp, equals(15));
     });
 
     test(

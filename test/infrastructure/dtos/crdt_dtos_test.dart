@@ -26,7 +26,7 @@ void main() {
     });
 
     test(
-        'fromMap handles string values and missing fields with robust fallbacks',
+        'fromMap parses string values, defaults missing lc to 0, and fails loudly on missing pt or node',
         () {
       final stringMap = {
         'pt': '1700000000000',
@@ -39,11 +39,32 @@ void main() {
       expect(hlc.logicalCounter, equals(42));
       expect(hlc.nodeId, equals('node-string'));
 
+      // Missing logical counter defaults deterministically to 0
+      final noLcMap = {
+        'pt': 1700000000000,
+        'node': 'node-string',
+      };
+      final hlcNoLc = HybridLogicalClockDto.fromMap(noLcMap);
+      expect(hlcNoLc.logicalCounter, equals(0));
+      expect(hlcNoLc.physicalTime, equals(1700000000000));
+
+      // Missing or malformed physical time fails loudly (no DateTime.now() fallback)
       final emptyMap = <String, dynamic>{};
-      final fallbackHlc = HybridLogicalClockDto.fromMap(emptyMap);
-      expect(fallbackHlc.physicalTime, greaterThan(0));
-      expect(fallbackHlc.logicalCounter, equals(0));
-      expect(fallbackHlc.nodeId, equals('unknown_node'));
+      expect(() => HybridLogicalClockDto.fromMap(emptyMap),
+          throwsA(isA<FormatException>()));
+
+      final malformedPtMap = {
+        'pt': 'not-a-number',
+        'node': 'node-1',
+      };
+      expect(() => HybridLogicalClockDto.fromMap(malformedPtMap),
+          throwsA(isA<FormatException>()));
+
+      final missingNodeMap = {
+        'pt': 1700000000000,
+      };
+      expect(() => HybridLogicalClockDto.fromMap(missingNodeMap),
+          throwsA(isA<FormatException>()));
     });
   });
 
