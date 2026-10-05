@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/models/value_objects/hit_points.dart';
 import 'package:vtt_engine_core/utils/deep_immutable.dart';
@@ -468,7 +469,8 @@ class MinionInstance {
           secondaryDamageDiceSides == other.secondaryDamageDiceSides &&
           secondaryDamageType == other.secondaryDamageType &&
           specialTrait == other.specialTrait &&
-          marker == other.marker;
+          marker == other.marker &&
+          const DeepCollectionEquality().equals(customProperties, other.customProperties);
 
   @override
   int get hashCode => Object.hashAll([
@@ -488,6 +490,7 @@ class MinionInstance {
         secondaryDamageType,
         specialTrait,
         marker,
+        const DeepCollectionEquality().hash(customProperties),
       ]);
 
   @override

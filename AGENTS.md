@@ -153,7 +153,7 @@ Detailed subsystem policies reside in `.agents/rules/`. Refer to each document f
 - **Architecture & DDD:** [.agents/rules/architecture.md](file:///.agents/rules/architecture.md)
   - Detailed hexagonal boundaries, port/adapter structure, dependency injection with `get_it`, and clean-room ACL guidelines.
 - **Distributed State & Sync:** [.agents/rules/crdt_and_sync.md](file:///.agents/rules/crdt_and_sync.md)
-  - Convergence invariants, sub-resource reconciliation (`RoomStateReconciliationService`), `crdt_purse_delta` protocol, CRDT structural immutability vs transitive payload immutability, narrow mutex critical sections, 4-tier transport waterfall, and W3C polite peer glare handling.
+  - Convergence invariants, sub-resource reconciliation (`RoomStateReconciliationService`), `crdt_purse_delta` protocol, CRDT structural immutability vs transitive payload immutability, transitive immutability vs value equality, narrow mutex critical sections, 4-tier transport waterfall, and W3C polite peer glare handling.
 - **D&D 5e Dual-Ruleset Mechanics:** [.agents/rules/dnd_rulesets.md](file:///.agents/rules/dnd_rulesets.md)
   - 2014 RAW vs 2024 Revised rules divergence, edition-locked characters, draft reconciliation, multiclass spellcaster progression math, action economy typing, and instant death decoupling.
 - **Data Safety & Performance:** [.agents/rules/data_and_performance.md](file:///.agents/rules/data_and_performance.md)

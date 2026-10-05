@@ -46,3 +46,14 @@ This document details the application-level synchronization services, transport 
 - **CRDT Structural Immutability:** Generic CRDT primitives (`CrdtOrSet<T>`, `CrdtLwwRegister<T>`, `PnCounter`) enforce structural immutability of the container itself; elements, registers, and tombstones cannot be mutated in place, and operations produce new unmodifiable containers.
 - **Transitive Payload Immutability:** Generic CRDTs do not clone arbitrary payload objects of type `T`. It is not sufficient for the immediate CRDT wrapper or immediate parent object to be immutable if a child value still retains mutable aliases. A value already incorporated into replicated state must not be logically alterable through any caller-owned mutable collection reachable through that value graph.
 - **Boundary Responsibility:** Concrete replicated payload models (`MinionInstance`, `RoomNodeState`, `EntityReference`, `InventoryItemInstance`, `LootContainer`) and ingestion/deserialization boundaries (`RoomNodeState.fromMap`, `RoomNodeState.fromLists`, `RoomNodeState.copyWith`) must deeply defensively freeze nested collections (`deepFreezeMap`, `deepFreezeList`, `deepFreezeSet`, `deepFreezeValue`) before CRDT stamping. Raw mutable collections or un-frozen JSON maps must never enter replicated state graphs.
+
+---
+
+## 6. Transitive Immutability vs Value Equality
+- **Separate Invariants:** "Transitive immutability and value equality are separate invariants." An object may be impossible to mutate through aliases and still be incorrect for replicated state if equality/hash ignore logical fields or compare nested collections by identity.
+- **Replicated Value Object Contracts:** Replicated value objects must satisfy:
+  1. `same logical serialized value -> equal`
+  2. `equal -> same hashCode`
+  3. `logical replicated change -> observable inequality where equality participates in synchronization/change detection`
+- **Structural Semantics:** Replicated objects bearing nested JSON-like metadata maps or lists (`customProperties`, `runtimeData`, `normalizedData`, `rawPayload`, `unparsedPayload`, `grantedSkills`) must utilize recursive deep structural equality (`DeepCollectionEquality`) in both `operator ==` and `hashCode`. Map entry insertion order must not alter equality or hash, whereas list item order remains significant.
+- **Key Integrity Invariant:** `deepFreezeMap` enforces that nested map keys MUST be `String`. Non-string keys fail loudly with `ArgumentError`; keys are never silently stringified, dropped, or collapsed.
