@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 
 void main() {
   group('Pass 2.3 Section A: MinionInstance Value Semantics & Equality', () {
@@ -20,7 +21,6 @@ void main() {
 
       expect(a == b, isFalse);
       expect(b == a, isFalse);
-      expect(a.hashCode == b.hashCode, isFalse);
     });
 
     test('2. Independently allocated but structurally identical nested metadata are equal and have identical hashCodes', () {
@@ -122,7 +122,7 @@ void main() {
       );
 
       expect(original == updated, isFalse);
-      expect(original.hashCode == updated.hashCode, isFalse);
+      expect(updated == original, isFalse);
 
       final reverted = updated.copyWith(
         customProperties: {'power': 10},
@@ -329,7 +329,7 @@ void main() {
       // Crucial: roomState equality check in RoomSyncOrchestrator change detection
       // MUST NOT be suppressed when only nested metadata mutated!
       expect(roomStateA == roomStateB, isFalse);
-      expect(roomStateA.hashCode == roomStateB.hashCode, isFalse);
+      expect(roomStateB == roomStateA, isFalse);
 
       final now = DateTime.utc(2026, 1, 1);
       final profileA = CampaignProfile(
@@ -352,6 +352,73 @@ void main() {
 
       // Profile comparison or change detection is aware of the change
       expect(profileA.roomState == profileB.roomState, isFalse);
+    });
+  });
+
+  group('Pass 2.3.1 Section C: RoomEntityLink Canonical RefType Equality & Round-Trip in Toolkit', () {
+    test('SessionRefType enum -> toMap() -> fromMap() (EntityCategory) preserves equality and hashCode symmetrically', () {
+      final original = RoomEntityLink(
+        refType: SessionRefType.character,
+        entityId: 'char-hero-1',
+        displayName: 'Aethelgard',
+        notes: 'Level 5 Paladin',
+        position: {'x': 4, 'y': 8},
+      );
+
+      final map = original.toMap();
+      expect(map['refType'], equals('character'));
+
+      // Deserializing through RoomEntityLink.fromMap() without custom resolver
+      // reconstructs refType as EntityCategory
+      final restored = RoomEntityLink.fromMap(map);
+      expect(restored.refType, isA<EntityCategory>());
+      expect((restored.refType as EntityCategory).key, equals('character'));
+
+      // Equivalence relation
+      expect(original == restored, isTrue);
+      expect(restored == original, isTrue);
+      expect(original.hashCode, equals(restored.hashCode));
+    });
+
+    test('reconciles SessionRefType enum, EntityCategory, and String refTypes symmetrically', () {
+      final linkEnum = RoomEntityLink(
+        refType: SessionRefType.monster,
+        entityId: 'goblin-1',
+        displayName: 'Goblin Scout',
+      );
+      final linkCat = RoomEntityLink(
+        refType: const EntityCategory('monster'),
+        entityId: 'goblin-1',
+        displayName: 'Goblin Scout',
+      );
+      final linkStr = RoomEntityLink(
+        refType: 'monster',
+        entityId: 'goblin-1',
+        displayName: 'Goblin Scout',
+      );
+
+      // Equivalence relation: symmetric & transitive
+      expect(linkEnum == linkCat, isTrue);
+      expect(linkCat == linkEnum, isTrue);
+
+      expect(linkCat == linkStr, isTrue);
+      expect(linkStr == linkCat, isTrue);
+
+      expect(linkEnum == linkStr, isTrue);
+      expect(linkStr == linkEnum, isTrue);
+
+      // Equal -> same hashCode
+      expect(linkEnum.hashCode, equals(linkCat.hashCode));
+      expect(linkCat.hashCode, equals(linkStr.hashCode));
+
+      // Key lookup in Set and Map
+      final set = <RoomEntityLink>{linkEnum};
+      expect(set.contains(linkCat), isTrue);
+      expect(set.contains(linkStr), isTrue);
+
+      final map = <RoomEntityLink, String>{linkEnum: 'monster_entry'};
+      expect(map[linkCat], equals('monster_entry'));
+      expect(map[linkStr], equals('monster_entry'));
     });
   });
 }

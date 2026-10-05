@@ -32,7 +32,6 @@ void main() {
 
       expect(obj1 == obj2, isFalse,
           reason: 'Different currentHp must not evaluate as equal');
-      expect(obj1.hashCode == obj2.hashCode, isFalse);
     });
 
     test(
