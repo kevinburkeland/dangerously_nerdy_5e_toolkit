@@ -5771,7 +5771,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
               title: Text(item.displayName,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(
-                'Qty: ${item.quantity} • ${item.isEquipped ? "Equipped in ${item.equippedSlot?.displayName}" : "In Backpack"}${item.requiresAttunement ? (item.isAttuned ? " • [Attuned]" : " • [Unattuned]") : ""}',
+                'Qty: ${item.quantity} • ${item.isEquipped ? "Equipped in ${_formatEquippedSlot(item.equippedSlot)}" : "In Backpack"}${item.requiresAttunement ? (item.isAttuned ? " • [Attuned]" : " • [Unattuned]") : ""}',
                 style: const TextStyle(fontSize: 12, color: Colors.white70),
               ),
               trailing: Row(
@@ -6027,6 +6027,19 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         );
       },
     );
+  }
+
+  String _formatEquippedSlot(dynamic slot) {
+    if (slot == null) return 'Gear Slot';
+    if (slot is EquipmentSlot) return slot.displayName;
+    final str = slot.toString().trim();
+    for (final s in EquipmentSlot.values) {
+      if (s.name.toLowerCase() == str.toLowerCase() ||
+          s.displayName.toLowerCase() == str.toLowerCase()) {
+        return s.displayName;
+      }
+    }
+    return str.isNotEmpty ? str : 'Gear Slot';
   }
 
   // --------------------------------------------------------------------------

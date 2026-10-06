@@ -28,17 +28,34 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
       // 1. Check local IndexedDB / Hive database
       final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
       if (raw != null) {
+        final List<dynamic> items;
         if (raw is List) {
-          return raw
-              .map((item) => Character.fromMap(Map<String, dynamic>.from(
-                  item is Map ? item : json.decode(item.toString()) as Map)))
-              .toList();
+          items = raw;
         } else if (raw is String && raw.isNotEmpty) {
-          final decoded = json.decode(raw) as List<dynamic>;
-          return decoded
-              .map((item) =>
-                  Character.fromMap(Map<String, dynamic>.from(item as Map)))
-              .toList();
+          items = json.decode(raw) as List<dynamic>;
+        } else {
+          items = const [];
+        }
+
+        if (items.isNotEmpty) {
+          final roster = <Character>[];
+          for (var i = 0; i < items.length; i++) {
+            final item = items[i];
+            try {
+              final map = Map<String, dynamic>.from(
+                  item is Map ? item : json.decode(item.toString()) as Map);
+              roster.add(Character.fromMap(map));
+            } catch (e) {
+              final idField = item is Map ? item['id'] : null;
+              final slug = idField is Map ? idField['slug'] : idField?.toString();
+              final identifier = slug ?? (item is Map ? item['name'] : null) ?? 'index $i';
+              LoggingService().logWarning(
+                'Corrupt character record at $identifier could not be loaded: $e',
+                e,
+              );
+            }
+          }
+          return roster;
         }
       }
 
@@ -47,10 +64,21 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
       final rosterJson = prefs.getString(_kSavedRosterKey);
       if (rosterJson != null && rosterJson.isNotEmpty) {
         final decoded = json.decode(rosterJson) as List<dynamic>;
-        final list = decoded
-            .map((item) =>
-                Character.fromMap(Map<String, dynamic>.from(item as Map)))
-            .toList();
+        final list = <Character>[];
+        for (var i = 0; i < decoded.length; i++) {
+          final item = decoded[i];
+          try {
+            list.add(Character.fromMap(Map<String, dynamic>.from(item as Map)));
+          } catch (e) {
+            final identifier = item is Map
+                ? (item['id']?['slug'] ?? item['id'] ?? item['name'] ?? 'index $i')
+                : 'index $i';
+            LoggingService().logWarning(
+              'Corrupt legacy character record at $identifier could not be migrated: $e',
+              e,
+            );
+          }
+        }
         if (list.isNotEmpty) {
           // One-time migration into database
           await _db.put(

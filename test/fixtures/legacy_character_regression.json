@@ -1,0 +1,343 @@
+{
+  "id": {
+    "slug": "legacy-adventurer",
+    "ruleset": "v2014"
+  },
+  "name": "Legacy Adventurer",
+  "speciesRef": {
+    "refType": "species",
+    "slug": "human",
+    "rulesetPreferred": null,
+    "displayName": "Human",
+    "grantedSkills": []
+  },
+  "backgroundRef": {
+    "refType": "background",
+    "slug": "acolyte",
+    "rulesetPreferred": null,
+    "displayName": "Acolyte",
+    "grantedSkills": []
+  },
+  "progression": {
+    "classes": [
+      {
+        "classRef": {
+          "refType": "classDefinition",
+          "slug": "warlock",
+          "rulesetPreferred": null,
+          "displayName": "Warlock",
+          "grantedSkills": []
+        },
+        "subclassRef": {
+          "refType": "subclass",
+          "slug": "warlock-fiend",
+          "rulesetPreferred": null,
+          "displayName": "The Fiend",
+          "grantedSkills": [],
+          "customProperties": {
+            "featuresMarkdown": "### Dark One's Blessing\nStarting at 1st level...",
+            "classSlug": "warlock",
+            "shortName": "Fiend",
+            "grants": [],
+            "entityType": "subclass"
+          }
+        },
+        "level": 11,
+        "isStartingClass": true,
+        "selectedFeatureOptions": {
+          "warlock-invocations-2": [
+            "agonizing_blast",
+            "repelling_blast"
+          ],
+          "warlock-pact-boon-3-2014": [
+            "pact_of_the_blade"
+          ],
+          "warlock-invocations-5": [
+            "devils_sight"
+          ],
+          "warlock-invocations-7": [
+            "beguiling_influence"
+          ],
+          "warlock-invocations-9": [
+            "eyes_of_the_rune_keeper"
+          ]
+        },
+        "customProperties": {},
+        "hitDie": "d8",
+        "hitPointsRolled": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      }
+    ],
+    "experiencePoints": 0,
+    "manualHpRolls": {
+      "2": 5,
+      "3": 5,
+      "4": 5,
+      "5": 5,
+      "6": 5,
+      "7": 5,
+      "8": 5,
+      "9": 5,
+      "10": 5,
+      "11": 5
+    }
+  },
+  "baseScores": {
+    "strength": 6,
+    "dexterity": 14,
+    "constitution": 18,
+    "intelligence": 13,
+    "wisdom": 14,
+    "charisma": 18
+  },
+  "bonusScores": {
+    "strength": 0,
+    "dexterity": 1,
+    "constitution": 2,
+    "intelligence": 0,
+    "wisdom": 0,
+    "charisma": 2
+  },
+  "traitProficiencies": {
+    "intimidation": 1,
+    "acrobatics": 1,
+    "persuasion": 2,
+    "religion": 1,
+    "deception": 1,
+    "performance": 1
+  },
+  "skillProficiencies": {
+    "intimidation": 1,
+    "acrobatics": 1,
+    "persuasion": 2,
+    "religion": 1,
+    "deception": 1,
+    "performance": 1
+  },
+  "savingThrowProficiencies": [
+    "wisdom",
+    "charisma"
+  ],
+  "toolProficiencies": [
+    "Disguise Kit",
+    "Musical Instrument (Lute)",
+    "cook's utensils"
+  ],
+  "languages": [
+    "Common"
+  ],
+  "inventory": [
+    {
+      "instanceId": "item-1",
+      "itemRef": {
+        "refType": "equipment",
+        "slug": "leather-armor",
+        "displayName": "Leather Armor"
+      },
+      "quantity": 1,
+      "isEquipped": false,
+      "equippedSlot": null
+    },
+    {
+      "instanceId": "item-2",
+      "itemRef": {
+        "refType": "equipment",
+        "slug": "dagger",
+        "displayName": "Dagger"
+      },
+      "quantity": 1,
+      "isEquipped": false,
+      "equippedSlot": null
+    },
+    {
+      "instanceId": "item-3",
+      "itemRef": {
+        "refType": "equipment",
+        "slug": "pearl-of-power",
+        "displayName": "Pearl of Power"
+      },
+      "quantity": 1,
+      "isEquipped": true,
+      "equippedSlot": "wondrous",
+      "requiresAttunement": true,
+      "isAttuned": true
+    },
+    {
+      "instanceId": "item-4",
+      "itemRef": {
+        "refType": "equipment",
+        "slug": "breastplate",
+        "displayName": "Breastplate"
+      },
+      "quantity": 1,
+      "isEquipped": true,
+      "equippedSlot": "armor"
+    },
+    {
+      "instanceId": "item-5",
+      "itemRef": {
+        "refType": "equipment",
+        "slug": "shield",
+        "displayName": "Shield"
+      },
+      "quantity": 1,
+      "isEquipped": true,
+      "equippedSlot": "shield"
+    },
+    {
+      "instanceId": "item-6",
+      "itemRef": {
+        "refType": "equipment",
+        "slug": "boots-of-elvenkind",
+        "displayName": "Boots of Elvenkind"
+      },
+      "quantity": 1,
+      "isEquipped": true,
+      "equippedSlot": "boots"
+    }
+  ],
+  "purse": {
+    "gp": 220,
+    "gpCounter": {
+      "positive": {
+        "init": 220
+      },
+      "negative": {}
+    },
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "pp": 0,
+    "denominationCounters": {
+      "gp": {
+        "positive": {
+          "init": 220
+        },
+        "negative": {}
+      },
+      "cp": {
+        "positive": {},
+        "negative": {}
+      },
+      "sp": {
+        "positive": {},
+        "negative": {}
+      },
+      "ep": {
+        "positive": {},
+        "negative": {}
+      },
+      "pp": {
+        "positive": {},
+        "negative": {}
+      }
+    }
+  },
+  "allocatedSpells": {
+    "cantrips": [
+      {
+        "refType": "spell",
+        "slug": "eldritch-blast",
+        "displayName": "Eldritch Blast",
+        "grantedSkills": []
+      },
+      {
+        "refType": "spell",
+        "slug": "mage-hand",
+        "displayName": "Mage Hand",
+        "grantedSkills": []
+      }
+    ],
+    "spellsKnown": [
+      {
+        "refType": "spell",
+        "slug": "hellish-rebuke",
+        "displayName": "Hellish Rebuke",
+        "grantedSkills": []
+      },
+      {
+        "refType": "spell",
+        "slug": "fireball",
+        "displayName": "Fireball",
+        "grantedSkills": []
+      }
+    ]
+  },
+  "cantrips": [
+    {
+      "refType": "spell",
+      "slug": "eldritch-blast",
+      "displayName": "Eldritch Blast",
+      "grantedSkills": []
+    },
+    {
+      "refType": "spell",
+      "slug": "mage-hand",
+      "displayName": "Mage Hand",
+      "grantedSkills": []
+    }
+  ],
+  "spellsKnown": [
+    {
+      "refType": "spell",
+      "slug": "hellish-rebuke",
+      "displayName": "Hellish Rebuke",
+      "grantedSkills": []
+    },
+    {
+      "refType": "spell",
+      "slug": "fireball",
+      "displayName": "Fireball",
+      "grantedSkills": []
+    }
+  ],
+  "spellsPrepared": [],
+  "feats": [
+    {
+      "refType": "feat",
+      "slug": "alert",
+      "displayName": "Alert",
+      "grantedSkills": []
+    }
+  ],
+  "resources": {
+    "currentHp": 113,
+    "tempHp": 0,
+    "currentHitDice": {
+      "d8": 11
+    },
+    "spellSlots": {
+      "currentSlots": {},
+      "maxSlots": {},
+      "pactMagicSlotLevel": 5,
+      "pactMagicMax": 3,
+      "pactMagicCurrent": 3
+    },
+    "customResourcesCurrent": {},
+    "customResourcesMax": {},
+    "deathSaveSuccesses": 0,
+    "deathSaveFailures": 0,
+    "exhaustionLevel": 0,
+    "hasHeroicInspiration": false
+  },
+  "currentHp": 113,
+  "maxHp": 113,
+  "tempHp": 0,
+  "armorClass": 10,
+  "conditions": [],
+  "maxAttunementSlots": 3,
+  "baseSpeedFeet": 30,
+  "rulesetId": "v2014",
+  "rulesEdition": "v2014",
+  "customProperties": {}
+}
