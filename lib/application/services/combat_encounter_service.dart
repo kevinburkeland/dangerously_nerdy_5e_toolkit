@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
@@ -20,6 +21,9 @@ class CombatEncounterService {
   String get localNodeId => replicaId.value;
   final ICombatResolver combatResolver;
   final int Function() _networkTimeProvider;
+  final StatefulHlcClock _clock;
+
+  int Function() get networkTimeProvider => _networkTimeProvider;
 
   CombatEncounterService({
     required this.characterRepo,
@@ -27,8 +31,15 @@ class CombatEncounterService {
     required this.replicaId,
     required this.combatResolver,
     int Function()? networkTimeProvider,
-  }) : _networkTimeProvider = networkTimeProvider ??
-            (() => DateTime.now().toUtc().millisecondsSinceEpoch);
+    StatefulHlcClock? clock,
+  })  : _networkTimeProvider = networkTimeProvider ??
+            (() => DateTime.now().toUtc().millisecondsSinceEpoch),
+        _clock = clock ??
+            StatefulHlcClock(
+              replicaId: replicaId,
+              timeProvider: networkTimeProvider ??
+                  (() => DateTime.now().toUtc().millisecondsSinceEpoch),
+            );
 
   // ==========================================
   // Character Vitals & Damage Routing
@@ -213,19 +224,10 @@ class CombatEncounterService {
   HybridLogicalClock _nextHlc({
     HybridLogicalClock? previousClock,
   }) {
-    final nowMs = _networkTimeProvider();
-    if (previousClock != null && previousClock.physicalTime >= nowMs) {
-      return HybridLogicalClock(
-        physicalTime: previousClock.physicalTime,
-        logicalCounter: previousClock.logicalCounter + 1,
-        nodeId: localNodeId,
-      );
+    if (previousClock != null) {
+      _clock.observeRemote(previousClock);
     }
-    return HybridLogicalClock(
-      physicalTime: nowMs,
-      logicalCounter: 0,
-      nodeId: localNodeId,
-    );
+    return _clock.nextTimestamp();
   }
 
   // ==========================================

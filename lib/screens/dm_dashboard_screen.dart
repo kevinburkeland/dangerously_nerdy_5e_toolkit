@@ -568,14 +568,13 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     _updateEncounter(updated);
   }
 
-  void _updateEncounter(List<EncounterParticipant> list) {
+  void _updateEncounter(List<EncounterParticipant> list) async {
     if (_activeProfile == null) return;
-    final updatedRoom = _activeProfile!.roomState
-        .copyWith(activeEncounter: list, nodeId: _controller.nodeId);
+    await _controller.updateEncounter(list);
+    if (!mounted) return;
     setState(() {
-      _activeProfile = _activeProfile!.copyWith(roomState: updatedRoom);
+      _activeProfile = _controller.activeProfile;
     });
-    _persistActiveProfile();
   }
 
   void _applyDamageOrHeal(String participantId, int delta) {

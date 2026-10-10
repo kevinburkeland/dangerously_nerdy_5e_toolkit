@@ -1,15 +1,31 @@
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 
 /// Application service managing local party session node identity and timestamping.
-/// Enforces cryptographically unique UUIDv4 node IDs to eliminate tie-breaker collisions.
+/// Enforces cryptographically unique UUIDv4 node IDs to eliminate tie-breaker collisions
+/// and maintains monotonic HLC timestamp state for active local writes.
 class PartyRoomService {
   final ReplicaId replicaId;
+  final StatefulHlcClock _clock;
+
   String get localNodeId => replicaId.value;
 
-  const PartyRoomService({required this.replicaId});
+  PartyRoomService({
+    required this.replicaId,
+    StatefulHlcClock? clock,
+    int Function()? timeProvider,
+  }) : _clock = clock ??
+            StatefulHlcClock(
+              replicaId: replicaId,
+              timeProvider: timeProvider,
+            );
 
-  /// Creates a new [HybridLogicalClock] timestamp anchored to this node's unique ID.
-  HybridLogicalClock createLocalTimestamp() {
-    return HybridLogicalClock.now(localNodeId);
+  /// Generates the next monotonic [HybridLogicalClock] timestamp anchored to this node.
+  HybridLogicalClock createLocalTimestamp({int offsetMs = 0}) {
+    return _clock.nextTimestamp(offsetMs: offsetMs);
+  }
+
+  /// Observes a remote timestamp from another node and reconciles local clock causality.
+  void observeRemoteTimestamp(HybridLogicalClock remote, {int offsetMs = 0}) {
+    _clock.observeRemote(remote, offsetMs: offsetMs);
   }
 }

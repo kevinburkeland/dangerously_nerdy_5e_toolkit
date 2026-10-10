@@ -356,6 +356,16 @@ class DmDashboardController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Updates active encounter participants in [RoomNodeState] via [CombatEncounterService].
+  Future<void> updateEncounter(List<EncounterParticipant> encounter) async {
+    if (_activeProfile == null) return;
+    _activeProfile = await _combatEncounterService.updateEncounterParticipants(
+      profile: _activeProfile!,
+      encounter: encounter,
+    );
+    notifyListeners();
+  }
+
   // --- Campaign Profile Operations ---
 
   /// Saves active profile notes and metadata.

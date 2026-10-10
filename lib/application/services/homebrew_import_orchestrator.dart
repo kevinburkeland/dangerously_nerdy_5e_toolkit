@@ -3,6 +3,8 @@ import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/homebrew/models/homebrew_entity.dart';
 import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
@@ -96,7 +98,7 @@ class HomebrewImportOrchestrator {
   final bool _retainLedger;
 
   CrdtOrSet<HomebrewEntity> _ledger = const CrdtOrSet<HomebrewEntity>.empty();
-  HybridLogicalClock _hlc;
+  final StatefulHlcClock _clock;
 
   HomebrewImportOrchestrator({
     required IGithubIngestorPort ingestorPort,
@@ -106,6 +108,7 @@ class HomebrewImportOrchestrator {
     int batchSize = defaultBatchSize,
     CrdtOrSet<HomebrewEntity>? initialLedger,
     bool retainLedger = true,
+    StatefulHlcClock? clock,
   }) : this._internal(
           ingestorPort: ingestorPort,
           nodeId: nodeId ?? const Uuid().v4(),
@@ -114,6 +117,7 @@ class HomebrewImportOrchestrator {
           batchSize: batchSize,
           initialLedger: initialLedger,
           retainLedger: retainLedger,
+          clock: clock,
         );
 
   HomebrewImportOrchestrator._internal({
@@ -124,6 +128,7 @@ class HomebrewImportOrchestrator {
     int batchSize = defaultBatchSize,
     CrdtOrSet<HomebrewEntity>? initialLedger,
     bool retainLedger = true,
+    StatefulHlcClock? clock,
   })  : _ingestorPort = ingestorPort,
         _nodeId = nodeId,
         _persister = persister,
@@ -131,7 +136,7 @@ class HomebrewImportOrchestrator {
         _batchSize = batchSize,
         _retainLedger = retainLedger,
         _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>.empty(),
-        _hlc = HybridLogicalClock.now(nodeId);
+        _clock = clock ?? StatefulHlcClock(replicaId: ReplicaId(nodeId));
 
   /// Node identifier used for stamping CRDT clock ticks.
   String get nodeId => _nodeId;
@@ -192,9 +197,9 @@ class HomebrewImportOrchestrator {
           if (result is IngestionSuccessResult) {
             final entity = result.entity;
             if (_retainLedger) {
-              _hlc = _hlc.tick();
+              final ts = _clock.nextTimestamp();
               pendingLedgerEntries
-                  .add((id: entity.id, item: entity, timestamp: _hlc));
+                  .add((id: entity.id, item: entity, timestamp: ts));
             }
 
             if (_persister != null) {
