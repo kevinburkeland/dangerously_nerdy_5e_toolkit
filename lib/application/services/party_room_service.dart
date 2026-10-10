@@ -1,8 +1,8 @@
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 
 /// Application service managing local party session node identity and timestamping.
-/// Enforces cryptographically unique UUIDv4 node IDs to eliminate tie-breaker collisions
-/// and maintains monotonic HLC timestamp state for active local writes.
+/// Enforces unique ReplicaId identity (UUIDv4) and maintains monotonic HLC timestamp
+/// state for active local writes to eliminate timestamp collisions.
 class PartyRoomService {
   final ReplicaId replicaId;
   final StatefulHlcClock _clock;

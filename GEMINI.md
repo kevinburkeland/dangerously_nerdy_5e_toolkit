@@ -46,7 +46,7 @@ For full system architecture, fast navigation indexes, and detailed engineering 
 6. **Distributed State & Distributed Mutex:**
    - Replicated state converges deterministically via CvRDT join-semilattice merges.
    - In-memory CRDT joins and profile reconciliation are scoped within `_syncMutex`; persistence executes asynchronously outside the lock to prevent deadlocks.
-   - Currency reductions apply differential decrements against `effectiveCounter` in `PnCounter`; never re-seed with positive scalars.
+   - Currency reductions apply differential decrements against the underlying signed mathematical value in `PnCounter`; never re-seed with positive scalars.
    - Inbound transport frames enforce SHA-256 LRU deduplication and sliding lookback filtering.
 
 7. **Definition of Done:**
