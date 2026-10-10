@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
@@ -52,6 +53,7 @@ void main() {
       final repo = LocalCampaignRepository(
         replicaId: ReplicaId('test_repo_node'),
         characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_repo_node')),
       );
       addTearDown(repo.dispose);
 
@@ -81,6 +83,7 @@ void main() {
       final repo = LocalCampaignRepository(
         replicaId: ReplicaId('test_repo_node'),
         characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_repo_node')),
       );
       addTearDown(repo.dispose);
 
@@ -108,6 +111,7 @@ void main() {
       final repo = LocalCampaignRepository(
         replicaId: ReplicaId('test_repo_node'),
         characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_repo_node')),
       );
       addTearDown(repo.dispose);
 
@@ -144,6 +148,7 @@ void main() {
       final repo = LocalCampaignRepository(
         replicaId: ReplicaId('test_repo_node'),
         characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_repo_node')),
       );
       addTearDown(repo.dispose);
 
@@ -198,6 +203,7 @@ void main() {
       final repo = LocalCampaignRepository(
         replicaId: ReplicaId('test_repo_node'),
         characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_repo_node')),
       );
       addTearDown(repo.dispose);
 
@@ -240,6 +246,7 @@ void main() {
       final restartedRepo = LocalCampaignRepository(
         replicaId: ReplicaId('test_repo_node'),
         characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_repo_node')),
       );
       addTearDown(restartedRepo.dispose);
 
@@ -296,6 +303,7 @@ void main() {
       final repo = LocalCampaignRepository(
         replicaId: ReplicaId('test_repo_node'),
         characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_repo_node')),
       );
       addTearDown(repo.dispose);
 

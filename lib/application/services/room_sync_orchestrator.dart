@@ -73,10 +73,10 @@ class RoomSyncOrchestrator {
   final StreamController<SyncErrorEvent> _deadLetterController =
       StreamController<SyncErrorEvent>.broadcast(sync: false);
 
-  final StatefulHlcClock? _clock;
+  final StatefulHlcClock _clock;
 
-  /// Authoritative StatefulHlcClock instance, if available.
-  StatefulHlcClock? get clock => _clock;
+  /// Authoritative StatefulHlcClock instance.
+  StatefulHlcClock get clock => _clock;
 
   /// Reactive stream broadcasting sync errors, dead letters, and schema mismatches.
   Stream<SyncErrorEvent> get deadLetterStream => _deadLetterController.stream;
@@ -95,7 +95,7 @@ class RoomSyncOrchestrator {
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
     Duration? heartbeatTtl,
-    StatefulHlcClock? clock,
+    required StatefulHlcClock clock,
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         payloadMapper = payloadMapper ??
@@ -287,7 +287,7 @@ class RoomSyncOrchestrator {
               ];
 
               // Atomically validate all remote CRDT timestamps against future drift policy
-              if (_clock != null && candidateHlcs.isNotEmpty) {
+              if (candidateHlcs.isNotEmpty) {
                 try {
                   _clock.validateAllRemote(candidateHlcs);
                 } on HlcFutureDriftException catch (e, st) {
@@ -297,13 +297,21 @@ class RoomSyncOrchestrator {
                     reason:
                         'Rejected remote full profile due to clock future drift: ${e.toString()}',
                   );
+                  if (!_deadLetterController.isClosed) {
+                    _deadLetterController.add(SyncErrorEvent(
+                      error: e,
+                      stackTrace: st,
+                      rawPayload: jsonPayload,
+                      parsedMessage: message,
+                    ));
+                  }
                   // Entire aggregate rejected: do NOT observe, do NOT reconcile, do NOT save
                   return;
                 }
               }
 
               // All timestamps valid: observe into runtime clock atomically
-              if (_clock != null && candidateHlcs.isNotEmpty) {
+              if (candidateHlcs.isNotEmpty) {
                 _clock.observeAllRemote(candidateHlcs);
               }
 
@@ -348,7 +356,7 @@ class RoomSyncOrchestrator {
             final localProfile = campaignRepo.activeProfile;
             if (localProfile != null) {
               final deltaHlcs = msg.rulesSet.extractTimestamps();
-              if (_clock != null && deltaHlcs.isNotEmpty) {
+              if (deltaHlcs.isNotEmpty) {
                 try {
                   _clock.validateAllRemote(deltaHlcs);
                 } on HlcFutureDriftException catch (e, st) {
@@ -358,6 +366,14 @@ class RoomSyncOrchestrator {
                     reason:
                         'Rejected OrSet delta due to clock future drift: ${e.toString()}',
                   );
+                  if (!_deadLetterController.isClosed) {
+                    _deadLetterController.add(SyncErrorEvent(
+                      error: e,
+                      stackTrace: st,
+                      rawPayload: jsonPayload,
+                      parsedMessage: message,
+                    ));
+                  }
                   return;
                 }
                 _clock.observeAllRemote(deltaHlcs);

@@ -318,6 +318,7 @@ void main() {
         clockSyncService: ClockSyncService(
           networkTimePort: _MockNetworkTimePort(),
         ),
+        clock: sl<StatefulHlcClock>(),
       );
 
       final orchController = DmDashboardController(

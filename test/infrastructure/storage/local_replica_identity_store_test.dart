@@ -389,6 +389,7 @@ void main() {
       // RoomSyncOrchestrator
       final orchestrator = RoomSyncOrchestrator(
         replicaId: authoritativeId,
+        clock: sharedClock,
         campaignRepo: _TestMockCampaignRepo(),
         reconciliationService: RoomStateReconciliationService(
           networkTimeProvider: () => 1000,
@@ -494,6 +495,7 @@ void main() {
 
       final orch = RoomSyncOrchestrator(
         replicaId: authoritativeId,
+        clock: sharedClock,
         campaignRepo: _TestMockCampaignRepo(),
         reconciliationService: RoomStateReconciliationService(
           networkTimeProvider: () => 1000,

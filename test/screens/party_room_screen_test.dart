@@ -15,6 +15,7 @@ import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
@@ -90,8 +91,12 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       registry = CampaignRegistryService.newInstance();
+      final testClock = StatefulHlcClock(
+        replicaId: ReplicaId('party_room_screen_test_replica'),
+      );
       partyService = PartyRoomService.newInstance(
         replicaId: ReplicaId('party_room_screen_test_replica'),
+        clock: testClock,
         registry: registry,
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
@@ -313,11 +318,17 @@ void main() {
         (tester) async {
       const roomCode = 'ROOM-CONN01';
       final transport = _MockSyncTransport();
+      final orchClock = StatefulHlcClock(replicaId: ReplicaId('test_orch_screen'));
+      final repoClock = StatefulHlcClock(replicaId: ReplicaId('test_repo'));
       final orchestrator = RoomSyncOrchestrator(
         replicaId: ReplicaId('test_orch_screen'),
         transportPort: transport,
+        clock: orchClock,
         campaignRepo:
-            LocalCampaignRepository(replicaId: ReplicaId('test_repo')),
+            LocalCampaignRepository(
+              replicaId: ReplicaId('test_repo'),
+              clock: repoClock,
+            ),
         reconciliationService: RoomStateReconciliationService(
           networkTimeProvider: () =>
               DateTime.now().toUtc().millisecondsSinceEpoch,

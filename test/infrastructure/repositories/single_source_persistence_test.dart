@@ -5,6 +5,7 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
@@ -63,6 +64,7 @@ void main() {
     charRepo = LocalCharacterRepository(db: mockDb);
     campRepo = LocalCampaignRepository(
         replicaId: ReplicaId('test_camp_node'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_camp_node')),
         db: mockDb,
         characterRepo: charRepo);
   });

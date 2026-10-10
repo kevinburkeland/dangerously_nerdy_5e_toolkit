@@ -41,19 +41,19 @@ class LocalCampaignRepository implements ICampaignRepository {
       StreamController<List<CampaignProfile>>.broadcast();
 
   final ReplicaId _replicaId;
-  final StatefulHlcClock? _clock;
+  final StatefulHlcClock _clock;
 
   LocalCampaignRepository({
     AppDatabaseService? db,
     ICharacterRepository? characterRepo,
     required ReplicaId replicaId,
-    StatefulHlcClock? clock,
+    required StatefulHlcClock clock,
   })  : _db = db ?? AppDatabaseService.instance,
         _replicaId = replicaId,
         _clock = clock;
 
   ReplicaId get replicaId => _replicaId;
-  StatefulHlcClock? get clock => _clock;
+  StatefulHlcClock get clock => _clock;
   String get _effectiveNodeId => _replicaId.value;
 
   @override
@@ -266,7 +266,6 @@ class LocalCampaignRepository implements ICampaignRepository {
   }
 
   void _validateAndObserveProfileTimestamps(CampaignProfile profile) {
-    if (_clock == null) return;
     final timestamps = extractCampaignProfileTimestamps(profile);
     if (timestamps.isNotEmpty) {
       _clock.validateAllRemote(timestamps);

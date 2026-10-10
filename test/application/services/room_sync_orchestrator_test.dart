@@ -13,6 +13,7 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/crdt/crdt_or_set_dto.dart';
@@ -232,6 +233,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_orchestrator_node')),
         localTimeProvider: () => 1700000000500,
         isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
@@ -389,6 +391,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('dm-host-prime')),
         isHost: true,
         replicaId: ReplicaId('dm-host-prime'),
         milestoneInterval: const Duration(milliseconds: 100),
@@ -479,6 +482,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_generic_node')),
         telemetryInterval: const Duration(milliseconds: 20),
       );
 
@@ -515,6 +519,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_generic_node')),
       );
 
       // Verify that currentTelemetry accurately reflects port state without casting
@@ -542,6 +547,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_orchestrator_node')),
         localTimeProvider: () => 1700000000500,
         isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
@@ -612,6 +618,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_default_node')),
       );
 
       expect(defaultOrchestrator.telemetryInterval,
@@ -739,6 +746,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('dm-host-1')),
         localTimeProvider: () => now,
         isHost: true,
         replicaId: ReplicaId('dm-host-1'),
@@ -783,6 +791,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('dm-host-1')),
         localTimeProvider: () => simulatedNow,
         isHost: true,
         replicaId: ReplicaId('dm-host-1'),
@@ -959,6 +968,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: throwingReconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_orchestrator_node')),
         localTimeProvider: () => 1700000000500,
         isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
@@ -997,6 +1007,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('explicit_orch_1')),
       );
       expect(orch1.replicaId, equals(ReplicaId('explicit_orch_1')));
       expect(orch1.localNodeId, equals('explicit_orch_1'));
@@ -1011,6 +1022,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: throwingReconciliation,
         clockSyncService: clockSyncService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test-node-local')),
         replicaId: ReplicaId('test-node-local'),
       );
 

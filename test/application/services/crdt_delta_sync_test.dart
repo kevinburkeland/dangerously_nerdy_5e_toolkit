@@ -11,6 +11,7 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 class MockTransportPort implements IP2pTransportPort {
   final List<String> broadcastedPayloads = [];
@@ -152,6 +153,7 @@ void main() {
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
         replicaId: ReplicaId('node-orchestrator'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('node-orchestrator')),
         payloadMapper: const RoomSyncPayloadMapper(),
       );
     });

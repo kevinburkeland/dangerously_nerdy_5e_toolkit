@@ -15,6 +15,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 class MockP2pTransport implements IP2pTransportPort {
   final List<String> broadcasted = [];
@@ -327,6 +328,7 @@ void main() {
         clockSyncService:
             ClockSyncService(networkTimePort: MockNetworkTimePort()),
         diceRoomService: diceService,
+        clock: StatefulHlcClock(replicaId: ReplicaId('test_dice_orch_node')),
         payloadMapper: const RoomSyncPayloadMapper(),
       );
 

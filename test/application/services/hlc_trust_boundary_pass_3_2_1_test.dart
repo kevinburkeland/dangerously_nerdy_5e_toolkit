@@ -211,10 +211,17 @@ void main() {
         'payload': CampaignProfileDto.fromDomain(rogueProfile).toMap(),
       });
 
+      final deadLetters = <SyncErrorEvent>[];
+      final deadLetterSub = orchestrator.deadLetterStream.listen(deadLetters.add);
+      addTearDown(deadLetterSub.cancel);
+
       // Ingest malicious payload
       await orchestrator.handleIncomingPayload(roguePayload);
 
-      // Verify rejection: local notes unchanged, clock unchanged
+      // Verify rejection: local notes unchanged, clock unchanged, dead-letter emitted
+      expect(deadLetters.length, equals(1));
+      expect(deadLetters.first.error, isA<HlcFutureDriftException>());
+
       final profileAfterRogue = repo.activeProfile!;
       expect(profileAfterRogue.notesRegister.value,
           equals('Original pristine notes'));
@@ -589,6 +596,10 @@ void main() {
       );
       addTearDown(orchestrator.dispose);
 
+      final deadLetters = <SyncErrorEvent>[];
+      final deadLetterSub = orchestrator.deadLetterStream.listen(deadLetters.add);
+      addTearDown(deadLetterSub.cancel);
+
       // --- SECTION E: FullProfileSyncMessage with far-future encounter ---
       final farFutureEncounterHlc = HybridLogicalClock(
         physicalTime: simulatedNow + (10 * 365 * 24 * 3600 * 1000),
@@ -645,8 +656,11 @@ void main() {
       final currentProfile = repo.activeProfile!;
       expect(currentProfile.partyPurse.gp, equals(100)); // Purse NOT updated
       expect(currentProfile.roomState.activeEncounter.activeValues, isEmpty);
+      // 3. Dead letter contains HlcFutureDriftException
+      expect(deadLetters.length, equals(1));
+      expect(deadLetters[0].error, isA<HlcFutureDriftException>());
 
-      // --- SECTION F: OrSetDeltaSyncMessage with far-future tombstone ---
+      // --- SECTION F.1: OrSetDeltaSyncMessage with far-future item ---
       final farFutureRuleHlc = HybridLogicalClock(
         physicalTime: simulatedNow + (10 * 365 * 24 * 3600 * 1000),
         logicalCounter: 0,
@@ -657,11 +671,12 @@ void main() {
       rogueRulesDelta = rogueRulesDelta.add('grapple', 'grapple', farFutureRuleHlc);
 
       final deltaEnvelope = {
-        'type': 'room_sync_rules_delta',
+        'type': 'crdt_or_set_delta',
         'origin_node_id': rogueNode.value,
         'origin_seq': 2,
         'timestamp': simulatedNow,
-        'rules_delta': CrdtOrSetDto.toMap<String>(
+        'campaign_id': 'campaign_1',
+        'payload': CrdtOrSetDto.toMap<String>(
           rogueRulesDelta,
           (item) => item,
         ),
@@ -669,11 +684,46 @@ void main() {
 
       await orchestrator.handleIncomingPayload(jsonEncode(deltaEnvelope));
 
-      // Verify OrSet delta rejection:
+      // Verify OrSet item delta rejection:
       // 1. Clock is unchanged
       expect(clock.latest, equals(baselineHlc));
-      // 2. Pinned rules unchanged
+      // 2. Tracked rules set unchanged
+      expect(orchestrator.trackedRulesSet.activeValues, isEmpty);
+      // 3. Pinned rules unchanged
       expect(repo.activeProfile!.pinnedRuleIds, equals({'cover'}));
+      // 4. Dead letter contains HlcFutureDriftException
+      expect(deadLetters.length, equals(2));
+      expect(deadLetters[1].error, isA<HlcFutureDriftException>());
+
+      // --- SECTION F.2: OrSetDeltaSyncMessage with genuine far-future tombstone ---
+      final rogueTombstoneDelta = CrdtOrSet<String>(
+        tombstones: {'shove': farFutureRuleHlc},
+      );
+
+      final tombstoneEnvelope = {
+        'type': 'crdt_or_set_delta',
+        'origin_node_id': rogueNode.value,
+        'origin_seq': 3,
+        'timestamp': simulatedNow,
+        'campaign_id': 'campaign_1',
+        'payload': CrdtOrSetDto.toMap<String>(
+          rogueTombstoneDelta,
+          (item) => item,
+        ),
+      };
+
+      await orchestrator.handleIncomingPayload(jsonEncode(tombstoneEnvelope));
+
+      // Verify OrSet tombstone delta rejection:
+      // 1. Clock is unchanged
+      expect(clock.latest, equals(baselineHlc));
+      // 2. Tracked rules set tombstones unchanged
+      expect(orchestrator.trackedRulesSet.tombstones, isEmpty);
+      // 3. Pinned rules unchanged
+      expect(repo.activeProfile!.pinnedRuleIds, equals({'cover'}));
+      // 4. Dead letter contains HlcFutureDriftException
+      expect(deadLetters.length, equals(3));
+      expect(deadLetters[2].error, isA<HlcFutureDriftException>());
     });
   });
 }

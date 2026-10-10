@@ -11,6 +11,7 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
@@ -269,6 +270,7 @@ void main() {
       clockSyncService:
           ClockSyncService(networkTimePort: MockNetworkTimePort()),
       diceRoomService: DiceRoomService(),
+      clock: StatefulHlcClock(replicaId: ReplicaId('test_banner_node')),
       telemetryInterval: const Duration(milliseconds: 100),
     );
     sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
