@@ -553,7 +553,10 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     HapticService.selectionTick(context);
     final updated = _controller.combatEncounterService.nextTurn(
       _activeProfile!.roomState.activeEncounterList,
-      onNewRound: (round) => setState(() => _currentRound = round),
+      onNewRound: (round) {
+        _controller.setRound(round);
+        setState(() => _currentRound = round);
+      },
       currentRound: _currentRound,
     );
     _updateEncounter(updated);
