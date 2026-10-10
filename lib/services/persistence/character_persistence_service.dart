@@ -80,12 +80,8 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
           }
         }
         if (list.isNotEmpty) {
-          // One-time migration into database
-          await _db.put(
-            AppDatabaseService.boxCharacters,
-            _kSavedRosterKey,
-            list.map((c) => c.toMap()).toList(),
-          );
+          // One-time migration into database - preserve full raw decoded roster including any unparsed entries
+          await _writeRawRosterToDisk(decoded);
           return list;
         }
       }
@@ -98,21 +94,57 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
     return <Character>[];
   }
 
-  /// Saves the complete character roster to local database and syncs to SharedPreferences for safety.
-  @override
-  Future<void> saveRoster(List<Character> roster) async {
+  List<dynamic> _loadRawPersistedRoster() {
+    final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
+    if (raw is List) {
+      return List<dynamic>.from(raw);
+    } else if (raw is String && raw.isNotEmpty) {
+      try {
+        final decoded = json.decode(raw);
+        if (decoded is List) return List<dynamic>.from(decoded);
+      } catch (_) {}
+    }
+    return <dynamic>[];
+  }
+
+  String? _extractSlug(dynamic item) {
+    if (item is Map) {
+      final idField = item['id'];
+      if (idField is Map && idField['slug'] != null) {
+        return idField['slug'].toString();
+      } else if (idField is String && idField.isNotEmpty) {
+        return idField;
+      }
+      if (item['name'] != null && item['name'].toString().isNotEmpty) {
+        return item['name'].toString();
+      }
+    }
+    return null;
+  }
+
+  bool _isRecordMalformed(dynamic item) {
     try {
-      final listMaps = roster.map((c) => c.toMap()).toList();
+      final map = Map<String, dynamic>.from(
+          item is Map ? item : json.decode(item.toString()) as Map);
+      Character.fromMap(map);
+      return false;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> _writeRawRosterToDisk(List<dynamic> rawList) async {
+    try {
       await _db.put(
         AppDatabaseService.boxCharacters,
         _kSavedRosterKey,
-        listMaps,
+        rawList,
       );
 
       // Best-effort sync to SharedPreferences for backwards compatibility
       try {
         final prefs = await SharedPreferences.getInstance();
-        final encoded = json.encode(listMaps);
+        final encoded = json.encode(rawList);
         await prefs.setString(_kSavedRosterKey, encoded);
       } catch (_) {
         // Suppress quota errors from SharedPreferences if payload exceeds 5MB
@@ -125,7 +157,31 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
     }
   }
 
-  /// Saves or updates a single character in the roster.
+  /// Saves the complete character roster to local database and syncs to SharedPreferences for safety.
+  /// Preserves any previously rejected/malformed raw records so an unrelated save cannot destroy data.
+  @override
+  Future<void> saveRoster(List<Character> roster) async {
+    final rawRoster = _loadRawPersistedRoster();
+    final newSlugs = roster.map((c) => c.id.slug).toSet();
+
+    final preservedMalformed = <dynamic>[];
+    for (final rawItem in rawRoster) {
+      if (_isRecordMalformed(rawItem)) {
+        final slug = _extractSlug(rawItem);
+        if (slug == null || !newSlugs.contains(slug)) {
+          preservedMalformed.add(rawItem);
+        }
+      }
+    }
+
+    final listMaps = <dynamic>[
+      ...roster.map((c) => c.toMap()),
+      ...preservedMalformed,
+    ];
+    await _writeRawRosterToDisk(listMaps);
+  }
+
+  /// Saves or updates a single character in the roster while preserving raw unparsed entries.
   @override
   Future<void> saveCharacter(Character character) async {
     var charToSave = character;
@@ -140,15 +196,26 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
       }
     }
 
-    final roster = List<Character>.from(await loadCharacters());
-    final index = roster.indexWhere((c) => c.id.slug == charToSave.id.slug);
-    if (index >= 0) {
-      roster[index] = charToSave;
-    } else {
-      roster.add(charToSave);
+    final rawRoster = _loadRawPersistedRoster();
+    final targetSlug = charToSave.id.slug;
+    int targetIndex = -1;
+
+    for (var i = 0; i < rawRoster.length; i++) {
+      final slug = _extractSlug(rawRoster[i]);
+      if (slug == targetSlug || (slug == charToSave.name)) {
+        targetIndex = i;
+        break;
+      }
     }
-    await saveRoster(roster);
-    return;
+
+    final charMap = charToSave.toMap();
+    if (targetIndex >= 0) {
+      rawRoster[targetIndex] = charMap;
+    } else {
+      rawRoster.add(charMap);
+    }
+
+    await _writeRawRosterToDisk(rawRoster);
   }
 
   /// Fetches characters matching the given IDs/slugs, preserving the order of the requested IDs.
@@ -167,29 +234,40 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
     return list.firstOrNull;
   }
 
-  /// Saves multiple characters to persistence in bulk.
+  /// Saves multiple characters to persistence in bulk while preserving raw unparsed entries.
   @override
   Future<void> saveCharacters(List<Character> characters) async {
     if (characters.isEmpty) return;
-    final roster = List<Character>.from(await loadCharacters());
+    final rawRoster = _loadRawPersistedRoster();
     for (final charToSave in characters) {
-      final index = roster.indexWhere((c) => c.id.slug == charToSave.id.slug);
-      if (index >= 0) {
-        roster[index] = charToSave;
+      final targetSlug = charToSave.id.slug;
+      int targetIndex = -1;
+      for (var i = 0; i < rawRoster.length; i++) {
+        final slug = _extractSlug(rawRoster[i]);
+        if (slug == targetSlug || (slug == charToSave.name)) {
+          targetIndex = i;
+          break;
+        }
+      }
+      final charMap = charToSave.toMap();
+      if (targetIndex >= 0) {
+        rawRoster[targetIndex] = charMap;
       } else {
-        roster.add(charToSave);
+        rawRoster.add(charMap);
       }
     }
-    await saveRoster(roster);
+    await _writeRawRosterToDisk(rawRoster);
   }
 
   /// Deletes a character by slug from the roster.
   @override
   Future<void> deleteCharacter(String characterSlug) async {
-    final roster = List<Character>.from(await loadCharacters());
-    roster.removeWhere((c) => c.id.slug == characterSlug);
-    await saveRoster(roster);
-    return;
+    final rawRoster = _loadRawPersistedRoster();
+    rawRoster.removeWhere((item) {
+      final slug = _extractSlug(item);
+      return slug == characterSlug;
+    });
+    await _writeRawRosterToDisk(rawRoster);
   }
 
   /// Loads the active character ID.

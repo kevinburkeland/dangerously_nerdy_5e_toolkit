@@ -77,7 +77,7 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
           }
         }
         if (list.isNotEmpty) {
-          await _persistRosterToDisk(list);
+          await _writeRawRosterToDisk(decoded);
           return list;
         }
       }
@@ -88,6 +88,60 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
       );
     }
     return <Character>[];
+  }
+
+  List<dynamic> _loadRawPersistedRoster() {
+    final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
+    if (raw is List) {
+      return List<dynamic>.from(raw);
+    } else if (raw is String && raw.isNotEmpty) {
+      try {
+        final decoded = json.decode(raw);
+        if (decoded is List) return List<dynamic>.from(decoded);
+      } catch (_) {}
+    }
+    return <dynamic>[];
+  }
+
+  String? _extractSlug(dynamic item) {
+    if (item is Map) {
+      final idField = item['id'];
+      if (idField is Map && idField['slug'] != null) {
+        return idField['slug'].toString();
+      } else if (idField is String && idField.isNotEmpty) {
+        return idField;
+      }
+      if (item['name'] != null && item['name'].toString().isNotEmpty) {
+        return item['name'].toString();
+      }
+    }
+    return null;
+  }
+
+  bool _isRecordMalformed(dynamic item) {
+    try {
+      final map = Map<String, dynamic>.from(
+          item is Map ? item : json.decode(item.toString()) as Map);
+      CharacterDto.fromMap(map).toDomain();
+      return false;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> _writeRawRosterToDisk(List<dynamic> rawList) async {
+    try {
+      await _db.put(
+        AppDatabaseService.boxCharacters,
+        _kSavedRosterKey,
+        rawList,
+      );
+    } catch (e) {
+      LoggingService().logWarning(
+        'Failed to save characters roster to repository: $e',
+        e,
+      );
+    }
   }
 
   @override
@@ -110,72 +164,89 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
     return ids.map((id) => map[id]).whereType<Character>().toList();
   }
 
-  Future<void> _persistRosterToDisk(List<Character> roster) async {
-    try {
-      final listMaps =
-          roster.map((c) => CharacterDto.fromDomain(c).toMap()).toList();
-      await _db.put(
-        AppDatabaseService.boxCharacters,
-        _kSavedRosterKey,
-        listMaps,
-      );
-    } catch (e) {
-      LoggingService().logWarning(
-        'Failed to save characters roster to repository: $e',
-        e,
-      );
-    }
-  }
-
+  /// Saves the character roster to disk while preserving any unparsed/rejected records.
   @override
   Future<void> saveRoster(List<Character> roster) async {
-    await _persistRosterToDisk(roster);
-  }
+    final rawRoster = _loadRawPersistedRoster();
+    final newSlugs = roster.map((c) => c.id.slug).toSet();
 
-  @override
-  Future<void> saveCharacter(Character character) async {
-    final roster = await loadCharacters();
-    final index = roster.indexWhere(
-      (c) =>
-          c.id.slug == character.id.slug ||
-          (c.id.slug.isEmpty && c.name == character.name),
-    );
-
-    if (index >= 0) {
-      roster[index] = character;
-    } else {
-      roster.add(character);
-    }
-
-    await _persistRosterToDisk(roster);
-  }
-
-  @override
-  Future<void> saveCharacters(List<Character> characters) async {
-    final roster = await loadCharacters();
-    for (final char in characters) {
-      final index = roster.indexWhere(
-        (c) =>
-            c.id.slug == char.id.slug ||
-            (c.id.slug.isEmpty && c.name == char.name),
-      );
-      if (index >= 0) {
-        roster[index] = char;
-      } else {
-        roster.add(char);
+    final preservedMalformed = <dynamic>[];
+    for (final rawItem in rawRoster) {
+      if (_isRecordMalformed(rawItem)) {
+        final slug = _extractSlug(rawItem);
+        if (slug == null || !newSlugs.contains(slug)) {
+          preservedMalformed.add(rawItem);
+        }
       }
     }
 
-    await _persistRosterToDisk(roster);
+    final listMaps = <dynamic>[
+      ...roster.map((c) => CharacterDto.fromDomain(c).toMap()),
+      ...preservedMalformed,
+    ];
+
+    await _writeRawRosterToDisk(listMaps);
   }
 
+  /// Saves or updates a single character in place without deleting unparsed records.
+  @override
+  Future<void> saveCharacter(Character character) async {
+    final rawRoster = _loadRawPersistedRoster();
+    final targetSlug = character.id.slug;
+    int targetIndex = -1;
+
+    for (var i = 0; i < rawRoster.length; i++) {
+      final slug = _extractSlug(rawRoster[i]);
+      if (slug == targetSlug || (slug == character.name)) {
+        targetIndex = i;
+        break;
+      }
+    }
+
+    final charMap = CharacterDto.fromDomain(character).toMap();
+    if (targetIndex >= 0) {
+      rawRoster[targetIndex] = charMap;
+    } else {
+      rawRoster.add(charMap);
+    }
+
+    await _writeRawRosterToDisk(rawRoster);
+  }
+
+  /// Saves multiple characters in place without deleting unparsed records.
+  @override
+  Future<void> saveCharacters(List<Character> characters) async {
+    final rawRoster = _loadRawPersistedRoster();
+    for (final char in characters) {
+      final targetSlug = char.id.slug;
+      int targetIndex = -1;
+      for (var i = 0; i < rawRoster.length; i++) {
+        final slug = _extractSlug(rawRoster[i]);
+        if (slug == targetSlug || (slug == char.name)) {
+          targetIndex = i;
+          break;
+        }
+      }
+      final charMap = CharacterDto.fromDomain(char).toMap();
+      if (targetIndex >= 0) {
+        rawRoster[targetIndex] = charMap;
+      } else {
+        rawRoster.add(charMap);
+      }
+    }
+
+    await _writeRawRosterToDisk(rawRoster);
+  }
+
+  /// Deletes a character by id/slug from the raw roster.
   @override
   Future<void> deleteCharacter(String characterId) async {
-    final roster = await loadCharacters();
-    roster.removeWhere(
-      (c) => c.id.slug == characterId || c.name == characterId,
-    );
-    await _persistRosterToDisk(roster);
+    final rawRoster = _loadRawPersistedRoster();
+    rawRoster.removeWhere((item) {
+      final slug = _extractSlug(item);
+      return slug == characterId;
+    });
+    await _writeRawRosterToDisk(rawRoster);
   }
 
   @override
