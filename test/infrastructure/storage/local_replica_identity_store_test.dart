@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/pn_counter.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/storage/local_replica_identity_store.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
@@ -216,7 +217,10 @@ void main() {
         '9. PartyRoomService.removeCharacterFromRoster attributes mutations to injected replica ID',
         () async {
       final authoritativeId = ReplicaId('dm_authoritative_node_99');
-      final partyService = PartyRoomService(replicaId: authoritativeId);
+      final partyService = PartyRoomService(
+        replicaId: authoritativeId,
+        clock: StatefulHlcClock(replicaId: authoritativeId),
+      );
 
       const roomCode = 'ROOM99';
       await partyService.ensureRoomExists(
@@ -372,6 +376,8 @@ void main() {
         () {
       final authoritativeId = ReplicaId('dm_prod_replica_99');
       sl.registerSingleton<ReplicaId>(authoritativeId);
+      final sharedClock = StatefulHlcClock(replicaId: authoritativeId);
+      sl.registerSingleton<StatefulHlcClock>(sharedClock);
 
       // DmDashboardController
       final dmController = DmDashboardController(replicaId: authoritativeId);
@@ -397,7 +403,10 @@ void main() {
       expect(orchestrator.localNodeId, equals(authoritativeId.value));
 
       // Application PartyRoomService
-      final appPartyService = app_party.PartyRoomService(replicaId: authoritativeId);
+      final appPartyService = app_party.PartyRoomService(
+        replicaId: authoritativeId,
+        clock: sharedClock,
+      );
       expect(appPartyService.replicaId, equals(authoritativeId));
       expect(appPartyService.localNodeId, equals(authoritativeId.value));
 
@@ -453,6 +462,7 @@ void main() {
         campaignRepo: mockRepo,
         replicaId: authoritativeId,
         combatResolver: const Dnd5eCombatResolver(),
+        clock: StatefulHlcClock(replicaId: authoritativeId),
       );
 
       expect(combatService.replicaId, equals(authoritativeId));
@@ -480,6 +490,7 @@ void main() {
         '15. Separately constructed production mutation services share the exact same injected ReplicaId without secret discovery',
         () {
       final authoritativeId = ReplicaId('shared_runtime_replica_123');
+      final sharedClock = StatefulHlcClock(replicaId: authoritativeId);
 
       final orch = RoomSyncOrchestrator(
         replicaId: authoritativeId,
@@ -499,9 +510,13 @@ void main() {
         campaignRepo: _TestMockCampaignRepo(),
         replicaId: authoritativeId,
         combatResolver: const Dnd5eCombatResolver(),
+        clock: sharedClock,
       );
 
-      final party = PartyRoomService(replicaId: authoritativeId);
+      final party = PartyRoomService(
+        replicaId: authoritativeId,
+        clock: sharedClock,
+      );
 
       expect(orch.replicaId, equals(authoritativeId));
       expect(combat.replicaId, equals(authoritativeId));

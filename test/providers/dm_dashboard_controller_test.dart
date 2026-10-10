@@ -12,6 +12,8 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orch
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
@@ -27,13 +29,25 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       AppServices.reset();
+      final repId = ReplicaId('test_dm_node');
+      if (!sl.isRegistered<ReplicaId>()) {
+        sl.registerSingleton<ReplicaId>(repId);
+      }
+      if (!sl.isRegistered<StatefulHlcClock>()) {
+        sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
+      }
       campaignService = CampaignProfileService();
       characterService = CharacterPersistenceService();
       controller = DmDashboardController(
         campaignProfileService: campaignService,
         characterPersistenceService: characterService,
-        replicaId: ReplicaId('test_dm_node'),
+        replicaId: repId,
+        clock: sl<StatefulHlcClock>(),
       );
+    });
+
+    tearDown(() {
+      sl.reset();
     });
 
     test('Initial loadData resolves relational characters by foreign key IDs',

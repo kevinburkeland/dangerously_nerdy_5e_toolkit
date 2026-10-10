@@ -13,8 +13,10 @@ import 'clock_sync_service.dart';
 import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/models/aggregate_hlc_extractor.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/logging_service.dart';
 
@@ -269,12 +271,6 @@ class RoomSyncOrchestrator {
             final localProfile = campaignRepo.activeProfile;
 
             if (localProfile != null && localProfile.id == remoteProfile.id) {
-              // Reconcile pinned rules CRDT set if present
-              if (msg.pinnedRulesDelta != null) {
-                _trackedRulesSet =
-                    _trackedRulesSet.merge(msg.pinnedRulesDelta!);
-              }
-
               // Reconcile party purse CRDT delta if present in envelope
               PartyPurse effectiveRemotePurse = remoteProfile.partyPurse;
               if (msg.purseDelta != null) {
@@ -284,14 +280,37 @@ class RoomSyncOrchestrator {
               final remoteWithPurse =
                   remoteProfile.copyWith(partyPurse: effectiveRemotePurse);
 
-              // Observe remote CRDT timestamps into runtime StatefulHlcClock
-              if (_clock != null &&
-                  remoteWithPurse.notesRegister.timestamp.physicalTime > 0) {
+              final candidateHlcs = <HybridLogicalClock>[
+                ...extractCampaignProfileTimestamps(remoteWithPurse),
+                if (msg.pinnedRulesDelta != null)
+                  ...msg.pinnedRulesDelta!.extractTimestamps(),
+              ];
+
+              // Atomically validate all remote CRDT timestamps against future drift policy
+              if (_clock != null && candidateHlcs.isNotEmpty) {
                 try {
-                  _clock.observeRemote(remoteWithPurse.notesRegister.timestamp);
-                } catch (e) {
-                  LoggingService().logWarning('Rejected remote notes timestamp: $e');
+                  _clock.validateAllRemote(candidateHlcs);
+                } on HlcFutureDriftException catch (e, st) {
+                  LoggingService().logNonFatal(
+                    e,
+                    st,
+                    reason:
+                        'Rejected remote full profile due to clock future drift: ${e.toString()}',
+                  );
+                  // Entire aggregate rejected: do NOT observe, do NOT reconcile, do NOT save
+                  return;
                 }
+              }
+
+              // All timestamps valid: observe into runtime clock atomically
+              if (_clock != null && candidateHlcs.isNotEmpty) {
+                _clock.observeAllRemote(candidateHlcs);
+              }
+
+              // Reconcile pinned rules CRDT set if present
+              if (msg.pinnedRulesDelta != null) {
+                _trackedRulesSet =
+                    _trackedRulesSet.merge(msg.pinnedRulesDelta!);
               }
 
               // Reconcile sub-resources deterministically at field-level via CRDTs
@@ -328,21 +347,20 @@ class RoomSyncOrchestrator {
           case OrSetDeltaSyncMessage msg:
             final localProfile = campaignRepo.activeProfile;
             if (localProfile != null) {
-              if (_clock != null) {
-                for (final item in msg.rulesSet.items.values) {
-                  if (item.timestamp.physicalTime > 0) {
-                    try {
-                      _clock.observeRemote(item.timestamp);
-                    } catch (_) {}
-                  }
+              final deltaHlcs = msg.rulesSet.extractTimestamps();
+              if (_clock != null && deltaHlcs.isNotEmpty) {
+                try {
+                  _clock.validateAllRemote(deltaHlcs);
+                } on HlcFutureDriftException catch (e, st) {
+                  LoggingService().logNonFatal(
+                    e,
+                    st,
+                    reason:
+                        'Rejected OrSet delta due to clock future drift: ${e.toString()}',
+                  );
+                  return;
                 }
-                for (final ts in msg.rulesSet.tombstones.values) {
-                  if (ts.physicalTime > 0) {
-                    try {
-                      _clock.observeRemote(ts);
-                    } catch (_) {}
-                  }
-                }
+                _clock.observeAllRemote(deltaHlcs);
               }
 
               _trackedRulesSet = _trackedRulesSet.merge(msg.rulesSet);

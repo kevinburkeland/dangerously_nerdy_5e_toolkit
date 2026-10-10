@@ -7,6 +7,8 @@ import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/remote/github_ingestor_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/remote/http_fetcher.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 class MockHttpFetchClient implements HttpFetchClient {
   final Map<String, String> responses;
@@ -64,9 +66,11 @@ void main() {
       final persistedEntities = <HomebrewEntity>[];
       final adapter =
           GithubIngestorAdapter(client: mockClient, useIsolate: false);
+      final repId = ReplicaId('test_node_42');
       final orchestrator = HomebrewImportOrchestrator(
         ingestorPort: adapter,
-        nodeId: 'test_node_42',
+        nodeId: repId.value,
+        clock: StatefulHlcClock(replicaId: repId),
         persister: (entity) async {
           persistedEntities.add(entity);
         },
@@ -129,8 +133,10 @@ void main() {
 
       final adapter =
           GithubIngestorAdapter(client: mockClient, useIsolate: false);
+      final repId = ReplicaId(const Uuid().v4());
       final orchestrator = HomebrewImportOrchestrator(
         ingestorPort: adapter,
+        clock: StatefulHlcClock(replicaId: repId),
       );
 
       expect(Uuid.isValidUUID(fromString: orchestrator.nodeId), isTrue);
@@ -176,8 +182,10 @@ void main() {
           GithubIngestorAdapter(client: mockClient, useIsolate: false);
       final persistedBatches = <List<HomebrewEntity>>[];
 
+      final repId = ReplicaId(const Uuid().v4());
       final orchestrator = HomebrewImportOrchestrator(
         ingestorPort: adapter,
+        clock: StatefulHlcClock(replicaId: repId),
         batchPersister: (batch) async {
           persistedBatches.add(batch);
         },
@@ -222,9 +230,11 @@ void main() {
           GithubIngestorAdapter(client: mockClient, useIsolate: false);
       final persistedBatches = <List<HomebrewEntity>>[];
 
+      final repId = ReplicaId(const Uuid().v4());
       final orchestrator = HomebrewImportOrchestrator(
         ingestorPort: adapter,
         batchSize: 2,
+        clock: StatefulHlcClock(replicaId: repId),
         batchPersister: (batch) async {
           persistedBatches.add(batch);
         },

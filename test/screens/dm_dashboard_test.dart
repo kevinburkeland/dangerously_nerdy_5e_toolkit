@@ -8,6 +8,9 @@ import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connectio
 import 'package:dangerously_nerdy_5e_toolkit/screens/dm_dashboard_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 Widget _buildTestApp({Widget? home}) {
   return MaterialApp(
@@ -22,6 +25,18 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
+    if (!sl.isRegistered<ReplicaId>()) {
+      sl.registerSingleton<ReplicaId>(ReplicaId('dm_test_replica'));
+    }
+    if (!sl.isRegistered<StatefulHlcClock>()) {
+      sl.registerSingleton<StatefulHlcClock>(
+        StatefulHlcClock(replicaId: sl<ReplicaId>()),
+      );
+    }
+  });
+
+  tearDown(() {
+    sl.reset();
   });
 
   group('DmDashboardScreen Widget Tests', () {

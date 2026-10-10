@@ -6,6 +6,7 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
@@ -129,6 +130,7 @@ void main() {
         campaignRepo: campaignRepo,
         replicaId: ReplicaId('node-test-1'),
         combatResolver: const Dnd5eCombatResolver(),
+        clock: StatefulHlcClock(replicaId: ReplicaId('node-test-1')),
       );
 
       testChar = const Character(
@@ -518,12 +520,17 @@ void main() {
         'updateEncounterParticipants anchors HLC timestamps to injected networkTimeProvider',
         () async {
       const fixedNetworkTime = 1715000000000;
+      final repId = ReplicaId('node-timed-test');
       final timedService = CombatEncounterService(
         characterRepo: charRepo,
         campaignRepo: campaignRepo,
-        replicaId: ReplicaId('node-timed-test'),
+        replicaId: repId,
         combatResolver: const Dnd5eCombatResolver(),
         networkTimeProvider: () => fixedNetworkTime,
+        clock: StatefulHlcClock(
+          replicaId: repId,
+          timeProvider: () => fixedNetworkTime,
+        ),
       );
 
       final p1 = EncounterParticipant(

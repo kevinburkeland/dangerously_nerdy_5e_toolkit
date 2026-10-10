@@ -113,15 +113,15 @@ class LocalCampaignRepository implements ICampaignRepository {
               );
             }
             final profile = dto.toDomain();
+            _validateAndObserveProfileTimestamps(profile);
             _memoryCache[id] = profile;
             profiles.add(profile);
-            _observeProfileTimestamps(profile);
           } catch (e, st) {
             _rejectedProfileIds.add(id);
             LoggingService().logNonFatal(
               e,
               st,
-              reason: 'Corrupted campaign profile skipped and preserved: $id',
+              reason: 'Corrupted or drift-rejected campaign profile skipped and preserved: $id',
             );
           }
         }
@@ -265,24 +265,12 @@ class LocalCampaignRepository implements ICampaignRepository {
     return list;
   }
 
-  void _observeProfileTimestamps(CampaignProfile profile) {
+  void _validateAndObserveProfileTimestamps(CampaignProfile profile) {
     if (_clock == null) return;
-    try {
-      if (profile.notesRegister.timestamp.physicalTime > 0) {
-        _clock.observeRemote(profile.notesRegister.timestamp);
-      }
-      for (final item in profile.roomState.activeMinions.items.values) {
-        if (item.timestamp.physicalTime > 0) {
-          _clock.observeRemote(item.timestamp);
-        }
-      }
-      for (final ts in profile.roomState.activeMinions.tombstones.values) {
-        if (ts.physicalTime > 0) {
-          _clock.observeRemote(ts);
-        }
-      }
-    } catch (e) {
-      LoggingService().logWarning('Loaded profile timestamp observation skipped: $e');
+    final timestamps = extractCampaignProfileTimestamps(profile);
+    if (timestamps.isNotEmpty) {
+      _clock.validateAllRemote(timestamps);
+      _clock.observeAllRemote(timestamps);
     }
   }
 

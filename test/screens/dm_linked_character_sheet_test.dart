@@ -12,6 +12,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 
 Widget _buildTestApp({required Widget home}) {
   return MaterialApp(
@@ -61,12 +63,23 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
-    CampaignProfileService(replicaId: ReplicaId('dm_linked_sheet_replica'));
+    final repId = ReplicaId('dm_linked_sheet_replica');
+    if (!sl.isRegistered<ReplicaId>()) {
+      sl.registerSingleton<ReplicaId>(repId);
+    }
+    if (!sl.isRegistered<StatefulHlcClock>()) {
+      sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
+    }
+    CampaignProfileService(replicaId: repId);
     final partyService = PartyRoomService.newInstance(
-      replicaId: ReplicaId('dm_linked_sheet_replica'),
+      replicaId: repId,
+      clock: sl<StatefulHlcClock>(),
     );
     PartyRoomService.setCustomInstanceForTesting(partyService);
-    addTearDown(PartyRoomService.resetCustomInstanceForTesting);
+    addTearDown(() {
+      PartyRoomService.resetCustomInstanceForTesting();
+      sl.reset();
+    });
   });
 
   group('DM Linked Character Sheet & Modification Tests', () {

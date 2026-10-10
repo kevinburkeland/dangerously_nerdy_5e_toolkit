@@ -12,13 +12,8 @@ class PartyRoomService {
 
   PartyRoomService({
     required this.replicaId,
-    StatefulHlcClock? clock,
-    int Function()? timeProvider,
-  }) : _clock = clock ??
-            StatefulHlcClock(
-              replicaId: replicaId,
-              timeProvider: timeProvider,
-            );
+    required StatefulHlcClock clock,
+  }) : _clock = clock;
 
   /// Generates the next monotonic [HybridLogicalClock] timestamp anchored to this node.
   HybridLogicalClock createLocalTimestamp({int offsetMs = 0}) {

@@ -32,15 +32,10 @@ class CombatEncounterService {
     required this.replicaId,
     required this.combatResolver,
     int Function()? networkTimeProvider,
-    StatefulHlcClock? clock,
+    required StatefulHlcClock clock,
   })  : _networkTimeProvider = networkTimeProvider ??
             (() => DateTime.now().toUtc().millisecondsSinceEpoch),
-        _clock = clock ??
-            StatefulHlcClock(
-              replicaId: replicaId,
-              timeProvider: networkTimeProvider ??
-                  (() => DateTime.now().toUtc().millisecondsSinceEpoch),
-            );
+        _clock = clock;
 
   // ==========================================
   // Character Vitals & Damage Routing

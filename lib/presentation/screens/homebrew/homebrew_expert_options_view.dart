@@ -7,8 +7,10 @@ import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
 import '../../../infrastructure/adapters/remote/github_ingestor_adapter.dart';
+import '../../../infrastructure/di/injection_container.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/persistence/homebrew_persistence_service.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 /// Isolated sub-view for Expert GitHub Homebrew Ingestion.
 ///
@@ -17,11 +19,13 @@ import '../../../services/persistence/homebrew_persistence_service.dart';
 class HomebrewExpertOptionsView extends StatefulWidget {
   final IGithubIngestorPort? customIngestorPort;
   final EntityPersister? customPersister;
+  final StatefulHlcClock? customClock;
 
   const HomebrewExpertOptionsView({
     super.key,
     this.customIngestorPort,
     this.customPersister,
+    this.customClock,
   });
 
   @override
@@ -46,6 +50,12 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
   void initState() {
     super.initState();
     final port = widget.customIngestorPort ?? GithubIngestorAdapter();
+    final clock = widget.customClock ??
+        (sl.isRegistered<StatefulHlcClock>()
+            ? sl<StatefulHlcClock>()
+            : throw StateError(
+                'HomebrewExpertOptionsView requires an authoritative StatefulHlcClock registered in DI or passed via customClock.',
+              ));
     _orchestrator = HomebrewImportOrchestrator(
       ingestorPort: port,
       persister: widget.customPersister,
@@ -54,6 +64,7 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
           : (batch) => HomebrewPersistenceService()
               .saveHomebrewEntitiesBatch(batch, syncLibraries: false),
       retainLedger: false,
+      clock: clock,
     );
 
     _urlController.addListener(_validateUrlLive);

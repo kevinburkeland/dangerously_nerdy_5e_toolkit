@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:meta/meta.dart';
-import 'package:uuid/uuid.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
@@ -108,10 +107,10 @@ class HomebrewImportOrchestrator {
     int batchSize = defaultBatchSize,
     CrdtOrSet<HomebrewEntity>? initialLedger,
     bool retainLedger = true,
-    StatefulHlcClock? clock,
+    required StatefulHlcClock clock,
   }) : this._internal(
           ingestorPort: ingestorPort,
-          nodeId: nodeId ?? const Uuid().v4(),
+          nodeId: nodeId ?? clock.replicaId.value,
           persister: persister,
           batchPersister: batchPersister,
           batchSize: batchSize,
@@ -128,7 +127,7 @@ class HomebrewImportOrchestrator {
     int batchSize = defaultBatchSize,
     CrdtOrSet<HomebrewEntity>? initialLedger,
     bool retainLedger = true,
-    StatefulHlcClock? clock,
+    required StatefulHlcClock clock,
   })  : _ingestorPort = ingestorPort,
         _nodeId = nodeId,
         _persister = persister,
@@ -136,7 +135,7 @@ class HomebrewImportOrchestrator {
         _batchSize = batchSize,
         _retainLedger = retainLedger,
         _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>.empty(),
-        _clock = clock ?? StatefulHlcClock(replicaId: ReplicaId(nodeId));
+        _clock = clock;
 
   /// Node identifier used for stamping CRDT clock ticks.
   String get nodeId => _nodeId;

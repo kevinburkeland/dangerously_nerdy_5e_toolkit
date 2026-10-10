@@ -40,7 +40,7 @@ class DmDashboardController extends ChangeNotifier {
   bool _isLoading = true;
   int _currentRound = 1;
 
-  DmDashboardController({
+  factory DmDashboardController({
     required ReplicaId replicaId,
     StatefulHlcClock? clock,
     ICampaignRepository? campaignRepository,
@@ -49,11 +49,37 @@ class DmDashboardController extends ChangeNotifier {
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
+  }) {
+    final effectiveClock = clock ??
+        (sl.isRegistered<StatefulHlcClock>()
+            ? sl<StatefulHlcClock>()
+            : throw StateError(
+                'Authoritative StatefulHlcClock is required for DmDashboardController. '
+                'Pass clock explicitly or register StatefulHlcClock in DI.',
+              ));
+    return DmDashboardController._internal(
+      replicaId: replicaId,
+      clock: effectiveClock,
+      campaignRepository: campaignRepository,
+      characterRepository: characterRepository,
+      combatEncounterService: combatEncounterService,
+      campaignProfileService: campaignProfileService,
+      characterPersistenceService: characterPersistenceService,
+      roomSyncOrchestrator: roomSyncOrchestrator,
+    );
+  }
+
+  DmDashboardController._internal({
+    required ReplicaId replicaId,
+    required StatefulHlcClock clock,
+    ICampaignRepository? campaignRepository,
+    ICharacterRepository<Character>? characterRepository,
+    CombatEncounterService? combatEncounterService,
+    CampaignProfileService? campaignProfileService,
+    CharacterPersistenceService? characterPersistenceService,
+    RoomSyncOrchestrator? roomSyncOrchestrator,
   })  : _replicaId = replicaId,
-        _clock = clock ??
-            (sl.isRegistered<StatefulHlcClock>()
-                ? sl<StatefulHlcClock>()
-                : StatefulHlcClock(replicaId: replicaId)),
+        _clock = clock,
         _campaignProfileService = campaignRepository ??
             campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
