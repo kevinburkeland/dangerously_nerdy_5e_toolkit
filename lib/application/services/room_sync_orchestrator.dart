@@ -14,7 +14,9 @@ import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import '../../services/dice_room_service.dart';
+import '../../services/logging_service.dart';
 
 /// Application service orchestrating bidirectional synchronization between
 /// the cascading P2P network transport mesh and local IndexedDB/Hive persistence.
@@ -69,6 +71,11 @@ class RoomSyncOrchestrator {
   final StreamController<SyncErrorEvent> _deadLetterController =
       StreamController<SyncErrorEvent>.broadcast(sync: false);
 
+  final StatefulHlcClock? _clock;
+
+  /// Authoritative StatefulHlcClock instance, if available.
+  StatefulHlcClock? get clock => _clock;
+
   /// Reactive stream broadcasting sync errors, dead letters, and schema mismatches.
   Stream<SyncErrorEvent> get deadLetterStream => _deadLetterController.stream;
 
@@ -86,6 +93,7 @@ class RoomSyncOrchestrator {
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
     Duration? heartbeatTtl,
+    StatefulHlcClock? clock,
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         payloadMapper = payloadMapper ??
@@ -94,6 +102,7 @@ class RoomSyncOrchestrator {
         _localTimeProvider =
             localTimeProvider ?? (() => clockSyncService.currentNetworkTimeMs),
         heartbeatTtl = heartbeatTtl ?? (transportPort ?? router)!.heartbeatTtl,
+        _clock = clock,
         assert(
           transportPort != null || router != null,
           'Must provide either transportPort or router',
@@ -275,6 +284,16 @@ class RoomSyncOrchestrator {
               final remoteWithPurse =
                   remoteProfile.copyWith(partyPurse: effectiveRemotePurse);
 
+              // Observe remote CRDT timestamps into runtime StatefulHlcClock
+              if (_clock != null &&
+                  remoteWithPurse.notesRegister.timestamp.physicalTime > 0) {
+                try {
+                  _clock.observeRemote(remoteWithPurse.notesRegister.timestamp);
+                } catch (e) {
+                  LoggingService().logWarning('Rejected remote notes timestamp: $e');
+                }
+              }
+
               // Reconcile sub-resources deterministically at field-level via CRDTs
               final reconciledProfile = reconciliationService.reconcileProfile(
                 local: localProfile,
@@ -309,6 +328,23 @@ class RoomSyncOrchestrator {
           case OrSetDeltaSyncMessage msg:
             final localProfile = campaignRepo.activeProfile;
             if (localProfile != null) {
+              if (_clock != null) {
+                for (final item in msg.rulesSet.items.values) {
+                  if (item.timestamp.physicalTime > 0) {
+                    try {
+                      _clock.observeRemote(item.timestamp);
+                    } catch (_) {}
+                  }
+                }
+                for (final ts in msg.rulesSet.tombstones.values) {
+                  if (ts.physicalTime > 0) {
+                    try {
+                      _clock.observeRemote(ts);
+                    } catch (_) {}
+                  }
+                }
+              }
+
               _trackedRulesSet = _trackedRulesSet.merge(msg.rulesSet);
 
               // Reflect merged active values into profile's pinned rules

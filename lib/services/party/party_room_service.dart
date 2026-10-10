@@ -17,6 +17,7 @@ import '../persistence/character_persistence_service.dart';
 import '../persistence/campaign_profile_service.dart';
 import 'campaign_registry_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import '../../infrastructure/di/injection_container.dart';
 
 class CampaignNotFoundException implements Exception {
@@ -127,6 +128,7 @@ class PartyRoomService {
 
   factory PartyRoomService({
     ReplicaId? replicaId,
+    StatefulHlcClock? clock,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
@@ -135,6 +137,7 @@ class PartyRoomService {
     if (replicaId != null) {
       return PartyRoomService._internal(
         replicaId: replicaId,
+        clock: clock,
         registry: registry,
         diceRoomService: diceRoomService,
         characterPersistenceService: characterPersistenceService,
@@ -146,6 +149,8 @@ class PartyRoomService {
 
   final ReplicaId replicaId;
   String get localNodeId => replicaId.value;
+  final StatefulHlcClock _clock;
+  StatefulHlcClock get clock => _clock;
   final CampaignRegistryService _registry;
   final DiceRoomService _diceRoomService;
   final CharacterPersistenceService _characterPersistenceService;
@@ -153,11 +158,16 @@ class PartyRoomService {
 
   PartyRoomService._internal({
     required this.replicaId,
+    StatefulHlcClock? clock,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : _registry = registry ?? CampaignRegistryService(),
+  })  : _clock = clock ??
+            (sl.isRegistered<StatefulHlcClock>()
+                ? sl<StatefulHlcClock>()
+                : StatefulHlcClock(replicaId: replicaId)),
+        _registry = registry ?? CampaignRegistryService(),
         _diceRoomService = diceRoomService ?? DiceRoomService(),
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
@@ -167,6 +177,7 @@ class PartyRoomService {
   @visibleForTesting
   PartyRoomService.newInstance({
     ReplicaId? replicaId,
+    StatefulHlcClock? clock,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
@@ -176,6 +187,10 @@ class PartyRoomService {
               'PartyRoomService requires an authoritative ReplicaId. '
               'Pass replicaId explicitly.',
             )),
+        _clock = clock ??
+            (sl.isRegistered<StatefulHlcClock>()
+                ? sl<StatefulHlcClock>()
+                : StatefulHlcClock(replicaId: replicaId)),
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),

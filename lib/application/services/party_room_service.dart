@@ -8,6 +8,7 @@ class PartyRoomService {
   final StatefulHlcClock _clock;
 
   String get localNodeId => replicaId.value;
+  StatefulHlcClock get clock => _clock;
 
   PartyRoomService({
     required this.replicaId,

@@ -878,8 +878,14 @@ void main() {
       final baseProfile = CampaignProfile.defaultProfile(
           id: 'camp_conflict', nodeId: 'test_node');
       // Local has updated notes
-      final localProfile =
-          baseProfile.copyWith(notesMarkdown: 'Local draft notes by DM');
+      final localProfile = baseProfile.copyWith(
+        notesMarkdown: 'Local draft notes by DM',
+        notesTimestamp: const HybridLogicalClock(
+          physicalTime: 100,
+          logicalCounter: 0,
+          nodeId: 'test_node',
+        ),
+      );
       mockRepo.activeProfile = localProfile;
 
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -887,7 +893,6 @@ void main() {
       final remoteProfile = baseProfile.copyWith(
         partyPurse: const PartyPurse.empty()
             .setCoins(gp: 750, pp: 5, replicaId: ReplicaId('node_remote')),
-        notesMarkdown: '', // Remote did not edit notes (blank)
       );
 
       final inboundConflict = jsonEncode({

@@ -184,7 +184,6 @@ class CampaignProfileService extends ChangeNotifier
               title: '${m.campaignName} Staging Area',
               description: 'Active DM session staging node.',
             ),
-            notesMarkdown: '',
           );
           await saveProfileImmediate(prof);
           profiles.add(prof);

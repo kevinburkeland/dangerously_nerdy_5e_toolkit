@@ -20,6 +20,8 @@ import 'rules_compendium_screen.dart';
 import '../widgets/party/party_vitality_hud.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import '../infrastructure/storage/local_replica_identity_store.dart';
 import '../infrastructure/di/injection_container.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
@@ -36,8 +38,12 @@ class DmDashboardScreen extends StatefulWidget {
 }
 
 class _DmDashboardScreenState extends State<DmDashboardScreen> {
-  final DmDashboardController _controller =
-      DmDashboardController(replicaId: sl<ReplicaId>());
+  late final DmDashboardController _controller = DmDashboardController(
+    replicaId: sl.isRegistered<ReplicaId>()
+        ? sl<ReplicaId>()
+        : LocalReplicaIdentityStore.createRuntimeReplicaId(),
+    clock: sl.isRegistered<StatefulHlcClock>() ? sl<StatefulHlcClock>() : null,
+  );
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
   bool _isLoading = true;

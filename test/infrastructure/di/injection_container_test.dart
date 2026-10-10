@@ -7,6 +7,10 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_import_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/local_wifi_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
@@ -72,6 +76,38 @@ void main() {
 
       final orchestrator = sl<RoomSyncOrchestrator>();
       expect(orchestrator, isA<RoomSyncOrchestrator>());
+    });
+
+    test('Pass 3.2: proves exactly ONE shared StatefulHlcClock singleton in DI',
+        () async {
+      await initServiceLocator();
+
+      expect(sl.isRegistered<ReplicaId>(), isTrue);
+      expect(sl.isRegistered<StatefulHlcClock>(), isTrue);
+
+      final clock = sl<StatefulHlcClock>();
+      final replicaId = sl<ReplicaId>();
+
+      expect(clock.replicaId, equals(replicaId));
+
+      final combatService = sl<CombatEncounterService>();
+      final partyService = sl<PartyRoomService>();
+      final homebrewOrchestrator = sl<HomebrewImportOrchestrator>();
+      final roomSyncOrchestrator = sl<RoomSyncOrchestrator>();
+      final campaignRepo = sl<ICampaignRepository>() as LocalCampaignRepository;
+
+      // Identity assertions: exact same object injected into all active writers
+      expect(identical(clock, combatService.clock), isTrue,
+          reason: 'CombatEncounterService must receive the DI clock singleton');
+      expect(identical(clock, partyService.clock), isTrue,
+          reason: 'PartyRoomService must receive the DI clock singleton');
+      expect(identical(clock, homebrewOrchestrator.clock), isTrue,
+          reason:
+              'HomebrewImportOrchestrator must receive the DI clock singleton');
+      expect(identical(clock, roomSyncOrchestrator.clock), isTrue,
+          reason: 'RoomSyncOrchestrator must receive the DI clock singleton');
+      expect(identical(clock, campaignRepo.clock), isTrue,
+          reason: 'LocalCampaignRepository must receive the DI clock singleton');
     });
 
     test('throws StateError when resolving an unregistered dependency', () {

@@ -141,6 +141,9 @@ class HomebrewImportOrchestrator {
   /// Node identifier used for stamping CRDT clock ticks.
   String get nodeId => _nodeId;
 
+  /// Authoritative StatefulHlcClock instance.
+  StatefulHlcClock get clock => _clock;
+
   /// Current state of the CRDT ledger.
   CrdtOrSet<HomebrewEntity> get ledger => _ledger;
 

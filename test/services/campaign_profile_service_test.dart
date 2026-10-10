@@ -10,7 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
-import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -246,6 +246,11 @@ void main() {
         nodeId: 'test_node',
       ).copyWith(
         notesMarkdown: 'Secret DM notes: The vampire is in the chapel.',
+        notesTimestamp: const HybridLogicalClock(
+          physicalTime: 10,
+          logicalCounter: 0,
+          nodeId: 'test_node',
+        ),
       );
 
       await service.saveProfileImmediate(source);
@@ -297,7 +302,14 @@ void main() {
         id: 'camp_export_test',
         name: 'Starfarer Odyssey',
         nodeId: 'test_node',
-      ).copyWith(notesMarkdown: 'Asteroid base coordinates: 42.88');
+      ).copyWith(
+        notesMarkdown: 'Asteroid base coordinates: 42.88',
+        notesTimestamp: const HybridLogicalClock(
+          physicalTime: 10,
+          logicalCounter: 0,
+          nodeId: 'test_node',
+        ),
+      );
 
       final jsonStr = backupService.exportProfileJson(profile);
       final decoded = json.decode(jsonStr) as Map<String, dynamic>;

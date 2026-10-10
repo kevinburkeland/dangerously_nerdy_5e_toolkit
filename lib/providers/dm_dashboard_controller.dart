@@ -4,6 +4,8 @@ import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import '../models/animated_object.dart';
 import '../models/campaign_profile.dart';
 import '../models/dm_screen_data.dart';
@@ -28,6 +30,7 @@ class DmDashboardController extends ChangeNotifier {
   final CombatEncounterService _combatEncounterService;
   final RoomSyncOrchestrator? _roomSyncOrchestrator;
   final ReplicaId _replicaId;
+  final StatefulHlcClock _clock;
 
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
@@ -39,6 +42,7 @@ class DmDashboardController extends ChangeNotifier {
 
   DmDashboardController({
     required ReplicaId replicaId,
+    StatefulHlcClock? clock,
     ICampaignRepository? campaignRepository,
     ICharacterRepository<Character>? characterRepository,
     CombatEncounterService? combatEncounterService,
@@ -46,6 +50,10 @@ class DmDashboardController extends ChangeNotifier {
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
   })  : _replicaId = replicaId,
+        _clock = clock ??
+            (sl.isRegistered<StatefulHlcClock>()
+                ? sl<StatefulHlcClock>()
+                : StatefulHlcClock(replicaId: replicaId)),
         _campaignProfileService = campaignRepository ??
             campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
@@ -76,6 +84,7 @@ class DmDashboardController extends ChangeNotifier {
                         ? sl<ICombatResolver>()
                         : const Dnd5eCombatResolver(),
                     replicaId: replicaId,
+                    clock: clock,
                   )),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()
@@ -84,6 +93,7 @@ class DmDashboardController extends ChangeNotifier {
 
   ReplicaId get replicaId => _replicaId;
   String get nodeId => _replicaId.value;
+  StatefulHlcClock get clock => _clock;
 
   CombatEncounterService get combatEncounterService => _combatEncounterService;
   ICampaignRepository get campaignRepository => _campaignProfileService;
@@ -182,6 +192,12 @@ class DmDashboardController extends ChangeNotifier {
         (_allProfiles.isNotEmpty
             ? _allProfiles.first
             : CampaignProfile.defaultProfile(nodeId: _replicaId.value));
+    if (_activeProfile != null &&
+        _activeProfile!.notesRegister.timestamp.physicalTime > 0) {
+      try {
+        _clock.observeRemote(_activeProfile!.notesRegister.timestamp);
+      } catch (_) {}
+    }
     await _loadPartyCharacters();
 
     _isLoading = false;
@@ -372,8 +388,12 @@ class DmDashboardController extends ChangeNotifier {
   Future<void> updateNotes(String notesMarkdown,
       {bool immediate = false}) async {
     if (_activeProfile == null) return;
+    final ts = _clock.nextTimestamp();
     _activeProfile = _activeProfile!.copyWith(
-      notesMarkdown: notesMarkdown,
+      notesRegister: CrdtLwwRegister<String>(
+        value: notesMarkdown,
+        timestamp: ts,
+      ),
       lastPlayedAt: DateTime.now(),
     );
     if (immediate) {

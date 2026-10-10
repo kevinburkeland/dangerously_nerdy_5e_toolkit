@@ -31,6 +31,7 @@ class LocalCampaignRepository implements ICampaignRepository {
   final AppDatabaseService _db;
   final Map<String, CampaignProfile> _memoryCache = {};
   final Map<String, UnparsedPayloadCache> _unparsedCache = {};
+  final Set<String> _rejectedProfileIds = {};
   String? _activeProfileId;
   bool _initialized = false;
 
@@ -40,15 +41,19 @@ class LocalCampaignRepository implements ICampaignRepository {
       StreamController<List<CampaignProfile>>.broadcast();
 
   final ReplicaId _replicaId;
+  final StatefulHlcClock? _clock;
 
   LocalCampaignRepository({
     AppDatabaseService? db,
     ICharacterRepository? characterRepo,
     required ReplicaId replicaId,
+    StatefulHlcClock? clock,
   })  : _db = db ?? AppDatabaseService.instance,
-        _replicaId = replicaId;
+        _replicaId = replicaId,
+        _clock = clock;
 
   ReplicaId get replicaId => _replicaId;
+  StatefulHlcClock? get clock => _clock;
   String get _effectiveNodeId => _replicaId.value;
 
   @override
@@ -82,6 +87,7 @@ class LocalCampaignRepository implements ICampaignRepository {
 
       final profiles = <CampaignProfile>[];
       _memoryCache.clear();
+      _rejectedProfileIds.clear();
 
       for (final id in indexList) {
         String? rawJson = _db
@@ -109,11 +115,13 @@ class LocalCampaignRepository implements ICampaignRepository {
             final profile = dto.toDomain();
             _memoryCache[id] = profile;
             profiles.add(profile);
+            _observeProfileTimestamps(profile);
           } catch (e, st) {
+            _rejectedProfileIds.add(id);
             LoggingService().logNonFatal(
               e,
               st,
-              reason: 'Corrupted campaign profile skipped: $id',
+              reason: 'Corrupted campaign profile skipped and preserved: $id',
             );
           }
         }
@@ -131,6 +139,7 @@ class LocalCampaignRepository implements ICampaignRepository {
       if (activeId != null && _memoryCache.containsKey(activeId)) {
         _activeProfileId = activeId;
       } else if (profiles.isNotEmpty) {
+        // Fall back to first healthy profile in runtime memory without clobbering activeProfileIdKey in DB
         _activeProfileId = profiles.first.id;
       } else {
         final def = CampaignProfile.defaultProfile(nodeId: nodeId);
@@ -215,10 +224,13 @@ class LocalCampaignRepository implements ICampaignRepository {
     if (!_initialized) await loadAllProfiles();
     _memoryCache.remove(id);
     _unparsedCache.remove(id);
+    _rejectedProfileIds.remove(id);
 
     try {
       await _db.delete(
           AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('$profileKeyPrefix$id');
     } catch (_) {}
 
     await _persistIndex();
@@ -243,6 +255,37 @@ class LocalCampaignRepository implements ICampaignRepository {
     _emitState();
   }
 
+  List<String> get _currentIndexList {
+    final list = <String>[..._memoryCache.keys];
+    for (final rejectedId in _rejectedProfileIds) {
+      if (!list.contains(rejectedId)) {
+        list.add(rejectedId);
+      }
+    }
+    return list;
+  }
+
+  void _observeProfileTimestamps(CampaignProfile profile) {
+    if (_clock == null) return;
+    try {
+      if (profile.notesRegister.timestamp.physicalTime > 0) {
+        _clock.observeRemote(profile.notesRegister.timestamp);
+      }
+      for (final item in profile.roomState.activeMinions.items.values) {
+        if (item.timestamp.physicalTime > 0) {
+          _clock.observeRemote(item.timestamp);
+        }
+      }
+      for (final ts in profile.roomState.activeMinions.tombstones.values) {
+        if (ts.physicalTime > 0) {
+          _clock.observeRemote(ts);
+        }
+      }
+    } catch (e) {
+      LoggingService().logWarning('Loaded profile timestamp observation skipped: $e');
+    }
+  }
+
   Future<void> _persistProfileToDisk(CampaignProfile profile) async {
     try {
       final cachedUnparsed = _unparsedCache[profile.id];
@@ -252,7 +295,7 @@ class LocalCampaignRepository implements ICampaignRepository {
         unparsedMinions: cachedUnparsed?.unparsedMinions ?? const [],
       );
       final jsonStr = dto.toJson();
-      final idList = _memoryCache.keys.toList();
+      final idList = _currentIndexList;
       await _db.putAll(
         AppDatabaseService.boxCampaignProfiles,
         {
@@ -267,7 +310,7 @@ class LocalCampaignRepository implements ICampaignRepository {
 
   Future<void> _persistIndex() async {
     try {
-      final idList = _memoryCache.keys.toList();
+      final idList = _currentIndexList;
       await _db.put(
         AppDatabaseService.boxCampaignProfiles,
         profileIndexKey,

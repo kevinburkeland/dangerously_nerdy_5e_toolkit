@@ -24,6 +24,7 @@ class CombatEncounterService {
   final StatefulHlcClock _clock;
 
   int Function() get networkTimeProvider => _networkTimeProvider;
+  StatefulHlcClock get clock => _clock;
 
   CombatEncounterService({
     required this.characterRepo,

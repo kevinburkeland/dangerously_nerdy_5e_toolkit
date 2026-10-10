@@ -65,3 +65,22 @@ This document details the application-level synchronization services, transport 
   3. `logical replicated change -> observable inequality where equality participates in synchronization/change detection`
 - **Structural Semantics:** Replicated objects bearing nested JSON-like metadata maps or lists (`customProperties`, `runtimeData`, `normalizedData`, `rawPayload`, `unparsedPayload`, `grantedSkills`) must utilize recursive deep structural equality (`DeepCollectionEquality`) in both `operator ==` and `hashCode`. Map entry insertion order must not alter equality or hash, whereas list item order remains significant.
 - **Key Integrity Invariant:** `deepFreezeMap` enforces that nested map keys MUST be `String`. Non-string keys fail loudly with `ArgumentError`; keys are never silently stringified, dropped, or collapsed.
+
+---
+
+## 7. Writer Authority & Clock Trust Invariants (Pass 3.2)
+- **One Shared `StatefulHlcClock` Per Runtime Writer:** The runtime generates a single `ReplicaId` per process execution. Exactly ONE `StatefulHlcClock` is constructed for that `ReplicaId` and registered as a singleton in DI (`sl<StatefulHlcClock>()`). All services originating replicated writes (`CombatEncounterService`, `PartyRoomService`, `HomebrewImportOrchestrator`, `RoomSyncOrchestrator`, `LocalCampaignRepository`, `DmDashboardController`) must receive this identical shared clock instance. Services must never construct private clocks when DI is active.
+- **Clock Identity & Writer Attribution:** Replicated writes always carry the active runtime `ReplicaId` via `clock.nextTimestamp()`. Historical node IDs in deserialized or loaded state are DATA, not authority; the runtime must never reuse historical timestamps or raw node IDs to stamp active local mutations.
+- **Domain Models Do Not Manufacture Timestamps:** Domain models (such as `CampaignProfile`) must NEVER construct active HLCs, call `DateTime.now()`, or accept a raw `nodeId` in mutation methods. Any mutation altering replicated fields (e.g. `copyWith(notesRegister: ...)` or `copyWith(notesMarkdown: ..., notesTimestamp: ...)`) requires an already-stamped register or explicit caller timestamp.
+- **Accepted Remote & Loaded Local History Observation:** When remote replicated state is accepted or when local persisted profile state is loaded, relevant timestamps are observed into the shared clock (`clock.observeRemote(...)`). This ensures the next local write is strictly after all causally observed history.
+- **Bounded Remote Future Drift & Typed Skew Rejection:** `StatefulHlcClock.observeRemote()` enforces an explicit maximum future drift bound (`maxFutureDrift`, default 1 minute). When an inbound remote physical timestamp exceeds `localPhysicalTime + maxFutureDrift`, the clock rejects the observation by throwing a typed `HlcFutureDriftException(remotePhysicalTime, localPhysicalTime, maxDrift, remoteNodeId)`. The rejected timestamp does NOT mutate `_latest`, leaving the local clock invariant and monotonic.
+- **Exact-HLC Collision Policy Remains Fail-Loud:** Exact identical HLC timestamps with divergent logical payloads fail loudly with `StateError` at the primitive layer (`CrdtLwwRegister`, `CrdtOrSet`). Application fault isolation (quarantining offending subresources to prevent dead-lettering unrelated progress) is handled in orchestration (Pass 4), without weakening primitive algebra.
+
+---
+
+## 8. Campaign Persistence & Corrupt Record Durability (Pass 3.2)
+- **Parse Failure != Delete:** Deserialization failure of a stored campaign profile must never cause record deletion or index orphaning. `LocalCampaignRepository` isolates malformed profile IDs into `_rejectedProfileIds` and preserves both the raw corrupt payload and its index membership across all loads, unrelated profile saves, index rewrites, and process restarts.
+- **Explicit Delete Only:** A malformed record is removed from disk only upon an explicit call to `deleteProfile(id)`.
+- **Active Profile Corrupt Record Handling:** If `activeProfileId` points to a corrupted record, the repository selects a healthy fallback profile in memory for current runtime use, but preserves the corrupt record and its index pointer without silently clobbering disk state.
+- **Mandatory Production Caller Audit:** Any change to hardened architectural contracts (`StatefulHlcClock`, `CampaignProfile` mutation, repository error handling) requires an exhaustive production caller audit classifying every callsite before completion.
+

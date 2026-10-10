@@ -1,5 +1,7 @@
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 import '../../services/party/party_room_service.dart';
+import '../../application/services/party_room_service.dart' as app_party;
+import '../../application/services/homebrew_import_orchestrator.dart';
 import '../storage/local_replica_identity_store.dart';
 import '../../application/services/cascading_transport_router.dart';
 import '../../application/services/clock_sync_service.dart';
@@ -22,6 +24,7 @@ import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/subclass_spells_library.dart';
 import '../../models/magic_items/magic_item_library.dart';
+import '../adapters/remote/github_ingestor_adapter.dart';
 import '../../services/acl/compendium_pipe_parser.dart';
 import '../adapters/system_network_time_port.dart';
 import '../mappers/room_sync_payload_mapper.dart';
@@ -103,6 +106,15 @@ Future<void> initServiceLocator({
   final resolvedReplicaId = replicaId ??
       LocalReplicaIdentityStore.createRuntimeReplicaId();
   sl.registerSingleton<ReplicaId>(resolvedReplicaId);
+
+  final hlcClock = StatefulHlcClock(
+    replicaId: resolvedReplicaId,
+    timeProvider: () => sl.isRegistered<ClockSyncService>()
+        ? sl<ClockSyncService>().currentNetworkTimeMs
+        : DateTime.now().toUtc().millisecondsSinceEpoch,
+  );
+  sl.registerSingleton<StatefulHlcClock>(hlcClock);
+
   CampaignProfileService(replicaId: resolvedReplicaId);
 
   final charRepo = characterRepo ?? LocalCharacterRepository(db: db);
@@ -113,6 +125,7 @@ Future<void> initServiceLocator({
         db: db,
         characterRepo: charRepo,
         replicaId: resolvedReplicaId,
+        clock: hlcClock,
       );
   sl.registerSingleton<ICampaignRepository>(campRepo);
 
@@ -153,12 +166,33 @@ Future<void> initServiceLocator({
         combatResolver: sl<ICombatResolver>(),
         networkTimeProvider: () => sl<ClockSyncService>().currentNetworkTimeMs,
         replicaId: resolvedReplicaId,
+        clock: sl<StatefulHlcClock>(),
       ));
 
   final partyRoomService = PartyRoomService(
     replicaId: resolvedReplicaId,
+    clock: sl<StatefulHlcClock>(),
   );
   sl.registerSingleton<PartyRoomService>(partyRoomService);
+
+  sl.registerLazySingleton<app_party.PartyRoomService>(
+    () => app_party.PartyRoomService(
+      replicaId: resolvedReplicaId,
+      clock: sl<StatefulHlcClock>(),
+    ),
+  );
+
+  sl.registerLazySingleton<IGithubIngestorPort>(
+    () => GithubIngestorAdapter(),
+  );
+
+  sl.registerLazySingleton<HomebrewImportOrchestrator>(
+    () => HomebrewImportOrchestrator(
+      ingestorPort: sl<IGithubIngestorPort>(),
+      nodeId: resolvedReplicaId.value,
+      clock: sl<StatefulHlcClock>(),
+    ),
+  );
 
   sl.registerLazySingleton<RoomStateReconciliationService>(
     () => RoomStateReconciliationService(
@@ -229,5 +263,6 @@ Future<void> initServiceLocator({
         diceRoomService: DiceRoomService(),
         payloadMapper: sl<IRoomSyncPayloadPort>(),
         replicaId: resolvedReplicaId,
+        clock: sl<StatefulHlcClock>(),
       ));
 }
