@@ -2,10 +2,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mutex/mutex.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/ports/i_character_repository.dart';
-import 'package:vtt_engine_core/crdt/replica_id.dart';
-import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character;
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
@@ -317,6 +314,273 @@ void main() {
           contains('corrupt-id'));
       expect(prefs.getString('dn5e_campaign_profile_corrupt-id'),
           equals(corruptPayload));
+    });
+
+    group('Cold Iron Birdcage — Pass 3.3 Trusted Local History & Invariant Tests', () {
+      const baseTimeT = 1700000000000;
+      const oneHourMs = 3600 * 1000;
+      const sixHoursMs = 6 * 3600 * 1000;
+
+      test(
+          'Section K: Clock-correction regression: local profile at T + 6h loads normally without drift rejection',
+          () async {
+        final oldDmReplica = ReplicaId('old-dm-session');
+        final newRuntimeReplica = ReplicaId('new-runtime-dm');
+
+        final historicalHlc = HybridLogicalClock(
+          physicalTime: baseTimeT + sixHoursMs,
+          logicalCounter: 10,
+          nodeId: oldDmReplica.value,
+        );
+
+        final profileWithFutureHlc = CampaignProfile(
+          id: 'camp-future-history',
+          name: 'Future History Campaign',
+          createdAt: DateTime.utc(2026, 1, 1),
+          lastPlayedAt: DateTime.utc(2026, 1, 1),
+          nodeId: oldDmReplica.value,
+          roomState: RoomNodeState(
+            roomId: 'r1',
+            roomCode: 'RC1',
+            title: 'Future Chamber',
+          ),
+          notesRegister: CrdtLwwRegister<String>(
+            value: 'Historical notes from the future',
+            timestamp: historicalHlc,
+          ),
+        );
+
+        final dto = CampaignProfileDto.fromDomain(profileWithFutureHlc);
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          LocalCampaignRepository.profileIndexKey,
+          ['camp-future-history'],
+        );
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          '${LocalCampaignRepository.profileKeyPrefix}camp-future-history',
+          dto.toJson(),
+        );
+
+        // Start new runtime whose wall clock is T
+        final runtimeClock = StatefulHlcClock(
+          replicaId: newRuntimeReplica,
+          maxFutureDrift: const Duration(minutes: 1),
+          timeProvider: () => baseTimeT,
+        );
+
+        final repo = LocalCampaignRepository(
+          replicaId: newRuntimeReplica,
+          characterRepo: _FakeCharRepo(),
+          clock: runtimeClock,
+        );
+        addTearDown(repo.dispose);
+
+        final loaded = await repo.loadAllProfiles();
+
+        // Assert: profile loads normally and remains active/available
+        expect(loaded.length, equals(1));
+        expect(loaded.first.id, equals('camp-future-history'));
+        expect(repo.activeProfile?.id, equals('camp-future-history'));
+
+        // Runtime clock advances to historical causality
+        expect(runtimeClock.latest.physicalTime, equals(baseTimeT + sixHoursMs));
+        expect(runtimeClock.latest.logicalCounter, equals(11));
+
+        // Next local write is > historical HLC and uses NEW runtime ReplicaId
+        final nextWrite = runtimeClock.nextTimestamp();
+        expect(nextWrite.isAfter(historicalHlc), isTrue);
+        expect(nextWrite.nodeId, equals(newRuntimeReplica.value));
+        expect(nextWrite.physicalTime, equals(baseTimeT + sixHoursMs));
+        expect(nextWrite.logicalCounter, equals(12));
+      });
+
+      test(
+          'Section L: Mixed local history regression: notes T+1h, minion T+2h, encounter tombstone T+3h all load and clock advances',
+          () async {
+        final oldNode = ReplicaId('old-writer-node');
+        final newRuntimeReplica = ReplicaId('new-local-writer');
+
+        final tsNotes = HybridLogicalClock(
+          physicalTime: baseTimeT + oneHourMs,
+          logicalCounter: 1,
+          nodeId: oldNode.value,
+        );
+        final tsMinion = HybridLogicalClock(
+          physicalTime: baseTimeT + (2 * oneHourMs),
+          logicalCounter: 2,
+          nodeId: oldNode.value,
+        );
+        final tsEncounterTombstone = HybridLogicalClock(
+          physicalTime: baseTimeT + (3 * oneHourMs),
+          logicalCounter: 3,
+          nodeId: oldNode.value,
+        );
+
+        final minionSet = CrdtOrSet<dynamic>(
+          items: {
+            'minion-1': CrdtLwwRegister<dynamic>(
+              value: {'name': 'Skeleton'},
+              timestamp: tsMinion,
+            ),
+          },
+        );
+
+        final encounterSet = CrdtOrSet<EncounterParticipant>(
+          tombstones: {
+            'participant-dead': tsEncounterTombstone,
+          },
+        );
+
+        final roomState = RoomNodeState(
+          roomId: 'room-mixed',
+          roomCode: 'MIX-1',
+          title: 'Mixed Chamber',
+          activeMinions: minionSet,
+          activeEncounter: encounterSet,
+        );
+
+        final mixedProfile = CampaignProfile.raw(
+          id: 'camp-mixed-history',
+          name: 'Mixed History Campaign',
+          createdAt: DateTime.utc(2026, 1, 1),
+          lastPlayedAt: DateTime.utc(2026, 1, 1),
+          roomState: roomState,
+          notesRegister: CrdtLwwRegister<String>(
+            value: 'T+1h Notes',
+            timestamp: tsNotes,
+          ),
+        );
+
+        // Verify aggregate extraction helper extracts all 3 timestamps
+        final extracted = extractCampaignProfileTimestamps(mixedProfile);
+        expect(extracted, containsAll([tsNotes, tsMinion, tsEncounterTombstone]));
+
+        final dto = CampaignProfileDto.fromDomain(mixedProfile);
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          LocalCampaignRepository.profileIndexKey,
+          ['camp-mixed-history'],
+        );
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          '${LocalCampaignRepository.profileKeyPrefix}camp-mixed-history',
+          dto.toJson(),
+        );
+
+        // Load under wall clock T
+        final runtimeClock = StatefulHlcClock(
+          replicaId: newRuntimeReplica,
+          maxFutureDrift: const Duration(minutes: 1),
+          timeProvider: () => baseTimeT,
+        );
+
+        final repo = LocalCampaignRepository(
+          replicaId: newRuntimeReplica,
+          characterRepo: _FakeCharRepo(),
+          clock: runtimeClock,
+        );
+        addTearDown(repo.dispose);
+
+        final loaded = await repo.loadAllProfiles();
+        expect(loaded.length, equals(1));
+        final loadedProfile = loaded.first;
+
+        // Assert all profile state loads, no field dropped
+        expect(loadedProfile.notesRegister.value, equals('T+1h Notes'));
+        expect(loadedProfile.roomState.activeMinions.items.containsKey('minion-1'),
+            isTrue);
+        expect(
+            loadedProfile.roomState.activeEncounter.tombstones
+                .containsKey('participant-dead'),
+            isTrue);
+
+        // Runtime clock causality reaches the maximum historical HLC (T+3h)
+        expect(runtimeClock.latest.physicalTime,
+            equals(tsEncounterTombstone.physicalTime));
+
+        // Next local write is after all three
+        final nextWrite = runtimeClock.nextTimestamp();
+        expect(nextWrite.isAfter(tsNotes), isTrue);
+        expect(nextWrite.isAfter(tsMinion), isTrue);
+        expect(nextWrite.isAfter(tsEncounterTombstone), isTrue);
+        expect(nextWrite.nodeId, equals(newRuntimeReplica.value));
+      });
+
+      test(
+          'Section M: Malformed local state still fails loudly and is quarantined/preserved',
+          () async {
+        final runtimeReplica = ReplicaId('test-runtime-replica');
+
+        // 1. Structurally malformed HLC structure in CRDT encounter set
+        const malformedHlcPayload =
+            '{"id":"camp-bad-hlc","name":"Bad HLC","roomState":{"roomId":"r1","roomCode":"RC","activeEncounter":{"items":{"e1":{"v":{"participantId":"e1","entityLink":{"entityId":"e1","displayName":"Goblin"}},"ts":{"pt":"not-a-number","node":"n1"}}}}}}';
+
+        // 2. Malformed CRDT map structure
+        const malformedCrdtMapPayload =
+            '{"id":"camp-bad-crdt","name":"Bad CRDT","roomState":{"roomId":"r1","roomCode":"RC","activeMinions":"not-a-map"}}';
+
+        final healthyProfile = CampaignProfile.defaultProfile(
+          id: 'camp-healthy',
+          name: 'Healthy Campaign',
+          nodeId: runtimeReplica.value,
+        );
+        final healthyDto = CampaignProfileDto.fromDomain(healthyProfile);
+
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          LocalCampaignRepository.profileIndexKey,
+          ['camp-healthy', 'camp-bad-hlc', 'camp-bad-crdt'],
+        );
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          '${LocalCampaignRepository.profileKeyPrefix}camp-healthy',
+          healthyDto.toJson(),
+        );
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          '${LocalCampaignRepository.profileKeyPrefix}camp-bad-hlc',
+          malformedHlcPayload,
+        );
+        AppDatabaseService.instance.put(
+          AppDatabaseService.boxCampaignProfiles,
+          '${LocalCampaignRepository.profileKeyPrefix}camp-bad-crdt',
+          malformedCrdtMapPayload,
+        );
+
+        final clock = StatefulHlcClock(
+          replicaId: runtimeReplica,
+          timeProvider: () => baseTimeT,
+        );
+        final repo = LocalCampaignRepository(
+          replicaId: runtimeReplica,
+          characterRepo: _FakeCharRepo(),
+          clock: clock,
+        );
+        addTearDown(repo.dispose);
+
+        final loaded = await repo.loadAllProfiles();
+
+        // Malformed profiles are rejected from loaded memory; only healthy profile loads
+        expect(loaded.length, equals(1));
+        expect(loaded.first.id, equals('camp-healthy'));
+        expect(loaded.any((p) => p.id == 'camp-bad-hlc'), isFalse);
+        expect(loaded.any((p) => p.id == 'camp-bad-crdt'), isFalse);
+
+        // Both records are preserved in raw disk storage
+        expect(
+            AppDatabaseService.instance.get(
+              AppDatabaseService.boxCampaignProfiles,
+              '${LocalCampaignRepository.profileKeyPrefix}camp-bad-hlc',
+            ),
+            equals(malformedHlcPayload));
+        expect(
+            AppDatabaseService.instance.get(
+              AppDatabaseService.boxCampaignProfiles,
+              '${LocalCampaignRepository.profileKeyPrefix}camp-bad-crdt',
+            ),
+            equals(malformedCrdtMapPayload));
+      });
     });
   });
 }

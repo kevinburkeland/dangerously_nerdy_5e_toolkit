@@ -10,6 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_session_state.da
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -206,8 +207,10 @@ void main() {
     test(
         'PartyRoomService links character and broadcasts minified telemetry map',
         () async {
+      final replica = ReplicaId('telemetry_sync_replica');
       final partyService = PartyRoomService.newInstance(
-        replicaId: ReplicaId('telemetry_sync_replica'),
+        replicaId: replica,
+        clock: StatefulHlcClock(replicaId: replica),
       );
       final draft = CharacterDraft()
         ..characterName = 'Sir Reginald'

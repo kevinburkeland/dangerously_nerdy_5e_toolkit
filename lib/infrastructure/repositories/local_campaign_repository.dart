@@ -113,7 +113,7 @@ class LocalCampaignRepository implements ICampaignRepository {
               );
             }
             final profile = dto.toDomain();
-            _validateAndObserveProfileTimestamps(profile);
+            _observeTrustedProfileTimestamps(profile);
             _memoryCache[id] = profile;
             profiles.add(profile);
           } catch (e, st) {
@@ -121,7 +121,7 @@ class LocalCampaignRepository implements ICampaignRepository {
             LoggingService().logNonFatal(
               e,
               st,
-              reason: 'Corrupted or drift-rejected campaign profile skipped and preserved: $id',
+              reason: 'Corrupted campaign profile skipped and preserved: $id',
             );
           }
         }
@@ -265,11 +265,22 @@ class LocalCampaignRepository implements ICampaignRepository {
     return list;
   }
 
-  void _validateAndObserveProfileTimestamps(CampaignProfile profile) {
+  void _observeTrustedProfileTimestamps(CampaignProfile profile) {
     final timestamps = extractCampaignProfileTimestamps(profile);
     if (timestamps.isNotEmpty) {
-      _clock.validateAllRemote(timestamps);
-      _clock.observeAllRemote(timestamps);
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      for (final ts in timestamps) {
+        if (ts.physicalTime > now + _clock.maxFutureDrift.inMilliseconds) {
+          final diff = Duration(milliseconds: ts.physicalTime - now);
+          LoggingService().logNonFatal(
+            'Persisted profile clock is ${diff.inHours}h ahead of local physical time',
+            StackTrace.current,
+            reason: 'Persisted profile clock diagnostic warning for campaign ${profile.id}',
+          );
+          break;
+        }
+      }
+      _clock.observeAllTrustedHistory(timestamps);
     }
   }
 

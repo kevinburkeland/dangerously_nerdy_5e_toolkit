@@ -434,18 +434,49 @@ void main() {
         clock: poisonedClock,
       );
       addTearDown(poisonedRepo.dispose);
-
       final reloadedProfiles = await poisonedRepo.loadAllProfiles();
 
-      // Poisoned profile is quarantined: excluded from memory cache and loadAllProfiles
-      expect(reloadedProfiles.length, equals(1));
-      expect(reloadedProfiles.first.id, equals('camp-healthy-enc'));
-      expect(reloadedProfiles.any((p) => p.id == 'camp-poisoned-tombstone'), isFalse);
+      // Persisted future history is accepted and causally observed under Pass 3.3
+      expect(reloadedProfiles.length, equals(2));
+      expect(reloadedProfiles.map((p) => p.id),
+          containsAll(['camp-healthy-enc', 'camp-poisoned-tombstone']));
 
-      // Clock was NOT corrupted by the far-future tombstone (only healthy profile timestamps were observed)
-      expect(poisonedClock.latest.physicalTime, equals(validTombstoneHlc.physicalTime));
+      // Clock causality was advanced to the maximum historical tombstone timestamp
       expect(poisonedClock.latest.physicalTime,
-          isNot(equals(farFutureTombstoneHlc.physicalTime)));
+          equals(farFutureTombstoneHlc.physicalTime));
+
+      // Next local tick must be strictly after the historical tombstone with runtime writer authority
+      final nextTick = poisonedClock.nextTimestamp();
+      expect(nextTick.isAfter(farFutureTombstoneHlc), isTrue);
+      expect(nextTick.nodeId, equals(localNode.value));
+
+      // Now verify that genuinely malformed serialized state is still quarantined and preserved
+      AppDatabaseService.instance.put(
+        AppDatabaseService.boxCampaignProfiles,
+        '${LocalCampaignRepository.profileKeyPrefix}camp-malformed-json',
+        '{"id": "camp-malformed-json", "corrupt_syntax": ',
+      );
+      AppDatabaseService.instance.put(
+        AppDatabaseService.boxCampaignProfiles,
+        LocalCampaignRepository.profileIndexKey,
+        ['camp-healthy-enc', 'camp-poisoned-tombstone', 'camp-malformed-json'],
+      );
+
+      final malformedRepo = LocalCampaignRepository(
+        replicaId: localNode,
+        characterRepo: _FakeCharRepo(),
+        clock: StatefulHlcClock(
+          replicaId: localNode,
+          maxFutureDrift: const Duration(minutes: 1),
+          timeProvider: () => simulatedNow,
+        ),
+      );
+      addTearDown(malformedRepo.dispose);
+
+      final withMalformedProfiles = await malformedRepo.loadAllProfiles();
+      expect(withMalformedProfiles.length, equals(2));
+      expect(withMalformedProfiles.any((p) => p.id == 'camp-malformed-json'),
+          isFalse);
     });
 
     test(

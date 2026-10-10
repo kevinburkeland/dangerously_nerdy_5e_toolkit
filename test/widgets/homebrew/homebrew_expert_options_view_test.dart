@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
@@ -33,6 +35,9 @@ void main() {
         MaterialApp(
           home: HomebrewExpertOptionsView(
             customIngestorPort: MockTestIngestorPort(),
+            customClock: StatefulHlcClock(
+              replicaId: ReplicaId('test_homebrew_writer'),
+            ),
           ),
         ),
       );
@@ -97,6 +102,9 @@ void main() {
             ),
             child: HomebrewExpertOptionsView(
               customIngestorPort: MockTestIngestorPort(),
+              customClock: StatefulHlcClock(
+                replicaId: ReplicaId('test_homebrew_writer'),
+              ),
             ),
           ),
         ),

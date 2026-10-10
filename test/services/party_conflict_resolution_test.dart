@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_currency_system.dart';
 
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +22,10 @@ void main() {
     registry = CampaignRegistryService.newInstance();
     // ignore: invalid_use_of_visible_for_testing_member
     diceService = DiceRoomService.newInstance();
+    final replica = ReplicaId('party_conflict_replica');
     partyService = PartyRoomService.newInstance(
-      replicaId: ReplicaId('party_conflict_replica'),
+      replicaId: replica,
+      clock: StatefulHlcClock(replicaId: replica),
       registry: registry,
       diceRoomService: diceService,
     );

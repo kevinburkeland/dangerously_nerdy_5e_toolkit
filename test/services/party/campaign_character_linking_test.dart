@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +58,7 @@ void main() {
 
       partyService = PartyRoomService.newInstance(
         replicaId: testReplica,
+        clock: StatefulHlcClock(replicaId: testReplica),
         registry: registry,
         diceRoomService: diceService,
         characterPersistenceService: characterService,

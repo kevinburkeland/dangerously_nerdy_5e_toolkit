@@ -166,7 +166,10 @@ class PartyRoomService {
   })  : _clock = clock ??
             (sl.isRegistered<StatefulHlcClock>()
                 ? sl<StatefulHlcClock>()
-                : StatefulHlcClock(replicaId: replicaId)),
+                : throw StateError(
+                    'Authoritative StatefulHlcClock is required but not registered in DI. '
+                    'Pass clock explicitly or register StatefulHlcClock in DI.',
+                  )),
         _registry = registry ?? CampaignRegistryService(),
         _diceRoomService = diceRoomService ?? DiceRoomService(),
         _characterPersistenceService =
@@ -190,7 +193,10 @@ class PartyRoomService {
         _clock = clock ??
             (sl.isRegistered<StatefulHlcClock>()
                 ? sl<StatefulHlcClock>()
-                : StatefulHlcClock(replicaId: replicaId)),
+                : throw StateError(
+                    'PartyRoomService requires an authoritative StatefulHlcClock. '
+                    'Register StatefulHlcClock in DI or pass clock explicitly.',
+                  )),
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),

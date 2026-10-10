@@ -88,3 +88,28 @@ This document details the application-level synchronization services, transport 
 - **Active Profile Corrupt Record Handling:** If `activeProfileId` points to a corrupted record, the repository selects a healthy fallback profile in memory for current runtime use, but preserves the corrupt record and its index pointer without silently clobbering disk state.
 - **Mandatory Production Caller Audit:** Any change to hardened architectural contracts (`StatefulHlcClock`, `CampaignProfile` mutation, repository error handling) requires an exhaustive production caller audit classifying every callsite before completion.
 
+---
+
+## 9. Permanent Birdcage Bars & Hard Invariants (Pass 3.3)
+1. **Single Authoritative Writer Clock:** Exactly one authoritative `StatefulHlcClock` instance exists per running application process, created in DI (`lib/infrastructure/di/injection_container.dart`) and injected into active writer services.
+2. **Static Source Bar: No Clock Manufacture in Production Code:** Production code under `lib/` must never construct `StatefulHlcClock(` outside `lib/infrastructure/di/` (enforced by `test/infrastructure/compliance/source_bars_test.dart`). Missing clock composition in production paths must fail loudly (`StateError`) rather than synthesizing private fallback clocks.
+3. **Static Source Bar: No Literal ReplicaId Synthesis in Production Code:** Production code under `lib/` must never synthesize literal replica IDs (such as `ReplicaId('...')`). Active writes strictly obtain `clock.replicaId`. Enforced by `test/infrastructure/compliance/source_bars_test.dart`.
+4. **Untrusted Remote Input Drift Validation:** Inbound remote envelopes (`FullProfileSyncMessage`, `OrSetDeltaSyncMessage`) are strictly untrusted. All incoming timestamps must be validated against `maxFutureDrift` before observation (`validateAllRemote`). If any timestamp exceeds future drift bounds, the envelope is rejected atomically without mutating local clock state.
+5. **Trusted Local Persisted History Semantics:** Persisted local storage is trusted history. When loading local campaign profiles, timestamps are observed causally via `observeTrustedHistory` / `observeAllTrustedHistory` without rejecting profiles due to backward local wall-clock shifts or offline dormancy. Structural corruption or malformed payloads remain strictly quarantined.
+6. **Corrupt Record Durability:** Corrupt stored records are preserved on disk and retained in indexes; startup or reload never deletes, clobbers, or overwrites malformed records.
+7. **Primitive CRDT Algebraic Closure:** Primitive CRDT mathematics (`CrdtLwwRegister`, `CrdtOrSet`, `PnCounter`) in `vtt_engine_core` remain strictly fail-loud on invariant violations (e.g., identical HLC with divergent payload throws `StateError`).
+8. **Test Harness Discipline:** Tests must conform to production invariants via explicit test DI or parameter injection (constructing clocks within test files or test helpers). Production code must never weaken its boundaries or maintain fallback crutches to accommodate tests.
+
+---
+
+## 10. Migration-ID vs Active-Writer-ID Policy
+- **Historical & Migration Identifiers:** Fixed identifiers such as `'genesis'`, `'init'`, `'migration'`, or deterministic replay node IDs in `fromMap`/deserializers represent read-only historical or migration attribution. They are immutable data artifacts.
+- **Active Writer Identifiers:** An active runtime writer must NEVER use fixed migration IDs or synthesize arbitrary replica strings to stamp new live mutations. All active writes originating on a device must strictly use the process's authoritative `ReplicaId` obtained from the runtime's single `StatefulHlcClock` via `clock.nextTimestamp()` (or `clock.replicaId`).
+
+---
+
+## 11. Pass 4 Entry Note: Per-Item Collision Fault Isolation
+- **Algebraic Invariance vs Application Isolation:** Primitive CRDT algebra in `vtt_engine_core` strictly enforces fail-loud behavior on identical-timestamp divergent-payload collisions.
+- **Application Fault Isolation Scope:** In Pass 4, application orchestration (`RoomStateReconciliationService` and `RoomSyncOrchestrator`) will implement per-item fault isolation. When a collision occurs within a compound or set-based sync envelope, the orchestration layer isolates and quarantines the offending item or sub-resource without dead-lettering the entire envelope or aborting unrelated healthy items. The underlying primitive CRDT layer remains unmodified and algebraically pure.
+
+

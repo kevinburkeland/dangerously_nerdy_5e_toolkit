@@ -4,6 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
@@ -62,8 +63,10 @@ void main() {
     await characterRepo.saveCharacter(testHero);
 
     registry = CampaignRegistryService();
+    final replica = ReplicaId('test_hero_replica');
     roomService = PartyRoomService.newInstance(
-      replicaId: ReplicaId('test_hero_replica'),
+      replicaId: replica,
+      clock: StatefulHlcClock(replicaId: replica),
       registry: registry,
     );
     PartyRoomService.setCustomInstanceForTesting(roomService);

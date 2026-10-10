@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/utils/crypto_utils.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/party/campaign_dialogs.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -60,8 +61,10 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
       SharedPreferences.setMockInitialValues({});
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
+      final replica = ReplicaId('claim_dm_passkey_replica');
       partyService = PartyRoomService.newInstance(
-        replicaId: ReplicaId('claim_dm_passkey_replica'),
+        replicaId: replica,
+        clock: StatefulHlcClock(replicaId: replica),
         registry: registry,
         diceRoomService: diceService,
       );
@@ -113,8 +116,10 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
 
       // Separate player registry
       final playerRegistry = CampaignRegistryService.newInstance();
+      final playerReplica = ReplicaId('claim_dm_passkey_player_replica');
       PartyRoomService.newInstance(
-        replicaId: ReplicaId('claim_dm_passkey_player_replica'),
+        replicaId: playerReplica,
+        clock: StatefulHlcClock(replicaId: playerReplica),
         registry: playerRegistry,
         diceRoomService: diceService,
       );

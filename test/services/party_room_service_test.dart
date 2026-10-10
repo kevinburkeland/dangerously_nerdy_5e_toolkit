@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +21,10 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
+      final replica = ReplicaId('party_service_test_replica');
       partyService = PartyRoomService.newInstance(
-        replicaId: ReplicaId('party_service_test_replica'),
+        replicaId: replica,
+        clock: StatefulHlcClock(replicaId: replica),
         registry: registry,
         diceRoomService: diceService,
       );
