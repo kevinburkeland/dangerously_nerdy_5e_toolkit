@@ -11,6 +11,7 @@ import '../../../infrastructure/di/injection_container.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/persistence/homebrew_persistence_service.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 /// Isolated sub-view for Expert GitHub Homebrew Ingestion.
 ///
@@ -53,8 +54,10 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
     final clock = widget.customClock ??
         (sl.isRegistered<StatefulHlcClock>()
             ? sl<StatefulHlcClock>()
-            : throw StateError(
-                'HomebrewExpertOptionsView requires an authoritative StatefulHlcClock registered in DI or passed via customClock.',
+            : StatefulHlcClock(
+                replicaId: sl.isRegistered<ReplicaId>()
+                    ? sl<ReplicaId>()
+                    : ReplicaId('homebrew_expert_fallback'),
               ));
     _orchestrator = HomebrewImportOrchestrator(
       ingestorPort: port,
