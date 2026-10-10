@@ -53,13 +53,10 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
+    sl.reset();
     final repId = ReplicaId('money_sync_replica');
-    if (!sl.isRegistered<ReplicaId>()) {
-      sl.registerSingleton<ReplicaId>(repId);
-    }
-    if (!sl.isRegistered<StatefulHlcClock>()) {
-      sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
-    }
+    sl.registerSingleton<ReplicaId>(repId);
+    sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
     CampaignProfileService(replicaId: repId);
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
@@ -158,7 +155,7 @@ void main() {
       final controller = DmDashboardController(
         campaignProfileService: profileService,
         characterPersistenceService: persistence,
-        replicaId: ReplicaId('test_dm_replica'),
+        replicaId: sl<ReplicaId>(),
         clock: sl<StatefulHlcClock>(),
       );
       await controller.loadData();

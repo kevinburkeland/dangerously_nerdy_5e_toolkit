@@ -13,7 +13,14 @@ class PartyRoomService {
   PartyRoomService({
     required this.replicaId,
     required StatefulHlcClock clock,
-  }) : _clock = clock;
+  }) : _clock = clock {
+    if (_clock.replicaId != replicaId) {
+      throw ArgumentError(
+        'PartyRoomService writer identity mismatch: '
+        'replicaId ($replicaId) does not match clock.replicaId (${_clock.replicaId}).',
+      );
+    }
+  }
 
   /// Generates the next monotonic [HybridLogicalClock] timestamp anchored to this node.
   HybridLogicalClock createLocalTimestamp({int offsetMs = 0}) {

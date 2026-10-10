@@ -35,7 +35,14 @@ class CombatEncounterService {
     required StatefulHlcClock clock,
   })  : _networkTimeProvider = networkTimeProvider ??
             (() => DateTime.now().toUtc().millisecondsSinceEpoch),
-        _clock = clock;
+        _clock = clock {
+    if (_clock.replicaId != replicaId) {
+      throw ArgumentError(
+        'CombatEncounterService writer identity mismatch: '
+        'replicaId ($replicaId) does not match clock.replicaId (${_clock.replicaId}).',
+      );
+    }
+  }
 
   // ==========================================
   // Character Vitals & Damage Routing
@@ -221,7 +228,7 @@ class CombatEncounterService {
     HybridLogicalClock? previousClock,
   }) {
     if (previousClock != null) {
-      _clock.observeRemote(previousClock);
+      _clock.observeTrustedHistory(previousClock);
     }
     return _clock.nextTimestamp();
   }

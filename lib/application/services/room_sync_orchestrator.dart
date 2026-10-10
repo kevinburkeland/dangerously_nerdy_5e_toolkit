@@ -108,7 +108,14 @@ class RoomSyncOrchestrator {
         assert(
           transportPort != null || router != null,
           'Must provide either transportPort or router',
-        );
+        ) {
+    if (_clock.replicaId != replicaId) {
+      throw ArgumentError(
+        'RoomSyncOrchestrator writer identity mismatch: '
+        'replicaId ($replicaId) does not match clock.replicaId (${_clock.replicaId}).',
+      );
+    }
+  }
 
   /// Tracked payload hashes for deduplication (exposed for testing).
   @visibleForTesting

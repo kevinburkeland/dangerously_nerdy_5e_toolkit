@@ -135,7 +135,14 @@ class HomebrewImportOrchestrator {
         _batchSize = batchSize,
         _retainLedger = retainLedger,
         _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>.empty(),
-        _clock = clock;
+        _clock = clock {
+    if (_clock.replicaId.value != nodeId) {
+      throw ArgumentError(
+        'HomebrewImportOrchestrator writer identity mismatch: '
+        'nodeId ($nodeId) does not match clock.replicaId (${_clock.replicaId.value}).',
+      );
+    }
+  }
 
   /// Node identifier used for stamping CRDT clock ticks.
   String get nodeId => _nodeId;

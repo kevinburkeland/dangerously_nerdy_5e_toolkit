@@ -175,7 +175,14 @@ class PartyRoomService {
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService();
+            campaignProfileService ?? CampaignProfileService() {
+    if (_clock.replicaId != replicaId) {
+      throw ArgumentError(
+        'PartyRoomService writer identity mismatch: '
+        'replicaId ($replicaId) does not match clock.replicaId (${_clock.replicaId}).',
+      );
+    }
+  }
 
   @visibleForTesting
   PartyRoomService.newInstance({
@@ -206,7 +213,14 @@ class PartyRoomService {
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService();
+            campaignProfileService ?? CampaignProfileService() {
+    if (_clock.replicaId != this.replicaId) {
+      throw ArgumentError(
+        'PartyRoomService writer identity mismatch: '
+        'replicaId (${this.replicaId}) does not match clock.replicaId (${_clock.replicaId}).',
+      );
+    }
+  }
 
   static void resetCustomInstanceForTesting() {
     _customInstance = null;

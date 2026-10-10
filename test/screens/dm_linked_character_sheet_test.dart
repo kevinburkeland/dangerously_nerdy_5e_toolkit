@@ -63,13 +63,10 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
+    sl.reset();
     final repId = ReplicaId('dm_linked_sheet_replica');
-    if (!sl.isRegistered<ReplicaId>()) {
-      sl.registerSingleton<ReplicaId>(repId);
-    }
-    if (!sl.isRegistered<StatefulHlcClock>()) {
-      sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
-    }
+    sl.registerSingleton<ReplicaId>(repId);
+    sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
     CampaignProfileService(replicaId: repId);
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,

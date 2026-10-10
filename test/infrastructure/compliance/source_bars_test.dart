@@ -139,5 +139,38 @@ void main() {
             '${violations.join('\n')}',
       );
     });
+
+    test(
+        'Source Bar E: Known local mutation and load services must NOT call observeRemote',
+        () {
+      final forbiddenFiles = [
+        'lib/application/services/combat_encounter_service.dart',
+        'lib/providers/dm_dashboard_controller.dart',
+      ];
+      final observeRemotePattern = RegExp(r'\b_?clock\.observeRemote\s*\(');
+      final violations = <String>[];
+
+      for (final relPath in forbiddenFiles) {
+        final file = File(relPath);
+        if (!file.existsSync()) continue;
+        final lines = file.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          final line = lines[i];
+          if (line.trim().startsWith('//')) continue;
+          if (observeRemotePattern.hasMatch(line)) {
+            violations.add('$relPath:${i + 1} -> ${line.trim()}');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Known local mutation services must not call observeRemote (Source Bar E). Violations:\n'
+            '${violations.join('\n')}',
+      );
+    });
   });
 }
+

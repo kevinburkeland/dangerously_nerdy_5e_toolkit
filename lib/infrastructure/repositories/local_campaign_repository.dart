@@ -50,7 +50,14 @@ class LocalCampaignRepository implements ICampaignRepository {
     required StatefulHlcClock clock,
   })  : _db = db ?? AppDatabaseService.instance,
         _replicaId = replicaId,
-        _clock = clock;
+        _clock = clock {
+    if (_clock.replicaId != replicaId) {
+      throw ArgumentError(
+        'LocalCampaignRepository writer identity mismatch: '
+        'replicaId ($replicaId) does not match clock.replicaId (${_clock.replicaId}).',
+      );
+    }
+  }
 
   ReplicaId get replicaId => _replicaId;
   StatefulHlcClock get clock => _clock;

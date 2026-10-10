@@ -29,13 +29,10 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       AppServices.reset();
+      sl.reset();
       final repId = ReplicaId('test_dm_node');
-      if (!sl.isRegistered<ReplicaId>()) {
-        sl.registerSingleton<ReplicaId>(repId);
-      }
-      if (!sl.isRegistered<StatefulHlcClock>()) {
-        sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
-      }
+      sl.registerSingleton<ReplicaId>(repId);
+      sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
       campaignService = CampaignProfileService();
       characterService = CharacterPersistenceService();
       controller = DmDashboardController(

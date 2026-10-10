@@ -39,9 +39,11 @@ class DmDashboardScreen extends StatefulWidget {
 
 class _DmDashboardScreenState extends State<DmDashboardScreen> {
   late final DmDashboardController _controller = DmDashboardController(
-    replicaId: sl.isRegistered<ReplicaId>()
-        ? sl<ReplicaId>()
-        : LocalReplicaIdentityStore.createRuntimeReplicaId(),
+    replicaId: sl.isRegistered<StatefulHlcClock>()
+        ? sl<StatefulHlcClock>().replicaId
+        : (sl.isRegistered<ReplicaId>()
+            ? sl<ReplicaId>()
+            : LocalReplicaIdentityStore.createRuntimeReplicaId()),
     clock: sl.isRegistered<StatefulHlcClock>() ? sl<StatefulHlcClock>() : null,
   );
   CampaignProfile? _activeProfile;

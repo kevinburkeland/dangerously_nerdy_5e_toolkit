@@ -112,4 +112,18 @@ This document details the application-level synchronization services, transport 
 - **Algebraic Invariance vs Application Isolation:** Primitive CRDT algebra in `vtt_engine_core` strictly enforces fail-loud behavior on identical-timestamp divergent-payload collisions.
 - **Application Fault Isolation Scope:** In Pass 4, application orchestration (`RoomStateReconciliationService` and `RoomSyncOrchestrator`) will implement per-item fault isolation. When a collision occurs within a compound or set-based sync envelope, the orchestration layer isolates and quarantines the offending item or sub-resource without dead-lettering the entire envelope or aborting unrelated healthy items. The underlying primitive CRDT layer remains unmodified and algebraically pure.
 
+---
+
+## 12. Provenance Rule & Writer-Clock Identity Consistency (Pass 3.3.1)
+- **Provenance-Dependent Timestamp Handling:** Timestamp handling depends strictly on provenance, not timestamp magnitude or value:
+  - **Untrusted Remote Input:** Remote envelopes received over network transports are untrusted; all candidate timestamps must be drift-validated against `maxFutureDrift` before observation (`validateAllRemote` / `observeRemote`).
+  - **Trusted Local Persisted History:** Records loaded from local storage are trusted; all timestamps are observed causally without drift rejection (`observeAllTrustedHistory`), preserving local durability across offline dormancy or backward local clock corrections.
+  - **Accepted In-Memory Replicated State:** Predecessor timestamps extracted from already-accepted local state (e.g., active minions, active encounters, notes registers) represent trusted local history when used to sequence subsequent local mutations. They must be observed causally via `observeTrustedHistory(...)`. A timestamp does not become untrusted remote input again merely because it originally arrived from a peer; once accepted, its causal predecessor is local trusted history.
+- **Writer / Clock Identity Consistency Invariant:** Any production class accepting both `ReplicaId` and `StatefulHlcClock` (`CombatEncounterService`, `RoomSyncOrchestrator`, `LocalCampaignRepository`, `DmDashboardController`, `PartyRoomService`, `HomebrewImportOrchestrator`) must enforce at construction time:
+  ```dart
+  clock.replicaId == replicaId
+  ```
+  If they diverge, the constructor must fail loudly immediately by throwing `ArgumentError`. No service may attribute HLC writes to one writer while attributing PN-counter or domain operations to another.
+
+
 

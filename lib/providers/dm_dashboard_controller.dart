@@ -115,7 +115,14 @@ class DmDashboardController extends ChangeNotifier {
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()
                 ? sl<RoomSyncOrchestrator>()
-                : null);
+                : null) {
+    if (_clock.replicaId != _replicaId) {
+      throw ArgumentError(
+        'DmDashboardController writer identity mismatch: '
+        'replicaId ($_replicaId) does not match clock.replicaId (${_clock.replicaId}).',
+      );
+    }
+  }
 
   ReplicaId get replicaId => _replicaId;
   String get nodeId => _replicaId.value;
@@ -220,9 +227,7 @@ class DmDashboardController extends ChangeNotifier {
             : CampaignProfile.defaultProfile(nodeId: _replicaId.value));
     if (_activeProfile != null &&
         _activeProfile!.notesRegister.timestamp.physicalTime > 0) {
-      try {
-        _clock.observeRemote(_activeProfile!.notesRegister.timestamp);
-      } catch (_) {}
+      _clock.observeTrustedHistory(_activeProfile!.notesRegister.timestamp);
     }
     await _loadPartyCharacters();
 
