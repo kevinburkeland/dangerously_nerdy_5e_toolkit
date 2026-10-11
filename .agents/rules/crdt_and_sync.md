@@ -289,13 +289,14 @@ The following fields represent immutable identity, metadata, or configuration af
   - *Merge Semantics:* `joinCustomProperties` (disjoint keys unioned, identical keys must match deep values; divergent unversioned values throw `StateError`).
   - *Architectural Bar:* Production code must not call mutating `copyWith` methods on these fields in active replicated state without first defining explicit replication semantics (e.g. per-key CRDT registers).
 
-### 17.4 Strict Authoritative Register Presence & Value-Key Invariant (Pass 4.2.1 & Pass 4.2.2)
+### 17.4 Strict Authoritative Register Presence & Value-Key Invariant (Pass 4.2.1, Pass 4.2.2 & Pass 4.2.3)
 For every authoritative replicated register (`nameRegister`, `titleRegister`, `descriptionRegister`, `displayNameRegister`, `notesRegister`):
 - **PRESENT Authoritative Register:**
   - Must be parsed as authoritative.
   - Must contain an explicit value key (`value` or `v`), an explicit timestamp key (`timestamp` or `ts`), and a valid HLC.
   - If neither `v` nor `value` is present, deserialization must fail loudly with `FormatException`. A register with a timestamp but no value key is malformed and must **NEVER** silently default.
   - If the register value is not a Map, or is `null`, or contains a missing or malformed timestamp/HLC, deserialization must fail loudly with `FormatException`.
+  - **Strict Root Non-Nullable Register Null Rejection (Pass 4.2.3):** For non-nullable root registers (`nameRegister` and `CampaignProfile.notesRegister`), an explicit null value (`"v": null` or `"value": null`) must fail loudly with `FormatException`. Parsers must **NEVER** stringify `null` into `"null"`.
   - For nullable registers (`RoomEntityLink.notesRegister`), an explicit `"value": null` or `"v": null` represents an authoritative null; omission of the value key is malformed.
   - Deserialization must **NEVER** silently fall back to legacy scalar fields upon encountering malformed authoritative register data.
   - If both authoritative register and legacy scalar are present, the authoritative register wins unconditionally.
@@ -306,10 +307,56 @@ For every authoritative replicated register (`nameRegister`, `titleRegister`, `d
 - **Container Structure:** `RoomNodeState.entityLinksCrdt` is a `CrdtOrSet<RoomEntityLink>`.
 - **OR-Set Authority:** The outer OR-Set layer governs link membership, additions, removals (`unbindEntityFromRoom`), and tombstones under add-wins semantics.
 - **Nested Causal Registers:** Each surviving `RoomEntityLink` contains its own independent causal registers (`displayNameRegister`, `notesRegister`).
-- **Recursive Join:** When both replicas contain surviving link items for the same `entityId`, `joinEntityLinks` recursively merges the payloads via `RoomEntityLink.join(localItem.value, remoteItem.value)` rather than choosing one whole payload solely by outer item timestamp.
-- **Outer Item Timestamp Policy:** The surviving item timestamp is derived deterministically as `max(localItem.timestamp, remoteItem.timestamp)` (`localItem.timestamp.isAfter(remoteItem.timestamp) ? localItem.timestamp : remoteItem.timestamp`).
+- **Recursive Join:** When both replicas contain surviving link items for the same `entityId` within the same incarnation, `joinEntityLinks` recursively merges the payloads via `RoomEntityLink.join(localItem.value, remoteItem.value)` rather than choosing one whole payload solely by outer item timestamp.
 - **Preservation of Independent Field Edits:** Independent edits to different fields of the same link (e.g., Replica A edits `displayName`, Replica B edits `notes`) both survive reconciliation without fault.
 - **Permanent Bar:** Replacing `joinEntityLinks(a, b)` with generic opaque `a.merge(b)` is permanently forbidden and guarded by structural and behavioral regressions.
+
+### 17.6 RoomEntityLink Incarnation Semantics & Remove/Re-Add Associativity (Pass 4.2.3)
+
+#### Causal Problem & The Associativity Failure
+Under naive recursive composition, when an entity link is removed via a tombstone and later re-added, the defeated tombstone disappears from active state when joined with the newer re-add. If an offline replica carrying the old pre-removal payload later reconnects, a naive payload merge would recursively compose the old payload (e.g. pre-removal notes) into the new incarnation. Furthermore:
+$$\text{join}(\text{join}(A, B), C) \neq \text{join}(A, \text{join}(B, C))$$
+because in $(A \sqcup B) \sqcup C$, tombstone $B$ deletes old link $A$, and $C$ starts fresh; whereas in $A \sqcup (B \sqcup C)$, $B \sqcup C$ collapses to $C$ (tombstone defeated), leaving $A \sqcup C$ to erroneously merge $A$'s pre-removal notes into $C$'s blank notes.
+
+#### The Durable Incarnation Model
+To preserve CRDT associativity, commutativity, and idempotence across remove and re-add boundaries:
+1. **Durable Incarnation Timestamp (`incarnationTimestamp`):**
+   - Each `RoomEntityLink` carries an authoritative `HybridLogicalClock incarnationTimestamp`.
+   - **Initial Add:** Binding or creating a link establishes its `incarnationTimestamp` from the write's authoritative HLC (or genesis if unversioned legacy).
+   - **Removal:** Removing a link (`unbindEntityFromRoom`) creates an OR-Set tombstone at $T_{\text{remove}}$, ending the incarnation.
+   - **Re-Add:** Re-adding a link after a removal establishes a *new incarnation* whose `incarnationTimestamp` is strictly greater than the tombstone ($T_{\text{readd}} > T_{\text{remove}}$).
+2. **Incarnation Boundary Rule in `RoomEntityLink.join`:**
+   - **Same Incarnation ($a.\text{incarnationTimestamp} == b.\text{incarnationTimestamp}$):**
+     Payloads belong to the same logical incarnation. Recursive CRDT merge is executed: `displayNameRegister` merges causally via LWW, `notesRegister` merges causally via LWW, and independent concurrent field edits compose cleanly.
+   - **Different Incarnations ($a.\text{incarnationTimestamp} \neq b.\text{incarnationTimestamp}$):**
+     Payloads belong to distinct incarnations. The causally winning incarnation ($a.\text{incarnationTimestamp}.\text{isAfter}(b.\text{incarnationTimestamp}) \ ?\ a : b$) survives entirely. Pre-removal nested fields from defeated incarnations are **strictly rejected** and never merge across the boundary.
+3. **Outer Item Timestamp Policy in `joinEntityLinks`:**
+   - If both local and remote active items belong to the **same incarnation**, the outer item timestamp is $\max(\text{localItem.timestamp}, \text{remoteItem.timestamp})$.
+   - If they belong to **different incarnations**, the outer item timestamp is that of the winning incarnation's item.
+4. **Serialization & Deserialization:**
+   - `RoomEntityLink.toMap()` serializes `'incarnationTimestamp': incarnationTimestamp.toMap()`.
+   - `RoomEntityLink.fromMap()` strictly validates that `incarnationTimestamp` is a Map and decodes it via `HybridLogicalClock.fromMap`. For legacy payloads without the field, it falls back deterministically to the max register timestamp or genesis.
+5. **Value Equality & Hash:**
+   - `RoomEntityLink.operator ==` and `hashCode` include `incarnationTimestamp`. Two links with identical visible field strings but different incarnations are not equivalent replicated states.
+6. **HLC Extraction & Trust Boundary:**
+   - `extractRoomNodeTimestamps` (and transitively `extractCampaignProfileTimestamps`) extracts `link.incarnationTimestamp` (for physicalTime > 0).
+   - `incarnationTimestamp` participates in all remote future-drift validation and trusted local history observation.
+
+#### Example Walkthrough: 3-State Associativity
+Consider:
+- **Replica A:** Old link @ $T_{10}$ with `notes: "old secret note"`, `incarnation: T_{10}`.
+- **Replica B:** Removal tombstone @ $T_{20}$.
+- **Replica C:** Re-added link @ $T_{30}$ with `displayName: "New Door"`, `notes: null`, `incarnation: T_{30}`.
+
+- **Grouping 1: $(A \sqcup B) \sqcup C$**
+  - $A \sqcup B$: Tombstone @ $T_{20}$ defeats item @ $T_{10}$. Result: Tombstone @ $T_{20}$.
+  - $(A \sqcup B) \sqcup C$: Tombstone @ $T_{20}$ meets item $C$ @ $T_{30}$. Item $C$ wins. Result: Item $C$ (`notes: null`).
+- **Grouping 2: $A \sqcup (B \sqcup C)$**
+  - $B \sqcup C$: Tombstone @ $T_{20}$ meets item $C$ @ $T_{30}$. Item $C$ wins.
+  - $A \sqcup (B \sqcup C) = A \sqcup C$: Both $A$ and $C$ are active items. `RoomEntityLink.join(A, C)` evaluates incarnation timestamps. Since $C.\text{incarnationTimestamp} (T_{30}) > A.\text{incarnationTimestamp} (T_{10})$, incarnation $C$ wins entirely without merging pre-removal notes.
+  - Result: Item $C$ (`notes: null`).
+
+Both groupings yield identical state: $(A \sqcup B) \sqcup C = A \sqcup (B \sqcup C)$. Pre-removal notes do not resurrect.
 
 
 

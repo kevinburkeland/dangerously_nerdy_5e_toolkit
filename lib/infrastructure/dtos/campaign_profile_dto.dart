@@ -165,7 +165,16 @@ class CampaignProfileDto {
     }
 
     final parsedNotesRegister = notesRegister.isNotEmpty
-        ? CrdtLwwRegisterDto.fromMap<String>(notesRegister, (v) => v.toString())
+        ? CrdtLwwRegisterDto.parse<String>(
+            notesRegister,
+            (v) {
+              if (v == null) {
+                throw const FormatException(
+                    'CampaignProfileDto.toDomain: "notesRegister" value must not be null.');
+              }
+              return v.toString();
+            },
+          )
         : (notesMarkdown.isNotEmpty
             ? CrdtLwwRegister<String>(
                 value: notesMarkdown,
@@ -208,7 +217,16 @@ class CampaignProfileDto {
     }
 
     final parsedNameRegister = nameRegister.isNotEmpty
-        ? CrdtLwwRegisterDto.fromMap<String>(nameRegister, (v) => v.toString())
+        ? CrdtLwwRegisterDto.parse<String>(
+            nameRegister,
+            (v) {
+              if (v == null) {
+                throw const FormatException(
+                    'CampaignProfileDto.toDomain: "nameRegister" value must not be null.');
+              }
+              return v.toString();
+            },
+          )
         : null;
 
     return CampaignProfile.raw(
@@ -223,15 +241,7 @@ class CampaignProfileDto {
       partyCharacterIds: partyCharacterIds,
       pinnedRules: parsedPinnedRules,
       pinnedRuleIds: parsedPinnedRules == null ? pinned : null,
-      notesRegister: parsedNotesRegister ??
-          const CrdtLwwRegister<String>(
-            value: '',
-            timestamp: HybridLogicalClock(
-              physicalTime: 0,
-              logicalCounter: 0,
-              nodeId: 'genesis',
-            ),
-          ),
+      notesRegister: parsedNotesRegister,
       partyPurse: purse,
       changeLog: parsedEvents,
     );
@@ -470,7 +480,13 @@ class CampaignProfileDto {
       try {
         CrdtLwwRegisterDto.parse<String>(
           safeReg,
-          (v) => v.toString(),
+          (v) {
+            if (v == null) {
+              throw const FormatException(
+                  'CampaignProfileDto.fromMap: "notesRegister" value must not be null.');
+            }
+            return v.toString();
+          },
         );
       } catch (e) {
         throw FormatException(
@@ -492,7 +508,13 @@ class CampaignProfileDto {
       try {
         CrdtLwwRegisterDto.parse<String>(
           safeReg,
-          (v) => v.toString(),
+          (v) {
+            if (v == null) {
+              throw const FormatException(
+                  'CampaignProfileDto.fromMap: "nameRegister" value must not be null.');
+            }
+            return v.toString();
+          },
         );
       } catch (e) {
         throw FormatException(

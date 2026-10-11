@@ -52,8 +52,20 @@ class SessionGraphService {
                 'Authoritative StatefulHlcClock is required for SessionGraphService. '
                 'Pass clock or timestamp explicitly, or register StatefulHlcClock in DI.',
               ));
+    final existingTombstone = room.entityLinksCrdt.tombstones[link.entityId];
+    final bool needsNewIncarnation = link.incarnationTimestamp.physicalTime == 0 ||
+        (existingTombstone != null &&
+            !link.incarnationTimestamp.isAfter(existingTombstone));
+    final resolvedLink = needsNewIncarnation
+        ? link.copyWith(
+            incarnationTimestamp: effectiveTimestamp,
+            displayNameTimestamp: link.displayNameRegister.timestamp.isAfter(effectiveTimestamp)
+                ? link.displayNameRegister.timestamp
+                : effectiveTimestamp,
+          )
+        : link;
     final updatedLinksCrdt =
-        room.entityLinksCrdt.add(link.entityId, link, effectiveTimestamp);
+        room.entityLinksCrdt.add(resolvedLink.entityId, resolvedLink, effectiveTimestamp);
     return room.copyWith(entityLinksCrdt: updatedLinksCrdt);
   }
 

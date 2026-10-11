@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
+import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
@@ -822,6 +823,144 @@ void main() {
         final recon = reconciliationService.reconcileProfileSafely(local: repA, remote: repB);
         expect(recon.hasFaults, isFalse);
         expect(recon.profile.roomState.entityLinks, isEmpty);
+      });
+    });
+
+    group('10. Entity-Link Incarnation Semantics & Remove/Re-add Associativity (Pass 4.2.3)', () {
+      test('Aggregate-level 6-permutation associativity across old-incarnation -> removal -> re-add', () {
+        final base = createCommonBase();
+        const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: 'node-a');
+        const ts20 = HybridLogicalClock(physicalTime: 20, logicalCounter: 0, nodeId: 'node-b');
+        const ts30 = HybridLogicalClock(physicalTime: 30, logicalCounter: 0, nodeId: 'node-c');
+
+        final oldLink = RoomEntityLink(
+          entityId: 'link-door',
+          displayName: 'Old Door',
+          displayNameTimestamp: ts10,
+          notes: 'old secret note',
+          notesTimestamp: ts10,
+          incarnationTimestamp: ts10,
+        );
+
+        final newLink = RoomEntityLink(
+          entityId: 'link-door',
+          displayName: 'New Door',
+          displayNameTimestamp: ts30,
+          notes: null,
+          incarnationTimestamp: ts30,
+        );
+
+        // State A: Profile with old incarnation @ ts10
+        final profA = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty().add('link-door', oldLink, ts10),
+          ),
+        );
+
+        // State B: Profile with removal @ ts20
+        final profB = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty()
+                .add('link-door', oldLink, ts10)
+                .remove('link-door', ts20),
+          ),
+        );
+
+        // State C: Profile with re-add @ ts30
+        final profC = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty().add('link-door', newLink, ts30),
+          ),
+        );
+
+        // All 6 permutations of CampaignProfile.join
+        final permAbC = CampaignProfile.join(CampaignProfile.join(profA, profB), profC);
+        final permABc = CampaignProfile.join(profA, CampaignProfile.join(profB, profC));
+        final permCbA = CampaignProfile.join(CampaignProfile.join(profC, profB), profA);
+        final permCBa = CampaignProfile.join(profC, CampaignProfile.join(profB, profA));
+        final permAcB = CampaignProfile.join(CampaignProfile.join(profA, profC), profB);
+        final permACb = CampaignProfile.join(profA, CampaignProfile.join(profC, profB));
+
+        expect(permAbC, equals(permABc));
+        expect(permAbC, equals(permCbA));
+        expect(permAbC, equals(permCBa));
+        expect(permAbC, equals(permAcB));
+        expect(permAbC, equals(permACb));
+
+        // Result: link exists, displayName == 'New Door', notes == null, old secret notes never resurrect
+        final surviving = permAbC.roomState.entityLinks.first;
+        expect(surviving.displayName, equals('New Door'));
+        expect(surviving.notes, isNull);
+        expect(surviving.incarnationTimestamp, equals(ts30));
+      });
+
+      test('Application reconciliation: stale replica reconnect after remove/re-add rejects old payload', () {
+        final base = createCommonBase();
+        final tsA10 = clockA.nextTimestamp();
+
+        final oldLink = RoomEntityLink(
+          entityId: 'link-door',
+          displayName: 'Dungeon Portcullis',
+          displayNameTimestamp: tsA10,
+          notes: 'Hidden bypass switch behind torch',
+          notesTimestamp: tsA10,
+          incarnationTimestamp: tsA10,
+        );
+
+        // Replica A goes offline with old incarnation
+        final repA = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty().add('link-door', oldLink, tsA10),
+          ),
+        );
+
+        // Replica B removes link at tsB20, re-adds at tsB30, edits displayName at tsB35
+        clockB.observeRemote(tsA10);
+        final tsB20 = clockB.nextTimestamp();
+        final tsB30 = clockB.nextTimestamp();
+        final tsB35 = clockB.nextTimestamp();
+
+        final readdedLink = RoomEntityLink(
+          entityId: 'link-door',
+          displayName: 'Iron Gate',
+          displayNameTimestamp: tsB30,
+          notes: null,
+          incarnationTimestamp: tsB30,
+        );
+        final editedLinkB = readdedLink.copyWith(
+          displayName: 'Reinforced Adamantine Gate',
+          displayNameTimestamp: tsB35,
+        );
+
+        final repB = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty()
+                .add('link-door', oldLink, tsA10)
+                .remove('link-door', tsB20)
+                .add('link-door', editedLinkB, tsB35),
+          ),
+        );
+
+        // Replica A reconnects: reconcile in both directions
+        final reconAB = reconciliationService.reconcileProfileSafely(local: repA, remote: repB);
+        final reconBA = reconciliationService.reconcileProfileSafely(local: repB, remote: repA);
+
+        expect(reconAB.hasFaults, isFalse);
+        expect(reconBA.hasFaults, isFalse);
+        expect(reconAB.profile, equals(reconBA.profile));
+
+        final surviving = reconAB.profile.roomState.entityLinks.first;
+        expect(surviving.displayName, equals('Reinforced Adamantine Gate'));
+        expect(surviving.notes, isNull);
+        expect(surviving.incarnationTimestamp, equals(tsB30));
+
+        // Repeated reconciliation is stable/idempotent
+        final reconRepeat = reconciliationService.reconcileProfileSafely(
+          local: reconAB.profile,
+          remote: reconBA.profile,
+        );
+        expect(reconRepeat.hasFaults, isFalse);
+        expect(reconRepeat.profile, equals(reconAB.profile));
       });
     });
   });
