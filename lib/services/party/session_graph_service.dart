@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import '../../infrastructure/di/injection_container.dart';
 import '../../models/domain/loot_models.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_purse.dart';
@@ -36,24 +39,42 @@ class PartyPassiveMetrics {
 class SessionGraphService {
   /// Binds an entity link (character, monster, or NPC) to a room node
   static RoomNodeState bindEntityToRoom(
-      RoomNodeState room, RoomEntityLink link) {
-    final links = List<RoomEntityLink>.from(room.entityLinks);
-    final idx = links.indexWhere(
-        (l) => l.entityId == link.entityId && l.refType == link.refType);
-    if (idx != -1) {
-      links[idx] = link;
-    } else {
-      links.add(link);
-    }
-    return room.copyWith(entityLinks: links);
+    RoomNodeState room,
+    RoomEntityLink link, {
+    HybridLogicalClock? timestamp,
+    StatefulHlcClock? clock,
+  }) {
+    final effectiveTimestamp = timestamp ??
+        (clock?.nextTimestamp()) ??
+        (sl.isRegistered<StatefulHlcClock>()
+            ? sl<StatefulHlcClock>().nextTimestamp()
+            : throw StateError(
+                'Authoritative StatefulHlcClock is required for SessionGraphService. '
+                'Pass clock or timestamp explicitly, or register StatefulHlcClock in DI.',
+              ));
+    final updatedLinksCrdt =
+        room.entityLinksCrdt.add(link.entityId, link, effectiveTimestamp);
+    return room.copyWith(entityLinksCrdt: updatedLinksCrdt);
   }
 
   /// Removes an entity link from a room node
   static RoomNodeState unbindEntityFromRoom(
-      RoomNodeState room, String entityId) {
-    final links = List<RoomEntityLink>.from(room.entityLinks)
-      ..removeWhere((l) => l.entityId == entityId);
-    return room.copyWith(entityLinks: links);
+    RoomNodeState room,
+    String entityId, {
+    HybridLogicalClock? timestamp,
+    StatefulHlcClock? clock,
+  }) {
+    final effectiveTimestamp = timestamp ??
+        (clock?.nextTimestamp()) ??
+        (sl.isRegistered<StatefulHlcClock>()
+            ? sl<StatefulHlcClock>().nextTimestamp()
+            : throw StateError(
+                'Authoritative StatefulHlcClock is required for SessionGraphService. '
+                'Pass clock or timestamp explicitly, or register StatefulHlcClock in DI.',
+              ));
+    final updatedLinksCrdt =
+        room.entityLinksCrdt.remove(entityId, effectiveTimestamp);
+    return room.copyWith(entityLinksCrdt: updatedLinksCrdt);
   }
 
   /// Adds a loot container to a room node

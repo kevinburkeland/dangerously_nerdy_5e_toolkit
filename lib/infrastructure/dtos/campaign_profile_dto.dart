@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
+import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/rules/ruleset_edition.dart';
@@ -26,6 +27,7 @@ class CampaignProfileDto {
   final Map<String, dynamic> roomState;
   final List<String> partyCharacterIds;
   final List<String> pinnedRuleIds;
+  final Map<String, dynamic> pinnedRulesCrdt;
   final String notesMarkdown;
   final Map<String, dynamic> notesRegister;
   final Map<String, dynamic> partyPurse;
@@ -42,6 +44,7 @@ class CampaignProfileDto {
     required this.roomState,
     this.partyCharacterIds = const [],
     this.pinnedRuleIds = const [],
+    this.pinnedRulesCrdt = const {},
     this.notesMarkdown = '',
     this.notesRegister = const {},
     this.partyPurse = const {},
@@ -65,6 +68,7 @@ class CampaignProfileDto {
       roomState: profile.roomState.toMap(),
       partyCharacterIds: List<String>.from(profile.partyCharacterIds),
       pinnedRuleIds: profile.pinnedRuleIds.toList(),
+      pinnedRulesCrdt: profile.pinnedRules.toMap((v) => v),
       notesMarkdown: profile.notesMarkdown,
       notesRegister: CrdtLwwRegisterDto.toMap(profile.notesRegister, (v) => v),
       partyPurse: profile.partyPurse.toMap(),
@@ -104,6 +108,16 @@ class CampaignProfileDto {
     for (final raw in changeLog) {
       try {
         parsedEvents.add(PartyEvent.fromMap(raw));
+      } catch (_) {}
+    }
+
+    CrdtOrSet<String>? parsedPinnedRules;
+    if (pinnedRulesCrdt.isNotEmpty) {
+      try {
+        parsedPinnedRules = CrdtOrSet<String>.fromMap(
+          pinnedRulesCrdt,
+          (v) => v.toString(),
+        );
       } catch (_) {}
     }
 
@@ -160,7 +174,7 @@ class CampaignProfileDto {
       parsedEdition = RulesetIdentifier(edition);
     }
 
-    return CampaignProfile(
+    return CampaignProfile.raw(
       id: id,
       name: name,
       edition: parsedEdition,
@@ -168,7 +182,8 @@ class CampaignProfileDto {
       lastPlayedAt: lastPlayedDateTime,
       roomState: parsedRoom,
       partyCharacterIds: partyCharacterIds,
-      pinnedRuleIds: pinned,
+      pinnedRules: parsedPinnedRules,
+      pinnedRuleIds: parsedPinnedRules == null ? pinned : null,
       notesRegister: parsedNotesRegister ??
           const CrdtLwwRegister<String>(
             value: '',
@@ -180,7 +195,6 @@ class CampaignProfileDto {
           ),
       partyPurse: purse,
       changeLog: parsedEvents,
-      nodeId: id,
     );
   }
 
@@ -277,6 +291,12 @@ class CampaignProfileDto {
     final pinned =
         (map['pinnedRuleIds'] as List? ?? []).whereType<String>().toList();
 
+    final pinnedCrdtMap = map['pinnedRules_crdt'] is Map
+        ? Map<String, dynamic>.from(map['pinnedRules_crdt'] as Map)
+        : (map['pinnedRules'] is Map
+            ? Map<String, dynamic>.from(map['pinnedRules'] as Map)
+            : const <String, dynamic>{});
+
     final purseMap = map['partyPurse'] is Map
         ? Map<String, dynamic>.from(map['partyPurse'] as Map)
         : <String, dynamic>{};
@@ -300,6 +320,7 @@ class CampaignProfileDto {
       roomState: roomMap,
       partyCharacterIds: extractedIds,
       pinnedRuleIds: pinned,
+      pinnedRulesCrdt: pinnedCrdtMap,
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
       notesRegister: map['notesRegister'] is Map
           ? Map<String, dynamic>.from(map['notesRegister'] as Map)
@@ -321,6 +342,7 @@ class CampaignProfileDto {
       'roomState': roomState,
       'partyCharacterIds': partyCharacterIds,
       'pinnedRuleIds': pinnedRuleIds,
+      if (pinnedRulesCrdt.isNotEmpty) 'pinnedRules_crdt': pinnedRulesCrdt,
       'notesMarkdown': notesMarkdown,
       'notesRegister': notesRegister,
       'partyPurse': partyPurse,

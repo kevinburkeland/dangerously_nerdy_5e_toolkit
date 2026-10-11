@@ -445,13 +445,12 @@ class DmDashboardController extends ChangeNotifier {
   /// Toggles a pinned reference rule ID.
   Future<void> togglePinnedRule(String ruleId) async {
     if (_activeProfile == null) return;
-    final set = Set<String>.from(_activeProfile!.pinnedRuleIds);
-    if (set.contains(ruleId)) {
-      set.remove(ruleId);
-    } else {
-      set.add(ruleId);
-    }
-    _activeProfile = _activeProfile!.copyWith(pinnedRuleIds: set);
+    final nowHlc = _clock.nextTimestamp();
+    final currentRules = _activeProfile!.pinnedRules;
+    final updatedRules = currentRules.activeValues.contains(ruleId)
+        ? currentRules.remove(ruleId, nowHlc)
+        : currentRules.add(ruleId, ruleId, nowHlc);
+    _activeProfile = _activeProfile!.copyWith(pinnedRules: updatedRules);
     notifyListeners();
     await _campaignProfileService.saveProfile(_activeProfile!);
   }

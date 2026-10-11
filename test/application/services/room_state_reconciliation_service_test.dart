@@ -492,12 +492,10 @@ void main() {
 
       // Higher HLC timestamp wins deterministically without string concatenation bloat
       expect(merged.notesMarkdown, equals('Remote notes: Trapped the chest.'));
-      // Dropped delta is recorded in changeLog for audit and recovery
+      // No synthetic event is minted during reconciliation
       expect(
-        merged.changeLog.any((e) =>
-            e.type == 'notesConflictOverwrite' &&
-            e.details == 'Local notes: Discovered hidden cave.'),
-        isTrue,
+        merged.changeLog.any((e) => e.type == 'notesConflictOverwrite'),
+        isFalse,
       );
     });
   });

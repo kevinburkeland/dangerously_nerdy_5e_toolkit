@@ -3,6 +3,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/loot_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/session_graph_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
@@ -16,6 +18,11 @@ void main() {
     late Character cleric;
 
     setUp(() {
+      sl.reset();
+      sl.registerSingleton<StatefulHlcClock>(
+        StatefulHlcClock(replicaId: ReplicaId('test_session_graph')),
+      );
+
       repository = LayeredPriorityRepository();
       resolver = ReferenceResolver(repository);
 
@@ -88,6 +95,10 @@ void main() {
         },
         resources: CharacterResourcePool(currentHp: 24),
       );
+    });
+
+    tearDown(() {
+      sl.reset();
     });
 
     test('binds entity links to room node', () {
