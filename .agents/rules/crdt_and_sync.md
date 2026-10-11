@@ -311,52 +311,111 @@ For every authoritative replicated register (`nameRegister`, `titleRegister`, `d
 - **Preservation of Independent Field Edits:** Independent edits to different fields of the same link (e.g., Replica A edits `displayName`, Replica B edits `notes`) both survive reconciliation without fault.
 - **Permanent Bar:** Replacing `joinEntityLinks(a, b)` with generic opaque `a.merge(b)` is permanently forbidden and guarded by structural and behavioral regressions.
 
-### 17.6 RoomEntityLink Incarnation Semantics & Remove/Re-Add Associativity (Pass 4.2.3)
+### 17.6 RoomEntityLink Generation-Aware Membership & Tombstone Targeting (Pass 4.2.4)
 
-#### Causal Problem & The Associativity Failure
-Under naive recursive composition, when an entity link is removed via a tombstone and later re-added, the defeated tombstone disappears from active state when joined with the newer re-add. If an offline replica carrying the old pre-removal payload later reconnects, a naive payload merge would recursively compose the old payload (e.g. pre-removal notes) into the new incarnation. Furthermore:
-$$\text{join}(\text{join}(A, B), C) \neq \text{join}(A, \text{join}(B, C))$$
-because in $(A \sqcup B) \sqcup C$, tombstone $B$ deletes old link $A$, and $C$ starts fresh; whereas in $A \sqcup (B \sqcup C)$, $B \sqcup C$ collapses to $C$ (tombstone defeated), leaving $A \sqcup C$ to erroneously merge $A$'s pre-removal notes into $C$'s blank notes.
+#### Root Cause of the Associativity Failure in Incarnation-Blind Removal
+In Pass 4.2.3, items tracked their `incarnationTimestamp`, but tombstones remained generic OR-Set removals (`entityId -> removalTimestamp`), recording only when a removal occurred without recording which incarnation was removed. This produced a hard associativity failure:
+- **Replica A:** Offline edit inside generation $G_1$ @ $T_{40}$ (incarnation $G_1 = T_{10}$).
+- **Replica B:** Removal of generation $G_1$ @ $T_{35}$.
+- **Replica C:** Re-add creating generation $G_2$ @ $T_{30}$ (incarnation $G_2 = T_{30}$).
 
-#### The Durable Incarnation Model
-To preserve CRDT associativity, commutativity, and idempotence across remove and re-add boundaries:
-1. **Durable Incarnation Timestamp (`incarnationTimestamp`):**
-   - Each `RoomEntityLink` carries an authoritative `HybridLogicalClock incarnationTimestamp`.
-   - **Initial Add:** Binding or creating a link establishes its `incarnationTimestamp` from the write's authoritative HLC (or genesis if unversioned legacy).
-   - **Removal:** Removing a link (`unbindEntityFromRoom`) creates an OR-Set tombstone at $T_{\text{remove}}$, ending the incarnation.
-   - **Re-Add:** Re-adding a link after a removal establishes a *new incarnation* whose `incarnationTimestamp` is strictly greater than the tombstone ($T_{\text{readd}} > T_{\text{remove}}$).
-2. **Incarnation Boundary Rule in `RoomEntityLink.join`:**
-   - **Same Incarnation ($a.\text{incarnationTimestamp} == b.\text{incarnationTimestamp}$):**
-     Payloads belong to the same logical incarnation. Recursive CRDT merge is executed: `displayNameRegister` merges causally via LWW, `notesRegister` merges causally via LWW, and independent concurrent field edits compose cleanly.
-   - **Different Incarnations ($a.\text{incarnationTimestamp} \neq b.\text{incarnationTimestamp}$):**
-     Payloads belong to distinct incarnations. The causally winning incarnation ($a.\text{incarnationTimestamp}.\text{isAfter}(b.\text{incarnationTimestamp}) \ ?\ a : b$) survives entirely. Pre-removal nested fields from defeated incarnations are **strictly rejected** and never merge across the boundary.
-3. **Outer Item Timestamp Policy in `joinEntityLinks`:**
-   - If both local and remote active items belong to the **same incarnation**, the outer item timestamp is $\max(\text{localItem.timestamp}, \text{remoteItem.timestamp})$.
-   - If they belong to **different incarnations**, the outer item timestamp is that of the winning incarnation's item.
-4. **Serialization & Deserialization:**
-   - `RoomEntityLink.toMap()` serializes `'incarnationTimestamp': incarnationTimestamp.toMap()`.
-   - `RoomEntityLink.fromMap()` strictly validates that `incarnationTimestamp` is a Map and decodes it via `HybridLogicalClock.fromMap`. For legacy payloads without the field, it falls back deterministically to the max register timestamp or genesis.
-5. **Value Equality & Hash:**
-   - `RoomEntityLink.operator ==` and `hashCode` include `incarnationTimestamp`. Two links with identical visible field strings but different incarnations are not equivalent replicated states.
-6. **HLC Extraction & Trust Boundary:**
-   - `extractRoomNodeTimestamps` (and transitively `extractCampaignProfileTimestamps`) extracts `link.incarnationTimestamp` (for physicalTime > 0).
-   - `incarnationTimestamp` participates in all remote future-drift validation and trusted local history observation.
+Under grouping $(A \sqcup B) \sqcup C$:
+- $A@40$ beat tombstone $B@35$ (outer edit timestamp $40 > 35$).
+- Then $A (G_1) \sqcup C (G_2)$ resolved via incarnation comparison: $G_2@30 > G_1@10$, selecting $C$. Final: $C$.
+Under grouping $A \sqcup (B \sqcup C)$:
+- $B@35$ beat $C@30$ (tombstone timestamp $35 > 30$), leaving tombstone $B@35$.
+- Then $A@40 \sqcup B@35$: $A@40$ beat tombstone $B@35$. Final: $A$.
+Therefore, $(A \sqcup B) \sqcup C \neq A \sqcup (B \sqcup C)$.
 
-#### Example Walkthrough: 3-State Associativity
-Consider:
-- **Replica A:** Old link @ $T_{10}$ with `notes: "old secret note"`, `incarnation: T_{10}`.
-- **Replica B:** Removal tombstone @ $T_{20}$.
-- **Replica C:** Re-added link @ $T_{30}$ with `displayName: "New Door"`, `notes: null`, `incarnation: T_{30}`.
+#### The Generation-Aware Entity-Link Membership Model (`EntityLinkCrdtSet`)
+To eliminate all grouping dependence and achieve mathematical join-semilattice closure across arbitrary interleavings of additions, edits, removals, and re-adds, entity link membership is formalized in `EntityLinkCrdtSet`:
 
-- **Grouping 1: $(A \sqcup B) \sqcup C$**
-  - $A \sqcup B$: Tombstone @ $T_{20}$ defeats item @ $T_{10}$. Result: Tombstone @ $T_{20}$.
-  - $(A \sqcup B) \sqcup C$: Tombstone @ $T_{20}$ meets item $C$ @ $T_{30}$. Item $C$ wins. Result: Item $C$ (`notes: null`).
-- **Grouping 2: $A \sqcup (B \sqcup C)$**
-  - $B \sqcup C$: Tombstone @ $T_{20}$ meets item $C$ @ $T_{30}$. Item $C$ wins.
-  - $A \sqcup (B \sqcup C) = A \sqcup C$: Both $A$ and $C$ are active items. `RoomEntityLink.join(A, C)` evaluates incarnation timestamps. Since $C.\text{incarnationTimestamp} (T_{30}) > A.\text{incarnationTimestamp} (T_{10})$, incarnation $C$ wins entirely without merging pre-removal notes.
-  - Result: Item $C$ (`notes: null`).
+1. **Generation Identity & Total Ordering:**
+   - Every `RoomEntityLink` carries an authoritative `HybridLogicalClock incarnationTimestamp` defining its generation $G$.
+   - Generations are totally ordered by HLC causal comparison ($G_a > G_b \iff G_a.\text{isAfter}(G_b)$).
+   - Higher generation strictly dominates lower generation.
+   - Generation identity is authored at the runtime writer boundary using `clock.nextTimestamp()`. Merge operations never manufacture generation IDs.
 
-Both groupings yield identical state: $(A \sqcup B) \sqcup C = A \sqcup (B \sqcup C)$. Pre-removal notes do not resurrect.
+2. **Tombstone Targeting (`EntityLinkTombstone`):**
+   - Each removal explicitly targets a specific generation:
+     ```dart
+     class EntityLinkTombstone {
+       final HybridLogicalClock targetGeneration; // The incarnation removed
+       final HybridLogicalClock timestamp;        // When removal occurred
+     }
+     ```
+   - A removal targeting generation $G$ proves that generation $G$ is removed. Stale offline edits inside generation $G$ cannot resurrect $G$ merely because their edit HLC is numerically greater than the removal HLC ($T_{\text{edit}} > T_{\text{remove}}$).
+
+3. **Causal Membership Lattice Transition Rules:**
+   For any `entityId` across replicas $A$ and $B$, let the states be evaluated:
+   - **Different Generations ($G_1 \neq G_2$):**
+     - The state with the higher generation strictly wins.
+     - If the higher generation is an active item, it survives.
+     - If the higher generation is a tombstone, the entity remains removed.
+     - Lower generation items and tombstones are completely dominated.
+     - **Cross-Generation Payload Isolation:** ZERO recursive nested payload merge occurs across different generations. Stale payload from older generations never leaks into newer generations.
+   - **Same Generation ($G_1 == G_2$):**
+     - **Item vs Tombstone:** The tombstone targeting $G_1$ strictly dominates the active item of $G_1$ (removal dominates active edits within the targeted generation). Outer edit timestamp recency never overrides targeted removal.
+     - **Item vs Item (Active Edits):** Recursive payload composition is executed via `RoomEntityLink.join(itemA, itemB)`. Independent concurrent field edits (`displayNameRegister`, `notesRegister`) merge via LWW. The resulting item timestamp is $\max(ts_A, ts_B)$.
+     - **Tombstone vs Tombstone:** The tombstone is retained targeting $G_1$ with timestamp $\max(ts_A, ts_B)$.
+
+4. **Re-Add Semantics:**
+   - Re-adding an entity link creates a distinct, brand-new generation $G_2$ with `incarnationTimestamp = effectiveTimestamp > targetGeneration`.
+   - $G_1$ remains permanently dead (targeted by its tombstone). $G_2$ is independently active.
+
+5. **Re-Bind Payload Inheritance Policy:**
+   - **Fresh Incarnation Baseline Policy:** When `SessionGraphService.bindEntityToRoom` binds after removal or without an existing incarnation, a fresh incarnation baseline is established:
+     - `incarnationTimestamp` is set to `effectiveTimestamp`.
+     - `displayName` carries forward and is stamped with `effectiveTimestamp`.
+     - Pre-removal notes from old incarnations (`notesRegister.timestamp < effectiveTimestamp`) are **not** inherited and are explicitly cleared (`clearNotes: true, notesTimestamp: effectiveTimestamp`).
+     - Only notes explicitly authored for the new incarnation (`notesRegister.timestamp >= effectiveTimestamp` or unstamped new notes) are preserved.
+
+6. **Serialization, Equality/Hash & Trust Extraction:**
+   - `EntityLinkTombstone` serializes `'targetGeneration'` and `'timestamp'`.
+   - `EntityLinkCrdtSet` serializes `'items'` and `'tombstones'`.
+   - Structural equality and `hashCode` include all item registers and targeted tombstones.
+   - `extractRoomNodeTimestamps` extracts all item timestamps, nested register timestamps, incarnation timestamps, and tombstone timestamps/targetGenerations. All participation in remote future-drift rejection and trusted local history observation is preserved.
+
+---
+
+### 17.7 Canonical Merge Walkthroughs
+
+#### Walkthrough 1: Initial Add -> Removal -> Re-Add ($G_1 \to \text{remove} \to G_2$)
+1. Replica 1 binds entity link `link-portal` @ $T_{10}$ ($G_1 = T_{10}$). Link is active with `displayName: "Portal"`.
+2. Replica 1 unbinds `link-portal` @ $T_{20}$. A targeted tombstone is authored: `targetGeneration: T_{10}, timestamp: T_{20}`. Link is removed.
+3. Replica 1 re-binds `link-portal` @ $T_{30}$. A new generation $G_2 = T_{30}$ is authored with `displayName: "Portal"`, fresh baseline.
+4. Merge convergence: Any replica observing all three states converges to active $G_2$ @ $T_{30}$ because $G_2 (T_{30}) > G_1 (T_{10})$, regardless of merge order.
+
+#### Walkthrough 2: Stale High-HLC $G_1$ Edit After Removal
+1. Replica A has $G_1$ @ $T_{10}$ and goes offline.
+2. Replica B removes $G_1$ @ $T_{35}$ (`targetGeneration: T_{10}, timestamp: T_{35}`).
+3. While offline, Replica A edits $G_1$'s display name @ $T_{40}$ (its local clock advanced).
+4. Replica A reconnects and merges with Replica B:
+   - Both states share generation $G_1 = T_{10}$.
+   - Under the same-generation removal dominance rule, the tombstone targeting $G_1$ defeats the active item of $G_1$, even though $T_{40} > T_{35}$.
+   - Result: Entity remains removed. $G_1$ is NOT resurrected.
+
+#### Walkthrough 3: Stale $G_1$ Reconnect After $G_2$ Exists
+1. $G_1$ @ $T_{10}$ was removed @ $T_{20}$. $G_2$ was created @ $T_{30}$ with `notes: null`.
+2. Replica A was offline carrying $G_1$ with `notes: "Secret Runes"` and a late edit @ $T_{50}$.
+3. Replica A reconnects.
+4. Generation comparison: $G_2 (T_{30}) > G_1 (T_{10})$. Generation $G_2$ strictly wins.
+5. Cross-generation payload isolation: $G_1$'s notes are rejected and never merge into $G_2$.
+6. Result: $G_2$ survives with `notes: null`.
+
+#### Walkthrough 4: Second Removal ($G_1 \to \text{remove} \to G_2 \to \text{edit} \to \text{remove } G_2$)
+1. $G_1$ created @ $T_{10}$, removed @ $T_{20}$.
+2. $G_2$ created @ $T_{30}$, edited @ $T_{35}$, removed @ $T_{40}$ (`targetGeneration: T_{30}, timestamp: T_{40}`).
+3. Stale snapshot of $G_1$ (@ $T_{60}$) and stale snapshot of $G_2$ (@ $T_{35}$) reconnect.
+4. Merge: $G_1$ edit is defeated by $G_2$ state; $G_2$ edit is defeated by tombstone targeting $G_2$.
+5. Result: Entity remains removed. Neither generation resurrects.
+
+#### Walkthrough 5: Same-Generation Concurrent Field Edits
+1. Active link in generation $G = T_{10}$.
+2. Replica A edits `displayName` to "Awakened Guardian" @ $T_{20}$ (preserving $G = T_{10}$).
+3. Replica B edits `notes` to "Sapphire eyes" @ $T_{25}$ (preserving $G = T_{10}$).
+4. Merged: Both share $G = T_{10}$. `RoomEntityLink.join` recursively merges `displayNameRegister` (A wins LWW) and `notesRegister` (B wins LWW).
+5. Result: Active link survives with both "Awakened Guardian" and "Sapphire eyes". Zero faults.
 
 
 

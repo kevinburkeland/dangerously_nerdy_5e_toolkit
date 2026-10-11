@@ -55,15 +55,39 @@ class SessionGraphService {
     final existingTombstone = room.entityLinksCrdt.tombstones[link.entityId];
     final bool needsNewIncarnation = link.incarnationTimestamp.physicalTime == 0 ||
         (existingTombstone != null &&
-            !link.incarnationTimestamp.isAfter(existingTombstone));
-    final resolvedLink = needsNewIncarnation
-        ? link.copyWith(
-            incarnationTimestamp: effectiveTimestamp,
-            displayNameTimestamp: link.displayNameRegister.timestamp.isAfter(effectiveTimestamp)
-                ? link.displayNameRegister.timestamp
-                : effectiveTimestamp,
-          )
-        : link;
+            !link.incarnationTimestamp.isAfter(existingTombstone.targetGeneration));
+    final RoomEntityLink resolvedLink;
+    if (needsNewIncarnation) {
+      final bool hasNewOrUnstampedNotes = link.notes != null &&
+          (link.notesRegister.timestamp.physicalTime == 0 ||
+              !link.notesRegister.timestamp.isBefore(effectiveTimestamp));
+      final bool hasStaleNotesToClear = link.notes != null && !hasNewOrUnstampedNotes;
+
+      if (hasNewOrUnstampedNotes) {
+        resolvedLink = link.copyWith(
+          incarnationTimestamp: effectiveTimestamp,
+          displayNameTimestamp: effectiveTimestamp,
+          notes: link.notes,
+          notesTimestamp: link.notesRegister.timestamp.physicalTime == 0
+              ? effectiveTimestamp
+              : link.notesRegister.timestamp,
+        );
+      } else if (hasStaleNotesToClear) {
+        resolvedLink = link.copyWith(
+          incarnationTimestamp: effectiveTimestamp,
+          displayNameTimestamp: effectiveTimestamp,
+          clearNotes: true,
+          notesTimestamp: effectiveTimestamp,
+        );
+      } else {
+        resolvedLink = link.copyWith(
+          incarnationTimestamp: effectiveTimestamp,
+          displayNameTimestamp: effectiveTimestamp,
+        );
+      }
+    } else {
+      resolvedLink = link;
+    }
     final updatedLinksCrdt =
         room.entityLinksCrdt.add(resolvedLink.entityId, resolvedLink, effectiveTimestamp);
     return room.copyWith(entityLinksCrdt: updatedLinksCrdt);

@@ -266,7 +266,7 @@ class RoomStateReconciliationService {
     }
 
     // Entity links: canonical OR-Set join with fault isolation
-    CrdtOrSet<RoomEntityLink> mergedLinks = local.entityLinksCrdt;
+    EntityLinkCrdtSet mergedLinks = local.entityLinksCrdt;
     try {
       mergedLinks = joinEntityLinks(local.entityLinksCrdt, remote.entityLinksCrdt);
     } catch (e, st) {

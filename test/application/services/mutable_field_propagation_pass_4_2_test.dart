@@ -5,6 +5,7 @@ import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/session_graph_service.dart';
 import 'package:vtt_engine_core/models/aggregate_hlc_extractor.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/loot_models.dart';
@@ -961,6 +962,376 @@ void main() {
         );
         expect(reconRepeat.hasFaults, isFalse);
         expect(reconRepeat.profile, equals(reconAB.profile));
+      });
+    });
+
+    group('Group 11: Pass 4.2.4 Generation-Aware Membership, Tombstone Targeting & Re-Add Algebra', () {
+      test('J & Y. Aggregate-level 6-permutation associativity: Core Counterexample converges to C', () {
+        final base = createCommonBase();
+        const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "node-a");
+        const ts30 = HybridLogicalClock(physicalTime: 30, logicalCounter: 0, nodeId: "node-c");
+        const ts35 = HybridLogicalClock(physicalTime: 35, logicalCounter: 0, nodeId: "node-b");
+        const ts40 = HybridLogicalClock(physicalTime: 40, logicalCounter: 0, nodeId: "node-a");
+
+        // G1 link created @10
+        final linkG1 = RoomEntityLink(
+          entityId: "link-portal",
+          displayName: "Initial Portal",
+          displayNameTimestamp: ts10,
+          incarnationTimestamp: ts10,
+        );
+
+        // State A: G1 edited @40 offline
+        final editedLinkG1 = linkG1.copyWith(
+          displayName: "Stale Offline Edit",
+          displayNameTimestamp: ts40,
+        );
+        final profA = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const EntityLinkCrdtSet.empty().add("link-portal", editedLinkG1, ts40),
+          ),
+        );
+
+        // State B: Removal of G1 @35
+        final profB = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const EntityLinkCrdtSet.empty()
+                .add("link-portal", linkG1, ts10)
+                .remove("link-portal", ts35),
+          ),
+        );
+
+        // State C: G2 re-added @30
+        final linkG2 = RoomEntityLink(
+          entityId: "link-portal",
+          displayName: "Fresh Portal Incarnation",
+          displayNameTimestamp: ts30,
+          incarnationTimestamp: ts30,
+        );
+        final profC = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const EntityLinkCrdtSet.empty().add("link-portal", linkG2, ts30),
+          ),
+        );
+
+        // All 6 permutations of CampaignProfile.join
+        final permAbC = CampaignProfile.join(CampaignProfile.join(profA, profB), profC);
+        final permABc = CampaignProfile.join(profA, CampaignProfile.join(profB, profC));
+        final permCbA = CampaignProfile.join(CampaignProfile.join(profC, profB), profA);
+        final permCBa = CampaignProfile.join(profC, CampaignProfile.join(profB, profA));
+        final permAcB = CampaignProfile.join(CampaignProfile.join(profA, profC), profB);
+        final permACb = CampaignProfile.join(profA, CampaignProfile.join(profC, profB));
+
+        expect(permAbC, equals(permABc));
+        expect(permAbC, equals(permCbA));
+        expect(permAbC, equals(permCBa));
+        expect(permAbC, equals(permAcB));
+        expect(permAbC, equals(permACb));
+
+        // Result is G2
+        final surviving = permAbC.roomState.entityLinks.first;
+        expect(surviving.displayName, equals("Fresh Portal Incarnation"));
+        expect(surviving.incarnationTimestamp, equals(ts30));
+
+        // Also verify RoomNodeState.join directly
+        final roomA = profA.roomState;
+        final roomB = profB.roomState;
+        final roomC = profC.roomState;
+        final roomAbC = RoomNodeState.join(RoomNodeState.join(roomA, roomB), roomC);
+        final roomABc = RoomNodeState.join(roomA, RoomNodeState.join(roomB, roomC));
+        expect(roomAbC, equals(roomABc));
+        expect(roomAbC.entityLinks.first, equals(surviving));
+      });
+
+      test('K. Required Old-edit-after-remove: G1 offline edit defeats neither removal nor G2', () {
+        const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "node-a");
+        const ts35 = HybridLogicalClock(physicalTime: 35, logicalCounter: 0, nodeId: "node-b");
+        const ts40 = HybridLogicalClock(physicalTime: 40, logicalCounter: 0, nodeId: "node-a");
+
+        final linkG1 = RoomEntityLink(
+          entityId: "link-portal",
+          displayName: "Original Portal",
+          displayNameTimestamp: ts10,
+          incarnationTimestamp: ts10,
+        );
+
+        final editedG1 = linkG1.copyWith(
+          displayName: "Late G1 Edit",
+          displayNameTimestamp: ts40,
+        );
+
+        final setA = const EntityLinkCrdtSet.empty().add("link-portal", editedG1, ts40);
+        final setB = const EntityLinkCrdtSet.empty().add("link-portal", linkG1, ts10).remove("link-portal", ts35);
+
+        final merged = setA.merge(setB);
+        expect(merged.activeValues, isEmpty);
+        expect(merged.tombstones.containsKey("link-portal"), isTrue);
+        expect(merged.tombstones["link-portal"]!.targetGeneration, equals(ts10));
+      });
+
+      test('L. Required Readd: Stale G1 edit cannot replace G2 or leak payload', () {
+        const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "node-a");
+        const ts20 = HybridLogicalClock(physicalTime: 20, logicalCounter: 0, nodeId: "node-b");
+        const ts30 = HybridLogicalClock(physicalTime: 30, logicalCounter: 0, nodeId: "node-c");
+        const ts50 = HybridLogicalClock(physicalTime: 50, logicalCounter: 0, nodeId: "node-a");
+
+        final g1 = RoomEntityLink(
+          entityId: "link-portal",
+          displayName: "G1 Portal",
+          displayNameTimestamp: ts10,
+          notes: "Old secret portal runes",
+          notesTimestamp: ts10,
+          incarnationTimestamp: ts10,
+        );
+
+        final g2 = RoomEntityLink(
+          entityId: "link-portal",
+          displayName: "G2 Fresh Portal",
+          displayNameTimestamp: ts30,
+          notes: null,
+          incarnationTimestamp: ts30,
+        );
+
+        final setG2 = const EntityLinkCrdtSet.empty()
+            .add("link-portal", g1, ts10)
+            .remove("link-portal", ts20)
+            .add("link-portal", g2, ts30);
+
+        final staleG1Edit = g1.copyWith(
+          displayName: "Stale G1 Edit",
+          displayNameTimestamp: ts50,
+          notes: "Resurrected stale runes",
+          notesTimestamp: ts50,
+        );
+
+        final setStaleG1 = const EntityLinkCrdtSet.empty().add("link-portal", staleG1Edit, ts50);
+
+        final merged = setG2.merge(setStaleG1);
+        expect(merged.activeValues.length, equals(1));
+        final current = merged.activeValues.first;
+        expect(current.displayName, equals("G2 Fresh Portal"));
+        expect(current.notes, isNull);
+        expect(current.incarnationTimestamp, equals(ts30));
+      });
+
+      test('M. Required Second Removal: G1 remove -> G2 create -> G2 edit -> G2 remove -> neither resurrects', () {
+        const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "n1");
+        const ts20 = HybridLogicalClock(physicalTime: 20, logicalCounter: 0, nodeId: "n2");
+        const ts30 = HybridLogicalClock(physicalTime: 30, logicalCounter: 0, nodeId: "n3");
+        const ts35 = HybridLogicalClock(physicalTime: 35, logicalCounter: 0, nodeId: "n3");
+        const ts40 = HybridLogicalClock(physicalTime: 40, logicalCounter: 0, nodeId: "n2");
+        const ts60 = HybridLogicalClock(physicalTime: 60, logicalCounter: 0, nodeId: "n1");
+
+        final g1 = RoomEntityLink(
+          entityId: "link-e",
+          displayName: "G1 Entity",
+          displayNameTimestamp: ts10,
+          incarnationTimestamp: ts10,
+        );
+
+        final g2 = RoomEntityLink(
+          entityId: "link-e",
+          displayName: "G2 Entity",
+          displayNameTimestamp: ts30,
+          incarnationTimestamp: ts30,
+        );
+        final g2Edited = g2.copyWith(displayName: "G2 Edited", displayNameTimestamp: ts35);
+
+        // Sequence: G1 -> remove G1 -> G2 -> edit G2 -> remove G2
+        final fullSequence = const EntityLinkCrdtSet.empty()
+            .add("link-e", g1, ts10)
+            .remove("link-e", ts20)
+            .add("link-e", g2, ts30)
+            .add("link-e", g2Edited, ts35)
+            .remove("link-e", ts40);
+
+        // Stale snapshot from G1 era with late offline edit @ ts60
+        final staleG1 = const EntityLinkCrdtSet.empty().add(
+          "link-e",
+          g1.copyWith(displayName: "G1 Stale Edit", displayNameTimestamp: ts60),
+          ts60,
+        );
+
+        // Stale snapshot from G2 era @ ts35
+        final staleG2 = const EntityLinkCrdtSet.empty().add("link-e", g2Edited, ts35);
+
+        final merged1 = fullSequence.merge(staleG1);
+        expect(merged1.activeValues, isEmpty);
+
+        final merged2 = merged1.merge(staleG2);
+        expect(merged2.activeValues, isEmpty);
+      });
+
+      test('N. Same-generation concurrent edits compose cleanly without losing fields', () {
+        const tsG = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "root");
+        const tsEditName = HybridLogicalClock(physicalTime: 20, logicalCounter: 0, nodeId: "replica-a");
+        const tsEditNotes = HybridLogicalClock(physicalTime: 25, logicalCounter: 0, nodeId: "replica-b");
+
+        final initialLink = RoomEntityLink(
+          entityId: "link-statue",
+          displayName: "Gargoyle Statue",
+          displayNameTimestamp: tsG,
+          notes: "Ancient stone gargoyle",
+          notesTimestamp: tsG,
+          incarnationTimestamp: tsG,
+        );
+
+        final setA = const EntityLinkCrdtSet.empty().add(
+          "link-statue",
+          initialLink.copyWith(displayName: "Awakened Gargoyle Guardian", displayNameTimestamp: tsEditName),
+          tsEditName,
+        );
+
+        final setB = const EntityLinkCrdtSet.empty().add(
+          "link-statue",
+          initialLink.copyWith(notes: "Has sapphire eyes with detect magic aura", notesTimestamp: tsEditNotes),
+          tsEditNotes,
+        );
+
+        final merged = setA.merge(setB);
+        expect(merged.activeValues.length, equals(1));
+        final composed = merged.activeValues.first;
+        expect(composed.displayName, equals("Awakened Gargoyle Guardian"));
+        expect(composed.notes, equals("Has sapphire eyes with detect magic aura"));
+        expect(composed.incarnationTimestamp, equals(tsG));
+      });
+
+      test('R. SessionGraphService re-bind payload inheritance: starts fresh baseline and prevents stale notes leakage', () {
+        final clock = StatefulHlcClock(replicaId: ReplicaId("test-dm"), timeProvider: () => 1000);
+        var room = RoomNodeState(roomId: "r1", roomCode: "R1", title: "Throne Room");
+
+        final ts1 = clock.nextTimestamp();
+        final link = RoomEntityLink(
+          entityId: "boss-npc",
+          displayName: "Goblin King",
+          displayNameTimestamp: ts1,
+          notes: "Carries crown key",
+          notesTimestamp: ts1,
+          incarnationTimestamp: ts1,
+        );
+
+        // Bind initial incarnation
+        room = SessionGraphService.bindEntityToRoom(room, link, timestamp: ts1, clock: clock);
+        expect(room.entityLinks.length, equals(1));
+        expect(room.entityLinks.first.notes, equals("Carries crown key"));
+
+        // Unbind / remove
+        final ts2 = clock.nextTimestamp();
+        room = SessionGraphService.unbindEntityFromRoom(room, "boss-npc", timestamp: ts2, clock: clock);
+        expect(room.entityLinks, isEmpty);
+
+        // Re-bind using old link object (which carried old notes from ts1)
+        final ts3 = clock.nextTimestamp();
+        room = SessionGraphService.bindEntityToRoom(room, link, timestamp: ts3, clock: clock);
+        expect(room.entityLinks.length, equals(1));
+        final readded = room.entityLinks.first;
+        expect(readded.displayName, equals("Goblin King"));
+        // Notes must be cleared/reset for the new incarnation
+        expect(readded.notes, isNull);
+        expect(readded.incarnationTimestamp, equals(ts3));
+
+        // Now test explicitly authored notes for the new generation are preserved
+        final ts4 = clock.nextTimestamp();
+        final freshLinkWithNotes = RoomEntityLink(
+          entityId: "boss-npc-2",
+          displayName: "Goblin Shaman",
+          notes: "Knows fireball ritual",
+        );
+        room = SessionGraphService.bindEntityToRoom(room, freshLinkWithNotes, timestamp: ts4, clock: clock);
+        final shaman = room.entityLinks.firstWhere((l) => l.entityId == "boss-npc-2");
+        expect(shaman.notes, equals("Knows fireball ritual"));
+        expect(shaman.notesRegister.timestamp, equals(ts4));
+      });
+
+      test('Z. Application Reconciliation: RoomStateReconciliationService safely reconciles stale and current states', () {
+        final base = createCommonBase();
+        const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "n1");
+        const ts20 = HybridLogicalClock(physicalTime: 20, logicalCounter: 0, nodeId: "n2");
+        const ts30 = HybridLogicalClock(physicalTime: 30, logicalCounter: 0, nodeId: "n3");
+        const ts40 = HybridLogicalClock(physicalTime: 40, logicalCounter: 0, nodeId: "n1");
+
+        final linkG1 = RoomEntityLink(
+          entityId: "link-guard",
+          displayName: "Guard G1",
+          displayNameTimestamp: ts10,
+          notes: "Shield and Spear",
+          notesTimestamp: ts10,
+          incarnationTimestamp: ts10,
+        );
+
+        final linkG2 = RoomEntityLink(
+          entityId: "link-guard",
+          displayName: "Guard G2",
+          displayNameTimestamp: ts30,
+          notes: null,
+          incarnationTimestamp: ts30,
+        );
+
+        // Scenario 1: Stale G1 reconnect after G1 removal
+        final profG1Removed = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const EntityLinkCrdtSet.empty()
+                .add("link-guard", linkG1, ts10)
+                .remove("link-guard", ts20),
+          ),
+        );
+        final profStaleG1Edit = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const EntityLinkCrdtSet.empty().add(
+              "link-guard",
+              linkG1.copyWith(displayName: "Late G1 Edit", displayNameTimestamp: ts40),
+              ts40,
+            ),
+          ),
+        );
+        final res1 = reconciliationService.reconcileProfileSafely(
+          local: profG1Removed,
+          remote: profStaleG1Edit,
+        );
+        expect(res1.hasFaults, isFalse);
+        expect(res1.profile.roomState.entityLinks, isEmpty);
+
+        // Scenario 2: Stale G1 reconnect after G2 re-add
+        final profG2Active = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: const EntityLinkCrdtSet.empty()
+                .add("link-guard", linkG1, ts10)
+                .remove("link-guard", ts20)
+                .add("link-guard", linkG2, ts30),
+          ),
+        );
+        final res2 = reconciliationService.reconcileProfileSafely(
+          local: profG2Active,
+          remote: profStaleG1Edit,
+        );
+        expect(res2.hasFaults, isFalse);
+        expect(res2.profile.roomState.entityLinks.length, equals(1));
+        final survivingGuard = res2.profile.roomState.entityLinks.first;
+        expect(survivingGuard.displayName, equals("Guard G2"));
+        expect(survivingGuard.notes, isNull);
+        expect(survivingGuard.incarnationTimestamp, equals(ts30));
+
+        // Scenario 3: Stale G2 reconnect after G2 removal
+        const ts50 = HybridLogicalClock(physicalTime: 50, logicalCounter: 0, nodeId: "n2");
+        final profG2Removed = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: profG2Active.roomState.entityLinksCrdt.remove("link-guard", ts50),
+          ),
+        );
+        final res3 = reconciliationService.reconcileProfileSafely(
+          local: profG2Removed,
+          remote: profG2Active,
+        );
+        expect(res3.hasFaults, isFalse);
+        expect(res3.profile.roomState.entityLinks, isEmpty);
+
+        // Repeated reconciliation is stable
+        final resRepeat = reconciliationService.reconcileProfileSafely(
+          local: res2.profile,
+          remote: res2.profile,
+        );
+        expect(resRepeat.hasFaults, isFalse);
+        expect(resRepeat.profile, equals(res2.profile));
       });
     });
   });
