@@ -415,8 +415,37 @@ To eliminate all grouping dependence and achieve mathematical join-semilattice c
 2. Replica A edits `displayName` to "Awakened Guardian" @ $T_{20}$ (preserving $G = T_{10}$).
 3. Replica B edits `notes` to "Sapphire eyes" @ $T_{25}$ (preserving $G = T_{10}$).
 4. Merged: Both share $G = T_{10}$. `RoomEntityLink.join` recursively merges `displayNameRegister` (A wins LWW) and `notesRegister` (B wins LWW).
-5. Result: Active link survives with both "Awakened Guardian" and "Sapphire eyes". Zero faults.
+### 17.8 Inflationary Entity-Link Mutation Semantics & Strict Type Safety (Pass 4.2.5)
 
+#### Core Law: Local Mutation Monotonicity
+Every active mutation on `EntityLinkCrdtSet` must be inflationary with respect to the replicated-state partial order. Local mutation semantics preserve the exact same causal model enforced by `merge()`. A valid local mutation must never:
+- Replace a newer generation with an older generation.
+- Replace a newer same-generation item with an older snapshot.
+- Resurrect a removed generation by accident.
+- Create a new generation merely because stale data was passed to an update method.
+- Silently discard valid replicated state.
 
+#### Explicit Mutation Operations
+The API distinguishes three explicit operations:
+1. **`update(String id, RoomEntityLink link, HybridLogicalClock timestamp)` (Ordinary Update):**
+   - **Crucial Rule:** **An ordinary update can never create a generation.**
+   - Requires an existing active item in `items`. If the entity is currently removed or absent, `update` strictly returns `this` without resurrecting or re-adding state.
+   - If an active item exists with generation $G_{\text{current}}$, an incoming update with generation $G_{\text{old}} < G_{\text{current}}$ is rejected (returns `this`).
+   - If incoming update has generation $G_{\text{incoming}} > G_{\text{current}}$, it is rejected (returns `this`), because generation advancement is forbidden in the ordinary update API.
+   - Within the same generation $G$, fields are merged monotonically via `RoomEntityLink.join`. A stale same-generation snapshot cannot regress newer `displayName` or `notes` state.
+2. **`createOrReadd(String id, RoomEntityLink link, HybridLogicalClock timestamp)` (Explicit Create / Re-Add):**
+   - Creates a fresh generation authored from the supplied authoritative runtime timestamp ($G_{\text{new}} = \text{timestamp}$).
+   - Any prior tombstone for `id` is removed.
+   - **Payload Inheritance Policy:** If an entity is being re-added after having a prior active item or tombstone, stale notes from earlier generations (`notesRegister.timestamp < timestamp`) are explicitly cleared (`clearNotes: true, notesTimestamp: timestamp`). Fresh notes stamped at or after `timestamp` are preserved.
+3. **`remove(String id, HybridLogicalClock timestamp, {HybridLogicalClock? targetGeneration})` (Removal):**
+   - Targets the currently active generation $G_{\text{active}}$ (or existing tombstone target generation) and authors an `EntityLinkTombstone(targetGeneration: targetGen, timestamp: timestamp)`.
+   - Monotonically advances removal timestamps for the same generation, and replaces older-generation tombstones if targeting a newer generation.
+4. **Compatibility `add` Helper:**
+   - Retained strictly as an inflationary convenience helper: if `link.incarnationTimestamp` is strictly newer than any tombstone's `targetGeneration`, delegates to `createOrReadd`; if equal, delegates to `update`; if older or equal to an existing tombstone, returns `this` without resurrecting. No production synchronization service relies on ambiguous `add`.
 
-
+#### RoomNodeState Type Safety & Migration Boundary
+- `RoomNodeState` constructor, `copyWith`, and `fromLists` strictly enforce type safety on `entityLinksCrdt`:
+  - Valid `EntityLinkCrdtSet` instances are accepted directly.
+  - Legacy `CrdtOrSet<RoomEntityLink>` instances are converted through the explicit migration boundary `EntityLinkCrdtSet.fromCrdtOrSet(legacy)`.
+  - Any invalid non-null value (e.g. `String`, `int`, unsupported object) or explicit `null` passed to `copyWith` immediately throws `ArgumentError`.
+  - Silent defaulting or fallback to empty structures on malformed input is strictly prohibited.

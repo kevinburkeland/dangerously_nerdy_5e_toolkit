@@ -53,9 +53,10 @@ class SessionGraphService {
                 'Pass clock or timestamp explicitly, or register StatefulHlcClock in DI.',
               ));
     final existingTombstone = room.entityLinksCrdt.tombstones[link.entityId];
-    final bool needsNewIncarnation = link.incarnationTimestamp.physicalTime == 0 ||
-        (existingTombstone != null &&
-            !link.incarnationTimestamp.isAfter(existingTombstone.targetGeneration));
+    final isCurrentlyActive = room.entityLinksCrdt.items.containsKey(link.entityId);
+    final bool isReadd = existingTombstone != null &&
+        !link.incarnationTimestamp.isAfter(existingTombstone.targetGeneration);
+    final bool needsNewIncarnation = link.incarnationTimestamp.physicalTime == 0 || isReadd;
     final RoomEntityLink resolvedLink;
     if (needsNewIncarnation) {
       final bool hasNewOrUnstampedNotes = link.notes != null &&
@@ -88,8 +89,11 @@ class SessionGraphService {
     } else {
       resolvedLink = link;
     }
-    final updatedLinksCrdt =
-        room.entityLinksCrdt.add(resolvedLink.entityId, resolvedLink, effectiveTimestamp);
+    final updatedLinksCrdt = (!isCurrentlyActive || needsNewIncarnation)
+        ? room.entityLinksCrdt.createOrReadd(
+            resolvedLink.entityId, resolvedLink, effectiveTimestamp)
+        : room.entityLinksCrdt.update(
+            resolvedLink.entityId, resolvedLink, effectiveTimestamp);
     return room.copyWith(entityLinksCrdt: updatedLinksCrdt);
   }
 
