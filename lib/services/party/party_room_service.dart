@@ -564,12 +564,14 @@ class PartyRoomService {
             if (matchesRoom &&
                 !activeDmProfile.partyCharacterIds
                     .contains(characterSnapshot.id.slug)) {
-              final updatedPartyIds = [
-                ...activeDmProfile.partyCharacterIds,
-                characterSnapshot.id.slug
-              ];
               await _campaignProfileService.updateActiveProfile(
-                (p) => p.copyWith(partyCharacterIds: updatedPartyIds),
+                (p) => p.copyWith(
+                  partyRoster: p.partyRoster.add(
+                    characterSnapshot.id.slug,
+                    characterSnapshot.id.slug,
+                    _clock.nextTimestamp(),
+                  ),
+                ),
               );
             }
           }
@@ -849,12 +851,14 @@ class PartyRoomService {
                 current.campaignName.toLowerCase();
         if (matchesRoom &&
             !activeDmProfile.partyCharacterIds.contains(character.id.slug)) {
-          final updatedPartyIds = [
-            ...activeDmProfile.partyCharacterIds,
-            character.id.slug
-          ];
           await _campaignProfileService.updateActiveProfile(
-            (p) => p.copyWith(partyCharacterIds: updatedPartyIds),
+            (p) => p.copyWith(
+              partyRoster: p.partyRoster.add(
+                character.id.slug,
+                character.id.slug,
+                _clock.nextTimestamp(),
+              ),
+            ),
           );
         }
       }

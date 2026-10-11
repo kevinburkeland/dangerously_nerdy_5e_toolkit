@@ -329,9 +329,12 @@ class DmDashboardController extends ChangeNotifier {
     _partyCharactersMap[character.id.slug] = character;
 
     if (!_activeProfile!.partyCharacterIds.contains(character.id.slug)) {
-      final updatedIds = List<String>.from(_activeProfile!.partyCharacterIds)
-        ..add(character.id.slug);
-      _activeProfile = _activeProfile!.copyWith(partyCharacterIds: updatedIds);
+      final updatedRoster = _activeProfile!.partyRoster.add(
+        character.id.slug,
+        character.id.slug,
+        _clock.nextTimestamp(),
+      );
+      _activeProfile = _activeProfile!.copyWith(partyRoster: updatedRoster);
       await _campaignProfileService.saveProfileImmediate(_activeProfile!);
     }
     notifyListeners();
@@ -360,8 +363,10 @@ class DmDashboardController extends ChangeNotifier {
   Future<void> removeCharacterFromParty(String characterId) async {
     if (_activeProfile == null) return;
 
-    final updatedIds = List<String>.from(_activeProfile!.partyCharacterIds)
-      ..remove(characterId);
+    final updatedRoster = _activeProfile!.partyRoster.remove(
+      characterId,
+      _clock.nextTimestamp(),
+    );
     final charName = _partyCharactersMap[characterId]?.name ?? characterId;
     final removalEvent = PartyEvent(
       id: 'evt_remove_${characterId}_${DateTime.now().toUtc().millisecondsSinceEpoch}',
@@ -375,7 +380,7 @@ class DmDashboardController extends ChangeNotifier {
     final updatedChangeLog = [..._activeProfile!.changeLog, removalEvent];
 
     _activeProfile = _activeProfile!.copyWith(
-      partyCharacterIds: updatedIds,
+      partyRoster: updatedRoster,
       changeLog: updatedChangeLog,
     );
     _partyCharactersMap.remove(characterId);

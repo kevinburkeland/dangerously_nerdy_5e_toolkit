@@ -92,8 +92,7 @@ void main() {
 
       expect(controller.activeProfile?.id, equals('camp_heroes'));
       expect(controller.partyCharacters.length, equals(2));
-      expect(controller.partyCharacters[0].name, equals('Valen'));
-      expect(controller.partyCharacters[1].name, equals('Sylas'));
+      expect(controller.partyCharacters.map((c) => c.name), containsAll(['Valen', 'Sylas']));
       expect(controller.partyCharactersMap.containsKey('hero_valen'), isTrue);
       expect(controller.partyCharactersMap.containsKey('hero_sylas'), isTrue);
     });

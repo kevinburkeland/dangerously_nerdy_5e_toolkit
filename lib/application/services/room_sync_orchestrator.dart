@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:mutex/mutex.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
@@ -487,8 +486,7 @@ class RoomSyncOrchestrator {
           last.notesMarkdown == profile.notesMarkdown &&
           last.pinnedRules == profile.pinnedRules &&
           last.roomState == profile.roomState &&
-          const ListEquality()
-              .equals(last.partyCharacterIds, profile.partyCharacterIds)) {
+          last.partyRoster == profile.partyRoster) {
         payloadToSend = payloadMapper.serializePurseDelta(
           campaignId: profile.id,
           purse: profile.partyPurse,
@@ -507,8 +505,7 @@ class RoomSyncOrchestrator {
           last.name == profile.name &&
           last.notesMarkdown == profile.notesMarkdown &&
           last.roomState == profile.roomState &&
-          const ListEquality()
-              .equals(last.partyCharacterIds, profile.partyCharacterIds)) {
+          last.partyRoster == profile.partyRoster) {
         _trackedRulesSet = _trackedRulesSet.merge(profile.pinnedRules);
         payloadToSend = payloadMapper.serializeOrSetDelta(
           campaignId: profile.id,

@@ -26,6 +26,7 @@ class CampaignProfileDto {
   final String lastPlayedAt;
   final Map<String, dynamic> roomState;
   final List<String> partyCharacterIds;
+  final Map<String, dynamic> partyRosterCrdt;
   final List<String> pinnedRuleIds;
   final Map<String, dynamic> pinnedRulesCrdt;
   final String notesMarkdown;
@@ -43,6 +44,7 @@ class CampaignProfileDto {
     required this.lastPlayedAt,
     required this.roomState,
     this.partyCharacterIds = const [],
+    this.partyRosterCrdt = const {},
     this.pinnedRuleIds = const [],
     this.pinnedRulesCrdt = const {},
     this.notesMarkdown = '',
@@ -67,6 +69,7 @@ class CampaignProfileDto {
       lastPlayedAt: profile.lastPlayedAt.toIso8601String(),
       roomState: profile.roomState.toMap(),
       partyCharacterIds: List<String>.from(profile.partyCharacterIds),
+      partyRosterCrdt: profile.partyRoster.toMap((v) => v),
       pinnedRuleIds: profile.pinnedRuleIds.toList(),
       pinnedRulesCrdt: profile.pinnedRules.toMap((v) => v),
       notesMarkdown: profile.notesMarkdown,
@@ -128,6 +131,27 @@ class CampaignProfileDto {
             'resting',
           };
 
+    final CrdtOrSet<String> parsedPartyRoster;
+    if (partyRosterCrdt.isNotEmpty) {
+      parsedPartyRoster = CrdtOrSet<String>.fromMap(
+        partyRosterCrdt,
+        (v) => v.toString(),
+      );
+    } else if (partyCharacterIds.isNotEmpty) {
+      final entries = partyCharacterIds.map((id) => (
+            id: id,
+            item: id,
+            timestamp: const HybridLogicalClock(
+              physicalTime: 0,
+              logicalCounter: 0,
+              nodeId: 'genesis',
+            ),
+          ));
+      parsedPartyRoster = const CrdtOrSet<String>.empty().addBatch(entries);
+    } else {
+      parsedPartyRoster = const CrdtOrSet<String>.empty();
+    }
+
     final parsedNotesRegister = notesRegister.isNotEmpty
         ? CrdtLwwRegisterDto.fromMap<String>(notesRegister, (v) => v.toString())
         : (notesMarkdown.isNotEmpty
@@ -178,6 +202,7 @@ class CampaignProfileDto {
       createdAt: createdDateTime,
       lastPlayedAt: lastPlayedDateTime,
       roomState: parsedRoom,
+      partyRoster: parsedPartyRoster,
       partyCharacterIds: partyCharacterIds,
       pinnedRules: parsedPinnedRules,
       pinnedRuleIds: parsedPinnedRules == null ? pinned : null,
@@ -198,39 +223,62 @@ class CampaignProfileDto {
   /// Deserializes a raw Map payload into [CampaignProfileDto] with complete legacy schema migrations.
   factory CampaignProfileDto.fromMap(Map<String, dynamic> map) {
     final rawId = map['id'];
-    if (rawId == null || rawId.toString().trim().isEmpty) {
+    if (rawId == null || rawId is! String || rawId.trim().isEmpty) {
       throw const FormatException('CampaignProfileDto.fromMap: "id" must not be null or empty.');
     }
-    final idStr = rawId.toString();
+    final idStr = rawId.trim();
 
     final editionStr = map['edition']?.toString() ?? 'v2024';
 
     final String createdAtStr;
-    if (map.containsKey('createdAt') && map['createdAt'] != null) {
-      final parsed = DateTime.tryParse(map['createdAt'].toString());
+    if (map.containsKey('createdAt')) {
+      final rawCreated = map['createdAt'];
+      if (rawCreated == null) {
+        throw const FormatException('CampaignProfileDto.fromMap: "createdAt" must not be null.');
+      }
+      final parsed = DateTime.tryParse(rawCreated.toString());
       if (parsed == null) {
         throw const FormatException('CampaignProfileDto.fromMap: "createdAt" is malformed.');
       }
-      createdAtStr = map['createdAt'].toString();
+      createdAtStr = rawCreated.toString();
     } else {
       // Deterministic migration sentinel for genuine legacy absence: Unix epoch UTC
       createdAtStr = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toIso8601String();
     }
 
     final String lastPlayedAtStr;
-    if (map.containsKey('lastPlayedAt') && map['lastPlayedAt'] != null) {
-      final parsed = DateTime.tryParse(map['lastPlayedAt'].toString());
+    if (map.containsKey('lastPlayedAt')) {
+      final rawPlayed = map['lastPlayedAt'];
+      if (rawPlayed == null) {
+        throw const FormatException('CampaignProfileDto.fromMap: "lastPlayedAt" must not be null.');
+      }
+      final parsed = DateTime.tryParse(rawPlayed.toString());
       if (parsed == null) {
         throw const FormatException('CampaignProfileDto.fromMap: "lastPlayedAt" is malformed.');
       }
-      lastPlayedAtStr = map['lastPlayedAt'].toString();
+      lastPlayedAtStr = rawPlayed.toString();
     } else {
       lastPlayedAtStr = createdAtStr;
     }
 
-    final roomMap = map['roomState'] is Map
-        ? Map<String, dynamic>.from(map['roomState'] as Map)
-        : <String, dynamic>{};
+    final Map<String, dynamic> roomMap;
+    if (map.containsKey('roomState')) {
+      final rawRoom = map['roomState'];
+      if (rawRoom is! Map) {
+        throw const FormatException('CampaignProfileDto.fromMap: "roomState" must be a Map.');
+      }
+      roomMap = Map<String, dynamic>.from(rawRoom);
+      try {
+        RoomNodeState.fromMap(
+          roomMap,
+          minionParser: (m) => AnimatedObjectDto.fromMap(m).toDomain(),
+        );
+      } catch (e) {
+        throw FormatException('CampaignProfileDto.fromMap: "roomState" is malformed: $e');
+      }
+    } else {
+      roomMap = <String, dynamic>{};
+    }
 
     final extractedIds = <String>[];
     final unparsedRoster = <Map<String, dynamic>>[];
@@ -322,6 +370,15 @@ class CampaignProfileDto {
             'CampaignProfileDto.fromMap: "pinnedRules_crdt" must be a Map.');
       }
       pinnedCrdtMap = Map<String, dynamic>.from(rawCrdt);
+      try {
+        CrdtOrSet<String>.fromMap(
+          pinnedCrdtMap,
+          (v) => v.toString(),
+        );
+      } catch (e) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: "pinnedRules_crdt" contains malformed items or tombstones: $e');
+      }
     } else if (map.containsKey('pinnedRules')) {
       final rawRules = map['pinnedRules'];
       if (rawRules is! Map) {
@@ -329,8 +386,38 @@ class CampaignProfileDto {
             'CampaignProfileDto.fromMap: "pinnedRules" must be a Map.');
       }
       pinnedCrdtMap = Map<String, dynamic>.from(rawRules);
+      try {
+        CrdtOrSet<String>.fromMap(
+          pinnedCrdtMap,
+          (v) => v.toString(),
+        );
+      } catch (e) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: "pinnedRules" contains malformed items or tombstones: $e');
+      }
     } else {
       pinnedCrdtMap = const <String, dynamic>{};
+    }
+
+    final Map<String, dynamic> rosterCrdtMap;
+    if (map.containsKey('partyRoster_crdt')) {
+      final rawRoster = map['partyRoster_crdt'];
+      if (rawRoster is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "partyRoster_crdt" must be a Map.');
+      }
+      rosterCrdtMap = Map<String, dynamic>.from(rawRoster);
+      try {
+        CrdtOrSet<String>.fromMap(
+          rosterCrdtMap,
+          (v) => v.toString(),
+        );
+      } catch (e) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: "partyRoster_crdt" contains malformed items or tombstones: $e');
+      }
+    } else {
+      rosterCrdtMap = const <String, dynamic>{};
     }
 
     final Map<String, dynamic> purseMap;
@@ -341,8 +428,35 @@ class CampaignProfileDto {
             'CampaignProfileDto.fromMap: "partyPurse" must be a Map.');
       }
       purseMap = Map<String, dynamic>.from(rawPurse);
+      try {
+        PartyPurse.fromMap(purseMap);
+      } catch (e) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: "partyPurse" is malformed: $e');
+      }
     } else {
       purseMap = const <String, dynamic>{};
+    }
+
+    final Map<String, dynamic> notesRegMap;
+    if (map.containsKey('notesRegister')) {
+      final rawReg = map['notesRegister'];
+      if (rawReg is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "notesRegister" must be a Map.');
+      }
+      final safeReg = Map<String, dynamic>.from(rawReg);
+      final parsedReg = CrdtLwwRegisterDto.fromMap<String>(
+        safeReg,
+        (v) => v.toString(),
+      );
+      if (parsedReg == null) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "notesRegister" contains malformed register or HLC.');
+      }
+      notesRegMap = safeReg;
+    } else {
+      notesRegMap = const <String, dynamic>{};
     }
 
     final changeLogList = <Map<String, dynamic>>[];
@@ -357,7 +471,14 @@ class CampaignProfileDto {
           throw const FormatException(
               'CampaignProfileDto.fromMap: changeLog entry must be a Map.');
         }
-        changeLogList.add(Map<String, dynamic>.from(raw));
+        final eventMap = Map<String, dynamic>.from(raw);
+        try {
+          PartyEvent.fromMap(eventMap);
+        } catch (e) {
+          throw FormatException(
+              'CampaignProfileDto.fromMap: changeLog entry is malformed: $e');
+        }
+        changeLogList.add(eventMap);
       }
     }
 
@@ -369,12 +490,11 @@ class CampaignProfileDto {
       lastPlayedAt: lastPlayedAtStr,
       roomState: roomMap,
       partyCharacterIds: extractedIds,
+      partyRosterCrdt: rosterCrdtMap,
       pinnedRuleIds: pinned,
       pinnedRulesCrdt: pinnedCrdtMap,
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
-      notesRegister: map['notesRegister'] is Map
-          ? Map<String, dynamic>.from(map['notesRegister'] as Map)
-          : const {},
+      notesRegister: notesRegMap,
       partyPurse: purseMap,
       changeLog: changeLogList,
       unparsedPartyRoster: unparsedRoster,
@@ -391,6 +511,7 @@ class CampaignProfileDto {
       'lastPlayedAt': lastPlayedAt,
       'roomState': roomState,
       'partyCharacterIds': partyCharacterIds,
+      if (partyRosterCrdt.isNotEmpty) 'partyRoster_crdt': partyRosterCrdt,
       'pinnedRuleIds': pinnedRuleIds,
       if (pinnedRulesCrdt.isNotEmpty) 'pinnedRules_crdt': pinnedRulesCrdt,
       'notesMarkdown': notesMarkdown,

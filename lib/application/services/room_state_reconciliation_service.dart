@@ -148,17 +148,13 @@ class RoomStateReconciliationService {
       mergedChangeLog = local.changeLog;
     }
 
-    // 5. Party Roster: canonical party roster join respecting removals in changelog
-    List<String> mergedPartyCharacterIds = local.partyCharacterIds;
+    // 5. Party Roster: canonical CRDT OR-set join with fault isolation
+    CrdtOrSet<String> mergedPartyRoster = local.partyRoster;
     try {
-      mergedPartyCharacterIds = joinPartyRoster(
-        local.partyCharacterIds,
-        remote.partyCharacterIds,
-        changeLog: mergedChangeLog,
-      );
+      mergedPartyRoster = joinPartyRosterCrdt(local.partyRoster, remote.partyRoster);
     } catch (e, st) {
-      faults.add(ReconciliationFieldFault(field: 'partyCharacterIds', error: e, stackTrace: st));
-      mergedPartyCharacterIds = local.partyCharacterIds;
+      faults.add(ReconciliationFieldFault(field: 'partyRoster', error: e, stackTrace: st));
+      mergedPartyRoster = local.partyRoster;
     }
 
     // 6. Pinned Rules: canonical CRDT OR-set join with fault isolation
@@ -184,7 +180,7 @@ class RoomStateReconciliationService {
       lastPlayedAt: mergedLastPlayedAt,
       notesRegister: mergedNotesRegister,
       partyPurse: mergedPurse,
-      partyCharacterIds: mergedPartyCharacterIds,
+      partyRoster: mergedPartyRoster,
       pinnedRules: mergedPinnedRules,
       roomState: roomRecon.roomState,
       changeLog: mergedChangeLog,

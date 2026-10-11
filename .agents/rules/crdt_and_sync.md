@@ -203,24 +203,30 @@ All HLC-bearing replicated fields participate in the Pass-3 causality, trust, an
 ### 15.1 Replicated Fields in Aggregate Extraction
 Aggregate timestamp extraction (`extractCampaignProfileTimestamps`, `extractRoomNodeTimestamps`) extracts every HLC across all CRDT fields:
 1. `notesRegister.timestamp`
-2. `pinnedRules` (active item HLCs and tombstones via `pinnedRules.extractTimestamps()`)
-3. `roomState.entityLinksCrdt` (active item HLCs and tombstones via `entityLinksCrdt.extractTimestamps()`)
-4. `roomState.activeMinions` (active item HLCs and tombstones via `activeMinions.extractTimestamps()`)
-5. `roomState.activeEncounter` (active item HLCs and tombstones via `activeEncounter.extractTimestamps()`)
+2. `partyRoster` (active item HLCs and tombstones via `partyRoster.extractTimestamps()`)
+3. `pinnedRules` (active item HLCs and tombstones via `pinnedRules.extractTimestamps()`)
+4. `roomState.entityLinksCrdt` (active item HLCs and tombstones via `entityLinksCrdt.extractTimestamps()`)
+5. `roomState.activeMinions` (active item HLCs and tombstones via `activeMinions.extractTimestamps()`)
+6. `roomState.activeEncounter` (active item HLCs and tombstones via `activeEncounter.extractTimestamps()`)
 
 **Definition of Done Mandate:** Any future HLC-bearing replicated field added to `CampaignProfile` or `RoomNodeState` MUST be added to aggregate timestamp extraction in the same schema change commit. No HLC-bearing replicated field may remain outside aggregate timestamp extraction.
 
 ### 15.2 Inbound Remote Drift vs Trusted Local History
-- **Inbound Remote Validation:** Remote frames containing any HLC exceeding the local clock by more than `maxFutureDrift` (5 minutes) in any extracted field (item or tombstone) reject the entire aggregate before reconciliation, advance no local clocks, and route to `deadLetterStream` as `HlcFutureDriftException`.
+- **Inbound Remote Validation:** Remote frames containing any HLC exceeding the local clock by more than `maxFutureDrift` (1 minute, matching `StatefulHlcClock.defaultMaxFutureDrift`) in any extracted field (item or tombstone) reject the entire aggregate before reconciliation, advance no local clocks, and route to `deadLetterStream` as `HlcFutureDriftException`.
 - **Trusted Local History Observation:** Persisted/accepted local state is trusted; when loaded from storage or accepted from authoritative history, all timestamps (even if historically ahead of local physical time) are observed into `StatefulHlcClock.observeAllTrustedHistory()` without future-drift quarantine, ensuring local clocks tick forward strictly monotonically beyond historical causality.
 
 ---
 
-## 16. Production Deletion Authoring Policies (Pass 4.1.1)
+## 16. Production Deletion & Membership Authoring Policies (Pass 4.1.1 / Pass 4.1.2)
 
-No deletion semantics may exist only in merge code without a production writer. Active mutations must author explicit replicated deletion facts:
+No deletion or membership semantics may exist only in merge code without a production writer. Active mutations must author explicit replicated CRDT facts:
 
 - **Pinned Rule Removal:** Unpinning a rule (`DmDashboardController.togglePinnedRule`) authors a direct CRDT tombstone via `pinnedRules.remove(ruleId, timestamp: clock.nextTimestamp())`.
 - **Entity Link Removal:** Unbinding an entity link authors a direct CRDT tombstone in `entityLinksCrdt` via `unbindEntityFromRoom(entityId, clock: clock)`.
-- **Roster Removal:** Removing a character from the party roster (`DmDashboardController.removeCharacterFromParty`) authors a typed `PartyEvent(type: 'characterRemove', entityId: characterId)` with the exact canonical character ID and appends it to `changeLog`. The aggregate join rule (`joinPartyRoster`) uses this typed audit event to suppress the character from the joined roster, preventing stale replicas from resurrecting removed characters.
+- **Roster Membership (Pass 4.1.2):** Campaign roster causal authority belongs exclusively to `CrdtOrSet<String> partyRoster`.
+  - **Add Character:** Authors `partyRoster.add(characterId, characterId, clock.nextTimestamp())`.
+  - **Remove Character:** Authors `partyRoster.remove(characterId, clock.nextTimestamp())`.
+  - **Re-add Character:** Authors a new add with a later HLC, cleanly superseding prior tombstones across all replicas.
+  - **Audit vs Causality:** `PartyEvent` records (e.g. `type: 'characterRemove'`, `type: 'playerLeave'`) are strictly audit history. Aggregate join (`CampaignProfile.join`, `RoomStateReconciliationService`) derives membership solely from the OR-set lattice merge (`joinPartyRosterCrdt`).
+  - **Derived View:** `partyCharacterIds` is an unmodifiable, sorted projection of `partyRoster.activeValues`. Direct mutation via `CampaignProfile.copyWith(partyCharacterIds: ...)` is permanently banned in production code (Source Bar G).
 

@@ -170,13 +170,14 @@ class CampaignProfileService extends ChangeNotifier
               p.id == 'campaign_${m.roomCode}',
         );
         if (!alreadyExists) {
-          final prof = CampaignProfile.defaultProfile(
+          final prof = CampaignProfile(
             id: 'campaign_${m.roomCode}',
             name: m.campaignName.trim().isNotEmpty
                 ? m.campaignName.trim()
                 : 'Campaign ${m.roomCode}',
             nodeId: _effectiveNodeId,
-          ).copyWith(
+            createdAt: DateTime.now().toUtc(),
+            lastPlayedAt: DateTime.now().toUtc(),
             partyCharacterIds: savedCharacters.map((c) => c.id.slug).toList(),
             roomState: RoomNodeState(
               roomId: 'room_${m.roomCode}',

@@ -574,7 +574,7 @@ void main() {
       };
       expect(() => CampaignProfileDto.fromMap(wrongTypeMap), throwsA(isA<FormatException>()));
 
-      // 5. Key present malformed internal CRDT -> fails FormatException in toDomain()
+      // 5. Key present malformed internal CRDT -> fails FormatException in fromMap()
       final badInternalMap = {
         'id': 'c_bad_internal',
         'name': 'Bad Internal CRDT',
@@ -583,8 +583,7 @@ void main() {
           'tombstones': {},
         },
       };
-      final dtoBadInternal = CampaignProfileDto.fromMap(badInternalMap);
-      expect(() => dtoBadInternal.toDomain(), throwsA(isA<FormatException>()));
+      expect(() => CampaignProfileDto.fromMap(badInternalMap), throwsA(isA<FormatException>()));
 
       // 6. Both authoritative and legacy present -> validates authoritative and uses authoritative
       final bothMap = {
@@ -623,8 +622,7 @@ void main() {
         ],
       };
 
-      final dto = CampaignProfileDto.fromMap(badChangeLogMap);
-      expect(() => dto.toDomain(), throwsA(isA<FormatException>()));
+      expect(() => CampaignProfileDto.fromMap(badChangeLogMap), throwsA(isA<FormatException>()));
 
       final healthyMap = {
         'id': 'c_healthy',

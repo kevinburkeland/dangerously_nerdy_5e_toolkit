@@ -404,29 +404,35 @@ void main() {
         final timeA = 1000 + rand.nextInt(500);
         final clockA = StatefulHlcClock(replicaId: ReplicaId('node-a'), timeProvider: () => timeA);
         final gpDepositA = rand.nextInt(50) + 1;
+        final tsA2 = clockA.nextTimestamp();
         repA = repA.copyWith(
           partyPurse: repA.partyPurse.depositCoins(gp: gpDepositA, replicaId: ReplicaId('node-a')),
           notesRegister: repA.notesRegister.set('Note from A iter $iteration', clockA.nextTimestamp()),
+          partyRoster: repA.partyRoster.add('hero_a_$iteration', 'hero_a_$iteration', tsA2),
         );
 
         // Mutate B
         final timeB = 1600 + rand.nextInt(500);
         final clockB = StatefulHlcClock(replicaId: ReplicaId('node-b'), timeProvider: () => timeB);
         final spDepositB = rand.nextInt(100) + 1;
+        final tsB2 = clockB.nextTimestamp();
         repB = repB.copyWith(
           partyPurse: repB.partyPurse.depositCoins(sp: spDepositB, replicaId: ReplicaId('node-b')),
           notesRegister: repB.notesRegister.set('Note from B iter $iteration', clockB.nextTimestamp()),
           pinnedRuleIds: {...repB.pinnedRuleIds, 'rule_b_$iteration'},
+          partyRoster: repB.partyRoster.remove('char-fighter', tsB2),
         );
 
         // Mutate C
         final timeC = 2200 + rand.nextInt(500);
         final clockC = StatefulHlcClock(replicaId: ReplicaId('node-c'), timeProvider: () => timeC);
         final gpSpendC = rand.nextInt(20);
+        final tsC2 = clockC.nextTimestamp();
         repC = repC.copyWith(
           partyPurse: repC.partyPurse.withdrawCoins(gp: gpSpendC, replicaId: ReplicaId('node-c')),
           notesRegister: repC.notesRegister.set('Note from C iter $iteration', clockC.nextTimestamp()),
           pinnedRuleIds: repC.pinnedRuleIds.where((r) => r != 'cover').toSet(),
+          partyRoster: repC.partyRoster.add('char-fighter', 'char-fighter', tsC2),
         );
 
         // IDEMPOTENCE

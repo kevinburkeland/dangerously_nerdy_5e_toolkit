@@ -211,10 +211,10 @@ void main() {
       expect(mergedLinks, contains('monster-goblin'));
     });
 
-    test('J & Y. Stale replica cannot resurrect character removed via typed PartyEvent entityId', () {
+    test('J & Y. Stale replica cannot resurrect character removed via authoritative partyRoster tombstone', () {
       final base = createSampleProfile(partyCharacterIds: ['cleric-1', 'rogue-1']);
 
-      // Removal event with typed entityId
+      // Removal tombstone with typed entityId audit event
       final removeEvent = PartyEvent(
         id: 'rm-cleric',
         roomCode: 'RC-101',
@@ -225,7 +225,13 @@ void main() {
         timestamp: DateTime.utc(2026, 1, 1, 12, 0),
       );
 
-      final repA = base.copyWith(changeLog: [removeEvent]);
+      final repA = base.copyWith(
+        partyRoster: base.partyRoster.remove(
+          'cleric-1',
+          const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'rep-a'),
+        ),
+        changeLog: [removeEvent],
+      );
       final repB = base; // Stale replica still containing cleric-1
 
       final merged = reconciliationService.reconcileProfileSafely(local: repA, remote: repB).profile;
@@ -298,8 +304,12 @@ void main() {
         ),
       );
 
-      // Replica C removes 'hero-1'
+      // Replica C removes 'hero-1' from partyRoster
       final repC = base.copyWith(
+        partyRoster: base.partyRoster.remove(
+          'hero-1',
+          const HybridLogicalClock(physicalTime: 300, logicalCounter: 1, nodeId: 'nodeC'),
+        ),
         changeLog: [
           PartyEvent(
             id: 'ev-rm-hero1',
@@ -342,7 +352,7 @@ void main() {
 
       // Canonical engine helpers are explicitly called:
       expect(source.contains('joinChangeLog('), isTrue);
-      expect(source.contains('joinPartyRoster('), isTrue);
+      expect(source.contains('joinPartyRosterCrdt('), isTrue);
       expect(source.contains('joinPinnedRules('), isTrue);
       expect(source.contains('joinCustomProperties('), isTrue);
       expect(source.contains('joinEntityLinks('), isTrue);
