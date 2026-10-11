@@ -21,11 +21,11 @@ dependencies:
   vtt_engine_core:
     git:
       url: https://github.com/kevinburkeland/vtt-engine-core.git
-      ref: e50c11b9ca0b13a129375e4a5801ceed797a5540
+      ref: a747f82876818bc50e86dd14dac285f9bf84dd5b
   vtt_ruleset_dnd5e:
     git:
       url: https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git
-      ref: 935186204f6d143c32d7fdf5016d79ed69e39aa7
+      ref: 95b563c10a3ede8aba4f264142ed35f43dc93e10
   meta: ^1.19.0
   uuid: ^4.6.0
   flutter_webrtc: ^1.6.2+hotfix.1

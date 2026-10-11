@@ -289,15 +289,28 @@ The following fields represent immutable identity, metadata, or configuration af
   - *Merge Semantics:* `joinCustomProperties` (disjoint keys unioned, identical keys must match deep values; divergent unversioned values throw `StateError`).
   - *Architectural Bar:* Production code must not call mutating `copyWith` methods on these fields in active replicated state without first defining explicit replication semantics (e.g. per-key CRDT registers).
 
-### 17.4 Strict Authoritative Register Presence Invariant
+### 17.4 Strict Authoritative Register Presence & Value-Key Invariant (Pass 4.2.1 & Pass 4.2.2)
 For every authoritative replicated register (`nameRegister`, `titleRegister`, `descriptionRegister`, `displayNameRegister`, `notesRegister`):
 - **PRESENT Authoritative Register:**
   - Must be parsed as authoritative.
-  - If the value is not a Map, or is `null`, or contains a missing or malformed timestamp/HLC, deserialization must fail loudly with `FormatException`.
+  - Must contain an explicit value key (`value` or `v`), an explicit timestamp key (`timestamp` or `ts`), and a valid HLC.
+  - If neither `v` nor `value` is present, deserialization must fail loudly with `FormatException`. A register with a timestamp but no value key is malformed and must **NEVER** silently default.
+  - If the register value is not a Map, or is `null`, or contains a missing or malformed timestamp/HLC, deserialization must fail loudly with `FormatException`.
+  - For nullable registers (`RoomEntityLink.notesRegister`), an explicit `"value": null` or `"v": null` represents an authoritative null; omission of the value key is malformed.
   - Deserialization must **NEVER** silently fall back to legacy scalar fields upon encountering malformed authoritative register data.
   - If both authoritative register and legacy scalar are present, the authoritative register wins unconditionally.
 - **ABSENT Authoritative Register:**
   - Deterministic legacy migration runs, wrapping legacy scalar data into a genesis HLC register (`pt: 0, lc: 0, node: 'genesis'`).
+
+### 17.5 Recursive Nested CRDT Composition (`RoomNodeState.entityLinksCrdt` / Pass 4.2.2)
+- **Container Structure:** `RoomNodeState.entityLinksCrdt` is a `CrdtOrSet<RoomEntityLink>`.
+- **OR-Set Authority:** The outer OR-Set layer governs link membership, additions, removals (`unbindEntityFromRoom`), and tombstones under add-wins semantics.
+- **Nested Causal Registers:** Each surviving `RoomEntityLink` contains its own independent causal registers (`displayNameRegister`, `notesRegister`).
+- **Recursive Join:** When both replicas contain surviving link items for the same `entityId`, `joinEntityLinks` recursively merges the payloads via `RoomEntityLink.join(localItem.value, remoteItem.value)` rather than choosing one whole payload solely by outer item timestamp.
+- **Outer Item Timestamp Policy:** The surviving item timestamp is derived deterministically as `max(localItem.timestamp, remoteItem.timestamp)` (`localItem.timestamp.isAfter(remoteItem.timestamp) ? localItem.timestamp : remoteItem.timestamp`).
+- **Preservation of Independent Field Edits:** Independent edits to different fields of the same link (e.g., Replica A edits `displayName`, Replica B edits `notes`) both survive reconciliation without fault.
+- **Permanent Bar:** Replacing `joinEntityLinks(a, b)` with generic opaque `a.merge(b)` is permanently forbidden and guarded by structural and behavioral regressions.
+
 
 
 

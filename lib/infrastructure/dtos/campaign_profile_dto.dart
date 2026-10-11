@@ -467,13 +467,14 @@ class CampaignProfileDto {
             'CampaignProfileDto.fromMap: "notesRegister" must be a Map.');
       }
       final safeReg = Map<String, dynamic>.from(rawReg);
-      final parsedReg = CrdtLwwRegisterDto.fromMap<String>(
-        safeReg,
-        (v) => v.toString(),
-      );
-      if (parsedReg == null) {
-        throw const FormatException(
-            'CampaignProfileDto.fromMap: "notesRegister" contains malformed register or HLC.');
+      try {
+        CrdtLwwRegisterDto.parse<String>(
+          safeReg,
+          (v) => v.toString(),
+        );
+      } catch (e) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: "notesRegister" contains malformed register or HLC: $e');
       }
       notesRegMap = safeReg;
     } else {
@@ -488,13 +489,14 @@ class CampaignProfileDto {
             'CampaignProfileDto.fromMap: "nameRegister" must be a Map.');
       }
       final safeReg = Map<String, dynamic>.from(rawReg);
-      final parsedReg = CrdtLwwRegisterDto.fromMap<String>(
-        safeReg,
-        (v) => v.toString(),
-      );
-      if (parsedReg == null) {
-        throw const FormatException(
-            'CampaignProfileDto.fromMap: "nameRegister" contains malformed register or HLC.');
+      try {
+        CrdtLwwRegisterDto.parse<String>(
+          safeReg,
+          (v) => v.toString(),
+        );
+      } catch (e) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: "nameRegister" contains malformed register or HLC: $e');
       }
       nameRegMap = safeReg;
     } else {

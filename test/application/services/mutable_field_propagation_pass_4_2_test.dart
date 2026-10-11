@@ -21,11 +21,16 @@ void main() {
 
   group('Cold Iron Birdcage — Pass 4.2: Mutable Field Semantics & Single-Writer Law', () {
     late StatefulHlcClock clockA;
+    late StatefulHlcClock clockB;
     late RoomStateReconciliationService reconciliationService;
 
     setUp(() {
       clockA = StatefulHlcClock(
         replicaId: ReplicaId('replica-a'),
+        timeProvider: () => 1700000000000,
+      );
+      clockB = StatefulHlcClock(
+        replicaId: ReplicaId('replica-b'),
         timeProvider: () => 1700000000000,
       );
       reconciliationService = RoomStateReconciliationService(
@@ -621,6 +626,202 @@ void main() {
           }),
           throwsA(isA<FormatException>()),
         );
+      });
+    });
+
+    group('7. Pass 4.2.2 Strict Value-Key Presence & Nullable Notes Distinctions', () {
+      final validHlcMap = {'pt': 1000, 'lc': 0, 'node': 'n1'};
+
+      test('CampaignProfileDto.fromMap: registers with timestamp but missing value key throw FormatException', () {
+        expect(
+          () => CampaignProfileDto.fromMap({
+            'id': 'c1',
+            'nameRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        expect(
+          () => CampaignProfileDto.fromMap({
+            'id': 'c1',
+            'notesRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+
+      test('RoomNodeState.fromMap: registers with timestamp but missing value key throw FormatException', () {
+        expect(
+          () => RoomNodeState.fromMap({
+            'roomId': 'r1',
+            'titleRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        expect(
+          () => RoomNodeState.fromMap({
+            'roomId': 'r1',
+            'descriptionRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+
+      test('EntityInstance.fromMap: displayNameRegister with timestamp but missing value key throws FormatException', () {
+        expect(
+          () => EntityInstance.fromMap({
+            'instanceId': 'i1',
+            'displayNameRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+
+      test('RoomEntityLink.fromMap: displayNameRegister with timestamp but missing value key throws FormatException', () {
+        expect(
+          () => RoomEntityLink.fromMap({
+            'entityId': 'e1',
+            'displayNameRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+
+      test('RoomEntityLink.fromMap: notesRegister distinguishes authoritative null from missing value', () {
+        // Missing value key throws FormatException
+        expect(
+          () => RoomEntityLink.fromMap({
+            'entityId': 'e1',
+            'notesRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+        expect(
+          () => RoomEntityLink.fromMap({
+            'entityId': 'e1',
+            'notesRegister': {'ts': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        // Explicit "value": null parses to authoritative null
+        final linkWithNullValue = RoomEntityLink.fromMap({
+          'entityId': 'e1',
+          'notesRegister': {'value': null, 'timestamp': validHlcMap},
+        });
+        expect(linkWithNullValue.notes, isNull);
+        expect(linkWithNullValue.notesRegister.timestamp.physicalTime, equals(1000));
+
+        // Explicit "v": null parses to authoritative null
+        final linkWithNullV = RoomEntityLink.fromMap({
+          'entityId': 'e1',
+          'notesRegister': {'v': null, 'ts': validHlcMap},
+        });
+        expect(linkWithNullV.notes, isNull);
+        expect(linkWithNullV.notesRegister.timestamp.physicalTime, equals(1000));
+      });
+
+      test('LootContainer.fromMap: nameRegister with timestamp but missing value key throws FormatException', () {
+        expect(
+          () => LootContainer.fromMap({
+            'containerId': 'c1',
+            'nameRegister': {'timestamp': validHlcMap},
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+    });
+
+    group('8. Pass 4.2.2 Recursive Entity-Link CRDT Composition & Reconciliation', () {
+      test('End-to-End: concurrent independent link field edits both survive CampaignProfile.join and reconcile safely', () {
+        final base = createCommonBase();
+        final baseLink = base.roomState.entityLinks.first; // entityId: link-door
+
+        // Replica A edits displayName to "Secret North Door" at tsA
+        final tsA = clockA.nextTimestamp();
+        final updatedLinkA = baseLink.copyWith(
+          displayName: 'Secret North Door',
+          displayNameTimestamp: tsA,
+        );
+        final repA = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: base.roomState.entityLinksCrdt.add(updatedLinkA.entityId, updatedLinkA, tsA),
+          ),
+        );
+
+        // Replica B edits notes to "Poisonous runes etched on wood" at tsB
+        final tsB = clockB.nextTimestamp();
+        final updatedLinkB = baseLink.copyWith(
+          notes: 'Poisonous runes etched on wood',
+          notesTimestamp: tsB,
+        );
+        final repB = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: base.roomState.entityLinksCrdt.add(updatedLinkB.entityId, updatedLinkB, tsB),
+          ),
+        );
+
+        // 1. Pure aggregate join in both directions
+        final joinAB = CampaignProfile.join(repA, repB);
+        final joinBA = CampaignProfile.join(repB, repA);
+
+        expect(joinAB, equals(joinBA));
+        expect(joinAB.roomState.entityLinks.first.displayName, equals('Secret North Door'));
+        expect(joinAB.roomState.entityLinks.first.notes, equals('Poisonous runes etched on wood'));
+
+        // 2. Application reconciliation in both directions produces zero faults
+        final reconAB = reconciliationService.reconcileProfileSafely(local: repA, remote: repB);
+        expect(reconAB.hasFaults, isFalse);
+        expect(reconAB.profile.roomState.entityLinks.first.displayName, equals('Secret North Door'));
+        expect(reconAB.profile.roomState.entityLinks.first.notes, equals('Poisonous runes etched on wood'));
+
+        final reconBA = reconciliationService.reconcileProfileSafely(local: repB, remote: repA);
+        expect(reconBA.hasFaults, isFalse);
+        expect(reconBA.profile.roomState.entityLinks.first.displayName, equals('Secret North Door'));
+        expect(reconBA.profile.roomState.entityLinks.first.notes, equals('Poisonous runes etched on wood'));
+
+        // Repeated reconciliation converges
+        final reconReconverge = reconciliationService.reconcileProfileSafely(
+          local: reconAB.profile,
+          remote: reconBA.profile,
+        );
+        expect(reconReconverge.hasFaults, isFalse);
+        expect(reconReconverge.profile, equals(reconAB.profile));
+      });
+
+      test('End-to-End: stale link edit vs newer link unbind (removal wins)', () {
+        final base = createCommonBase();
+        final baseLink = base.roomState.entityLinks.first;
+
+        // Replica A edits at tsA
+        final tsA = clockA.nextTimestamp();
+        final updatedLinkA = baseLink.copyWith(
+          displayName: 'Reinforced Door',
+          displayNameTimestamp: tsA,
+        );
+        final repA = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: base.roomState.entityLinksCrdt.add(updatedLinkA.entityId, updatedLinkA, tsA),
+          ),
+        );
+
+        // Replica B unbinds link at tsB (tsB > tsA)
+        clockB.observeRemote(tsA);
+        final tsB = clockB.nextTimestamp();
+        final repB = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: base.roomState.entityLinksCrdt.remove(baseLink.entityId, tsB),
+          ),
+        );
+
+        final joinAB = CampaignProfile.join(repA, repB);
+        expect(joinAB.roomState.entityLinks, isEmpty);
+        expect(joinAB.roomState.entityLinksCrdt.tombstones.containsKey(baseLink.entityId), isTrue);
+
+        final recon = reconciliationService.reconcileProfileSafely(local: repA, remote: repB);
+        expect(recon.hasFaults, isFalse);
+        expect(recon.profile.roomState.entityLinks, isEmpty);
       });
     });
   });
