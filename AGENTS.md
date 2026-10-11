@@ -153,7 +153,7 @@ Detailed subsystem policies reside in `.agents/rules/`. Refer to each document f
 - **Architecture & DDD:** [.agents/rules/architecture.md](file:///.agents/rules/architecture.md)
   - Detailed hexagonal boundaries, port/adapter structure, dependency injection with `get_it`, and clean-room ACL guidelines.
 - **Distributed State & Sync:** [.agents/rules/crdt_and_sync.md](file:///.agents/rules/crdt_and_sync.md)
-  - Convergence invariants, sub-resource reconciliation (`RoomStateReconciliationService`), `crdt_purse_delta` protocol, CRDT structural immutability vs transitive payload immutability, transitive immutability vs value equality, narrow mutex critical sections, 4-tier transport waterfall, W3C polite peer glare handling, trusted local history vs remote drift validation, and permanent writer-authority source bars.
+  - Convergence invariants, canonical pure aggregate join (`CampaignProfile.join`, `RoomNodeState.join`), per-subresource fault isolation (`RoomStateReconciliationService`), `crdt_purse_delta` protocol, CRDT structural immutability vs transitive payload immutability, transitive immutability vs value equality, narrow mutex critical sections, 4-tier transport waterfall, W3C polite peer glare handling, trusted local history vs remote drift validation, and permanent writer-authority source bars.
 - **D&D 5e Dual-Ruleset Mechanics:** [.agents/rules/dnd_rulesets.md](file:///.agents/rules/dnd_rulesets.md)
   - 2014 RAW vs 2024 Revised rules divergence, edition-locked characters, draft reconciliation, multiclass spellcaster progression math, action economy typing, and instant death decoupling.
 - **Data Safety & Performance:** [.agents/rules/data_and_performance.md](file:///.agents/rules/data_and_performance.md)
@@ -178,6 +178,9 @@ flutter test test/infrastructure/compliance/srd_legal_compliance_test.dart
 
 # Application state reconciliation & CRDT DTOs (< 2s)
 flutter test test/application/services/room_state_reconciliation_service_test.dart test/infrastructure/dtos/crdt_dtos_test.dart
+
+# Pass 4 aggregate replicated-state convergence suite (< 2s)
+flutter test test/application/services/aggregate_convergence_pass_4_test.dart
 
 # Rules engine & dual-ruleset divergence tests (< 3s)
 flutter test test/services/rules/dual_ruleset_divergence_test.dart test/services/rules/character_evaluation_engine_test.dart

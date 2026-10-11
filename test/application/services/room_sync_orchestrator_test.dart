@@ -6,6 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_ser
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connection_telemetry.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
@@ -254,7 +255,14 @@ void main() {
 
       // Remote profile update
       final remoteProfile = initialProfile.copyWith(
-        name: 'Curse of the Frost - Chapter 2',
+        notesRegister: const CrdtLwwRegister<String>(
+          value: 'Inbound Chapter 2 Notes',
+          timestamp: HybridLogicalClock(
+            physicalTime: 1700000001000,
+            logicalCounter: 0,
+            nodeId: 'remote-node',
+          ),
+        ),
       );
       final remoteDto = CampaignProfileDto.fromDomain(remoteProfile);
       final inboundJson = jsonEncode({
@@ -268,8 +276,8 @@ void main() {
 
       // Verify profile was saved locally
       expect(mockRepo.savedImmediateProfiles.length, equals(1));
-      expect(mockRepo.savedImmediateProfiles.first.name,
-          equals('Curse of the Frost - Chapter 2'));
+      expect(mockRepo.savedImmediateProfiles.first.notesMarkdown,
+          equals('Inbound Chapter 2 Notes'));
 
       // Assert that echo loop prevention mutex suppressed broadcastPayload()
       expect(mockWebRtc.broadcastedPayloads, isEmpty);
@@ -563,7 +571,14 @@ void main() {
 
       // Inbound payload to be emitted by the fallback adapter when broadcast is retried on it
       final remoteProfile = initialProfile.copyWith(
-        name: 'Curse of the Frost - Reconciled In Fallback',
+        notesRegister: const CrdtLwwRegister<String>(
+          value: 'Curse of the Frost - Reconciled In Fallback',
+          timestamp: HybridLogicalClock(
+            physicalTime: 1700000005000,
+            logicalCounter: 0,
+            nodeId: 'fallback-node',
+          ),
+        ),
       );
       final remoteDto = CampaignProfileDto.fromDomain(remoteProfile);
       final inboundJson = jsonEncode({
@@ -579,7 +594,7 @@ void main() {
 
       // Trigger a local profile update that broadcasts
       final localProfileUpdate = initialProfile.copyWith(
-        name: 'Curse of the Frost - Local Outbound',
+        pinnedRuleIds: {'cover', 'resting', 'underwater_combat'},
       );
 
       // Await local profile broadcast handling - must complete cleanly without deadlocking on _syncMutex
@@ -602,7 +617,7 @@ void main() {
       // Assert inbound payload from fallback was reconciled into the repository
       expect(
         mockRepo.savedImmediateProfiles.any(
-          (p) => p.name == 'Curse of the Frost - Reconciled In Fallback',
+          (p) => p.notesMarkdown == 'Curse of the Frost - Reconciled In Fallback',
         ),
         isTrue,
       );
@@ -632,8 +647,16 @@ void main() {
       const localTime = 1700000000500;
 
       // 1. Process initial inbound profile at t = localTime - 500ms (1700000000000) with origin sequence 1
-      final profile1 =
-          initialProfile.copyWith(name: 'Authoritative Title at 1700000000000');
+      final profile1 = initialProfile.copyWith(
+        notesRegister: const CrdtLwwRegister<String>(
+          value: 'Authoritative Title at 1700000000000',
+          timestamp: HybridLogicalClock(
+            physicalTime: 1700000000000,
+            logicalCounter: 0,
+            nodeId: 'node-remote-1',
+          ),
+        ),
+      );
       final inbound1 = jsonEncode({
         'type': 'room_sync_full',
         'origin_node_id': 'node-remote-1',
@@ -644,7 +667,7 @@ void main() {
       await orchestrator.handleIncomingPayload(inbound1);
 
       expect(mockRepo.savedImmediateProfiles.length, equals(1));
-      expect(mockRepo.savedImmediateProfiles.last.name,
+      expect(mockRepo.savedImmediateProfiles.last.notesMarkdown,
           equals('Authoritative Title at 1700000000000'));
       expect(orchestrator.lastProfileSyncTimestamp, equals(1700000000000));
       expect(orchestrator.processedPayloadHashes.length, equals(1));
@@ -698,8 +721,16 @@ void main() {
           contains('underwater_combat'));
 
       // 5. Strictly newer packet at sequence 3
-      final newerProfile =
-          initialProfile.copyWith(name: 'Newer Packet at 1700000002500');
+      final newerProfile = initialProfile.copyWith(
+        notesRegister: const CrdtLwwRegister<String>(
+          value: 'Newer Packet at 1700000002500',
+          timestamp: HybridLogicalClock(
+            physicalTime: 1700000002500,
+            logicalCounter: 0,
+            nodeId: 'node-remote-1',
+          ),
+        ),
+      );
       final inboundNewer = jsonEncode({
         'type': 'room_sync_full',
         'origin_node_id': 'node-remote-1',
@@ -710,7 +741,7 @@ void main() {
       await orchestrator.handleIncomingPayload(inboundNewer);
 
       expect(mockRepo.savedImmediateProfiles.length, equals(4));
-      expect(mockRepo.savedImmediateProfiles.last.name,
+      expect(mockRepo.savedImmediateProfiles.last.notesMarkdown,
           equals('Newer Packet at 1700000002500'));
       expect(orchestrator.lastProfileSyncTimestamp, equals(localTime + 2000));
     });

@@ -270,7 +270,6 @@ void main() {
           .setCoins(gp: 50, replicaId: ReplicaId('node_init'))
           .modifyCoin('gp', 80, replicaId: ReplicaId('node-remote'));
       final remoteProfile = baseProfile.copyWith(
-        name: 'Updated Campaign Title',
         partyPurse: remotePurse,
       );
 
@@ -296,7 +295,7 @@ void main() {
       expect(mockRepo.savedProfiles.isNotEmpty, isTrue);
       final reconciled = mockRepo.savedProfiles.last;
 
-      expect(reconciled.name, equals('Updated Campaign Title'));
+      expect(reconciled.name, equals(baseProfile.name));
       // 50 (init) + 20 (local) + 80 (remote) = 150 GP
       expect(reconciled.partyPurse.gp, equals(150));
     });

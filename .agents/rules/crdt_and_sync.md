@@ -125,5 +125,54 @@ This document details the application-level synchronization services, transport 
   ```
   If they diverge, the constructor must fail loudly immediately by throwing `ArgumentError`. No service may attribute HLC writes to one writer while attributing PN-counter or domain operations to another.
 
+---
 
+## 13. Aggregate Replicated-State Convergence & Deterministic Join Semantics (Pass 4.0)
 
+### 13.1 Canonical Aggregate Join Owner
+- **Domain/Engine Location:** Canonical aggregate joins reside in `package:vtt_engine_core`:
+  - `CampaignProfile.join(CampaignProfile a, CampaignProfile b)`
+  - `RoomNodeState.join(RoomNodeState a, RoomNodeState b)`
+- **Mathematical Invariants:** For any valid pair of independently evolved states $A$, $B$, and $C$:
+  - **Idempotence:** `join(A, A) == A`
+  - **Commutativity:** `join(A, B) == join(B, A)`
+  - **Associativity:** `join(join(A, B), C) == join(A, join(B, C))`
+- **Pure Join Invariants:**
+  - Zero I/O, zero `DateTime.now()`, zero `StatefulHlcClock`, zero `ReplicaId`, zero service locator or repository writes.
+  - Direction independence: `join(a, b)` produces identical results regardless of which argument is named "local" or "remote".
+  - Input immutability: neither input profile, nested collection, nor CRDT payload is mutated during join.
+
+### 13.2 RoomNodeState Merge Policy Table
+| Field | Replicated? | Type | Merge Rule | Conflict Behavior | Test Coverage |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `roomId` | Yes | `String` | Immutable ID | Equal required; divergence throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `roomCode` | Yes | `String` | Immutable ID | Equal required; divergence throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `title` | Yes | `String` | Unversioned scalar | Equal or one empty preserved; divergent throws `StateError` (isolated at app layer) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `activeMinions` | Yes | `CrdtOrSet<MinionInstance>` | CRDT OR-set merge | `a.merge(b)`; exact-HLC collision throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `activeEncounter` | Yes | `CrdtOrSet<EncounterParticipant>`| CRDT OR-set merge | `a.merge(b)`; exact-HLC collision throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `customProperties`| Yes | `Map<String, dynamic>` | Per-key map join | Disjoint keys union; same key + identical value preserved; divergent value throws `StateError` | `aggregate_join_laws_test.dart` |
+| `containers` | Yes | `Map<String, LootContainer>` | Per-key map join | Disjoint keys union; same key joins recursively via `LootContainer.join(a, b)` | `aggregate_join_laws_test.dart` |
+| `entityLinks` | Yes | `Map<String, RoomEntityLink>` | Per-key map join | Disjoint keys union; same key joins recursively via `RoomEntityLink.join(a, b)` | `aggregate_join_laws_test.dart` |
+
+### 13.3 CampaignProfile Merge Policy Table
+| Field | Replicated? | Type | Merge Rule | Conflict Behavior | Test Coverage |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `id` | Yes | `String` | Immutable ID | Equal required; divergence throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `nodeId` | Yes | `String` | Immutable ID | Equal required; divergence throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `edition` | Yes | `dynamic` / `RulesetEdition` | Immutable schema identity | Equal `rulesetId` required; divergence throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `name` | Yes | `String` | Unversioned scalar | Equal or one empty preserved; divergent throws `StateError` (isolated at app layer) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `createdAt` | Yes | `DateTime` | Causal minimum | `a.isBefore(b) ? a : b` | `aggregate_join_laws_test.dart` |
+| `lastPlayedAt`| Yes | `DateTime` | Derived/metadata max | `a.isAfter(b) ? a : b` | `aggregate_join_laws_test.dart` |
+| `roomState` | Yes | `RoomNodeState` | Recursive aggregate | `RoomNodeState.join(a.roomState, b.roomState)` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `partyCharacterIds` | Yes | `List<String>` | Set-like membership list | Deterministic sorted union (`toSet().toList()..sort()`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `pinnedRuleIds` | Yes | `Set<String>` | Set-like membership Set | Deterministic union (`a.union(b)`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `notesRegister` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register | `a.merge(b)`; later HLC wins; exact-HLC collision throws `StateError` | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `partyPurse` | Yes | `PartyPurse` | CRDT PN-counters | `a.merge(b)`; vector join preserves signed counters | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_test.dart` |
+| `changeLog` | Yes | `List<PartyEvent>` | Append-only audit log | Deterministic deduplicated merge by event ID and timestamp | `aggregate_join_laws_test.dart` |
+
+### 13.4 Narrow Per-Subresource Fault Isolation at Application Layer
+- Application-level reconciliation (`RoomStateReconciliationService.reconcileProfileSafely`) wraps the pure join with narrow subresource fault isolation.
+- Sub-resources (`notesRegister`, `partyPurse`, `activeMinions`, `activeEncounter`, `containers`, `entityLinks`, `customProperties`) are joined independently.
+- If an invalid collision occurs in one subresource (e.g. an exact-HLC divergent payload in `activeMinions`), only that offending subresource is isolated (retaining the local value) and recorded as a typed `ReconciliationFieldFault`, while all unrelated healthy sub-resources (`notes`, `partyPurse`) continue to merge safely without loss of progress.
+- `RoomSyncOrchestrator` routes isolated field faults to `deadLetterStream` for telemetry and alerting.
+- Pure aggregate join in `vtt_engine_core` remains total and fail-loud for invalid states without operational compromises.

@@ -329,12 +329,33 @@ class RoomSyncOrchestrator {
               }
 
               // Reconcile sub-resources deterministically at field-level via CRDTs
-              final reconciledProfile = reconciliationService.reconcileProfile(
+              final reconciliationResult =
+                  reconciliationService.reconcileProfileSafely(
                 local: localProfile,
                 remote: remoteWithPurse,
                 inboundTimestampMs: msg.timestamp,
                 localTimestampMs: _lastProfileSyncTimestamp,
               );
+              final reconciledProfile = reconciliationResult.profile;
+
+              if (reconciliationResult.hasFaults) {
+                for (final fault in reconciliationResult.fieldFaults) {
+                  LoggingService().logNonFatal(
+                    fault.error,
+                    fault.stackTrace ?? StackTrace.current,
+                    reason:
+                        'Reconciliation field fault in ${fault.field}: ${fault.error}',
+                  );
+                  if (!_deadLetterController.isClosed) {
+                    _deadLetterController.add(SyncErrorEvent(
+                      error: fault.error,
+                      stackTrace: fault.stackTrace ?? StackTrace.current,
+                      rawPayload: jsonPayload,
+                      parsedMessage: message,
+                    ));
+                  }
+                }
+              }
 
               if (msg.timestamp > _lastProfileSyncTimestamp) {
                 _lastProfileSyncTimestamp = msg.timestamp;

@@ -3,6 +3,7 @@ import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import '../../models/animated_object.dart';
 import '../modules/dnd5e/rules/ruleset_edition.dart';
 import '../../models/domain/character_models.dart';
@@ -136,10 +137,33 @@ class CampaignProfileDto {
                 ),
               ));
 
+    final dynamic parsedEdition;
+    final cleanEdition = edition.trim().toLowerCase();
+    if (cleanEdition.contains('2024') ||
+        cleanEdition == 'srd5.2.1' ||
+        cleanEdition == 'srd5.2' ||
+        cleanEdition == 'srd2024' ||
+        cleanEdition == 'srd521' ||
+        cleanEdition == 'srd52' ||
+        cleanEdition == '5e-2024' ||
+        cleanEdition == 'v2024' ||
+        cleanEdition.contains('5.2')) {
+      parsedEdition = RulesetEdition.v2024;
+    } else if (cleanEdition.contains('2014') ||
+        cleanEdition == 'srd5.1' ||
+        cleanEdition == 'srd51' ||
+        cleanEdition == '5e-2014' ||
+        cleanEdition == 'v2014' ||
+        cleanEdition.contains('5.1')) {
+      parsedEdition = RulesetEdition.v2014;
+    } else {
+      parsedEdition = RulesetIdentifier(edition);
+    }
+
     return CampaignProfile(
       id: id,
       name: name,
-      edition: RulesetEdition.fromString(edition),
+      edition: parsedEdition,
       createdAt: createdDateTime,
       lastPlayedAt: lastPlayedDateTime,
       roomState: parsedRoom,
