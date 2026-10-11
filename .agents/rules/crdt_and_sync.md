@@ -178,3 +178,49 @@ This document details the application-level synchronization services, transport 
 - Safe reconciliation never mints new synthetic replicated `PartyEvent`s during merge, and never consults wall/network clock for merged state.
 - `RoomSyncOrchestrator` routes isolated field faults to `deadLetterStream` for telemetry and alerting.
 - Pure aggregate join in `vtt_engine_core` remains total and fail-loud for invalid states without operational compromises.
+
+---
+
+## 14. Authoritative vs Derived Fields (Pass 4.1.1)
+
+Replicated aggregate entities distinguish between **authoritative replicated CRDT state** and **derived read-only convenience views**:
+
+### 14.1 CampaignProfile
+- **Authoritative:** `pinnedRules` (`CrdtOrSet<String>`). Stores full causal history (item registers with HLCs, tombstones with HLCs). Active production mutations MUST target `pinnedRules` using authoritative HLC-stamped `add(...)` and `remove(...)` operations.
+- **Derived View:** `pinnedRuleIds` (`Set<String>`). Read-only derived active values view (`pinnedRules.activeValues.toSet()`). Calling `copyWith(pinnedRuleIds: ...)` in active production code is strictly forbidden (enforced by permanent architectural Source Bar F), as it destroys tombstones and causal history.
+- **Migration Only:** Legacy list/set forms in DTOs (`pinnedRuleIds`) are accepted solely as backward-compatibility migration inputs when the authoritative `pinnedRules_crdt` key is absent from the wire/disk record.
+
+### 14.2 RoomNodeState
+- **Authoritative:** `entityLinksCrdt` (`CrdtOrSet<RoomEntityLink>`). Stores full causal history of room entity links, item HLCs, and tombstones. Active production binding/unbinding mutations MUST operate on `entityLinksCrdt` using authoritative HLCs.
+- **Derived View:** `entityLinks` (`List<RoomEntityLink>`). Read-only derived view of active links (`entityLinksCrdt.activeValues.toList()`).
+
+---
+
+## 15. Aggregate HLC Trust & Timestamp Extraction (Pass 4.1.1)
+
+All HLC-bearing replicated fields participate in the Pass-3 causality, trust, and future-drift validation machinery:
+
+### 15.1 Replicated Fields in Aggregate Extraction
+Aggregate timestamp extraction (`extractCampaignProfileTimestamps`, `extractRoomNodeTimestamps`) extracts every HLC across all CRDT fields:
+1. `notesRegister.timestamp`
+2. `pinnedRules` (active item HLCs and tombstones via `pinnedRules.extractTimestamps()`)
+3. `roomState.entityLinksCrdt` (active item HLCs and tombstones via `entityLinksCrdt.extractTimestamps()`)
+4. `roomState.activeMinions` (active item HLCs and tombstones via `activeMinions.extractTimestamps()`)
+5. `roomState.activeEncounter` (active item HLCs and tombstones via `activeEncounter.extractTimestamps()`)
+
+**Definition of Done Mandate:** Any future HLC-bearing replicated field added to `CampaignProfile` or `RoomNodeState` MUST be added to aggregate timestamp extraction in the same schema change commit. No HLC-bearing replicated field may remain outside aggregate timestamp extraction.
+
+### 15.2 Inbound Remote Drift vs Trusted Local History
+- **Inbound Remote Validation:** Remote frames containing any HLC exceeding the local clock by more than `maxFutureDrift` (5 minutes) in any extracted field (item or tombstone) reject the entire aggregate before reconciliation, advance no local clocks, and route to `deadLetterStream` as `HlcFutureDriftException`.
+- **Trusted Local History Observation:** Persisted/accepted local state is trusted; when loaded from storage or accepted from authoritative history, all timestamps (even if historically ahead of local physical time) are observed into `StatefulHlcClock.observeAllTrustedHistory()` without future-drift quarantine, ensuring local clocks tick forward strictly monotonically beyond historical causality.
+
+---
+
+## 16. Production Deletion Authoring Policies (Pass 4.1.1)
+
+No deletion semantics may exist only in merge code without a production writer. Active mutations must author explicit replicated deletion facts:
+
+- **Pinned Rule Removal:** Unpinning a rule (`DmDashboardController.togglePinnedRule`) authors a direct CRDT tombstone via `pinnedRules.remove(ruleId, timestamp: clock.nextTimestamp())`.
+- **Entity Link Removal:** Unbinding an entity link authors a direct CRDT tombstone in `entityLinksCrdt` via `unbindEntityFromRoom(entityId, clock: clock)`.
+- **Roster Removal:** Removing a character from the party roster (`DmDashboardController.removeCharacterFromParty`) authors a typed `PartyEvent(type: 'characterRemove', entityId: characterId)` with the exact canonical character ID and appends it to `changeLog`. The aggregate join rule (`joinPartyRoster`) uses this typed audit event to suppress the character from the joined roster, preventing stale replicas from resurrecting removed characters.
+

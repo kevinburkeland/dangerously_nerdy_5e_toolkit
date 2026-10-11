@@ -80,9 +80,14 @@ class CampaignProfileDto {
 
   /// Converts this DTO into a pure domain [CampaignProfile] entity.
   CampaignProfile toDomain() {
-    final createdDateTime = DateTime.tryParse(createdAt) ?? DateTime.now();
-    final lastPlayedDateTime =
-        DateTime.tryParse(lastPlayedAt) ?? createdDateTime;
+    final createdDateTime = DateTime.tryParse(createdAt);
+    if (createdDateTime == null) {
+      throw const FormatException('CampaignProfileDto.toDomain: "createdAt" is malformed.');
+    }
+    final lastPlayedDateTime = DateTime.tryParse(lastPlayedAt);
+    if (lastPlayedDateTime == null) {
+      throw const FormatException('CampaignProfileDto.toDomain: "lastPlayedAt" is malformed.');
+    }
 
     final parsedRoom = roomState.isNotEmpty
         ? RoomNodeState.fromMap(
@@ -97,28 +102,20 @@ class CampaignProfileDto {
 
     PartyPurse purse = const PartyPurse.empty();
     if (partyPurse.isNotEmpty) {
-      try {
-        purse = PartyPurse.fromMap(partyPurse);
-      } catch (_) {
-        purse = const PartyPurse.empty();
-      }
+      purse = PartyPurse.fromMap(partyPurse);
     }
 
     final parsedEvents = <PartyEvent>[];
     for (final raw in changeLog) {
-      try {
-        parsedEvents.add(PartyEvent.fromMap(raw));
-      } catch (_) {}
+      parsedEvents.add(PartyEvent.fromMap(raw));
     }
 
     CrdtOrSet<String>? parsedPinnedRules;
     if (pinnedRulesCrdt.isNotEmpty) {
-      try {
-        parsedPinnedRules = CrdtOrSet<String>.fromMap(
-          pinnedRulesCrdt,
-          (v) => v.toString(),
-        );
-      } catch (_) {}
+      parsedPinnedRules = CrdtOrSet<String>.fromMap(
+        pinnedRulesCrdt,
+        (v) => v.toString(),
+      );
     }
 
     final pinned = pinnedRuleIds.isNotEmpty
@@ -200,10 +197,36 @@ class CampaignProfileDto {
 
   /// Deserializes a raw Map payload into [CampaignProfileDto] with complete legacy schema migrations.
   factory CampaignProfileDto.fromMap(Map<String, dynamic> map) {
+    final rawId = map['id'];
+    if (rawId == null || rawId.toString().trim().isEmpty) {
+      throw const FormatException('CampaignProfileDto.fromMap: "id" must not be null or empty.');
+    }
+    final idStr = rawId.toString();
+
     final editionStr = map['edition']?.toString() ?? 'v2024';
-    final createdAtStr =
-        map['createdAt']?.toString() ?? DateTime.now().toIso8601String();
-    final lastPlayedAtStr = map['lastPlayedAt']?.toString() ?? createdAtStr;
+
+    final String createdAtStr;
+    if (map.containsKey('createdAt') && map['createdAt'] != null) {
+      final parsed = DateTime.tryParse(map['createdAt'].toString());
+      if (parsed == null) {
+        throw const FormatException('CampaignProfileDto.fromMap: "createdAt" is malformed.');
+      }
+      createdAtStr = map['createdAt'].toString();
+    } else {
+      // Deterministic migration sentinel for genuine legacy absence: Unix epoch UTC
+      createdAtStr = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toIso8601String();
+    }
+
+    final String lastPlayedAtStr;
+    if (map.containsKey('lastPlayedAt') && map['lastPlayedAt'] != null) {
+      final parsed = DateTime.tryParse(map['lastPlayedAt'].toString());
+      if (parsed == null) {
+        throw const FormatException('CampaignProfileDto.fromMap: "lastPlayedAt" is malformed.');
+      }
+      lastPlayedAtStr = map['lastPlayedAt'].toString();
+    } else {
+      lastPlayedAtStr = createdAtStr;
+    }
 
     final roomMap = map['roomState'] is Map
         ? Map<String, dynamic>.from(map['roomState'] as Map)
@@ -291,28 +314,55 @@ class CampaignProfileDto {
     final pinned =
         (map['pinnedRuleIds'] as List? ?? []).whereType<String>().toList();
 
-    final pinnedCrdtMap = map['pinnedRules_crdt'] is Map
-        ? Map<String, dynamic>.from(map['pinnedRules_crdt'] as Map)
-        : (map['pinnedRules'] is Map
-            ? Map<String, dynamic>.from(map['pinnedRules'] as Map)
-            : const <String, dynamic>{});
+    final Map<String, dynamic> pinnedCrdtMap;
+    if (map.containsKey('pinnedRules_crdt')) {
+      final rawCrdt = map['pinnedRules_crdt'];
+      if (rawCrdt is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "pinnedRules_crdt" must be a Map.');
+      }
+      pinnedCrdtMap = Map<String, dynamic>.from(rawCrdt);
+    } else if (map.containsKey('pinnedRules')) {
+      final rawRules = map['pinnedRules'];
+      if (rawRules is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "pinnedRules" must be a Map.');
+      }
+      pinnedCrdtMap = Map<String, dynamic>.from(rawRules);
+    } else {
+      pinnedCrdtMap = const <String, dynamic>{};
+    }
 
-    final purseMap = map['partyPurse'] is Map
-        ? Map<String, dynamic>.from(map['partyPurse'] as Map)
-        : <String, dynamic>{};
+    final Map<String, dynamic> purseMap;
+    if (map.containsKey('partyPurse')) {
+      final rawPurse = map['partyPurse'];
+      if (rawPurse is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "partyPurse" must be a Map.');
+      }
+      purseMap = Map<String, dynamic>.from(rawPurse);
+    } else {
+      purseMap = const <String, dynamic>{};
+    }
 
     final changeLogList = <Map<String, dynamic>>[];
-    if (map['changeLog'] is List) {
-      for (final raw in (map['changeLog'] as List)) {
-        if (raw is Map) {
-          changeLogList.add(Map<String, dynamic>.from(raw));
+    if (map.containsKey('changeLog')) {
+      final rawLog = map['changeLog'];
+      if (rawLog is! List) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "changeLog" must be a List.');
+      }
+      for (final raw in rawLog) {
+        if (raw is! Map) {
+          throw const FormatException(
+              'CampaignProfileDto.fromMap: changeLog entry must be a Map.');
         }
+        changeLogList.add(Map<String, dynamic>.from(raw));
       }
     }
 
     return CampaignProfileDto(
-      id: map['id']?.toString() ??
-          'campaign_${DateTime.now().millisecondsSinceEpoch}',
+      id: idStr,
       name: map['name']?.toString() ?? 'Unnamed Campaign',
       edition: editionStr,
       createdAt: createdAtStr,

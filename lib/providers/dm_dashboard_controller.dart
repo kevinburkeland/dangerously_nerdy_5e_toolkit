@@ -355,13 +355,29 @@ class DmDashboardController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Removes a character pointer from the active campaign's party roster.
+  /// Removes a character pointer from the active campaign's party roster,
+  /// authoring a typed [PartyEvent] with the character's canonical entity ID.
   Future<void> removeCharacterFromParty(String characterId) async {
     if (_activeProfile == null) return;
 
     final updatedIds = List<String>.from(_activeProfile!.partyCharacterIds)
       ..remove(characterId);
-    _activeProfile = _activeProfile!.copyWith(partyCharacterIds: updatedIds);
+    final charName = _partyCharactersMap[characterId]?.name ?? characterId;
+    final removalEvent = PartyEvent(
+      id: 'evt_remove_${characterId}_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+      roomCode: _activeProfile!.roomState.roomCode,
+      type: 'characterRemove',
+      playerName: charName,
+      details: 'Removed from party roster',
+      timestamp: DateTime.now().toUtc(),
+      entityId: characterId,
+    );
+    final updatedChangeLog = [..._activeProfile!.changeLog, removalEvent];
+
+    _activeProfile = _activeProfile!.copyWith(
+      partyCharacterIds: updatedIds,
+      changeLog: updatedChangeLog,
+    );
     _partyCharactersMap.remove(characterId);
     await _campaignProfileService.saveProfileImmediate(_activeProfile!);
     notifyListeners();

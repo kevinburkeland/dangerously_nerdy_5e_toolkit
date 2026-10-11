@@ -2245,19 +2245,13 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                       item: item,
                       edition: profile.edition,
                       isPinned: true,
-                      onTogglePin: () {
-                        final set =
-                            Set<String>.from(_activeProfile!.pinnedRuleIds);
-                        if (set.contains(item.id)) {
-                          set.remove(item.id);
-                        } else {
-                          set.add(item.id);
+                      onTogglePin: () async {
+                        await _controller.togglePinnedRule(item.id);
+                        if (mounted) {
+                          setState(() {
+                            _activeProfile = _controller.activeProfile;
+                          });
                         }
-                        setState(() {
-                          _activeProfile =
-                              _activeProfile!.copyWith(pinnedRuleIds: set);
-                        });
-                        _persistActiveProfile();
                       },
                       onTap: () {},
                     ),

@@ -171,6 +171,38 @@ void main() {
             '${violations.join('\n')}',
       );
     });
+
+    test(
+        'Source Bar F: Active production code in lib/ must not call CampaignProfile.copyWith(pinnedRuleIds: ...)',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      final copyWithPattern = RegExp(r'\.copyWith\s*\([^)]*\bpinnedRuleIds\s*:', dotAll: true);
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final content = file.readAsStringSync();
+        // Check if file contains a copyWith call that sets pinnedRuleIds
+        for (final match in copyWithPattern.allMatches(content)) {
+          final matchedText = match.group(0)!;
+          // Ignore AppSettings.copyWith in settings_provider.dart
+          if (file.path.contains('settings_provider.dart')) {
+            continue;
+          }
+          final lineNumber = content.substring(0, match.start).split('\n').length;
+          violations.add('${file.path}:$lineNumber -> $matchedText');
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Active production code must not call CampaignProfile.copyWith(pinnedRuleIds: ...) (Source Bar F). Violations:\n'
+            '${violations.join('\n')}',
+      );
+    });
   });
 }
 

@@ -361,6 +361,7 @@ class RoomSyncOrchestrator {
                 _lastProfileSyncTimestamp = msg.timestamp;
               }
 
+              _trackedRulesSet = reconciledProfile.pinnedRules;
               _recordAppliedProfileHash(reconciledProfile.hashCode);
               _lastEmittedProfile = reconciledProfile;
               profileToSave = reconciledProfile;
@@ -409,9 +410,9 @@ class RoomSyncOrchestrator {
 
               _trackedRulesSet = _trackedRulesSet.merge(msg.rulesSet);
 
-              // Reflect merged active values into profile's pinned rules
+              // Reflect merged CRDT set into profile's pinned rules
               final updatedProfile = localProfile.copyWith(
-                pinnedRuleIds: _trackedRulesSet.activeValues.toSet(),
+                pinnedRules: _trackedRulesSet,
               );
 
               _recordAppliedProfileHash(updatedProfile.hashCode);
@@ -484,8 +485,7 @@ class RoomSyncOrchestrator {
           last.partyPurse != profile.partyPurse &&
           last.name == profile.name &&
           last.notesMarkdown == profile.notesMarkdown &&
-          const SetEquality()
-              .equals(last.pinnedRuleIds, profile.pinnedRuleIds) &&
+          last.pinnedRules == profile.pinnedRules &&
           last.roomState == profile.roomState &&
           const ListEquality()
               .equals(last.partyCharacterIds, profile.partyCharacterIds)) {
@@ -499,17 +499,17 @@ class RoomSyncOrchestrator {
         return;
       }
 
-      // Focused CRDT delta: if only pinnedRuleIds mutated, emit crdt_or_set_delta
+      // Focused CRDT delta: if only pinnedRules mutated, emit crdt_or_set_delta
       if (last != null &&
           last.id == profile.id &&
-          !const SetEquality()
-              .equals(last.pinnedRuleIds, profile.pinnedRuleIds) &&
+          last.pinnedRules != profile.pinnedRules &&
           last.partyPurse == profile.partyPurse &&
           last.name == profile.name &&
           last.notesMarkdown == profile.notesMarkdown &&
           last.roomState == profile.roomState &&
           const ListEquality()
               .equals(last.partyCharacterIds, profile.partyCharacterIds)) {
+        _trackedRulesSet = _trackedRulesSet.merge(profile.pinnedRules);
         payloadToSend = payloadMapper.serializeOrSetDelta(
           campaignId: profile.id,
           rulesSet: _trackedRulesSet,
