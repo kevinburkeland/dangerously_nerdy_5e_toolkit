@@ -165,14 +165,15 @@ This document details the application-level synchronization services, transport 
 | `createdAt` | Yes | `DateTime` | Causal minimum (`a.isBefore(b) ? a : b`) | N/A | Deterministic min | Default now | Yes (`createdAt.isAtSameMomentAs(other.createdAt)`) | `campaign_profile_test.dart` |
 | `lastPlayedAt` | Yes | `DateTime` | Derived/metadata max (`a.isAfter(b) ? a : b`) | N/A | Deterministic max | Default createdAt | Yes (`lastPlayedAt.isAtSameMomentAs(other.lastPlayedAt)`) | `campaign_profile_test.dart` |
 | `roomState` | Yes | `RoomNodeState` | Recursive aggregate join (`RoomNodeState.join(a.roomState, b.roomState)`) | See RoomNodeState table | Delegates to roomState join | Default empty RoomNodeState | Yes (`roomState == other.roomState`) | `aggregate_join_laws_test.dart` |
-| `partyCharacterIds` | Yes | `List<String>` | Union minus removals tracked by typed `PartyEvent.entityId` in changelog (`joinPartyRoster`) | Authoritative typed `characterRemove` / `playerLeave` events with `entityId` | Removal in changelog removes ID; deterministic sorted list | Deduplicated union | Yes (`_listStringEquality`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
-| `pinnedRules` | Yes | `CrdtOrSet<String>` | Canonical CRDT OR-set merge (`joinPinnedRules`) | Tombstoned remove (`pinnedRules.remove`), Add-wins | Exact-HLC collision throws `StateError` | `pinnedRuleIds` Set batch-added with genesis HLC | Yes (`pinnedRules == other.pinnedRules`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
+| `partyRoster` | Yes | `CrdtOrSet<String>` | Canonical CRDT OR-set merge (`joinPartyRosterCrdt`) | Tombstoned remove (`partyRoster.remove`), newer HLC add supersedes older tombstone | Primitive OR-set exact-HLC rules | `partyCharacterIds` List batch-added with genesis HLC on genuine absence | Yes (`partyRoster == other.partyRoster`) | `aggregate_join_laws_test.dart`, `crdt_pass_4_1_2_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
+| `partyCharacterIds` | No (Derived view) | `List<String>` | Derived sorted active `partyRoster` values (`partyRoster.activeValues.toList()..sort()`) | N/A (Derived) | None (mutation forbidden in active production) | Migration input only when authoritative `partyRoster_crdt` key is absent | Yes (`_listStringEquality`) | `aggregate_join_laws_test.dart`, `crdt_pass_4_1_2_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
+| `pinnedRules` | Yes | `CrdtOrSet<String>` | Canonical CRDT OR-set merge (`joinPinnedRules`) | Tombstoned remove (`pinnedRules.remove`), Add-wins | Exact-HLC collision throws `StateError` | `pinnedRuleIds` Set batch-added with genesis HLC on genuine absence | Yes (`pinnedRules == other.pinnedRules`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
 | `notesRegister` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register merge | Empty string overwrite via newer HLC | Later HLC wins; exact-HLC collision throws `StateError` | Markdown wrapped at genesis HLC | Yes (`notesRegister == other.notesRegister`) | `aggregate_join_laws_test.dart` |
 | `partyPurse` | Yes | `PartyPurse` | CRDT PN-counters lattice join across denominations | Signed decrements on PN-counters | Monotonic join of positive and negative vectors | Default empty purse | Yes (`partyPurse == other.partyPurse`) | `aggregate_join_laws_test.dart` |
-| `changeLog` | Yes | `List<PartyEvent>` | Deduplicated by event ID, sorted by timestamp & ID (`joinChangeLog`) | Append-only event history | Divergent payload under same event ID throws `StateError` | Fallback default events | Yes (`_listEventEquality`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
+| `changeLog` | Yes | `List<PartyEvent>` | Deduplicated by event ID, sorted by timestamp & ID (`joinChangeLog`) | Append-only event history (audit-only; does NOT determine roster membership) | Divergent payload under same event ID throws `StateError` | Fallback default events | Yes (`_listEventEquality`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
 
 ### 13.4 Narrow Per-Subresource Fault Isolation at Application Layer
-- Application-level reconciliation (`RoomStateReconciliationService.reconcileProfileSafely`) delegates each subresource join directly to canonical engine helpers (`joinChangeLog`, `joinPartyRoster`, `joinPinnedRules`, `joinCustomProperties`, `joinEntityLinks`, `joinEntityInstances`, `joinContainers`).
+- Application-level reconciliation (`RoomStateReconciliationService.reconcileProfileSafely`) delegates each subresource join directly to canonical engine helpers (`joinChangeLog`, `joinPartyRosterCrdt`, `joinPinnedRules`, `joinCustomProperties`, `joinEntityLinks`, `joinEntityInstances`, `joinContainers`).
 - Sub-resources are joined independently within isolated try-catch blocks.
 - If an invalid collision occurs in one subresource (e.g. an exact-HLC divergent payload in `activeMinions` or divergent unversioned custom property), only that offending subresource is isolated (retaining the local value) and recorded as a typed `ReconciliationFieldFault`, while all unrelated healthy sub-resources (`notes`, `partyPurse`, `changeLog`) continue to merge safely without loss of progress.
 - Safe reconciliation never mints new synthetic replicated `PartyEvent`s during merge, and never consults wall/network clock for merged state.
@@ -181,16 +182,24 @@ This document details the application-level synchronization services, transport 
 
 ---
 
-## 14. Authoritative vs Derived Fields (Pass 4.1.1)
+## 14. Authoritative vs Derived Fields & Authoritative Presence (Pass 4.1.1 / Pass 4.1.2 / Pass 4.1.2.1)
 
 Replicated aggregate entities distinguish between **authoritative replicated CRDT state** and **derived read-only convenience views**:
 
-### 14.1 CampaignProfile
-- **Authoritative:** `pinnedRules` (`CrdtOrSet<String>`). Stores full causal history (item registers with HLCs, tombstones with HLCs). Active production mutations MUST target `pinnedRules` using authoritative HLC-stamped `add(...)` and `remove(...)` operations.
-- **Derived View:** `pinnedRuleIds` (`Set<String>`). Read-only derived active values view (`pinnedRules.activeValues.toSet()`). Calling `copyWith(pinnedRuleIds: ...)` in active production code is strictly forbidden (enforced by permanent architectural Source Bar F), as it destroys tombstones and causal history.
-- **Migration Only:** Legacy list/set forms in DTOs (`pinnedRuleIds`) are accepted solely as backward-compatibility migration inputs when the authoritative `pinnedRules_crdt` key is absent from the wire/disk record.
+### 14.1 Authoritative Presence Invariant (Pass 4.1.2.1)
+- **PRESENT authoritative field:** Authority exists unconditionally regardless of logical emptiness (e.g. `partyRoster_crdt: {}`, `pinnedRules_crdt: {}`). Authoritative empty state represents a deliberate empty set and MUST NOT be mistaken for field absence. Stale legacy convenience fields MUST NOT resurrect deleted items.
+- **ABSENT authoritative field:** Deterministic legacy migration runs only upon genuine key absence.
+- **Anti-Pattern Barred:** Never use `authoritativeMap.isNotEmpty` as a proxy for key presence where empty is a valid replicated state.
+- **Fail-Loud:** Present malformed authoritative representations must fail loudly with `FormatException`.
 
-### 14.2 RoomNodeState
+### 14.2 CampaignProfile
+- **Authoritative:** `partyRoster` (`CrdtOrSet<String>`). Stores full causal history of party membership (item registers with HLCs, tombstones with HLCs). Active production mutations MUST target `partyRoster` using authoritative HLC-stamped `add(...)` and `remove(...)` operations.
+- **Authoritative:** `pinnedRules` (`CrdtOrSet<String>`). Stores full causal history (item registers with HLCs, tombstones with HLCs). Active production mutations MUST target `pinnedRules` using authoritative HLC-stamped `add(...)` and `remove(...)` operations.
+- **Derived View:** `partyCharacterIds` (`List<String>`). Read-only derived active values view (`partyRoster.activeValues.toList()..sort()`). Direct mutation via `CampaignProfile.copyWith(partyCharacterIds: ...)` is permanently banned in production code (Source Bar G).
+- **Derived View:** `pinnedRuleIds` (`Set<String>`). Read-only derived active values view (`pinnedRules.activeValues.toSet()`). Calling `copyWith(pinnedRuleIds: ...)` in active production code is strictly forbidden (enforced by permanent architectural Source Bar F), as it destroys tombstones and causal history.
+- **Migration Only:** Legacy list/set forms in DTOs (`partyCharacterIds`, `pinnedRuleIds`) are accepted solely as backward-compatibility migration inputs when the authoritative `partyRoster_crdt` / `pinnedRules_crdt` key is absent from the wire/disk record.
+
+### 14.3 RoomNodeState
 - **Authoritative:** `entityLinksCrdt` (`CrdtOrSet<RoomEntityLink>`). Stores full causal history of room entity links, item HLCs, and tombstones. Active production binding/unbinding mutations MUST operate on `entityLinksCrdt` using authoritative HLCs.
 - **Derived View:** `entityLinks` (`List<RoomEntityLink>`). Read-only derived view of active links (`entityLinksCrdt.activeValues.toList()`).
 
