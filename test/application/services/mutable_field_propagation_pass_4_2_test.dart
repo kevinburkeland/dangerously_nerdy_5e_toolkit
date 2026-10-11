@@ -854,14 +854,14 @@ void main() {
         // State A: Profile with old incarnation @ ts10
         final profA = base.copyWith(
           roomState: base.roomState.copyWith(
-            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty().add('link-door', oldLink, ts10),
+            entityLinksCrdt: const EntityLinkCrdtSet.empty().add('link-door', oldLink, ts10),
           ),
         );
 
         // State B: Profile with removal @ ts20
         final profB = base.copyWith(
           roomState: base.roomState.copyWith(
-            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty()
+            entityLinksCrdt: const EntityLinkCrdtSet.empty()
                 .add('link-door', oldLink, ts10)
                 .remove('link-door', ts20),
           ),
@@ -870,7 +870,7 @@ void main() {
         // State C: Profile with re-add @ ts30
         final profC = base.copyWith(
           roomState: base.roomState.copyWith(
-            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty().add('link-door', newLink, ts30),
+            entityLinksCrdt: const EntityLinkCrdtSet.empty().add('link-door', newLink, ts30),
           ),
         );
 
@@ -911,7 +911,7 @@ void main() {
         // Replica A goes offline with old incarnation
         final repA = base.copyWith(
           roomState: base.roomState.copyWith(
-            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty().add('link-door', oldLink, tsA10),
+            entityLinksCrdt: const EntityLinkCrdtSet.empty().add('link-door', oldLink, tsA10),
           ),
         );
 
@@ -935,9 +935,10 @@ void main() {
 
         final repB = base.copyWith(
           roomState: base.roomState.copyWith(
-            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty()
+            entityLinksCrdt: const EntityLinkCrdtSet.empty()
                 .add('link-door', oldLink, tsA10)
                 .remove('link-door', tsB20)
+                .add('link-door', readdedLink, tsB30)
                 .add('link-door', editedLinkB, tsB35),
           ),
         );
@@ -1448,9 +1449,18 @@ void main() {
         );
         expect(room.entityLinksCrdt, equals(validSet));
 
-        // Constructor accepts valid CrdtOrSet via explicit legacy migration boundary
+        // Constructor rejects legacy CrdtOrSet (explicit migration boundary required)
         const legacyOrSet = CrdtOrSet<RoomEntityLink>.empty();
-        final roomFromLegacy = RoomNodeState(
+        expect(
+          () => RoomNodeState(
+            roomId: "r1",
+            roomCode: "RC",
+            entityLinksCrdt: legacyOrSet as dynamic,
+          ),
+          throwsArgumentError,
+        );
+
+        final roomFromLegacy = RoomNodeState.fromLegacyCrdtOrSet(
           roomId: "r1",
           roomCode: "RC",
           entityLinksCrdt: legacyOrSet,

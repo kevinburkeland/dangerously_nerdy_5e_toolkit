@@ -313,7 +313,7 @@ void main() {
             roomId: 'room-1',
             roomCode: 'RC-101',
             title: 'Main Hall',
-            entityLinksCrdt: const CrdtOrSet<RoomEntityLink>.empty()
+            entityLinksCrdt: const EntityLinkCrdtSet.empty()
                 .add('link-1', RoomEntityLink(entityId: 'link-1', displayName: 'Link 1'), const HybridLogicalClock(physicalTime: 101, logicalCounter: 0, nodeId: 'n1'))
                 .remove('link-2', const HybridLogicalClock(physicalTime: 102, logicalCounter: 0, nodeId: 'n1')),
             activeMinions: const CrdtOrSet<dynamic>.empty()

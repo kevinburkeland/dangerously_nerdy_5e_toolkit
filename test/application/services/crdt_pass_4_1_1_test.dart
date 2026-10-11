@@ -301,10 +301,10 @@ void main() {
         logicalCounter: 0,
         nodeId: 'remote_malicious',
       );
-      final badLinkCrdt = CrdtOrSet<RoomEntityLink>(
+      final badLinkCrdt = EntityLinkCrdtSet(
         items: {
           'evil_entity': CrdtLwwRegister<RoomEntityLink>(
-            value: RoomEntityLink(entityId: 'evil_entity', displayName: 'Evil Entity'),
+            value: RoomEntityLink(entityId: 'evil_entity', displayName: 'Evil Entity', incarnationTimestamp: farFutureLinkHlc),
             timestamp: farFutureLinkHlc,
           ),
         },
@@ -331,9 +331,12 @@ void main() {
         logicalCounter: 0,
         nodeId: 'remote_malicious',
       );
-      final badTombstoneLinkCrdt = CrdtOrSet<RoomEntityLink>(
+      final badTombstoneLinkCrdt = EntityLinkCrdtSet(
         tombstones: {
-          'tombstoned_entity': farFutureLinkTombstoneHlc,
+          'tombstoned_entity': EntityLinkTombstone(
+            targetGeneration: farFutureLinkTombstoneHlc,
+            timestamp: farFutureLinkTombstoneHlc,
+          ),
         },
       );
       final remoteBadRoomTombstone = initialProfile.roomState.copyWith(entityLinksCrdt: badTombstoneLinkCrdt);
@@ -383,10 +386,10 @@ void main() {
           roomId: 'room_trusted',
           roomCode: 'TRUST1',
           title: 'Trusted Room',
-          entityLinksCrdt: CrdtOrSet<RoomEntityLink>(
+          entityLinksCrdt: EntityLinkCrdtSet(
             items: {
               'hero': CrdtLwwRegister<RoomEntityLink>(
-                value: RoomEntityLink(entityId: 'hero', displayName: 'Hero'),
+                value: RoomEntityLink(entityId: 'hero', displayName: 'Hero', incarnationTimestamp: tsLink),
                 timestamp: tsLink,
               ),
             },
@@ -744,15 +747,18 @@ void main() {
           roomId: 'r_tomb',
           roomCode: 'TOMB1',
           title: 'Tomb Room',
-          entityLinksCrdt: CrdtOrSet<RoomEntityLink>(
+          entityLinksCrdt: EntityLinkCrdtSet(
             items: {
               'link_active': CrdtLwwRegister<RoomEntityLink>(
-                value: RoomEntityLink(entityId: 'link_active', displayName: 'Active Link'),
+                value: RoomEntityLink(entityId: 'link_active', displayName: 'Active Link', incarnationTimestamp: tsAdd),
                 timestamp: tsAdd,
               ),
             },
             tombstones: {
-              'link_deleted': tsDel,
+              'link_deleted': const EntityLinkTombstone(
+                targetGeneration: tsDel,
+                timestamp: tsDel,
+              ),
             },
           ),
         ),
@@ -803,15 +809,18 @@ void main() {
           roomId: 'r_9',
           roomCode: 'R9',
           title: 'Room 9',
-          entityLinksCrdt: CrdtOrSet<RoomEntityLink>(
+          entityLinksCrdt: EntityLinkCrdtSet(
             items: {
               'link_1': CrdtLwwRegister<RoomEntityLink>(
-                value: RoomEntityLink(entityId: 'link_1', displayName: 'L1'),
+                value: RoomEntityLink(entityId: 'link_1', displayName: 'L1', incarnationTimestamp: tsLinkItem),
                 timestamp: tsLinkItem,
               ),
             },
             tombstones: {
-              'link_2': tsLinkTombstone,
+              'link_2': const EntityLinkTombstone(
+                targetGeneration: tsLinkTombstone,
+                timestamp: tsLinkTombstone,
+              ),
             },
           ),
           activeMinions: CrdtOrSet<dynamic>(
