@@ -22,12 +22,14 @@ class CrdtLwwRegisterDto {
   ) {
     try {
       final safeMap = Map<String, dynamic>.from(map);
-      final rawTs = safeMap['ts'];
+      final rawTs = safeMap['ts'] ?? safeMap['timestamp'];
       if (rawTs is! Map) return null;
 
       final safeTs = Map<String, dynamic>.from(rawTs);
       final timestamp = HybridLogicalClockDto.fromMap(safeTs);
-      final value = valueDecoder(safeMap['v']);
+      final rawValue =
+          safeMap.containsKey('v') ? safeMap['v'] : safeMap['value'];
+      final value = valueDecoder(rawValue);
 
       return CrdtLwwRegister<T>(value: value, timestamp: timestamp);
     } catch (_) {

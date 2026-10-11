@@ -147,8 +147,8 @@ This document details the application-level synchronization services, transport 
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `roomId` | Yes | `String` | Immutable ID (`joinImmutableId`) | N/A | Divergence throws `StateError` (isolated at app layer) | Empty string takes non-empty string | Yes (`==`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
 | `roomCode` | Yes | `String` | Immutable ID (`joinImmutableId`) | N/A | Divergence throws `StateError` (isolated at app layer) | Empty string takes non-empty string | Yes (`==`) | `aggregate_join_laws_test.dart` |
-| `title` | Yes | `String` | Unversioned scalar (`joinUnversionedString`) | N/A | Divergence throws `StateError` (isolated at app layer) | Empty takes non-empty | Yes (`==`) | `aggregate_join_laws_test.dart` |
-| `description` | Yes | `String` | Unversioned scalar (`joinUnversionedString`) | N/A | Divergence throws `StateError` (isolated at app layer) | Empty takes non-empty | Yes (`==`) | `campaign_profile_test.dart`, `aggregate_join_laws_test.dart` |
+| `title` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register merge (`titleRegister.merge`) | N/A | Higher HLC wins; exact-HLC collision throws `StateError` | Genesis HLC on genuine absence | Yes (`titleRegister == other.titleRegister`) | `aggregate_join_laws_test.dart`, `mutable_field_propagation_pass_4_2_test.dart` |
+| `description` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register merge (`descriptionRegister.merge`) | N/A | Higher HLC wins; exact-HLC collision throws `StateError` | Genesis HLC on genuine absence | Yes (`descriptionRegister == other.descriptionRegister`) | `campaign_profile_test.dart`, `aggregate_join_laws_test.dart`, `mutable_field_propagation_pass_4_2_test.dart` |
 | `entityLinks` | Yes | `CrdtOrSet<RoomEntityLink>` | CRDT OR-set merge (`joinEntityLinks`) | Tombstoned remove (`unbindEntityFromRoom`), Add-wins | Exact-HLC collision throws `StateError` | List batch-added with genesis HLC | Yes (`entityLinksCrdt == other.entityLinksCrdt`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
 | `entityInstances` | Yes | `List<EntityInstance>` | Grow-only map-by-instanceId recursion (`joinEntityInstances`) | Grow-only (no application removal in Pass 4) | Field-level divergence throws `StateError` | Deserialized from List | Yes (`_deepEquality`) | `campaign_profile_test.dart`, `aggregate_join_laws_test.dart` |
 | `containers` | Yes | `List<LootContainer>` | Grow-only map-by-containerId recursion (`joinContainers`) | Grow-only (no application removal in Pass 4) | Field-level divergence throws `StateError` | Deserialized from List | Yes (`_deepEquality`) | `aggregate_join_laws_test.dart` |
@@ -160,7 +160,7 @@ This document details the application-level synchronization services, transport 
 | Field | Replicated? | Type | Merge Rule | Deletion Rule | Conflict Behavior | Legacy Behavior | Equality Checked? | Test Coverage |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `id` | Yes | `String` | Immutable ID (`joinImmutableId`) | N/A | Divergence throws `StateError` | `FormatException` on missing/null/empty (immutable identity required) | Yes (`==`) | `aggregate_join_laws_test.dart` |
-| `name` | Yes | `String` | Unversioned scalar (`joinUnversionedString`) | N/A | Divergence throws `StateError` (isolated at app layer) | Empty takes non-empty | Yes (`==`) | `aggregate_join_laws_test.dart` |
+| `name` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register merge (`nameRegister.merge`) | N/A | Higher HLC wins; exact-HLC collision throws `StateError` | Legacy name wrapped at genesis HLC on genuine absence | Yes (`nameRegister == other.nameRegister`) | `aggregate_join_laws_test.dart`, `mutable_field_propagation_pass_4_2_test.dart` |
 | `edition` | Yes | `dynamic` / `RulesetIdentifier` | Schema identity (`a.rulesetId == b.rulesetId`), canonicalizes to stable `RulesetIdentifier` if runtime forms differ | N/A | Differing `rulesetId` throws `StateError` | String or enum mapped to rulesetId | Yes (`rulesetId == other.rulesetId`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
 | `createdAt` | Yes | `DateTime` | Causal minimum (`a.isBefore(b) ? a : b`) | N/A | Deterministic min | Deterministic Unix epoch UTC (`DateTime.fromMillisecondsSinceEpoch(0, isUtc: true)`) | Yes (`createdAt.isAtSameMomentAs(other.createdAt)`) | `campaign_profile_test.dart` |
 | `lastPlayedAt` | Yes | `DateTime` | Derived/metadata max (`a.isAfter(b) ? a : b`) | N/A | Deterministic max | Default createdAt | Yes (`lastPlayedAt.isAtSameMomentAs(other.lastPlayedAt)`) | `campaign_profile_test.dart` |
@@ -242,7 +242,7 @@ No deletion or membership semantics may exist only in merge code without a produ
 
 ---
 
-## 17. Replicated Field Mutation Contracts & Policies (Pass 4.2)
+## 17. Replicated Field Mutation Contracts & Policies (Pass 4.2 & Pass 4.2.1)
 
 Every replicated aggregate field enforces an explicit mutation contract: it is either causally mutable with deterministic LWW convergence, structurally immutable configuration/identity, or explicitly conflict-preserving. Replicated fields that merely appear mutable while ordinary single-writer updates diverge are forbidden.
 
@@ -256,27 +256,48 @@ The following user-facing scalars are causally versioned using `CrdtLwwRegister<
 | **`RoomNodeState.title`** | YES | YES | `titleRegister` (`CrdtLwwRegister<String>`) | LWW (`local.titleRegister.merge(remote.titleRegister)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`, safely isolated. | Legacy `title` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(title: ..., titleTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
 | **`RoomNodeState.description`** | YES | YES | `descriptionRegister` (`CrdtLwwRegister<String>`) | LWW (`local.descriptionRegister.merge(remote.descriptionRegister)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`, safely isolated. | Legacy `description` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(description: ..., descriptionTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
 | **`EntityInstance.displayName`** | YES | YES | `displayNameRegister` (`CrdtLwwRegister<String>`) | LWW (`local.displayNameRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `displayName` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(displayName: ..., displayNameTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
-| **`RoomEntityLink.notes`** | YES | YES | `notesRegister` (`CrdtLwwRegister<String?>`) | LWW (`local.notesRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `notes` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(notes: ..., notesTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
+| **`RoomEntityLink.displayName`** | YES | YES | `displayNameRegister` (`CrdtLwwRegister<String>`) | LWW (`local.displayNameRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `displayName` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(displayName: ..., displayNameTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
+| **`RoomEntityLink.notes`** | YES | YES | `notesRegister` (`CrdtLwwRegister<String?>`) | LWW (`local.notesRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `notes` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(notes: ..., notesTimestamp: clock.nextTimestamp())` or `copyWith(clearNotes: true, notesTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
 | **`LootContainer.name`** | YES | YES | `nameRegister` (`CrdtLwwRegister<String>`) | LWW (`local.nameRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `name` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(name: ..., nameTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
 
-### 17.2 Immutable Identity Fields
-The following fields represent immutable identity and cannot be mutated after creation:
-- `CampaignProfile.id`, `RoomNodeState.roomId`, `RoomNodeState.roomCode`
-- `EntityInstance.instanceId`, `EntityInstance.entityDefinitionId`, `EntityInstance.entityType`
-- `RoomEntityLink.entityId`, `RoomEntityLink.refType`
-- `LootContainer.containerId`, `LootContainer.type`
+### 17.2 Null/Clear Semantics for `RoomEntityLink.notes`
+`RoomEntityLink.notes` is a nullable replicated register (`CrdtLwwRegister<String?>`).
+- **Active Clear / Null Setting:** Calling `copyWith(notes: null, notesTimestamp: clock.nextTimestamp())` or `copyWith(clearNotes: true, notesTimestamp: clock.nextTimestamp())` explicitly creates a new register with `value: null` and the authoritative timestamp.
+- **Omission Distinction:** Omission (`notes` parameter not passed and `clearNotes: false`) preserves the existing `notesRegister`.
+- **Timestamp Enforcement:** Clearing notes without providing a valid `notesTimestamp` throws `ArgumentError`.
+- **Convergence:** A `notesRegister` with `value: null` converges deterministically under LWW like any other value: if its timestamp is strictly greater, remote non-null notes are cleared.
 
-**Merge Semantics:** Exact value identity (`joinImmutableId`). Divergent IDs represent incompatible non-mergeable entities and fail loudly with `StateError`.
+### 17.3 Immutable Identity & Configuration Fields
+The following fields represent immutable identity, metadata, or configuration after creation in replicated state:
+- **Identity Fields:**
+  - `CampaignProfile.id`, `RoomNodeState.roomId`, `RoomNodeState.roomCode`
+  - `EntityInstance.instanceId`, `EntityInstance.entityDefinitionId`, `EntityInstance.entityType`
+  - `RoomEntityLink.entityId`, `RoomEntityLink.refType`
+  - `LootContainer.containerId`, `LootContainer.type`
+  - *Merge Semantics:* Exact value identity (`joinImmutableId`). Divergent IDs represent incompatible non-mergeable entities and fail loudly with `StateError`.
+- **Configuration & Structural Fields:**
+  - `RoomEntityLink.position`, `RoomEntityLink.cloneRuntimeData`, `RoomEntityLink.isIsolatedClone`
+  - `EntityInstance.position`, `EntityInstance.isVisible`
+  - `LootContainer.isLocked`, `LootContainer.capacityWeightLbs`
+  - *Merge Semantics:* Exact scalar/value equality (`_deepEquality`). Divergence on unversioned structural fields throws `StateError`.
+- **Configuration Maps:**
+  - `RoomNodeState.customProperties`
+  - `EntityInstance.customProperties`
+  - `EntityInstance.runtimeData`
+  - `LootContainer.permissions`
+  - `LootContainer.customProperties`
+  - *Merge Semantics:* `joinCustomProperties` (disjoint keys unioned, identical keys must match deep values; divergent unversioned values throw `StateError`).
+  - *Architectural Bar:* Production code must not call mutating `copyWith` methods on these fields in active replicated state without first defining explicit replication semantics (e.g. per-key CRDT registers).
 
-### 17.3 Immutable Configuration Maps
-The following fields represent immutable configuration maps after creation in replicated state:
-- `RoomNodeState.customProperties`
-- `EntityInstance.customProperties`
-- `EntityInstance.runtimeData`
-- `LootContainer.permissions`
-- `LootContainer.customProperties`
+### 17.4 Strict Authoritative Register Presence Invariant
+For every authoritative replicated register (`nameRegister`, `titleRegister`, `descriptionRegister`, `displayNameRegister`, `notesRegister`):
+- **PRESENT Authoritative Register:**
+  - Must be parsed as authoritative.
+  - If the value is not a Map, or is `null`, or contains a missing or malformed timestamp/HLC, deserialization must fail loudly with `FormatException`.
+  - Deserialization must **NEVER** silently fall back to legacy scalar fields upon encountering malformed authoritative register data.
+  - If both authoritative register and legacy scalar are present, the authoritative register wins unconditionally.
+- **ABSENT Authoritative Register:**
+  - Deterministic legacy migration runs, wrapping legacy scalar data into a genesis HLC register (`pt: 0, lc: 0, node: 'genesis'`).
 
-**Merge Semantics:** `joinCustomProperties` (disjoint keys unioned, identical keys must match deep values; divergent unversioned values throw `StateError`).
-**Architectural Bar:** Production code must not call `copyWith(customProperties:)`, `copyWith(runtimeData:)`, or `copyWith(permissions:)` on active replicated state. Modifying configuration maps requires defining explicit replication semantics (e.g. per-key LWW registers) before introducing a mutation path.
 
 

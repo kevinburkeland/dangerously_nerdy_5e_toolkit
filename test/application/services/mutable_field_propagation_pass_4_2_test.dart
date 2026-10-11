@@ -38,6 +38,7 @@ void main() {
       final link = RoomEntityLink(
         entityId: 'link-door',
         displayName: 'North Door',
+        displayNameTimestamp: genesisHlc,
         notes: 'A solid oak door',
         notesTimestamp: genesisHlc,
       );
@@ -229,6 +230,61 @@ void main() {
         expect(reconResult.hasFaults, isFalse);
         expect(reconResult.profile.roomState.containers.first.name, equals('Royal Gilded Vault'));
       });
+
+      test('RoomEntityLink.displayName: single-writer edit propagates and converges with zero faults', () {
+        final base = createCommonBase();
+        final editTs = clockA.nextTimestamp();
+        final updatedLink = base.roomState.entityLinks.first.copyWith(
+          displayName: 'Secret North Door',
+          displayNameTimestamp: editTs,
+        );
+        final repA = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: base.roomState.entityLinksCrdt.add(updatedLink.entityId, updatedLink, editTs),
+          ),
+        );
+        final repB = base;
+
+        final joinAB = CampaignProfile.join(repA, repB);
+        final joinBA = CampaignProfile.join(repB, repA);
+
+        expect(joinAB.roomState.entityLinks.first.displayName, equals('Secret North Door'));
+        expect(joinBA.roomState.entityLinks.first.displayName, equals('Secret North Door'));
+        expect(joinAB, equals(joinBA));
+
+        final reconResult = reconciliationService.reconcileProfileSafely(local: repB, remote: repA);
+        expect(reconResult.hasFaults, isFalse);
+        expect(reconResult.profile.roomState.entityLinks.first.displayName, equals('Secret North Door'));
+        expect(reconResult.profile.roomState.entityLinks.first.displayNameRegister.timestamp, equals(editTs));
+      });
+
+      test('RoomEntityLink.notes: clearing notes to null propagates and converges with zero faults', () {
+        final base = createCommonBase();
+        expect(base.roomState.entityLinks.first.notes, isNotNull);
+        final editTs = clockA.nextTimestamp();
+        final updatedLink = base.roomState.entityLinks.first.copyWith(
+          clearNotes: true,
+          notesTimestamp: editTs,
+        );
+        final repA = base.copyWith(
+          roomState: base.roomState.copyWith(
+            entityLinksCrdt: base.roomState.entityLinksCrdt.add(updatedLink.entityId, updatedLink, editTs),
+          ),
+        );
+        final repB = base;
+
+        final joinAB = CampaignProfile.join(repA, repB);
+        final joinBA = CampaignProfile.join(repB, repA);
+
+        expect(joinAB.roomState.entityLinks.first.notes, isNull);
+        expect(joinBA.roomState.entityLinks.first.notes, isNull);
+        expect(joinAB, equals(joinBA));
+
+        final reconResult = reconciliationService.reconcileProfileSafely(local: repB, remote: repA);
+        expect(reconResult.hasFaults, isFalse);
+        expect(reconResult.profile.roomState.entityLinks.first.notes, isNull);
+        expect(reconResult.profile.roomState.entityLinks.first.notesRegister.timestamp, equals(editTs));
+      });
     });
 
     group('2. Concurrent Edits & Conflict Resolution', () {
@@ -270,6 +326,45 @@ void main() {
         expect(recon.fieldFaults.any((f) => f.field == 'name'), isTrue);
         expect(recon.profile.name, equals('Name Branch A')); // Keeps local on collision fault
       });
+
+      test('Concurrent RoomEntityLink displayName edits: higher HLC wins deterministically', () {
+        final base = createCommonBase();
+        const tsA = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'node-a');
+        const tsB = HybridLogicalClock(physicalTime: 3000, logicalCounter: 0, nodeId: 'node-b');
+
+        final linkA = base.roomState.entityLinks.first.copyWith(
+          displayName: 'Oak Door',
+          displayNameTimestamp: tsA,
+        );
+        final linkB = base.roomState.entityLinks.first.copyWith(
+          displayName: 'Iron Door',
+          displayNameTimestamp: tsB,
+        );
+
+        final merged = linkA.merge(linkB);
+        final mergedRev = linkB.merge(linkA);
+
+        expect(merged.displayName, equals('Iron Door'));
+        expect(mergedRev.displayName, equals('Iron Door'));
+        expect(merged, equals(mergedRev));
+      });
+
+      test('Exact-HLC collision on RoomEntityLink.displayName fails loud with StateError', () {
+        final base = createCommonBase();
+        const collisionTs = HybridLogicalClock(physicalTime: 5000, logicalCounter: 0, nodeId: 'same-node');
+
+        final linkA = base.roomState.entityLinks.first.copyWith(
+          displayName: 'Branch A Door',
+          displayNameTimestamp: collisionTs,
+        );
+        final linkB = base.roomState.entityLinks.first.copyWith(
+          displayName: 'Branch B Door',
+          displayNameTimestamp: collisionTs,
+        );
+
+        expect(() => linkA.merge(linkB), throwsA(isA<StateError>()));
+        expect(() => linkB.merge(linkA), throwsA(isA<StateError>()));
+      });
     });
 
     group('3. HLC Extraction & Remote Drift Validation', () {
@@ -279,6 +374,7 @@ void main() {
         expect(timestamps, contains(base.nameRegister.timestamp));
         expect(timestamps, contains(base.roomState.titleRegister.timestamp));
         expect(timestamps, contains(base.roomState.descriptionRegister.timestamp));
+        expect(timestamps, contains(base.roomState.entityLinks.first.displayNameRegister.timestamp));
         expect(timestamps, contains(base.roomState.entityLinks.first.notesRegister.timestamp));
         expect(timestamps, contains(base.roomState.entityInstances.first.displayNameRegister.timestamp));
         expect(timestamps, contains(base.roomState.containers.first.nameRegister.timestamp));
@@ -368,6 +464,24 @@ void main() {
           () => base.roomState.containers.first.copyWith(name: 'New Container'),
           throwsA(isA<ArgumentError>()),
         );
+
+        // RoomEntityLink.displayName without timestamp
+        expect(
+          () => base.roomState.entityLinks.first.copyWith(displayName: 'New Door Name'),
+          throwsA(isA<ArgumentError>()),
+        );
+
+        // RoomEntityLink.notes: null without timestamp
+        expect(
+          () => base.roomState.entityLinks.first.copyWith(notes: null),
+          throwsA(isA<ArgumentError>()),
+        );
+
+        // RoomEntityLink.clearNotes: true without timestamp
+        expect(
+          () => base.roomState.entityLinks.first.copyWith(clearNotes: true),
+          throwsA(isA<ArgumentError>()),
+        );
       });
 
       test('Production codebase scan ensures zero active unversioned mutations on RoomNodeState or CampaignProfile', () {
@@ -386,6 +500,127 @@ void main() {
             reason: '${file.path} must not mutate roomState.customProperties via copyWith',
           );
         }
+      });
+    });
+
+    group('6. Authoritative Register Strict Presence & Malformed Fallback Prevention', () {
+      test('CampaignProfileDto.fromMap: nameRegister and notesRegister strict presence', () {
+        // PRESENT wrong type throws FormatException, NEVER falls back to legacy name
+        expect(
+          () => CampaignProfileDto.fromMap({
+            'id': 'c1',
+            'nameRegister': 'not-a-map',
+            'name': 'Legacy Name',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        // PRESENT null throws FormatException
+        expect(
+          () => CampaignProfileDto.fromMap({
+            'id': 'c1',
+            'nameRegister': null,
+            'name': 'Legacy Name',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        // PRESENT Map with malformed timestamp throws FormatException
+        expect(
+          () => CampaignProfileDto.fromMap({
+            'id': 'c1',
+            'nameRegister': {
+              'v': 'Valid Value',
+              'ts': 'bad-timestamp',
+            },
+            'name': 'Legacy Name',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        // PRESENT valid register + divergent legacy scalar: authoritative register wins
+        final validDto = CampaignProfileDto.fromMap({
+          'id': 'c1',
+          'nameRegister': {
+            'v': 'Authoritative Name',
+            'ts': {'pt': 100, 'lc': 0, 'node': 'n1'},
+          },
+          'name': 'Divergent Legacy Name',
+        });
+        final domain = validDto.toDomain();
+        expect(domain.name, equals('Authoritative Name'));
+        expect(domain.nameRegister.timestamp.physicalTime, equals(100));
+
+        // ABSENT register: migrates legacy scalar at genesis HLC
+        final legacyAbsent = CampaignProfileDto.fromMap({
+          'id': 'c1',
+          'name': 'Legacy Campaign',
+        }).toDomain();
+        expect(legacyAbsent.name, equals('Legacy Campaign'));
+        expect(legacyAbsent.nameRegister.timestamp.physicalTime, equals(0));
+        expect(legacyAbsent.nameRegister.timestamp.nodeId, equals('genesis'));
+      });
+
+      test('RoomNodeState.fromMap: titleRegister and descriptionRegister strict presence', () {
+        expect(
+          () => RoomNodeState.fromMap({
+            'roomId': 'r1',
+            'titleRegister': 'garbage',
+            'title': 'Legacy Title',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        expect(
+          () => RoomNodeState.fromMap({
+            'roomId': 'r1',
+            'descriptionRegister': null,
+            'description': 'Legacy Desc',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+
+      test('EntityInstance.fromMap: displayNameRegister strict presence', () {
+        expect(
+          () => EntityInstance.fromMap({
+            'instanceId': 'i1',
+            'displayNameRegister': null,
+            'displayName': 'Goblin',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+
+      test('RoomEntityLink.fromMap: displayNameRegister and notesRegister strict presence', () {
+        expect(
+          () => RoomEntityLink.fromMap({
+            'entityId': 'e1',
+            'displayNameRegister': 'bad',
+            'displayName': 'Door',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+
+        expect(
+          () => RoomEntityLink.fromMap({
+            'entityId': 'e1',
+            'notesRegister': 12345,
+            'notes': 'Note',
+          }),
+          throwsA(isA<FormatException>()),
+        );
+      });
+
+      test('LootContainer.fromMap: nameRegister strict presence', () {
+        expect(
+          () => LootContainer.fromMap({
+            'containerId': 'c1',
+            'nameRegister': false,
+            'name': 'Chest',
+          }),
+          throwsA(isA<FormatException>()),
+        );
       });
     });
   });
