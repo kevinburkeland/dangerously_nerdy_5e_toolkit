@@ -159,14 +159,14 @@ This document details the application-level synchronization services, transport 
 ### 13.3 CampaignProfile Merge Policy Table (Pass 4.1)
 | Field | Replicated? | Type | Merge Rule | Deletion Rule | Conflict Behavior | Legacy Behavior | Equality Checked? | Test Coverage |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `id` | Yes | `String` | Immutable ID (`joinImmutableId`) | N/A | Divergence throws `StateError` | Fallback default id | Yes (`==`) | `aggregate_join_laws_test.dart` |
+| `id` | Yes | `String` | Immutable ID (`joinImmutableId`) | N/A | Divergence throws `StateError` | `FormatException` on missing/null/empty (immutable identity required) | Yes (`==`) | `aggregate_join_laws_test.dart` |
 | `name` | Yes | `String` | Unversioned scalar (`joinUnversionedString`) | N/A | Divergence throws `StateError` (isolated at app layer) | Empty takes non-empty | Yes (`==`) | `aggregate_join_laws_test.dart` |
 | `edition` | Yes | `dynamic` / `RulesetIdentifier` | Schema identity (`a.rulesetId == b.rulesetId`), canonicalizes to stable `RulesetIdentifier` if runtime forms differ | N/A | Differing `rulesetId` throws `StateError` | String or enum mapped to rulesetId | Yes (`rulesetId == other.rulesetId`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
-| `createdAt` | Yes | `DateTime` | Causal minimum (`a.isBefore(b) ? a : b`) | N/A | Deterministic min | Default now | Yes (`createdAt.isAtSameMomentAs(other.createdAt)`) | `campaign_profile_test.dart` |
+| `createdAt` | Yes | `DateTime` | Causal minimum (`a.isBefore(b) ? a : b`) | N/A | Deterministic min | Deterministic Unix epoch UTC (`DateTime.fromMillisecondsSinceEpoch(0, isUtc: true)`) | Yes (`createdAt.isAtSameMomentAs(other.createdAt)`) | `campaign_profile_test.dart` |
 | `lastPlayedAt` | Yes | `DateTime` | Derived/metadata max (`a.isAfter(b) ? a : b`) | N/A | Deterministic max | Default createdAt | Yes (`lastPlayedAt.isAtSameMomentAs(other.lastPlayedAt)`) | `campaign_profile_test.dart` |
-| `roomState` | Yes | `RoomNodeState` | Recursive aggregate join (`RoomNodeState.join(a.roomState, b.roomState)`) | See RoomNodeState table | Delegates to roomState join | Default empty RoomNodeState | Yes (`roomState == other.roomState`) | `aggregate_join_laws_test.dart` |
+| `roomState` | Yes | `RoomNodeState` | Recursive aggregate join (`RoomNodeState.join(a.roomState, b.roomState)`) | See RoomNodeState table | Delegates to roomState join | Present empty `{}` preserves authoritative empty `RoomNodeState` (no synthetic fallback); genuine absence migrates to staging room | Yes (`roomState == other.roomState`) | `aggregate_join_laws_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
 | `partyRoster` | Yes | `CrdtOrSet<String>` | Canonical CRDT OR-set merge (`joinPartyRosterCrdt`) | Tombstoned remove (`partyRoster.remove`), newer HLC add supersedes older tombstone | Primitive OR-set exact-HLC rules | `partyCharacterIds` List batch-added with genesis HLC on genuine absence | Yes (`partyRoster == other.partyRoster`) | `aggregate_join_laws_test.dart`, `crdt_pass_4_1_2_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
-| `partyCharacterIds` | No (Derived view) | `List<String>` | Derived sorted active `partyRoster` values (`partyRoster.activeValues.toList()..sort()`) | N/A (Derived) | None (mutation forbidden in active production) | Migration input only when authoritative `partyRoster_crdt` key is absent | Yes (`_listStringEquality`) | `aggregate_join_laws_test.dart`, `crdt_pass_4_1_2_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
+| `partyCharacterIds` | No (Derived view) | `List<String>` | Derived sorted active `partyRoster` values (`partyRoster.activeValues.toList()..sort()`) | N/A (Derived) | None (mutation forbidden in active production) | Migration input only when authoritative `partyRoster_crdt` key is absent | No (governed by authoritative `partyRoster` equality) | `aggregate_join_laws_test.dart`, `crdt_pass_4_1_2_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
 | `pinnedRules` | Yes | `CrdtOrSet<String>` | Canonical CRDT OR-set merge (`joinPinnedRules`) | Tombstoned remove (`pinnedRules.remove`), Add-wins | Exact-HLC collision throws `StateError` | `pinnedRuleIds` Set batch-added with genesis HLC on genuine absence | Yes (`pinnedRules == other.pinnedRules`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart`, `crdt_pass_4_1_2_1_test.dart` |
 | `notesRegister` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register merge | Empty string overwrite via newer HLC | Later HLC wins; exact-HLC collision throws `StateError` | Markdown wrapped at genesis HLC | Yes (`notesRegister == other.notesRegister`) | `aggregate_join_laws_test.dart` |
 | `partyPurse` | Yes | `PartyPurse` | CRDT PN-counters lattice join across denominations | Signed decrements on PN-counters | Monotonic join of positive and negative vectors | Default empty purse | Yes (`partyPurse == other.partyPurse`) | `aggregate_join_laws_test.dart` |
@@ -182,20 +182,21 @@ This document details the application-level synchronization services, transport 
 
 ---
 
-## 14. Authoritative vs Derived Fields & Authoritative Presence (Pass 4.1.1 / Pass 4.1.2 / Pass 4.1.2.1)
+## 14. Authoritative vs Derived Fields & Authoritative Presence (Pass 4.1.1 / Pass 4.1.2 / Pass 4.1.2.1 / Pass 4.1.2.1a)
 
 Replicated aggregate entities distinguish between **authoritative replicated CRDT state** and **derived read-only convenience views**:
 
-### 14.1 Authoritative Presence Invariant (Pass 4.1.2.1)
-- **PRESENT authoritative field:** Authority exists unconditionally regardless of logical emptiness (e.g. `partyRoster_crdt: {}`, `pinnedRules_crdt: {}`). Authoritative empty state represents a deliberate empty set and MUST NOT be mistaken for field absence. Stale legacy convenience fields MUST NOT resurrect deleted items.
+### 14.1 Authoritative Presence Invariant (Pass 4.1.2.1 / Pass 4.1.2.1a)
+- **PRESENT authoritative field:** Authority exists unconditionally regardless of logical emptiness (e.g. `partyRoster_crdt: {}`, `pinnedRules_crdt: {}`, `roomState: {}`). Authoritative empty state represents a deliberate empty set or empty node and MUST NOT be mistaken for field absence. Stale legacy convenience fields MUST NOT resurrect deleted items, and present empty `roomState: {}` must not collapse into synthetic staging room defaults.
 - **ABSENT authoritative field:** Deterministic legacy migration runs only upon genuine key absence.
 - **Anti-Pattern Barred:** Never use `authoritativeMap.isNotEmpty` as a proxy for key presence where empty is a valid replicated state.
-- **Fail-Loud:** Present malformed authoritative representations must fail loudly with `FormatException`.
+- **Fail-Loud:** Present malformed authoritative representations (e.g. null, non-Map, or malformed nested CRDTs) must fail loudly with `FormatException`.
 
 ### 14.2 CampaignProfile
 - **Authoritative:** `partyRoster` (`CrdtOrSet<String>`). Stores full causal history of party membership (item registers with HLCs, tombstones with HLCs). Active production mutations MUST target `partyRoster` using authoritative HLC-stamped `add(...)` and `remove(...)` operations.
 - **Authoritative:** `pinnedRules` (`CrdtOrSet<String>`). Stores full causal history (item registers with HLCs, tombstones with HLCs). Active production mutations MUST target `pinnedRules` using authoritative HLC-stamped `add(...)` and `remove(...)` operations.
-- **Derived View:** `partyCharacterIds` (`List<String>`). Read-only derived active values view (`partyRoster.activeValues.toList()..sort()`). Direct mutation via `CampaignProfile.copyWith(partyCharacterIds: ...)` is permanently banned in production code (Source Bar G).
+- **Authoritative Presence Policy (roomState):** Preserved explicitly via `hasRoomState` in `CampaignProfileDto`. Present `roomState: {}` deserializes to an authoritative empty `RoomNodeState` without synthetic staging IDs, room codes, or titles. Genuine absence migrates deterministically to `RoomNodeState(roomId: 'room_$id', roomCode: 'CR-101', title: '$name Staging')`. Present `roomState` that is `null`, non-Map, or malformed fails loudly with `FormatException`.
+- **Derived View:** `partyCharacterIds` (`List<String>`). Read-only derived active values view (`partyRoster.activeValues.toList()..sort()`). Direct mutation via `CampaignProfile.copyWith(partyCharacterIds: ...)` is permanently banned in production code (Source Bar G). Equality is governed by authoritative `partyRoster`, not independent list equality.
 - **Derived View:** `pinnedRuleIds` (`Set<String>`). Read-only derived active values view (`pinnedRules.activeValues.toSet()`). Calling `copyWith(pinnedRuleIds: ...)` in active production code is strictly forbidden (enforced by permanent architectural Source Bar F), as it destroys tombstones and causal history.
 - **Migration Only:** Legacy list/set forms in DTOs (`partyCharacterIds`, `pinnedRuleIds`) are accepted solely as backward-compatibility migration inputs when the authoritative `partyRoster_crdt` / `pinnedRules_crdt` key is absent from the wire/disk record.
 

@@ -336,5 +336,120 @@ void main() {
         expect(base.partyCharacterIds, equals(['hero-1']));
       });
     });
+
+    // =========================================================================
+    // ROOMSTATE AUTHORITATIVE PRESENCE REGRESSIONS (PASS 4.1.2.1a)
+    // =========================================================================
+    group('RoomState Authoritative Presence Regressions', () {
+      test('1. roomState absent -> deterministic legacy/default room migration', () {
+        final map = {
+          'id': 'camp-room-1',
+          'name': 'Dungeon Run',
+        };
+        final dto = CampaignProfileDto.fromMap(map);
+        expect(dto.hasRoomState, isFalse);
+        final domain = dto.toDomain();
+
+        expect(domain.roomState.roomId, equals('room_camp-room-1'));
+        expect(domain.roomState.roomCode, equals('CR-101'));
+        expect(domain.roomState.title, equals('Dungeon Run Staging'));
+      });
+
+      test('2. roomState present nonempty -> authoritative room used', () {
+        final map = {
+          'id': 'camp-room-2',
+          'name': 'Dungeon Run',
+          'roomState': {
+            'roomId': 'custom-room-id',
+            'roomCode': 'ALPHA-99',
+            'title': 'The Iron Citadel',
+            'description': 'A towering fortress of cold iron.',
+          },
+        };
+        final dto = CampaignProfileDto.fromMap(map);
+        expect(dto.hasRoomState, isTrue);
+        final domain = dto.toDomain();
+
+        expect(domain.roomState.roomId, equals('custom-room-id'));
+        expect(domain.roomState.roomCode, equals('ALPHA-99'));
+        expect(domain.roomState.title, equals('The Iron Citadel'));
+        expect(domain.roomState.description, equals('A towering fortress of cold iron.'));
+      });
+
+      test('3. roomState present null -> FormatException', () {
+        final map = {
+          'id': 'camp-room-3',
+          'name': 'Null Room Campaign',
+          'roomState': null,
+        };
+        expect(() => CampaignProfileDto.fromMap(map), throwsA(isA<FormatException>()));
+      });
+
+      test('4. roomState present wrong type -> FormatException', () {
+        final map = {
+          'id': 'camp-room-4',
+          'name': 'Invalid Type Room Campaign',
+          'roomState': 'not-a-map-room',
+        };
+        expect(() => CampaignProfileDto.fromMap(map), throwsA(isA<FormatException>()));
+      });
+
+      test('5. roomState present malformed nested CRDT -> FormatException', () {
+        final map = {
+          'id': 'camp-room-5',
+          'name': 'Malformed Nested CRDT Campaign',
+          'roomState': {
+            'roomId': 'room-bad-crdt',
+            'entityLinks_crdt': 'not-a-valid-crdt-map',
+          },
+        };
+        expect(() => CampaignProfileDto.fromMap(map), throwsA(isA<FormatException>()));
+      });
+
+      test('6. roomState present EMPTY {} -> authoritative empty RoomNodeState semantics preserved (no synthetic fallback)', () {
+        final map = {
+          'id': 'camp-room-6',
+          'name': 'Empty Room Campaign',
+          'roomState': <String, dynamic>{},
+        };
+        final dto = CampaignProfileDto.fromMap(map);
+        expect(dto.hasRoomState, isTrue);
+        final domain = dto.toDomain();
+
+        // Must preserve authoritative empty room semantics; MUST NOT synthesize room_id / CR-101 / Staging
+        expect(domain.roomState.roomId, equals(''));
+        expect(domain.roomState.roomCode, equals(''));
+        expect(domain.roomState.title, equals(''));
+        expect(domain.roomState.description, equals(''));
+        expect(domain.roomState.entityLinks, isEmpty);
+        expect(domain.roomState.entityInstances, isEmpty);
+        expect(domain.roomState.containers, isEmpty);
+        expect(domain.roomState.activeEncounterList, isEmpty);
+        expect(domain.roomState.activeMinionsList, isEmpty);
+      });
+
+      test('7. roomState present {} roundtrip preserves presence exactly without synthetic fallback', () {
+        final rawMap = {
+          'id': 'camp-room-7',
+          'name': 'Roundtrip Empty Room Campaign',
+          'roomState': <String, dynamic>{},
+        };
+
+        final dto1 = CampaignProfileDto.fromMap(rawMap);
+        expect(dto1.hasRoomState, isTrue);
+
+        final serializedMap = dto1.toMap();
+        expect(serializedMap.containsKey('roomState'), isTrue);
+        expect(serializedMap['roomState'], equals(<String, dynamic>{}));
+
+        final dto2 = CampaignProfileDto.fromMap(serializedMap);
+        expect(dto2.hasRoomState, isTrue);
+
+        final domain = dto2.toDomain();
+        expect(domain.roomState.roomId, equals(''));
+        expect(domain.roomState.roomCode, equals(''));
+        expect(domain.roomState.title, equals(''));
+      });
+    });
   });
 }

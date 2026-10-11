@@ -25,6 +25,7 @@ class CampaignProfileDto {
   final String createdAt;
   final String lastPlayedAt;
   final Map<String, dynamic> roomState;
+  final bool hasRoomState;
   final List<String> partyCharacterIds;
   final Map<String, dynamic> partyRosterCrdt;
   final bool hasPartyRosterCrdt;
@@ -45,6 +46,7 @@ class CampaignProfileDto {
     required this.createdAt,
     required this.lastPlayedAt,
     required this.roomState,
+    this.hasRoomState = false,
     this.partyCharacterIds = const [],
     this.partyRosterCrdt = const {},
     this.hasPartyRosterCrdt = false,
@@ -72,6 +74,7 @@ class CampaignProfileDto {
       createdAt: profile.createdAt.toIso8601String(),
       lastPlayedAt: profile.lastPlayedAt.toIso8601String(),
       roomState: profile.roomState.toMap(),
+      hasRoomState: true,
       partyCharacterIds: List<String>.from(profile.partyCharacterIds),
       partyRosterCrdt: profile.partyRoster.toMap((v) => v),
       hasPartyRosterCrdt: true,
@@ -98,7 +101,7 @@ class CampaignProfileDto {
       throw const FormatException('CampaignProfileDto.toDomain: "lastPlayedAt" is malformed.');
     }
 
-    final parsedRoom = roomState.isNotEmpty
+    final parsedRoom = (hasRoomState || roomState.isNotEmpty)
         ? RoomNodeState.fromMap(
             roomState,
             minionParser: (m) => AnimatedObjectDto.fromMap(m).toDomain(),
@@ -267,10 +270,11 @@ class CampaignProfileDto {
       lastPlayedAtStr = createdAtStr;
     }
 
+    final bool hasRoomState = map.containsKey('roomState');
     final Map<String, dynamic> roomMap;
-    if (map.containsKey('roomState')) {
+    if (hasRoomState) {
       final rawRoom = map['roomState'];
-      if (rawRoom is! Map) {
+      if (rawRoom == null || rawRoom is! Map) {
         throw const FormatException('CampaignProfileDto.fromMap: "roomState" must be a Map.');
       }
       roomMap = Map<String, dynamic>.from(rawRoom);
@@ -498,6 +502,7 @@ class CampaignProfileDto {
       createdAt: createdAtStr,
       lastPlayedAt: lastPlayedAtStr,
       roomState: roomMap,
+      hasRoomState: hasRoomState,
       partyCharacterIds: extractedIds,
       partyRosterCrdt: rosterCrdtMap,
       hasPartyRosterCrdt: hasRosterCrdt,
@@ -520,7 +525,7 @@ class CampaignProfileDto {
       'edition': edition,
       'createdAt': createdAt,
       'lastPlayedAt': lastPlayedAt,
-      'roomState': roomState,
+      if (hasRoomState || roomState.isNotEmpty) 'roomState': roomState,
       'partyCharacterIds': partyCharacterIds,
       if (hasPartyRosterCrdt || partyRosterCrdt.isNotEmpty)
         'partyRoster_crdt': partyRosterCrdt,
@@ -528,7 +533,7 @@ class CampaignProfileDto {
       if (hasPinnedRulesCrdt || pinnedRulesCrdt.isNotEmpty)
         'pinnedRules_crdt': pinnedRulesCrdt,
       'notesMarkdown': notesMarkdown,
-      'notesRegister': notesRegister,
+      if (notesRegister.isNotEmpty) 'notesRegister': notesRegister,
       'partyPurse': partyPurse,
       'changeLog': changeLog,
     };
