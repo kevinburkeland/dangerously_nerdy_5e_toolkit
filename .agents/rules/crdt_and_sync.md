@@ -240,3 +240,43 @@ No deletion or membership semantics may exist only in merge code without a produ
   - **Audit vs Causality:** `PartyEvent` records (e.g. `type: 'characterRemove'`, `type: 'playerLeave'`) are strictly audit history. Aggregate join (`CampaignProfile.join`, `RoomStateReconciliationService`) derives membership solely from the OR-set lattice merge (`joinPartyRosterCrdt`).
   - **Derived View:** `partyCharacterIds` is an unmodifiable, sorted projection of `partyRoster.activeValues`. Direct mutation via `CampaignProfile.copyWith(partyCharacterIds: ...)` is permanently banned in production code (Source Bar G).
 
+---
+
+## 17. Replicated Field Mutation Contracts & Policies (Pass 4.2)
+
+Every replicated aggregate field enforces an explicit mutation contract: it is either causally mutable with deterministic LWW convergence, structurally immutable configuration/identity, or explicitly conflict-preserving. Replicated fields that merely appear mutable while ordinary single-writer updates diverge are forbidden.
+
+### 17.1 Mutable Scalars (Causal LWW Registers)
+
+The following user-facing scalars are causally versioned using `CrdtLwwRegister<T>`:
+
+| Field | Replicated? | Mutable? | Authoritative Representation | Merge Semantics | Conflict Behavior | Migration Behavior | HLC Extraction | Production Mutation API |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **`CampaignProfile.name`** | YES | YES | `nameRegister` (`CrdtLwwRegister<String>`) | LWW (`local.nameRegister.merge(remote.nameRegister)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`, safely isolated in reconciliation. | Legacy `name` without `nameRegister` maps to genesis HLC (`pt: 0, lc: 0, node: 'genesis'`). Authoritative `nameRegister` wins when present. | Yes (`extractCampaignProfileTimestamps`) | `copyWith(name: ..., nameTimestamp: clock.nextTimestamp())` or `copyWith(nameRegister: ...)`. Omitting timestamp throws `ArgumentError`. |
+| **`RoomNodeState.title`** | YES | YES | `titleRegister` (`CrdtLwwRegister<String>`) | LWW (`local.titleRegister.merge(remote.titleRegister)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`, safely isolated. | Legacy `title` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(title: ..., titleTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
+| **`RoomNodeState.description`** | YES | YES | `descriptionRegister` (`CrdtLwwRegister<String>`) | LWW (`local.descriptionRegister.merge(remote.descriptionRegister)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`, safely isolated. | Legacy `description` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(description: ..., descriptionTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
+| **`EntityInstance.displayName`** | YES | YES | `displayNameRegister` (`CrdtLwwRegister<String>`) | LWW (`local.displayNameRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `displayName` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(displayName: ..., displayNameTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
+| **`RoomEntityLink.notes`** | YES | YES | `notesRegister` (`CrdtLwwRegister<String?>`) | LWW (`local.notesRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `notes` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(notes: ..., notesTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
+| **`LootContainer.name`** | YES | YES | `nameRegister` (`CrdtLwwRegister<String>`) | LWW (`local.nameRegister.merge(...)`) | Higher HLC wins. Exact-HLC divergent payload throws `StateError`. | Legacy `name` mapped to genesis HLC if register absent. | Yes (`extractRoomNodeTimestamps`) | `copyWith(name: ..., nameTimestamp: clock.nextTimestamp())`. Omitting timestamp throws `ArgumentError`. |
+
+### 17.2 Immutable Identity Fields
+The following fields represent immutable identity and cannot be mutated after creation:
+- `CampaignProfile.id`, `RoomNodeState.roomId`, `RoomNodeState.roomCode`
+- `EntityInstance.instanceId`, `EntityInstance.entityDefinitionId`, `EntityInstance.entityType`
+- `RoomEntityLink.entityId`, `RoomEntityLink.refType`
+- `LootContainer.containerId`, `LootContainer.type`
+
+**Merge Semantics:** Exact value identity (`joinImmutableId`). Divergent IDs represent incompatible non-mergeable entities and fail loudly with `StateError`.
+
+### 17.3 Immutable Configuration Maps
+The following fields represent immutable configuration maps after creation in replicated state:
+- `RoomNodeState.customProperties`
+- `EntityInstance.customProperties`
+- `EntityInstance.runtimeData`
+- `LootContainer.permissions`
+- `LootContainer.customProperties`
+
+**Merge Semantics:** `joinCustomProperties` (disjoint keys unioned, identical keys must match deep values; divergent unversioned values throw `StateError`).
+**Architectural Bar:** Production code must not call `copyWith(customProperties:)`, `copyWith(runtimeData:)`, or `copyWith(permissions:)` on active replicated state. Modifying configuration maps requires defining explicit replication semantics (e.g. per-key LWW registers) before introducing a mutation path.
+
+

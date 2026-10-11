@@ -290,6 +290,7 @@ void main() {
 
       final updatedProfile = initialProfile.copyWith(
         name: 'Locally Mutated Campaign Title',
+        nameTimestamp: orchestrator.clock.nextTimestamp(),
         pinnedRuleIds: {'concentration', 'cover', 'resting'},
       );
 
@@ -319,6 +320,7 @@ void main() {
 
       final remoteProfile = initialProfile.copyWith(
         name: 'Inbound Remote Update',
+        nameTimestamp: const HybridLogicalClock(physicalTime: 1700000001000, logicalCounter: 0, nodeId: 'node-remote'),
       );
       final inboundJson = jsonEncode({
         'type': 'room_sync_full',
@@ -335,8 +337,10 @@ void main() {
       expect(orchestrator.isProcessingNetworkPayload, isFalse);
 
       // Subsequent local UI change must now broadcast freely
-      final userEditProfile =
-          remoteProfile.copyWith(name: 'Subsequent Local User Edit');
+      final userEditProfile = remoteProfile.copyWith(
+        name: 'Subsequent Local User Edit',
+        nameTimestamp: orchestrator.clock.nextTimestamp(),
+      );
       mockRepo.emitProfile(userEditProfile);
 
       await Future<void>.delayed(Duration.zero);
@@ -683,6 +687,7 @@ void main() {
       // Must NOT be silently dropped by arbitrary 30s window; must reconcile cleanly via causality tracking
       final offlineProfile = initialProfile.copyWith(
         name: 'Reconnecting Offline Edits',
+        nameTimestamp: const HybridLogicalClock(physicalTime: 1699965000500, logicalCounter: 0, nodeId: 'node-remote-1'),
         partyCharacterIds: ['char-offline-reconnect'],
       );
       final inboundOffline = jsonEncode({
@@ -704,6 +709,7 @@ void main() {
       // Must NOT be dropped by strict scalar checks; CRDT state merges deterministically
       final outOfOrderProfile = initialProfile.copyWith(
         name: 'Out-of-Order Partition Packet',
+        nameTimestamp: const HybridLogicalClock(physicalTime: 1699970000500, logicalCounter: 0, nodeId: 'node-remote-1'),
         pinnedRuleIds: {'underwater_combat'},
       );
       final inboundOutOfOrder = jsonEncode({
@@ -754,7 +760,10 @@ void main() {
 
       // Inject 501 unique payloads within sliding lookback window
       for (int i = 0; i < 501; i++) {
-        final profile = initialProfile.copyWith(name: 'Bulk Item $i');
+        final profile = initialProfile.copyWith(
+          name: 'Bulk Item $i',
+          nameTimestamp: HybridLogicalClock(physicalTime: localTime - 1000, logicalCounter: i, nodeId: 'node-bulk'),
+        );
         final payload = jsonEncode({
           'type': 'room_sync_full',
           'payload': CampaignProfileDto.fromDomain(profile).toMap(),

@@ -18,6 +18,8 @@ import 'campaign_profile_service.dart';
 import 'character_persistence_service.dart';
 import 'dpr_persistence_service.dart';
 import 'homebrew_persistence_service.dart';
+import 'package:vtt_engine_core/vtt_engine_core.dart';
+import '../../infrastructure/di/injection_container.dart';
 
 /// Service coordinating campaign profile JSON snapshots and system-wide backup bundles.
 class DmBackupService {
@@ -272,9 +274,20 @@ class DmBackupService {
       }
       // Ensure unique ID on import to prevent accidental key collisions with active games
       final now = DateTime.now();
+      final bool needsDefaultName = profile.name.isEmpty;
+      final targetName = needsDefaultName ? 'Imported Campaign' : profile.name;
+      final timestamp = needsDefaultName
+          ? (sl.isRegistered<StatefulHlcClock>()
+              ? sl<StatefulHlcClock>().nextTimestamp()
+              : throw StateError(
+                  'Authoritative StatefulHlcClock is required for DmBackupService import. '
+                  'Register StatefulHlcClock in DI.',
+                ))
+          : profile.nameRegister.timestamp;
       final sanitizedProfile = profile.copyWith(
         id: 'campaign_imported_${now.millisecondsSinceEpoch}',
-        name: profile.name.isNotEmpty ? profile.name : 'Imported Campaign',
+        name: targetName,
+        nameTimestamp: timestamp,
         lastPlayedAt: now,
       );
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/storage/storage_durability_coordinator.dart';
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/storage/models/engine_profile.dart';
@@ -287,7 +288,10 @@ void main() {
       );
 
       // 1. Inbound older snapshot (e.g. 60 seconds ago) for an intentional user rollback
-      final rollbackProfile = localProfile.copyWith(name: 'Rolled Back State');
+      final rollbackProfile = localProfile.copyWith(
+        name: 'Rolled Back State',
+        nameTimestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'n1'),
+      );
       final rollbackPayload = Uint8List.fromList(
         utf8.encode(CampaignProfileDto.fromDomain(rollbackProfile).toJson()),
       );
@@ -307,8 +311,10 @@ void main() {
       expect(currentAfterRollback!.name, equals('Rolled Back State'));
 
       // 2. Fresh inbound snapshot
-      final freshProfile =
-          localProfile.copyWith(name: 'Authorized Fresh State');
+      final freshProfile = localProfile.copyWith(
+        name: 'Authorized Fresh State',
+        nameTimestamp: const HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'n1'),
+      );
       final freshPayload = Uint8List.fromList(
         utf8.encode(CampaignProfileDto.fromDomain(freshProfile).toJson()),
       );

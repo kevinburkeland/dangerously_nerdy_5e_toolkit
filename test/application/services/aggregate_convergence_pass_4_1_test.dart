@@ -75,7 +75,6 @@ void main() {
       );
 
       final pA = base.copyWith(
-        name: 'Test Campaign',
         notesRegister: const CrdtLwwRegister<String>(
           value: 'Alice updated notes',
           timestamp: HybridLogicalClock(physicalTime: 2000, logicalCounter: 1, nodeId: 'nodeA'),
@@ -85,7 +84,6 @@ void main() {
       );
 
       final pB = base.copyWith(
-        name: 'Test Campaign',
         notesRegister: const CrdtLwwRegister<String>(
           value: 'Bob notes',
           timestamp: HybridLogicalClock(physicalTime: 1500, logicalCounter: 1, nodeId: 'nodeB'),
@@ -358,7 +356,7 @@ void main() {
       expect(source.contains('joinEntityLinks('), isTrue);
       expect(source.contains('joinEntityInstances('), isTrue);
       expect(source.contains('joinContainers('), isTrue);
-      expect(source.contains('joinUnversionedString('), isTrue);
+      expect(source.contains('nameRegister.merge('), isTrue);
       expect(source.contains('joinImmutableId('), isTrue);
     });
   });

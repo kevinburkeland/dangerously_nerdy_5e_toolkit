@@ -383,11 +383,15 @@ void main() {
       expect(() => CampaignProfile.join(editionA, editionB), throwsA(isA<StateError>()));
       expect(() => CampaignProfile.join(editionB, editionA), throwsA(isA<StateError>()));
 
-      // 3. Divergent unversioned campaign name
-      final nameA = base.copyWith(name: 'Adventure One');
-      final nameB = base.copyWith(name: 'Adventure Two');
+      // 3. Divergent campaign name with exact-HLC collision fails loud symmetrically
+      const collisionTs = HybridLogicalClock(physicalTime: 9999, logicalCounter: 1, nodeId: 'same-node');
+      final nameA = base.copyWith(name: 'Adventure One', nameTimestamp: collisionTs);
+      final nameB = base.copyWith(name: 'Adventure Two', nameTimestamp: collisionTs);
       expect(() => CampaignProfile.join(nameA, nameB), throwsA(isA<StateError>()));
       expect(() => CampaignProfile.join(nameB, nameA), throwsA(isA<StateError>()));
+
+      // 4. Updating name without timestamp throws ArgumentError
+      expect(() => base.copyWith(name: 'Adventure One'), throwsA(isA<ArgumentError>()));
     });
 
     test('Randomized Aggregate Laws: 100 iterations of seeded concurrent forks converge idempotently, commutatively, and associatively', () {

@@ -21,6 +21,7 @@ import 'crdt/crdt_lww_register_dto.dart';
 class CampaignProfileDto {
   final String id;
   final String name;
+  final Map<String, dynamic> nameRegister;
   final String edition;
   final String createdAt;
   final String lastPlayedAt;
@@ -42,6 +43,7 @@ class CampaignProfileDto {
   const CampaignProfileDto({
     required this.id,
     required this.name,
+    this.nameRegister = const {},
     required this.edition,
     required this.createdAt,
     required this.lastPlayedAt,
@@ -70,6 +72,7 @@ class CampaignProfileDto {
     return CampaignProfileDto(
       id: profile.id,
       name: profile.name,
+      nameRegister: CrdtLwwRegisterDto.toMap(profile.nameRegister, (v) => v),
       edition: profile.edition is Enum ? (profile.edition as Enum).name : profile.edition.toString(),
       createdAt: profile.createdAt.toIso8601String(),
       lastPlayedAt: profile.lastPlayedAt.toIso8601String(),
@@ -204,9 +207,14 @@ class CampaignProfileDto {
       parsedEdition = RulesetIdentifier(edition);
     }
 
+    final parsedNameRegister = nameRegister.isNotEmpty
+        ? CrdtLwwRegisterDto.fromMap<String>(nameRegister, (v) => v.toString())
+        : null;
+
     return CampaignProfile.raw(
       id: id,
       name: name,
+      nameRegister: parsedNameRegister,
       edition: parsedEdition,
       createdAt: createdDateTime,
       lastPlayedAt: lastPlayedDateTime,
@@ -472,6 +480,27 @@ class CampaignProfileDto {
       notesRegMap = const <String, dynamic>{};
     }
 
+    final Map<String, dynamic> nameRegMap;
+    if (map.containsKey('nameRegister')) {
+      final rawReg = map['nameRegister'];
+      if (rawReg is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "nameRegister" must be a Map.');
+      }
+      final safeReg = Map<String, dynamic>.from(rawReg);
+      final parsedReg = CrdtLwwRegisterDto.fromMap<String>(
+        safeReg,
+        (v) => v.toString(),
+      );
+      if (parsedReg == null) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "nameRegister" contains malformed register or HLC.');
+      }
+      nameRegMap = safeReg;
+    } else {
+      nameRegMap = const <String, dynamic>{};
+    }
+
     final changeLogList = <Map<String, dynamic>>[];
     if (map.containsKey('changeLog')) {
       final rawLog = map['changeLog'];
@@ -498,6 +527,7 @@ class CampaignProfileDto {
     return CampaignProfileDto(
       id: idStr,
       name: map['name']?.toString() ?? 'Unnamed Campaign',
+      nameRegister: nameRegMap,
       edition: editionStr,
       createdAt: createdAtStr,
       lastPlayedAt: lastPlayedAtStr,
@@ -522,6 +552,7 @@ class CampaignProfileDto {
     final map = <String, dynamic>{
       'id': id,
       'name': name,
+      if (nameRegister.isNotEmpty) 'nameRegister': nameRegister,
       'edition': edition,
       'createdAt': createdAt,
       'lastPlayedAt': lastPlayedAt,

@@ -104,16 +104,12 @@ class RoomStateReconciliationService {
     final faults = <ReconciliationFieldFault>[];
 
     // 1. Root metadata: name, createdAt, lastPlayedAt
-    String mergedName = local.name;
+    CrdtLwwRegister<String> mergedNameRegister = local.nameRegister;
     try {
-      mergedName = joinUnversionedString(
-        local.name,
-        remote.name,
-        fieldName: 'CampaignProfile.name',
-      );
+      mergedNameRegister = local.nameRegister.merge(remote.nameRegister);
     } catch (e, st) {
       faults.add(ReconciliationFieldFault(field: 'name', error: e, stackTrace: st));
-      mergedName = local.name;
+      mergedNameRegister = local.nameRegister;
     }
 
     final mergedCreatedAt =
@@ -174,7 +170,7 @@ class RoomStateReconciliationService {
     faults.addAll(roomRecon.fieldFaults);
 
     final mergedProfile = local.copyWith(
-      name: mergedName,
+      nameRegister: mergedNameRegister,
       edition: canonicalEdition,
       createdAt: mergedCreatedAt,
       lastPlayedAt: mergedLastPlayedAt,
@@ -222,28 +218,20 @@ class RoomStateReconciliationService {
       mergedRoomCode = local.roomCode;
     }
 
-    String mergedTitle = local.title;
+    CrdtLwwRegister<String> mergedTitleRegister = local.titleRegister;
     try {
-      mergedTitle = joinUnversionedString(
-        local.title,
-        remote.title,
-        fieldName: 'RoomNodeState.title',
-      );
+      mergedTitleRegister = local.titleRegister.merge(remote.titleRegister);
     } catch (e, st) {
       faults.add(ReconciliationFieldFault(field: 'roomState.title', error: e, stackTrace: st));
-      mergedTitle = local.title;
+      mergedTitleRegister = local.titleRegister;
     }
 
-    String mergedDescription = local.description;
+    CrdtLwwRegister<String> mergedDescriptionRegister = local.descriptionRegister;
     try {
-      mergedDescription = joinUnversionedString(
-        local.description,
-        remote.description,
-        fieldName: 'RoomNodeState.description',
-      );
+      mergedDescriptionRegister = local.descriptionRegister.merge(remote.descriptionRegister);
     } catch (e, st) {
       faults.add(ReconciliationFieldFault(field: 'roomState.description', error: e, stackTrace: st));
-      mergedDescription = local.description;
+      mergedDescriptionRegister = local.descriptionRegister;
     }
 
     // Minions: OR-Set merge with fault isolation
@@ -307,8 +295,8 @@ class RoomStateReconciliationService {
     final mergedRoomState = RoomNodeState(
       roomId: mergedRoomId,
       roomCode: mergedRoomCode,
-      title: mergedTitle,
-      description: mergedDescription,
+      titleRegister: mergedTitleRegister,
+      descriptionRegister: mergedDescriptionRegister,
       entityLinksCrdt: mergedLinks,
       entityInstances: mergedInstances,
       containers: mergedContainers,

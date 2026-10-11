@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/dtos/campaign_profile_dto.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/session_graph_models.dart';
@@ -395,11 +397,19 @@ class CampaignProfileService extends ChangeNotifier
         ? newName.trim()
         : '${source?.name ?? "Campaign"} (Copy)';
 
+    final timestamp = sl.isRegistered<StatefulHlcClock>()
+        ? sl<StatefulHlcClock>().nextTimestamp()
+        : throw StateError(
+            'Authoritative StatefulHlcClock is required for CampaignProfileService.cloneProfile. '
+            'Register StatefulHlcClock in DI.',
+          );
+
     final cloned =
         (source ?? CampaignProfile.defaultProfile(nodeId: _effectiveNodeId))
             .copyWith(
       id: newId,
       name: targetName,
+      nameTimestamp: timestamp,
       createdAt: now,
       lastPlayedAt: now,
       roomState: (source?.roomState ??
@@ -408,6 +418,7 @@ class CampaignProfileService extends ChangeNotifier
           .copyWith(
         roomId: 'room_$newId',
         title: '$targetName - Staging Area',
+        titleTimestamp: timestamp,
       ),
     );
 
