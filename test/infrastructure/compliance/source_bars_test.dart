@@ -203,20 +203,59 @@ void main() {
     });
 
     test(
-        'Source Bar G: Active production code in lib/ must not call CampaignProfile.copyWith(partyCharacterIds: ...)',
+        'Source Bar G: Active production code in lib/ must not use partyCharacterIds as CampaignProfile authority input (partyRoster is authoritative)',
         () {
       final dartFiles = getDartFiles();
       expect(dartFiles, isNotEmpty);
 
-      final copyWithPattern = RegExp(r'\.copyWith\s*\([^)]*\bpartyCharacterIds\s*:', dotAll: true);
+      // Whitelisted explicit migration/compatibility boundaries
+      final allowedMigrationPaths = <String>[
+        'lib/infrastructure/dtos/campaign_profile_dto.dart',
+        'lib/infrastructure/dtos/migrations/',
+      ];
+
       final violations = <String>[];
+      final targets = [
+        'CampaignProfile(',
+        'CampaignProfile.raw(',
+        'CampaignProfile.initial(',
+        '.copyWith(',
+      ];
 
       for (final file in dartFiles) {
+        final normalizedPath = file.path.replaceAll(r'\\', '/');
+        if (allowedMigrationPaths.any((p) => normalizedPath.endsWith(p) || normalizedPath.contains(p))) {
+          continue;
+        }
+
         final content = file.readAsStringSync();
-        for (final match in copyWithPattern.allMatches(content)) {
-          final matchedText = match.group(0)!;
-          final lineNumber = content.substring(0, match.start).split('\n').length;
-          violations.add('${file.path}:$lineNumber -> $matchedText');
+        for (final target in targets) {
+          var pos = 0;
+          while (true) {
+            final idx = content.indexOf(target, pos);
+            if (idx == -1) break;
+
+            final parenStart = idx + target.length - 1;
+            var depth = 1;
+            var cur = parenStart + 1;
+            while (cur < content.length && depth > 0) {
+              if (content[cur] == '(') {
+                depth++;
+              } else if (content[cur] == ')') {
+                depth--;
+              }
+              cur++;
+            }
+
+            final callBody = content.substring(parenStart, cur);
+            if (callBody.contains('partyCharacterIds:')) {
+              final lineNumber = content.substring(0, idx).split('\n').length;
+              final snippet = content.substring(idx, cur.clamp(0, idx + 120)).replaceAll('\n', ' ');
+              violations.add('$normalizedPath:$lineNumber -> $snippet');
+            }
+
+            pos = idx + target.length;
+          }
         }
       }
 
@@ -224,11 +263,82 @@ void main() {
         violations,
         isEmpty,
         reason:
-            'Active production code must not call CampaignProfile.copyWith(partyCharacterIds: ...) (Source Bar G). Violations:\n'
-            '${violations.join('\n')}',
+            'Active production code must not use partyCharacterIds as CampaignProfile authority input (Source Bar G).\n'
+            'Party membership authority is partyRoster (CrdtOrSet<String>), not legacy partyCharacterIds.\n'
+            'Violations:\n${violations.join("\n")}',
       );
     });
- 
+
+    test(
+        'Source Bar G unit validation: rejects copyWith(partyCharacterIds:) and CampaignProfile(partyCharacterIds:) while allowing migration boundary',
+        () {
+      bool hasPartyCharacterIdsViolation(String content) {
+        final targets = [
+          'CampaignProfile(',
+          'CampaignProfile.raw(',
+          'CampaignProfile.initial(',
+          '.copyWith(',
+        ];
+        for (final target in targets) {
+          var pos = 0;
+          while (true) {
+            final idx = content.indexOf(target, pos);
+            if (idx == -1) break;
+            final parenStart = idx + target.length - 1;
+            var depth = 1;
+            var cur = parenStart + 1;
+            while (cur < content.length && depth > 0) {
+              if (content[cur] == '(') depth++;
+              if (content[cur] == ')') depth--;
+              cur++;
+            }
+            final callBody = content.substring(parenStart, cur);
+            if (callBody.contains('partyCharacterIds:')) return true;
+            pos = idx + target.length;
+          }
+        }
+        return false;
+      }
+
+      const badCopyWith = '''
+        final updated = profile.copyWith(
+          partyCharacterIds: ['char1', 'char2'],
+        );
+      ''';
+      const badConstructor = '''
+        final prof = CampaignProfile(
+          id: 'camp_1',
+          name: 'Camp 1',
+          nodeId: 'node_1',
+          createdAt: DateTime.now().toUtc(),
+          lastPlayedAt: DateTime.now().toUtc(),
+          partyCharacterIds: ['char1'],
+          roomState: roomState,
+        );
+      ''';
+      const goodConstructor = '''
+        final prof = CampaignProfile(
+          id: 'camp_1',
+          name: 'Camp 1',
+          nodeId: 'node_1',
+          createdAt: DateTime.now().toUtc(),
+          lastPlayedAt: DateTime.now().toUtc(),
+          partyRoster: roster,
+          roomState: roomState,
+        );
+      ''';
+      const allowedMigrationPath = 'lib/infrastructure/dtos/campaign_profile_dto.dart';
+      final allowedPaths = [
+        'lib/infrastructure/dtos/campaign_profile_dto.dart',
+        'lib/infrastructure/dtos/migrations/',
+      ];
+
+      expect(hasPartyCharacterIdsViolation(badCopyWith), isTrue);
+      expect(hasPartyCharacterIdsViolation(badConstructor), isTrue);
+      expect(hasPartyCharacterIdsViolation(goodConstructor), isFalse);
+      expect(allowedPaths.any((p) => allowedMigrationPath.endsWith(p)), isTrue);
+    });
+
     test(
         'Source Bar H: Active production code under lib/ must not use CrdtOrSet<RoomEntityLink> authority',
         () {

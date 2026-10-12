@@ -7,6 +7,9 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
+
 import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/dtos/campaign_profile_dto.dart';
 import '../../models/dm_screen_data.dart';
@@ -193,6 +196,19 @@ class CampaignProfileService extends ChangeNotifier
               p.id == 'campaign_${m.roomCode}',
         );
         if (!alreadyExists) {
+          final entries =
+              <({String id, String item, HybridLogicalClock timestamp})>[];
+          for (final char in savedCharacters) {
+            entries.add((
+              id: char.id.slug,
+              item: char.id.slug,
+              timestamp: _effectiveClock.nextTimestamp(),
+            ));
+          }
+          final partyRoster = entries.isNotEmpty
+              ? const CrdtOrSet<String>.empty().addBatch(entries)
+              : const CrdtOrSet<String>.empty();
+
           final prof = CampaignProfile(
             id: 'campaign_${m.roomCode}',
             name: m.campaignName.trim().isNotEmpty
@@ -201,7 +217,7 @@ class CampaignProfileService extends ChangeNotifier
             nodeId: _effectiveNodeId,
             createdAt: DateTime.now().toUtc(),
             lastPlayedAt: DateTime.now().toUtc(),
-            partyCharacterIds: savedCharacters.map((c) => c.id.slug).toList(),
+            partyRoster: partyRoster,
             roomState: RoomNodeState(
               roomId: 'room_${m.roomCode}',
               roomCode: m.roomCode,

@@ -1,3 +1,7 @@
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
@@ -10,6 +14,33 @@ import 'package:vtt_engine_core/utils/aggregate_join_utils.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+
+Character _createTestHero(String slug, String name) {
+  return CharacterFactory.createLevel1Character(
+    CharacterCreationRequest(
+      characterName: name,
+      ruleset: RulesetVersion.v2024,
+      speciesRef: const EntityReference.empty(
+        refType: EntityType.species,
+        slug: 'human',
+        displayName: 'Human',
+      ),
+      backgroundRef: const EntityReference.empty(
+        refType: EntityType.background,
+        slug: 'acolyte',
+        displayName: 'Acolyte',
+      ),
+      startingClassSlug: 'fighter',
+      startingClassDisplayName: 'Fighter',
+      startingClassHitDie: 'd10',
+      baseScores: const AbilityScores.standardArray(),
+      bonusScores: const AbilityScores(strength: 2, constitution: 1),
+    ),
+  ).copyWith(
+    id: EntityId(slug: slug, ruleset: RulesetVersion.v2024),
+    name: name,
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -79,6 +110,40 @@ void main() {
         // pinnedRules
         expect(profile.pinnedRules.items.isNotEmpty, isTrue);
         for (final entry in profile.pinnedRules.items.values) {
+          expect(entry.timestamp.nodeId, equals(replicaId.value));
+          expect(entry.timestamp.nodeId, isNot(equals('genesis')));
+          expect(entry.timestamp.physicalTime, greaterThan(0));
+        }
+      });
+
+      test('CampaignProfileService.loadAllProfiles registry adoption authors partyRoster with runtime clock causality (never genesis)', () async {
+        final hero1 = _createTestHero('hero-aragorn', 'Aragorn');
+        final hero2 = _createTestHero('hero-legolas', 'Legolas');
+        await CharacterPersistenceService().saveRoster([hero1, hero2]);
+
+        final reg = CampaignRegistryService.newInstance();
+        await reg.saveMembership(CampaignMembership(
+          roomCode: 'REG-SYNTH-1',
+          campaignName: 'Synthesized Fellowship',
+          role: CampaignRole.host,
+          lastPlayed: DateTime.now(),
+        ));
+
+        final service = CampaignProfileService();
+        final profiles = await service.loadAllProfiles();
+
+        final adopted = profiles.firstWhere((p) => p.roomState.roomCode == 'REG-SYNTH-1');
+        expect(adopted.name, equals('Synthesized Fellowship'));
+
+        // partyRoster contains the expected character IDs
+        expect(adopted.partyRoster.activeValues, containsAll(['hero-aragorn', 'hero-legolas']));
+        expect(adopted.partyRoster.length, equals(2));
+
+        // partyCharacterIds is only the derived projection of partyRoster
+        expect(adopted.partyCharacterIds, equals(adopted.partyRoster.activeValues));
+
+        // Timestamps must use the runtime writer authority, NOT genesis
+        for (final entry in adopted.partyRoster.items.values) {
           expect(entry.timestamp.nodeId, equals(replicaId.value));
           expect(entry.timestamp.nodeId, isNot(equals('genesis')));
           expect(entry.timestamp.physicalTime, greaterThan(0));
