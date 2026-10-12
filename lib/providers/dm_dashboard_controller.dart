@@ -598,16 +598,4 @@ class DmDashboardController extends ChangeNotifier {
       } catch (_) {}
     }
   }
-
-  /// Updates room state (encounter participants, descriptions, links).
-  Future<void> updateRoomState(RoomNodeState roomState,
-      {bool immediate = false}) async {
-    final targetId = activeProfile?.id;
-    if (targetId == null) return;
-    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
-      return current.copyWith(roomState: roomState);
-    });
-    _activeProfile = updated;
-    notifyListeners();
-  }
 }

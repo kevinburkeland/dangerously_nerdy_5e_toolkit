@@ -75,10 +75,28 @@ class LocalCampaignRepository implements ICampaignRepository {
 
   @override
   Future<List<CampaignProfile>> loadAllProfiles() async {
-    // Validate authoritative replica identity BEFORE entering persistence try/catch
-    // so a missing ReplicaId fails loudly without rethrowing unrelated persistence errors.
     final nodeId = _effectiveNodeId;
 
+    if (!_initialized) {
+      await _loadSavedRecords();
+    }
+
+    if (_memoryCache.isEmpty) {
+      final def = CampaignProfile.defaultProfile(nodeId: nodeId, clock: _clock);
+      _memoryCache[def.id] = def;
+      _activeProfileId = def.id;
+      await _persistProfileToDisk(def);
+      await _persistIndex();
+      _emitState();
+    } else {
+      await _persistIndex();
+      _emitState();
+    }
+
+    return _memoryCache.values.toList();
+  }
+
+  Future<void> _loadSavedRecords() async {
     try {
       List<String> indexList = [];
       final dbIndex =
@@ -146,27 +164,19 @@ class LocalCampaignRepository implements ICampaignRepository {
       if (activeId != null && _memoryCache.containsKey(activeId)) {
         _activeProfileId = activeId;
       } else if (profiles.isNotEmpty) {
-        // Fall back to first healthy profile in runtime memory without clobbering activeProfileIdKey in DB
         _activeProfileId = profiles.first.id;
       } else {
-        final def = CampaignProfile.defaultProfile(nodeId: nodeId, clock: _clock);
-        _memoryCache[def.id] = def;
-        profiles.add(def);
-        _activeProfileId = def.id;
-        await _persistProfileToDisk(def);
+        _activeProfileId = null;
       }
 
-      await _persistIndex();
       _initialized = true;
-      _emitState();
-      return profiles;
     } catch (e, st) {
       LoggingService().logNonFatal(
         e,
         st,
         reason: 'Failed to load campaign profiles.',
       );
-      return [];
+      _initialized = true;
     }
   }
 
@@ -222,7 +232,7 @@ class LocalCampaignRepository implements ICampaignRepository {
       } catch (_) {}
 
       try {
-        if (!_initialized) await loadAllProfiles();
+        if (!_initialized) await _loadSavedRecords();
         final current = _memoryCache[id];
         if (current == null) {
           throw StateError('Campaign profile with id "$id" not found');
@@ -259,8 +269,9 @@ class LocalCampaignRepository implements ICampaignRepository {
       } catch (_) {}
 
       try {
-        if (!_initialized) await loadAllProfiles();
+        if (!_initialized) await _loadSavedRecords();
         _memoryCache[profile.id] = profile;
+        _activeProfileId ??= profile.id;
         AppServices.instance.debouncedStorage
             .cancelTask('save_campaign_profile_${profile.id}');
         await _persistProfileToDisk(profile);
@@ -284,21 +295,9 @@ class LocalCampaignRepository implements ICampaignRepository {
     await putProfile(profile);
   }
 
-  /// Backward-compatible debounced save.
-  Future<void> saveProfile(CampaignProfile profile) async {
-    _memoryCache[profile.id] = profile;
-    _emitState();
-
-    AppServices.instance.debouncedStorage.scheduleWrite(
-      'save_campaign_profile_${profile.id}',
-      () => _persistProfileToDisk(profile),
-      duration: const Duration(milliseconds: 400),
-    );
-  }
-
   @override
   Future<void> deleteProfile(String id) async {
-    if (!_initialized) await loadAllProfiles();
+    if (!_initialized) await _loadSavedRecords();
     _memoryCache.remove(id);
     _unparsedCache.remove(id);
     _rejectedProfileIds.remove(id);

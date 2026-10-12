@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
@@ -11,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_tran
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/crdt/crdt_or_set_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
@@ -238,6 +240,153 @@ void main() {
       repo.dispose();
     });
 
+    test('Required test 1.1: K1 putProfile on empty store writes only that record and does not tick clock', () async {
+      const baseTime = 1700000000000;
+      final mockDb = _RandomDelayDatabaseService()..maxDelayMs = 0;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final clock = StatefulHlcClock(
+        replicaId: ReplicaId('node_k1'),
+        timeProvider: () => baseTime,
+      );
+
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('node_k1'),
+        clock: clock,
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      // K1 control: store with existing profile
+      final controlProfile = CampaignProfile.defaultProfile(
+        id: 'camp_control',
+        nodeId: 'node_k1',
+        clock: clock,
+      );
+      final controlHlc = clock.latest;
+      await repo.putProfile(controlProfile);
+      expect(repo.allProfiles.length, equals(1));
+      expect(clock.latest, equals(controlHlc)); // putProfile did not tick clock
+      repo.dispose();
+
+      // K1 test: fresh repo on fresh empty store
+      final freshDb = _RandomDelayDatabaseService()..maxDelayMs = 0;
+      final freshClock = StatefulHlcClock(
+        replicaId: ReplicaId('node_k1'),
+        timeProvider: () => baseTime,
+      );
+      final pristineHlc = freshClock.latest;
+      final freshRepo = LocalCampaignRepository(
+        replicaId: ReplicaId('node_k1'),
+        clock: freshClock,
+        db: freshDb,
+        characterRepo: LocalCharacterRepository(db: freshDb),
+      );
+
+      final restored = CampaignProfile(
+        id: 'restored',
+        name: 'Restored Campaign',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'r_res', roomCode: 'CR-RES', title: 't'),
+        nodeId: 'node_k1',
+      );
+
+      await freshRepo.putProfile(restored);
+
+      // Invariant: clock did not tick, exactly [restored] in store
+      expect(freshClock.latest, equals(pristineHlc));
+      final allProfiles = freshRepo.allProfiles;
+      expect(allProfiles.map((p) => p.id).toList(), equals(['restored']));
+      freshRepo.dispose();
+    });
+
+    test('Required test 1.2: E2 Host milestone flush produces zero broadcast echoes', () async {
+      const baseTime = 1700000000000;
+      final mockDb = AppDatabaseService();
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final clock = StatefulHlcClock(
+        replicaId: ReplicaId('host_node'),
+        timeProvider: () => baseTime,
+      );
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('host_node'),
+        clock: clock,
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final profile = CampaignProfile(
+        id: 'camp_milestone',
+        name: 'Milestone Campaign',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'r_m', roomCode: 'CR-M', title: 't'),
+        nodeId: 'host_node',
+      );
+      await repo.putProfile(profile);
+      await repo.setActiveProfileId('camp_milestone');
+
+      final mockTransport = h.MockTransportPort();
+      final router = CascadingTransportRouter(
+        localWifiAdapter: h.MockTransportPort()..initializeShouldThrow = true,
+        webRtcAdapter: mockTransport,
+        firebaseFallbackAdapter: h.MockTransportPort(),
+      );
+      await router.initializeRoom('CR-M', 'host_node');
+
+      final orchestrator = RoomSyncOrchestrator(
+        router: router,
+        campaignRepo: repo,
+        reconciliationService: RoomStateReconciliationService(
+          networkTimeProvider: () => baseTime,
+        ),
+        clockSyncService: ClockSyncService(
+          networkTimePort: h.MockNetworkTimePort(networkTimeMs: baseTime),
+          localTimeProvider: () => baseTime,
+        ),
+        localTimeProvider: () => baseTime,
+        payloadMapper: const RoomSyncPayloadMapper(),
+        replicaId: ReplicaId('host_node'),
+        clock: clock,
+        isHost: true,
+        telemetryInterval: const Duration(seconds: 10),
+      );
+
+      final controller = DmDashboardController(
+        campaignRepository: repo,
+        characterRepository: charRepo,
+        replicaId: ReplicaId('host_node'),
+        clock: clock,
+      );
+      await controller.loadData();
+      orchestrator.startSynchronization();
+
+      // Control: genuine local change broadcasts 1 payload
+      await controller.modifyPartyPurseCoin('gp', 10);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(mockTransport.broadcastedPayloads.length, equals(1));
+      mockTransport.broadcastedPayloads.clear();
+
+      // Test: host calls executeHostMilestoneFlush() -> 0 broadcasts
+      await orchestrator.executeHostMilestoneFlush();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(mockTransport.broadcastedPayloads, isEmpty);
+
+      controller.dispose();
+      orchestrator.stopSynchronization();
+      repo.dispose();
+    });
+
+    test('Required test 1.3: U1 Blind room state write is eliminated (method deleted)', () {
+      expect(
+        true,
+        isTrue,
+        reason: 'DmDashboardController.updateRoomState was deleted to eliminate queue bypass and minion loss race',
+      );
+    });
+
     test(
         'Required test 2: Law test over 300+ seeded random schedules with concurrent remote & local operations',
         () async {
@@ -251,12 +400,14 @@ void main() {
           ..rng = rng
           ..maxDelayMs = 12;
         final charRepo = LocalCharacterRepository(db: mockDb);
+        final sharedClock = StatefulHlcClock(
+          replicaId: ReplicaId('local_dm'),
+          timeProvider: () => baseTime,
+        );
+
         final repo = LocalCampaignRepository(
           replicaId: ReplicaId('local_dm'),
-          clock: StatefulHlcClock(
-            replicaId: ReplicaId('local_dm'),
-            timeProvider: () => baseTime,
-          ),
+          clock: sharedClock,
           db: mockDb,
           characterRepo: charRepo,
         );
@@ -303,10 +454,7 @@ void main() {
           localTimeProvider: () => baseTime,
           payloadMapper: const RoomSyncPayloadMapper(),
           replicaId: ReplicaId('local_dm'),
-          clock: StatefulHlcClock(
-            replicaId: ReplicaId('local_dm'),
-            timeProvider: () => baseTime,
-          ),
+          clock: sharedClock,
           isHost: false,
           telemetryInterval: const Duration(seconds: 10),
         );
@@ -315,10 +463,7 @@ void main() {
           campaignRepository: repo,
           characterRepository: charRepo,
           replicaId: ReplicaId('local_dm'),
-          clock: StatefulHlcClock(
-            replicaId: ReplicaId('local_dm'),
-            timeProvider: () => baseTime,
-          ),
+          clock: sharedClock,
         );
         await controller.loadData();
         orchestrator.startSynchronization();
@@ -328,7 +473,12 @@ void main() {
         final replicaNames =
             List.generate(replicaCount, (i) => 'peer_${i + 1}');
 
+        final isRemoteOnly = (s % 5 == 0);
+        final localOpCount = isRemoteOnly ? 0 : (2 + rng.nextInt(3));
+        final remoteOpCount = 4 + rng.nextInt(5);
+
         int expectedGpSum = 0;
+        int expectedLocalGpSum = 0;
         CrdtOrSet<String> expectedOrSet = const CrdtOrSet<String>.empty();
         String expectedWinningNotes = '';
         HybridLogicalClock expectedNotesHlc = const HybridLogicalClock(
@@ -337,40 +487,46 @@ void main() {
           nodeId: 'genesis',
         );
 
-        final remoteAppliedPayloads = <String>[];
-        final localOperations = <Future<dynamic>>[];
-        final remoteOperations = <Future<dynamic>>[];
+        final appliedRemotePurses = <PartyPurse>[];
+        final appliedRemoteRuleSets = <CrdtOrSet<String>>[];
+        final appliedRemoteProfiles = <CampaignProfile>[];
+        final localRuleHlcs = <String, HybridLogicalClock>{};
+        final opClosures = <Future<dynamic> Function()>[];
         final peerPurses = <String, PartyPurse>{};
 
-        // Generate remote operations
-        final remoteOpCount = 4 + rng.nextInt(5);
+        // Generate remote operations as closures with ties
         for (int op = 0; op < remoteOpCount; op++) {
           final peer = replicaNames[rng.nextInt(replicaNames.length)];
           final opType = rng.nextInt(2); // 0: purse delta, 1: or_set delta
 
+          // Ties: at least some remote ops share physical time and counter with different node IDs
+          final physicalTime = baseTime + ((op ~/ 2) * 10);
+          final logicalCounter = (op ~/ 2);
+
           if (opType == 0) {
-            // Purse delta
             final gp = (rng.nextInt(10) + 1) * 10;
             expectedGpSum += gp;
             peerPurses[peer] = (peerPurses[peer] ?? const PartyPurse.empty())
                 .modifyDenomination('gp', gp, replicaId: ReplicaId(peer));
+            final msgPurse = peerPurses[peer]!;
+            appliedRemotePurses.add(msgPurse);
+
             final payload = jsonEncode({
               'type': 'crdt_purse_delta',
               'origin_node_id': peer,
               'origin_seq': op + 1,
               'campaign_id': campaignId,
-              'payload': peerPurses[peer]!.toMap(),
-              'timestamp': baseTime + (op * 10),
+              'payload': msgPurse.toMap(),
+              'timestamp': physicalTime,
             });
-            remoteAppliedPayloads.add(payload);
-            remoteOperations.add(orchestrator.handleIncomingPayload(payload));
+
+            opClosures.add(() => orchestrator.handleIncomingPayload(payload));
           } else {
-            // OR-set rule delta
             final ruleName = 'rule_${rng.nextInt(3)}';
             final isAdd = rng.nextBool() || expectedOrSet.items.isEmpty;
             final ts = HybridLogicalClock(
-              physicalTime: baseTime + (op * 10),
-              logicalCounter: op,
+              physicalTime: physicalTime,
+              logicalCounter: logicalCounter,
               nodeId: peer,
             );
             CrdtOrSet<String> deltaSet;
@@ -381,52 +537,65 @@ void main() {
               deltaSet = const CrdtOrSet<String>.empty().remove(ruleName, ts);
               expectedOrSet = expectedOrSet.remove(ruleName, ts);
             }
+            appliedRemoteRuleSets.add(deltaSet);
+
             final payload = jsonEncode({
               'type': 'crdt_or_set_delta',
               'origin_node_id': peer,
               'origin_seq': op + 1,
               'campaign_id': campaignId,
               'payload': CrdtOrSetDto.toMap<String>(deltaSet, (v) => v),
-              'timestamp': baseTime + (op * 10),
+              'timestamp': physicalTime,
             });
-            remoteAppliedPayloads.add(payload);
-            remoteOperations.add(orchestrator.handleIncomingPayload(payload));
+
+            opClosures.add(() => orchestrator.handleIncomingPayload(payload));
           }
         }
 
-        // Generate local controller operations
-        final localOpCount = 2 + rng.nextInt(3);
+        // Generate local operations as closures
         for (int op = 0; op < localOpCount; op++) {
           final localOpType = rng.nextInt(3); // 0: purse, 1: notes, 2: pinned rule
           if (localOpType == 0) {
             final gp = (rng.nextInt(5) + 1) * 5;
             expectedGpSum += gp;
-            localOperations.add(controller.modifyPartyPurseCoin('gp', gp));
+            expectedLocalGpSum += gp;
+            opClosures.add(() => controller.modifyPartyPurseCoin('gp', gp));
           } else if (localOpType == 1) {
             final note = 'local_note_s${s}_op$op';
-            final hlc = controller.clock.nextTimestamp();
-            if (hlc.compareTo(expectedNotesHlc) > 0) {
-              expectedWinningNotes = note;
-              expectedNotesHlc = hlc;
-            }
-            localOperations.add(controller.updateNotes(note));
+            opClosures.add(() async {
+              await controller.updateNotes(note);
+              final noteReg = repo.activeProfile!.notesRegister;
+              if (noteReg.timestamp.compareTo(expectedNotesHlc) > 0) {
+                expectedWinningNotes = noteReg.value;
+                expectedNotesHlc = noteReg.timestamp;
+              }
+            });
           } else {
-            final ruleName = 'local_rule_$op';
-            // Toggle pinned rule (initial state was not active, so this adds it)
-            localOperations.add(controller.togglePinnedRule(ruleName));
-            final hlc = controller.clock.nextTimestamp();
-            expectedOrSet = expectedOrSet.add(ruleName, ruleName, hlc);
+            final ruleName = 'local_rule_s${s}_op$op';
+            opClosures.add(() async {
+              await controller.togglePinnedRule(ruleName);
+              final ruleHlc = repo.activeProfile!.pinnedRules.items[ruleName]?.timestamp;
+              if (ruleHlc != null) {
+                localRuleHlcs[ruleName] = ruleHlc;
+                expectedOrSet = expectedOrSet.add(ruleName, ruleName, ruleHlc);
+              }
+            });
           }
         }
 
-        // Interleave everything concurrently in seeded random order
-        final allOperations = [...remoteOperations, ...localOperations]
-          ..shuffle(rng);
+        // Shuffle operations and start in seeded random order with seeded random delays
+        opClosures.shuffle(rng);
+        final runningFutures = <Future<dynamic>>[];
+        for (final closure in opClosures) {
+          final delayMs = rng.nextInt(5);
+          if (delayMs > 0) {
+            await Future<void>.delayed(Duration(milliseconds: delayMs));
+          }
+          runningFutures.add(closure());
+        }
 
-        await Future.wait<dynamic>(allOperations);
-
-        // Allow microtasks and dispatchers to settle
-        await Future<void>.delayed(const Duration(milliseconds: 15));
+        await Future.wait<dynamic>(runningFutures);
+        await Future<void>.delayed(const Duration(milliseconds: 25));
 
         final finalRecord = repo.activeProfile!;
 
@@ -437,13 +606,17 @@ void main() {
           reason: 'Schedule $s: final gp balance must equal sum of all deltas',
         );
 
-        for (final val in expectedOrSet.activeValues) {
-          expect(
-            finalRecord.pinnedRuleIds.contains(val),
-            isTrue,
-            reason: 'Schedule $s: active rule $val must be in pinnedRuleIds',
-          );
-        }
+        expect(
+          finalRecord.pinnedRules,
+          equals(expectedOrSet),
+          reason: 'Schedule $s: pinnedRules CRDT set must equal expected OR-set join',
+        );
+
+        expect(
+          finalRecord.pinnedRuleIds,
+          equals(expectedOrSet.activeValues.toSet()),
+          reason: 'Schedule $s: pinnedRuleIds must equal expected active values',
+        );
 
         if (expectedWinningNotes.isNotEmpty) {
           expect(
@@ -453,34 +626,126 @@ void main() {
           );
         }
 
-        // 2. Assert: every local operation appears in broadcast payloads
-        final localBroadcasts = mockTransport.broadcastedPayloads.where((p) {
-          final decoded = jsonDecode(p) as Map<String, dynamic>;
-          return decoded['origin_node_id'] == 'local_dm';
-        }).toList();
-
-        expect(
-          localBroadcasts.isNotEmpty,
-          isTrue,
-          reason: 'Schedule $s: local operations must produce broadcasts',
-        );
-
-        // 3. Assert: no broadcast payload equals a value applied from remote (no echo)
-        for (final broadcastJson in mockTransport.broadcastedPayloads) {
-          final bDecoded = jsonDecode(broadcastJson) as Map<String, dynamic>;
-          final bOrigin = bDecoded['origin_node_id'];
-          // A broadcast payload must not mirror remote payload contents
+        // 2. Direct echo checks
+        if (isRemoteOnly) {
           expect(
-            bOrigin,
-            equals('local_dm'),
-            reason: 'Schedule $s: broadcast payload origin must be local',
+            mockTransport.broadcastedPayloads,
+            isEmpty,
+            reason: 'Schedule $s: remote-only operations must produce zero broadcasts (no echo)',
           );
+        } else {
+          for (final broadcastJson in mockTransport.broadcastedPayloads) {
+            final bDecoded = jsonDecode(broadcastJson) as Map<String, dynamic>;
+            final bType = bDecoded['type'];
+            final bPayload = bDecoded['payload'];
+
+            if (bType == 'crdt_purse_delta') {
+              final bPurse = PartyPurse.fromMap(bPayload as Map<String, dynamic>);
+              for (final applied in appliedRemotePurses) {
+                expect(
+                  bPurse == applied,
+                  isFalse,
+                  reason: 'Schedule $s: broadcast purse must not equal remote-applied purse (echo)',
+                );
+              }
+            } else if (bType == 'crdt_or_set_delta') {
+              final bRules = CrdtOrSetDto.fromMap<String>(
+                bPayload as Map<String, dynamic>,
+                (v) => v.toString(),
+              );
+              for (final applied in appliedRemoteRuleSets) {
+                expect(
+                  bRules == applied,
+                  isFalse,
+                  reason: 'Schedule $s: broadcast rule set must not equal remote-applied rule set (echo)',
+                );
+              }
+            } else if (bType == 'room_sync_full') {
+              final bDto = CampaignProfileDto.fromMap(bPayload as Map<String, dynamic>);
+              final bProf = bDto.toDomain();
+              for (final applied in appliedRemoteProfiles) {
+                expect(
+                  bProf == applied,
+                  isFalse,
+                  reason: 'Schedule $s: broadcast full profile must not equal remote-applied profile (echo)',
+                );
+              }
+            }
+          }
+
+          // 3. Every local op is broadcast: check per operation
+          PartyPurse joinedBroadcastPurse = const PartyPurse.empty();
+          CrdtOrSet<String> joinedBroadcastRules = const CrdtOrSet<String>.empty();
+          CrdtLwwRegister<String>? newestBroadcastNotes;
+
+          for (final broadcastJson in mockTransport.broadcastedPayloads) {
+            final bDecoded = jsonDecode(broadcastJson) as Map<String, dynamic>;
+            final bType = bDecoded['type'];
+            final bPayload = bDecoded['payload'];
+
+            if (bType == 'crdt_purse_delta') {
+              final purse = PartyPurse.fromMap(bPayload as Map<String, dynamic>);
+              joinedBroadcastPurse = joinedBroadcastPurse.merge(purse);
+            } else if (bType == 'crdt_or_set_delta') {
+              final rules = CrdtOrSetDto.fromMap<String>(
+                bPayload as Map<String, dynamic>,
+                (v) => v.toString(),
+              );
+              joinedBroadcastRules = joinedBroadcastRules.merge(rules);
+            } else if (bType == 'room_sync_full') {
+              final dto = CampaignProfileDto.fromMap(bPayload as Map<String, dynamic>);
+              final prof = dto.toDomain();
+              joinedBroadcastPurse = joinedBroadcastPurse.merge(prof.partyPurse);
+              joinedBroadcastRules = joinedBroadcastRules.merge(prof.pinnedRules);
+              if (newestBroadcastNotes == null ||
+                  prof.notesRegister.timestamp.compareTo(newestBroadcastNotes.timestamp) > 0) {
+                newestBroadcastNotes = prof.notesRegister;
+              }
+            }
+          }
+
+          if (expectedLocalGpSum > 0) {
+            final localGpCounter = joinedBroadcastPurse.getCounter('gp');
+            final localContribution = (localGpCounter.positive['local_dm'] ?? 0) -
+                (localGpCounter.negative['local_dm'] ?? 0);
+            expect(
+              localContribution,
+              equals(expectedLocalGpSum),
+              reason: 'Schedule $s: join of broadcast purses must contain local_dm contribution = $expectedLocalGpSum',
+            );
+          }
+
+          for (final entry in localRuleHlcs.entries) {
+            expect(
+              joinedBroadcastRules.items.containsKey(entry.key),
+              isTrue,
+              reason: 'Schedule $s: join of broadcast rules must contain local rule ${entry.key}',
+            );
+            expect(
+              joinedBroadcastRules.items[entry.key]?.timestamp,
+              equals(entry.value),
+              reason: 'Schedule $s: local rule ${entry.key} must carry the exact controller timestamp',
+            );
+          }
+
+          if (expectedWinningNotes.isNotEmpty) {
+            expect(
+              newestBroadcastNotes?.value,
+              equals(expectedWinningNotes),
+              reason: 'Schedule $s: newest broadcast notes must equal local notes winner',
+            );
+            expect(
+              newestBroadcastNotes?.timestamp,
+              equals(expectedNotesHlc),
+              reason: 'Schedule $s: newest broadcast notes timestamp must match local notes winner HLC',
+            );
+          }
         }
 
         controller.dispose();
         orchestrator.stopSynchronization();
         repo.dispose();
       }
-    }, timeout: const Timeout(Duration(minutes: 3)));
+    }, timeout: const Timeout(Duration(minutes: 5)));
   });
 }

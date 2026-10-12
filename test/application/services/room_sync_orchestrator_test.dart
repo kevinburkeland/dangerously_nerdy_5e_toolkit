@@ -378,8 +378,13 @@ void main() {
       const ts2 = HybridLogicalClock(
           physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeB');
 
-      orchestrator.trackedRulesSet =
+      final localRules =
           const CrdtOrSet<String>.empty().add('grapple', 'grapple', ts1);
+      orchestrator.trackedRulesSet = localRules;
+      await mockRepo.updateProfile(
+        mockRepo.activeProfile!.id,
+        (current) => current.copyWith(pinnedRules: localRules),
+      );
 
       // Inbound remote delta has 'cover' (newer) and a tombstone for 'grapple' (newer ts2)
       final remoteSet = const CrdtOrSet<String>.empty()

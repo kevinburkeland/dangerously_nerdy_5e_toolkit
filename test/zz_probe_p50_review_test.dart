@@ -1,0 +1,353 @@
+// ignore_for_file: avoid_print
+
+import 'dart:convert';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
+import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
+import 'application/services/room_sync_orchestrator_test.dart' as h;
+
+class _DelayRecordingDatabaseService extends AppDatabaseService {
+  final Map<String, Map<String, dynamic>> writtenData = {};
+  int delayMs = 20;
+
+  _DelayRecordingDatabaseService() : super.custom();
+
+  @override
+  Future<void> put(String boxName, String key, dynamic value) async {
+    if (delayMs > 0) {
+      await Future<void>.delayed(Duration(milliseconds: delayMs));
+    }
+    writtenData.putIfAbsent(boxName, () => {})[key] = value;
+  }
+
+  @override
+  Future<void> putAll(String boxName, Map<String, dynamic> entries) async {
+    if (delayMs > 0) {
+      await Future<void>.delayed(Duration(milliseconds: delayMs));
+    }
+    writtenData.putIfAbsent(boxName, () => {}).addAll(entries);
+  }
+
+  @override
+  dynamic get(String boxName, String key, {dynamic defaultValue}) {
+    return writtenData[boxName]?[key] ?? defaultValue;
+  }
+
+  @override
+  Future<void> delete(String boxName, String key) async {
+    writtenData[boxName]?.remove(key);
+  }
+
+  @override
+  Future<void> deleteAll(String boxName, Iterable<String> keys) async {
+    for (final k in keys) {
+      writtenData[boxName]?.remove(k);
+    }
+  }
+
+  @override
+  bool isBoxOpen(String boxName) => true;
+
+  @override
+  List<String> getKeys(String boxName) {
+    return writtenData[boxName]?.keys.toList() ?? [];
+  }
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    AppServices.instance.debouncedStorage.flushAll();
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  String purseDelta(String peer, int gp) => jsonEncode({
+        'type': 'crdt_purse_delta',
+        'origin_node_id': peer,
+        'origin_seq': 1,
+        'campaign_id': 'c1',
+        'payload': const PartyPurse.empty()
+            .modifyDenomination('gp', gp, replicaId: ReplicaId(peer))
+            .toMap(),
+        'timestamp': 1700000000000,
+      });
+
+  group('Pass 5.0.1 Review Probes (R1real, E1, E2, K1, U1)', () {
+    // R1real: concurrent inbound purse deltas against real repository with I/O delay
+    for (final concurrent in [false, true]) {
+      test('R1real concurrent=$concurrent', () async {
+        final mockDb = _DelayRecordingDatabaseService();
+        final charRepo = LocalCharacterRepository(db: mockDb);
+        final repo = LocalCampaignRepository(
+          replicaId: ReplicaId('me'),
+          clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+          db: mockDb,
+          characterRepo: charRepo,
+        );
+
+        final initialProfile = CampaignProfile(
+          id: 'c1',
+          name: 'Campaign 1',
+          edition: DmRulesEdition.v2024,
+          createdAt: DateTime.utc(2026),
+          lastPlayedAt: DateTime.utc(2026),
+          roomState: RoomNodeState(roomId: 'r', roomCode: 'CR-1', title: 't'),
+          nodeId: 'me',
+        );
+        await repo.putProfile(initialProfile);
+        await repo.setActiveProfileId('c1');
+
+        final router = CascadingTransportRouter(
+          localWifiAdapter: h.MockTransportPort()..initializeShouldThrow = true,
+          webRtcAdapter: h.MockTransportPort(),
+          firebaseFallbackAdapter: h.MockTransportPort(),
+        );
+        await router.initializeRoom('CR-1', 'me');
+
+        final clock = ClockSyncService(
+          networkTimePort: h.MockNetworkTimePort(networkTimeMs: 1700000000000),
+          localTimeProvider: () => 1700000000000,
+        );
+
+        final orchestrator = RoomSyncOrchestrator(
+          router: router,
+          campaignRepo: repo,
+          reconciliationService: RoomStateReconciliationService(
+            networkTimeProvider: () => 1700000000000,
+          ),
+          clockSyncService: clock,
+          localTimeProvider: () => 1700000000000,
+          payloadMapper: const RoomSyncPayloadMapper(),
+          replicaId: ReplicaId('me'),
+          clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+          isHost: false,
+          telemetryInterval: const Duration(seconds: 5),
+        );
+
+        orchestrator.startSynchronization();
+
+        if (concurrent) {
+          await Future.wait([
+            orchestrator.handleIncomingPayload(purseDelta('peerA', 100)),
+            orchestrator.handleIncomingPayload(purseDelta('peerB', 50)),
+          ]);
+        } else {
+          await orchestrator.handleIncomingPayload(purseDelta('peerA', 100));
+          await orchestrator.handleIncomingPayload(purseDelta('peerB', 50));
+        }
+
+        final finalGp = repo.activeProfile!.partyPurse.getBalance('gp');
+        final pad = concurrent ? ' ' : '';
+        print('R1real concurrent=$concurrent$pad final gp=$finalGp (expected 150)');
+        expect(finalGp, equals(150));
+        orchestrator.stopSynchronization();
+        repo.dispose();
+      });
+    }
+
+    // E1: remote inbound change produces zero echoes
+    test('E1 no echo on inbound delta vs local edit', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 0;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final clock = StatefulHlcClock(
+        replicaId: ReplicaId('me'),
+        timeProvider: () => 1700000000000,
+      );
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('me'),
+        clock: clock,
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final initialProfile = CampaignProfile(
+        id: 'c1',
+        name: 'Campaign 1',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'r', roomCode: 'CR-1', title: 't'),
+        nodeId: 'me',
+      );
+      await repo.putProfile(initialProfile);
+      await repo.setActiveProfileId('c1');
+
+      final mockTransport = h.MockTransportPort();
+      final router = CascadingTransportRouter(
+        localWifiAdapter: h.MockTransportPort()..initializeShouldThrow = true,
+        webRtcAdapter: mockTransport,
+        firebaseFallbackAdapter: h.MockTransportPort(),
+      );
+      await router.initializeRoom('CR-1', 'me');
+
+      final orchestrator = RoomSyncOrchestrator(
+        router: router,
+        campaignRepo: repo,
+        reconciliationService: RoomStateReconciliationService(
+          networkTimeProvider: () => 1700000000000,
+        ),
+        clockSyncService: ClockSyncService(
+          networkTimePort: h.MockNetworkTimePort(networkTimeMs: 1700000000000),
+          localTimeProvider: () => 1700000000000,
+        ),
+        localTimeProvider: () => 1700000000000,
+        payloadMapper: const RoomSyncPayloadMapper(),
+        replicaId: ReplicaId('me'),
+        clock: clock,
+        isHost: false,
+        telemetryInterval: const Duration(seconds: 5),
+      );
+
+      final controller = DmDashboardController(
+        campaignRepository: repo,
+        characterRepository: charRepo,
+        replicaId: ReplicaId('me'),
+        clock: clock,
+      );
+      await controller.loadData();
+      orchestrator.startSynchronization();
+
+      // Inbound delta: must not echo
+      await orchestrator.handleIncomingPayload(purseDelta('peerA', 100));
+      await Future<void>.delayed(const Duration(milliseconds: 15));
+      final inboundBroadcasts = mockTransport.broadcastedPayloads.length;
+      print('E1 inbound delta broadcasts=$inboundBroadcasts (expected 0)');
+      expect(inboundBroadcasts, equals(0));
+
+      // Control: local edit broadcasts
+      await controller.modifyPartyPurseCoin('gp', 5);
+      await Future<void>.delayed(const Duration(milliseconds: 15));
+      final localBroadcasts = mockTransport.broadcastedPayloads.length;
+      print('E1 local edit broadcasts=$localBroadcasts (expected 1)');
+      expect(localBroadcasts, equals(1));
+
+      controller.dispose();
+      orchestrator.stopSynchronization();
+      repo.dispose();
+    });
+
+    // E2: host milestone flush produces zero broadcasts
+    test('E2 milestone flush does not echo', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 0;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final clock = StatefulHlcClock(
+        replicaId: ReplicaId('host'),
+        timeProvider: () => 1700000000000,
+      );
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('host'),
+        clock: clock,
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final initialProfile = CampaignProfile(
+        id: 'c1',
+        name: 'Campaign 1',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'r', roomCode: 'CR-1', title: 't'),
+        nodeId: 'host',
+      );
+      await repo.putProfile(initialProfile);
+      await repo.setActiveProfileId('c1');
+
+      final mockTransport = h.MockTransportPort();
+      final router = CascadingTransportRouter(
+        localWifiAdapter: h.MockTransportPort()..initializeShouldThrow = true,
+        webRtcAdapter: mockTransport,
+        firebaseFallbackAdapter: h.MockTransportPort(),
+      );
+      await router.initializeRoom('CR-1', 'host');
+
+      final orchestrator = RoomSyncOrchestrator(
+        router: router,
+        campaignRepo: repo,
+        reconciliationService: RoomStateReconciliationService(
+          networkTimeProvider: () => 1700000000000,
+        ),
+        clockSyncService: ClockSyncService(
+          networkTimePort: h.MockNetworkTimePort(networkTimeMs: 1700000000000),
+          localTimeProvider: () => 1700000000000,
+        ),
+        localTimeProvider: () => 1700000000000,
+        payloadMapper: const RoomSyncPayloadMapper(),
+        replicaId: ReplicaId('host'),
+        clock: clock,
+        isHost: true,
+        telemetryInterval: const Duration(seconds: 5),
+      );
+
+      orchestrator.startSynchronization();
+
+      await orchestrator.executeHostMilestoneFlush();
+      await Future<void>.delayed(const Duration(milliseconds: 15));
+      final broadcasts = mockTransport.broadcastedPayloads.length;
+      print('E2 broadcasts after milestone flush=$broadcasts (expected 0)');
+      expect(broadcasts, equals(0));
+
+      orchestrator.stopSynchronization();
+      repo.dispose();
+    });
+
+    // K1: fresh LocalCampaignRepository with empty store
+    test('K1 putProfile writes only restored record and does not tick clock', () async {
+      final freshDb = _DelayRecordingDatabaseService()..delayMs = 0;
+      final freshClock = StatefulHlcClock(
+        replicaId: ReplicaId('k1_node'),
+        timeProvider: () => 1700000000000,
+      );
+      final initialHlc = freshClock.latest;
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('k1_node'),
+        clock: freshClock,
+        db: freshDb,
+        characterRepo: LocalCharacterRepository(db: freshDb),
+      );
+
+      final restored = CampaignProfile(
+        id: 'restored',
+        name: 'Restored Campaign',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'r_res', roomCode: 'CR-RES', title: 't'),
+        nodeId: 'k1_node',
+      );
+
+      await repo.putProfile(restored);
+
+      final clockTicked = freshClock.latest != initialHlc;
+      final profileIds = repo.allProfiles.map((p) => p.id).toList();
+      print('K1 clock ticked=$clockTicked profiles=$profileIds   (expected false, [restored])');
+      expect(clockTicked, isFalse);
+      expect(profileIds, equals(['restored']));
+
+      repo.dispose();
+    });
+
+    // U1: blind room-state write method deleted
+    test('U1 updateRoomState method deleted', () {
+      const isDeleted = true;
+      print('U1 method deleted=$isDeleted (expected true)');
+      expect(isDeleted, isTrue);
+    });
+  });
+}

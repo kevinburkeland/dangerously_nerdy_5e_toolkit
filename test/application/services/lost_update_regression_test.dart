@@ -19,7 +19,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
-import 'application/services/room_sync_orchestrator_test.dart' as h;
+import 'room_sync_orchestrator_test.dart' as h;
 
 class _DelayRecordingDatabaseService extends AppDatabaseService {
   final Map<String, Map<String, dynamic>> writtenData = {};

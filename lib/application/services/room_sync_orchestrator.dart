@@ -148,16 +148,7 @@ class RoomSyncOrchestrator {
   CrdtOrSet<String> get trackedRulesSet => _trackedRulesSet;
 
   @visibleForTesting
-  set trackedRulesSet(CrdtOrSet<String> set) {
-    _trackedRulesSet = set;
-    final active = campaignRepo.activeProfile;
-    if (active != null) {
-      campaignRepo.updateProfile(
-        active.id,
-        (current) => current.copyWith(pinnedRules: set),
-      );
-    }
-  }
+  set trackedRulesSet(CrdtOrSet<String> set) => _trackedRulesSet = set;
 
   /// Activates bidirectional synchronization and begins telemetry polling.
   void startSynchronization() {
@@ -603,9 +594,9 @@ class RoomSyncOrchestrator {
 
     // Persist immediately via serialized updatePath without clobbering concurrent edits
     final applied = await campaignRepo.updateProfile(targetId, (current) {
+      _recordAppliedProfile(current);
       return current;
     });
-    _recordAppliedProfile(applied);
     _lastEmittedProfile = applied;
   }
 
