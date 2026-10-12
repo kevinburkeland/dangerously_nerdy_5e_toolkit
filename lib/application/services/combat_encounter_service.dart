@@ -172,19 +172,21 @@ class CombatEncounterService {
         profile.roomState.activeMinions.items[minionId]?.value;
     if (currentMinion == null) return profile;
 
-    final updated = delta < 0
-        ? currentMinion.applyDamage(delta.abs())
-        : currentMinion.applyHealing(delta);
     final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp;
     final hlc = _nextHlc(previousClock: prevTs);
-    final updatedMinions =
-        profile.roomState.activeMinions.add(minionId, updated, hlc);
-    final updatedRoom =
-        profile.roomState.copyWith(activeMinions: updatedMinions);
-    final updatedProfile = profile.copyWith(roomState: updatedRoom);
 
-    await campaignRepo.saveProfile(updatedProfile);
-    return updatedProfile;
+    return await campaignRepo.updateProfile(profile.id, (current) {
+      final minionToUpdate =
+          current.roomState.activeMinions.items[minionId]?.value ?? currentMinion;
+      final updated = delta < 0
+          ? minionToUpdate.applyDamage(delta.abs())
+          : minionToUpdate.applyHealing(delta);
+      final updatedMinions =
+          current.roomState.activeMinions.add(minionId, updated, hlc);
+      final updatedRoom =
+          current.roomState.copyWith(activeMinions: updatedMinions);
+      return current.copyWith(roomState: updatedRoom);
+    });
   }
 
   /// Adds a minion to [CampaignProfile.roomState.activeMinions].
@@ -196,14 +198,14 @@ class CombatEncounterService {
         profile.roomState.activeMinions.items[minion.id]?.timestamp ??
             profile.roomState.activeMinions.tombstones[minion.id];
     final hlc = _nextHlc(previousClock: prevTs);
-    final updatedMinions =
-        profile.roomState.activeMinions.add(minion.id, minion, hlc);
-    final updatedRoom =
-        profile.roomState.copyWith(activeMinions: updatedMinions);
-    final updatedProfile = profile.copyWith(roomState: updatedRoom);
 
-    await campaignRepo.saveProfile(updatedProfile);
-    return updatedProfile;
+    return await campaignRepo.updateProfile(profile.id, (current) {
+      final updatedMinions =
+          current.roomState.activeMinions.add(minion.id, minion, hlc);
+      final updatedRoom =
+          current.roomState.copyWith(activeMinions: updatedMinions);
+      return current.copyWith(roomState: updatedRoom);
+    });
   }
 
   /// Removes an animated object summon/minion from [CampaignProfile.roomState.activeMinions].
@@ -214,14 +216,14 @@ class CombatEncounterService {
     final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp ??
         profile.roomState.activeMinions.tombstones[minionId];
     final hlc = _nextHlc(previousClock: prevTs);
-    final updatedMinions =
-        profile.roomState.activeMinions.remove(minionId, hlc);
-    final updatedRoom =
-        profile.roomState.copyWith(activeMinions: updatedMinions);
-    final updatedProfile = profile.copyWith(roomState: updatedRoom);
 
-    await campaignRepo.saveProfile(updatedProfile);
-    return updatedProfile;
+    return await campaignRepo.updateProfile(profile.id, (current) {
+      final updatedMinions =
+          current.roomState.activeMinions.remove(minionId, hlc);
+      final updatedRoom =
+          current.roomState.copyWith(activeMinions: updatedMinions);
+      return current.copyWith(roomState: updatedRoom);
+    });
   }
 
   HybridLogicalClock _nextHlc({
@@ -355,6 +357,7 @@ class CombatEncounterService {
       }
     }
 
+    final removals = <String, HybridLogicalClock>{};
     for (final id in currentIds.difference(newIds)) {
       final prevTs = updatedEncounter.items[id]?.timestamp ??
           updatedEncounter.tombstones[id];
@@ -364,8 +367,10 @@ class CombatEncounterService {
               : prevTs;
       final hlc = _nextHlc(previousClock: base);
       lastClock = hlc;
-      updatedEncounter = updatedEncounter.remove(id, hlc);
+      removals[id] = hlc;
     }
+
+    final additions = <EncounterParticipant, HybridLogicalClock>{};
     for (final p in encounter) {
       final prevTs = updatedEncounter.items[p.participantId]?.timestamp ??
           updatedEncounter.tombstones[p.participantId];
@@ -375,13 +380,20 @@ class CombatEncounterService {
               : prevTs;
       final hlc = _nextHlc(previousClock: base);
       lastClock = hlc;
-      updatedEncounter = updatedEncounter.add(p.participantId, p, hlc);
+      additions[p] = hlc;
     }
 
-    final updatedRoom =
-        profile.roomState.copyWith(activeEncounter: updatedEncounter);
-    final updatedProfile = profile.copyWith(roomState: updatedRoom);
-    await campaignRepo.saveProfileImmediate(updatedProfile);
-    return updatedProfile;
+    return await campaignRepo.updateProfile(profile.id, (current) {
+      var encounterSet = current.roomState.activeEncounter;
+      for (final entry in removals.entries) {
+        encounterSet = encounterSet.remove(entry.key, entry.value);
+      }
+      for (final entry in additions.entries) {
+        encounterSet = encounterSet.add(entry.key.participantId, entry.key, entry.value);
+      }
+      final updatedRoom =
+          current.roomState.copyWith(activeEncounter: encounterSet);
+      return current.copyWith(roomState: updatedRoom);
+    });
   }
 }

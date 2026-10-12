@@ -310,8 +310,83 @@ class CampaignProfileService extends ChangeNotifier
     return newProfile;
   }
 
-  /// Saves a campaign profile with debounced asynchronous persistence.
+  final Map<String, Future<void>> _updateQueues = {};
+
   @override
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async {
+    final prev = _updateQueues[id] ?? Future<void>.value();
+    final completer = Completer<CampaignProfile>();
+    late final Future<void> currentFuture;
+
+    currentFuture = () async {
+      try {
+        await prev;
+      } catch (_) {}
+
+      try {
+        var current = _memoryCache[id];
+        if (current == null) {
+          await loadAllProfiles();
+          current = _memoryCache[id];
+        }
+        if (current == null) {
+          throw StateError('Campaign profile with id "$id" not found');
+        }
+        final next = transform(current).copyWith(lastPlayedAt: DateTime.now());
+        _memoryCache[id] = next;
+        AppServices.instance.debouncedStorage.cancelTask('campaign_save_$id');
+        await _persistProfileToDisk(next);
+        notifyListeners();
+        completer.complete(next);
+      } catch (e, st) {
+        completer.completeError(e, st);
+      } finally {
+        if (identical(_updateQueues[id], currentFuture)) {
+          _updateQueues.remove(id);
+        }
+      }
+    }();
+
+    _updateQueues[id] = currentFuture;
+    return completer.future;
+  }
+
+  @override
+  Future<void> putProfile(CampaignProfile profile) async {
+    final prev = _updateQueues[profile.id] ?? Future<void>.value();
+    final completer = Completer<void>();
+    late final Future<void> currentFuture;
+
+    currentFuture = () async {
+      try {
+        await prev;
+      } catch (_) {}
+
+      try {
+        final updated = profile.copyWith(lastPlayedAt: DateTime.now());
+        _memoryCache[updated.id] = updated;
+        AppServices.instance.debouncedStorage
+            .cancelTask('campaign_save_${updated.id}');
+        await _persistProfileToDisk(updated);
+        notifyListeners();
+        completer.complete();
+      } catch (e, st) {
+        completer.completeError(e, st);
+      } finally {
+        if (identical(_updateQueues[profile.id], currentFuture)) {
+          _updateQueues.remove(profile.id);
+        }
+      }
+    }();
+
+    _updateQueues[profile.id] = currentFuture;
+    return completer.future;
+  }
+
+  /// Saves a campaign profile with debounced asynchronous persistence.
   Future<void> saveProfile(CampaignProfile profile) async {
     final updated = profile.copyWith(lastPlayedAt: DateTime.now());
     _memoryCache[updated.id] = updated;
@@ -335,22 +410,17 @@ class CampaignProfileService extends ChangeNotifier
     CampaignProfile Function(CampaignProfile current) updater, {
     bool immediate = false,
   }) async {
-    final current = await getActiveProfile();
-    final updated = updater(current);
-    if (immediate) {
-      await saveProfileImmediate(updated);
-    } else {
-      await saveProfile(updated);
+    if (_activeProfileId == null) {
+      await loadAllProfiles();
+    }
+    if (_activeProfileId != null) {
+      await updateProfile(_activeProfileId!, updater);
     }
   }
 
   /// Saves and flushes a campaign profile directly to disk without debouncing.
-  @override
   Future<void> saveProfileImmediate(CampaignProfile profile) async {
-    final updated = profile.copyWith(lastPlayedAt: DateTime.now());
-    _memoryCache[updated.id] = updated;
-    await _persistProfileToDisk(updated);
-    notifyListeners();
+    await putProfile(profile);
   }
 
   /// Internal disk persistence implementation

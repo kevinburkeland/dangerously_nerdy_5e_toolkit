@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../application/services/combat_encounter_service.dart';
 import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
@@ -31,6 +32,7 @@ class DmDashboardController extends ChangeNotifier {
   final RoomSyncOrchestrator? _roomSyncOrchestrator;
   final ReplicaId _replicaId;
   final StatefulHlcClock _clock;
+  StreamSubscription<CampaignProfile?>? _activeProfileSub;
 
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
@@ -122,6 +124,20 @@ class DmDashboardController extends ChangeNotifier {
         'replicaId ($_replicaId) does not match clock.replicaId (${_clock.replicaId}).',
       );
     }
+    _activeProfileSub = _campaignProfileService.watchActiveProfile().listen((profile) {
+      if (profile != null) {
+        if (_activeProfile == null || _activeProfile!.id == profile.id) {
+          _activeProfile = profile;
+          notifyListeners();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _activeProfileSub?.cancel();
+    super.dispose();
   }
 
   ReplicaId get replicaId => _replicaId;
@@ -135,7 +151,15 @@ class DmDashboardController extends ChangeNotifier {
   Stream<RoomConnectionTelemetry>? get telemetryStream =>
       _roomSyncOrchestrator?.watchTelemetry();
 
-  CampaignProfile? get activeProfile => _activeProfile;
+  CampaignProfile? get activeProfile {
+    if (_activeProfile != null) {
+      final repoActive = _campaignProfileService.activeProfile;
+      if (repoActive != null && repoActive.id == _activeProfile!.id) {
+        return repoActive;
+      }
+    }
+    return _activeProfile ?? _campaignProfileService.activeProfile;
+  }
   List<CampaignProfile> get allProfiles => _allProfiles;
   Map<String, Character> get partyCharactersMap =>
       Map.unmodifiable(_partyCharactersMap);
@@ -323,20 +347,25 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Adds a new or existing character to the active campaign's party roster pointer list.
   Future<void> addCharacterToParty(Character character) async {
-    if (_activeProfile == null) return;
+    final targetId = activeProfile?.id;
+    if (targetId == null) return;
 
     await _characterPersistenceService.saveCharacter(character);
     _partyCharactersMap[character.id.slug] = character;
 
-    if (!_activeProfile!.partyCharacterIds.contains(character.id.slug)) {
-      final updatedRoster = _activeProfile!.partyRoster.add(
+    final nowHlc = _clock.nextTimestamp();
+    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
+      if (current.partyCharacterIds.contains(character.id.slug)) {
+        return current;
+      }
+      final updatedRoster = current.partyRoster.add(
         character.id.slug,
         character.id.slug,
-        _clock.nextTimestamp(),
+        nowHlc,
       );
-      _activeProfile = _activeProfile!.copyWith(partyRoster: updatedRoster);
-      await _campaignProfileService.saveProfileImmediate(_activeProfile!);
-    }
+      return current.copyWith(partyRoster: updatedRoster);
+    });
+    _activeProfile = updated;
     notifyListeners();
   }
 
@@ -361,30 +390,34 @@ class DmDashboardController extends ChangeNotifier {
   /// Removes a character pointer from the active campaign's party roster,
   /// authoring a typed [PartyEvent] with the character's canonical entity ID.
   Future<void> removeCharacterFromParty(String characterId) async {
-    if (_activeProfile == null) return;
+    final targetId = activeProfile?.id;
+    if (targetId == null) return;
 
-    final updatedRoster = _activeProfile!.partyRoster.remove(
-      characterId,
-      _clock.nextTimestamp(),
-    );
+    final nowHlc = _clock.nextTimestamp();
     final charName = _partyCharactersMap[characterId]?.name ?? characterId;
     final removalEvent = PartyEvent(
       id: 'evt_remove_${characterId}_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-      roomCode: _activeProfile!.roomState.roomCode,
+      roomCode: activeProfile!.roomState.roomCode,
       type: 'characterRemove',
       playerName: charName,
       details: 'Removed from party roster',
       timestamp: DateTime.now().toUtc(),
       entityId: characterId,
     );
-    final updatedChangeLog = [..._activeProfile!.changeLog, removalEvent];
 
-    _activeProfile = _activeProfile!.copyWith(
-      partyRoster: updatedRoster,
-      changeLog: updatedChangeLog,
-    );
+    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
+      final updatedRoster = current.partyRoster.remove(
+        characterId,
+        nowHlc,
+      );
+      final updatedChangeLog = [...current.changeLog, removalEvent];
+      return current.copyWith(
+        partyRoster: updatedRoster,
+        changeLog: updatedChangeLog,
+      );
+    });
     _partyCharactersMap.remove(characterId);
-    await _campaignProfileService.saveProfileImmediate(_activeProfile!);
+    _activeProfile = updated;
     notifyListeners();
   }
 
@@ -392,10 +425,11 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Modifies an active minion's HP in [RoomNodeState].
   Future<void> modifyMinionHp(String minionId, int delta) async {
-    if (_activeProfile == null) return;
+    final target = activeProfile;
+    if (target == null) return;
 
     _activeProfile = await _combatEncounterService.modifyMinionHp(
-      profile: _activeProfile!,
+      profile: target,
       minionId: minionId,
       delta: delta,
     );
@@ -404,10 +438,11 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Adds a new animated object minion to [RoomNodeState].
   Future<void> addMinion(AnimatedObjectInstance minion) async {
-    if (_activeProfile == null) return;
+    final target = activeProfile;
+    if (target == null) return;
 
     _activeProfile = await _combatEncounterService.addMinion(
-      profile: _activeProfile!,
+      profile: target,
       minion: minion,
     );
     notifyListeners();
@@ -415,10 +450,11 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Removes an animated object minion from [RoomNodeState].
   Future<void> removeMinion(String minionId) async {
-    if (_activeProfile == null) return;
+    final target = activeProfile;
+    if (target == null) return;
 
     _activeProfile = await _combatEncounterService.removeMinion(
-      profile: _activeProfile!,
+      profile: target,
       minionId: minionId,
     );
     notifyListeners();
@@ -426,9 +462,10 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Updates active encounter participants in [RoomNodeState] via [CombatEncounterService].
   Future<void> updateEncounter(List<EncounterParticipant> encounter) async {
-    if (_activeProfile == null) return;
+    final target = activeProfile;
+    if (target == null) return;
     _activeProfile = await _combatEncounterService.updateEncounterParticipants(
-      profile: _activeProfile!,
+      profile: target,
       encounter: encounter,
     );
     notifyListeners();
@@ -439,45 +476,52 @@ class DmDashboardController extends ChangeNotifier {
   /// Saves active profile notes and metadata.
   Future<void> updateNotes(String notesMarkdown,
       {bool immediate = false}) async {
-    if (_activeProfile == null) return;
+    final targetId = activeProfile?.id;
+    if (targetId == null) return;
     final ts = _clock.nextTimestamp();
-    _activeProfile = _activeProfile!.copyWith(
-      notesRegister: CrdtLwwRegister<String>(
-        value: notesMarkdown,
-        timestamp: ts,
-      ),
-      lastPlayedAt: DateTime.now(),
-    );
-    if (immediate) {
-      await _campaignProfileService.saveProfileImmediate(_activeProfile!);
-    } else {
-      await _campaignProfileService.saveProfile(_activeProfile!);
-    }
+    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
+      return current.copyWith(
+        notesRegister: CrdtLwwRegister<String>(
+          value: notesMarkdown,
+          timestamp: ts,
+        ),
+        lastPlayedAt: DateTime.now(),
+      );
+    });
+    _activeProfile = updated;
+    notifyListeners();
   }
 
   /// Changes rules edition for active profile.
   Future<void> changeEdition(DmRulesEdition newEdition) async {
-    if (_activeProfile == null || _activeProfile!.edition == newEdition) return;
-    _activeProfile = _activeProfile!.copyWith(edition: newEdition);
+    final targetId = activeProfile?.id;
+    if (targetId == null) return;
+    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
+      if (current.edition == newEdition) return current;
+      return current.copyWith(edition: newEdition);
+    });
+    _activeProfile = updated;
     notifyListeners();
-    await _campaignProfileService.saveProfileImmediate(_activeProfile!);
   }
 
   /// Toggles a pinned reference rule ID.
   Future<void> togglePinnedRule(String ruleId) async {
-    if (_activeProfile == null) return;
+    final targetId = activeProfile?.id;
+    if (targetId == null) return;
     final nowHlc = _clock.nextTimestamp();
-    final currentRules = _activeProfile!.pinnedRules;
-    final updatedRules = currentRules.activeValues.contains(ruleId)
-        ? currentRules.remove(ruleId, nowHlc)
-        : currentRules.add(ruleId, ruleId, nowHlc);
-    _activeProfile = _activeProfile!.copyWith(pinnedRules: updatedRules);
+    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
+      final currentRules = current.pinnedRules;
+      final updatedRules = currentRules.activeValues.contains(ruleId)
+          ? currentRules.remove(ruleId, nowHlc)
+          : currentRules.add(ruleId, ruleId, nowHlc);
+      return current.copyWith(pinnedRules: updatedRules);
+    });
+    _activeProfile = updated;
     notifyListeners();
-    await _campaignProfileService.saveProfile(_activeProfile!);
   }
 
   /// Shared party treasury / reserve purse for the active campaign.
-  PartyPurse get partyPurse => _activeProfile?.partyPurse ?? const PartyPurse.empty();
+  PartyPurse get partyPurse => activeProfile?.partyPurse ?? const PartyPurse.empty();
 
   /// Combined wealth across the campaign shared party purse and all linked character personal purses.
   PartyPurse get totalPartyWealth {
@@ -490,12 +534,15 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Modifies coins in the active campaign's shared party treasury.
   Future<void> modifyPartyPurseCoin(String coinKey, int delta) async {
-    if (_activeProfile == null || delta == 0) return;
-    final curPurse = _activeProfile!.partyPurse;
-    final newPurse = curPurse.modifyCoin(coinKey, delta, replicaId: _replicaId);
-    _activeProfile = _activeProfile!.copyWith(partyPurse: newPurse);
+    final targetId = activeProfile?.id;
+    if (targetId == null || delta == 0) return;
+    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
+      final curPurse = current.partyPurse;
+      final newPurse = curPurse.modifyCoin(coinKey, delta, replicaId: _replicaId);
+      return current.copyWith(partyPurse: newPurse);
+    });
+    _activeProfile = updated;
     notifyListeners();
-    await _campaignProfileService.saveProfileImmediate(_activeProfile!);
   }
 
   /// Backward-compatible alias for [modifyPartyPurseCoin].
@@ -516,10 +563,10 @@ class DmDashboardController extends ChangeNotifier {
     notifyListeners();
     await _characterPersistenceService.saveCharacter(updated);
 
-    if (_activeProfile != null) {
+    if (activeProfile != null) {
       try {
         await PartyRoomService().updateMemberPurse(
-          roomCode: _activeProfile!.id,
+          roomCode: activeProfile!.id,
           characterName: updated.name,
           newPurse: updated.purse,
           performedBy: 'DM',
@@ -540,10 +587,10 @@ class DmDashboardController extends ChangeNotifier {
     notifyListeners();
     await _characterPersistenceService.saveCharacter(updated);
 
-    if (_activeProfile != null) {
+    if (activeProfile != null) {
       try {
         await PartyRoomService().updateMemberPurse(
-          roomCode: _activeProfile!.id,
+          roomCode: activeProfile!.id,
           characterName: updated.name,
           newPurse: updated.purse,
           performedBy: 'DM',
@@ -555,13 +602,12 @@ class DmDashboardController extends ChangeNotifier {
   /// Updates room state (encounter participants, descriptions, links).
   Future<void> updateRoomState(RoomNodeState roomState,
       {bool immediate = false}) async {
-    if (_activeProfile == null) return;
-    _activeProfile = _activeProfile!.copyWith(roomState: roomState);
+    final targetId = activeProfile?.id;
+    if (targetId == null) return;
+    final updated = await _campaignProfileService.updateProfile(targetId, (current) {
+      return current.copyWith(roomState: roomState);
+    });
+    _activeProfile = updated;
     notifyListeners();
-    if (immediate) {
-      await _campaignProfileService.saveProfileImmediate(_activeProfile!);
-    } else {
-      await _campaignProfileService.saveProfile(_activeProfile!);
-    }
   }
 }

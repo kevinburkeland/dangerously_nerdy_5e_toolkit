@@ -102,11 +102,25 @@ class FakeCampaignRepository implements ICampaignRepository {
   Future<List<CampaignProfile>> loadAllProfiles() async => allProfiles;
 
   @override
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async {
+    final current = profiles[id] ?? (throw StateError('Profile not found: $id'));
+    final updated = transform(current);
+    profiles[id] = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> putProfile(CampaignProfile profile) async {
+    profiles[profile.id] = profile;
+  }
+
   Future<void> saveProfile(CampaignProfile profile) async {
     profiles[profile.id] = profile;
   }
 
-  @override
   Future<void> saveProfileImmediate(CampaignProfile profile) async {
     profiles[profile.id] = profile;
   }

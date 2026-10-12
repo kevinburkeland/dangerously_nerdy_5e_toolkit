@@ -92,11 +92,36 @@ class _FakeCampaignRepo implements ICampaignRepository {
   Future<CampaignProfile?> getActiveProfile() async => currentProfile;
 
   @override
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async {
+    final current = currentProfile?.id == id
+        ? currentProfile!
+        : (currentProfile ??
+            CampaignProfile.defaultProfile(
+              id: id,
+              nodeId: 'test_node',
+              timestamp: const HybridLogicalClock(
+                physicalTime: 1000,
+                logicalCounter: 0,
+                nodeId: 'test_node',
+              ),
+            ));
+    final updated = transform(current);
+    currentProfile = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> putProfile(CampaignProfile profile) async {
+    currentProfile = profile;
+  }
+
   Future<void> saveProfile(CampaignProfile profile) async {
     currentProfile = profile;
   }
 
-  @override
   Future<void> saveProfileImmediate(CampaignProfile profile) async {
     currentProfile = profile;
   }

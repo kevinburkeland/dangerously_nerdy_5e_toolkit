@@ -664,11 +664,36 @@ class _TestMockCampaignRepo implements ICampaignRepository {
       savedProfile != null ? [savedProfile!] : [];
 
   @override
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async {
+    final current = (savedProfile?.id == id)
+        ? savedProfile!
+        : (savedProfile ??
+            CampaignProfile.defaultProfile(
+              id: id,
+              nodeId: 'test_node',
+              timestamp: const HybridLogicalClock(
+                physicalTime: 1000,
+                logicalCounter: 0,
+                nodeId: 'test_node',
+              ),
+            ));
+    final updated = transform(current);
+    savedProfile = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> putProfile(CampaignProfile profile) async {
+    savedProfile = profile;
+  }
+
   Future<void> saveProfile(CampaignProfile profile) async {
     savedProfile = profile;
   }
 
-  @override
   Future<void> saveProfileImmediate(CampaignProfile profile) async {
     savedProfile = profile;
   }

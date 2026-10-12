@@ -60,6 +60,13 @@ class DebouncedStorageService {
     }
   }
 
+  /// Cancels a specific pending write task without executing it.
+  void cancelTask(String taskKey) {
+    _debounceTimers[taskKey]?.cancel();
+    _debounceTimers.remove(taskKey);
+    _pendingTasks.remove(taskKey);
+  }
+
   /// Immediately flushes all pending write tasks across the entire application.
   /// Cancels all active timers immediately, snapshots all tasks, and executes
   /// writes concurrently with individual error isolation.

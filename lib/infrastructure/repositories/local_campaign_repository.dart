@@ -205,7 +205,86 @@ class LocalCampaignRepository implements ICampaignRepository {
     return activeProfile;
   }
 
+  final Map<String, Future<void>> _updateQueues = {};
+
   @override
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async {
+    final prev = _updateQueues[id] ?? Future<void>.value();
+    final completer = Completer<CampaignProfile>();
+    late final Future<void> currentFuture;
+
+    currentFuture = () async {
+      try {
+        await prev;
+      } catch (_) {}
+
+      try {
+        if (!_initialized) await loadAllProfiles();
+        final current = _memoryCache[id];
+        if (current == null) {
+          throw StateError('Campaign profile with id "$id" not found');
+        }
+        final next = transform(current);
+        _memoryCache[id] = next;
+        AppServices.instance.debouncedStorage
+            .cancelTask('save_campaign_profile_$id');
+        await _persistProfileToDisk(next);
+        _emitState();
+        completer.complete(next);
+      } catch (e, st) {
+        completer.completeError(e, st);
+      } finally {
+        if (identical(_updateQueues[id], currentFuture)) {
+          _updateQueues.remove(id);
+        }
+      }
+    }();
+
+    _updateQueues[id] = currentFuture;
+    return completer.future;
+  }
+
+  @override
+  Future<void> putProfile(CampaignProfile profile) async {
+    final prev = _updateQueues[profile.id] ?? Future<void>.value();
+    final completer = Completer<void>();
+    late final Future<void> currentFuture;
+
+    currentFuture = () async {
+      try {
+        await prev;
+      } catch (_) {}
+
+      try {
+        if (!_initialized) await loadAllProfiles();
+        _memoryCache[profile.id] = profile;
+        AppServices.instance.debouncedStorage
+            .cancelTask('save_campaign_profile_${profile.id}');
+        await _persistProfileToDisk(profile);
+        _emitState();
+        completer.complete();
+      } catch (e, st) {
+        completer.completeError(e, st);
+      } finally {
+        if (identical(_updateQueues[profile.id], currentFuture)) {
+          _updateQueues.remove(profile.id);
+        }
+      }
+    }();
+
+    _updateQueues[profile.id] = currentFuture;
+    return completer.future;
+  }
+
+  /// Backward-compatible immediate save delegating to serialized [putProfile].
+  Future<void> saveProfileImmediate(CampaignProfile profile) async {
+    await putProfile(profile);
+  }
+
+  /// Backward-compatible debounced save.
   Future<void> saveProfile(CampaignProfile profile) async {
     _memoryCache[profile.id] = profile;
     _emitState();
@@ -215,15 +294,6 @@ class LocalCampaignRepository implements ICampaignRepository {
       () => _persistProfileToDisk(profile),
       duration: const Duration(milliseconds: 400),
     );
-  }
-
-  @override
-  Future<void> saveProfileImmediate(CampaignProfile profile) async {
-    await AppServices.instance.debouncedStorage
-        .flushKey('save_campaign_profile_${profile.id}');
-    _memoryCache[profile.id] = profile;
-    await _persistProfileToDisk(profile);
-    _emitState();
   }
 
   @override

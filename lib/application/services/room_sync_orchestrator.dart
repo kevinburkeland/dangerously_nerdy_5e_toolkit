@@ -61,8 +61,8 @@ class RoomSyncOrchestrator {
 
   final Mutex _syncMutex = Mutex();
   final Set<int> _appliedProfileHashRing = <int>{};
+  final List<CampaignProfile> _appliedProfiles = <CampaignProfile>[];
   static const int maxAppliedHashRingSize = 100;
-  bool _isApplyingRemoteSync = false;
   int _localSequenceNumber = 0;
   int _lastProfileSyncTimestamp = 0;
   CampaignProfile? _lastEmittedProfile;
@@ -70,7 +70,7 @@ class RoomSyncOrchestrator {
   StreamController<RoomConnectionTelemetry> _telemetryController =
       StreamController<RoomConnectionTelemetry>.broadcast(sync: false);
   final StreamController<SyncErrorEvent> _deadLetterController =
-      StreamController<SyncErrorEvent>.broadcast(sync: false);
+      StreamController<SyncErrorEvent>.broadcast(sync: true);
 
   final StatefulHlcClock _clock;
 
@@ -148,7 +148,16 @@ class RoomSyncOrchestrator {
   CrdtOrSet<String> get trackedRulesSet => _trackedRulesSet;
 
   @visibleForTesting
-  set trackedRulesSet(CrdtOrSet<String> set) => _trackedRulesSet = set;
+  set trackedRulesSet(CrdtOrSet<String> set) {
+    _trackedRulesSet = set;
+    final active = campaignRepo.activeProfile;
+    if (active != null) {
+      campaignRepo.updateProfile(
+        active.id,
+        (current) => current.copyWith(pinnedRules: set),
+      );
+    }
+  }
 
   /// Activates bidirectional synchronization and begins telemetry polling.
   void startSynchronization() {
@@ -228,11 +237,22 @@ class RoomSyncOrchestrator {
     });
   }
 
-  void _recordAppliedProfileHash(int hash) {
-    _appliedProfileHashRing.add(hash);
-    if (_appliedProfileHashRing.length > maxAppliedHashRingSize) {
-      _appliedProfileHashRing.remove(_appliedProfileHashRing.first);
+  void _recordAppliedProfile(CampaignProfile profile) {
+    _appliedProfileHashRing.add(profile.hashCode);
+    _appliedProfiles.add(profile);
+    if (_appliedProfiles.length > maxAppliedHashRingSize) {
+      final removed = _appliedProfiles.removeAt(0);
+      if (!_appliedProfiles.any((p) => p.hashCode == removed.hashCode)) {
+        _appliedProfileHashRing.remove(removed.hashCode);
+      }
     }
+  }
+
+  bool _isAppliedProfile(CampaignProfile profile) {
+    if (_appliedProfileHashRing.contains(profile.hashCode)) {
+      return _appliedProfiles.any((p) => p == profile);
+    }
+    return false;
   }
 
   /// Handles incoming JSON payloads from the P2P transport.
@@ -256,7 +276,10 @@ class RoomSyncOrchestrator {
       return;
     }
 
-    CampaignProfile? profileToSave;
+    bool shouldApply = false;
+    String? targetProfileId;
+    CampaignProfile Function(CampaignProfile current)? transform;
+    void Function(CampaignProfile applied)? onApplied;
 
     // 2. Narrow Critical Section: restrict mutex lock strictly to in-memory state
     // reconciliation, vector clock updates, and CRDT joins.
@@ -321,63 +344,69 @@ class RoomSyncOrchestrator {
                 _clock.observeAllRemote(candidateHlcs);
               }
 
-              // Reconcile pinned rules CRDT set if present
-              if (msg.pinnedRulesDelta != null) {
-                _trackedRulesSet =
-                    _trackedRulesSet.merge(msg.pinnedRulesDelta!);
-              }
-
-              // Reconcile sub-resources deterministically at field-level via CRDTs
-              final reconciliationResult =
-                  reconciliationService.reconcileProfileSafely(
-                local: localProfile,
-                remote: remoteWithPurse,
-                inboundTimestampMs: msg.timestamp,
-                localTimestampMs: _lastProfileSyncTimestamp,
-              );
-              final reconciledProfile = reconciliationResult.profile;
-
-              if (reconciliationResult.hasFaults) {
-                for (final fault in reconciliationResult.fieldFaults) {
-                  LoggingService().logNonFatal(
-                    fault.error,
-                    fault.stackTrace ?? StackTrace.current,
-                    reason:
-                        'Reconciliation field fault in ${fault.field}: ${fault.error}',
+              targetProfileId = remoteProfile.id;
+              shouldApply = true;
+              transform = (current) {
+                var effectiveRemote = remoteWithPurse;
+                if (msg.pinnedRulesDelta != null) {
+                  effectiveRemote = effectiveRemote.copyWith(
+                    pinnedRules:
+                        effectiveRemote.pinnedRules.merge(msg.pinnedRulesDelta!),
                   );
-                  if (!_deadLetterController.isClosed) {
-                    _deadLetterController.add(SyncErrorEvent(
-                      error: fault.error,
-                      stackTrace: fault.stackTrace ?? StackTrace.current,
-                      rawPayload: jsonPayload,
-                      parsedMessage: message,
-                    ));
+                }
+
+                // Reconcile sub-resources deterministically at field-level via CRDTs
+                final reconciliationResult =
+                    reconciliationService.reconcileProfileSafely(
+                  local: current,
+                  remote: effectiveRemote,
+                  inboundTimestampMs: msg.timestamp,
+                  localTimestampMs: _lastProfileSyncTimestamp,
+                );
+                if (reconciliationResult.hasFaults) {
+                  for (final fault in reconciliationResult.fieldFaults) {
+                    LoggingService().logNonFatal(
+                      fault.error,
+                      fault.stackTrace ?? StackTrace.current,
+                      reason:
+                          'Reconciliation field fault in ${fault.field}: ${fault.error}',
+                    );
+                    if (!_deadLetterController.isClosed) {
+                      _deadLetterController.add(SyncErrorEvent(
+                        error: fault.error,
+                        stackTrace: fault.stackTrace ?? StackTrace.current,
+                        rawPayload: jsonPayload,
+                        parsedMessage: message,
+                      ));
+                    }
                   }
                 }
-              }
-
-              if (msg.timestamp > _lastProfileSyncTimestamp) {
-                _lastProfileSyncTimestamp = msg.timestamp;
-              }
-
-              _trackedRulesSet = reconciledProfile.pinnedRules;
-              _recordAppliedProfileHash(reconciledProfile.hashCode);
-              _lastEmittedProfile = reconciledProfile;
-              profileToSave = reconciledProfile;
+                final reconciled = reconciliationResult.profile;
+                _recordAppliedProfile(reconciled);
+                return reconciled;
+              };
+              onApplied = (applied) {
+                if (msg.timestamp > _lastProfileSyncTimestamp) {
+                  _lastProfileSyncTimestamp = msg.timestamp;
+                }
+                _trackedRulesSet = applied.pinnedRules;
+              };
             }
 
           case PurseDeltaSyncMessage msg:
             final localProfile = campaignRepo.activeProfile;
             if (localProfile != null) {
-              // Converge purse via CvRDT PN-counter lattice join
-              final updatedPurse = localProfile.partyPurse.merge(msg.purse);
-              if (updatedPurse != localProfile.partyPurse) {
-                final updatedProfile =
-                    localProfile.copyWith(partyPurse: updatedPurse);
-                _recordAppliedProfileHash(updatedProfile.hashCode);
-                _lastEmittedProfile = updatedProfile;
-                profileToSave = updatedProfile;
-              }
+              targetProfileId = localProfile.id;
+              shouldApply = true;
+              transform = (current) {
+                final updatedPurse = current.partyPurse.merge(msg.purse);
+                if (updatedPurse == current.partyPurse) {
+                  return current;
+                }
+                final updated = current.copyWith(partyPurse: updatedPurse);
+                _recordAppliedProfile(updated);
+                return updated;
+              };
             }
 
           case OrSetDeltaSyncMessage msg:
@@ -407,16 +436,20 @@ class RoomSyncOrchestrator {
                 _clock.observeAllRemote(deltaHlcs);
               }
 
-              _trackedRulesSet = _trackedRulesSet.merge(msg.rulesSet);
-
-              // Reflect merged CRDT set into profile's pinned rules
-              final updatedProfile = localProfile.copyWith(
-                pinnedRules: _trackedRulesSet,
-              );
-
-              _recordAppliedProfileHash(updatedProfile.hashCode);
-              _lastEmittedProfile = updatedProfile;
-              profileToSave = updatedProfile;
+              targetProfileId = localProfile.id;
+              shouldApply = true;
+              transform = (current) {
+                final mergedRules = current.pinnedRules.merge(msg.rulesSet);
+                if (mergedRules == current.pinnedRules) {
+                  return current;
+                }
+                final updated = current.copyWith(pinnedRules: mergedRules);
+                _recordAppliedProfile(updated);
+                return updated;
+              };
+              onApplied = (applied) {
+                _trackedRulesSet = applied.pinnedRules;
+              };
             }
 
           case DiceRollSyncMessage msg:
@@ -445,15 +478,31 @@ class RoomSyncOrchestrator {
       }
     });
 
-    // 3. Decouple disk I/O and repository event dispatches outside the mutex lock
-    if (profileToSave != null) {
-      _isApplyingRemoteSync = true;
+    // 3. Serialized update path: apply transform and persist through repository outside mutex
+    if (shouldApply && targetProfileId != null && transform != null) {
       try {
-        await campaignRepo.saveProfileImmediate(profileToSave!);
-      } finally {
-        scheduleMicrotask(() {
-          _isApplyingRemoteSync = false;
-        });
+        final applied =
+            await campaignRepo.updateProfile(targetProfileId!, transform!);
+        onApplied?.call(applied);
+        _recordAppliedProfile(applied);
+        _lastEmittedProfile = applied;
+      } catch (error, stackTrace) {
+        if (!_deadLetterController.isClosed) {
+          _deadLetterController.add(SyncErrorEvent(
+            error: error,
+            stackTrace: stackTrace,
+            rawPayload: jsonPayload,
+            parsedMessage: message,
+          ));
+        }
+        var isDebug = false;
+        assert(() {
+          isDebug = true;
+          return true;
+        }());
+        if (isDebug) {
+          rethrow;
+        }
       }
     }
   }
@@ -465,10 +514,7 @@ class RoomSyncOrchestrator {
 
   Future<void> _handleLocalProfileChange(CampaignProfile? profile) async {
     if (profile == null) return;
-    if (_isApplyingRemoteSync) {
-      return;
-    }
-    if (_appliedProfileHashRing.contains(profile.hashCode)) {
+    if (_isAppliedProfile(profile)) {
       return;
     }
 
@@ -547,22 +593,20 @@ class RoomSyncOrchestrator {
   /// have observed deletions; pruning tombstones without causal stability leads to
   /// state resurrection when offline replicas reconnect. Tombstones are retained indefinitely.
   Future<void> executeHostMilestoneFlush() async {
-    final activeProfile = campaignRepo.activeProfile;
-    if (activeProfile == null) return;
+    final targetId =
+        campaignRepo.activeProfileId ?? campaignRepo.activeProfile?.id;
+    if (targetId == null) return;
 
     // Retain tracked CRDT tombstones indefinitely; elapsed time does not prove causal acknowledgement.
     _trackedRulesSet =
         reconciliationService.retainTombstones<String>(_trackedRulesSet);
 
-    // Persist immediately to establish the snapshot boundary
-    _isApplyingRemoteSync = true;
-    try {
-      await campaignRepo.saveProfileImmediate(activeProfile);
-    } finally {
-      scheduleMicrotask(() {
-        _isApplyingRemoteSync = false;
-      });
-    }
+    // Persist immediately via serialized updatePath without clobbering concurrent edits
+    final applied = await campaignRepo.updateProfile(targetId, (current) {
+      return current;
+    });
+    _recordAppliedProfile(applied);
+    _lastEmittedProfile = applied;
   }
 
   /// Cancels all subscriptions, timers, and emits offline telemetry.
@@ -578,7 +622,6 @@ class RoomSyncOrchestrator {
     _telemetryTimer?.cancel();
     _telemetryTimer = null;
     _lastProfileSyncTimestamp = 0;
-    _isApplyingRemoteSync = false;
     _processedPayloadHashes.clear();
     _lastSeenSequenceByNode.clear();
     _emitTelemetry();

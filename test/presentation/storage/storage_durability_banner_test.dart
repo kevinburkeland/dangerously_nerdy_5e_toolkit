@@ -73,8 +73,13 @@ class MockCampaignRepository implements ICampaignRepository {
   @override
   Future<List<CampaignProfile>> loadAllProfiles() async => [];
   @override
-  Future<void> saveProfile(CampaignProfile profile) async {}
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async => throw UnimplementedError();
   @override
+  Future<void> putProfile(CampaignProfile profile) async {}
+  Future<void> saveProfile(CampaignProfile profile) async {}
   Future<void> saveProfileImmediate(CampaignProfile profile) async {}
   @override
   Future<void> setActiveProfileId(String id) async {}

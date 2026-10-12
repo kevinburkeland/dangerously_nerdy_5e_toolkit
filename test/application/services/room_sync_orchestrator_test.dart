@@ -107,16 +107,32 @@ class MockCampaignRepository implements ICampaignRepository {
   Future<List<CampaignProfile>> loadAllProfiles() async => allProfiles;
 
   @override
-  Future<void> saveProfile(CampaignProfile profile) async =>
-      saveProfileImmediate(profile);
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async {
+    final current = (_activeProfile?.id == id)
+        ? _activeProfile!
+        : throw StateError('Profile not found: $id');
+    final updated = transform(current);
+    await putProfile(updated);
+    return updated;
+  }
 
   @override
-  Future<void> saveProfileImmediate(CampaignProfile profile) async {
+  Future<void> putProfile(CampaignProfile profile) async {
     _activeProfile = profile;
     savedImmediateProfiles.add(profile);
     if (emitOnSaveImmediate) {
       _activeProfileController.add(profile);
     }
+  }
+
+  Future<void> saveProfile(CampaignProfile profile) async =>
+      saveProfileImmediate(profile);
+
+  Future<void> saveProfileImmediate(CampaignProfile profile) async {
+    await putProfile(profile);
   }
 
   @override

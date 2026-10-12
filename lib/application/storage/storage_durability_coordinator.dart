@@ -149,7 +149,7 @@ class StorageDurabilityCoordinator {
     // cryptographic validity is already verified via bundle.isValid above.
 
     // Reconcile / save state
-    await campaignRepo.saveProfileImmediate(inboundProfile);
+    await campaignRepo.putProfile(inboundProfile);
     if (campaignRepo.activeProfileId == null ||
         campaignRepo.activeProfileId == inboundProfile.id) {
       await campaignRepo.setActiveProfileId(inboundProfile.id);
