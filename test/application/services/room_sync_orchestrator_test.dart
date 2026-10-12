@@ -925,7 +925,7 @@ void main() {
         'Concurrent Conflict Resolution: concurrent edits to notes and purse merge without wholesale overwrite',
         () async {
       final baseProfile = CampaignProfile.defaultProfile(
-          id: 'camp_conflict', nodeId: 'test_node');
+          id: 'camp_conflict', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: 'test_node'));
       // Local has updated notes
       final localProfile = baseProfile.copyWith(
         notesMarkdown: 'Local draft notes by DM',

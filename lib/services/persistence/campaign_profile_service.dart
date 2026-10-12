@@ -28,14 +28,18 @@ class CampaignProfileService extends ChangeNotifier
 
   static final CampaignProfileService _instance =
       CampaignProfileService._internal();
-  factory CampaignProfileService({ReplicaId? replicaId}) {
+  factory CampaignProfileService({ReplicaId? replicaId, StatefulHlcClock? clock}) {
     if (replicaId != null) {
       _instance._replicaId = replicaId;
     }
+    if (clock != null) {
+      _instance._clock = clock;
+    }
     return _instance;
   }
-  CampaignProfileService._internal({ReplicaId? replicaId})
-      : _replicaId = replicaId {
+  CampaignProfileService._internal({ReplicaId? replicaId, StatefulHlcClock? clock})
+      : _replicaId = replicaId,
+        _clock = clock {
     CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
     CampaignProfile.defaultPinnedRulesFallback = const {
       'concentration',
@@ -44,19 +48,36 @@ class CampaignProfileService extends ChangeNotifier
   }
 
   ReplicaId? _replicaId;
+  StatefulHlcClock? _clock;
 
   @visibleForTesting
   static void resetForTesting() {
     _instance._replicaId = null;
+    _instance._clock = null;
     _instance._memoryCache.clear();
     _instance._activeProfileId = null;
     _instance._initialized = false;
   }
   String get _effectiveNodeId {
+    if (_clock != null) return _clock!.replicaId.value;
+    if (sl.isRegistered<StatefulHlcClock>()) {
+      return sl<StatefulHlcClock>().replicaId.value;
+    }
     if (_replicaId != null) return _replicaId!.value;
     throw StateError(
       'CampaignProfileService requires an authoritative ReplicaId. '
       'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+    );
+  }
+
+  StatefulHlcClock get _effectiveClock {
+    if (_clock != null) return _clock!;
+    if (sl.isRegistered<StatefulHlcClock>()) {
+      return sl<StatefulHlcClock>();
+    }
+    throw StateError(
+      'CampaignProfileService requires an authoritative StatefulHlcClock. '
+      'Ensure initServiceLocator() has completed or inject StatefulHlcClock explicitly.',
     );
   }
 
@@ -207,7 +228,7 @@ class CampaignProfileService extends ChangeNotifier
 
     // Default Fallback
     final defaultProfile =
-        CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
+        CampaignProfile.defaultProfile(nodeId: _effectiveNodeId, clock: _effectiveClock);
     await saveProfileImmediate(defaultProfile);
     _initialized = true;
     return [defaultProfile];
@@ -251,7 +272,7 @@ class CampaignProfileService extends ChangeNotifier
     }
 
     final freshDefault =
-        CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
+        CampaignProfile.defaultProfile(nodeId: _effectiveNodeId, clock: _effectiveClock);
     await saveProfileImmediate(freshDefault);
     await switchProfile(freshDefault.id);
     return freshDefault;
@@ -266,6 +287,7 @@ class CampaignProfileService extends ChangeNotifier
       name: name,
       edition: edition,
       nodeId: _effectiveNodeId,
+      clock: _effectiveClock,
     );
     await saveProfileImmediate(newProfile);
     await switchProfile(newProfile.id);
@@ -405,7 +427,7 @@ class CampaignProfileService extends ChangeNotifier
           );
 
     final cloned =
-        (source ?? CampaignProfile.defaultProfile(nodeId: _effectiveNodeId))
+        (source ?? CampaignProfile.defaultProfile(nodeId: _effectiveNodeId, clock: _effectiveClock))
             .copyWith(
       id: newId,
       name: targetName,
@@ -413,7 +435,7 @@ class CampaignProfileService extends ChangeNotifier
       createdAt: now,
       lastPlayedAt: now,
       roomState: (source?.roomState ??
-              CampaignProfile.defaultProfile(nodeId: _effectiveNodeId)
+              CampaignProfile.defaultProfile(nodeId: _effectiveNodeId, clock: _effectiveClock)
                   .roomState)
           .copyWith(
         roomId: 'room_$newId',
@@ -461,7 +483,7 @@ class CampaignProfileService extends ChangeNotifier
           await switchProfile(indexList.first);
         } else {
           final fresh =
-              CampaignProfile.defaultProfile(nodeId: _effectiveNodeId);
+              CampaignProfile.defaultProfile(nodeId: _effectiveNodeId, clock: _effectiveClock);
           await saveProfileImmediate(fresh);
           await switchProfile(fresh.id);
         }

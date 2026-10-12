@@ -351,7 +351,7 @@ void main() {
         final domain = dto.toDomain();
 
         expect(domain.roomState.roomId, equals('room_camp-room-1'));
-        expect(domain.roomState.roomCode, equals('CR-101'));
+        expect(domain.roomState.roomCode, equals('CR-D3D73A'));
         expect(domain.roomState.title, equals('Dungeon Run Staging'));
       });
 

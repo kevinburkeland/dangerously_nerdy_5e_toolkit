@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
@@ -194,7 +195,7 @@ void main() {
         'Granular CRDT Delta: mutating partyPurse emits crdt_purse_delta rather than full profile',
         () async {
       final baseProfile =
-          CampaignProfile.defaultProfile(id: 'camp_delta', nodeId: 'test_node');
+          CampaignProfile.defaultProfile(id: 'camp_delta', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       mockRepo.activeProfile = baseProfile;
 
       // Seed orchestrator baseline
@@ -223,7 +224,7 @@ void main() {
         'Ingress of crdt_purse_delta reconciles party purse via CvRDT lattice join',
         () async {
       final baseProfile =
-          CampaignProfile.defaultProfile(id: 'camp_delta', nodeId: 'test_node')
+          CampaignProfile.defaultProfile(id: 'camp_delta', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
               .copyWith(
         partyPurse: const PartyPurse.empty()
             .setCoins(gp: 100, replicaId: ReplicaId('node_init'))
@@ -258,7 +259,7 @@ void main() {
         'Full room_sync_full carries party_purse_crdt delta and converges without scalar LWW',
         () async {
       final baseProfile =
-          CampaignProfile.defaultProfile(id: 'camp_full', nodeId: 'test_node')
+          CampaignProfile.defaultProfile(id: 'camp_full', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
               .copyWith(
         partyPurse: const PartyPurse.empty()
             .setCoins(gp: 50, replicaId: ReplicaId('node_init'))

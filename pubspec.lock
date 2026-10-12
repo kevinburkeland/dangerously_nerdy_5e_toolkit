@@ -777,8 +777,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: eaa4088fc0ce324aeb625c2f3853a33c795b2958
-      resolved-ref: eaa4088fc0ce324aeb625c2f3853a33c795b2958
+      ref: "9252069b99e278c3d5354d5cad2aab29ff8bfe1e"
+      resolved-ref: "9252069b99e278c3d5354d5cad2aab29ff8bfe1e"
       url: "https://github.com/kevinburkeland/vtt-engine-core.git"
     source: git
     version: "1.0.0"
@@ -786,8 +786,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: b05ac185134b6e4232946f82d7b4df985ad58dd5
-      resolved-ref: b05ac185134b6e4232946f82d7b4df985ad58dd5
+      ref: "82c5e56579325ee2bd821e1ada8a43abb31a2a37"
+      resolved-ref: "82c5e56579325ee2bd821e1ada8a43abb31a2a37"
       url: "https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git"
     source: git
     version: "1.0.0"

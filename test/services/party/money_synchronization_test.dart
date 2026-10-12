@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -144,7 +145,7 @@ void main() {
       final profile = CampaignProfile.defaultProfile(
         id: 'camp_gondor',
         name: 'Gondor Defense',
-        nodeId: 'test_node',
+        nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(
         partyPurse: PartyPurse(gp: 500),
         partyCharacterIds: [hero1.id.slug, hero2.id.slug],
@@ -202,7 +203,7 @@ void main() {
       final profile = CampaignProfile.defaultProfile(
         id: 'camp_shire',
         name: 'Shire Journey',
-        nodeId: 'test_node',
+        nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(
         partyPurse: PartyPurse(gp: 150),
         partyCharacterIds: [hero.id.slug],

@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -143,6 +144,7 @@ void main() {
         id: 'camp_iron_peaks',
         name: 'Iron Peaks Campaign',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       );
 
       await campRepo.saveProfileImmediate(profile);

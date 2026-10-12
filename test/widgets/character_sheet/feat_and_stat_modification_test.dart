@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -185,6 +186,7 @@ void main() {
         id: 'camp-123',
         name: 'The Lost Mines',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(partyCharacterIds: ['hero-bob']);
       await CampaignProfileService().saveProfileImmediate(profile);
 

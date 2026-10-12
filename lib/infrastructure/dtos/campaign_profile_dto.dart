@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
@@ -111,7 +112,7 @@ class CampaignProfileDto {
           )
         : RoomNodeState(
             roomId: 'room_$id',
-            roomCode: 'CR-101',
+            roomCode: _deriveDeterministicRoomCode(id),
             title: '$name Staging',
           );
 
@@ -624,5 +625,13 @@ class CampaignProfileDto {
       }
     }
     return characters;
+  }
+
+  /// Deterministically derives a campaign-isolated migration room code
+  /// for legacy records that genuinely lack room state, avoiding shared
+  /// accidental authority across distinct campaigns.
+  static String _deriveDeterministicRoomCode(String campaignId) {
+    final digest = sha256.convert(utf8.encode(campaignId)).toString().toUpperCase();
+    return 'CR-${digest.substring(0, 6)}';
   }
 }

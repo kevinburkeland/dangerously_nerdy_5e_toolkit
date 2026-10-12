@@ -228,6 +228,92 @@ void main() {
             '${violations.join('\n')}',
       );
     });
+ 
+    test(
+        'Source Bar H: Active production code under lib/ must not use CrdtOrSet<RoomEntityLink> authority',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      // Matches CrdtOrSet<RoomEntityLink> with flexible whitespace
+      final legacyEntityLinkCrdtPattern =
+          RegExp(r'\bCrdtOrSet\s*<\s*RoomEntityLink\s*>');
+      final violations = <String>[];
+
+      // Whitelisted explicit migration/compatibility boundaries
+      final allowedMigrationPaths = <String>[
+        'lib/infrastructure/dtos/migrations/',
+      ];
+
+      for (final file in dartFiles) {
+        final normalizedPath = file.path.replaceAll('\\', '/');
+        if (allowedMigrationPaths.any((p) => normalizedPath.contains(p))) {
+          continue;
+        }
+
+        final lines = file.readAsLinesSync();
+        bool inBlockComment = false;
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+
+          // Block comment tracking
+          if (inBlockComment) {
+            if (line.contains('*/')) {
+              line = line.substring(line.indexOf('*/') + 2).trim();
+              inBlockComment = false;
+            } else {
+              continue;
+            }
+          }
+          if (line.startsWith('/*')) {
+            if (!line.contains('*/')) {
+              inBlockComment = true;
+              continue;
+            } else {
+              line = line.substring(line.indexOf('*/') + 2).trim();
+            }
+          }
+
+          // Single-line comment removal
+          if (line.startsWith('//') || line.startsWith('*')) {
+            continue;
+          }
+          final commentIdx = line.indexOf('//');
+          if (commentIdx != -1) {
+            line = line.substring(0, commentIdx).trim();
+          }
+
+          if (legacyEntityLinkCrdtPattern.hasMatch(line)) {
+            violations.add('$normalizedPath:${i + 1} -> ${lines[i].trim()}');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'CrdtOrSet<RoomEntityLink> as authoritative entity link representation is forbidden in lib/ (Source Bar H). '
+            'Use EntityLinkCrdtSet instead. Violations:\n'
+            '${violations.join('\n')}',
+      );
+    });
+
+    test(
+        'Source Bar H unit validation: rejects representative production pattern and allows migration boundary',
+        () {
+      final legacyPattern = RegExp(r'\bCrdtOrSet\s*<\s*RoomEntityLink\s*>');
+      const badSnippet = 'final CrdtOrSet<RoomEntityLink> entityLinksCrdt;';
+      const goodSnippet = 'final EntityLinkCrdtSet entityLinksCrdt;';
+      const allowedMigrationPath =
+          'lib/infrastructure/dtos/migrations/legacy_entity_link_migration.dart';
+
+      expect(legacyPattern.hasMatch(badSnippet), isTrue);
+      expect(legacyPattern.hasMatch(goodSnippet), isFalse);
+
+      final allowedPaths = ['lib/infrastructure/dtos/migrations/'];
+      expect(allowedPaths.any((p) => allowedMigrationPath.contains(p)), isTrue);
+    });
   });
 }
-

@@ -224,7 +224,7 @@ class DmDashboardController extends ChangeNotifier {
     _activeProfile = active ??
         (_allProfiles.isNotEmpty
             ? _allProfiles.first
-            : CampaignProfile.defaultProfile(nodeId: _replicaId.value));
+            : CampaignProfile.defaultProfile(nodeId: _replicaId.value, clock: _clock));
     if (_activeProfile != null &&
         _activeProfile!.notesRegister.timestamp.physicalTime > 0) {
       _clock.observeTrustedHistory(_activeProfile!.notesRegister.timestamp);

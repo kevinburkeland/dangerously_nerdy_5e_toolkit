@@ -115,7 +115,7 @@ Future<void> initServiceLocator({
   );
   sl.registerSingleton<StatefulHlcClock>(hlcClock);
 
-  CampaignProfileService(replicaId: resolvedReplicaId);
+  CampaignProfileService(replicaId: resolvedReplicaId, clock: hlcClock);
 
   final charRepo = characterRepo ?? LocalCharacterRepository(db: db);
   sl.registerSingleton<ICharacterRepository>(charRepo);

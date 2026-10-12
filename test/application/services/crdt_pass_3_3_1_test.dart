@@ -192,7 +192,7 @@ void main() {
       final initialMinions = const CrdtOrSet<MinionInstance>.empty()
           .add('minion_1', initialMinion, historicalTs);
 
-      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value).copyWith(
+      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value, timestamp: HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: replicaA.value)).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'R1',
@@ -257,7 +257,7 @@ void main() {
         tombstones: {'minion_1': historicalTombstone},
       );
 
-      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value).copyWith(
+      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value, timestamp: HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: replicaA.value)).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'R1',
@@ -336,7 +336,7 @@ void main() {
       final initialEncounter = const CrdtOrSet<EncounterParticipant>.empty()
           .add('part_1', p1, p1Hlc);
 
-      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value).copyWith(
+      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value, timestamp: HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: replicaA.value)).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'R1',
@@ -433,7 +433,7 @@ void main() {
         tombstones: {'pC': tsC},
       );
 
-      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value).copyWith(
+      final profile = CampaignProfile.defaultProfile(nodeId: replicaA.value, timestamp: HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: replicaA.value)).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'R1',

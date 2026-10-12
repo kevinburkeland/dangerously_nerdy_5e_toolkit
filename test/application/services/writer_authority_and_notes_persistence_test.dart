@@ -129,6 +129,7 @@ void main() {
         id: 'camp_future_history',
         name: 'Future History Campaign',
         nodeId: 'historical_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'historical_node'),
       ).copyWith(
         notesRegister: CrdtLwwRegister(
           value: 'Historical future notes',
@@ -177,6 +178,7 @@ void main() {
         id: 'camp_attrib_test',
         name: 'Attribution Campaign',
         nodeId: 'genesis_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'genesis_node'),
       );
       await campaignService.saveProfileImmediate(baseCampaign);
       await campaignService.switchProfile(baseCampaign.id);

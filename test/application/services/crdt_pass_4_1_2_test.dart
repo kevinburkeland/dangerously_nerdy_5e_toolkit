@@ -164,7 +164,7 @@ void main() {
         final profile = dto.toDomain();
 
         expect(profile.roomState.roomId, equals('room_c-no-room'));
-        expect(profile.roomState.roomCode, equals('CR-101'));
+        expect(profile.roomState.roomCode, equals('CR-C0D529'));
         expect(profile.roomState.title, equals('Default Room Campaign Staging'));
       });
 

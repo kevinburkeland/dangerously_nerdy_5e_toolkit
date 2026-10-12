@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,6 +53,7 @@ void main() {
         name: 'Vampire Lord of the Mist',
         edition: DmRulesEdition.v2024,
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       );
       await CampaignProfileService().saveProfileImmediate(p);
       await CampaignProfileService().switchProfile(p.id);
@@ -88,6 +90,7 @@ void main() {
         id: 'camp_init_test',
         name: 'Initiative Arena',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r1',
@@ -155,6 +158,7 @@ void main() {
         id: 'camp_hp_test',
         name: 'HP Test Table',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r1',
@@ -204,7 +208,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final p = CampaignProfile.defaultProfile(
-          id: 'camp_add_c', name: 'Add Combatant Table', nodeId: 'test_node');
+          id: 'camp_add_c', name: 'Add Combatant Table', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await CampaignProfileService().saveProfileImmediate(p);
       await CampaignProfileService().switchProfile(p.id);
 
@@ -231,7 +235,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final p = CampaignProfile.defaultProfile(
-          id: 'camp_minion_t', name: 'Minions Table', nodeId: 'test_node');
+          id: 'camp_minion_t', name: 'Minions Table', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await CampaignProfileService().saveProfileImmediate(p);
       await CampaignProfileService().switchProfile(p.id);
 
@@ -255,7 +259,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final p = CampaignProfile.defaultProfile(
-          id: 'camp_notes_t', name: 'Notes Table', nodeId: 'test_node');
+          id: 'camp_notes_t', name: 'Notes Table', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await CampaignProfileService().saveProfileImmediate(p);
       await CampaignProfileService().switchProfile(p.id);
 
@@ -282,9 +286,9 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final p1 = CampaignProfile.defaultProfile(
-          id: 'c1', name: 'First Campaign', nodeId: 'test_node');
+          id: 'c1', name: 'First Campaign', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       final p2 = CampaignProfile.defaultProfile(
-          id: 'c2', name: 'Second Campaign', nodeId: 'test_node');
+          id: 'c2', name: 'Second Campaign', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await CampaignProfileService().saveProfileImmediate(p1);
       await CampaignProfileService().saveProfileImmediate(p2);
       await CampaignProfileService().switchProfile('c1');
@@ -314,7 +318,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final p = CampaignProfile.defaultProfile(
-          id: 'c_exp', name: 'Export Test Campaign', nodeId: 'test_node');
+          id: 'c_exp', name: 'Export Test Campaign', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await CampaignProfileService().saveProfileImmediate(p);
       await CampaignProfileService().switchProfile(p.id);
 
@@ -340,7 +344,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final p = CampaignProfile.defaultProfile(
-          id: 'c_imp', name: 'Import Test Table', nodeId: 'test_node');
+          id: 'c_imp', name: 'Import Test Table', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await CampaignProfileService().saveProfileImmediate(p);
       await CampaignProfileService().switchProfile(p.id);
 

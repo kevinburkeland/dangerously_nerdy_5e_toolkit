@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
@@ -469,7 +470,7 @@ void main() {
       expect(combatService.replicaId, equals(authoritativeId));
       expect(combatService.localNodeId, equals(authoritativeId.value));
 
-      final baseProfile = CampaignProfile.defaultProfile(nodeId: authoritativeId.value);
+      final baseProfile = CampaignProfile.defaultProfile(nodeId: authoritativeId.value, timestamp: HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: authoritativeId.value));
       final updatedProfile = await combatService.addMinion(
         profile: baseProfile,
         minion: MinionInstance(

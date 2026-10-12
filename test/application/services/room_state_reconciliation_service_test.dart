@@ -318,9 +318,9 @@ void main() {
 
       // Merge local and remote
       final merged = service.reconcileProfile(
-        local: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')
+        local: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
             .copyWith(partyPurse: local),
-        remote: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')
+        remote: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
             .copyWith(partyPurse: remote),
         inboundTimestampMs: 2000,
         localTimestampMs: 1000,
@@ -342,9 +342,9 @@ void main() {
           .depositCoins(gp: 50, replicaId: ReplicaId('peerB'));
 
       final merged = service.reconcileProfile(
-        local: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')
+        local: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
             .copyWith(partyPurse: purseA),
-        remote: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')
+        remote: CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
             .copyWith(partyPurse: purseB),
         inboundTimestampMs: 2000,
         localTimestampMs: 1000,
@@ -407,7 +407,7 @@ void main() {
           encounterParticipant.participantId, tsLocalRemoval);
 
       final clientProfile = CampaignProfile.defaultProfile(
-              id: 'camp-partition', nodeId: 'test_node')
+              id: 'camp-partition', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
           .copyWith(
         roomState: RoomNodeState(
           roomId: 'r1',
@@ -420,7 +420,7 @@ void main() {
 
       // Remote host remained online, but only has original un-dismissed minions/encounter state
       final hostProfile = CampaignProfile.defaultProfile(
-              id: 'camp-partition', nodeId: 'test_node')
+              id: 'camp-partition', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
           .copyWith(
         roomState: RoomNodeState(
           roomId: 'r1',
@@ -471,13 +471,13 @@ void main() {
           physicalTime: 1000, logicalCounter: 2, nodeId: 'peerB');
 
       final profileA =
-          CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')
+          CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
               .copyWith(
         notesRegister: const CrdtLwwRegister<String>(
             value: 'Local notes: Discovered hidden cave.', timestamp: tsA),
       );
       final profileB =
-          CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node')
+          CampaignProfile.defaultProfile(id: 'camp1', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'))
               .copyWith(
         notesRegister: const CrdtLwwRegister<String>(
             value: 'Remote notes: Trapped the chest.', timestamp: tsB),

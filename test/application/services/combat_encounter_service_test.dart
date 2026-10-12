@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_combat_resolver.dart';
@@ -234,7 +235,7 @@ void main() {
         maxHp: 10,
       );
       final profile =
-          CampaignProfile.defaultProfile(nodeId: 'test_node').copyWith(
+          CampaignProfile.defaultProfile(nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node')).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'R1',
@@ -281,7 +282,7 @@ void main() {
         tempHp: 5,
       );
       final profile =
-          CampaignProfile.defaultProfile(nodeId: 'test_node').copyWith(
+          CampaignProfile.defaultProfile(nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node')).copyWith(
         roomState: RoomNodeState.fromLists(
           roomId: 'r_immutable',
           roomCode: 'IMMUTABLE',
@@ -545,7 +546,7 @@ void main() {
       );
 
       final profile = CampaignProfile.defaultProfile(
-          id: 'camp_clock_test', nodeId: 'test_node');
+          id: 'camp_clock_test', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       final updatedProfile = await timedService.updateEncounterParticipants(
         profile: profile,
         encounter: [p1],

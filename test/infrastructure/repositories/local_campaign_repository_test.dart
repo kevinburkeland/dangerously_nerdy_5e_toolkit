@@ -66,7 +66,7 @@ void main() {
       });
 
       final p1 = CampaignProfile.defaultProfile(
-          name: 'Campaign Alpha', nodeId: 'test_node');
+          name: 'Campaign Alpha', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await repo.saveProfileImmediate(p1);
       await Future<void>.delayed(Duration.zero);
 
@@ -85,9 +85,9 @@ void main() {
       addTearDown(repo.dispose);
 
       final p1 =
-          CampaignProfile.defaultProfile(name: 'Camp 1', nodeId: 'test_node');
+          CampaignProfile.defaultProfile(name: 'Camp 1', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       final p2 =
-          CampaignProfile.defaultProfile(name: 'Camp 2', nodeId: 'test_node');
+          CampaignProfile.defaultProfile(name: 'Camp 2', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await repo.saveProfileImmediate(p1);
       await repo.saveProfileImmediate(p2);
 
@@ -125,7 +125,9 @@ void main() {
       synchronousFlag = true;
       final saveFuture = repo.saveProfileImmediate(
           CampaignProfile.defaultProfile(
-              name: 'Async Test', nodeId: 'test_node'));
+              name: 'Async Test',
+              nodeId: 'test_node',
+              timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node')));
       synchronousFlag = false;
 
       await saveFuture;
@@ -164,6 +166,7 @@ void main() {
             id: 'mutex_profile_$i',
             name: 'Mutex Profile $i',
             nodeId: 'test_node',
+            timestamp: HybridLogicalClock(physicalTime: 1000 + i, logicalCounter: 0, nodeId: 'test_node'),
           );
           await repo.saveProfileImmediate(profile);
         }));
@@ -186,6 +189,7 @@ void main() {
         id: 'healthy-id',
         name: 'Healthy Campaign',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       );
       final healthyDtoMap = CampaignProfileDto.fromDomain(healthy).toMap();
       const corruptPayload = '{"id":"corrupt-id", "broken": [invalid json syntax';
@@ -221,6 +225,7 @@ void main() {
         id: 'healthy-id-2',
         name: 'Healthy Campaign 2',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       );
       await repo.saveProfileImmediate(p2);
 
@@ -286,6 +291,7 @@ void main() {
         id: 'healthy-id',
         name: 'Healthy Campaign',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       );
       final healthyDtoMap = CampaignProfileDto.fromDomain(healthy).toMap();
       const corruptPayload = '{"id":"corrupt-id", "broken": [invalid json syntax';
@@ -524,6 +530,7 @@ void main() {
           id: 'camp-healthy',
           name: 'Healthy Campaign',
           nodeId: runtimeReplica.value,
+          timestamp: HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: runtimeReplica.value),
         );
         final healthyDto = CampaignProfileDto.fromDomain(healthyProfile);
 

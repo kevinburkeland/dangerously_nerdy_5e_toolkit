@@ -149,7 +149,7 @@ This document details the application-level synchronization services, transport 
 | `roomCode` | Yes | `String` | Immutable ID (`joinImmutableId`) | N/A | Divergence throws `StateError` (isolated at app layer) | Empty string takes non-empty string | Yes (`==`) | `aggregate_join_laws_test.dart` |
 | `title` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register merge (`titleRegister.merge`) | N/A | Higher HLC wins; exact-HLC collision throws `StateError` | Genesis HLC on genuine absence | Yes (`titleRegister == other.titleRegister`) | `aggregate_join_laws_test.dart`, `mutable_field_propagation_pass_4_2_test.dart` |
 | `description` | Yes | `CrdtLwwRegister<String>` | CRDT LWW register merge (`descriptionRegister.merge`) | N/A | Higher HLC wins; exact-HLC collision throws `StateError` | Genesis HLC on genuine absence | Yes (`descriptionRegister == other.descriptionRegister`) | `campaign_profile_test.dart`, `aggregate_join_laws_test.dart`, `mutable_field_propagation_pass_4_2_test.dart` |
-| `entityLinks` | Yes | `CrdtOrSet<RoomEntityLink>` | CRDT OR-set merge (`joinEntityLinks`) | Tombstoned remove (`unbindEntityFromRoom`), Add-wins | Exact-HLC collision throws `StateError` | List batch-added with genesis HLC | Yes (`entityLinksCrdt == other.entityLinksCrdt`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
+| `entityLinks` | Yes | `EntityLinkCrdtSet` | Generation-aware CRDT merge (`joinEntityLinks`) | Generation-aware tombstoned remove (`unbindEntityFromRoom`), same-generation removal wins | Higher generation dominates; exact-HLC collision throws `StateError` | Deserialized via `EntityLinkCrdtSet.fromMap` / `fromCrdtOrSet` migration | Yes (`entityLinksCrdt == other.entityLinksCrdt`) | `aggregate_join_laws_test.dart`, `aggregate_convergence_pass_4_1_test.dart` |
 | `entityInstances` | Yes | `List<EntityInstance>` | Grow-only map-by-instanceId recursion (`joinEntityInstances`) | Grow-only (no application removal in Pass 4) | Field-level divergence throws `StateError` | Deserialized from List | Yes (`_deepEquality`) | `campaign_profile_test.dart`, `aggregate_join_laws_test.dart` |
 | `containers` | Yes | `List<LootContainer>` | Grow-only map-by-containerId recursion (`joinContainers`) | Grow-only (no application removal in Pass 4) | Field-level divergence throws `StateError` | Deserialized from List | Yes (`_deepEquality`) | `aggregate_join_laws_test.dart` |
 | `activeEncounter` | Yes | `CrdtOrSet<EncounterParticipant>` | CRDT OR-set merge | Tombstoned remove, Add-wins | Exact-HLC collision throws `StateError` | List batch-added with genesis HLC | Yes (`==`) | `aggregate_join_laws_test.dart` |
@@ -201,7 +201,7 @@ Replicated aggregate entities distinguish between **authoritative replicated CRD
 - **Migration Only:** Legacy list/set forms in DTOs (`partyCharacterIds`, `pinnedRuleIds`) are accepted solely as backward-compatibility migration inputs when the authoritative `partyRoster_crdt` / `pinnedRules_crdt` key is absent from the wire/disk record.
 
 ### 14.3 RoomNodeState
-- **Authoritative:** `entityLinksCrdt` (`CrdtOrSet<RoomEntityLink>`). Stores full causal history of room entity links, item HLCs, and tombstones. Active production binding/unbinding mutations MUST operate on `entityLinksCrdt` using authoritative HLCs.
+- **Authoritative:** `entityLinksCrdt` (`EntityLinkCrdtSet`). Stores full causal history of room entity links, generation identity, and generation-aware tombstones. Active production binding/unbinding mutations MUST operate on `entityLinksCrdt` using authoritative HLCs. Normal runtime APIs do not accept legacy `CrdtOrSet<RoomEntityLink>` authority.
 - **Derived View:** `entityLinks` (`List<RoomEntityLink>`). Read-only derived view of active links (`entityLinksCrdt.activeValues.toList()`).
 
 ---
@@ -303,9 +303,15 @@ For every authoritative replicated register (`nameRegister`, `titleRegister`, `d
 - **ABSENT Authoritative Register:**
   - Deterministic legacy migration runs, wrapping legacy scalar data into a genesis HLC register (`pt: 0, lc: 0, node: 'genesis'`).
 
-### 17.5 Recursive Nested CRDT Composition (`RoomNodeState.entityLinksCrdt` / Pass 4.2.2)
-- **Container Structure:** `RoomNodeState.entityLinksCrdt` is a `CrdtOrSet<RoomEntityLink>`.
-- **OR-Set Authority:** The outer OR-Set layer governs link membership, additions, removals (`unbindEntityFromRoom`), and tombstones under add-wins semantics.
+### 17.5 Recursive Nested CRDT Composition (`RoomNodeState.entityLinksCrdt` / Pass 4.2.2 & Pass 4.2.4)
+- **Container Structure:** `RoomNodeState.entityLinksCrdt` is an `EntityLinkCrdtSet`. Normal runtime APIs do not accept legacy `CrdtOrSet<RoomEntityLink>` authority.
+- **Generation-Aware Membership Authority:** The collection enforces generation-aware semantics:
+  - Explicit incarnation/generation identity (`incarnationTimestamp`).
+  - Generation-aware tombstones (`EntityLinkTombstone` tracking `targetGeneration`).
+  - Higher generation strictly dominates lower generation.
+  - Same-generation active payloads recursively compose via `RoomEntityLink.join`.
+  - Same-generation native removal wins (`!legacyAddWins`).
+  - Legacy add-wins behavior exists only at the one-time migration boundary (`legacyAddWins = true`) where required to preserve historical OR-set semantics.
 - **Nested Causal Registers:** Each surviving `RoomEntityLink` contains its own independent causal registers (`displayNameRegister`, `notesRegister`).
 - **Recursive Join:** When both replicas contain surviving link items for the same `entityId` within the same incarnation, `joinEntityLinks` recursively merges the payloads via `RoomEntityLink.join(localItem.value, remoteItem.value)` rather than choosing one whole payload solely by outer item timestamp.
 - **Preservation of Independent Field Edits:** Independent edits to different fields of the same link (e.g., Replica A edits `displayName`, Replica B edits `notes`) both survive reconciliation without fault.

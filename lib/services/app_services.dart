@@ -135,7 +135,8 @@ class AppServices {
     _instance.debouncedStorage.cancelAllForTesting();
     _instance.presetService.clearCacheForTesting();
     _instance.minionSession.clearCacheForTesting();
-    _instance.campaignProfileService.clearCacheForTesting();
+    // ignore: invalid_use_of_visible_for_testing_member
+    CampaignProfileService.resetForTesting();
     // ignore: invalid_use_of_visible_for_testing_member
     AppDatabaseService.instance.resetForTesting();
     _instance = AppServices._();

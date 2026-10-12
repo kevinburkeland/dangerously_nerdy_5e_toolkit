@@ -319,6 +319,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                       name: finalName,
                       edition: edition,
                       nodeId: _controller.nodeId,
+                      clock: _controller.clock,
                     );
                     final service = AppServices.instance.campaignProfileService;
                     await service.saveProfileImmediate(newProf);

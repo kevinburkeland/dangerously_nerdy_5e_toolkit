@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -95,6 +96,7 @@ void main() {
         id: 'camp_dm_sheet_1',
         name: 'Fellowship Campaign',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(partyCharacterIds: [hero.id.slug]);
 
       await CampaignProfileService().saveProfileImmediate(profile);
@@ -123,6 +125,7 @@ void main() {
         id: 'camp_dm_sheet_2',
         name: 'Rangers Campaign',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(partyCharacterIds: [hero.id.slug]);
 
       await CampaignProfileService().saveProfileImmediate(profile);
@@ -168,6 +171,7 @@ void main() {
         id: 'camp_dm_sheet_3',
         name: 'Elven Campaign',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(partyCharacterIds: []);
 
       await CampaignProfileService().saveProfileImmediate(profile);

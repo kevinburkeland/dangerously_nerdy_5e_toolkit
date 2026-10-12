@@ -234,7 +234,7 @@ void main() {
       final profile = CampaignProfile.defaultProfile(
         id: 'camp_frost_haven',
         name: 'Frost Haven Campaign',
-        nodeId: 'test_node',
+        nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       );
       await campaignRepo.saveProfileImmediate(profile);
       await campaignRepo.setActiveProfileId(profile.id);
@@ -275,7 +275,7 @@ void main() {
       final localProfile = CampaignProfile.defaultProfile(
         id: 'vault_sync_1',
         name: 'Local Fresh State',
-        nodeId: 'test_node',
+        nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(
         lastPlayedAt: now.subtract(const Duration(seconds: 10)),
       );

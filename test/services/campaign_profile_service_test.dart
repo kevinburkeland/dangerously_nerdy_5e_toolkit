@@ -167,7 +167,7 @@ void main() {
 
     test('Default factory initializes staging area and core pinned rules', () {
       final def = CampaignProfile.defaultProfile(
-          name: 'Lost Mine Explorers', nodeId: 'test_node');
+          name: 'Lost Mine Explorers', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       expect(def.id, startsWith('campaign_'));
       expect(def.name, equals('Lost Mine Explorers'));
       expect(def.edition, equals(DmRulesEdition.v2024));
@@ -181,8 +181,10 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       AppServices.reset();
+      final testReplica = ReplicaId('campaign_profile_test_replica');
       CampaignProfileService(
-        replicaId: ReplicaId('campaign_profile_test_replica'),
+        replicaId: testReplica,
+        clock: StatefulHlcClock(replicaId: testReplica),
       );
     });
 
@@ -221,9 +223,9 @@ void main() {
       final service = CampaignProfileService();
 
       final p1 = CampaignProfile.defaultProfile(
-          id: 'camp_1', name: 'Crown City Vault Heist', nodeId: 'test_node');
+          id: 'camp_1', name: 'Crown City Vault Heist', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       final p2 = CampaignProfile.defaultProfile(
-          id: 'camp_2', name: 'Tomb of the Serpent King', nodeId: 'test_node');
+          id: 'camp_2', name: 'Tomb of the Serpent King', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
 
       await service.saveProfileImmediate(p1);
       await service.saveProfileImmediate(p2);
@@ -244,6 +246,7 @@ void main() {
         id: 'source_1',
         name: 'Shadows of the Vampire',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(
         notesMarkdown: 'Secret DM notes: The vampire is in the chapel.',
         notesTimestamp: const HybridLogicalClock(
@@ -271,9 +274,9 @@ void main() {
       final service = CampaignProfileService();
 
       final p1 = CampaignProfile.defaultProfile(
-          id: 'camp_a', name: 'Campaign Alpha', nodeId: 'test_node');
+          id: 'camp_a', name: 'Campaign Alpha', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       final p2 = CampaignProfile.defaultProfile(
-          id: 'camp_b', name: 'Campaign Beta', nodeId: 'test_node');
+          id: 'camp_b', name: 'Campaign Beta', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
 
       await service.saveProfileImmediate(p1);
       await service.saveProfileImmediate(p2);
@@ -294,6 +297,11 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       AppServices.reset();
+      final testReplica = ReplicaId('campaign_profile_test_replica');
+      CampaignProfileService(
+        replicaId: testReplica,
+        clock: StatefulHlcClock(replicaId: testReplica),
+      );
     });
 
     test('Exports and hydrates valid profile snapshot JSON', () async {
@@ -302,6 +310,7 @@ void main() {
         id: 'camp_export_test',
         name: 'Starfarer Odyssey',
         nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
       ).copyWith(
         notesMarkdown: 'Asteroid base coordinates: 42.88',
         notesTimestamp: const HybridLogicalClock(

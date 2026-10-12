@@ -149,7 +149,7 @@ class LocalCampaignRepository implements ICampaignRepository {
         // Fall back to first healthy profile in runtime memory without clobbering activeProfileIdKey in DB
         _activeProfileId = profiles.first.id;
       } else {
-        final def = CampaignProfile.defaultProfile(nodeId: nodeId);
+        final def = CampaignProfile.defaultProfile(nodeId: nodeId, clock: _clock);
         _memoryCache[def.id] = def;
         profiles.add(def);
         _activeProfileId = def.id;
