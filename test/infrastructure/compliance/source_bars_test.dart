@@ -425,5 +425,159 @@ void main() {
       final allowedPaths = ['lib/infrastructure/dtos/migrations/'];
       expect(allowedPaths.any((p) => allowedMigrationPath.contains(p)), isTrue);
     });
+
+    List<String> findImmutableConfigViolations(String content, [String filePath = '']) {
+      final violations = <String>[];
+      var pos = 0;
+      while (true) {
+        final idx = content.indexOf('.copyWith(', pos);
+        if (idx == -1) break;
+
+        var receiverEnd = idx;
+        var receiverStart = receiverEnd - 1;
+        while (receiverStart >= 0 &&
+            (content[receiverStart] == ' ' || content[receiverStart] == '\n' || content[receiverStart] == '\r')) {
+          receiverStart--;
+          receiverEnd--;
+        }
+        while (receiverStart >= 0 &&
+            (RegExp(r'[a-zA-Z0-9_\.]').hasMatch(content[receiverStart]) ||
+                content[receiverStart] == ')' ||
+                content[receiverStart] == '?')) {
+          receiverStart--;
+        }
+        receiverStart++;
+        final receiver = content.substring(receiverStart, receiverEnd).trim().replaceAll('?', '');
+
+        final parenStart = idx + '.copyWith'.length;
+        var depth = 1;
+        var cur = parenStart + 1;
+        while (cur < content.length && depth > 0) {
+          if (content[cur] == '(') {
+            depth++;
+          } else if (content[cur] == ')') {
+            depth--;
+          }
+          cur++;
+        }
+
+        final callBody = content.substring(parenStart, cur);
+
+        final hasPosition = RegExp(r'\bposition\s*:').hasMatch(callBody);
+        final hasIsVisible = RegExp(r'\bisVisible\s*:').hasMatch(callBody);
+        final hasRuntimeData = RegExp(r'\bruntimeData\s*:').hasMatch(callBody);
+        final hasCustomProperties = RegExp(r'\bcustomProperties\s*:').hasMatch(callBody);
+
+        final isEntityInstanceOrLink = RegExp(
+                r'(instance|entityinstance|link|entitylink|roomentitylink)',
+                caseSensitive: false)
+            .hasMatch(receiver);
+        final isRoomNodeState = RegExp(
+                r'(room|roomstate|roomnode|roomnodestate|node)',
+                caseSensitive: false)
+            .hasMatch(receiver);
+
+        bool isViolation = false;
+        if (hasPosition || hasIsVisible || hasRuntimeData) {
+          if (isEntityInstanceOrLink || isRoomNodeState || receiver.isEmpty) {
+            isViolation = true;
+          }
+        }
+        if (hasCustomProperties) {
+          if (isRoomNodeState || isEntityInstanceOrLink) {
+            isViolation = true;
+          }
+        }
+
+        if (isViolation) {
+          final lineNumber = content.substring(0, idx).split('\n').length;
+          final snippet = content.substring(receiverStart, cur.clamp(receiverStart, idx + 120)).replaceAll('\n', ' ');
+          violations.add('$filePath:$lineNumber -> $snippet');
+        }
+
+        pos = idx + '.copyWith('.length;
+      }
+      return violations;
+    }
+
+    test(
+        'Source Bar I: Active production code under lib/ must not mutate immutable configuration fields via copyWith on EntityInstance, RoomEntityLink, or RoomNodeState',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final content = file.readAsStringSync();
+        final fileViolations = findImmutableConfigViolations(content, file.path);
+        violations.addAll(fileViolations);
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Immutable configuration fields (position, isVisible, runtimeData, customProperties on EntityInstance/RoomEntityLink, '
+            'and customProperties on RoomNodeState) must not be mutated via copyWith in lib/ (Source Bar I).\n'
+            'Violations:\n${violations.join('\n')}',
+      );
+    });
+
+    test(
+        'Source Bar I unit validation: rejects representative immutable configuration mutations and allows character/compendium/homebrew customProperties',
+        () {
+      const badRoomCustomProps = '''
+        final updatedRoom = roomState.copyWith(
+          customProperties: {'theme': 'dungeon'},
+        );
+      ''';
+      const badLinkPosition = '''
+        final updatedLink = link.copyWith(
+          position: {'x': 10, 'y': 20},
+        );
+      ''';
+      const badInstanceVisibility = '''
+        final updatedInst = entityInstance.copyWith(
+          isVisible: false,
+        );
+      ''';
+      const badInstanceRuntimeData = '''
+        final updatedInst = instance.copyWith(
+          runtimeData: {'hp': 10},
+        );
+      ''';
+      const badLinkCustomProps = '''
+        final updatedLink = entityLink.copyWith(
+          customProperties: {'secret': true},
+        );
+      ''';
+
+      const goodCharacterCustomProps = '''
+        final updatedChar = character.copyWith(
+          customProperties: {'favoriteFood': 'lembas'},
+        );
+      ''';
+      const goodCompendiumCustomProps = '''
+        final updatedCompendium = entry.copyWith(
+          customProperties: {'sourceBook': 'PHB'},
+        );
+      ''';
+      const goodRoomTitle = '''
+        final updatedRoom = roomState.copyWith(
+          title: 'Dragon Lair',
+        );
+      ''';
+
+      expect(findImmutableConfigViolations(badRoomCustomProps), isNotEmpty);
+      expect(findImmutableConfigViolations(badLinkPosition), isNotEmpty);
+      expect(findImmutableConfigViolations(badInstanceVisibility), isNotEmpty);
+      expect(findImmutableConfigViolations(badInstanceRuntimeData), isNotEmpty);
+      expect(findImmutableConfigViolations(badLinkCustomProps), isNotEmpty);
+
+      expect(findImmutableConfigViolations(goodCharacterCustomProps), isEmpty);
+      expect(findImmutableConfigViolations(goodCompendiumCustomProps), isEmpty);
+      expect(findImmutableConfigViolations(goodRoomTitle), isEmpty);
+    });
   });
 }
