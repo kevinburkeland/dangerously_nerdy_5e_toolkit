@@ -73,30 +73,71 @@ class LocalCampaignRepository implements ICampaignRepository {
   @override
   List<CampaignProfile> get allProfiles => _memoryCache.values.toList();
 
+  final Map<String, Future<void>> _updateQueues = {};
+  Future<void>? _activeReload;
+  Future<void> _reloadChain = Future<void>.value();
+
   @override
   Future<List<CampaignProfile>> loadAllProfiles() async {
-    final nodeId = _effectiveNodeId;
+    final prev = _reloadChain;
+    final completer = Completer<List<CampaignProfile>>();
+    late final Future<void> currentFuture;
 
-    if (!_initialized) {
-      await _loadSavedRecords();
-    }
+    currentFuture = () async {
+      try {
+        await prev;
+      } catch (_) {}
 
-    if (_memoryCache.isEmpty) {
-      final def = CampaignProfile.defaultProfile(nodeId: nodeId, clock: _clock);
-      _memoryCache[def.id] = def;
-      _activeProfileId = def.id;
-      await _persistProfileToDisk(def);
-      await _persistIndex();
-      _emitState();
-    } else {
-      await _persistIndex();
-      _emitState();
-    }
+      try {
+        final result = await _executeLoadAllProfiles();
+        completer.complete(result);
+      } catch (e, st) {
+        completer.completeError(e, st);
+      }
+    }();
 
-    return _memoryCache.values.toList();
+    _reloadChain = currentFuture;
+    return completer.future;
   }
 
-  Future<void> _loadSavedRecords() async {
+  Future<List<CampaignProfile>> _executeLoadAllProfiles() async {
+    // 1. Wait for all in-flight writes across all campaign IDs so reload cannot overwrite a write in flight
+    while (_updateQueues.isNotEmpty) {
+      final pending = List<Future<void>>.from(_updateQueues.values);
+      await Future.wait(pending.map((f) => f.catchError((_) {})));
+    }
+
+    // 2. Set active reload future so subsequent writes wait for this reload to finish updating memory cache
+    final reloadCompleter = Completer<void>();
+    _activeReload = reloadCompleter.future;
+
+    try {
+      final nodeId = _effectiveNodeId;
+      final success = await _loadSavedRecords();
+      if (!success) {
+        return [];
+      }
+
+      if (_memoryCache.isEmpty) {
+        final def = CampaignProfile.defaultProfile(nodeId: nodeId, clock: _clock);
+        _memoryCache[def.id] = def;
+        _activeProfileId = def.id;
+        await _persistProfileToDisk(def);
+        await _persistIndex();
+        _emitState();
+      } else {
+        await _persistIndex();
+        _emitState();
+      }
+
+      return _memoryCache.values.toList();
+    } finally {
+      _activeReload = null;
+      reloadCompleter.complete();
+    }
+  }
+
+  Future<bool> _loadSavedRecords() async {
     try {
       List<String> indexList = [];
       final dbIndex =
@@ -110,9 +151,10 @@ class LocalCampaignRepository implements ICampaignRepository {
         indexList = prefs.getStringList(profileIndexKey) ?? <String>[];
       }
 
-      final profiles = <CampaignProfile>[];
-      _memoryCache.clear();
-      _rejectedProfileIds.clear();
+      final newProfiles = <CampaignProfile>[];
+      final newMemoryCache = <String, CampaignProfile>{};
+      final newUnparsedCache = <String, UnparsedPayloadCache>{};
+      final newRejectedProfileIds = <String>{};
 
       for (final id in indexList) {
         String? rawJson = _db
@@ -132,17 +174,16 @@ class LocalCampaignRepository implements ICampaignRepository {
             final dto = CampaignProfileDto.fromJson(rawJson);
             if (dto.unparsedPartyRoster.isNotEmpty ||
                 dto.unparsedMinions.isNotEmpty) {
-              _unparsedCache[id] = UnparsedPayloadCache(
+              newUnparsedCache[id] = UnparsedPayloadCache(
                 unparsedPartyRoster: dto.unparsedPartyRoster,
                 unparsedMinions: dto.unparsedMinions,
               );
             }
             final profile = dto.toDomain();
-            _observeTrustedProfileTimestamps(profile);
-            _memoryCache[id] = profile;
-            profiles.add(profile);
+            newMemoryCache[id] = profile;
+            newProfiles.add(profile);
           } catch (e, st) {
-            _rejectedProfileIds.add(id);
+            newRejectedProfileIds.add(id);
             LoggingService().logNonFatal(
               e,
               st,
@@ -161,22 +202,38 @@ class LocalCampaignRepository implements ICampaignRepository {
         activeId = prefs.getString(activeProfileIdKey);
       }
 
-      if (activeId != null && _memoryCache.containsKey(activeId)) {
-        _activeProfileId = activeId;
-      } else if (profiles.isNotEmpty) {
-        _activeProfileId = profiles.first.id;
+      String? newActiveProfileId;
+      if (activeId != null && newMemoryCache.containsKey(activeId)) {
+        newActiveProfileId = activeId;
+      } else if (newProfiles.isNotEmpty) {
+        newActiveProfileId = newProfiles.first.id;
       } else {
-        _activeProfileId = null;
+        newActiveProfileId = null;
       }
 
+      for (final profile in newProfiles) {
+        _observeTrustedProfileTimestamps(profile);
+      }
+
+      // Commit state only after complete successful reading
+      _memoryCache.clear();
+      _memoryCache.addAll(newMemoryCache);
+      _unparsedCache.clear();
+      _unparsedCache.addAll(newUnparsedCache);
+      _rejectedProfileIds.clear();
+      _rejectedProfileIds.addAll(newRejectedProfileIds);
+      _activeProfileId = newActiveProfileId;
       _initialized = true;
+
+      return true;
     } catch (e, st) {
       LoggingService().logNonFatal(
         e,
         st,
         reason: 'Failed to load campaign profiles.',
       );
-      _initialized = true;
+      // On failure it does not touch _memoryCache, _activeProfileId, _initialized or the index.
+      return false;
     }
   }
 
@@ -215,8 +272,6 @@ class LocalCampaignRepository implements ICampaignRepository {
     return activeProfile;
   }
 
-  final Map<String, Future<void>> _updateQueues = {};
-
   @override
   Future<CampaignProfile> updateProfile(
     String id,
@@ -230,6 +285,13 @@ class LocalCampaignRepository implements ICampaignRepository {
       try {
         await prev;
       } catch (_) {}
+
+      final activeReload = _activeReload;
+      if (activeReload != null) {
+        try {
+          await activeReload;
+        } catch (_) {}
+      }
 
       try {
         if (!_initialized) await _loadSavedRecords();
@@ -268,6 +330,13 @@ class LocalCampaignRepository implements ICampaignRepository {
         await prev;
       } catch (_) {}
 
+      final activeReload = _activeReload;
+      if (activeReload != null) {
+        try {
+          await activeReload;
+        } catch (_) {}
+      }
+
       try {
         if (!_initialized) await _loadSavedRecords();
         _memoryCache[profile.id] = profile;
@@ -297,28 +366,57 @@ class LocalCampaignRepository implements ICampaignRepository {
 
   @override
   Future<void> deleteProfile(String id) async {
-    if (!_initialized) await _loadSavedRecords();
-    _memoryCache.remove(id);
-    _unparsedCache.remove(id);
-    _rejectedProfileIds.remove(id);
+    final prev = _updateQueues[id] ?? Future<void>.value();
+    final completer = Completer<void>();
+    late final Future<void> currentFuture;
 
-    try {
-      await _db.delete(
-          AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id');
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('$profileKeyPrefix$id');
-    } catch (_) {}
+    currentFuture = () async {
+      try {
+        await prev;
+      } catch (_) {}
 
-    await _persistIndex();
-
-    if (_activeProfileId == id) {
-      _activeProfileId =
-          _memoryCache.keys.isNotEmpty ? _memoryCache.keys.first : null;
-      if (_activeProfileId != null) {
-        await setActiveProfileId(_activeProfileId!);
+      final activeReload = _activeReload;
+      if (activeReload != null) {
+        try {
+          await activeReload;
+        } catch (_) {}
       }
-    }
-    _emitState();
+
+      try {
+        if (!_initialized) await _loadSavedRecords();
+        _memoryCache.remove(id);
+        _unparsedCache.remove(id);
+        _rejectedProfileIds.remove(id);
+
+        try {
+          await _db.delete(
+              AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id');
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('$profileKeyPrefix$id');
+        } catch (_) {}
+
+        await _persistIndex();
+
+        if (_activeProfileId == id) {
+          _activeProfileId =
+              _memoryCache.keys.isNotEmpty ? _memoryCache.keys.first : null;
+          if (_activeProfileId != null) {
+            await setActiveProfileId(_activeProfileId!);
+          }
+        }
+        _emitState();
+        completer.complete();
+      } catch (e, st) {
+        completer.completeError(e, st);
+      } finally {
+        if (identical(_updateQueues[id], currentFuture)) {
+          _updateQueues.remove(id);
+        }
+      }
+    }();
+
+    _updateQueues[id] = currentFuture;
+    return completer.future;
   }
 
   @override

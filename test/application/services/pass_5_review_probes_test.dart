@@ -12,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
@@ -19,11 +20,12 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
-import 'application/services/room_sync_orchestrator_test.dart' as h;
+import 'room_sync_orchestrator_test.dart' as h;
 
 class _DelayRecordingDatabaseService extends AppDatabaseService {
   final Map<String, Map<String, dynamic>> writtenData = {};
   int delayMs = 20;
+  bool throwOnIndexReadOnce = false;
 
   _DelayRecordingDatabaseService() : super.custom();
 
@@ -45,6 +47,10 @@ class _DelayRecordingDatabaseService extends AppDatabaseService {
 
   @override
   dynamic get(String boxName, String key, {dynamic defaultValue}) {
+    if (throwOnIndexReadOnce && key == LocalCampaignRepository.profileIndexKey) {
+      throwOnIndexReadOnce = false;
+      throw StateError('Simulated index read failure');
+    }
     return writtenData[boxName]?[key] ?? defaultValue;
   }
 
@@ -343,11 +349,281 @@ void main() {
       repo.dispose();
     });
 
-    // U1: blind room-state write method deleted
-    test('U1 updateRoomState method deleted', () {
-      const isDeleted = true;
-      print('U1 method deleted=$isDeleted (expected true)');
-      expect(isDeleted, isTrue);
+    // C0: storage holds A. Call loadAllProfiles()
+    test('C0 baseline: storage holds A, loadAllProfiles returns [A]', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 0;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('me'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final profileA = CampaignProfile(
+        id: 'A',
+        name: 'Campaign A',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rA', roomCode: 'CR-A', title: 'tA'),
+        nodeId: 'me',
+      );
+      final jsonA = CampaignProfileDto.fromDomain(profileA).toJson();
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        '${LocalCampaignRepository.profileKeyPrefix}A'
+      ] = jsonA;
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        LocalCampaignRepository.profileIndexKey
+      ] = ['A'];
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        LocalCampaignRepository.activeProfileIdKey
+      ] = 'A';
+
+      final loaded = await repo.loadAllProfiles();
+      final ids = loaded.map((p) => p.id).toList();
+      final active = repo.activeProfileId;
+      final index = mockDb.get(AppDatabaseService.boxCampaignProfiles, LocalCampaignRepository.profileIndexKey);
+
+      print('C0: ids $ids, active $active, index $index');
+      expect(ids, equals(['A']));
+      expect(active, equals('A'));
+      expect(index, equals(['A']));
+
+      repo.dispose();
+    });
+
+    // C1: repo loaded with A. Storage gains B + index [A, B] + active id B. Call loadAllProfiles()
+    test('C1: repo loaded with A. Storage gains B + index [A, B] + active id B. Call loadAllProfiles()', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 0;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('me'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final profileA = CampaignProfile(
+        id: 'A',
+        name: 'Campaign A',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rA', roomCode: 'CR-A', title: 'tA'),
+        nodeId: 'me',
+      );
+      final jsonA = CampaignProfileDto.fromDomain(profileA).toJson();
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        '${LocalCampaignRepository.profileKeyPrefix}A'
+      ] = jsonA;
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        LocalCampaignRepository.profileIndexKey
+      ] = ['A'];
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        LocalCampaignRepository.activeProfileIdKey
+      ] = 'A';
+
+      // First load: loaded with A
+      await repo.loadAllProfiles();
+
+      // Storage gains B + index [A, B] + active id B
+      final profileB = CampaignProfile(
+        id: 'B',
+        name: 'Campaign B',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rB', roomCode: 'CR-B', title: 'tB'),
+        nodeId: 'me',
+      );
+      final jsonB = CampaignProfileDto.fromDomain(profileB).toJson();
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        '${LocalCampaignRepository.profileKeyPrefix}B'
+      ] = jsonB;
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        LocalCampaignRepository.profileIndexKey
+      ] = ['A', 'B'];
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        LocalCampaignRepository.activeProfileIdKey
+      ] = 'B';
+
+      // Call loadAllProfiles()
+      final loaded = await repo.loadAllProfiles();
+      final ids = loaded.map((p) => p.id).toList();
+      final active = repo.activeProfileId;
+      final index = mockDb.get(AppDatabaseService.boxCampaignProfiles, LocalCampaignRepository.profileIndexKey);
+
+      print('C1: ids $ids, active $active, index $index');
+      expect(ids, equals(['A', 'B']));
+      expect(active, equals('B'));
+      expect(index, equals(['A', 'B']));
+
+      repo.dispose();
+    });
+
+    // C2: repo loaded with A, B. Storage deletes B, index [A]. Call loadAllProfiles()
+    test('C2: repo loaded with A, B. Storage deletes B, index [A]. Call loadAllProfiles()', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 0;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('me'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final profileA = CampaignProfile(
+        id: 'A',
+        name: 'Campaign A',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rA', roomCode: 'CR-A', title: 'tA'),
+        nodeId: 'me',
+      );
+      final profileB = CampaignProfile(
+        id: 'B',
+        name: 'Campaign B',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rB', roomCode: 'CR-B', title: 'tB'),
+        nodeId: 'me',
+      );
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        '${LocalCampaignRepository.profileKeyPrefix}A'
+      ] = CampaignProfileDto.fromDomain(profileA).toJson();
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        '${LocalCampaignRepository.profileKeyPrefix}B'
+      ] = CampaignProfileDto.fromDomain(profileB).toJson();
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        LocalCampaignRepository.profileIndexKey
+      ] = ['A', 'B'];
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        LocalCampaignRepository.activeProfileIdKey
+      ] = 'A';
+
+      // First load: loaded with A, B
+      await repo.loadAllProfiles();
+
+      // Storage deletes B, index [A]
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]!.remove(
+        '${LocalCampaignRepository.profileKeyPrefix}B',
+      );
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        LocalCampaignRepository.profileIndexKey
+      ] = ['A'];
+
+      // Call loadAllProfiles()
+      final loaded = await repo.loadAllProfiles();
+      final ids = loaded.map((p) => p.id).toList();
+      final index = mockDb.get(AppDatabaseService.boxCampaignProfiles, LocalCampaignRepository.profileIndexKey);
+
+      print('C2: ids $ids, index $index');
+      expect(ids, equals(['A']));
+      expect(index, equals(['A']));
+
+      repo.dispose();
+    });
+
+    // F1: storage holds A. The first index read throws once. Call loadAllProfiles() twice
+    test('F1: storage holds A. The first index read throws once. Call loadAllProfiles() twice', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 0;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('me'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final profileA = CampaignProfile(
+        id: 'A',
+        name: 'Campaign A',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rA', roomCode: 'CR-A', title: 'tA'),
+        nodeId: 'me',
+      );
+      mockDb.writtenData.putIfAbsent(AppDatabaseService.boxCampaignProfiles, () => {})[
+        '${LocalCampaignRepository.profileKeyPrefix}A'
+      ] = CampaignProfileDto.fromDomain(profileA).toJson();
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        LocalCampaignRepository.profileIndexKey
+      ] = ['A'];
+      mockDb.writtenData[AppDatabaseService.boxCampaignProfiles]![
+        LocalCampaignRepository.activeProfileIdKey
+      ] = 'A';
+
+      // First index read throws once
+      mockDb.throwOnIndexReadOnce = true;
+
+      // Call loadAllProfiles() twice
+      final firstLoaded = await repo.loadAllProfiles();
+      final firstIds = firstLoaded.map((p) => p.id).toList();
+
+      final secondLoaded = await repo.loadAllProfiles();
+      final secondIds = secondLoaded.map((p) => p.id).toList();
+
+      final index = mockDb.get(AppDatabaseService.boxCampaignProfiles, LocalCampaignRepository.profileIndexKey);
+
+      print('F1: first $firstIds, second $secondIds, index $index');
+      expect(firstIds, equals([]));
+      expect(secondIds, equals(['A']));
+      expect(index, equals(['A']));
+
+      repo.dispose();
+    });
+
+    // Required test 2: A reload during an in-flight updateProfile (slow DB) keeps the update
+    test('A reload during an in-flight updateProfile (slow DB) keeps the update', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 30;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('me'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final profile = CampaignProfile(
+        id: 'c1',
+        name: 'Campaign 1',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'r1', roomCode: 'CR-1', title: 't1'),
+        nodeId: 'me',
+      );
+      await repo.putProfile(profile);
+      await repo.setActiveProfileId('c1');
+
+      // Start updateProfile (+10 gp)
+      final updateFuture = repo.updateProfile('c1', (current) {
+        return current.copyWith(
+          partyPurse: current.partyPurse.modifyDenomination(
+            'gp',
+            10,
+            replicaId: repo.replicaId,
+          ),
+        );
+      });
+
+      // Call loadAllProfiles() before updateProfile finishes
+      final loadFuture = repo.loadAllProfiles();
+
+      await Future.wait([updateFuture, loadFuture]);
+
+      final finalGp = repo.activeProfile!.partyPurse.getBalance('gp');
+      print('In-flight reload test: final gp=$finalGp (expected 10)');
+      expect(finalGp, equals(10));
+
+      final persistedProfile = await repo.getProfile('c1');
+      expect(persistedProfile!.partyPurse.getBalance('gp'), equals(10));
+
+      repo.dispose();
     });
   });
 }
