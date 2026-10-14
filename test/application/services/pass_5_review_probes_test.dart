@@ -561,17 +561,15 @@ void main() {
       // First index read throws once
       mockDb.throwOnIndexReadOnce = true;
 
-      // Call loadAllProfiles() twice
-      final firstLoaded = await repo.loadAllProfiles();
-      final firstIds = firstLoaded.map((p) => p.id).toList();
+      // Call loadAllProfiles() twice: first call throws, second call succeeds
+      expect(() => repo.loadAllProfiles(), throwsA(isA<StateError>()));
 
       final secondLoaded = await repo.loadAllProfiles();
       final secondIds = secondLoaded.map((p) => p.id).toList();
 
       final index = mockDb.get(AppDatabaseService.boxCampaignProfiles, LocalCampaignRepository.profileIndexKey);
 
-      print('F1: first $firstIds, second $secondIds, index $index');
-      expect(firstIds, equals([]));
+      print('F1: first threw StateError, second $secondIds, index $index');
       expect(secondIds, equals(['A']));
       expect(index, equals(['A']));
 

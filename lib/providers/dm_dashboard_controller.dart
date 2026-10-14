@@ -18,6 +18,7 @@ import '../infrastructure/resolvers/character_telemetry_resolver.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
+import '../services/logging_service.dart';
 import '../services/party/party_room_service.dart';
 
 /// State management controller for DM Dashboard.
@@ -228,7 +229,16 @@ class DmDashboardController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _allProfiles = await _campaignProfileService.loadAllProfiles();
+    try {
+      _allProfiles = await _campaignProfileService.loadAllProfiles();
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to load campaign profiles in DmDashboardController.loadData',
+      );
+      _allProfiles = [];
+    }
 
     CampaignProfile? active;
     if (initialCampaignId != null) {
@@ -237,10 +247,16 @@ class DmDashboardController extends ChangeNotifier {
             final pid = p.id.toUpperCase();
             final rcode = p.roomState.roomCode.toUpperCase();
             return pid == req || pid == 'CAMPAIGN_$req' || rcode == req;
-          }).firstOrNull ??
-          await _campaignProfileService.getActiveProfile();
+          }).firstOrNull;
+      if (active == null) {
+        try {
+          active = await _campaignProfileService.getActiveProfile();
+        } catch (_) {}
+      }
     } else {
-      active = await _campaignProfileService.getActiveProfile();
+      try {
+        active = await _campaignProfileService.getActiveProfile();
+      } catch (_) {}
     }
 
     _activeProfile = active ??

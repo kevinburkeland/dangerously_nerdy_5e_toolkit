@@ -9,6 +9,7 @@ import '../models/domain/session_graph_models.dart';
 import '../providers/dm_dashboard_controller.dart';
 import '../providers/settings_provider.dart';
 import '../services/app_services.dart';
+import '../services/logging_service.dart';
 import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
 import '../widgets/dm_reference/dm_interactive_tools.dart';
@@ -106,7 +107,21 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   Future<void> _showCampaignPicker() async {
     HapticService.selectionTick(context);
     final service = AppServices.instance.campaignProfileService;
-    _allProfiles = await service.loadAllProfiles();
+    try {
+      _allProfiles = await service.loadAllProfiles();
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to load campaigns for campaign picker',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load campaigns from storage')),
+        );
+      }
+      return;
+    }
 
     if (!mounted) return;
 

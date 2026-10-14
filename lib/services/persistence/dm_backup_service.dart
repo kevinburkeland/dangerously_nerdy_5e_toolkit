@@ -139,7 +139,17 @@ class DmBackupService {
   /// Packages all saved campaigns, dice presets, DPR builds, and homebrew compendium entities into a master bundle.
   Future<String> exportFullSystemSnapshot() async {
     final campaignService = CampaignProfileService();
-    final allProfiles = await campaignService.loadAllProfiles();
+    final List<CampaignProfile> allProfiles;
+    try {
+      allProfiles = await campaignService.loadAllProfiles();
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to read campaigns during system backup export',
+      );
+      rethrow;
+    }
     final customPresets = await PresetService().loadCustomPresets();
     final dprProfiles = await DprPersistenceService().loadSavedProfiles();
     final customSpells = await HomebrewPersistenceService().loadCustomSpells();

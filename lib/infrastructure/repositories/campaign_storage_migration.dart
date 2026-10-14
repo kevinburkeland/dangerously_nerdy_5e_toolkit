@@ -42,7 +42,17 @@ class CampaignStorageMigration {
     final regService = registryService ?? CampaignRegistryService();
 
     // Ensure storage records are loaded and prefs->hive copy completes
-    await repo.loadAllProfiles();
+    try {
+      await repo.loadAllProfiles();
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason:
+            'Failed to read campaign records during startup migration; skipping write steps',
+      );
+      return;
+    }
 
     // Step 2: Migrate legacy embedded characters before any repository writes
     await migrateLegacyCharacters(
@@ -130,13 +140,26 @@ class CampaignStorageMigration {
     CharacterPersistenceService? characterPersistenceService,
   }) async {
     try {
-      final registry = registryService ?? CampaignRegistryService();
+      final registry = registryService ??
+          (sl.isRegistered<CampaignRegistryService>()
+              ? sl<CampaignRegistryService>()
+              : null) ??
+          CampaignRegistryService();
       final memberships = await registry.loadMemberships();
       if (memberships.isEmpty) return;
 
-      final existingProfiles = repo.allProfiles.isEmpty
-          ? await repo.loadAllProfiles()
-          : repo.allProfiles;
+      final List<CampaignProfile> existingProfiles;
+      try {
+        existingProfiles = await repo.loadAllProfiles();
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason:
+              'Failed to read campaign records during registry adoption; skipping write steps',
+        );
+        return;
+      }
 
       final charService = characterPersistenceService ?? CharacterPersistenceService();
       final savedCharacters = await charService.loadCharacters();

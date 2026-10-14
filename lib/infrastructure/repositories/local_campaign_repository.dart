@@ -62,9 +62,6 @@ class LocalCampaignRepository implements ICampaignRepository {
   ReplicaId get replicaId => _replicaId;
   StatefulHlcClock get clock => _clock;
 
-  /// Whether the repository has successfully completed loading stored records.
-  bool get isInitialized => _initialized;
-
   @override
   String? get activeProfileId => _activeProfileId;
 
@@ -79,6 +76,10 @@ class LocalCampaignRepository implements ICampaignRepository {
   Future<void>? _activeReload;
   Future<void>? _activeReloadChain;
 
+  /// Loads all campaign profiles from persistent storage into memory.
+  ///
+  /// Throws a [StateError] if storage records could not be read.
+  /// If storage is empty and successfully read, returns an empty list `[]`.
   @override
   Future<List<CampaignProfile>> loadAllProfiles() async {
     final prev = _activeReloadChain;
@@ -89,6 +90,7 @@ class LocalCampaignRepository implements ICampaignRepository {
     }
 
     final completer = Completer<List<CampaignProfile>>();
+    completer.future.ignore();
     _activeReloadChain = completer.future;
 
     try {
@@ -120,7 +122,7 @@ class LocalCampaignRepository implements ICampaignRepository {
 
       final success = await _loadSavedRecords();
       if (!success) {
-        return [];
+        throw StateError('Failed to read campaign records from storage');
       }
 
       if (_memoryCache.isNotEmpty) {

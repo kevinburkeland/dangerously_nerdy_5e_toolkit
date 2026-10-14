@@ -8,7 +8,7 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
 import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/repositories/campaign_storage_migration.dart';
-import '../../infrastructure/repositories/local_campaign_repository.dart';
+import '../party/campaign_registry_service.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/party/party_event.dart';
 
@@ -133,13 +133,14 @@ class CampaignProfileService extends ChangeNotifier {
     _checkRepoSubscription();
     final repo = sl<ICampaignRepository>();
     await repo.loadAllProfiles();
-    if (repo is LocalCampaignRepository && !repo.isInitialized) {
-      return repo.allProfiles;
-    }
+    final regService = sl.isRegistered<CampaignRegistryService>()
+        ? sl<CampaignRegistryService>()
+        : null;
     await CampaignStorageMigration.adoptRegistryMemberships(
       repo,
       clock: _effectiveClock,
       nodeId: _effectiveNodeId,
+      registryService: regService,
     );
     if (repo.allProfiles.isEmpty) {
       final defaultProfile = CampaignProfile.defaultProfile(
@@ -237,28 +238,25 @@ class CampaignProfileService extends ChangeNotifier {
       source = all.where((p) => p.id == profileId).firstOrNull;
     }
 
+    if (source == null) {
+      throw StateError('Cannot clone campaign profile "$profileId": profile not found');
+    }
+
     final now = DateTime.now();
     final newId = 'campaign_${now.millisecondsSinceEpoch}';
     final targetName = (newName != null && newName.trim().isNotEmpty)
         ? newName.trim()
-        : '${source?.name ?? "Campaign"} (Copy)';
+        : '${source.name} (Copy)';
 
     final timestamp = _effectiveClock.nextTimestamp();
 
-    final cloned = (source ??
-            CampaignProfile.defaultProfile(
-                nodeId: _effectiveNodeId, clock: _effectiveClock))
-        .copyWith(
+    final cloned = source.copyWith(
       id: newId,
       name: targetName,
       nameTimestamp: timestamp,
       createdAt: now,
       lastPlayedAt: now,
-      roomState: (source?.roomState ??
-              CampaignProfile.defaultProfile(
-                      nodeId: _effectiveNodeId, clock: _effectiveClock)
-                  .roomState)
-          .copyWith(
+      roomState: source.roomState.copyWith(
         roomId: 'room_$newId',
         title: '$targetName - Staging Area',
         titleTimestamp: timestamp,
