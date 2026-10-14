@@ -55,9 +55,9 @@ class CampaignStorageMigration {
     final clk = clock ?? (sl.isRegistered<StatefulHlcClock>() ? sl<StatefulHlcClock>() : null);
     final nid = nodeId ??
         (clk?.replicaId.value ??
-            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : 'genesis'));
+            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null));
 
-    if (clk != null) {
+    if (clk != null && nid != null) {
       await adoptRegistryMemberships(
         repo,
         clock: clk,
@@ -65,12 +65,6 @@ class CampaignStorageMigration {
         registryService: regService,
         characterPersistenceService: charService,
       );
-
-      if (repo.allProfiles.isEmpty) {
-        final def = CampaignProfile.defaultProfile(nodeId: nid, clock: clk);
-        await repo.putProfile(def);
-        await repo.setActiveProfileId(def.id);
-      }
     }
   }
 

@@ -62,6 +62,9 @@ class LocalCampaignRepository implements ICampaignRepository {
   ReplicaId get replicaId => _replicaId;
   StatefulHlcClock get clock => _clock;
 
+  /// Whether the repository has successfully completed loading stored records.
+  bool get isInitialized => _initialized;
+
   @override
   String? get activeProfileId => _activeProfileId;
 
@@ -289,7 +292,14 @@ class LocalCampaignRepository implements ICampaignRepository {
       }
 
       try {
-        if (!_initialized) await _loadSavedRecords();
+        if (!_initialized) {
+          final ok = await _loadSavedRecords();
+          if (!ok) {
+            throw StateError(
+              'Cannot update campaign profile "$id": failed to read campaign records from storage',
+            );
+          }
+        }
         final current = _memoryCache[id];
         if (current == null) {
           throw StateError('Campaign profile with id "$id" not found');
@@ -333,7 +343,14 @@ class LocalCampaignRepository implements ICampaignRepository {
       }
 
       try {
-        if (!_initialized) await _loadSavedRecords();
+        if (!_initialized) {
+          final ok = await _loadSavedRecords();
+          if (!ok) {
+            throw StateError(
+              'Cannot put campaign profile "${profile.id}": failed to read campaign records from storage',
+            );
+          }
+        }
         _memoryCache[profile.id] = profile;
         _activeProfileId ??= profile.id;
         AppServices.instance.debouncedStorage
@@ -378,7 +395,14 @@ class LocalCampaignRepository implements ICampaignRepository {
       }
 
       try {
-        if (!_initialized) await _loadSavedRecords();
+        if (!_initialized) {
+          final ok = await _loadSavedRecords();
+          if (!ok) {
+            throw StateError(
+              'Cannot delete campaign profile "$id": failed to read campaign records from storage',
+            );
+          }
+        }
         _memoryCache.remove(id);
         _unparsedCache.remove(id);
         _rejectedProfileIds.remove(id);

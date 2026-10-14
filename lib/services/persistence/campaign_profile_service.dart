@@ -8,6 +8,7 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
 import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/repositories/campaign_storage_migration.dart';
+import '../../infrastructure/repositories/local_campaign_repository.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/party/party_event.dart';
 
@@ -132,6 +133,9 @@ class CampaignProfileService extends ChangeNotifier {
     _checkRepoSubscription();
     final repo = sl<ICampaignRepository>();
     await repo.loadAllProfiles();
+    if (repo is LocalCampaignRepository && !repo.isInitialized) {
+      return repo.allProfiles;
+    }
     await CampaignStorageMigration.adoptRegistryMemberships(
       repo,
       clock: _effectiveClock,
