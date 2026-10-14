@@ -430,7 +430,7 @@ void main() {
       final controller = DmDashboardController(
         replicaId: testReplica,
         clock: clock,
-        campaignProfileService: profileService,
+        campaignRepository: campaignRepo,
         characterPersistenceService: charPersistence,
       );
 
@@ -485,7 +485,7 @@ void main() {
       final controller = DmDashboardController(
         replicaId: testReplica,
         clock: clock,
-        campaignProfileService: profileService,
+        campaignRepository: campaignRepo,
         characterPersistenceService: charPersistence,
       );
 

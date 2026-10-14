@@ -15,6 +15,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
 Widget _buildTestApp({required Widget home}) {
   return MaterialApp(
@@ -68,7 +71,13 @@ void main() {
     final repId = ReplicaId('dm_linked_sheet_replica');
     sl.registerSingleton<ReplicaId>(repId);
     sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
-    CampaignProfileService(replicaId: repId);
+    final campRepo = LocalCampaignRepository(
+      replicaId: repId,
+      clock: sl<StatefulHlcClock>(),
+      characterRepo: LocalCharacterRepository(),
+    );
+    sl.registerSingleton<ICampaignRepository>(campRepo);
+    addTearDown(campRepo.dispose);
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
       clock: sl<StatefulHlcClock>(),
@@ -197,7 +206,7 @@ void main() {
       expect(find.text('28 HP'), findsOneWidget);
 
       final updatedProfile = await CampaignProfileService().getActiveProfile();
-      expect(updatedProfile.partyCharacterIds, contains('hero_sylas'));
+      expect(updatedProfile!.partyCharacterIds, contains('hero_sylas'));
     });
 
     testWidgets(

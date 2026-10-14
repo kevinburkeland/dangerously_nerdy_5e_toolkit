@@ -19,6 +19,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_serv
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -26,9 +27,10 @@ void main() {
   group('Homebrew Export & Import Completeness Test Suite', () {
     late HomebrewPersistenceService persistence;
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
       final replica = ReplicaId('homebrew_export_test_replica');
+      await initServiceLocator(replicaId: replica);
       CampaignProfileService(
         replicaId: replica,
         clock: StatefulHlcClock(replicaId: replica),
@@ -41,6 +43,10 @@ void main() {
       SrdFeatsLibrary.setCustomFeats([]);
       SrdBackgroundsLibrary.setCustomBackgrounds([]);
       EntityFluffService().clear();
+    });
+
+    tearDown(() {
+      sl.reset();
     });
 
     test(

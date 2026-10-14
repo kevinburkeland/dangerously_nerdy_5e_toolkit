@@ -21,8 +21,11 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'room_sync_orchestrator_test.dart' as h;
 
 class _RandomDelayDatabaseService extends AppDatabaseService {
@@ -459,6 +462,12 @@ void main() {
           telemetryInterval: const Duration(seconds: 10),
         );
 
+        sl.reset();
+        sl.registerSingleton<ReplicaId>(ReplicaId('local_dm'));
+        sl.registerSingleton<StatefulHlcClock>(sharedClock);
+        sl.registerSingleton<ICampaignRepository>(repo);
+        final facade = CampaignProfileService();
+
         final controller = DmDashboardController(
           campaignRepository: repo,
           characterRepository: charRepo,
@@ -479,6 +488,8 @@ void main() {
 
         int expectedGpSum = 0;
         int expectedLocalGpSum = 0;
+        int expectedLogCount = 0;
+        CrdtOrSet<String> expectedRoster = const CrdtOrSet<String>.empty();
         CrdtOrSet<String> expectedOrSet = const CrdtOrSet<String>.empty();
         String expectedWinningNotes = '';
         HybridLogicalClock expectedNotesHlc = const HybridLogicalClock(
@@ -554,7 +565,7 @@ void main() {
 
         // Generate local operations as closures
         for (int op = 0; op < localOpCount; op++) {
-          final localOpType = rng.nextInt(3); // 0: purse, 1: notes, 2: pinned rule
+          final localOpType = rng.nextInt(5); // 0: purse, 1: notes, 2: pinned rule, 3: logCampaignEvent, 4: updateActiveProfile roster add
           if (localOpType == 0) {
             final gp = (rng.nextInt(5) + 1) * 5;
             expectedGpSum += gp;
@@ -570,7 +581,7 @@ void main() {
                 expectedNotesHlc = noteReg.timestamp;
               }
             });
-          } else {
+          } else if (localOpType == 2) {
             final ruleName = 'local_rule_s${s}_op$op';
             opClosures.add(() async {
               await controller.togglePinnedRule(ruleName);
@@ -580,6 +591,25 @@ void main() {
                 expectedOrSet = expectedOrSet.add(ruleName, ruleName, ruleHlc);
               }
             });
+          } else if (localOpType == 3) {
+            final charId = 'hero_s${s}_$op';
+            expectedLogCount++;
+            opClosures.add(() => facade.logCampaignEvent(
+              characterId: charId,
+              characterName: 'Hero $charId',
+              type: 'milestone',
+              details: 'Milestone in schedule $s op $op',
+              roomCode: 'CR-L$s',
+            ));
+          } else {
+            final charId = 'roster_hero_s${s}_$op';
+            final ts = sharedClock.nextTimestamp();
+            expectedRoster = expectedRoster.add(charId, charId, ts);
+            opClosures.add(() => facade.updateActiveProfile(
+              (p) => p.copyWith(
+                partyRoster: p.partyRoster.add(charId, charId, ts),
+              ),
+            ));
           }
         }
 
@@ -616,6 +646,18 @@ void main() {
           finalRecord.pinnedRuleIds,
           equals(expectedOrSet.activeValues.toSet()),
           reason: 'Schedule $s: pinnedRuleIds must equal expected active values',
+        );
+
+        expect(
+          finalRecord.changeLog.length,
+          equals(expectedLogCount),
+          reason: 'Schedule $s: changeLog must contain all logged events',
+        );
+
+        expect(
+          finalRecord.partyRoster.activeValues.toSet(),
+          equals(expectedRoster.activeValues.toSet()),
+          reason: 'Schedule $s: partyRoster active values must match expected roster',
         );
 
         if (expectedWinningNotes.isNotEmpty) {
@@ -745,6 +787,9 @@ void main() {
         controller.dispose();
         orchestrator.stopSynchronization();
         repo.dispose();
+        CampaignProfileService.resetForTesting();
+        AppServices.reset();
+        sl.reset();
       }
     }, timeout: const Timeout(Duration(minutes: 5)));
   });

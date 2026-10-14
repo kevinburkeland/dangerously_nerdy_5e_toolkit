@@ -2,6 +2,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/campaign_profile.dart';
@@ -207,14 +208,18 @@ void main() {
   });
 
   group('CampaignProfileService Persistence Lifecycle Tests', () {
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
       AppServices.reset();
+      sl.reset();
       final testReplica = ReplicaId('campaign_profile_test_replica');
-      CampaignProfileService(
+      await initServiceLocator(
         replicaId: testReplica,
-        clock: StatefulHlcClock(replicaId: testReplica),
       );
+    });
+
+    tearDown(() {
+      sl.reset();
     });
 
     test('loadAllProfiles creates default My Campaign when storage is empty',
@@ -226,7 +231,7 @@ void main() {
       expect(profiles.first.name, equals('My Campaign'));
 
       final active = await service.getActiveProfile();
-      expect(active.id, equals(profiles.first.id));
+      expect(active!.id, equals(profiles.first.id));
     });
 
     test(
@@ -300,7 +305,7 @@ void main() {
 
       await service.switchProfile('camp_2');
       final active = await service.getActiveProfile();
-      expect(active.id, equals('camp_2'));
+      expect(active!.id, equals('camp_2'));
       expect(active.name, equals('Tomb of the Serpent King'));
     });
 
@@ -354,19 +359,23 @@ void main() {
       expect(all.first.id, equals('camp_b'));
 
       final active = await service.getActiveProfile();
-      expect(active.id, equals('camp_b'));
+      expect(active!.id, equals('camp_b'));
     });
   });
 
   group('DmBackupService Snapshot Import & Export Tests', () {
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
       AppServices.reset();
+      sl.reset();
       final testReplica = ReplicaId('campaign_profile_test_replica');
-      CampaignProfileService(
+      await initServiceLocator(
         replicaId: testReplica,
-        clock: StatefulHlcClock(replicaId: testReplica),
       );
+    });
+
+    tearDown(() {
+      sl.reset();
     });
 
     test('Exports and hydrates valid profile snapshot JSON', () async {

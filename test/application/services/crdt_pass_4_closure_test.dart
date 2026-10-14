@@ -11,9 +11,13 @@ import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/utils/aggregate_join_utils.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
 Character _createTestHero(String slug, String name) {
   return CharacterFactory.createLevel1Character(
@@ -51,16 +55,27 @@ void main() {
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      sl.reset();
       clock = StatefulHlcClock(
         replicaId: replicaId,
         timeProvider: () => 1700000000000,
       );
+      sl.registerSingleton<ReplicaId>(replicaId);
+      sl.registerSingleton<StatefulHlcClock>(clock);
+      final campRepo = LocalCampaignRepository(
+        replicaId: replicaId,
+        clock: clock,
+        characterRepo: LocalCharacterRepository(),
+      );
+      sl.registerSingleton<ICampaignRepository>(campRepo);
+      addTearDown(campRepo.dispose);
       CampaignProfileService.resetForTesting();
       CampaignProfileService(replicaId: replicaId, clock: clock);
     });
 
     tearDown(() {
       CampaignProfileService.resetForTesting();
+      sl.reset();
     });
 
     // =========================================================================

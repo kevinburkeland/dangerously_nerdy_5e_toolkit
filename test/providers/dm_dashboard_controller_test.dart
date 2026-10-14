@@ -13,10 +13,15 @@ import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,25 +30,35 @@ void main() {
     late CampaignProfileService campaignService;
     late CharacterPersistenceService characterService;
     late DmDashboardController controller;
+    late LocalCampaignRepository campaignRepo;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await AppDatabaseService.instance.resetForTesting();
       AppServices.reset();
       sl.reset();
       final repId = ReplicaId('test_dm_node');
       sl.registerSingleton<ReplicaId>(repId);
-      sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
+      final clock = StatefulHlcClock(replicaId: repId);
+      sl.registerSingleton<StatefulHlcClock>(clock);
+      campaignRepo = LocalCampaignRepository(
+        replicaId: repId,
+        clock: clock,
+        characterRepo: LocalCharacterRepository(),
+      );
+      sl.registerSingleton<ICampaignRepository>(campaignRepo);
       campaignService = CampaignProfileService();
       characterService = CharacterPersistenceService();
       controller = DmDashboardController(
-        campaignProfileService: campaignService,
+        campaignRepository: campaignRepo,
         characterPersistenceService: characterService,
         replicaId: repId,
-        clock: sl<StatefulHlcClock>(),
+        clock: clock,
       );
     });
 
     tearDown(() {
+      campaignRepo.dispose();
       sl.reset();
     });
 
@@ -232,7 +247,7 @@ void main() {
 
       // Verify persisted in roomState
       final reloaded = await campaignService.getActiveProfile();
-      expect(reloaded.roomState.activeMinions.first.currentHp, equals(15));
+      expect(reloaded!.roomState.activeMinions.first.currentHp, equals(15));
 
       // Remove minion
       await controller.removeMinion('minion_broom');
@@ -279,7 +294,12 @@ void main() {
       await prefs.setStringList(
           'dn5e_campaign_profile_index', ['legacy_campaign_test']);
 
-      // Call loadAllProfiles() which triggers automatic migration
+      // Run startup migration to copy prefs into Hive, extract legacy characters, and sanitize profile
+      await CampaignStorageMigration.runStartupMigration(
+        repository: campaignRepo,
+        characterPersistenceService: characterService,
+      );
+
       final loadedProfiles = await campaignService.loadAllProfiles();
       expect(loadedProfiles.length, equals(1));
 
@@ -292,10 +312,13 @@ void main() {
       expect(savedChars.length, equals(1));
       expect(savedChars.first.name, equals('Nested Cleric'));
 
-      // Verify the campaign JSON saved back to disk was flattened
-      final savedBackJson =
-          prefs.getString('dn5e_campaign_profile_legacy_campaign_test')!;
-      final savedBackMap = json.decode(savedBackJson) as Map<String, dynamic>;
+      // Verify the campaign JSON saved back to Hive storage was flattened
+      final savedBackJson = AppDatabaseService.instance.get(
+        AppDatabaseService.boxCampaignProfiles,
+        '${LocalCampaignRepository.profileKeyPrefix}legacy_campaign_test',
+      );
+      final savedBackMap =
+          json.decode(savedBackJson as String) as Map<String, dynamic>;
       expect(savedBackMap['partyCharacterIds'], equals(['cleric_nested']));
       expect(savedBackMap.containsKey('partyRoster'), isFalse);
     });
@@ -306,7 +329,7 @@ void main() {
       final orchestrator = RoomSyncOrchestrator(
         replicaId: ReplicaId('test_dm_node'),
         transportPort: mockTransport,
-        campaignRepo: campaignService,
+        campaignRepo: campaignRepo,
         reconciliationService: RoomStateReconciliationService(
           networkTimeProvider: () =>
               DateTime.now().toUtc().millisecondsSinceEpoch,
@@ -318,7 +341,7 @@ void main() {
       );
 
       final orchController = DmDashboardController(
-        campaignProfileService: campaignService,
+        campaignRepository: campaignRepo,
         characterPersistenceService: characterService,
         roomSyncOrchestrator: orchestrator,
         replicaId: ReplicaId('test_dm_node'),

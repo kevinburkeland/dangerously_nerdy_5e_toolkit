@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -577,8 +578,8 @@ void main() {
       repo.dispose();
     });
 
-    // Required test 2: A reload during an in-flight updateProfile (slow DB) keeps the update
-    test('A reload during an in-flight updateProfile (slow DB) keeps the update', () async {
+    // Required test 2: A reload during an in-flight updateProfile (slow DB) keeps the update (G1)
+    test('G1: A reload during an in-flight updateProfile (slow DB) keeps the update', () async {
       final mockDb = _DelayRecordingDatabaseService()..delayMs = 30;
       final charRepo = LocalCharacterRepository(db: mockDb);
       final repo = LocalCampaignRepository(
@@ -617,13 +618,128 @@ void main() {
       await Future.wait([updateFuture, loadFuture]);
 
       final finalGp = repo.activeProfile!.partyPurse.getBalance('gp');
-      print('In-flight reload test: final gp=$finalGp (expected 10)');
+      print('In-flight reload test (G1): final gp=$finalGp (expected 10)');
       expect(finalGp, equals(10));
 
       final persistedProfile = await repo.getProfile('c1');
       expect(persistedProfile!.partyPurse.getBalance('gp'), equals(10));
 
       repo.dispose();
+    });
+
+    // D1: a delete while a reload runs stays deleted
+    test('D1: a delete while a reload runs stays deleted', () async {
+      final mockDb = _DelayRecordingDatabaseService()..delayMs = 25;
+      final charRepo = LocalCharacterRepository(db: mockDb);
+      final repo = LocalCampaignRepository(
+        replicaId: ReplicaId('me'),
+        clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+        db: mockDb,
+        characterRepo: charRepo,
+      );
+
+      final profileA = CampaignProfile(
+        id: 'A',
+        name: 'Campaign A',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rA', roomCode: 'CR-A', title: 'tA'),
+        nodeId: 'me',
+      );
+      final profileB = CampaignProfile(
+        id: 'B',
+        name: 'Campaign B',
+        edition: DmRulesEdition.v2024,
+        createdAt: DateTime.utc(2026),
+        lastPlayedAt: DateTime.utc(2026),
+        roomState: RoomNodeState(roomId: 'rB', roomCode: 'CR-B', title: 'tB'),
+        nodeId: 'me',
+      );
+      await repo.putProfile(profileA);
+      await repo.putProfile(profileB);
+      await repo.setActiveProfileId('A');
+
+      // Start reload
+      final reloadFuture = repo.loadAllProfiles();
+      // Immediately call deleteProfile('A') while reload is in-flight
+      final deleteFuture = repo.deleteProfile('A');
+
+      await Future.wait([reloadFuture, deleteFuture]);
+
+      final remainingIds = repo.allProfiles.map((p) => p.id).toList();
+      print('D1 remaining ids: $remainingIds (expected [B])');
+      expect(remainingIds, equals(['B']));
+      expect(repo.activeProfileId, equals('B'));
+
+      final storedProfileA = await repo.getProfile('A');
+      expect(storedProfileA, isNull);
+
+      repo.dispose();
+    });
+
+    // S1: a reload doesn't wait behind a write stream
+    test('S1: a reload finishes after writes queued before it, while write stream continues', () async {
+      for (final stream in [false, true]) {
+        final mockDb = _DelayRecordingDatabaseService()..delayMs = 5;
+        final charRepo = LocalCharacterRepository(db: mockDb);
+        final repo = LocalCampaignRepository(
+          replicaId: ReplicaId('me'),
+          clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+          db: mockDb,
+          characterRepo: charRepo,
+        );
+
+        final profile = CampaignProfile(
+          id: 'c1',
+          name: 'Campaign 1',
+          edition: DmRulesEdition.v2024,
+          createdAt: DateTime.utc(2026),
+          lastPlayedAt: DateTime.utc(2026),
+          roomState: RoomNodeState(roomId: 'r1', roomCode: 'CR-1', title: 't1'),
+          nodeId: 'me',
+        );
+        await repo.putProfile(profile);
+
+        bool writesActive = true;
+        bool reloadFinishedWhileWritesContinued = false;
+        final writeFutures = <Future<void>>[];
+
+        if (stream) {
+          final endWritesAt = DateTime.now().add(const Duration(milliseconds: 300));
+          unawaited(() async {
+            while (DateTime.now().isBefore(endWritesAt)) {
+              writeFutures.add(repo.updateProfile('c1', (p) => p.copyWith(
+                partyPurse: p.partyPurse.modifyDenomination('gp', 1, replicaId: repo.replicaId),
+              )));
+              await Future<void>.delayed(const Duration(milliseconds: 2));
+            }
+            writesActive = false;
+          }());
+
+          // Wait 20ms so writes are active
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        } else {
+          writesActive = false;
+        }
+
+        final sw = Stopwatch()..start();
+        final reloadFuture = repo.loadAllProfiles();
+        await reloadFuture;
+        sw.stop();
+
+        if (stream) {
+          reloadFinishedWhileWritesContinued = writesActive;
+        } else {
+          reloadFinishedWhileWritesContinued = true;
+        }
+
+        print('S1 stream=$stream reload finished while writes continued=$reloadFinishedWhileWritesContinued   total=${sw.elapsedMilliseconds}ms');
+        expect(reloadFinishedWhileWritesContinued, isTrue);
+
+        await Future.wait(writeFutures.map((f) => f.catchError((_) {})));
+        repo.dispose();
+      }
     });
   });
 }

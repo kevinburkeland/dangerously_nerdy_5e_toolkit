@@ -224,6 +224,12 @@ class DiceRoomService {
     _clearPersistedSession();
   }
 
+  /// Asynchronously leaves room and awaits transport disconnection.
+  Future<void> leaveRoomAsync() async {
+    leaveRoom();
+    await _disconnectTransport();
+  }
+
   Future<void> _clearPersistedSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();

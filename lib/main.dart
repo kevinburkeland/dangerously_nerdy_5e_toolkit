@@ -18,6 +18,7 @@ import 'services/persistence/web_lifecycle.dart';
 import 'application/storage/storage_durability_coordinator.dart';
 import 'package:vtt_engine_core/storage/models/engine_profile.dart';
 import 'infrastructure/storage/storage_durability_adapter.dart';
+import 'infrastructure/repositories/campaign_storage_migration.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -68,6 +69,7 @@ void main() {
     try {
       await AppDatabaseService.instance.init();
       await initServiceLocator();
+      await CampaignStorageMigration.runStartupMigration();
       try {
         await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
       } catch (_) {}

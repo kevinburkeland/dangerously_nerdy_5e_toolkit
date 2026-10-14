@@ -9,6 +9,7 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/add_feat_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/modify_ability_scores_dialog.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
@@ -21,6 +22,7 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await initServiceLocator();
       baseCharacter = const Character(
         id: EntityId(slug: 'hero-bob', ruleset: RulesetVersion.v2024),
         name: 'Bob the Hero',
@@ -66,6 +68,10 @@ void main() {
           currentHitDice: {'d10': 3},
         ),
       );
+    });
+
+    tearDown(() {
+      sl.reset();
     });
 
     test(

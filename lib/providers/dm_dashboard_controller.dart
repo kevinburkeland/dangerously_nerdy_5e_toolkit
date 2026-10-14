@@ -12,8 +12,6 @@ import '../models/campaign_profile.dart';
 import '../models/dm_screen_data.dart';
 import '../models/domain/session_graph_models.dart';
 import '../models/party/party_purse.dart';
-import '../services/app_services.dart';
-import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../infrastructure/dtos/character_telemetry_dto.dart';
 import '../infrastructure/resolvers/character_telemetry_resolver.dart';
@@ -48,7 +46,6 @@ class DmDashboardController extends ChangeNotifier {
     ICampaignRepository? campaignRepository,
     ICharacterRepository<Character>? characterRepository,
     CombatEncounterService? combatEncounterService,
-    CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
   }) {
@@ -65,7 +62,6 @@ class DmDashboardController extends ChangeNotifier {
       campaignRepository: campaignRepository,
       characterRepository: characterRepository,
       combatEncounterService: combatEncounterService,
-      campaignProfileService: campaignProfileService,
       characterPersistenceService: characterPersistenceService,
       roomSyncOrchestrator: roomSyncOrchestrator,
     );
@@ -77,16 +73,17 @@ class DmDashboardController extends ChangeNotifier {
     ICampaignRepository? campaignRepository,
     ICharacterRepository<Character>? characterRepository,
     CombatEncounterService? combatEncounterService,
-    CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
   })  : _replicaId = replicaId,
         _clock = clock,
         _campaignProfileService = campaignRepository ??
-            campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
                 ? sl<ICampaignRepository>()
-                : AppServices.instance.campaignProfileService),
+                : throw StateError(
+                    'Authoritative ICampaignRepository is required for DmDashboardController. '
+                    'Pass campaignRepository explicitly or register ICampaignRepository in DI.',
+                  )),
         _characterPersistenceService = characterRepository ??
             characterPersistenceService ??
             (sl.isRegistered<ICharacterRepository<Character>>()
@@ -104,10 +101,11 @@ class DmDashboardController extends ChangeNotifier {
                             ? sl<ICharacterRepository>()
                             : CharacterPersistenceService()),
                     campaignRepo: campaignRepository ??
-                        campaignProfileService ??
                         (sl.isRegistered<ICampaignRepository>()
                             ? sl<ICampaignRepository>()
-                            : AppServices.instance.campaignProfileService),
+                            : throw StateError(
+                                'Authoritative ICampaignRepository is required for CombatEncounterService.',
+                              )),
                     combatResolver: sl.isRegistered<ICombatResolver>()
                         ? sl<ICombatResolver>()
                         : const Dnd5eCombatResolver(),

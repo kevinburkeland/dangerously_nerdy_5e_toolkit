@@ -61,7 +61,6 @@ class LocalCampaignRepository implements ICampaignRepository {
 
   ReplicaId get replicaId => _replicaId;
   StatefulHlcClock get clock => _clock;
-  String get _effectiveNodeId => _replicaId.value;
 
   @override
   String? get activeProfileId => _activeProfileId;
@@ -75,60 +74,56 @@ class LocalCampaignRepository implements ICampaignRepository {
 
   final Map<String, Future<void>> _updateQueues = {};
   Future<void>? _activeReload;
-  Future<void> _reloadChain = Future<void>.value();
+  Future<void>? _activeReloadChain;
 
   @override
   Future<List<CampaignProfile>> loadAllProfiles() async {
-    final prev = _reloadChain;
-    final completer = Completer<List<CampaignProfile>>();
-    late final Future<void> currentFuture;
-
-    currentFuture = () async {
+    final prev = _activeReloadChain;
+    if (prev != null) {
       try {
         await prev;
       } catch (_) {}
+    }
 
-      try {
-        final result = await _executeLoadAllProfiles();
-        completer.complete(result);
-      } catch (e, st) {
-        completer.completeError(e, st);
+    final completer = Completer<List<CampaignProfile>>();
+    _activeReloadChain = completer.future;
+
+    try {
+      final result = await _executeLoadAllProfiles();
+      completer.complete(result);
+      return result;
+    } catch (e, st) {
+      completer.completeError(e, st);
+      rethrow;
+    } finally {
+      if (identical(_activeReloadChain, completer.future)) {
+        _activeReloadChain = null;
       }
-    }();
-
-    _reloadChain = currentFuture;
-    return completer.future;
+    }
   }
 
   Future<List<CampaignProfile>> _executeLoadAllProfiles() async {
-    // 1. Wait for all in-flight writes across all campaign IDs so reload cannot overwrite a write in flight
-    while (_updateQueues.isNotEmpty) {
-      final pending = List<Future<void>>.from(_updateQueues.values);
-      await Future.wait(pending.map((f) => f.catchError((_) {})));
-    }
-
-    // 2. Set active reload future so subsequent writes wait for this reload to finish updating memory cache
+    // 1. Set active reload future first so new writes wait for this reload
     final reloadCompleter = Completer<void>();
     _activeReload = reloadCompleter.future;
 
+    // 2. Snapshot only the writes that were already queued before this reload started
+    final pendingWrites = List<Future<void>>.from(_updateQueues.values);
+
     try {
-      final nodeId = _effectiveNodeId;
+      if (pendingWrites.isNotEmpty) {
+        await Future.wait(pendingWrites.map((f) => f.catchError((_) {})));
+      }
+
       final success = await _loadSavedRecords();
       if (!success) {
         return [];
       }
 
-      if (_memoryCache.isEmpty) {
-        final def = CampaignProfile.defaultProfile(nodeId: nodeId, clock: _clock);
-        _memoryCache[def.id] = def;
-        _activeProfileId = def.id;
-        await _persistProfileToDisk(def);
+      if (_memoryCache.isNotEmpty) {
         await _persistIndex();
-        _emitState();
-      } else {
-        await _persistIndex();
-        _emitState();
       }
+      _emitState();
 
       return _memoryCache.values.toList();
     } finally {
@@ -278,6 +273,7 @@ class LocalCampaignRepository implements ICampaignRepository {
     CampaignProfile Function(CampaignProfile current) transform,
   ) async {
     final prev = _updateQueues[id] ?? Future<void>.value();
+    final reloadToAwait = _activeReload;
     final completer = Completer<CampaignProfile>();
     late final Future<void> currentFuture;
 
@@ -286,10 +282,9 @@ class LocalCampaignRepository implements ICampaignRepository {
         await prev;
       } catch (_) {}
 
-      final activeReload = _activeReload;
-      if (activeReload != null) {
+      if (reloadToAwait != null) {
         try {
-          await activeReload;
+          await reloadToAwait;
         } catch (_) {}
       }
 
@@ -322,6 +317,7 @@ class LocalCampaignRepository implements ICampaignRepository {
   @override
   Future<void> putProfile(CampaignProfile profile) async {
     final prev = _updateQueues[profile.id] ?? Future<void>.value();
+    final reloadToAwait = _activeReload;
     final completer = Completer<void>();
     late final Future<void> currentFuture;
 
@@ -330,10 +326,9 @@ class LocalCampaignRepository implements ICampaignRepository {
         await prev;
       } catch (_) {}
 
-      final activeReload = _activeReload;
-      if (activeReload != null) {
+      if (reloadToAwait != null) {
         try {
-          await activeReload;
+          await reloadToAwait;
         } catch (_) {}
       }
 
@@ -367,6 +362,7 @@ class LocalCampaignRepository implements ICampaignRepository {
   @override
   Future<void> deleteProfile(String id) async {
     final prev = _updateQueues[id] ?? Future<void>.value();
+    final reloadToAwait = _activeReload;
     final completer = Completer<void>();
     late final Future<void> currentFuture;
 
@@ -375,10 +371,9 @@ class LocalCampaignRepository implements ICampaignRepository {
         await prev;
       } catch (_) {}
 
-      final activeReload = _activeReload;
-      if (activeReload != null) {
+      if (reloadToAwait != null) {
         try {
-          await activeReload;
+          await reloadToAwait;
         } catch (_) {}
       }
 

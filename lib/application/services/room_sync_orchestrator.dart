@@ -476,7 +476,9 @@ class RoomSyncOrchestrator {
             await campaignRepo.updateProfile(targetProfileId!, transform!);
         onApplied?.call(applied);
         _recordAppliedProfile(applied);
-        _lastEmittedProfile = applied;
+        await _syncMutex.protect(() async {
+          _lastEmittedProfile = applied;
+        });
       } catch (error, stackTrace) {
         if (!_deadLetterController.isClosed) {
           _deadLetterController.add(SyncErrorEvent(

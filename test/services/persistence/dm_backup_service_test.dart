@@ -10,6 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipme
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,10 +22,15 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await initServiceLocator();
       backupService = DmBackupService();
       campaignService = CampaignProfileService();
       campaignService.clearCacheForTesting();
       homebrewService = HomebrewPersistenceService();
+    });
+
+    tearDown(() {
+      sl.reset();
     });
 
     test('validates valid campaign payload format', () {

@@ -23,6 +23,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/inventory_transaction_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/loot_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
@@ -266,6 +267,13 @@ void main() {
         () async {
       final authoritativeId = ReplicaId('dm_migration_node_77');
       sl.registerSingleton<ReplicaId>(authoritativeId);
+      final clock = StatefulHlcClock(replicaId: authoritativeId);
+      sl.registerSingleton<StatefulHlcClock>(clock);
+      final repo = LocalCampaignRepository(
+        replicaId: authoritativeId,
+        clock: clock,
+      );
+      sl.registerSingleton<ICampaignRepository>(repo);
 
       final registry = CampaignRegistryService();
       await registry.saveMembership(
@@ -379,9 +387,14 @@ void main() {
       sl.registerSingleton<ReplicaId>(authoritativeId);
       final sharedClock = StatefulHlcClock(replicaId: authoritativeId);
       sl.registerSingleton<StatefulHlcClock>(sharedClock);
+      final mockRepo = _TestMockCampaignRepo();
+      sl.registerSingleton<ICampaignRepository>(mockRepo);
 
       // DmDashboardController
-      final dmController = DmDashboardController(replicaId: authoritativeId);
+      final dmController = DmDashboardController(
+        replicaId: authoritativeId,
+        campaignRepository: mockRepo,
+      );
       expect(dmController.replicaId, equals(authoritativeId));
       expect(dmController.nodeId, equals(authoritativeId.value));
       expect(dmController.combatEncounterService.replicaId, equals(authoritativeId));

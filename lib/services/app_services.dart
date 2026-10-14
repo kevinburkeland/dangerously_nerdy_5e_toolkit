@@ -42,7 +42,6 @@ class AppServices {
     DprPersistenceService? dprPersistence,
     PresetService? presetService,
     MinionSessionService? minionSession,
-    CampaignProfileService? campaignProfileService,
     DmBackupService? dmBackupService,
     HomebrewPersistenceService? homebrewPersistence,
     CommunityCompendiumImporterService? communityCompendiumImporter,
@@ -53,8 +52,7 @@ class AppServices {
         _dprPersistence = dprPersistence ?? DprPersistenceService(),
         _presetService = presetService ?? PresetService(),
         _minionSession = minionSession ?? MinionSessionService(),
-        _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService(),
+        _campaignProfileService = CampaignProfileService(),
         _dmBackupService = dmBackupService ?? DmBackupService(),
         _homebrewPersistence =
             homebrewPersistence ?? HomebrewPersistenceService(),
@@ -105,7 +103,6 @@ class AppServices {
     DprPersistenceService? dprPersistence,
     PresetService? presetService,
     MinionSessionService? minionSession,
-    CampaignProfileService? campaignProfileService,
     DmBackupService? dmBackupService,
     HomebrewPersistenceService? homebrewPersistence,
     CommunityCompendiumImporterService? communityCompendiumImporter,
@@ -118,8 +115,6 @@ class AppServices {
       dprPersistence: dprPersistence ?? _instance._dprPersistence,
       presetService: presetService ?? _instance._presetService,
       minionSession: minionSession ?? _instance._minionSession,
-      campaignProfileService:
-          campaignProfileService ?? _instance._campaignProfileService,
       dmBackupService: dmBackupService ?? _instance._dmBackupService,
       homebrewPersistence:
           homebrewPersistence ?? _instance._homebrewPersistence,

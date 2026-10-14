@@ -206,6 +206,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
   void dispose() {
     _orchestrator?.stopSynchronization();
     _router?.disconnect();
+    _diceService.leaveRoom();
     _claimConflictSub?.cancel();
     _overdraftSub?.cancel();
     _tabController.dispose();

@@ -13,6 +13,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 
 Widget _buildTestApp({required Widget home}) {
@@ -58,6 +61,13 @@ void main() {
     final repId = ReplicaId('money_sync_replica');
     sl.registerSingleton<ReplicaId>(repId);
     sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
+    final campRepo = LocalCampaignRepository(
+      replicaId: repId,
+      clock: sl<StatefulHlcClock>(),
+      characterRepo: LocalCharacterRepository(),
+    );
+    sl.registerSingleton<ICampaignRepository>(campRepo);
+    addTearDown(campRepo.dispose);
     CampaignProfileService(replicaId: repId);
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
@@ -154,7 +164,7 @@ void main() {
       await profileService.switchProfile(profile.id);
 
       final controller = DmDashboardController(
-        campaignProfileService: profileService,
+        campaignRepository: sl<ICampaignRepository>(),
         characterPersistenceService: persistence,
         replicaId: sl<ReplicaId>(),
         clock: sl<StatefulHlcClock>(),

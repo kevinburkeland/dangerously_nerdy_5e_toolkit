@@ -1,5 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
@@ -18,6 +25,26 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/homebrew_entity
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group('Homebrew Feats & Class Features Directives (SRD Compliant)', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      sl.reset();
+      final repId = ReplicaId('feats_test_replica');
+      sl.registerSingleton<ReplicaId>(repId);
+      sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
+      final campRepo = LocalCampaignRepository(
+        replicaId: repId,
+        clock: sl<StatefulHlcClock>(),
+        characterRepo: LocalCharacterRepository(),
+      );
+      sl.registerSingleton<ICampaignRepository>(campRepo);
+      addTearDown(campRepo.dispose);
+      CampaignProfileService(replicaId: repId);
+    });
+
+    tearDown(() {
+      sl.reset();
+    });
+
     test('Feat parser extracts armor and tool proficiencies from homebrew JSON',
         () {
       final featJson = {

@@ -15,9 +15,10 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_event.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -587,17 +588,21 @@ void main() {
           timeProvider: () => 1700000000000,
         );
         final charRepo = CharacterPersistenceService();
-        final campRepo = CampaignProfileService();
+        final campRepo = LocalCampaignRepository(
+          replicaId: ReplicaId('dm-test-node'),
+          clock: clock,
+          characterRepo: LocalCharacterRepository(),
+        );
 
         final initialProfile = createSampleProfile(
           partyRoster: const CrdtOrSet<String>.empty(),
         );
-        await campRepo.saveProfileImmediate(initialProfile);
+        await campRepo.putProfile(initialProfile);
 
         final controller = DmDashboardController(
           replicaId: ReplicaId('dm-test-node'),
           clock: clock,
-          campaignProfileService: campRepo,
+          campaignRepository: campRepo,
           characterPersistenceService: charRepo,
         );
         await controller.loadData(initialCampaignId: initialProfile.id);
@@ -625,7 +630,11 @@ void main() {
           timeProvider: () => 1700000000000,
         );
         final charRepo = CharacterPersistenceService();
-        final campRepo = CampaignProfileService();
+        final campRepo = LocalCampaignRepository(
+          replicaId: ReplicaId('dm-test-node'),
+          clock: clock,
+          characterRepo: LocalCharacterRepository(),
+        );
 
         const testChar = Character(
           id: EntityId(slug: 'paladin-1', ruleset: RulesetVersion.v2024),
@@ -644,12 +653,12 @@ void main() {
             const HybridLogicalClock(physicalTime: 100, logicalCounter: 0, nodeId: 'genesis'),
           ),
         );
-        await campRepo.saveProfileImmediate(initialProfile);
+        await campRepo.putProfile(initialProfile);
 
         final controller = DmDashboardController(
           replicaId: ReplicaId('dm-test-node'),
           clock: clock,
-          campaignProfileService: campRepo,
+          campaignRepository: campRepo,
           characterPersistenceService: charRepo,
         );
         await controller.loadData(initialCampaignId: initialProfile.id);

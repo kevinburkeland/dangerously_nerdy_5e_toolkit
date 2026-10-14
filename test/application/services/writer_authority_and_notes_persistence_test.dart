@@ -9,10 +9,10 @@ import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 
 void main() {
@@ -163,16 +163,21 @@ void main() {
         maxFutureDrift: const Duration(minutes: 5),
       );
 
-      final campaignService = CampaignProfileService();
+      final campaignRepo = LocalCampaignRepository(
+        replicaId: replicaId,
+        clock: clock,
+        characterRepo: LocalCharacterRepository(),
+      );
       final characterService = CharacterPersistenceService();
 
       final controller = DmDashboardController(
-        campaignProfileService: campaignService,
+        campaignRepository: campaignRepo,
         characterPersistenceService: characterService,
         replicaId: replicaId,
         clock: clock,
       );
       addTearDown(controller.dispose);
+      addTearDown(campaignRepo.dispose);
 
       final baseCampaign = CampaignProfile.defaultProfile(
         id: 'camp_attrib_test',
@@ -180,8 +185,8 @@ void main() {
         nodeId: 'genesis_node',
         timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'genesis_node'),
       );
-      await campaignService.saveProfileImmediate(baseCampaign);
-      await campaignService.switchProfile(baseCampaign.id);
+      await campaignRepo.putProfile(baseCampaign);
+      await campaignRepo.setActiveProfileId(baseCampaign.id);
 
       await controller.loadData();
 

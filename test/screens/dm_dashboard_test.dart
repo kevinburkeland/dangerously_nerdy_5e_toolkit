@@ -11,7 +11,6 @@ import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
-import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 Widget _buildTestApp({Widget? home}) {
   return MaterialApp(
@@ -23,17 +22,13 @@ Widget _buildTestApp({Widget? home}) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
-    if (!sl.isRegistered<ReplicaId>()) {
-      sl.registerSingleton<ReplicaId>(ReplicaId('dm_test_replica'));
-    }
-    if (!sl.isRegistered<StatefulHlcClock>()) {
-      sl.registerSingleton<StatefulHlcClock>(
-        StatefulHlcClock(replicaId: sl<ReplicaId>()),
-      );
-    }
+    sl.reset();
+    await initServiceLocator(
+      replicaId: ReplicaId('dm_test_replica'),
+    );
   });
 
   tearDown(() {
@@ -275,7 +270,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final current = await CampaignProfileService().getActiveProfile();
-      expect(current.notesMarkdown,
+      expect(current!.notesMarkdown,
           equals('Secret trap door behind the painting.'));
     });
 
