@@ -44,12 +44,17 @@ void main() {
   });
 
   group('Legacy Entity Links in Full Campaign Record (Pass 4.2.7)', () {
-    // Relative path to golden fixtures in vtt_engine_core
-    final fixturesDir = Directory('../vtt-engine-core/test/fixtures/legacy_entity_links');
+    // Fixtures directory in test/fixtures/legacy_entity_links, falling back to vtt_engine_core
+    File resolveFixture(String filename) {
+      final local = File('test/fixtures/legacy_entity_links/$filename');
+      if (local.existsSync()) return local;
+      final fallback = File('../vtt-engine-core/test/fixtures/legacy_entity_links/$filename');
+      if (fallback.existsSync()) return fallback;
+      throw StateError('Fixture $filename not found in test/fixtures/legacy_entity_links or ../vtt-engine-core');
+    }
 
     Map<String, dynamic> loadFixtureJson(String filename) {
-      final file = File('${fixturesDir.path}/$filename');
-      expect(file.existsSync(), isTrue, reason: 'Fixture $filename must exist');
+      final file = resolveFixture(filename);
       return jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
     }
 
