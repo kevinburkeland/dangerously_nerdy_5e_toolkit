@@ -52,6 +52,8 @@ class CompendiumRaceParser {
           try {
             subraces.add(parseSubrace(Map<String, dynamic>.from(rawSub),
                 defaultRaceSlug: slug, forceRuleset: ruleset));
+          } on CatalogNotInstalledError {
+            rethrow;
           } catch (_) {}
         }
       }

@@ -5,9 +5,12 @@ import 'dart:isolate';
 import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart'
+    show CatalogNotInstalledError;
 import '../../../services/acl/compendium_class_parser.dart';
 import '../../../services/acl/generic_tag_scrubber.dart';
 import '../../dtos/homebrew_entity_dto.dart';
+import '../../modules/dnd5e/dnd5e_ruleset_catalog.dart';
 import 'http_fetcher.dart';
 
 /// Concrete adapter fulfilling [IGithubIngestorPort] for GitHub homebrew repositories.
@@ -213,6 +216,8 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
 
     try {
       return await _executeParsing(rawContent, ruleset, url);
+    } on CatalogNotInstalledError {
+      rethrow;
     } catch (e) {
       return [
         IngestionSkipResult(
@@ -232,8 +237,10 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
   ) async {
     if (!_isWeb && _useIsolate && jsonString.length >= isolateThresholdBytes) {
       try {
-        return await Isolate.run(
-            () => _unpackAndParsePayload(jsonString, ruleset, url));
+        return await Isolate.run(() {
+          installRulesetCatalog();
+          return _unpackAndParsePayload(jsonString, ruleset, url);
+        });
       } on UnsupportedError {
         return _parseInMicrotask(jsonString, ruleset, url);
       }
@@ -252,6 +259,8 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
       try {
         final results = _unpackAndParsePayload(jsonString, ruleset, url);
         completer.complete(results);
+      } on CatalogNotInstalledError catch (e, st) {
+        completer.completeError(e, st);
       } catch (e, st) {
         completer.completeError(e, st);
       }
@@ -649,6 +658,8 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
         errorDetails: e.toString(),
         ruleset: ruleset,
       );
+    } on CatalogNotInstalledError {
+      rethrow;
     } catch (e) {
       return IngestionSkipResult(
         sourceUrl: itemUrl,

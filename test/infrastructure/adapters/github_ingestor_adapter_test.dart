@@ -5,6 +5,7 @@ import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/remote/github_ingestor_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/remote/http_fetcher.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd5e_ruleset_catalog.dart';
 
 /// Test mock implementation of HttpFetchClient.
 class MockHttpFetchClient implements HttpFetchClient {
@@ -924,6 +925,102 @@ void main() {
           reason: 'All 3 features should have entityType == subclassfeature');
       expect(features.any((f) => f.entity.name == 'Void Grip'), isTrue);
       expect(features.any((f) => f.entity.name == 'Shadow Ward'), isTrue);
+    });
+
+    test(
+        'G1: Payload above isolateThresholdBytes yields identical results across sync and worker isolate',
+        () async {
+      installRulesetCatalog();
+
+      final largePadding = 'P' * 2000;
+      final payloadMap = {
+        'race': [
+          {
+            'name': 'Astral Elf Ingestor Test',
+            'size': ['M'],
+            'speed': 30,
+            'additionalSpells': [
+              {
+                'innate': {
+                  '_': ['light#c', 'dancing lights#c']
+                }
+              }
+            ],
+            'entries': [largePadding]
+          }
+        ],
+        'class': [
+          {
+            'name': 'Ingestor Wizard',
+            'hd': 6,
+            'additionalSpells': [
+              {
+                'prepared': {
+                  '1': ['magic missile#c']
+                }
+              }
+            ],
+            'entries': [largePadding]
+          }
+        ],
+        'subclass': [
+          {
+            'name': 'Ingestor Evoker',
+            'className': 'Ingestor Wizard',
+            'classSlug': 'ingestor-wizard',
+            'additionalSpells': [
+              {
+                'prepared': {
+                  '1': ['shield#c']
+                }
+              }
+            ],
+            'entries': [largePadding]
+          }
+        ],
+        'padding': List.generate(40, (i) => {'index': i, 'text': largePadding})
+      };
+
+      final rawJson = jsonEncode(payloadMap);
+      expect(rawJson.length,
+          greaterThanOrEqualTo(GithubIngestorAdapter.isolateThresholdBytes));
+
+      const testUrl =
+          'https://raw.githubusercontent.com/test/repo/main/large_data.json';
+      final client = MockHttpFetchClient({testUrl: rawJson});
+
+      final adapterSync =
+          GithubIngestorAdapter(client: client, useIsolate: false);
+      final adapterIsolate =
+          GithubIngestorAdapter(client: client, useIsolate: true);
+
+      final resultsSync = await adapterSync.ingestPayloadStream(
+        rawUrls: [testUrl],
+        ruleset: RulesetVersion.v2024,
+      ).toList();
+
+      final resultsIsolate = await adapterIsolate.ingestPayloadStream(
+        rawUrls: [testUrl],
+        ruleset: RulesetVersion.v2024,
+      ).toList();
+
+      expect(resultsIsolate.length, equals(resultsSync.length));
+      for (int i = 0; i < resultsSync.length; i++) {
+        expect(
+            resultsIsolate[i].runtimeType, equals(resultsSync[i].runtimeType));
+        expect(resultsIsolate[i].sourceUrl, equals(resultsSync[i].sourceUrl));
+        expect(resultsIsolate[i].ruleset, equals(resultsSync[i].ruleset));
+        if (resultsSync[i] is IngestionSuccessResult) {
+          final sSync = resultsSync[i] as IngestionSuccessResult;
+          final sIso = resultsIsolate[i] as IngestionSuccessResult;
+          expect(sIso.entity.name, equals(sSync.entity.name));
+          expect(sIso.entity.entityType, equals(sSync.entity.entityType));
+        } else if (resultsSync[i] is IngestionSkipResult) {
+          final sSync = resultsSync[i] as IngestionSkipResult;
+          final sIso = resultsIsolate[i] as IngestionSkipResult;
+          expect(sIso.reason, equals(sSync.reason));
+        }
+      }
     });
   });
 }

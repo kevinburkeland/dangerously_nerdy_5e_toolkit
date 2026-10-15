@@ -87,13 +87,13 @@ class _HomebrewImportPreviewDialogState
       final IngestionBatchResult ingestion;
       if (widget.useIsolate) {
         ingestion = await compute(
-          _parseJsonInIsolate,
-          _ParseRequest(jsonString, _selectedRuleset),
+          parseHomebrewJsonInIsolate,
+          HomebrewParseRequest(jsonString, _selectedRuleset),
         );
       } else {
         // Synchronous path used in tests to avoid isolate/pumpAndSettle issues.
         ingestion =
-            _parseJsonInIsolate(_ParseRequest(jsonString, _selectedRuleset));
+            parseHomebrewJsonInIsolate(HomebrewParseRequest(jsonString, _selectedRuleset));
       }
 
       if (ingestion.hasErrors && ingestion.totalEntities == 0) {
@@ -807,8 +807,6 @@ class HomebrewParseRequest {
   const HomebrewParseRequest(this.jsonString, this.forceRuleset);
 }
 
-typedef _ParseRequest = HomebrewParseRequest;
-
 /// Top-level function required by [compute] — runs in a separate isolate so
 /// that ACL parsing of large compendium files does not block the UI thread.
 @visibleForTesting
@@ -819,5 +817,4 @@ IngestionBatchResult parseHomebrewJsonInIsolate(HomebrewParseRequest req) {
       forceRuleset: req.forceRuleset);
 }
 
-const _parseJsonInIsolate = parseHomebrewJsonInIsolate;
 

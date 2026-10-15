@@ -163,7 +163,7 @@ class CompendiumJsonIngestionPipeline {
           errors: ['Invalid JSON format: expected Map or List at root.'],
         );
       }
-    } on StateError {
+    } on CatalogNotInstalledError {
       rethrow;
     } catch (e) {
       return IngestionBatchResult(
@@ -701,7 +701,7 @@ class CompendiumJsonIngestionPipeline {
           backgrounds: revitalizedBackgrounds,
           otherEntries: revitalizedOtherEntries,
         );
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         // Fall back to standard map ingestion
@@ -919,7 +919,7 @@ class CompendiumJsonIngestionPipeline {
           if (raw is Map) {
             try {
               handler(Map<String, dynamic>.from(raw));
-            } on StateError {
+            } on CatalogNotInstalledError {
               rethrow;
             } catch (e) {
               errors
@@ -974,7 +974,7 @@ class CompendiumJsonIngestionPipeline {
             baseLookup: lookupBase,
           );
           monsters.add(parsed);
-        } on StateError {
+        } on CatalogNotInstalledError {
           rethrow;
         } catch (e) {
           errors.add('Monster error (${raw['name'] ?? 'unnamed'}): $e');
@@ -1772,7 +1772,7 @@ class CompendiumJsonIngestionPipeline {
       try {
         final spell = spellParser.parseSpell(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(spells: [spell]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse spell: $e']);
@@ -1787,7 +1787,7 @@ class CompendiumJsonIngestionPipeline {
         final monster =
             monsterParser.parseMonster(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(monsters: [monster]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse monster: $e']);
@@ -1805,7 +1805,7 @@ class CompendiumJsonIngestionPipeline {
           classes: [cl],
           subclasses: cl.subclasses,
         );
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse class: $e']);
@@ -1826,7 +1826,7 @@ class CompendiumJsonIngestionPipeline {
           defaultCategory: 'Subclass Feature',
         );
         return IngestionBatchResult(otherEntries: [entry]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(
@@ -1852,7 +1852,7 @@ class CompendiumJsonIngestionPipeline {
           defaultCategory: 'Class Feature',
         );
         return IngestionBatchResult(otherEntries: [entry]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(
@@ -1876,7 +1876,7 @@ class CompendiumJsonIngestionPipeline {
       try {
         final sub = classParser.parseSubclass(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(subclasses: [sub]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse subclass: $e']);
@@ -1891,7 +1891,7 @@ class CompendiumJsonIngestionPipeline {
       try {
         final race = raceParser.parseRace(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(races: [race]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse race: $e']);
@@ -1905,7 +1905,7 @@ class CompendiumJsonIngestionPipeline {
       try {
         final feat = featParser.parseFeat(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(feats: [feat]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse feat: $e']);
@@ -1919,7 +1919,7 @@ class CompendiumJsonIngestionPipeline {
         final bg =
             backgroundParser.parseBackground(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(backgrounds: [bg]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse background: $e']);
@@ -1934,7 +1934,7 @@ class CompendiumJsonIngestionPipeline {
       try {
         final item = itemParser.parseItem(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(items: [item]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse item: $e']);
@@ -1965,7 +1965,7 @@ class CompendiumJsonIngestionPipeline {
           return const IngestionBatchResult();
         }
         return IngestionBatchResult(otherEntries: [entry]);
-      } on StateError {
+      } on CatalogNotInstalledError {
         rethrow;
       } catch (e) {
         return IngestionBatchResult(

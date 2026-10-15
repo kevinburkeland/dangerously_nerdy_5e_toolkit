@@ -62,6 +62,8 @@ class CompendiumClassParser {
               forceRuleset: ruleset,
               subclassFeatureMap: subclassFeatureMap,
             ));
+          } on CatalogNotInstalledError {
+            rethrow;
           } catch (_) {}
         }
       }
@@ -86,6 +88,8 @@ class CompendiumClassParser {
           try {
             featureDecisions.add(
                 ClassFeatureDecision.fromMap(Map<String, dynamic>.from(dec)));
+          } on CatalogNotInstalledError {
+            rethrow;
           } catch (_) {}
         }
       }
