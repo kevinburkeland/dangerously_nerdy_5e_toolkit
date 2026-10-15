@@ -199,7 +199,16 @@ class CampaignStorageMigration {
               description: 'Active DM session staging node.',
             ),
           );
-          await repo.putProfile(prof);
+          try {
+            await repo.putProfile(prof);
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason:
+                  'Failed to adopt registry membership for campaign_${m.roomCode}',
+            );
+          }
         }
       }
     } catch (e, st) {

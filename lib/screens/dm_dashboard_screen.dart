@@ -337,9 +337,22 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                       clock: _controller.clock,
                     );
                     final service = AppServices.instance.campaignProfileService;
-                    await service.saveProfileImmediate(newProf);
-                    await service.switchProfile(newProf.id);
-                    await _loadData();
+                    try {
+                      await service.saveProfileImmediate(newProf);
+                      await service.switchProfile(newProf.id);
+                      await _loadData();
+                    } catch (e, st) {
+                      LoggingService().logNonFatal(
+                        e,
+                        st,
+                        reason: 'Failed to create and save new campaign profile',
+                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to save campaign to storage')),
+                        );
+                      }
+                    }
                   },
                   child: const Text('Create'),
                 ),
@@ -376,8 +389,21 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                 if (nameCtrl.text.trim().isEmpty) return;
                 Navigator.pop(ctx);
                 final service = AppServices.instance.campaignProfileService;
-                await service.cloneProfile(profile.id, nameCtrl.text.trim());
-                await _loadData();
+                try {
+                  await service.cloneProfile(profile.id, nameCtrl.text.trim());
+                  await _loadData();
+                } catch (e, st) {
+                  LoggingService().logNonFatal(
+                    e,
+                    st,
+                    reason: 'Failed to clone campaign profile',
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to clone campaign to storage')),
+                    );
+                  }
+                }
               },
               child: const Text('Clone'),
             ),
@@ -407,8 +433,21 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
               onPressed: () async {
                 Navigator.pop(ctx);
                 final service = AppServices.instance.campaignProfileService;
-                await service.deleteProfile(profile.id);
-                await _loadData();
+                try {
+                  await service.deleteProfile(profile.id);
+                  await _loadData();
+                } catch (e, st) {
+                  LoggingService().logNonFatal(
+                    e,
+                    st,
+                    reason: 'Failed to delete campaign profile',
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to delete campaign from storage')),
+                    );
+                  }
+                }
               },
               child: const Text('Delete'),
             ),

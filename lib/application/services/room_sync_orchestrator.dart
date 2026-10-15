@@ -239,6 +239,13 @@ class RoomSyncOrchestrator {
     }
   }
 
+  void _unrecordAppliedProfile(CampaignProfile profile) {
+    _appliedProfiles.remove(profile);
+    if (!_appliedProfiles.any((p) => p.hashCode == profile.hashCode)) {
+      _appliedProfileHashRing.remove(profile.hashCode);
+    }
+  }
+
   bool _isAppliedProfile(CampaignProfile profile) {
     if (_appliedProfileHashRing.contains(profile.hashCode)) {
       return _appliedProfiles.any((p) => p == profile);
@@ -271,6 +278,7 @@ class RoomSyncOrchestrator {
     String? targetProfileId;
     CampaignProfile Function(CampaignProfile current)? transform;
     void Function(CampaignProfile applied)? onApplied;
+    CampaignProfile? pendingAppliedProfile;
 
     // 2. Narrow Critical Section: restrict mutex lock strictly to in-memory state
     // reconciliation, vector clock updates, and CRDT joins.
@@ -373,6 +381,7 @@ class RoomSyncOrchestrator {
                   }
                 }
                 final reconciled = reconciliationResult.profile;
+                pendingAppliedProfile = reconciled;
                 _recordAppliedProfile(reconciled);
                 return reconciled;
               };
@@ -395,6 +404,7 @@ class RoomSyncOrchestrator {
                   return current;
                 }
                 final updated = current.copyWith(partyPurse: updatedPurse);
+                pendingAppliedProfile = updated;
                 _recordAppliedProfile(updated);
                 return updated;
               };
@@ -435,6 +445,7 @@ class RoomSyncOrchestrator {
                   return current;
                 }
                 final updated = current.copyWith(pinnedRules: mergedRules);
+                pendingAppliedProfile = updated;
                 _recordAppliedProfile(updated);
                 return updated;
               };
@@ -476,10 +487,14 @@ class RoomSyncOrchestrator {
             await campaignRepo.updateProfile(targetProfileId!, transform!);
         onApplied?.call(applied);
         _recordAppliedProfile(applied);
+        pendingAppliedProfile = null;
         await _syncMutex.protect(() async {
           _lastEmittedProfile = applied;
         });
       } catch (error, stackTrace) {
+        if (pendingAppliedProfile != null) {
+          _unrecordAppliedProfile(pendingAppliedProfile!);
+        }
         if (!_deadLetterController.isClosed) {
           _deadLetterController.add(SyncErrorEvent(
             error: error,
@@ -595,11 +610,24 @@ class RoomSyncOrchestrator {
         reconciliationService.retainTombstones<String>(_trackedRulesSet);
 
     // Persist immediately via serialized updatePath without clobbering concurrent edits
-    final applied = await campaignRepo.updateProfile(targetId, (current) {
-      _recordAppliedProfile(current);
-      return current;
-    });
-    _lastEmittedProfile = applied;
+    CampaignProfile? pendingFlushProfile;
+    try {
+      final applied = await campaignRepo.updateProfile(targetId, (current) {
+        pendingFlushProfile = current;
+        _recordAppliedProfile(current);
+        return current;
+      });
+      _lastEmittedProfile = applied;
+    } catch (e, st) {
+      if (pendingFlushProfile != null) {
+        _unrecordAppliedProfile(pendingFlushProfile!);
+      }
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Host milestone flush persistence failed for campaign $targetId',
+      );
+    }
   }
 
   /// Cancels all subscriptions, timers, and emits offline telemetry.

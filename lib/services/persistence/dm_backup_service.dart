@@ -332,12 +332,22 @@ class DmBackupService {
       // 1. Restore Campaigns
       final campaignService = CampaignProfileService();
       final profilesArr = decoded['campaignProfiles'] as List? ?? [];
+      bool anyCampaignFailed = false;
       for (final p in profilesArr) {
         if (p is Map<String, dynamic>) {
+          final campaignId = p['id']?.toString() ?? 'unknown';
           try {
             final profile = CampaignProfileDto.fromMap(p).toDomain();
             await campaignService.saveProfileImmediate(profile);
-          } catch (_) {}
+          } catch (e, st) {
+            anyCampaignFailed = true;
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason:
+                  'Failed to restore campaign profile $campaignId in full system snapshot',
+            );
+          }
         }
       }
 
@@ -506,7 +516,7 @@ class DmBackupService {
       }
 
       await homebrewService.syncToLibraries();
-      return true;
+      return !anyCampaignFailed;
     } catch (e, st) {
       LoggingService().logNonFatal(
         e,

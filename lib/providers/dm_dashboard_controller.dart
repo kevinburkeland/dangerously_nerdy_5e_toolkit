@@ -365,7 +365,6 @@ class DmDashboardController extends ChangeNotifier {
     if (targetId == null) return;
 
     await _characterPersistenceService.saveCharacter(character);
-    _partyCharactersMap[character.id.slug] = character;
 
     final nowHlc = _clock.nextTimestamp();
     final updated = await _campaignProfileService.updateProfile(targetId, (current) {
@@ -379,6 +378,7 @@ class DmDashboardController extends ChangeNotifier {
       );
       return current.copyWith(partyRoster: updatedRoster);
     });
+    _partyCharactersMap[character.id.slug] = character;
     _activeProfile = updated;
     notifyListeners();
   }

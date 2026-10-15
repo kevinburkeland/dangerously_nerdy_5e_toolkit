@@ -72,9 +72,44 @@ class LocalCampaignRepository implements ICampaignRepository {
   @override
   List<CampaignProfile> get allProfiles => _memoryCache.values.toList();
 
-  final Map<String, Future<void>> _updateQueues = {};
+  Future<void>? _writeQueue;
   Future<void>? _activeReload;
   Future<void>? _activeReloadChain;
+
+  Future<T> _enqueueWrite<T>(Future<T> Function() operation) {
+    final prev = _writeQueue;
+    final reloadToAwait = _activeReload;
+    final completer = Completer<T>();
+    late final Future<void> currentFuture;
+
+    currentFuture = () async {
+      if (prev != null) {
+        try {
+          await prev;
+        } catch (_) {}
+      }
+
+      if (reloadToAwait != null) {
+        try {
+          await reloadToAwait;
+        } catch (_) {}
+      }
+
+      try {
+        final result = await operation();
+        completer.complete(result);
+      } catch (e, st) {
+        completer.completeError(e, st);
+      } finally {
+        if (identical(_writeQueue, currentFuture)) {
+          _writeQueue = null;
+        }
+      }
+    }();
+
+    _writeQueue = currentFuture;
+    return completer.future;
+  }
 
   /// Loads all campaign profiles from persistent storage into memory.
   ///
@@ -112,12 +147,16 @@ class LocalCampaignRepository implements ICampaignRepository {
     final reloadCompleter = Completer<void>();
     _activeReload = reloadCompleter.future;
 
-    // 2. Snapshot only the writes that were already queued before this reload started
-    final pendingWrites = List<Future<void>>.from(_updateQueues.values);
+    // 2. Snapshot the write queued before this reload started.
+    // The reload's own index rewrite (_executeLoadAllProfiles -> _persistIndex)
+    // already runs while no write is in flight. Keep it that way.
+    final pendingWrite = _writeQueue;
 
     try {
-      if (pendingWrites.isNotEmpty) {
-        await Future.wait(pendingWrites.map((f) => f.catchError((_) {})));
+      if (pendingWrite != null) {
+        try {
+          await pendingWrite;
+        } catch (_) {}
       }
 
       final success = await _loadSavedRecords();
@@ -126,7 +165,18 @@ class LocalCampaignRepository implements ICampaignRepository {
       }
 
       if (_memoryCache.isNotEmpty) {
-        await _persistIndex();
+        // If the reload's index rewrite fails, log it and still return the profiles.
+        // The read succeeded and the cache is right; the rewrite only copies the index
+        // (for example from the old SharedPreferences index), and the next reload repeats it.
+        try {
+          await _persistIndex();
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Non-fatal failure to rewrite campaign index during reload: $e',
+          );
+        }
       }
       _emitState();
 
@@ -276,101 +326,74 @@ class LocalCampaignRepository implements ICampaignRepository {
   Future<CampaignProfile> updateProfile(
     String id,
     CampaignProfile Function(CampaignProfile current) transform,
-  ) async {
-    final prev = _updateQueues[id] ?? Future<void>.value();
-    final reloadToAwait = _activeReload;
-    final completer = Completer<CampaignProfile>();
-    late final Future<void> currentFuture;
-
-    currentFuture = () async {
-      try {
-        await prev;
-      } catch (_) {}
-
-      if (reloadToAwait != null) {
-        try {
-          await reloadToAwait;
-        } catch (_) {}
+  ) {
+    return _enqueueWrite(() async {
+      if (!_initialized) {
+        final ok = await _loadSavedRecords();
+        if (!ok) {
+          throw StateError(
+            'Cannot update campaign profile "$id": failed to read campaign records from storage',
+          );
+        }
       }
 
+      final current = _memoryCache[id];
+      if (current == null) {
+        throw StateError('Campaign profile with id "$id" not found');
+      }
+
+      final next = transform(current);
+      _memoryCache[id] = next;
+      AppServices.instance.debouncedStorage
+          .cancelTask('save_campaign_profile_$id');
+
       try {
-        if (!_initialized) {
-          final ok = await _loadSavedRecords();
-          if (!ok) {
-            throw StateError(
-              'Cannot update campaign profile "$id": failed to read campaign records from storage',
-            );
-          }
-        }
-        final current = _memoryCache[id];
-        if (current == null) {
-          throw StateError('Campaign profile with id "$id" not found');
-        }
-        final next = transform(current);
-        _memoryCache[id] = next;
-        AppServices.instance.debouncedStorage
-            .cancelTask('save_campaign_profile_$id');
         await _persistProfileToDisk(next);
-        _emitState();
-        completer.complete(next);
-      } catch (e, st) {
-        completer.completeError(e, st);
-      } finally {
-        if (identical(_updateQueues[id], currentFuture)) {
-          _updateQueues.remove(id);
-        }
+      } catch (e) {
+        _memoryCache[id] = current;
+        rethrow;
       }
-    }();
 
-    _updateQueues[id] = currentFuture;
-    return completer.future;
+      _emitState();
+      return next;
+    });
   }
 
   @override
-  Future<void> putProfile(CampaignProfile profile) async {
-    final prev = _updateQueues[profile.id] ?? Future<void>.value();
-    final reloadToAwait = _activeReload;
-    final completer = Completer<void>();
-    late final Future<void> currentFuture;
-
-    currentFuture = () async {
-      try {
-        await prev;
-      } catch (_) {}
-
-      if (reloadToAwait != null) {
-        try {
-          await reloadToAwait;
-        } catch (_) {}
+  Future<void> putProfile(CampaignProfile profile) {
+    return _enqueueWrite(() async {
+      if (!_initialized) {
+        final ok = await _loadSavedRecords();
+        if (!ok) {
+          throw StateError(
+            'Cannot put campaign profile "${profile.id}": failed to read campaign records from storage',
+          );
+        }
       }
 
+      final hadPrevious = _memoryCache.containsKey(profile.id);
+      final previousProfile = _memoryCache[profile.id];
+      final previousActiveProfileId = _activeProfileId;
+
+      _memoryCache[profile.id] = profile;
+      _activeProfileId ??= profile.id;
+      AppServices.instance.debouncedStorage
+          .cancelTask('save_campaign_profile_${profile.id}');
+
       try {
-        if (!_initialized) {
-          final ok = await _loadSavedRecords();
-          if (!ok) {
-            throw StateError(
-              'Cannot put campaign profile "${profile.id}": failed to read campaign records from storage',
-            );
-          }
-        }
-        _memoryCache[profile.id] = profile;
-        _activeProfileId ??= profile.id;
-        AppServices.instance.debouncedStorage
-            .cancelTask('save_campaign_profile_${profile.id}');
         await _persistProfileToDisk(profile);
-        _emitState();
-        completer.complete();
-      } catch (e, st) {
-        completer.completeError(e, st);
-      } finally {
-        if (identical(_updateQueues[profile.id], currentFuture)) {
-          _updateQueues.remove(profile.id);
+      } catch (e) {
+        if (hadPrevious) {
+          _memoryCache[profile.id] = previousProfile!;
+        } else {
+          _memoryCache.remove(profile.id);
         }
+        _activeProfileId = previousActiveProfileId;
+        rethrow;
       }
-    }();
 
-    _updateQueues[profile.id] = currentFuture;
-    return completer.future;
+      _emitState();
+    });
   }
 
   /// Backward-compatible immediate save delegating to serialized [putProfile].
@@ -379,65 +402,70 @@ class LocalCampaignRepository implements ICampaignRepository {
   }
 
   @override
-  Future<void> deleteProfile(String id) async {
-    final prev = _updateQueues[id] ?? Future<void>.value();
-    final reloadToAwait = _activeReload;
-    final completer = Completer<void>();
-    late final Future<void> currentFuture;
-
-    currentFuture = () async {
-      try {
-        await prev;
-      } catch (_) {}
-
-      if (reloadToAwait != null) {
-        try {
-          await reloadToAwait;
-        } catch (_) {}
+  Future<void> deleteProfile(String id) {
+    return _enqueueWrite(() async {
+      if (!_initialized) {
+        final ok = await _loadSavedRecords();
+        if (!ok) {
+          throw StateError(
+            'Cannot delete campaign profile "$id": failed to read campaign records from storage',
+          );
+        }
       }
 
+      final previousProfile = _memoryCache[id];
+      final previousUnparsed = _unparsedCache[id];
+      final wasRejected = _rejectedProfileIds.contains(id);
+      final previousActiveProfileId = _activeProfileId;
+
+      _memoryCache.remove(id);
+      _unparsedCache.remove(id);
+      _rejectedProfileIds.remove(id);
+
+      // 1. Write the index without the id FIRST.
+      // If that fails, restore the cache, _unparsedCache, and _rejectedProfileIds, and throw;
+      // nothing changed on disk.
       try {
-        if (!_initialized) {
-          final ok = await _loadSavedRecords();
-          if (!ok) {
-            throw StateError(
-              'Cannot delete campaign profile "$id": failed to read campaign records from storage',
-            );
-          }
-        }
-        _memoryCache.remove(id);
-        _unparsedCache.remove(id);
-        _rejectedProfileIds.remove(id);
-
-        try {
-          await _db.delete(
-              AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id');
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.remove('$profileKeyPrefix$id');
-        } catch (_) {}
-
         await _persistIndex();
-
-        if (_activeProfileId == id) {
-          _activeProfileId =
-              _memoryCache.keys.isNotEmpty ? _memoryCache.keys.first : null;
-          if (_activeProfileId != null) {
-            await setActiveProfileId(_activeProfileId!);
-          }
+      } catch (e) {
+        if (previousProfile != null) {
+          _memoryCache[id] = previousProfile;
         }
-        _emitState();
-        completer.complete();
+        if (previousUnparsed != null) {
+          _unparsedCache[id] = previousUnparsed;
+        }
+        if (wasRejected) {
+          _rejectedProfileIds.add(id);
+        }
+        _activeProfileId = previousActiveProfileId;
+        rethrow;
+      }
+
+      // 2. Then delete the record (Hive and SharedPreferences copy).
+      // If only the record delete fails, log it and return normally:
+      // The record is no longer in the index, so no subsequent load can reach it.
+      try {
+        await _db.delete(
+            AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('$profileKeyPrefix$id');
       } catch (e, st) {
-        completer.completeError(e, st);
-      } finally {
-        if (identical(_updateQueues[id], currentFuture)) {
-          _updateQueues.remove(id);
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Non-fatal record deletion failure for campaign $id after index update',
+        );
+      }
+
+      if (_activeProfileId == id) {
+        _activeProfileId =
+            _memoryCache.keys.isNotEmpty ? _memoryCache.keys.first : null;
+        if (_activeProfileId != null) {
+          await setActiveProfileId(_activeProfileId!);
         }
       }
-    }();
-
-    _updateQueues[id] = currentFuture;
-    return completer.future;
+      _emitState();
+    });
   }
 
   @override
@@ -498,6 +526,7 @@ class LocalCampaignRepository implements ICampaignRepository {
       );
     } catch (e) {
       LoggingService().logWarning('Failed to persist campaign profile: $e', e);
+      rethrow;
     }
   }
 
@@ -511,6 +540,7 @@ class LocalCampaignRepository implements ICampaignRepository {
       );
     } catch (e) {
       LoggingService().logWarning('Failed to persist campaign index: $e', e);
+      rethrow;
     }
   }
 }

@@ -7,6 +7,7 @@ import 'package:vtt_engine_core/storage/models/storage_telemetry_report.dart';
 import 'package:vtt_engine_core/storage/ports/i_campaign_snapshot_serializer_port.dart';
 import 'package:vtt_engine_core/storage/ports/i_physical_snapshot_port.dart';
 import 'package:vtt_engine_core/storage/ports/i_storage_durability_port.dart';
+import '../../services/logging_service.dart';
 
 /// Application coordinator governing browser storage persistence negotiation,
 /// ambient telemetry reporting, and tamper-evident cold storage backups.
@@ -149,13 +150,22 @@ class StorageDurabilityCoordinator {
     // cryptographic validity is already verified via bundle.isValid above.
 
     // Reconcile / save state
-    await campaignRepo.putProfile(inboundProfile);
-    if (campaignRepo.activeProfileId == null ||
-        campaignRepo.activeProfileId == inboundProfile.id) {
-      await campaignRepo.setActiveProfileId(inboundProfile.id);
+    try {
+      await campaignRepo.putProfile(inboundProfile);
+      if (campaignRepo.activeProfileId == null ||
+          campaignRepo.activeProfileId == inboundProfile.id) {
+        await campaignRepo.setActiveProfileId(inboundProfile.id);
+      }
+      return true;
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason:
+            'Failed to persist restored physical snapshot to campaign repository',
+      );
+      return false;
     }
-
-    return true;
   }
 
   /// Disposes internal broadcast stream controller.

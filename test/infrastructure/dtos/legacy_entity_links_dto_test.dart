@@ -44,13 +44,10 @@ void main() {
   });
 
   group('Legacy Entity Links in Full Campaign Record (Pass 4.2.7)', () {
-    // Fixtures directory in test/fixtures/legacy_entity_links, falling back to vtt_engine_core
     File resolveFixture(String filename) {
       final local = File('test/fixtures/legacy_entity_links/$filename');
       if (local.existsSync()) return local;
-      final fallback = File('../vtt-engine-core/test/fixtures/legacy_entity_links/$filename');
-      if (fallback.existsSync()) return fallback;
-      throw StateError('Fixture $filename not found in test/fixtures/legacy_entity_links or ../vtt-engine-core');
+      throw StateError('Fixture $filename not found in test/fixtures/legacy_entity_links');
     }
 
     Map<String, dynamic> loadFixtureJson(String filename) {
