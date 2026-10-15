@@ -8,6 +8,7 @@ import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
 import '../../services/io/compendium_file_picker_service.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
+import '../../infrastructure/modules/dnd5e/dnd5e_ruleset_catalog.dart';
 import '../dialogs/app_dialog_frame.dart';
 
 /// Modal dialog providing interactive preview, category filters, automated deduplication,
@@ -799,17 +800,24 @@ class _HomebrewImportPreviewDialogState
 // ─── Isolate support ────────────────────────────────────────────────────────
 
 /// Payload for the isolate-based JSON parse step.
-class _ParseRequest {
+class HomebrewParseRequest {
   final String jsonString;
   final RulesetVersion? forceRuleset;
 
-  const _ParseRequest(this.jsonString, this.forceRuleset);
+  const HomebrewParseRequest(this.jsonString, this.forceRuleset);
 }
+
+typedef _ParseRequest = HomebrewParseRequest;
 
 /// Top-level function required by [compute] — runs in a separate isolate so
 /// that ACL parsing of large compendium files does not block the UI thread.
-IngestionBatchResult _parseJsonInIsolate(_ParseRequest req) {
+@visibleForTesting
+IngestionBatchResult parseHomebrewJsonInIsolate(HomebrewParseRequest req) {
+  installRulesetCatalog();
   final pipeline = CompendiumJsonIngestionPipeline();
   return pipeline.ingestJsonString(req.jsonString,
       forceRuleset: req.forceRuleset);
 }
+
+const _parseJsonInIsolate = parseHomebrewJsonInIsolate;
+

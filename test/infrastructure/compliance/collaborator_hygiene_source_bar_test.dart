@@ -46,9 +46,30 @@ void main() {
       allDartFiles = files;
     });
 
-    test('Rule 1: No static fields with function types (neither const nor final) except MinionStats.defaultProvider', () {
+    test('Rule 1: No static fields (neither const nor final) with nullable or function-typedef types', () {
       final violations = <String>[];
-      final staticFuncPattern = RegExp(r'\bstatic\s+(?!const\b|final\b)[^;=\(\)]*\bFunction\s*[\(<]');
+
+      // Collect all typedef names across allDartFiles
+      final typedefPattern = RegExp(r'\btypedef\s+(\w+)\s*=');
+      final allTypedefs = <String>{};
+      for (final file in allDartFiles) {
+        final content = file.readAsStringSync();
+        for (final match in typedefPattern.allMatches(content)) {
+          allTypedefs.add(match.group(1)!);
+        }
+      }
+
+      // Pattern for static field (neither const nor final) with nullable type:
+      // static [late] Type? name [= ...];
+      final nullableStaticFieldPattern = RegExp(
+        r'\bstatic\s+(?!const\b|final\b)(?:late\s+)?(?:[\w<>,?\s]+?)\?\s+([a-zA-Z0-9_]+)\s*(?:=|;)',
+      );
+
+      // Pattern for static field with inline Function type:
+      // static [late] ... Function(...) name [= ...];
+      final inlineFunctionFieldPattern = RegExp(
+        r'\bstatic\s+(?!const\b|final\b)[^;=\(\)]*\bFunction\s*[\(<]',
+      );
 
       for (final file in allDartFiles) {
         final lines = file.readAsLinesSync();
@@ -79,9 +100,37 @@ void main() {
           final codeOnly = line.split('//').first.trim();
           if (codeOnly.isEmpty) continue;
 
-          if (staticFuncPattern.hasMatch(codeOnly)) {
-            // Allowlist MinionStats.defaultProvider in minion_instance.dart (Pass 6 known debt)
+          // Exclude getters, setters, and static methods
+          if (RegExp(r'\bstatic\s+(?!const\b|final\b).*\b(get|set)\b').hasMatch(codeOnly)) {
+            continue;
+          }
+
+          bool isViolation = nullableStaticFieldPattern.hasMatch(codeOnly);
+
+          if (!isViolation && inlineFunctionFieldPattern.hasMatch(codeOnly)) {
+            isViolation = true;
+          }
+
+          if (!isViolation && codeOnly.startsWith('static ') && !codeOnly.contains('(')) {
+            for (final td in allTypedefs) {
+              if (RegExp('\\bstatic\\s+(?!const\\b|final\\b)(?:late\\s+)?$td\\s+[a-zA-Z0-9_]+\\s*(?:=|;)').hasMatch(codeOnly)) {
+                isViolation = true;
+                break;
+              }
+            }
+          }
+
+          if (isViolation) {
             final normalized = file.path.replaceAll('\\', '/');
+
+            // Allowlist 1: Dnd5eRuleset._catalog in dnd5e_catalog.dart (ruleset)
+            // Required SPI gateway for standalone ruleset module to access host catalog.
+            if (normalized.endsWith('dnd5e_catalog.dart') && codeOnly.contains('_catalog')) {
+              continue;
+            }
+
+            // Allowlist 2: MinionStats.defaultProvider in minion_instance.dart (app)
+            // Pass 6 known debt: allowlisted defaultProvider fallback; to be replaced in a later pass.
             if (normalized.endsWith('minion_instance.dart') && codeOnly.contains('defaultProvider')) {
               continue;
             }
@@ -94,7 +143,7 @@ void main() {
       expect(
         violations,
         isEmpty,
-        reason: 'Forbidden mutable static function field hooks found:\n${violations.join('\n')}',
+        reason: 'Forbidden mutable static fields with nullable or function-typedef types found:\n${violations.join('\n')}',
       );
     });
 

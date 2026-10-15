@@ -38,6 +38,7 @@ class InjectionContainer {
   final Map<Type, dynamic Function()> _factories = {};
   final Map<Type, dynamic> _singletons = {};
 
+
   /// Registers a factory that is resolved once into a cached singleton on first access.
   void registerLazySingleton<T>(T Function() factory) {
     _factories[T] = factory;
@@ -73,11 +74,16 @@ class InjectionContainer {
   bool isRegistered<T>() =>
       _singletons.containsKey(T) || _factories.containsKey(T);
 
+  /// Unregisters a type if registered.
+  void unregister<T>() {
+    _singletons.remove(T);
+    _factories.remove(T);
+  }
+
   /// Clears all registrations (primarily used in test teardowns).
   void reset() {
     _factories.clear();
     _singletons.clear();
-    PartyRoomService.resetCustomInstanceForTesting();
   }
 }
 

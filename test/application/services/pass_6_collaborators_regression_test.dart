@@ -134,31 +134,6 @@ class _MockNetworkTimePort implements INetworkTimePort {
   Future<int> getNetworkTimeMs() async => 1000;
 }
 
-class _CustomCasterClass extends DomainEntity {
-  @override
-  final EntityId id;
-  @override
-  final String name;
-  @override
-  final Map<String, dynamic> customProperties;
-
-  const _CustomCasterClass({
-    required this.id,
-    required this.name,
-    required this.customProperties,
-  });
-
-  @override
-  EntityType get entityType => EntityType.classDefinition;
-
-  @override
-  Map<String, dynamic> toMap() => {
-    'id': id.toMap(),
-    'name': name,
-    'customProperties': customProperties,
-  };
-}
-
 void main() {
   setUp(() {
     installRulesetCatalog();
@@ -410,14 +385,17 @@ void main() {
 
 class _CustomCasterCatalog extends AppDnd5eCatalog {
   @override
-  dynamic findClass(String slug) {
+  CharacterClass? findClass(String slug) {
     if (slug == 'custom-mage') {
-      return const _CustomCasterClass(
+      return const CharacterClass(
         id: EntityId(slug: 'custom-mage', ruleset: RulesetVersion.v2024),
         name: 'Custom Mage',
+        hitDie: 'd6',
         customProperties: {'spellcastingProgression': 'full'},
       );
     }
     return super.findClass(slug);
   }
 }
+
+

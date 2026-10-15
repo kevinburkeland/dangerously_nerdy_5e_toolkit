@@ -114,9 +114,7 @@ class PartyOutboxAction {
 class PartyRoomService {
   static const Duration defaultLootExpiration = Duration(days: 30);
 
-  static PartyRoomService? _customInstance;
   static PartyRoomService get _instance {
-    if (_customInstance != null) return _customInstance!;
     if (sl.isRegistered<PartyRoomService>()) {
       return sl<PartyRoomService>();
     }
@@ -223,12 +221,19 @@ class PartyRoomService {
   }
 
   static void resetCustomInstanceForTesting() {
-    _customInstance = null;
+    if (sl.isRegistered<PartyRoomService>()) {
+      sl.unregister<PartyRoomService>();
+    }
   }
 
   @visibleForTesting
   static void setCustomInstanceForTesting(PartyRoomService? instance) {
-    _customInstance = instance;
+    if (sl.isRegistered<PartyRoomService>()) {
+      sl.unregister<PartyRoomService>();
+    }
+    if (instance != null) {
+      sl.registerSingleton<PartyRoomService>(instance);
+    }
   }
 
   bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;

@@ -1,4 +1,5 @@
 import 'package:vtt_engine_core/simulation/combat_rider.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
@@ -15,7 +16,7 @@ class AppDnd5eCatalog implements Dnd5eCatalog {
   const AppDnd5eCatalog();
 
   @override
-  dynamic findClass(String slug) => SrdClassesLibrary.findBySlug(slug);
+  CharacterClass? findClass(String slug) => SrdClassesLibrary.findBySlug(slug);
 
   @override
   dynamic findFeat(String slug) => SrdFeatsLibrary.findBySlug(slug);
