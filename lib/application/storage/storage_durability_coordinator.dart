@@ -15,7 +15,7 @@ class StorageDurabilityCoordinator {
   final IStorageDurabilityPort storagePort;
   final IPhysicalSnapshotPort snapshotPort;
   final ICampaignRepository campaignRepo;
-  final ICampaignSnapshotSerializerPort? serializer;
+  final ICampaignSnapshotSerializerPort serializer;
 
   final StreamController<StorageTelemetryReport> _telemetryController =
       StreamController<StorageTelemetryReport>.broadcast(sync: false);
@@ -27,9 +27,8 @@ class StorageDurabilityCoordinator {
     required this.storagePort,
     required this.snapshotPort,
     required this.campaignRepo,
-    ICampaignSnapshotSerializerPort? serializer,
-  }) : serializer = serializer ??
-            ICampaignSnapshotSerializerPort.defaultProvider?.call();
+    required this.serializer,
+  });
 
   /// Reactive stream broadcasting storage persistence, quota, and risk diagnostics.
   Stream<StorageTelemetryReport> get telemetryStream =>
@@ -100,12 +99,7 @@ class StorageDurabilityCoordinator {
           'Cannot export cold storage: vault "$vaultId" not found.');
     }
 
-    if (serializer == null) {
-      throw StateError(
-          'Cannot export cold storage: serializer port not provided.');
-    }
-
-    final payloadBytes = await serializer!.serializeToBytes(profile);
+    final payloadBytes = await serializer.serializeToBytes(profile);
 
     final bundle = StorageSnapshotBundle.create(
       vaultId: vaultId,
@@ -133,15 +127,11 @@ class StorageDurabilityCoordinator {
       return false;
     }
 
-    if (serializer == null) {
-      return false;
-    }
-
     // 2. Deserialize inbound campaign state via snapshot serializer port
     CampaignProfile inboundProfile;
     try {
       inboundProfile =
-          await serializer!.deserializeFromBytes(bundle.payloadBytes);
+          await serializer.deserializeFromBytes(bundle.payloadBytes);
     } catch (_) {
       return false;
     }

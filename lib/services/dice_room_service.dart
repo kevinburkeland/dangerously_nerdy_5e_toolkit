@@ -313,7 +313,7 @@ class DiceRoomService {
         final prefs = await SharedPreferences.getInstance();
         final rolls = _localRooms[cleanCode] ?? [];
         final raw = jsonEncode(
-            rolls.map((r) => r.toMap(useFirestoreTimestamp: false)).toList());
+            rolls.map((r) => r.toJsonMap()).toList());
         await prefs.setString('$_kPersistedRoomRollsPrefix$cleanCode', raw);
       } catch (e, stackTrace) {
         LoggingService().logNonFatal(
@@ -490,7 +490,7 @@ class DiceRoomService {
         final p2pPayload = jsonEncode({
           'type': 'dice_roll',
           'roomCode': cleanCode,
-          'payload': roll.toMap(useFirestoreTimestamp: false),
+          'payload': roll.toJsonMap(),
           'timestamp': DateTime.now().millisecondsSinceEpoch,
         });
         unawaited(sl<IP2pTransportPort>().broadcastPayload(p2pPayload));
@@ -512,7 +512,7 @@ class DiceRoomService {
             .doc(cleanCode)
             .collection('rolls')
             .doc(roll.id)
-            .set(roll.toMap());
+            .set(roll.toFirestoreMap(Timestamp.fromDate));
       } catch (e, stackTrace) {
         LoggingService().logNonFatal(
           e,

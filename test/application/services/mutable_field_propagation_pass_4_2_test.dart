@@ -14,13 +14,8 @@ import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 
 void main() {
-  setUpAll(() {
-    IRoomSyncPayloadPort.defaultProvider = () => const RoomSyncPayloadMapper();
-  });
-
   group('Cold Iron Birdcage — Pass 4.2: Mutable Field Semantics & Single-Writer Law', () {
     late StatefulHlcClock clockA;
     late StatefulHlcClock clockB;
@@ -574,7 +569,7 @@ void main() {
             'roomId': 'r1',
             'titleRegister': 'garbage',
             'title': 'Legacy Title',
-          }),
+          }, minionParser: (m) => m),
           throwsA(isA<FormatException>()),
         );
 
@@ -583,7 +578,7 @@ void main() {
             'roomId': 'r1',
             'descriptionRegister': null,
             'description': 'Legacy Desc',
-          }),
+          }, minionParser: (m) => m),
           throwsA(isA<FormatException>()),
         );
       });
@@ -657,7 +652,7 @@ void main() {
           () => RoomNodeState.fromMap({
             'roomId': 'r1',
             'titleRegister': {'timestamp': validHlcMap},
-          }),
+          }, minionParser: (m) => m),
           throwsA(isA<FormatException>()),
         );
 
@@ -665,7 +660,7 @@ void main() {
           () => RoomNodeState.fromMap({
             'roomId': 'r1',
             'descriptionRegister': {'timestamp': validHlcMap},
-          }),
+          }, minionParser: (m) => m),
           throwsA(isA<FormatException>()),
         );
       });

@@ -78,10 +78,6 @@ class _RandomDelayDatabaseService extends AppDatabaseService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() {
-    IRoomSyncPayloadPort.defaultProvider = () => const RoomSyncPayloadMapper();
-  });
-
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();

@@ -161,10 +161,6 @@ class _InvertedFakeDbService extends AppDatabaseService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() {
-    IRoomSyncPayloadPort.defaultProvider = () => const RoomSyncPayloadMapper();
-  });
-
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppServices.instance.debouncedStorage.flushAll();
@@ -716,6 +712,7 @@ void main() {
           replicaId: replicaId,
           transportPort: transport,
           campaignRepo: repo,
+          payloadMapper: const RoomSyncPayloadMapper(),
           reconciliationService: reconciler,
           clockSyncService: clockSync,
           clock: clock,

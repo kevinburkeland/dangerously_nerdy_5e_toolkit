@@ -12,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_impor
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_combat_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
@@ -552,6 +553,7 @@ void main() {
           () => RoomSyncOrchestrator(
             transportPort: _FakeTransportPort(),
             campaignRepo: _FakeCampaignRepo(),
+            payloadMapper: const RoomSyncPayloadMapper(),
             reconciliationService: RoomStateReconciliationService(
               networkTimeProvider: () => 1000000,
             ),
@@ -566,6 +568,7 @@ void main() {
           () => RoomSyncOrchestrator(
             transportPort: _FakeTransportPort(),
             campaignRepo: _FakeCampaignRepo(),
+            payloadMapper: const RoomSyncPayloadMapper(),
             reconciliationService: RoomStateReconciliationService(
               networkTimeProvider: () => 1000000,
             ),

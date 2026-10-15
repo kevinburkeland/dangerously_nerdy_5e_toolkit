@@ -19,6 +19,7 @@ import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 
 class _MockSyncTransport implements IP2pTransportPort {
   final StreamController<String> _incoming =
@@ -323,6 +324,7 @@ void main() {
       final orchestrator = RoomSyncOrchestrator(
         replicaId: ReplicaId('test_orch_screen'),
         transportPort: transport,
+        payloadMapper: const RoomSyncPayloadMapper(),
         clock: orchClock,
         campaignRepo:
             LocalCampaignRepository(

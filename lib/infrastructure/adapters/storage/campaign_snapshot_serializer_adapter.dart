@@ -11,12 +11,6 @@ class CampaignSnapshotSerializerAdapter
     implements ICampaignSnapshotSerializerPort {
   const CampaignSnapshotSerializerAdapter();
 
-  /// Registers [CampaignSnapshotSerializerAdapter] as the global default provider.
-  static void registerDefault() {
-    ICampaignSnapshotSerializerPort.defaultProvider ??=
-        () => const CampaignSnapshotSerializerAdapter();
-  }
-
   @override
   Future<Uint8List> serializeToBytes(CampaignProfile profile) async {
     final dto = CampaignProfileDto.fromDomain(profile);

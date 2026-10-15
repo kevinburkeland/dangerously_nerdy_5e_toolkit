@@ -186,10 +186,6 @@ class ThrowingReconciliationService extends RoomStateReconciliationService {
 }
 
 void main() {
-  setUpAll(() {
-    IRoomSyncPayloadPort.defaultProvider = () => const RoomSyncPayloadMapper();
-  });
-
   group('RoomSyncOrchestrator Tests', () {
     late MockTransportPort mockWifi;
     late MockTransportPort mockWebRtc;
@@ -245,6 +241,7 @@ void main() {
       );
 
       orchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('test_orchestrator_node'),
         router: router,
         campaignRepo: mockRepo,
@@ -420,6 +417,7 @@ void main() {
         'Host Milestone Flush Test: host flushes snapshot and retains tombstones indefinitely',
         () async {
       final hostOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -510,6 +508,7 @@ void main() {
         () async {
       final genericMock = MockTransportPort();
       final genericOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('test_generic_node'),
         transportPort: genericMock,
         campaignRepo: mockRepo,
@@ -547,6 +546,7 @@ void main() {
         ..peerLastSeen = {'peerA': 1000, 'peerB': 2000};
 
       final genericOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('test_generic_node'),
         transportPort: genericMock,
         campaignRepo: mockRepo,
@@ -575,6 +575,7 @@ void main() {
       await router.initializeRoom('CR-101', 'localNode1');
 
       orchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('test_orchestrator_node'),
         router: router,
         campaignRepo: mockRepo,
@@ -653,6 +654,7 @@ void main() {
 
     test('Default telemetryInterval is 2 seconds', () {
       final defaultOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('test_default_node'),
         router: router,
         campaignRepo: mockRepo,
@@ -803,6 +805,7 @@ void main() {
         () async {
       final now = clockSyncService.currentNetworkTimeMs;
       final hostOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -848,6 +851,7 @@ void main() {
         () async {
       int simulatedNow = 100000;
       final hostOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
@@ -1024,6 +1028,7 @@ void main() {
         () async {
       final throwingReconciliationService = ThrowingReconciliationService();
       final testOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('test_orchestrator_node'),
         router: router,
         campaignRepo: mockRepo,
@@ -1063,6 +1068,7 @@ void main() {
         'Eliminate Static Node Identity: constructor requires explicit ReplicaId',
         () {
       final orch1 = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('explicit_orch_1'),
         transportPort: mockWebRtc,
         campaignRepo: mockRepo,
@@ -1079,6 +1085,7 @@ void main() {
         () async {
       final throwingReconciliation = _ThrowingHlcReconciliationService();
       final testOrchestrator = RoomSyncOrchestrator(
+        payloadMapper: const RoomSyncPayloadMapper(),
         transportPort: mockWebRtc,
         campaignRepo: mockRepo,
         reconciliationService: throwingReconciliation,

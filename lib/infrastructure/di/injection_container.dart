@@ -9,23 +9,17 @@ import '../../application/services/combat_encounter_service.dart';
 import '../../application/services/room_state_reconciliation_service.dart';
 import '../../application/services/room_sync_orchestrator.dart';
 import '../../application/storage/storage_durability_coordinator.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../../services/persistence/campaign_profile_service.dart';
 import '../adapters/p2p/firebase_fallback_adapter.dart';
-import '../modules/dnd5e/dnd_5e_animated_object_adapter.dart';
 import '../adapters/p2p/firebase_signaling_adapter.dart';
 import '../adapters/p2p/local_wifi_adapter.dart';
 import '../adapters/p2p/webrtc_mesh_adapter.dart';
 import '../adapters/storage/campaign_snapshot_serializer_adapter.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
-import '../../models/characters/srd_classes_library.dart';
-import '../../models/characters/srd_feats_library.dart';
-import '../../models/characters/subclass_spells_library.dart';
-import '../../models/magic_items/magic_item_library.dart';
+import '../modules/dnd5e/dnd5e_ruleset_catalog.dart';
 import '../adapters/remote/github_ingestor_adapter.dart';
-import '../../services/acl/compendium_pipe_parser.dart';
 import '../adapters/system_network_time_port.dart';
 import '../mappers/room_sync_payload_mapper.dart';
 import '../repositories/local_campaign_repository.dart';
@@ -100,6 +94,8 @@ Future<void> initServiceLocator({
   IPhysicalSnapshotPort? physicalSnapshotPort,
   ReplicaId? replicaId,
 }) async {
+  installRulesetCatalog();
+
   final db = databaseService ?? AppDatabaseService.instance;
   sl.registerSingleton<AppDatabaseService>(db);
 
@@ -140,8 +136,6 @@ Future<void> initServiceLocator({
   sl.registerLazySingleton<ICampaignSnapshotSerializerPort>(
     () => const CampaignSnapshotSerializerAdapter(),
   );
-  CampaignSnapshotSerializerAdapter.registerDefault();
-
   sl.registerLazySingleton<StorageDurabilityCoordinator>(
     () => StorageDurabilityCoordinator(
       storagePort: sl<IStorageDurabilityPort>(),
@@ -202,44 +196,6 @@ Future<void> initServiceLocator({
 
   sl.registerLazySingleton<IRoomSyncPayloadPort>(
       () => const RoomSyncPayloadMapper());
-  IRoomSyncPayloadPort.defaultProvider = () => sl<IRoomSyncPayloadPort>();
-
-  // Injected ruleset baseline provider for animated objects
-  AnimatedObjectStats.defaultProvider = Dnd5eAnimatedObjectAdapter.getStats;
-
-  // Wire ruleset domain extraction hooks to toolkit compendiums
-  FeatureGrant.spellDescriptorExtractor =
-      CompendiumPipeParser.extractSpellDescriptors;
-  FeatureGrant.spellNameExtractor = CompendiumPipeParser.extractSpellNames;
-  FeatureGrant.bonusSpellsExtractor = CompendiumPipeParser.extractBonusSpells;
-
-  CharacterEvaluationEngine.magicItemLookupHook = (idOrName) =>
-      MagicItemLibrary.findById(idOrName) ??
-      MagicItemLibrary.findById('item_$idOrName') ??
-      MagicItemLibrary.findByName(idOrName);
-  CharacterEvaluationEngine.featLookupHook =
-      (slug) => SrdFeatsLibrary.findBySlug(slug);
-  CharacterEvaluationEngine.classLookupHook =
-      (slug) => SrdClassesLibrary.findBySlug(slug);
-  CharacterProgressionEngine.classLookupHook =
-      (slug) => SrdClassesLibrary.findBySlug(slug);
-  CharacterStatCalculator.classLookupHook =
-      (slug) => SrdClassesLibrary.findBySlug(slug);
-  SpellAllocationValidator.alwaysPreparedSpellsHook = ({
-    required String classSlug,
-    String? subclassSlug,
-    required int classLevel,
-    required RulesetEdition edition,
-  }) {
-    return SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
-      classSlug: classSlug,
-      subclassSlug: subclassSlug,
-      classLevel: classLevel,
-      edition: edition == RulesetEdition.v2024
-          ? DmRulesEdition.dnd2024
-          : DmRulesEdition.dnd2014,
-    ).map((s) => s.name).toList();
-  };
 
   if (p2pTransport != null) {
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);

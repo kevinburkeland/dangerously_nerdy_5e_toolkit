@@ -16,6 +16,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/room_banner_widget.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 
 class MockP2pTransport implements IP2pTransportPort {
   String? currentRoomCode;
@@ -267,6 +268,7 @@ void main() {
     final orchestrator = RoomSyncOrchestrator(
       replicaId: ReplicaId('test_banner_node'),
       transportPort: mockTransport,
+      payloadMapper: const RoomSyncPayloadMapper(),
       campaignRepo: MockCampaignRepo(),
       reconciliationService: RoomStateReconciliationService(
         networkTimeProvider: () =>

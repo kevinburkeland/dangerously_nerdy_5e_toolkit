@@ -1,3 +1,4 @@
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/storage/campaign_snapshot_serializer_adapter.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -106,6 +107,7 @@ void main() {
         storagePort: port,
         snapshotPort: MockPhysicalSnapshotPort(),
         campaignRepo: MockCampaignRepository(),
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
       await coordinator.executeSilentPreflight();
 
@@ -142,6 +144,7 @@ void main() {
         storagePort: port,
         snapshotPort: MockPhysicalSnapshotPort(),
         campaignRepo: MockCampaignRepository(),
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
       await coordinator.executeSilentPreflight();
 
@@ -177,6 +180,7 @@ void main() {
         storagePort: port,
         snapshotPort: MockPhysicalSnapshotPort(),
         campaignRepo: MockCampaignRepository(),
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
       await coordinator.executeSilentPreflight();
 
@@ -239,6 +243,7 @@ void main() {
         storagePort: port,
         snapshotPort: MockPhysicalSnapshotPort(),
         campaignRepo: MockCampaignRepository(),
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
       await coordinator.executeSilentPreflight();
 
@@ -289,6 +294,7 @@ void main() {
         storagePort: port,
         snapshotPort: MockPhysicalSnapshotPort(),
         campaignRepo: MockCampaignRepository(),
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
       await coordinator.executeSilentPreflight();
       expect(coordinator.requiresContextualPrompt, isTrue);
@@ -343,6 +349,7 @@ void main() {
         storagePort: port,
         snapshotPort: MockPhysicalSnapshotPort(),
         campaignRepo: MockCampaignRepository(),
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
       await coordinator.executeSilentPreflight();
 

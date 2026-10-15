@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/utils/deep_immutable.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../../models/domain/character_models.dart';
 
 /// Lightweight pointer representing a single class progression level.
@@ -563,7 +564,7 @@ extension CharacterTelemetryDtoX on Character {
       backgroundSlug: backgroundRef?.slug,
       classPointers: classPointers,
       currentHp: resources.currentHp,
-      maxHp: evaluatedMaxHp,
+      maxHp: CharacterEvaluationEngine.evaluate(this).maxHp,
       tempHp: resources.tempHp,
       armorClass: queryStat('ac'),
       speed: baseSpeedFeet,

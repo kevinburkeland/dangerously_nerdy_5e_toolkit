@@ -40,7 +40,7 @@ void main() {
         isFumble: false,
       );
 
-      final map = original.toMap();
+      final map = original.toJsonMap();
       final restored = RoomRoll.fromMap(map);
 
       expect(restored.id, 'r1');
@@ -71,7 +71,7 @@ void main() {
         isFumble: false,
       );
 
-      final map = batchRoll.toMap();
+      final map = batchRoll.toJsonMap();
       final restored = RoomRoll.fromMap(map);
 
       expect(restored.id, 'batch_99');
@@ -79,6 +79,23 @@ void main() {
       expect(restored.details!.length, 3);
       expect(restored.details!.first, contains('Silver Coin #1: d20 [18]'));
       expect(restored.details![1], contains('MAX CRIT!'));
+    });
+
+    test('toFirestoreMap encodes timestamps using provided encoder', () {
+      final roll = RoomRoll(
+        id: 'r_fs',
+        roomCode: 'FS-1',
+        playerName: 'EncoderUser',
+        timestamp: DateTime.fromMillisecondsSinceEpoch(1700000000000),
+        formulaString: '1d20',
+        total: 10,
+        individualRolls: const [10],
+        isCrit: false,
+        isFumble: false,
+      );
+      final fsMap = roll.toFirestoreMap((dt) => 'ENC_${dt.millisecondsSinceEpoch}');
+      expect(fsMap['timestamp'], equals('ENC_1700000000000'));
+      expect(fsMap['expireAt'], startsWith('ENC_'));
     });
   });
 }

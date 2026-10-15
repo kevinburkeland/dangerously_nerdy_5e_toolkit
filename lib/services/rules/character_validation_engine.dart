@@ -1,3 +1,4 @@
+import '../../models/characters/srd_feats_library.dart';
 import '../../models/domain/character_models.dart';
 import 'package:vtt_engine_core/models/generic_tabletop_primitives.dart';
 import '../../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
@@ -206,15 +207,19 @@ class CharacterValidationEngine {
     return issues;
   }
 
-  /// Evaluates prerequisites for feats, multiclassing, and illegal score thresholds.
-  static const Map<String, ({String name, String prerequisite, Map<String, dynamic> properties})>
-      _coreSrdFeats = {
-    'grappler': (
-      name: 'Grappler',
-      prerequisite: 'Strength or Dexterity 13+',
-      properties: {'advantageOnGrappled': true, 'fastDrag': true},
-    ),
-  };
+  static ITraitDefinition? _resolveFeatTrait(String slug) {
+    final featDef = SrdFeatsLibrary.findBySlug(slug);
+    if (featDef == null) return null;
+    return ITraitDefinition(
+      id: featDef.id.slug,
+      name: featDef.name,
+      category: 'feat',
+      properties: {
+        if (featDef.prerequisite != null) 'prerequisite': featDef.prerequisite,
+        ...featDef.customProperties,
+      },
+    );
+  }
 
   /// Evaluates prerequisites for feats, multiclassing, and illegal score thresholds.
   static List<ValidationIssue> validateDraft(CharacterDraft draft) {
@@ -225,21 +230,7 @@ class CharacterValidationEngine {
 
     // Dynamic Feat Prerequisites Check
     for (final featRef in draft.originFeats) {
-      var trait = featRef.toTraitDefinition();
-      final slugClean = featRef.slug.toLowerCase().trim();
-      final core = _coreSrdFeats[slugClean];
-      if (core != null && (trait.properties['prerequisite'] == null || trait.properties['prerequisite'].toString().isEmpty)) {
-        final mergedProps = Map<String, dynamic>.from(trait.properties);
-        mergedProps['prerequisite'] = core.prerequisite;
-        mergedProps.addAll(core.properties);
-        trait = ITraitDefinition(
-          id: trait.id,
-          name: trait.name.isNotEmpty ? trait.name : core.name,
-          category: trait.category,
-          governedAttribute: trait.governedAttribute,
-          properties: mergedProps,
-        );
-      }
+      final trait = featRef.toTraitDefinition(_resolveFeatTrait);
       issues.addAll(
           evaluateTraitPrerequisites(trait: trait, totalScores: totalScores));
     }

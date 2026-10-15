@@ -398,7 +398,6 @@ class SpellbookLibrary {
   /// Sets user-created / imported homebrew spells to be included in the library.
   static void setHomebrewSpells(List<SpellItem> spells) {
     _customSpells = List.unmodifiable(spells);
-    Character.spellLevelResolver ??= (slug) => getSpellById(slug)?.level;
   }
 
   /// Canonical SRD spells.
@@ -419,7 +418,6 @@ class SpellbookLibrary {
       ];
 
   static SpellItem? getSpellById(String id) {
-    Character.spellLevelResolver ??= (slug) => getSpellById(slug)?.level;
     final lower = id.trim().toLowerCase();
     final stripped = lower.startsWith('spell_') ? lower.substring(6) : lower;
     final hyphenated = stripped.replaceAll('_', '-');

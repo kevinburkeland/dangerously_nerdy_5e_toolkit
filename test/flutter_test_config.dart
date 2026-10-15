@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_animated_object_adapter.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd5e_ruleset_catalog.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
-  AnimatedObjectStats.defaultProvider = Dnd5eAnimatedObjectAdapter.getStats;
+  installRulesetCatalog();
   if (!sl.isRegistered<ReplicaId>()) {
     sl.registerSingleton<ReplicaId>(ReplicaId('test_runner_replica'));
   }

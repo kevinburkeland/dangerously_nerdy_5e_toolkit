@@ -2,14 +2,8 @@
 library;
 export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 
-import '../../services/ingestion/stat_block_acl_parser.dart';
 import '../dm_screen_data.dart';
 import '../spellbook_data.dart';
-
-final bool spellAclInitialized = () {
-  Spell.riderExtractor = StatBlockAclParser.extractRiders;
-  return true;
-}();
 
 extension SpellGlyphX on Spell {
   /// Dynamic action rings for DndGlyph HUD rendering conforming to the Glyph Style Guide.

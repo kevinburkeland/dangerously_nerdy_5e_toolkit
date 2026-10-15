@@ -87,7 +87,7 @@ class RoomSyncOrchestrator {
     required this.reconciliationService,
     required this.clockSyncService,
     DiceRoomService? diceRoomService,
-    IRoomSyncPayloadPort? payloadMapper,
+    required this.payloadMapper,
     int Function()? localTimeProvider,
     this.isHost = false,
     required this.replicaId,
@@ -97,9 +97,6 @@ class RoomSyncOrchestrator {
     required StatefulHlcClock clock,
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
-        payloadMapper = payloadMapper ??
-            IRoomSyncPayloadPort.defaultProvider?.call() ??
-            const _NoOpRoomSyncPayloadPort(),
         _localTimeProvider =
             localTimeProvider ?? (() => clockSyncService.currentNetworkTimeMs),
         heartbeatTtl = heartbeatTtl ?? (transportPort ?? router)!.heartbeatTtl,
@@ -658,48 +655,6 @@ class RoomSyncOrchestrator {
       _deadLetterController.close();
     }
   }
-}
-
-/// Fallback no-op implementation of [IRoomSyncPayloadPort] when not configured.
-class _NoOpRoomSyncPayloadPort implements IRoomSyncPayloadPort {
-  const _NoOpRoomSyncPayloadPort();
-
-  @override
-  String computePayloadHash(String jsonPayload) => '';
-
-  @override
-  IncomingRoomSyncMessage parsePayload(String jsonPayload) =>
-      const UnknownSyncMessage();
-
-  @override
-  String serializeFullProfileSync({
-    required CampaignProfile profile,
-    required String originNodeId,
-    required int originSeq,
-    required int timestamp,
-    CrdtOrSet<String>? trackedRulesSet,
-  }) =>
-      '';
-
-  @override
-  String serializePurseDelta({
-    required String campaignId,
-    required PartyPurse purse,
-    required String originNodeId,
-    required int originSeq,
-    required int timestamp,
-  }) =>
-      '';
-
-  @override
-  String serializeOrSetDelta({
-    required String campaignId,
-    required CrdtOrSet<String> rulesSet,
-    required String originNodeId,
-    required int originSeq,
-    required int timestamp,
-  }) =>
-      '';
 }
 
 /// Represents an unhandled error, dead-letter, or distributed CRDT schema mismatch.

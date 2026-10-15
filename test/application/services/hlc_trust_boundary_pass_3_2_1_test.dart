@@ -109,10 +109,6 @@ void main() {
   final remoteNode = ReplicaId('node_remote');
   final rogueNode = ReplicaId('node_rogue');
 
-  setUpAll(() {
-    IRoomSyncPayloadPort.defaultProvider = () => const RoomSyncPayloadMapper();
-  });
-
   setUp(() async {
     sl.reset();
     sl.registerSingleton<ReplicaId>(localNode);
@@ -181,6 +177,7 @@ void main() {
         replicaId: localNode,
         transportPort: mockTransport,
         campaignRepo: repo,
+        payloadMapper: const RoomSyncPayloadMapper(),
         reconciliationService: recon,
         clockSyncService: clockSync,
         clock: clock,
@@ -620,6 +617,7 @@ void main() {
         replicaId: localNode,
         transportPort: mockTransport,
         campaignRepo: repo,
+        payloadMapper: const RoomSyncPayloadMapper(),
         reconciliationService: recon,
         clockSyncService: clockSync,
         clock: clock,

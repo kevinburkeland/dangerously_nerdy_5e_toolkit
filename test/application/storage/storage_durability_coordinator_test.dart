@@ -138,9 +138,6 @@ class FakeCampaignRepository implements ICampaignRepository {
 }
 
 void main() {
-  setUpAll(() {
-    CampaignSnapshotSerializerAdapter.registerDefault();
-  });
 
   group('StorageDurabilityCoordinator Lifecycle & Preflight', () {
     test('Silent preflight triggers requestPersistence on Chromium', () async {
@@ -158,6 +155,7 @@ void main() {
         storagePort: storagePort,
         snapshotPort: snapshotPort,
         campaignRepo: campaignRepo,
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
 
       expect(storagePort.requestPersistenceCallCount, equals(0));
@@ -187,6 +185,7 @@ void main() {
         storagePort: storagePort,
         snapshotPort: snapshotPort,
         campaignRepo: campaignRepo,
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
 
       await coordinator.executeSilentPreflight();
@@ -214,6 +213,7 @@ void main() {
         storagePort: storagePort,
         snapshotPort: snapshotPort,
         campaignRepo: campaignRepo,
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
 
       await coordinator.executeSilentPreflight();
@@ -257,6 +257,7 @@ void main() {
         storagePort: storagePort,
         snapshotPort: snapshotPort,
         campaignRepo: campaignRepo,
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
 
       await coordinator.generateColdStorageExport('camp_frost_haven');
@@ -299,6 +300,7 @@ void main() {
         storagePort: storagePort,
         snapshotPort: snapshotPort,
         campaignRepo: campaignRepo,
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
 
       // 1. Inbound older snapshot (e.g. 60 seconds ago) for an intentional user rollback
@@ -362,6 +364,7 @@ void main() {
         storagePort: storagePort,
         snapshotPort: snapshotPort,
         campaignRepo: campaignRepo,
+        serializer: const CampaignSnapshotSerializerAdapter(),
       );
 
       // Bundle with forged payload

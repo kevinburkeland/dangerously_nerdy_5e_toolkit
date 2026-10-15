@@ -22,6 +22,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -330,6 +331,7 @@ void main() {
         replicaId: ReplicaId('test_dm_node'),
         transportPort: mockTransport,
         campaignRepo: campaignRepo,
+        payloadMapper: const RoomSyncPayloadMapper(),
         reconciliationService: RoomStateReconciliationService(
           networkTimeProvider: () =>
               DateTime.now().toUtc().millisecondsSinceEpoch,

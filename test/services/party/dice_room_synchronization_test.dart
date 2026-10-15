@@ -137,7 +137,7 @@ void main() {
 
   group('RoomRoll Serialization & Firestore Rule Safety', () {
     test(
-        'toMap omits null details and null droppedRolls to prevent Firestore permission-denied',
+        'toJsonMap omits null details and null droppedRolls to prevent Firestore permission-denied',
         () {
       final rollResult = DiceRollResult.roll(dieType: DieType.d20, modifier: 3);
       final roll = RoomRoll.fromDiceRollResult(
@@ -147,7 +147,7 @@ void main() {
         result: rollResult,
       );
 
-      final map = roll.toMap(useFirestoreTimestamp: false);
+      final map = roll.toJsonMap();
 
       expect(map['id'], 'roll-123');
       expect(map['roomCode'], 'ROOM-ALPHA');
@@ -159,7 +159,7 @@ void main() {
     });
 
     test(
-        'toMap includes details and droppedRolls only when populated and clamps bounds',
+        'toJsonMap includes details and droppedRolls only when populated and clamps bounds',
         () {
       final roll = RoomRoll(
         id: 'roll-456',
@@ -175,7 +175,7 @@ void main() {
         isFumble: false,
       );
 
-      final map = roll.toMap(useFirestoreTimestamp: false);
+      final map = roll.toJsonMap();
 
       expect((map['playerName'] as String).length, 80);
       expect((map['formulaString'] as String).length, 200);
