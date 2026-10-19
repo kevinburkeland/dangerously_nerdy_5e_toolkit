@@ -579,5 +579,57 @@ void main() {
       expect(findImmutableConfigViolations(goodCompendiumCustomProps), isEmpty);
       expect(findImmutableConfigViolations(goodRoomTitle), isEmpty);
     });
+
+    test(
+        'Source Bar J: No string literal \'partyPurse\', \'memberPurses\', or \'characterRoster\' in lib/ files that import cloud_firestore, except party_ledger_legacy_import.dart',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      final forbiddenLiterals = [
+        'partyPurse',
+        'memberPurses',
+        'characterRoster',
+      ];
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final normalizedPath = file.path.replaceAll('\\', '/');
+        if (normalizedPath.endsWith('party_ledger_legacy_import.dart')) {
+          continue; // P5 legacy import exemption
+        }
+
+        final content = file.readAsStringSync();
+        if (!content.contains('cloud_firestore')) {
+          continue;
+        }
+
+        final lines = file.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          final line = lines[i];
+          final trimmed = line.trim();
+          if (trimmed.startsWith('//') ||
+              trimmed.startsWith('/*') ||
+              trimmed.startsWith('*')) {
+            continue;
+          }
+          for (final literal in forbiddenLiterals) {
+            if (line.contains("'$literal'") || line.contains('"$literal"')) {
+              violations.add(
+                  '$normalizedPath:${i + 1}: $trimmed (contains "$literal")');
+            }
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Files importing cloud_firestore must not contain legacy ledger literals (\'partyPurse\', \'memberPurses\', \'characterRoster\') (Source Bar J).\n'
+            'Violations:\n${violations.join('\n')}',
+      );
+    });
   });
 }
+

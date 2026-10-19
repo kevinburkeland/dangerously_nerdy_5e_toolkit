@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:mutex/mutex.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
@@ -295,161 +296,221 @@ class RoomSyncOrchestrator {
             final remoteProfile = msg.profile;
             final localProfile = campaignRepo.activeProfile;
 
-            if (localProfile != null && localProfile.id == remoteProfile.id) {
-              // Reconcile party purse CRDT delta if present in envelope
-              PartyPurse effectiveRemotePurse = remoteProfile.partyPurse;
-              if (msg.purseDelta != null) {
-                effectiveRemotePurse =
-                    effectiveRemotePurse.merge(msg.purseDelta!);
+            if (remoteProfile.id.trim().isEmpty ||
+                localProfile == null ||
+                localProfile.id != remoteProfile.id) {
+              final error = StateError(
+                'Campaign ID mismatch: incoming full profile campaign ID "${remoteProfile.id}" does not match active profile ID "${localProfile?.id}".',
+              );
+              LoggingService().logNonFatal(
+                error,
+                StackTrace.current,
+                reason: 'Rejected sync message due to campaign ID mismatch',
+              );
+              if (!_deadLetterController.isClosed) {
+                _deadLetterController.add(SyncErrorEvent(
+                  error: error,
+                  stackTrace: StackTrace.current,
+                  rawPayload: jsonPayload,
+                  parsedMessage: message,
+                ));
               }
-              final remoteWithPurse =
-                  remoteProfile.copyWith(partyPurse: effectiveRemotePurse);
+              return;
+            }
 
-              final candidateHlcs = <HybridLogicalClock>[
-                ...extractCampaignProfileTimestamps(remoteWithPurse),
-                if (msg.pinnedRulesDelta != null)
-                  ...msg.pinnedRulesDelta!.extractTimestamps(),
-              ];
+            // Reconcile party purse CRDT delta if present in envelope
+            PartyPurse effectiveRemotePurse = remoteProfile.partyPurse;
+            if (msg.purseDelta != null) {
+              effectiveRemotePurse =
+                  effectiveRemotePurse.merge(msg.purseDelta!);
+            }
+            final remoteWithPurse =
+                remoteProfile.copyWith(partyPurse: effectiveRemotePurse);
 
-              // Atomically validate all remote CRDT timestamps against future drift policy
-              if (candidateHlcs.isNotEmpty) {
-                try {
-                  _clock.validateAllRemote(candidateHlcs);
-                } on HlcFutureDriftException catch (e, st) {
+            final candidateHlcs = <HybridLogicalClock>[
+              ...extractCampaignProfileTimestamps(remoteWithPurse),
+              if (msg.pinnedRulesDelta != null)
+                ...msg.pinnedRulesDelta!.extractTimestamps(),
+            ];
+
+            // Atomically validate all remote CRDT timestamps against future drift policy
+            if (candidateHlcs.isNotEmpty) {
+              try {
+                _clock.validateAllRemote(candidateHlcs);
+              } on HlcFutureDriftException catch (e, st) {
+                LoggingService().logNonFatal(
+                  e,
+                  st,
+                  reason:
+                      'Rejected remote full profile due to clock future drift: ${e.toString()}',
+                );
+                if (!_deadLetterController.isClosed) {
+                  _deadLetterController.add(SyncErrorEvent(
+                    error: e,
+                    stackTrace: st,
+                    rawPayload: jsonPayload,
+                    parsedMessage: message,
+                  ));
+                }
+                // Entire aggregate rejected: do NOT observe, do NOT reconcile, do NOT save
+                return;
+              }
+            }
+
+            // All timestamps valid: observe into runtime clock atomically
+            if (candidateHlcs.isNotEmpty) {
+              _clock.observeAllRemote(candidateHlcs);
+            }
+
+            targetProfileId = remoteProfile.id;
+            shouldApply = true;
+            transform = (current) {
+              var effectiveRemote = remoteWithPurse;
+              if (msg.pinnedRulesDelta != null) {
+                effectiveRemote = effectiveRemote.copyWith(
+                  pinnedRules:
+                      effectiveRemote.pinnedRules.merge(msg.pinnedRulesDelta!),
+                );
+              }
+
+              // Reconcile sub-resources deterministically at field-level via CRDTs
+              final reconciliationResult =
+                  reconciliationService.reconcileProfileSafely(
+                local: current,
+                remote: effectiveRemote,
+                inboundTimestampMs: msg.timestamp,
+                localTimestampMs: _lastProfileSyncTimestamp,
+              );
+              if (reconciliationResult.hasFaults) {
+                for (final fault in reconciliationResult.fieldFaults) {
                   LoggingService().logNonFatal(
-                    e,
-                    st,
+                    fault.error,
+                    fault.stackTrace ?? StackTrace.current,
                     reason:
-                        'Rejected remote full profile due to clock future drift: ${e.toString()}',
+                        'Reconciliation field fault in ${fault.field}: ${fault.error}',
                   );
                   if (!_deadLetterController.isClosed) {
                     _deadLetterController.add(SyncErrorEvent(
-                      error: e,
-                      stackTrace: st,
+                      error: fault.error,
+                      stackTrace: fault.stackTrace ?? StackTrace.current,
                       rawPayload: jsonPayload,
                       parsedMessage: message,
                     ));
                   }
-                  // Entire aggregate rejected: do NOT observe, do NOT reconcile, do NOT save
-                  return;
                 }
               }
-
-              // All timestamps valid: observe into runtime clock atomically
-              if (candidateHlcs.isNotEmpty) {
-                _clock.observeAllRemote(candidateHlcs);
+              final reconciled = reconciliationResult.profile;
+              pendingAppliedProfile = reconciled;
+              _recordAppliedProfile(reconciled);
+              return reconciled;
+            };
+            onApplied = (applied) {
+              if (msg.timestamp > _lastProfileSyncTimestamp) {
+                _lastProfileSyncTimestamp = msg.timestamp;
               }
-
-              targetProfileId = remoteProfile.id;
-              shouldApply = true;
-              transform = (current) {
-                var effectiveRemote = remoteWithPurse;
-                if (msg.pinnedRulesDelta != null) {
-                  effectiveRemote = effectiveRemote.copyWith(
-                    pinnedRules:
-                        effectiveRemote.pinnedRules.merge(msg.pinnedRulesDelta!),
-                  );
-                }
-
-                // Reconcile sub-resources deterministically at field-level via CRDTs
-                final reconciliationResult =
-                    reconciliationService.reconcileProfileSafely(
-                  local: current,
-                  remote: effectiveRemote,
-                  inboundTimestampMs: msg.timestamp,
-                  localTimestampMs: _lastProfileSyncTimestamp,
-                );
-                if (reconciliationResult.hasFaults) {
-                  for (final fault in reconciliationResult.fieldFaults) {
-                    LoggingService().logNonFatal(
-                      fault.error,
-                      fault.stackTrace ?? StackTrace.current,
-                      reason:
-                          'Reconciliation field fault in ${fault.field}: ${fault.error}',
-                    );
-                    if (!_deadLetterController.isClosed) {
-                      _deadLetterController.add(SyncErrorEvent(
-                        error: fault.error,
-                        stackTrace: fault.stackTrace ?? StackTrace.current,
-                        rawPayload: jsonPayload,
-                        parsedMessage: message,
-                      ));
-                    }
-                  }
-                }
-                final reconciled = reconciliationResult.profile;
-                pendingAppliedProfile = reconciled;
-                _recordAppliedProfile(reconciled);
-                return reconciled;
-              };
-              onApplied = (applied) {
-                if (msg.timestamp > _lastProfileSyncTimestamp) {
-                  _lastProfileSyncTimestamp = msg.timestamp;
-                }
-                _trackedRulesSet = applied.pinnedRules;
-              };
-            }
+              _trackedRulesSet = applied.pinnedRules;
+            };
 
           case PurseDeltaSyncMessage msg:
             final localProfile = campaignRepo.activeProfile;
-            if (localProfile != null) {
-              targetProfileId = localProfile.id;
-              shouldApply = true;
-              transform = (current) {
-                final updatedPurse = current.partyPurse.merge(msg.purse);
-                if (updatedPurse == current.partyPurse) {
-                  return current;
-                }
-                final updated = current.copyWith(partyPurse: updatedPurse);
-                pendingAppliedProfile = updated;
-                _recordAppliedProfile(updated);
-                return updated;
-              };
+            if (msg.campaignId.trim().isEmpty ||
+                localProfile == null ||
+                localProfile.id != msg.campaignId) {
+              final error = StateError(
+                'Campaign ID mismatch: incoming purse delta campaign ID "${msg.campaignId}" does not match active profile ID "${localProfile?.id}".',
+              );
+              LoggingService().logNonFatal(
+                error,
+                StackTrace.current,
+                reason: 'Rejected sync message due to campaign ID mismatch',
+              );
+              if (!_deadLetterController.isClosed) {
+                _deadLetterController.add(SyncErrorEvent(
+                  error: error,
+                  stackTrace: StackTrace.current,
+                  rawPayload: jsonPayload,
+                  parsedMessage: message,
+                ));
+              }
+              return;
             }
+
+            targetProfileId = localProfile.id;
+            shouldApply = true;
+            transform = (current) {
+              final updatedPurse = current.partyPurse.merge(msg.purse);
+              if (updatedPurse == current.partyPurse) {
+                return current;
+              }
+              final updated = current.copyWith(partyPurse: updatedPurse);
+              pendingAppliedProfile = updated;
+              _recordAppliedProfile(updated);
+              return updated;
+            };
 
           case OrSetDeltaSyncMessage msg:
             final localProfile = campaignRepo.activeProfile;
-            if (localProfile != null) {
-              final deltaHlcs = msg.rulesSet.extractTimestamps();
-              if (deltaHlcs.isNotEmpty) {
-                try {
-                  _clock.validateAllRemote(deltaHlcs);
-                } on HlcFutureDriftException catch (e, st) {
-                  LoggingService().logNonFatal(
-                    e,
-                    st,
-                    reason:
-                        'Rejected OrSet delta due to clock future drift: ${e.toString()}',
-                  );
-                  if (!_deadLetterController.isClosed) {
-                    _deadLetterController.add(SyncErrorEvent(
-                      error: e,
-                      stackTrace: st,
-                      rawPayload: jsonPayload,
-                      parsedMessage: message,
-                    ));
-                  }
-                  return;
-                }
-                _clock.observeAllRemote(deltaHlcs);
+            if (msg.campaignId.trim().isEmpty ||
+                localProfile == null ||
+                localProfile.id != msg.campaignId) {
+              final error = StateError(
+                'Campaign ID mismatch: incoming OrSet delta campaign ID "${msg.campaignId}" does not match active profile ID "${localProfile?.id}".',
+              );
+              LoggingService().logNonFatal(
+                error,
+                StackTrace.current,
+                reason: 'Rejected sync message due to campaign ID mismatch',
+              );
+              if (!_deadLetterController.isClosed) {
+                _deadLetterController.add(SyncErrorEvent(
+                  error: error,
+                  stackTrace: StackTrace.current,
+                  rawPayload: jsonPayload,
+                  parsedMessage: message,
+                ));
               }
-
-              targetProfileId = localProfile.id;
-              shouldApply = true;
-              transform = (current) {
-                final mergedRules = current.pinnedRules.merge(msg.rulesSet);
-                if (mergedRules == current.pinnedRules) {
-                  return current;
-                }
-                final updated = current.copyWith(pinnedRules: mergedRules);
-                pendingAppliedProfile = updated;
-                _recordAppliedProfile(updated);
-                return updated;
-              };
-              onApplied = (applied) {
-                _trackedRulesSet = applied.pinnedRules;
-              };
+              return;
             }
+
+            final deltaHlcs = msg.rulesSet.extractTimestamps();
+            if (deltaHlcs.isNotEmpty) {
+              try {
+                _clock.validateAllRemote(deltaHlcs);
+              } on HlcFutureDriftException catch (e, st) {
+                LoggingService().logNonFatal(
+                  e,
+                  st,
+                  reason:
+                      'Rejected OrSet delta due to clock future drift: ${e.toString()}',
+                );
+                if (!_deadLetterController.isClosed) {
+                  _deadLetterController.add(SyncErrorEvent(
+                    error: e,
+                    stackTrace: st,
+                    rawPayload: jsonPayload,
+                    parsedMessage: message,
+                  ));
+                }
+                return;
+              }
+              _clock.observeAllRemote(deltaHlcs);
+            }
+
+            targetProfileId = localProfile.id;
+            shouldApply = true;
+            transform = (current) {
+              final mergedRules = current.pinnedRules.merge(msg.rulesSet);
+              if (mergedRules == current.pinnedRules) {
+                return current;
+              }
+              final updated = current.copyWith(pinnedRules: mergedRules);
+              pendingAppliedProfile = updated;
+              _recordAppliedProfile(updated);
+              return updated;
+            };
+            onApplied = (applied) {
+              _trackedRulesSet = applied.pinnedRules;
+            };
 
           case DiceRollSyncMessage msg:
             diceRoomService.ingestRemoteRoll(msg.roll);
@@ -512,6 +573,19 @@ class RoomSyncOrchestrator {
     }
   }
 
+  /// Retrieves the active room code associated with the underlying transport port, if any.
+  String? get currentTransportRoomCode {
+    if (transportPort is CascadingTransportRouter) {
+      return (transportPort as CascadingTransportRouter).roomCode;
+    }
+    try {
+      final dynamic port = transportPort;
+      final code = port.roomCode;
+      if (code is String) return code;
+    } catch (_) {}
+    return null;
+  }
+
   /// Handles local profile changes emitted by the campaign repository.
   @visibleForTesting
   Future<void> handleLocalProfileChange(CampaignProfile? profile) =>
@@ -521,6 +595,15 @@ class RoomSyncOrchestrator {
     if (profile == null) return;
     if (_isAppliedProfile(profile)) {
       return;
+    }
+
+    // Outbound isolation: do not broadcast a profile whose roomCode differs from the transport's room
+    final activeRoomCode = currentTransportRoomCode;
+    if (activeRoomCode != null && activeRoomCode.trim().isNotEmpty) {
+      if (profile.roomState.roomCode.trim().toUpperCase() !=
+          activeRoomCode.trim().toUpperCase()) {
+        return;
+      }
     }
 
     String? payloadToSend;
@@ -533,6 +616,7 @@ class RoomSyncOrchestrator {
       if (last != null &&
           last.id == profile.id &&
           last.partyPurse != profile.partyPurse &&
+          const MapEquality().equals(last.memberPurses, profile.memberPurses) &&
           last.name == profile.name &&
           last.notesMarkdown == profile.notesMarkdown &&
           last.pinnedRules == profile.pinnedRules &&
@@ -553,6 +637,7 @@ class RoomSyncOrchestrator {
           last.id == profile.id &&
           last.pinnedRules != profile.pinnedRules &&
           last.partyPurse == profile.partyPurse &&
+          const MapEquality().equals(last.memberPurses, profile.memberPurses) &&
           last.name == profile.name &&
           last.notesMarkdown == profile.notesMarkdown &&
           last.roomState == profile.roomState &&

@@ -388,7 +388,9 @@ class LocalCampaignRepository implements ICampaignRepository {
         } else {
           _memoryCache.remove(profile.id);
         }
-        _activeProfileId = previousActiveProfileId;
+        if (_activeProfileId == profile.id && previousActiveProfileId != profile.id) {
+          _activeProfileId = previousActiveProfileId;
+        }
         rethrow;
       }
 
@@ -416,7 +418,6 @@ class LocalCampaignRepository implements ICampaignRepository {
       final previousProfile = _memoryCache[id];
       final previousUnparsed = _unparsedCache[id];
       final wasRejected = _rejectedProfileIds.contains(id);
-      final previousActiveProfileId = _activeProfileId;
 
       _memoryCache.remove(id);
       _unparsedCache.remove(id);
@@ -437,7 +438,6 @@ class LocalCampaignRepository implements ICampaignRepository {
         if (wasRejected) {
           _rejectedProfileIds.add(id);
         }
-        _activeProfileId = previousActiveProfileId;
         rethrow;
       }
 

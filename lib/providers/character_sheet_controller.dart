@@ -21,6 +21,7 @@ import '../services/rules/character_homebrew_validator.dart';
 import '../services/rules/character_reparse_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/skill_trait_resolver.dart';
+import '../services/logging_service.dart';
 import '../utils/secure_random.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,
@@ -152,7 +153,7 @@ class CharacterSheetController extends ChangeNotifier {
         _character = _character.copyWith(customProperties: updatedCp);
       }
       await _persistenceService.saveCharacter(_character);
-      unawaited(_syncTelemetryToLinkedCampaigns());
+      await _syncTelemetryToLinkedCampaigns();
     } finally {
       _isSaving = false;
       notifyListeners();
@@ -166,7 +167,7 @@ class CharacterSheetController extends ChangeNotifier {
     _recalculateStats();
     notifyListeners();
     _schedulePersist();
-    unawaited(_syncPurseToLinkedCampaigns());
+    await _syncPurseToLinkedCampaigns();
   }
 
   /// Modifies a single coin denomination in the character's purse (clamped >= 0).
@@ -1329,7 +1330,11 @@ class CharacterSheetController extends ChangeNotifier {
           roomCode: m.roomCode,
           character: _character,
         );
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason:
+                'Failed to sync telemetry for ${_character.name} to room ${m.roomCode}');
+      }
     }
   }
 
@@ -1341,10 +1346,15 @@ class CharacterSheetController extends ChangeNotifier {
         await PartyRoomService().updateMemberPurse(
           roomCode: m.roomCode,
           characterName: _character.name,
+          characterSlug: _character.id.slug,
           newPurse: _character.purse,
           performedBy: _character.name,
         );
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason:
+                'Failed to sync purse for ${_character.name} to room ${m.roomCode}');
+      }
     }
   }
 

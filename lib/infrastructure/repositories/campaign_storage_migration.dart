@@ -7,6 +7,7 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
+import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/persistence/app_database_service.dart';
@@ -172,12 +173,23 @@ class CampaignStorageMigration {
         );
         if (!alreadyExists) {
           final entries = <({String id, String item, HybridLogicalClock timestamp})>[];
-          for (final char in savedCharacters) {
-            entries.add((
-              id: char.id.slug,
-              item: char.id.slug,
-              timestamp: clock.nextTimestamp(),
-            ));
+          if (m.characterId != null && m.characterId!.trim().isNotEmpty) {
+            final match = savedCharacters.cast<Character?>().firstWhere(
+                  (c) =>
+                      c != null &&
+                      (c.id.slug.toLowerCase() ==
+                              m.characterId!.trim().toLowerCase() ||
+                          c.name.trim().toLowerCase() ==
+                              m.characterId!.trim().toLowerCase()),
+                  orElse: () => null,
+                );
+            if (match != null) {
+              entries.add((
+                id: match.id.slug,
+                item: match.id.slug,
+                timestamp: clock.nextTimestamp(),
+              ));
+            }
           }
           final partyRoster = entries.isNotEmpty
               ? const CrdtOrSet<String>.empty().addBatch(entries)

@@ -9,6 +9,10 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +55,13 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       final testReplica = ReplicaId('campaign_link_test_replica');
+      final clock = StatefulHlcClock(replicaId: testReplica);
+      final campRepo = LocalCampaignRepository(
+        replicaId: testReplica,
+        clock: clock,
+        characterRepo: LocalCharacterRepository(),
+      );
+      sl.registerSingleton<ICampaignRepository>(campRepo);
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
       characterService = CharacterPersistenceService();
@@ -58,12 +69,18 @@ void main() {
 
       partyService = PartyRoomService.newInstance(
         replicaId: testReplica,
-        clock: StatefulHlcClock(replicaId: testReplica),
+        clock: clock,
         registry: registry,
         diceRoomService: diceService,
         characterPersistenceService: characterService,
         campaignProfileService: campaignProfileService,
       );
+      PartyRoomService.setCustomInstanceForTesting(partyService);
+      addTearDown(() {
+        campRepo.dispose();
+        PartyRoomService.resetCustomInstanceForTesting();
+        sl.reset();
+      });
 
       // Save starting characters
       await characterService.saveCharacters([testCharacter1, testCharacter2]);

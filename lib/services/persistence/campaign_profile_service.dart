@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
 import '../../infrastructure/di/injection_container.dart';
@@ -120,6 +121,11 @@ class CampaignProfileService extends ChangeNotifier {
   CampaignProfile? get activeProfile {
     _checkRepoSubscription();
     return sl<ICampaignRepository>().activeProfile;
+  }
+
+  ICampaignRepository get repo {
+    _checkRepoSubscription();
+    return sl<ICampaignRepository>();
   }
 
   List<CampaignProfile> get allProfiles {
@@ -256,11 +262,7 @@ class CampaignProfileService extends ChangeNotifier {
       nameTimestamp: timestamp,
       createdAt: now,
       lastPlayedAt: now,
-      roomState: source.roomState.copyWith(
-        roomId: 'room_$newId',
-        title: '$targetName - Staging Area',
-        titleTimestamp: timestamp,
-      ),
+      roomState: const RoomNodeState.empty(),
     );
 
     await repo.putProfile(cloned);

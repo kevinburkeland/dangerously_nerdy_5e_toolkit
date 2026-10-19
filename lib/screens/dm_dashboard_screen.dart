@@ -209,7 +209,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                             ),
                           ),
                           subtitle: Text(
-                            '${prof.edition.label} Edition • ${prof.partyCharacterIds.length} Players • ${prof.roomState.activeEncounterList.length} Encounter',
+                            '${prof.roomState.roomCode.isNotEmpty ? prof.roomState.roomCode : "no room"} • ${prof.edition.label} Edition • ${prof.partyCharacterIds.length} Players • ${prof.roomState.activeEncounterList.length} Encounter',
                             style: TextStyle(
                                 fontSize: 12,
                                 color: theme.colorScheme.onSurfaceVariant),

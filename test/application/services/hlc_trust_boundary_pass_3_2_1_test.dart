@@ -704,7 +704,7 @@ void main() {
         'origin_node_id': rogueNode.value,
         'origin_seq': 2,
         'timestamp': simulatedNow,
-        'campaign_id': 'campaign_1',
+        'campaign_id': initialProfile.id,
         'payload': CrdtOrSetDto.toMap<String>(
           rogueRulesDelta,
           (item) => item,
@@ -734,7 +734,7 @@ void main() {
         'origin_node_id': rogueNode.value,
         'origin_seq': 3,
         'timestamp': simulatedNow,
-        'campaign_id': 'campaign_1',
+        'campaign_id': initialProfile.id,
         'payload': CrdtOrSetDto.toMap<String>(
           rogueTombstoneDelta,
           (item) => item,

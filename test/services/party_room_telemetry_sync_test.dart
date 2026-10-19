@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_telemetry_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart'
     show DmRulesEdition;
@@ -11,6 +12,10 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -207,11 +212,25 @@ void main() {
     test(
         'PartyRoomService links character and broadcasts minified telemetry map',
         () async {
+      SharedPreferences.setMockInitialValues({});
       final replica = ReplicaId('telemetry_sync_replica');
+      final clock = StatefulHlcClock(replicaId: replica);
+      final campRepo = LocalCampaignRepository(
+        replicaId: replica,
+        clock: clock,
+        characterRepo: LocalCharacterRepository(),
+      );
+      sl.registerSingleton<ICampaignRepository>(campRepo);
+      addTearDown(() {
+        campRepo.dispose();
+        PartyRoomService.resetCustomInstanceForTesting();
+        sl.reset();
+      });
       final partyService = PartyRoomService.newInstance(
         replicaId: replica,
-        clock: StatefulHlcClock(replicaId: replica),
+        clock: clock,
       );
+      PartyRoomService.setCustomInstanceForTesting(partyService);
       final draft = CharacterDraft()
         ..characterName = 'Sir Reginald'
         ..rulesEdition = DmRulesEdition.v2024

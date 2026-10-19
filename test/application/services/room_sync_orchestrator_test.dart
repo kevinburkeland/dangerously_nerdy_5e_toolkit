@@ -392,6 +392,7 @@ void main() {
       final deltaMap = CrdtOrSetDto.toMap<String>(remoteSet, (v) => v);
       final inboundJson = jsonEncode({
         'type': 'crdt_or_set_delta',
+        'campaign_id': mockRepo.activeProfile!.id,
         'payload': deltaMap,
         'timestamp': 1700000002000,
       });
@@ -886,6 +887,7 @@ void main() {
           CrdtOrSetDto.toMap<String>(remoteDeletionSet, (v) => v);
       final deletionJson = jsonEncode({
         'type': 'crdt_or_set_delta',
+        'campaign_id': mockRepo.activeProfile!.id,
         'payload': deletionDeltaMap,
         'timestamp': 1700000002000,
       });
@@ -920,6 +922,7 @@ void main() {
           CrdtOrSetDto.toMap<String>(staleOfflineSet, (v) => v);
       final staleJson = jsonEncode({
         'type': 'crdt_or_set_delta',
+        'campaign_id': mockRepo.activeProfile!.id,
         'origin_node_id': 'replica-A',
         'payload': staleDeltaMap,
         'timestamp': 1700000062000,

@@ -251,12 +251,24 @@ class DmDashboardController extends ChangeNotifier {
       if (active == null) {
         try {
           active = await _campaignProfileService.getActiveProfile();
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to get active profile fallback by id in DmDashboardController',
+          );
+        }
       }
     } else {
       try {
         active = await _campaignProfileService.getActiveProfile();
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to get active profile in DmDashboardController',
+        );
+      }
     }
 
     _activeProfile = active ??
@@ -312,13 +324,20 @@ class DmDashboardController extends ChangeNotifier {
     _resolvedTelemetryMap.remove(characterId);
     notifyListeners();
 
-    if (_activeProfile != null) {
+    if (_activeProfile != null &&
+        _activeProfile!.roomState.roomCode.isNotEmpty) {
       try {
         await PartyRoomService().updateCharacterTelemetry(
-          roomCode: _activeProfile!.id,
+          roomCode: _activeProfile!.roomState.roomCode,
           character: updatedChar,
         );
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to update character telemetry in party room',
+        );
+      }
     }
   }
 
@@ -349,13 +368,20 @@ class DmDashboardController extends ChangeNotifier {
 
     await _characterPersistenceService.saveCharacter(updatedChar);
 
-    if (_activeProfile != null) {
+    if (_activeProfile != null &&
+        _activeProfile!.roomState.roomCode.isNotEmpty) {
       try {
         await PartyRoomService().updateCharacterTelemetry(
-          roomCode: _activeProfile!.id,
+          roomCode: _activeProfile!.roomState.roomCode,
           character: updatedChar,
         );
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to update character telemetry in party room',
+        );
+      }
     }
   }
 
@@ -577,15 +603,15 @@ class DmDashboardController extends ChangeNotifier {
     notifyListeners();
     await _characterPersistenceService.saveCharacter(updated);
 
-    if (activeProfile != null) {
-      try {
-        await PartyRoomService().updateMemberPurse(
-          roomCode: activeProfile!.id,
-          characterName: updated.name,
-          newPurse: updated.purse,
-          performedBy: 'DM',
-        );
-      } catch (_) {}
+    final roomCode = activeProfile?.roomState.roomCode;
+    if (roomCode != null && roomCode.isNotEmpty) {
+      await PartyRoomService().updateMemberPurse(
+        roomCode: roomCode,
+        characterName: updated.name,
+        characterSlug: updated.id.slug,
+        newPurse: updated.purse,
+        performedBy: 'DM',
+      );
     }
   }
 
@@ -601,15 +627,15 @@ class DmDashboardController extends ChangeNotifier {
     notifyListeners();
     await _characterPersistenceService.saveCharacter(updated);
 
-    if (activeProfile != null) {
-      try {
-        await PartyRoomService().updateMemberPurse(
-          roomCode: activeProfile!.id,
-          characterName: updated.name,
-          newPurse: updated.purse,
-          performedBy: 'DM',
-        );
-      } catch (_) {}
+    final roomCode = activeProfile?.roomState.roomCode;
+    if (roomCode != null && roomCode.isNotEmpty) {
+      await PartyRoomService().updateMemberPurse(
+        roomCode: roomCode,
+        characterName: updated.name,
+        characterSlug: updated.id.slug,
+        newPurse: updated.purse,
+        performedBy: 'DM',
+      );
     }
   }
 }

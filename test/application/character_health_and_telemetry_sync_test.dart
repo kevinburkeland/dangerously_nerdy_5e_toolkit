@@ -11,6 +11,10 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_currency_system.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -64,13 +68,24 @@ void main() {
 
     registry = CampaignRegistryService();
     final replica = ReplicaId('test_hero_replica');
+    final clock = StatefulHlcClock(replicaId: replica);
+    final campRepo = LocalCampaignRepository(
+      replicaId: replica,
+      clock: clock,
+      characterRepo: LocalCharacterRepository(),
+    );
+    sl.registerSingleton<ICampaignRepository>(campRepo);
     roomService = PartyRoomService.newInstance(
       replicaId: replica,
-      clock: StatefulHlcClock(replicaId: replica),
+      clock: clock,
       registry: registry,
     );
     PartyRoomService.setCustomInstanceForTesting(roomService);
-    addTearDown(PartyRoomService.resetCustomInstanceForTesting);
+    addTearDown(() {
+      campRepo.dispose();
+      PartyRoomService.resetCustomInstanceForTesting();
+      sl.reset();
+    });
 
     // Create a mock campaign membership linking Barek
     final membership = CampaignMembership(

@@ -264,6 +264,7 @@ void main() {
       await reg.saveMembership(CampaignMembership(
         roomCode: 'REG-SYNTH-1',
         campaignName: 'Synthesized Fellowship',
+        characterId: 'hero-aragorn',
         role: CampaignRole.host,
         lastPlayed: DateTime.now(),
       ));
@@ -275,8 +276,8 @@ void main() {
       expect(adopted.name, equals('Synthesized Fellowship'));
 
       // partyRoster contains the expected character IDs
-      expect(adopted.partyRoster.activeValues, containsAll(['hero-aragorn', 'hero-legolas']));
-      expect(adopted.partyRoster.length, equals(2));
+      expect(adopted.partyRoster.activeValues, containsAll(['hero-aragorn']));
+      expect(adopted.partyRoster.length, equals(1));
 
       // partyCharacterIds is only the derived projection of partyRoster
       expect(adopted.partyCharacterIds, equals(adopted.partyRoster.activeValues));

@@ -8,6 +8,10 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -22,12 +26,25 @@ void main() {
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
       final replica = ReplicaId('party_service_test_replica');
+      final clock = StatefulHlcClock(replicaId: replica);
+      final campRepo = LocalCampaignRepository(
+        replicaId: replica,
+        clock: clock,
+        characterRepo: LocalCharacterRepository(),
+      );
+      sl.registerSingleton<ICampaignRepository>(campRepo);
       partyService = PartyRoomService.newInstance(
         replicaId: replica,
-        clock: StatefulHlcClock(replicaId: replica),
+        clock: clock,
         registry: registry,
         diceRoomService: diceService,
       );
+      PartyRoomService.setCustomInstanceForTesting(partyService);
+      addTearDown(() {
+        campRepo.dispose();
+        PartyRoomService.resetCustomInstanceForTesting();
+        sl.reset();
+      });
     });
 
     test(

@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/ports/i_room_sync_payload_port.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
+import 'package:vtt_engine_core/ports/i_room_sync_payload_port.dart';
+import 'package:vtt_engine_core/rules/ruleset_edition.dart';
+import '../../models/domain/session_graph_models.dart';
 import '../../models/room_roll.dart';
 import '../../utils/crypto_utils.dart';
 import '../dtos/campaign_profile_dto.dart';
@@ -40,6 +42,25 @@ class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
         case 'room_sync_full':
           final payloadData = decoded['payload'];
           if (payloadData is! Map) return const UnknownSyncMessage();
+
+          final rawId = payloadData['id']?.toString() ?? decoded['campaign_id']?.toString() ?? '';
+          if (rawId.trim().isEmpty) {
+            final emptyProfile = CampaignProfile(
+              id: '',
+              name: '',
+              edition: const RulesetIdentifier('v2024'),
+              createdAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+              lastPlayedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+              roomState: const RoomNodeState.empty(),
+              nodeId: 'empty_node',
+            );
+            return FullProfileSyncMessage(
+              originNodeId: originNodeId,
+              originSeq: originSeq,
+              timestamp: timestamp,
+              profile: emptyProfile,
+            );
+          }
 
           final profileDto = CampaignProfileDto.fromMap(
             Map<String, dynamic>.from(payloadData),

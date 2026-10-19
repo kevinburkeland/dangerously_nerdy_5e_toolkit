@@ -219,6 +219,11 @@ void main() {
         '9. PartyRoomService.removeCharacterFromRoster attributes mutations to injected replica ID',
         () async {
       final authoritativeId = ReplicaId('dm_authoritative_node_99');
+      sl.reset();
+      sl.registerSingleton<ReplicaId>(authoritativeId);
+      final mockRepo = _TestMockCampaignRepo();
+      sl.registerSingleton<ICampaignRepository>(mockRepo);
+
       final partyService = PartyRoomService(
         replicaId: authoritativeId,
         clock: StatefulHlcClock(replicaId: authoritativeId),

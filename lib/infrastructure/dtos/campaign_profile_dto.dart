@@ -37,6 +37,7 @@ class CampaignProfileDto {
   final String notesMarkdown;
   final Map<String, dynamic> notesRegister;
   final Map<String, dynamic> partyPurse;
+  final Map<String, dynamic> memberPurses;
   final List<Map<String, dynamic>> changeLog;
   final List<Map<String, dynamic>> unparsedPartyRoster;
   final List<Map<String, dynamic>> unparsedMinions;
@@ -59,6 +60,7 @@ class CampaignProfileDto {
     this.notesMarkdown = '',
     this.notesRegister = const {},
     this.partyPurse = const {},
+    this.memberPurses = const {},
     this.changeLog = const [],
     this.unparsedPartyRoster = const [],
     this.unparsedMinions = const [],
@@ -88,6 +90,7 @@ class CampaignProfileDto {
       notesMarkdown: profile.notesMarkdown,
       notesRegister: CrdtLwwRegisterDto.toMap(profile.notesRegister, (v) => v),
       partyPurse: profile.partyPurse.toMap(),
+      memberPurses: profile.memberPurses.map((k, v) => MapEntry(k, v.toMap())),
       changeLog: profile.changeLog.map((e) => e.toMap()).toList(),
       unparsedPartyRoster: List<Map<String, dynamic>>.from(unparsedPartyRoster),
       unparsedMinions: List<Map<String, dynamic>>.from(unparsedMinions),
@@ -230,6 +233,14 @@ class CampaignProfileDto {
           )
         : null;
 
+    final Map<String, PartyPurse> parsedMemberPurses = {};
+    for (final entry in memberPurses.entries) {
+      if (entry.value is Map) {
+        parsedMemberPurses[entry.key] =
+            PartyPurse.fromMap(Map<String, dynamic>.from(entry.value as Map));
+      }
+    }
+
     return CampaignProfile.raw(
       id: id,
       name: name,
@@ -244,6 +255,7 @@ class CampaignProfileDto {
       pinnedRuleIds: parsedPinnedRules == null ? pinned : null,
       notesRegister: parsedNotesRegister,
       partyPurse: purse,
+      memberPurses: parsedMemberPurses,
       changeLog: parsedEvents,
     );
   }
@@ -470,6 +482,37 @@ class CampaignProfileDto {
       purseMap = const <String, dynamic>{};
     }
 
+    final Map<String, dynamic> memberPursesMap;
+    if (map.containsKey('memberPurses')) {
+      final rawMemberPurses = map['memberPurses'];
+      if (rawMemberPurses is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "memberPurses" must be a Map.');
+      }
+      final safeMemberPurses = <String, dynamic>{};
+      for (final entry in rawMemberPurses.entries) {
+        if (entry.key is! String) {
+          throw const FormatException(
+              'CampaignProfileDto.fromMap: "memberPurses" keys must be strings.');
+        }
+        if (entry.value is! Map) {
+          throw const FormatException(
+              'CampaignProfileDto.fromMap: "memberPurses" entry must be a Map.');
+        }
+        final purseEntryMap = Map<String, dynamic>.from(entry.value as Map);
+        try {
+          PartyPurse.fromMap(purseEntryMap);
+        } catch (e) {
+          throw FormatException(
+              'CampaignProfileDto.fromMap: "memberPurses" entry is malformed: $e');
+        }
+        safeMemberPurses[entry.key as String] = purseEntryMap;
+      }
+      memberPursesMap = safeMemberPurses;
+    } else {
+      memberPursesMap = const <String, dynamic>{};
+    }
+
     final Map<String, dynamic> notesRegMap;
     if (map.containsKey('notesRegister')) {
       final rawReg = map['notesRegister'];
@@ -567,6 +610,7 @@ class CampaignProfileDto {
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
       notesRegister: notesRegMap,
       partyPurse: purseMap,
+      memberPurses: memberPursesMap,
       changeLog: changeLogList,
       unparsedPartyRoster: unparsedRoster,
       unparsedMinions: unparsedMinionList,
@@ -591,6 +635,7 @@ class CampaignProfileDto {
       'notesMarkdown': notesMarkdown,
       if (notesRegister.isNotEmpty) 'notesRegister': notesRegister,
       'partyPurse': partyPurse,
+      'memberPurses': memberPurses,
       'changeLog': changeLog,
     };
     if (unparsedPartyRoster.isNotEmpty) {
