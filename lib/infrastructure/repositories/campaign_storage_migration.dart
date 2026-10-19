@@ -208,7 +208,9 @@ class CampaignStorageMigration {
               roomId: 'room_${m.roomCode}',
               roomCode: m.roomCode,
               title: '${m.campaignName} Staging Area',
+              titleTimestamp: clock.nextTimestamp(),
               description: 'Active DM session staging node.',
+              descriptionTimestamp: clock.nextTimestamp(),
             ),
           );
           try {

@@ -6,6 +6,7 @@ import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
 import '../../models/party/party_session_state.dart';
 import '../../services/persistence/character_persistence_service.dart';
+import '../../services/persistence/campaign_profile_service.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../utils/crypto_utils.dart';
@@ -57,9 +58,19 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
     HapticService.selectionTick(context);
 
     try {
+      String? linkProfileId;
+      try {
+        final activeProfile = await CampaignProfileService().getActiveProfile();
+        if (activeProfile != null &&
+            activeProfile.roomState.roomCode.trim().isEmpty) {
+          linkProfileId = activeProfile.id;
+        }
+      } catch (_) {}
+
       final session = await _partyService.createCampaign(
         campaignName: campaignName,
         playerName: playerName.isEmpty ? 'DM' : playerName,
+        linkProfileId: linkProfileId,
       );
 
       if (mounted) {

@@ -1,14 +1,24 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
+import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/session_graph_models.dart';
+import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_event.dart';
 import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
 import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../models/party/party_session_state.dart';
+import '../../models/party/party_room_lobby.dart';
+import '../../infrastructure/migration/party_ledger_legacy_import.dart';
+import '../../infrastructure/migration/room_profile_genesis_restamper.dart';
+import '../../infrastructure/di/injection_container.dart';
 import '../../utils/crypto_utils.dart';
 import '../../utils/secure_random.dart';
 import '../logging_service.dart';
@@ -16,15 +26,7 @@ import '../dice_room_service.dart';
 import '../persistence/character_persistence_service.dart';
 import '../persistence/campaign_profile_service.dart';
 import 'campaign_registry_service.dart';
-import 'package:vtt_engine_core/crdt/replica_id.dart';
-import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
-import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
-import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/models/session_graph_models.dart';
-import '../../models/party/party_room_lobby.dart';
-import '../../infrastructure/migration/party_ledger_legacy_import.dart';
-import '../../models/dm_screen_data.dart';
-import '../../infrastructure/di/injection_container.dart';
+import 'party_ledger_operations.dart';
 
 class CampaignNotFoundException implements Exception {
   final String message;
@@ -247,6 +249,7 @@ class PartyRoomService {
   // Local in-memory store for tests, offline mode, or fallback
   final Map<String, PartySessionState> _localRooms = {};
   final Map<String, PartyRoomLobby> _localLobbies = {};
+  final Map<String, Map<String, dynamic>> _rawLegacyDocs = {};
   final Map<String, Map<String, PartyLootItem>> _localLoot = {};
   final Map<String, List<PartyEvent>> _localEvents = {};
 
@@ -297,6 +300,16 @@ class PartyRoomService {
     return '';
   }
 
+  static dynamic _parseRulesetEdition(String raw) {
+    final clean = raw.trim().toLowerCase();
+    if (clean.contains('2024') || clean == 'v2024' || clean.contains('5.2')) {
+      return RulesetEdition.v2024;
+    } else if (clean.contains('2014') || clean == 'v2014' || clean.contains('5.1')) {
+      return RulesetEdition.v2014;
+    }
+    return RulesetIdentifier(raw);
+  }
+
   /// Deterministically locates or initializes the single campaign profile bound to [roomCode].
   ///
   /// Invariants:
@@ -304,70 +317,180 @@ class PartyRoomService {
   /// - Among local profiles whose roomState.roomCode equals the code, it picks the one whose
   ///   id equals the lobby campaignId, else the one whose id is `campaign_<ROOMCODE>`.
   /// - Only if neither exists and 2 or more profiles claim the code does opening the room fail,
-  ///   with an error naming every id.
-  /// - Never auto-merges, auto-deletes, or renames profiles.
-  /// - Sets the resolved profile as active before returning.
-  Future<CampaignProfile> profileForRoom(String roomCode, [String? lobbyCampaignId]) async {
+  /// Resolves the campaign profile for a room deterministically.
+  ///
+  /// Resolution invariants (Cold Iron Birdcage Pass 7.1 Q4):
+  /// - When the lobby names a campaign id:
+  ///   - Pick the local profile with that id (linking its room code if it has none).
+  ///   - If no local profile has that id and no local profile claims the code, create it with that id.
+  ///   - If no local profile has that id but one or more other profiles claim the code,
+  ///     fail with an error naming the lobby id and every claiming id.
+  ///   - Never pick a profile whose id differs from the lobby's, and never create a second claimant silently.
+  /// - When the lobby names no campaign id:
+  ///   - Keep Pass 7 order: `campaign_<ROOMCODE>`, else single claimant, else fail with error naming every id.
+  /// - Edition:
+  ///   - A joining device creates its empty profile with the lobby's rulesetId.
+  ///   - A legacy lobby without rulesetId means the core default (generic_tabletop).
+  /// - Stamping:
+  ///   - Every site that creates or links stamps each register with the injected clock.
+  /// - Resolution only:
+  ///   - Does NOT set active profile. Call [openRoomProfile] on room-entry paths to set active profile.
+  Future<CampaignProfile> profileForRoom(
+    String roomCode, [
+    String? lobbyCampaignId,
+    String? lobbyRulesetId,
+  ]) async {
     final clean = roomCode.trim().toUpperCase();
     final allProfiles = await _campaignProfileService.repo.loadAllProfiles();
-    final candidates = allProfiles
+    final claimants = allProfiles
         .where((p) => p.roomState.roomCode.trim().toUpperCase() == clean)
         .toList();
 
-    final targetId = lobbyCampaignId ?? _localLobbies[clean]?.campaignId ?? 'campaign_$clean';
+    final targetId = (lobbyCampaignId != null && lobbyCampaignId.trim().isNotEmpty)
+        ? lobbyCampaignId.trim()
+        : _localLobbies[clean]?.campaignId;
 
-    CampaignProfile? resolved;
-    if (candidates.length > 1) {
-      final byLobby = candidates.where((p) => p.id == targetId).firstOrNull;
-      if (byLobby != null) {
-        resolved = byLobby;
-      } else {
-        final byLegacy = candidates.where((p) => p.id == 'campaign_$clean').firstOrNull;
-        if (byLegacy != null) {
-          resolved = byLegacy;
+    CampaignProfile resolved;
+
+    if (targetId != null && targetId.isNotEmpty) {
+      final matchingById =
+          allProfiles.where((p) => p.id == targetId).firstOrNull;
+      if (matchingById != null) {
+        if (matchingById.roomState.roomCode.trim().toUpperCase() != clean) {
+          final nowTs = _clock.nextTimestamp();
+          final linked = matchingById.copyWith(
+            roomState: matchingById.roomState.copyWith(
+              roomCode: clean,
+              titleTimestamp: nowTs,
+            ),
+          );
+          await _campaignProfileService.repo.putProfile(linked);
+          resolved = linked;
         } else {
-          final ids = candidates.map((p) => p.id).toList();
-          throw StateError('Multiple campaign profiles claim room code $clean: $ids');
+          resolved = matchingById;
         }
-      }
-    } else if (candidates.length == 1) {
-      resolved = candidates.first;
-    } else {
-      // candidates.isEmpty: check if a profile with targetId exists locally and link its roomCode
-      final existingById = allProfiles.where((p) => p.id == targetId).firstOrNull;
-      if (existingById != null) {
-        final linked = existingById.copyWith(
-          roomState: existingById.roomState.copyWith(
-            roomCode: clean,
-            titleTimestamp: _clock.nextTimestamp(),
-          ),
+      } else if (claimants.isNotEmpty) {
+        final claimantIds = claimants.map((p) => p.id).toList();
+        throw StateError(
+          'Campaign profile mismatch for room $clean: lobby specifies campaign "$targetId", '
+          'but local profiles claim room code with different IDs: $claimantIds.',
         );
-        await _campaignProfileService.repo.putProfile(linked);
-        resolved = linked;
       } else {
-        final newProfile = CampaignProfile(
+        final targetRuleset = (lobbyRulesetId != null && lobbyRulesetId.trim().isNotEmpty)
+            ? lobbyRulesetId.trim()
+            : (_localLobbies[clean]?.rulesetId ?? 'generic_tabletop');
+        final edition = _parseRulesetEdition(targetRuleset);
+
+        final nowTs = _clock.nextTimestamp();
+        final newProfile = CampaignProfile.raw(
           id: targetId,
-          name: 'Campaign $clean',
-          edition: DmRulesEdition.v2024,
+          nameRegister: CrdtLwwRegister<String>(
+            value: 'Campaign $clean',
+            timestamp: nowTs,
+          ),
+          edition: edition,
           createdAt: DateTime.now(),
           lastPlayedAt: DateTime.now(),
           roomState: RoomNodeState(
             roomId: 'room_$clean',
             roomCode: clean,
             title: 'Campaign $clean Staging',
+            titleTimestamp: nowTs,
+            description: '',
+            descriptionTimestamp: nowTs,
           ),
           partyPurse: const PartyPurse.empty(),
           memberPurses: const {},
           partyRoster: const CrdtOrSet<String>.empty(),
-          nodeId: replicaId.value,
+          pinnedRules: const CrdtOrSet<String>.empty(),
+          notesRegister: CrdtLwwRegister<String>(
+            value: '',
+            timestamp: nowTs,
+          ),
+          changeLog: const [],
+        );
+        await _campaignProfileService.repo.putProfile(newProfile);
+        resolved = newProfile;
+      }
+    } else {
+      final legacyId = 'campaign_$clean';
+      final byLegacy = claimants.where((p) => p.id == legacyId).firstOrNull;
+      if (byLegacy != null) {
+        resolved = byLegacy;
+      } else if (claimants.length == 1) {
+        resolved = claimants.first;
+      } else if (claimants.length > 1) {
+        final claimantIds = claimants.map((p) => p.id).toList();
+        throw StateError(
+          'Multiple campaign profiles claim room code $clean without lobby campaignId: $claimantIds',
+        );
+      } else {
+        final targetRuleset =
+            _localLobbies[clean]?.rulesetId ?? 'generic_tabletop';
+        final edition = _parseRulesetEdition(targetRuleset);
+
+        final nowTs = _clock.nextTimestamp();
+        final newProfile = CampaignProfile.raw(
+          id: legacyId,
+          nameRegister: CrdtLwwRegister<String>(
+            value: 'Campaign $clean',
+            timestamp: nowTs,
+          ),
+          edition: edition,
+          createdAt: DateTime.now(),
+          lastPlayedAt: DateTime.now(),
+          roomState: RoomNodeState(
+            roomId: 'room_$clean',
+            roomCode: clean,
+            title: 'Campaign $clean Staging',
+            titleTimestamp: nowTs,
+            description: '',
+            descriptionTimestamp: nowTs,
+          ),
+          partyPurse: const PartyPurse.empty(),
+          memberPurses: const {},
+          partyRoster: const CrdtOrSet<String>.empty(),
+          pinnedRules: const CrdtOrSet<String>.empty(),
+          notesRegister: CrdtLwwRegister<String>(
+            value: '',
+            timestamp: nowTs,
+          ),
+          changeLog: const [],
         );
         await _campaignProfileService.repo.putProfile(newProfile);
         resolved = newProfile;
       }
     }
 
-    await _campaignProfileService.repo.setActiveProfileId(resolved.id);
     return resolved;
+  }
+
+  /// Resolves the campaign profile for [roomCode], re-stamps genesis titles if present,
+  /// and sets it as the active profile.
+  /// Only room-entry paths call this (create, join, rehydrate, PartyRoomScreen, RoomBannerWidget).
+  Future<CampaignProfile> openRoomProfile(
+    String roomCode, [
+    String? lobbyCampaignId,
+    String? lobbyRulesetId,
+  ]) async {
+    final clean = roomCode.trim().toUpperCase();
+    var profile = await profileForRoom(clean, lobbyCampaignId, lobbyRulesetId);
+
+    if (RoomProfileGenesisRestamper.isGenesisTimestamp(
+            profile.roomState.titleRegister.timestamp) ||
+        RoomProfileGenesisRestamper.isGenesisTimestamp(
+            profile.roomState.descriptionRegister.timestamp)) {
+      profile =
+          await _campaignProfileService.repo.updateProfile(profile.id, (p) {
+        return RoomProfileGenesisRestamper.restampIfNeeded(
+          profile: p,
+          clock: _clock,
+        );
+      });
+    }
+
+    await _campaignProfileService.repo.setActiveProfileId(profile.id);
+    return profile;
   }
 
   Future<PartyRoomLobby> _getOrFetchLobby(String roomCode) async {
@@ -379,7 +502,11 @@ class PartyRoomService {
       try {
         final doc = await FirebaseFirestore.instance.collection('rooms').doc(clean).get();
         if (doc.exists && doc.data() != null) {
-          final lobby = PartyRoomLobby.fromMap(doc.data()!);
+          final data = doc.data()!;
+          if (PartyLedgerLegacyImport.hasLegacyLedgerFields(data)) {
+            _rawLegacyDocs[clean] = data;
+          }
+          final lobby = PartyRoomLobby.fromMap(data);
           _localLobbies[clean] = lobby;
           return lobby;
         }
@@ -512,11 +639,13 @@ class PartyRoomService {
       final existing =
           await _campaignProfileService.repo.getProfile(linkProfileId.trim());
       if (existing != null) {
+        final nowTs = _clock.nextTimestamp();
         profile = existing.copyWith(
           roomState: existing.roomState.copyWith(
             roomId: 'room_$roomCode',
             roomCode: roomCode,
             title: 'Campaign $roomCode Staging',
+            titleTimestamp: nowTs,
           ),
         );
         await _campaignProfileService.repo.putProfile(profile);
@@ -526,7 +655,7 @@ class PartyRoomService {
     } else {
       profile = await profileForRoom(roomCode);
     }
-    await _campaignProfileService.repo.setActiveProfileId(profile.id);
+    profile = await openRoomProfile(roomCode, profile.id, profile.rulesetId);
 
     final lobby = PartyRoomLobby(
       roomCode: roomCode,
@@ -537,6 +666,7 @@ class PartyRoomService {
       lastUpdated: now,
       expiresAt: expiresAt,
       campaignId: profile.id,
+      rulesetId: profile.rulesetId,
     );
     _localLobbies[roomCode] = lobby;
 
@@ -609,6 +739,7 @@ class PartyRoomService {
     Character? characterSnapshot,
     String? existingRosterName,
     bool isNewImport = true,
+    @visibleForTesting Map<String, dynamic>? rawDoc,
   }) async {
     final cleanCode = roomCode.trim().toUpperCase().replaceAll(' ', '');
     final cleanPlayer =
@@ -635,8 +766,14 @@ class PartyRoomService {
     }.toList();
 
     PartyRoomLobby? cloudLobby;
-    Map<String, dynamic>? rawDoc;
     String matchedCode = cleanCode;
+
+    if (rawDoc != null) {
+      try {
+        cloudLobby = PartyRoomLobby.fromMap(rawDoc);
+        _localLobbies[cleanCode] = cloudLobby;
+      } catch (_) {}
+    }
 
     if (isFirebaseAvailable) {
       for (final code in codeCandidates) {
@@ -793,22 +930,24 @@ class PartyRoomService {
       await _registry.saveMembership(membership);
       await _registry.setActiveCampaign(membership);
 
+      if (rawDoc != null) {
+        _rawLegacyDocs[matchedCode] = rawDoc;
+      }
+
       // P1: Deterministically resolve room profile
       final lobbyCampaignId = campaignIdForRoom(cloudLobby);
-      var profile = await profileForRoom(matchedCode, lobbyCampaignId);
+      var profile = await openRoomProfile(matchedCode, lobbyCampaignId, cloudLobby.rulesetId);
 
       // P5: Check and run legacy import if raw doc has legacy ledger fields
       if (rawDoc != null &&
           PartyLedgerLegacyImport.hasLegacyLedgerFields(rawDoc)) {
-        final importedProfile = PartyLedgerLegacyImport.importLegacyLedger(
-          profile: profile,
-          rawDoc: rawDoc,
-          clock: _clock,
-        );
-        if (importedProfile != profile) {
-          await _campaignProfileService.repo.putProfile(importedProfile);
-          profile = importedProfile;
-        }
+        profile = await _campaignProfileService.repo.updateProfile(profile.id, (p) {
+          return PartyLedgerLegacyImport.importLegacyLedger(
+            profile: p,
+            rawDoc: rawDoc!,
+            clock: _clock,
+          );
+        });
       }
 
       // Update lobby fields
@@ -840,11 +979,13 @@ class PartyRoomService {
               _clock.nextTimestamp(),
             );
           }
-          final memberPurses = Map<String, PartyPurse>.from(p.memberPurses);
-          memberPurses[characterSnapshot.id.slug] = characterSnapshot.purse;
-          return p.copyWith(
-            partyRoster: roster,
-            memberPurses: memberPurses,
+          final withRoster = p.copyWith(partyRoster: roster);
+          return PartyLedgerOperations.seedCharacterPurse(
+            profile: withRoster,
+            characterSlug: characterSnapshot.id.slug,
+            openingPurse: characterSnapshot.purse,
+            rawDoc: rawDoc,
+            characterName: characterSnapshot.name,
           );
         });
       }
@@ -859,7 +1000,6 @@ class PartyRoomService {
         version: cloudLobby.version + 1,
         lastUpdated: now,
         expiresAt: expiresAt,
-        campaignId: profile.id,
       );
 
       _localLobbies[matchedCode] = updatedLobby;
@@ -933,18 +1073,25 @@ class PartyRoomService {
         ? CryptoUtils.sha256Hex(CryptoUtils.extractHostKey(hostKey))
         : (existingLobby?.hostKeyHash ?? '');
 
-    final lobby = PartyRoomLobby(
-      roomCode: cleanCode,
-      campaignName: cName,
-      hostKeyHash: hostKeyHash,
-      activePlayers: existingLobby?.activePlayers ?? const [],
-      partyTelemetry: existingLobby?.partyTelemetry ?? const {},
-      sharedCharacters: existingLobby?.sharedCharacters ?? const {},
-      version: (existingLobby?.version ?? 0) + 1,
-      lastUpdated: now,
-      expiresAt: expiresAt,
-      campaignId: profile.id,
-    );
+    final lobby = existingLobby != null
+        ? existingLobby.copyWith(
+            campaignName: cName,
+            hostKeyHash: hostKeyHash,
+            version: existingLobby.version + 1,
+            lastUpdated: now,
+            expiresAt: expiresAt,
+          )
+        : PartyRoomLobby(
+            roomCode: cleanCode,
+            campaignName: cName,
+            hostKeyHash: hostKeyHash,
+            activePlayers: const [],
+            partyTelemetry: const {},
+            sharedCharacters: const {},
+            version: 1,
+            lastUpdated: now,
+            expiresAt: expiresAt,
+          );
     _localLobbies[cleanCode] = lobby;
 
     final session = _buildSessionState(lobby, profile);
@@ -962,7 +1109,10 @@ class PartyRoomService {
           'isStateless': isStateless,
           'lastUpdated': now.toIso8601String(),
           'expiresAt': expiresAt.toIso8601String(),
-          'campaignId': profile.id,
+          if (lobby.campaignId != null && lobby.campaignId!.isNotEmpty)
+            'campaignId': lobby.campaignId,
+          if (lobby.rulesetId != null && lobby.rulesetId!.isNotEmpty)
+            'rulesetId': lobby.rulesetId,
         };
         if (hostKeyHash.isNotEmpty) {
           updateData['hostKeyHash'] = hostKeyHash;
@@ -1014,6 +1164,7 @@ class PartyRoomService {
     // 3. P1 & P3: Update profile ledger in ONE transform
     final lobby = await _getOrFetchLobby(clean);
     final profile = await profileForRoom(clean, lobby.campaignId);
+    final rawDoc = _rawLegacyDocs[clean];
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
@@ -1025,11 +1176,13 @@ class PartyRoomService {
           _clock.nextTimestamp(),
         );
       }
-      final memberPurses = Map<String, PartyPurse>.from(p.memberPurses);
-      memberPurses[character.id.slug] = character.purse;
-      return p.copyWith(
-        partyRoster: roster,
-        memberPurses: memberPurses,
+      final withRoster = p.copyWith(partyRoster: roster);
+      return PartyLedgerOperations.seedCharacterPurse(
+        profile: withRoster,
+        characterSlug: character.id.slug,
+        openingPurse: character.purse,
+        rawDoc: rawDoc,
+        characterName: character.name,
       );
     });
 
@@ -1055,7 +1208,6 @@ class PartyRoomService {
       partyTelemetry: updatedTelemetry,
       version: lobby.version + 1,
       lastUpdated: DateTime.now(),
-      campaignId: updatedProfile.id,
     );
     _localLobbies[clean] = updatedLobby;
 
@@ -1082,7 +1234,6 @@ class PartyRoomService {
           'version': FieldValue.increment(1),
           'lastUpdated': DateTime.now().toIso8601String(),
           'expiresAt': current.expiresAt.toIso8601String(),
-          'campaignId': updatedProfile.id,
         }, SetOptions(merge: true));
       } catch (e, st) {
         LoggingService().logNonFatal(e, st,
@@ -1111,15 +1262,7 @@ class PartyRoomService {
     final lobby = await _getOrFetchLobby(clean);
     final profile = await profileForRoom(clean, lobby.campaignId);
 
-    // 1. Update member purse in profile if changed
-    final updatedProfile =
-        await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final updatedPurses = Map<String, PartyPurse>.from(p.memberPurses);
-      updatedPurses[character.id.slug] = character.purse;
-      return p.copyWith(memberPurses: updatedPurses);
-    });
-
-    // 2. Update local lobby
+    // 1. Update local lobby
     final telemetry = character.toTelemetryDto();
     final name = existingRosterName ?? character.name;
     final updatedTelemetry =
@@ -1136,11 +1279,10 @@ class PartyRoomService {
       partyTelemetry: updatedTelemetry,
       sharedCharacters: updatedShared,
       lastUpdated: DateTime.now(),
-      campaignId: updatedProfile.id,
     );
     _localLobbies[clean] = updatedLobby;
 
-    final current = _buildSessionState(updatedLobby, updatedProfile);
+    final current = _buildSessionState(updatedLobby, profile);
     _localRooms[clean] = current;
     _emitSession(clean);
 
@@ -1303,21 +1445,29 @@ class PartyRoomService {
     final now = DateTime.now();
     final expiresAt = now.add(defaultLootExpiration);
 
-    final profile = await profileForRoom(cleanCode);
+    final profile = await openRoomProfile(cleanCode);
     final existingLobby = _localLobbies[cleanCode];
     final cName =
         campaignName ?? existingLobby?.campaignName ?? 'Rehydrated Campaign';
 
-    final lobby = PartyRoomLobby(
-      roomCode: cleanCode,
-      campaignName: cName,
-      hostKeyHash: hostKeyHash,
-      activePlayers: [playerName],
-      version: (existingLobby?.version ?? 0) + 1,
-      lastUpdated: now,
-      expiresAt: expiresAt,
-      campaignId: profile.id,
-    );
+    final lobby = existingLobby != null
+        ? existingLobby.copyWith(
+            campaignName: cName,
+            hostKeyHash: hostKeyHash,
+            activePlayers: [playerName],
+            version: existingLobby.version + 1,
+            lastUpdated: now,
+            expiresAt: expiresAt,
+          )
+        : PartyRoomLobby(
+            roomCode: cleanCode,
+            campaignName: cName,
+            hostKeyHash: hostKeyHash,
+            activePlayers: [playerName],
+            version: 1,
+            lastUpdated: now,
+            expiresAt: expiresAt,
+          );
 
     _localLobbies[cleanCode] = lobby;
     final rehydrated = _buildSessionState(lobby, profile);
@@ -1540,6 +1690,16 @@ class PartyRoomService {
       }
     }
     return null;
+  }
+
+  /// Returns the current in-memory cached lobby of a room if available
+  PartyRoomLobby? getCachedLobby(String roomCode) {
+    return _localLobbies[roomCode.trim().toUpperCase()];
+  }
+
+  /// Fetches or retrieves the lobby for a room
+  Future<PartyRoomLobby> getLobby(String roomCode) {
+    return _getOrFetchLobby(roomCode);
   }
 
   /// Stream root session state
@@ -1835,29 +1995,12 @@ class PartyRoomService {
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final updatedRoster =
-          p.partyRoster.remove(slug, _clock.nextTimestamp());
-      final memberPurse = p.memberPurses[slug];
-      var updatedReserve = p.partyPurse;
-      final updatedPurses = Map<String, PartyPurse>.from(p.memberPurses);
-
-      if (memberPurse != null && !memberPurse.isEmpty) {
-        deletedPurse = memberPurse;
-        updatedReserve = updatedReserve.add(memberPurse, replicaId: replicaId);
-        updatedPurses[slug] = memberPurse.withdrawCoins(
-          pp: memberPurse.pp,
-          gp: memberPurse.gp,
-          ep: memberPurse.ep,
-          sp: memberPurse.sp,
-          cp: memberPurse.cp,
-          replicaId: replicaId,
-        );
-      }
-
-      return p.copyWith(
-        partyRoster: updatedRoster,
-        partyPurse: updatedReserve,
-        memberPurses: updatedPurses,
+      deletedPurse = p.memberPurses[slug];
+      return PartyLedgerOperations.removeMemberFromRoster(
+        profile: p,
+        characterSlug: slug,
+        replicaId: replicaId,
+        clock: _clock,
       );
     });
 
@@ -1889,47 +2032,16 @@ class PartyRoomService {
 
     final lobby = await _getOrFetchLobby(clean);
     final profile = await profileForRoom(clean, lobby.campaignId);
+    final targetSlugs =
+        cleanedRoster.map((s) => _resolveSlugForName(s, lobby, profile)).toSet();
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      var updatedRoster = p.partyRoster;
-      var updatedReserve = p.partyPurse;
-      final updatedPurses = Map<String, PartyPurse>.from(p.memberPurses);
-
-      final targetSlugs =
-          cleanedRoster.map((s) => _resolveSlugForName(s, lobby, p)).toSet();
-
-      // Add new items
-      for (final slug in targetSlugs) {
-        if (!updatedRoster.activeValues.contains(slug)) {
-          updatedRoster = updatedRoster.add(slug, slug, _clock.nextTimestamp());
-        }
-      }
-
-      // Remove items not in targetSlugs
-      for (final slug in List<String>.from(updatedRoster.activeValues)) {
-        if (!targetSlugs.contains(slug)) {
-          updatedRoster = updatedRoster.remove(slug, _clock.nextTimestamp());
-          final memberPurse = updatedPurses[slug];
-          if (memberPurse != null && !memberPurse.isEmpty) {
-            updatedReserve =
-                updatedReserve.add(memberPurse, replicaId: replicaId);
-            updatedPurses[slug] = memberPurse.withdrawCoins(
-              pp: memberPurse.pp,
-              gp: memberPurse.gp,
-              ep: memberPurse.ep,
-              sp: memberPurse.sp,
-              cp: memberPurse.cp,
-              replicaId: replicaId,
-            );
-          }
-        }
-      }
-
-      return p.copyWith(
-        partyRoster: updatedRoster,
-        partyPurse: updatedReserve,
-        memberPurses: updatedPurses,
+      return PartyLedgerOperations.restoreMembersToRoster(
+        profile: p,
+        targetSlugs: targetSlugs,
+        replicaId: replicaId,
+        clock: _clock,
       );
     });
 
@@ -1967,7 +2079,8 @@ class PartyRoomService {
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final updatedPurse = p.partyPurse.depositCoins(
+      return PartyLedgerOperations.depositToReserve(
+        profile: p,
         cp: cp,
         sp: sp,
         ep: ep,
@@ -1975,7 +2088,6 @@ class PartyRoomService {
         pp: pp,
         replicaId: replicaId,
       );
-      return p.copyWith(partyPurse: updatedPurse);
     });
 
     final current = _buildSessionState(lobby, updatedProfile);
@@ -2071,7 +2183,8 @@ class PartyRoomService {
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final updatedPurse = p.partyPurse.withdrawCoins(
+      return PartyLedgerOperations.withdrawFromReserve(
+        profile: p,
         cp: cp,
         sp: sp,
         ep: ep,
@@ -2079,7 +2192,6 @@ class PartyRoomService {
         pp: pp,
         replicaId: replicaId,
       );
-      return p.copyWith(partyPurse: updatedPurse);
     });
 
     final current = _buildSessionState(lobby, updatedProfile);
@@ -2171,13 +2283,8 @@ class PartyRoomService {
               Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
           updatedShared[updatedChar.id.slug] = updatedChar.toMap();
           updatedShared[characterIdentifier] = updatedChar.toMap();
-          final updatedPurses =
-              Map<String, PartyPurse>.from(current.memberPurses);
-          updatedPurses[characterIdentifier] = updatedPurse;
-          updatedPurses[updatedChar.id.slug] = updatedPurse;
           _localRooms[clean] = current.copyWith(
             sharedCharacters: updatedShared,
-            memberPurses: updatedPurses,
           );
           final lobby = _localLobbies[clean];
           if (lobby != null) {
@@ -2235,13 +2342,8 @@ class PartyRoomService {
               Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
           updatedShared[updatedChar.id.slug] = updatedChar.toMap();
           updatedShared[characterIdentifier] = updatedChar.toMap();
-          final updatedPurses =
-              Map<String, PartyPurse>.from(current.memberPurses);
-          updatedPurses[characterIdentifier] = newPurse;
-          updatedPurses[updatedChar.id.slug] = newPurse;
           _localRooms[clean] = current.copyWith(
             sharedCharacters: updatedShared,
-            memberPurses: updatedPurses,
           );
           final lobby = _localLobbies[clean];
           if (lobby != null) {
@@ -2379,130 +2481,54 @@ class PartyRoomService {
 
     final perRecipientSyncs = <String, Map<String, int>>{};
 
+    final recipientSlugs =
+        recipients.map((r) => _resolveSlugForName(r, lobby, profile)).toList();
+
+    if (includeLiquidatedInSplit && liquidatedGemsAndArtGp > 0) {
+      final totalGp =
+          purseToDisperse.totalGpEquivalent + liquidatedGemsAndArtGp;
+      final perShareGp = (totalGp / shareCount).floor();
+      for (final recipient in recipients) {
+        perRecipientSyncs[recipient] = {'gp': perShareGp};
+      }
+    } else {
+      final ppPerShare = purseToDisperse.pp ~/ shareCount;
+      final gpPerShare = purseToDisperse.gp ~/ shareCount;
+      final epPerShare = purseToDisperse.ep ~/ shareCount;
+      final spPerShare = purseToDisperse.sp ~/ shareCount;
+      final cpPerShare = purseToDisperse.cp ~/ shareCount;
+      for (final recipient in recipients) {
+        perRecipientSyncs[recipient] = {
+          'pp': ppPerShare,
+          'gp': gpPerShare,
+          'ep': epPerShare,
+          'sp': spPerShare,
+          'cp': cpPerShare,
+        };
+      }
+    }
+
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final updatedMemberPurses = Map<String, PartyPurse>.from(p.memberPurses);
-      PartyPurse updatedPartyPurse = p.partyPurse;
+      final dispersed = PartyLedgerOperations.disperseCoins(
+        profile: p,
+        purseToDisperse: purseToDisperse,
+        recipientSlugs: recipientSlugs,
+        replicaId: replicaId,
+        includePartyReserve: includePartyReserve,
+        liquidatedGemsAndArtGp: liquidatedGemsAndArtGp,
+        includeLiquidatedInSplit: includeLiquidatedInSplit,
+        isVaultDispersal: isVaultDispersal,
+      );
 
-      if (includeLiquidatedInSplit && liquidatedGemsAndArtGp > 0) {
-        // Liquidate coins + gems/art into GP equivalent split
-        final totalGp =
-            purseToDisperse.totalGpEquivalent + liquidatedGemsAndArtGp;
-        final perShareGp = (totalGp / shareCount).floor();
-        final remainderGp = (totalGp - (perShareGp * shareCount)).round();
-
-        for (final recipient in recipients) {
-          final slug = _resolveSlugForName(recipient, lobby, p);
-          final prev = updatedMemberPurses[slug] ?? const PartyPurse.empty();
-          updatedMemberPurses[slug] =
-              prev.depositCoins(gp: perShareGp, replicaId: replicaId);
-          perRecipientSyncs[recipient] = {'gp': perShareGp};
-        }
-
-        if (isVaultDispersal) {
-          // Vault funds distributed to characters: withdraw disbursed character shares from vault
-          final totalGpWithdrawn = perShareGp * recipients.length;
-          updatedPartyPurse = updatedPartyPurse.withdrawCoins(
-            gp: math.min(updatedPartyPurse.gp, totalGpWithdrawn),
-            replicaId: replicaId,
-          );
-        } else {
-          // External loot drop: deposit reserve share or remainder
-          if (includePartyReserve) {
-            updatedPartyPurse = updatedPartyPurse.depositCoins(
-                gp: perShareGp + remainderGp, replicaId: replicaId);
-          } else if (remainderGp > 0) {
-            updatedPartyPurse = updatedPartyPurse.depositCoins(
-                gp: remainderGp, replicaId: replicaId);
-          }
-        }
-      } else {
-        // Even denomination split across PP, GP, EP, SP, CP
-        final ppPerShare = purseToDisperse.pp ~/ shareCount;
-        final gpPerShare = purseToDisperse.gp ~/ shareCount;
-        final epPerShare = purseToDisperse.ep ~/ shareCount;
-        final spPerShare = purseToDisperse.sp ~/ shareCount;
-        final cpPerShare = purseToDisperse.cp ~/ shareCount;
-
-        final ppRem = purseToDisperse.pp % shareCount;
-        final gpRem = purseToDisperse.gp % shareCount;
-        final epRem = purseToDisperse.ep % shareCount;
-        final spRem = purseToDisperse.sp % shareCount;
-        final cpRem = purseToDisperse.cp % shareCount;
-
-        for (final recipient in recipients) {
-          final slug = _resolveSlugForName(recipient, lobby, p);
-          final prev = updatedMemberPurses[slug] ?? const PartyPurse.empty();
-          updatedMemberPurses[slug] = prev.depositCoins(
-            pp: ppPerShare,
-            gp: gpPerShare,
-            ep: epPerShare,
-            sp: spPerShare,
-            cp: cpPerShare,
-            replicaId: replicaId,
-          );
-          perRecipientSyncs[recipient] = {
-            'pp': ppPerShare,
-            'gp': gpPerShare,
-            'ep': epPerShare,
-            'sp': spPerShare,
-            'cp': cpPerShare,
-          };
-        }
-
-        if (isVaultDispersal) {
-          // Vault funds distributed to characters: withdraw distributed shares from the vault
-          final ppWithdrawn = ppPerShare * recipients.length;
-          final gpWithdrawn = gpPerShare * recipients.length;
-          final epWithdrawn = epPerShare * recipients.length;
-          final spWithdrawn = spPerShare * recipients.length;
-          final cpWithdrawn = cpPerShare * recipients.length;
-          updatedPartyPurse = updatedPartyPurse.withdrawCoins(
-            pp: ppWithdrawn,
-            gp: gpWithdrawn,
-            ep: epWithdrawn,
-            sp: spWithdrawn,
-            cp: cpWithdrawn,
-            replicaId: replicaId,
-          );
-        } else {
-          // External loot drop: deposit reserve share or remainder
-          if (includePartyReserve) {
-            updatedPartyPurse = updatedPartyPurse.depositCoins(
-              pp: ppPerShare + ppRem,
-              gp: gpPerShare + gpRem,
-              ep: epPerShare + epRem,
-              sp: spPerShare + spRem,
-              cp: cpPerShare + cpRem,
-              replicaId: replicaId,
-            );
-          } else {
-            // Remainder always goes to party reserve so nothing is lost
-            updatedPartyPurse = updatedPartyPurse.depositCoins(
-              pp: ppRem,
-              gp: gpRem,
-              ep: epRem,
-              sp: spRem,
-              cp: cpRem,
-              replicaId: replicaId,
-            );
-          }
-        }
-      }
-
-      var updatedRoster = p.partyRoster;
-      for (final recipient in recipients) {
-        final slug = _resolveSlugForName(recipient, lobby, p);
+      var updatedRoster = dispersed.partyRoster;
+      for (final slug in recipientSlugs) {
         if (!updatedRoster.activeValues.contains(slug)) {
           updatedRoster = updatedRoster.add(slug, slug, _clock.nextTimestamp());
         }
       }
 
-      return p.copyWith(
-        partyPurse: updatedPartyPurse,
-        memberPurses: updatedMemberPurses,
-        partyRoster: updatedRoster,
-      );
+      return dispersed.copyWith(partyRoster: updatedRoster);
     });
 
     // Mirror to local character persistence
@@ -2561,15 +2587,12 @@ class PartyRoomService {
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final updatedMap = Map<String, PartyPurse>.from(p.memberPurses);
-      updatedMap[slug] = newPurse;
-      var updatedRoster = p.partyRoster;
-      if (!updatedRoster.activeValues.contains(slug)) {
-        updatedRoster = updatedRoster.add(slug, slug, _clock.nextTimestamp());
-      }
-      return p.copyWith(
-        memberPurses: updatedMap,
-        partyRoster: updatedRoster,
+      return PartyLedgerOperations.overrideMemberPurse(
+        profile: p,
+        characterSlug: slug,
+        newPurse: newPurse,
+        replicaId: replicaId,
+        clock: _clock,
       );
     });
 
@@ -2616,38 +2639,19 @@ class PartyRoomService {
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final currentMemberPurse =
-          p.memberPurses[slug] ?? const PartyPurse.empty();
-      updatedMemberPurse = currentMemberPurse.withdrawCoins(
+      final res = PartyLedgerOperations.transferMemberToReserve(
+        profile: p,
+        characterSlug: slug,
         cp: cp,
         sp: sp,
         ep: ep,
         gp: gp,
         pp: pp,
         replicaId: replicaId,
+        clock: _clock,
       );
-      final updatedPartyPurse = p.partyPurse.depositCoins(
-        cp: cp,
-        sp: sp,
-        ep: ep,
-        gp: gp,
-        pp: pp,
-        replicaId: replicaId,
-      );
-
-      final updatedMap = Map<String, PartyPurse>.from(p.memberPurses);
-      updatedMap[slug] = updatedMemberPurse;
-
-      var updatedRoster = p.partyRoster;
-      if (!updatedRoster.activeValues.contains(slug)) {
-        updatedRoster = updatedRoster.add(slug, slug, _clock.nextTimestamp());
-      }
-
-      return p.copyWith(
-        partyPurse: updatedPartyPurse,
-        memberPurses: updatedMap,
-        partyRoster: updatedRoster,
-      );
+      updatedMemberPurse = res.memberPurses[slug] ?? const PartyPurse.empty();
+      return res;
     });
 
     final current = _buildSessionState(lobby, updatedProfile);
@@ -2693,39 +2697,19 @@ class PartyRoomService {
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-      final currentPartyPurse = p.partyPurse;
-      final updatedPartyPurse = currentPartyPurse.withdrawCoins(
+      final res = PartyLedgerOperations.transferReserveToMember(
+        profile: p,
+        characterSlug: slug,
         cp: cp,
         sp: sp,
         ep: ep,
         gp: gp,
         pp: pp,
         replicaId: replicaId,
+        clock: _clock,
       );
-      final currentMemberPurse =
-          p.memberPurses[slug] ?? const PartyPurse.empty();
-      updatedMemberPurse = currentMemberPurse.depositCoins(
-        cp: cp,
-        sp: sp,
-        ep: ep,
-        gp: gp,
-        pp: pp,
-        replicaId: replicaId,
-      );
-
-      final updatedMap = Map<String, PartyPurse>.from(p.memberPurses);
-      updatedMap[slug] = updatedMemberPurse;
-
-      var updatedRoster = p.partyRoster;
-      if (!updatedRoster.activeValues.contains(slug)) {
-        updatedRoster = updatedRoster.add(slug, slug, _clock.nextTimestamp());
-      }
-
-      return p.copyWith(
-        partyPurse: updatedPartyPurse,
-        memberPurses: updatedMap,
-        partyRoster: updatedRoster,
-      );
+      updatedMemberPurse = res.memberPurses[slug] ?? const PartyPurse.empty();
+      return res;
     });
 
     final current = _buildSessionState(lobby, updatedProfile);

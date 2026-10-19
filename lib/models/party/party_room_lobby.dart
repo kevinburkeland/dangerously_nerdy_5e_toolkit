@@ -11,6 +11,7 @@ import 'package:vtt_engine_core/utils/deep_immutable.dart';
 class PartyRoomLobby {
   final String roomCode;
   final String? campaignId;
+  final String? rulesetId;
   final String campaignName;
   final String hostKeyHash;
   final List<String> activePlayers;
@@ -24,6 +25,7 @@ class PartyRoomLobby {
   PartyRoomLobby({
     required this.roomCode,
     this.campaignId,
+    this.rulesetId,
     required this.campaignName,
     required this.hostKeyHash,
     List<String> activePlayers = const [],
@@ -45,6 +47,7 @@ class PartyRoomLobby {
   PartyRoomLobby copyWith({
     String? roomCode,
     String? campaignId,
+    String? rulesetId,
     String? campaignName,
     String? hostKeyHash,
     List<String>? activePlayers,
@@ -58,6 +61,7 @@ class PartyRoomLobby {
     return PartyRoomLobby(
       roomCode: roomCode ?? this.roomCode,
       campaignId: campaignId ?? this.campaignId,
+      rulesetId: rulesetId ?? this.rulesetId,
       campaignName: campaignName ?? this.campaignName,
       hostKeyHash: hostKeyHash ?? this.hostKeyHash,
       activePlayers: activePlayers ?? this.activePlayers,
@@ -76,6 +80,8 @@ class PartyRoomLobby {
       'code': roomCode,
       if (campaignId != null && campaignId!.trim().isNotEmpty)
         'campaignId': campaignId!.trim(),
+      if (rulesetId != null && rulesetId!.trim().isNotEmpty)
+        'rulesetId': rulesetId!.trim(),
       'campaignName': campaignName,
       'hostKeyHash': hostKeyHash,
       'activePlayers': activePlayers,
@@ -91,6 +97,7 @@ class PartyRoomLobby {
   factory PartyRoomLobby.fromMap(Map<String, dynamic> map) {
     final rawCode = (map['roomCode'] ?? map['code'] ?? '').toString().trim().toUpperCase();
     final rawCampaignId = map['campaignId'] as String?;
+    final rawRulesetId = map['rulesetId'] as String?;
 
     final active = (map['activePlayers'] as List? ?? [])
         .whereType<String>()
@@ -142,6 +149,9 @@ class PartyRoomLobby {
       roomCode: rawCode,
       campaignId: rawCampaignId != null && rawCampaignId.trim().isNotEmpty
           ? rawCampaignId.trim()
+          : null,
+      rulesetId: rawRulesetId != null && rawRulesetId.trim().isNotEmpty
+          ? rawRulesetId.trim()
           : null,
       campaignName: map['campaignName']?.toString() ?? 'Party Campaign',
       hostKeyHash: map['hostKeyHash']?.toString() ?? '',

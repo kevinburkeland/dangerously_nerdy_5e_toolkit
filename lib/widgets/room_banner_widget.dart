@@ -5,7 +5,6 @@ import '../application/services/cascading_transport_router.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
-import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../services/dice_room_service.dart';
@@ -93,11 +92,7 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
         if (!orchestrator.isSynchronizing) {
           unawaited(() async {
             try {
-              final profile =
-                  await PartyRoomService().profileForRoom(effectiveRoom);
-              if (sl.isRegistered<ICampaignRepository>()) {
-                await sl<ICampaignRepository>().setActiveProfileId(profile.id);
-              }
+              await PartyRoomService().openRoomProfile(effectiveRoom);
             } catch (_) {}
             orchestrator.startSynchronization();
           }());

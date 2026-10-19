@@ -135,6 +135,26 @@ class RoomStateReconciliationService {
       mergedPurse = local.partyPurse;
     }
 
+    // 3b. Member Purses: CvRDT lattice join key by key with fault isolation
+    Map<String, PartyPurse> mergedMemberPurses = local.memberPurses;
+    try {
+      final merged = <String, PartyPurse>{};
+      final allMemberKeys = {...local.memberPurses.keys, ...remote.memberPurses.keys};
+      for (final key in allMemberKeys) {
+        final purseA = local.memberPurses[key];
+        final purseB = remote.memberPurses[key];
+        if (purseA != null && purseB != null) {
+          merged[key] = purseA.merge(purseB);
+        } else {
+          merged[key] = purseA ?? purseB!;
+        }
+      }
+      mergedMemberPurses = Map.unmodifiable(merged);
+    } catch (e, st) {
+      faults.add(ReconciliationFieldFault(field: 'memberPurses', error: e, stackTrace: st));
+      mergedMemberPurses = local.memberPurses;
+    }
+
     // 4. Change Log: canonical changelog join with fault isolation
     List<PartyEvent> mergedChangeLog = local.changeLog;
     try {
@@ -169,16 +189,18 @@ class RoomStateReconciliationService {
     );
     faults.addAll(roomRecon.fieldFaults);
 
-    final mergedProfile = local.copyWith(
+    final mergedProfile = CampaignProfile.raw(
+      id: local.id,
       nameRegister: mergedNameRegister,
       edition: canonicalEdition,
       createdAt: mergedCreatedAt,
       lastPlayedAt: mergedLastPlayedAt,
-      notesRegister: mergedNotesRegister,
-      partyPurse: mergedPurse,
+      roomState: roomRecon.roomState,
       partyRoster: mergedPartyRoster,
       pinnedRules: mergedPinnedRules,
-      roomState: roomRecon.roomState,
+      notesRegister: mergedNotesRegister,
+      partyPurse: mergedPurse,
+      memberPurses: mergedMemberPurses,
       changeLog: mergedChangeLog,
     );
 

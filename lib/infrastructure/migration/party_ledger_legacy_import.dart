@@ -225,24 +225,51 @@ class PartyLedgerLegacyImport {
     }
 
     // 5. Import & Reconcile Roster
+    final replicaValue = clock.replicaId.value;
+    final alreadyImportedByThisReplica = profile.changeLog.any((e) =>
+        e.id.startsWith('import_${replicaValue}_') &&
+        e.type == 'legacyImport' &&
+        e.roomCode.trim().toUpperCase() == rawCode);
+
     CrdtOrSet<String> updatedRoster = profile.partyRoster;
-    if (hasRoster) {
+    if (hasRoster && !alreadyImportedByThisReplica) {
       // Add each resolved roster entry to partyRoster
       for (final slug in resolvedRoomSlugs) {
-        if (!updatedRoster.activeValues.contains(slug)) {
+        if (!updatedRoster.activeValues.contains(slug) &&
+            !updatedRoster.tombstones.containsKey(slug)) {
           updatedRoster = updatedRoster.add(slug, slug, clock.nextTimestamp());
           mutated = true;
           auditNotes.add('Roster add: $slug');
         }
       }
 
-      // Remove entries that this replica added during adoption that are not on room roster
-      final currentRosterItems = List<String>.from(updatedRoster.activeValues);
-      for (final item in currentRosterItems) {
-        if (!resolvedRoomSlugs.contains(item)) {
-          updatedRoster = updatedRoster.remove(item, clock.nextTimestamp());
-          mutated = true;
-          auditNotes.add('Roster prune adopted unshared: $item');
+      // One-time prune of entries that THIS REPLICA added before its first import
+      // (every add tag of the entry carries this replica's node id and is older than the import).
+      // Never removes an entry another replica added, or one added after the import.
+      final existingImports = profile.changeLog.where(
+        (e) =>
+            e.type == 'legacyImport' &&
+            e.roomCode.trim().toUpperCase() == rawCode,
+      );
+
+      if (existingImports.isEmpty) {
+        final currentRosterItems = List<String>.from(updatedRoster.activeValues);
+        for (final item in currentRosterItems) {
+          if (!resolvedRoomSlugs.contains(item)) {
+            final isUserRosterUpdate = profile.changeLog.any(
+              (e) =>
+                  e.type == 'rosterUpdate' &&
+                  (e.id.contains(item) || e.details.contains(item)),
+            );
+            final reg = updatedRoster.items[item];
+            if (reg != null &&
+                reg.timestamp.nodeId == replicaValue &&
+                !isUserRosterUpdate) {
+              updatedRoster = updatedRoster.remove(item, clock.nextTimestamp());
+              mutated = true;
+              auditNotes.add('Roster prune adopted unshared: $item');
+            }
+          }
         }
       }
     }

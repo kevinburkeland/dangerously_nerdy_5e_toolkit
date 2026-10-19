@@ -23,7 +23,6 @@ import '../infrastructure/di/injection_container.dart';
 import '../application/services/cascading_transport_router.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
-import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../widgets/party/party_vitality_hud.dart';
 
@@ -185,10 +184,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
         unawaited(_router!.initializeRoom(_roomCode, localNodeId));
       }
       try {
-        final profile = await _partyService.profileForRoom(_roomCode);
-        if (sl.isRegistered<ICampaignRepository>()) {
-          await sl<ICampaignRepository>().setActiveProfileId(profile.id);
-        }
+        await _partyService.openRoomProfile(_roomCode);
       } catch (_) {}
       orchestrator.startSynchronization();
 

@@ -22,7 +22,18 @@ class CampaignProfileService extends ChangeNotifier {
   static final CampaignProfileService _instance =
       CampaignProfileService._internal();
 
-  factory CampaignProfileService({ReplicaId? replicaId, StatefulHlcClock? clock}) {
+  factory CampaignProfileService({
+    ReplicaId? replicaId,
+    StatefulHlcClock? clock,
+    ICampaignRepository? repo,
+  }) {
+    if (repo != null) {
+      return CampaignProfileService._internal(
+        replicaId: replicaId,
+        clock: clock,
+        repoOverride: repo,
+      );
+    }
     if (replicaId != null) {
       _instance._replicaId = replicaId;
     }
@@ -32,9 +43,13 @@ class CampaignProfileService extends ChangeNotifier {
     return _instance;
   }
 
-  CampaignProfileService._internal({ReplicaId? replicaId, StatefulHlcClock? clock})
-      : _replicaId = replicaId,
-        _clock = clock {
+  CampaignProfileService._internal({
+    ReplicaId? replicaId,
+    StatefulHlcClock? clock,
+    ICampaignRepository? repoOverride,
+  })  : _replicaId = replicaId,
+        _clock = clock,
+        _repoOverride = repoOverride {
     CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
     CampaignProfile.defaultPinnedRulesFallback = const {
       'concentration',
@@ -43,6 +58,7 @@ class CampaignProfileService extends ChangeNotifier {
     _ensureSubscribed();
   }
 
+  final ICampaignRepository? _repoOverride;
   ReplicaId? _replicaId;
   StatefulHlcClock? _clock;
 
@@ -51,6 +67,15 @@ class CampaignProfileService extends ChangeNotifier {
 
   void _ensureSubscribed() {
     if (_allProfilesSub != null) return;
+    if (_repoOverride != null) {
+      _activeProfileSub = _repoOverride.watchActiveProfile().listen((_) {
+        notifyListeners();
+      });
+      _allProfilesSub = _repoOverride.watchAllProfiles().listen((_) {
+        notifyListeners();
+      });
+      return;
+    }
     if (sl.isRegistered<ICampaignRepository>()) {
       final repo = sl<ICampaignRepository>();
       _activeProfileSub = repo.watchActiveProfile().listen((_) {
@@ -89,10 +114,10 @@ class CampaignProfileService extends ChangeNotifier {
 
   String get _effectiveNodeId {
     if (_clock != null) return _clock!.replicaId.value;
+    if (_replicaId != null) return _replicaId!.value;
     if (sl.isRegistered<StatefulHlcClock>()) {
       return sl<StatefulHlcClock>().replicaId.value;
     }
-    if (_replicaId != null) return _replicaId!.value;
     if (sl.isRegistered<ReplicaId>()) {
       return sl<ReplicaId>().value;
     }
@@ -114,21 +139,25 @@ class CampaignProfileService extends ChangeNotifier {
   }
 
   String? get activeProfileId {
+    if (_repoOverride != null) return _repoOverride.activeProfileId;
     _checkRepoSubscription();
     return sl<ICampaignRepository>().activeProfileId;
   }
 
   CampaignProfile? get activeProfile {
+    if (_repoOverride != null) return _repoOverride.activeProfile;
     _checkRepoSubscription();
     return sl<ICampaignRepository>().activeProfile;
   }
 
   ICampaignRepository get repo {
+    if (_repoOverride != null) return _repoOverride;
     _checkRepoSubscription();
     return sl<ICampaignRepository>();
   }
 
   List<CampaignProfile> get allProfiles {
+    if (_repoOverride != null) return _repoOverride.allProfiles;
     _checkRepoSubscription();
     return sl<ICampaignRepository>().allProfiles;
   }
@@ -136,39 +165,36 @@ class CampaignProfileService extends ChangeNotifier {
   /// Loads all campaign profiles from the underlying repository,
   /// executing registry adoption for unmapped campaigns, and returns the list.
   Future<List<CampaignProfile>> loadAllProfiles() async {
-    _checkRepoSubscription();
-    final repo = sl<ICampaignRepository>();
-    await repo.loadAllProfiles();
+    final activeRepo = repo;
+    await activeRepo.loadAllProfiles();
     final regService = sl.isRegistered<CampaignRegistryService>()
         ? sl<CampaignRegistryService>()
         : null;
     await CampaignStorageMigration.adoptRegistryMemberships(
-      repo,
+      activeRepo,
       clock: _effectiveClock,
       nodeId: _effectiveNodeId,
       registryService: regService,
     );
-    if (repo.allProfiles.isEmpty) {
+    if (activeRepo.allProfiles.isEmpty) {
       final defaultProfile = CampaignProfile.defaultProfile(
         nodeId: _effectiveNodeId,
         clock: _effectiveClock,
       );
-      await repo.putProfile(defaultProfile);
-      await repo.setActiveProfileId(defaultProfile.id);
+      await activeRepo.putProfile(defaultProfile);
+      await activeRepo.setActiveProfileId(defaultProfile.id);
     }
-    return repo.allProfiles;
+    return activeRepo.allProfiles;
   }
 
   /// Retrieves a campaign profile by ID through the repository port.
   Future<CampaignProfile?> getProfile(String id) async {
-    _checkRepoSubscription();
-    return sl<ICampaignRepository>().getProfile(id);
+    return repo.getProfile(id);
   }
 
   /// Gets the currently active campaign profile through the repository port.
   Future<CampaignProfile?> getActiveProfile() async {
-    _checkRepoSubscription();
-    return sl<ICampaignRepository>().getActiveProfile();
+    return repo.getActiveProfile();
   }
 
   /// Creates and activates a fresh campaign profile via [ICampaignRepository.putProfile].
@@ -176,16 +202,15 @@ class CampaignProfileService extends ChangeNotifier {
     required String name,
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) async {
-    _checkRepoSubscription();
-    final repo = sl<ICampaignRepository>();
+    final activeRepo = repo;
     final newProfile = CampaignProfile.defaultProfile(
       name: name,
       edition: edition,
       nodeId: _effectiveNodeId,
       clock: _effectiveClock,
     );
-    await repo.putProfile(newProfile);
-    await repo.setActiveProfileId(newProfile.id);
+    await activeRepo.putProfile(newProfile);
+    await activeRepo.setActiveProfileId(newProfile.id);
     return newProfile;
   }
 
@@ -194,29 +219,26 @@ class CampaignProfileService extends ChangeNotifier {
     String id,
     CampaignProfile Function(CampaignProfile current) transform,
   ) async {
-    _checkRepoSubscription();
-    return sl<ICampaignRepository>().updateProfile(id, transform);
+    return repo.updateProfile(id, transform);
   }
 
   /// Saves a campaign profile directly to the repository via [ICampaignRepository.putProfile].
   Future<void> putProfile(CampaignProfile profile) async {
-    _checkRepoSubscription();
-    await sl<ICampaignRepository>().putProfile(profile);
+    await repo.putProfile(profile);
   }
 
   /// Updates the active campaign profile via serialized [ICampaignRepository.updateProfile].
   Future<void> updateActiveProfile(
     CampaignProfile Function(CampaignProfile current) updater,
   ) async {
-    _checkRepoSubscription();
-    final repo = sl<ICampaignRepository>();
-    var activeId = repo.activeProfileId;
+    final activeRepo = repo;
+    var activeId = activeRepo.activeProfileId;
     if (activeId == null) {
       await loadAllProfiles();
-      activeId = repo.activeProfileId;
+      activeId = activeRepo.activeProfileId;
     }
     if (activeId != null) {
-      await repo.updateProfile(activeId, updater);
+      await activeRepo.updateProfile(activeId, updater);
     }
   }
 
@@ -227,8 +249,7 @@ class CampaignProfileService extends ChangeNotifier {
 
   /// Switches active profile pointer on the repository.
   Future<void> switchProfile(String profileId) async {
-    _checkRepoSubscription();
-    await sl<ICampaignRepository>().setActiveProfileId(profileId);
+    await repo.setActiveProfileId(profileId);
   }
 
   /// Sets the active campaign profile ID on the repository.
