@@ -20,6 +20,7 @@ import 'character_sheet_view.dart';
 import 'rules_compendium_screen.dart';
 import '../widgets/party/party_vitality_hud.dart';
 import '../presentation/widgets/room_connection_badge.dart';
+import '../widgets/party/campaign_dialogs.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import '../infrastructure/storage/local_replica_identity_store.dart';
@@ -360,6 +361,17 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
             );
           },
         );
+      },
+    );
+  }
+
+  Future<void> _showOpenPartyRoomDialog(CampaignProfile profile) async {
+    await CreateCampaignDialog.show(
+      context,
+      linkProfileId: profile.id,
+      initialCampaignName: profile.name,
+      onCreated: (roomCode) async {
+        await _loadData();
       },
     );
   }
@@ -1242,6 +1254,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (val) {
+              if (val == 'open_room') _showOpenPartyRoomDialog(profile);
               if (val == 'switch') _showCampaignPicker();
               if (val == 'new') _showCreateCampaignDialog();
               if (val == 'clone') _showCloneCampaignDialog(profile);
@@ -1249,6 +1262,9 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
               if (val == 'import') _importProfileSnapshot();
             },
             itemBuilder: (context) => [
+              if (profile.roomState.roomCode.trim().isEmpty)
+                const PopupMenuItem(
+                    value: 'open_room', child: Text('Open Party Room...')),
               const PopupMenuItem(
                   value: 'switch', child: Text('Switch Campaign...')),
               const PopupMenuItem(value: 'new', child: Text('New Campaign...')),

@@ -67,7 +67,6 @@ class SessionGraphService {
       if (hasNewOrUnstampedNotes) {
         resolvedLink = link.copyWith(
           incarnationTimestamp: effectiveTimestamp,
-          displayNameTimestamp: effectiveTimestamp,
           notes: link.notes,
           notesTimestamp: link.notesRegister.timestamp.physicalTime == 0
               ? effectiveTimestamp
@@ -76,14 +75,12 @@ class SessionGraphService {
       } else if (hasStaleNotesToClear) {
         resolvedLink = link.copyWith(
           incarnationTimestamp: effectiveTimestamp,
-          displayNameTimestamp: effectiveTimestamp,
           clearNotes: true,
           notesTimestamp: effectiveTimestamp,
         );
       } else {
         resolvedLink = link.copyWith(
           incarnationTimestamp: effectiveTimestamp,
-          displayNameTimestamp: effectiveTimestamp,
         );
       }
     } else {

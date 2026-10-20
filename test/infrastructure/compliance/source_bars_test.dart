@@ -630,6 +630,298 @@ void main() {
             'Violations:\n${violations.join('\n')}',
       );
     });
+
+    test(
+        'Pass 7.1 Source Bar 1: Member purses writes and arguments in lib/ are restricted to allowlist',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      final allowlist = [
+        'party_ledger_operations.dart',
+        'party_ledger_legacy_import.dart',
+        'room_state_reconciliation_service.dart',
+        'campaign_profile_dto.dart',
+        'lib/models/party/party_session_state.dart',
+      ];
+
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final normalizedPath = file.path.replaceAll('\\', '/');
+        if (allowlist.any((allowed) => normalizedPath.endsWith(allowed))) {
+          continue;
+        }
+
+        final lines = file.readAsLinesSync();
+        bool inBlockComment = false;
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+
+          // Block comment tracking
+          if (inBlockComment) {
+            if (line.contains('*/')) {
+              line = line.substring(line.indexOf('*/') + 2).trim();
+              inBlockComment = false;
+            } else {
+              continue;
+            }
+          }
+          if (line.startsWith('/*')) {
+            if (!line.contains('*/')) {
+              inBlockComment = true;
+              continue;
+            } else {
+              line = line.substring(line.indexOf('*/') + 2).trim();
+            }
+          }
+          if (line.startsWith('//') || line.startsWith('*')) {
+            continue;
+          }
+          final commentIdx = line.indexOf('//');
+          if (commentIdx != -1) {
+            line = line.substring(0, commentIdx).trim();
+          }
+
+          // Check memberPurses[...] = assignment
+          if (RegExp(r'\bmemberPurses\s*\[.*\]\s*=').hasMatch(line)) {
+            violations.add('$normalizedPath:${i + 1} -> ${lines[i].trim()}');
+            continue;
+          }
+
+          // Check memberPurses: argument
+          if (RegExp(r'\bmemberPurses\s*:').hasMatch(line)) {
+            // Allowed: memberPurses: const {}
+            if (RegExp(r'\bmemberPurses\s*:\s*const\s*\{\s*\}').hasMatch(line)) {
+              continue;
+            }
+            // Allowed: inside PartySessionState constructor
+            bool isPartySessionState = false;
+            for (var back = i; back >= 0 && back >= i - 30; back--) {
+              if (lines[back].contains('PartySessionState(') ||
+                  lines[back].contains('PartySessionState (')) {
+                isPartySessionState = true;
+                break;
+              }
+              if (back < i &&
+                  (lines[back].endsWith(';') ||
+                      lines[back].contains('CampaignProfile(') ||
+                      lines[back].contains('.copyWith('))) {
+                break;
+              }
+            }
+            if (isPartySessionState) {
+              continue;
+            }
+
+            violations.add('$normalizedPath:${i + 1} -> ${lines[i].trim()}');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Member purses arguments and writes outside allowlist are forbidden (Pass 7.1 Source Bar 1).\n'
+            'Violations:\n${violations.join('\n')}',
+      );
+    });
+
+    test(
+        'Pass 7.1 Source Bar 2: Lobby campaignId writes and arguments are restricted to createCampaign, PartyRoomLobby, and ensureRoomExists',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      // The sync payload\'s campaignId: in room_sync_payload_mapper.dart and room_sync_orchestrator.dart is a different type; allow those two files by name with a comment.
+      final allowedFilesByName = [
+        'party_room_lobby.dart',
+        'room_sync_payload_mapper.dart',
+        'room_sync_orchestrator.dart',
+      ];
+
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final normalizedPath = file.path.replaceAll('\\', '/');
+        if (allowedFilesByName.any((name) => normalizedPath.endsWith(name))) {
+          continue;
+        }
+
+        final lines = file.readAsLinesSync();
+        bool inBlockComment = false;
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+
+          // Block comment tracking
+          if (inBlockComment) {
+            if (line.contains('*/')) {
+              line = line.substring(line.indexOf('*/') + 2).trim();
+              inBlockComment = false;
+            } else {
+              continue;
+            }
+          }
+          if (line.startsWith('/*')) {
+            if (!line.contains('*/')) {
+              inBlockComment = true;
+              continue;
+            } else {
+              line = line.substring(line.indexOf('*/') + 2).trim();
+            }
+          }
+          if (line.startsWith('//') || line.startsWith('*')) {
+            continue;
+          }
+          final commentIdx = line.indexOf('//');
+          if (commentIdx != -1) {
+            line = line.substring(0, commentIdx).trim();
+          }
+
+          // Strip string literals to avoid matching messages like 'without lobby campaignId: ...'
+          final nonStringLine = line.replaceAll(RegExp(r'''('[^']*'|"[^"]*")'''), '');
+
+          // Check campaignId: argument
+          if (RegExp(r'\bcampaignId\s*:').hasMatch(nonStringLine)) {
+            // Find enclosing function by scanning backwards
+            bool inCreateCampaign = false;
+            for (var back = i; back >= 0 && back >= i - 60; back--) {
+              if (lines[back].contains('Future<void> createCampaign(') ||
+                  lines[back].contains('createCampaign(')) {
+                inCreateCampaign = true;
+                break;
+              }
+            }
+            if (!inCreateCampaign) {
+              violations.add('$normalizedPath:${i + 1} -> ${lines[i].trim()}');
+            }
+          }
+
+          // Check 'campaignId': map key
+          if (RegExp(r'''['"]campaignId['"]\s*:''').hasMatch(line)) {
+            // Only allowed in ensureRoomExists
+            bool inEnsureRoomExists = false;
+            for (var back = i; back >= 0 && back >= i - 60; back--) {
+              if (lines[back].contains('Future<void> ensureRoomExists(') ||
+                  lines[back].contains('ensureRoomExists(')) {
+                inEnsureRoomExists = true;
+                break;
+              }
+            }
+            if (!inEnsureRoomExists) {
+              violations.add('$normalizedPath:${i + 1} -> ${lines[i].trim()}');
+            }
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'PartyRoomLobby campaignId writes/arguments outside createCampaign and ensureRoomExists are forbidden (Pass 7.1 Source Bar 2).\n'
+            'Violations:\n${violations.join('\n')}',
+      );
+    });
+
+    test(
+        'Pass 7.1 Source Bar 3: No RoomNodeState creation in lib/ with title/description without timestamps',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final normalizedPath = file.path.replaceAll('\\', '/');
+        final content = file.readAsStringSync();
+
+        // Strip single-line and multi-line comments from content while preserving line breaks
+        final stripped = StringBuffer();
+        var idx = 0;
+        bool inBlock = false;
+        while (idx < content.length) {
+          if (inBlock) {
+            if (idx + 1 < content.length &&
+                content[idx] == '*' &&
+                content[idx + 1] == '/') {
+              inBlock = false;
+              idx += 2;
+            } else {
+              if (content[idx] == '\n') stripped.write('\n');
+              idx++;
+            }
+          } else if (idx + 1 < content.length &&
+              content[idx] == '/' &&
+              content[idx + 1] == '*') {
+            inBlock = true;
+            idx += 2;
+          } else if (idx + 1 < content.length &&
+              content[idx] == '/' &&
+              content[idx + 1] == '/') {
+            while (idx < content.length && content[idx] != '\n') {
+              idx++;
+            }
+          } else {
+            stripped.write(content[idx]);
+            idx++;
+          }
+        }
+
+        final cleanContent = stripped.toString();
+        final patterns = [
+          'RoomNodeState(',
+          'RoomNodeState.fromLegacyCrdtOrSet(',
+        ];
+
+        for (final pat in patterns) {
+          var searchPos = 0;
+          while (true) {
+            final matchPos = cleanContent.indexOf(pat, searchPos);
+            if (matchPos == -1) break;
+
+            final parenStart = matchPos + pat.length - 1;
+            var depth = 1;
+            var cur = parenStart + 1;
+            while (cur < cleanContent.length && depth > 0) {
+              if (cleanContent[cur] == '(') {
+                depth++;
+              } else if (cleanContent[cur] == ')') {
+                depth--;
+              }
+              cur++;
+            }
+
+            final callBody = cleanContent.substring(parenStart, cur);
+            final hasTitle = RegExp(r'\btitle\s*:').hasMatch(callBody);
+            final hasTitleTs = RegExp(r'\btitleTimestamp\s*:').hasMatch(callBody);
+            final hasDesc = RegExp(r'\bdescription\s*:').hasMatch(callBody);
+            final hasDescTs = RegExp(r'\bdescriptionTimestamp\s*:').hasMatch(callBody);
+
+            if ((hasTitle && !hasTitleTs) || (hasDesc && !hasDescTs)) {
+              final lineNum = cleanContent.substring(0, matchPos).split('\n').length;
+              final snippet = cleanContent
+                  .substring(matchPos, cur.clamp(matchPos, matchPos + 120))
+                  .replaceAll('\n', ' ');
+              violations.add('$normalizedPath:$lineNum -> $snippet');
+            }
+
+            searchPos = matchPos + pat.length;
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'RoomNodeState constructor calls passing title or description without timestamps are forbidden (Pass 7.1 Source Bar 3).\n'
+            'Violations:\n${violations.join('\n')}',
+      );
+    });
   });
 }
 

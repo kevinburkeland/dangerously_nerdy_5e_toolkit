@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
@@ -23,14 +24,23 @@ class RoomProfileGenesisRestamper {
       return profile;
     }
 
-    final newTitleTs =
-        needsTitle ? clock.nextTimestamp() : roomState.titleRegister.timestamp;
-    final newDescTs =
-        needsDesc ? clock.nextTimestamp() : roomState.descriptionRegister.timestamp;
+    final newTitleRegister = needsTitle
+        ? CrdtLwwRegister<String>(
+            value: roomState.title,
+            timestamp: clock.nextTimestamp(),
+          )
+        : roomState.titleRegister;
+
+    final newDescRegister = needsDesc
+        ? CrdtLwwRegister<String>(
+            value: roomState.description,
+            timestamp: clock.nextTimestamp(),
+          )
+        : roomState.descriptionRegister;
 
     final updatedRoomState = roomState.copyWith(
-      titleTimestamp: newTitleTs,
-      descriptionTimestamp: newDescTs,
+      titleRegister: newTitleRegister,
+      descriptionRegister: newDescRegister,
     );
 
     return profile.copyWith(roomState: updatedRoomState);

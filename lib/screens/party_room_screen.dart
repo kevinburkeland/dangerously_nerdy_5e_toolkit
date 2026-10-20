@@ -11,6 +11,7 @@ import '../services/dice_room_service.dart';
 import '../services/haptic_service.dart';
 import '../services/party/campaign_registry_service.dart';
 import '../services/party/party_room_service.dart';
+import '../services/logging_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/party/campaign_dialogs.dart';
 import '../widgets/party/loot_conflict_resolution_dialog.dart';
@@ -185,8 +186,22 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
       }
       try {
         await _partyService.openRoomProfile(_roomCode);
-      } catch (_) {}
-      orchestrator.startSynchronization();
+        orchestrator.startSynchronization();
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to open room profile for $_roomCode in PartyRoomScreen',
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to open room profile: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
 
       if (mounted) setState(() {});
       return;

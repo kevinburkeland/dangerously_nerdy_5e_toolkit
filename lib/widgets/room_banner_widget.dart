@@ -9,6 +9,7 @@ import '../infrastructure/di/injection_container.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../services/dice_room_service.dart';
 import '../services/party/party_room_service.dart';
+import '../services/logging_service.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/join_create_room_dialog.dart';
 
@@ -93,8 +94,22 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
           unawaited(() async {
             try {
               await PartyRoomService().openRoomProfile(effectiveRoom);
-            } catch (_) {}
-            orchestrator.startSynchronization();
+              orchestrator.startSynchronization();
+            } catch (e, st) {
+              LoggingService().logNonFatal(
+                e,
+                st,
+                reason: 'Failed to open room profile for $effectiveRoom in RoomBannerWidget',
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to open room profile: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           }());
         }
       }

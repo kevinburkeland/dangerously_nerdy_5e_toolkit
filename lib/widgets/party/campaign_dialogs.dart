@@ -6,7 +6,6 @@ import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
 import '../../models/party/party_session_state.dart';
 import '../../services/persistence/character_persistence_service.dart';
-import '../../services/persistence/campaign_profile_service.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../utils/crypto_utils.dart';
@@ -15,14 +14,29 @@ import '../../services/haptic_service.dart';
 /// Dialog to explicitly Create a New Campaign Room
 class CreateCampaignDialog extends StatefulWidget {
   final Function(String roomCode)? onCreated;
+  final String? linkProfileId;
+  final String? initialCampaignName;
 
-  const CreateCampaignDialog({super.key, this.onCreated});
+  const CreateCampaignDialog({
+    super.key,
+    this.onCreated,
+    this.linkProfileId,
+    this.initialCampaignName,
+  });
 
-  static Future<void> show(BuildContext context,
-      {Function(String roomCode)? onCreated}) {
+  static Future<void> show(
+    BuildContext context, {
+    Function(String roomCode)? onCreated,
+    String? linkProfileId,
+    String? initialCampaignName,
+  }) {
     return showDialog<void>(
       context: context,
-      builder: (ctx) => CreateCampaignDialog(onCreated: onCreated),
+      builder: (ctx) => CreateCampaignDialog(
+        onCreated: onCreated,
+        linkProfileId: linkProfileId,
+        initialCampaignName: initialCampaignName,
+      ),
     );
   }
 
@@ -35,6 +49,15 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
   final _nameController = TextEditingController();
   bool _isLoading = false;
   final PartyRoomService _partyService = PartyRoomService();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialCampaignName != null &&
+        widget.initialCampaignName!.isNotEmpty) {
+      _campaignController.text = widget.initialCampaignName!;
+    }
+  }
 
   @override
   void dispose() {
@@ -58,19 +81,10 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
     HapticService.selectionTick(context);
 
     try {
-      String? linkProfileId;
-      try {
-        final activeProfile = await CampaignProfileService().getActiveProfile();
-        if (activeProfile != null &&
-            activeProfile.roomState.roomCode.trim().isEmpty) {
-          linkProfileId = activeProfile.id;
-        }
-      } catch (_) {}
-
       final session = await _partyService.createCampaign(
         campaignName: campaignName,
         playerName: playerName.isEmpty ? 'DM' : playerName,
-        linkProfileId: linkProfileId,
+        linkProfileId: widget.linkProfileId,
       );
 
       if (mounted) {

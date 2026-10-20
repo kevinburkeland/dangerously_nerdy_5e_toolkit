@@ -46,7 +46,6 @@ class PartyRoomLobby {
 
   PartyRoomLobby copyWith({
     String? roomCode,
-    String? campaignId,
     String? rulesetId,
     String? campaignName,
     String? hostKeyHash,
@@ -60,7 +59,7 @@ class PartyRoomLobby {
   }) {
     return PartyRoomLobby(
       roomCode: roomCode ?? this.roomCode,
-      campaignId: campaignId ?? this.campaignId,
+      campaignId: campaignId,
       rulesetId: rulesetId ?? this.rulesetId,
       campaignName: campaignName ?? this.campaignName,
       hostKeyHash: hostKeyHash ?? this.hostKeyHash,

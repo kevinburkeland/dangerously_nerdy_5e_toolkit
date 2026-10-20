@@ -339,6 +339,7 @@ class PartyRoomService {
     String roomCode, [
     String? lobbyCampaignId,
     String? lobbyRulesetId,
+    bool allowCreate = true,
   ]) async {
     final clean = roomCode.trim().toUpperCase();
     final allProfiles = await _campaignProfileService.repo.loadAllProfiles();
@@ -357,11 +358,9 @@ class PartyRoomService {
           allProfiles.where((p) => p.id == targetId).firstOrNull;
       if (matchingById != null) {
         if (matchingById.roomState.roomCode.trim().toUpperCase() != clean) {
-          final nowTs = _clock.nextTimestamp();
           final linked = matchingById.copyWith(
             roomState: matchingById.roomState.copyWith(
               roomCode: clean,
-              titleTimestamp: nowTs,
             ),
           );
           await _campaignProfileService.repo.putProfile(linked);
@@ -376,6 +375,11 @@ class PartyRoomService {
           'but local profiles claim room code with different IDs: $claimantIds.',
         );
       } else {
+        if (!allowCreate) {
+          throw StateError(
+            'No campaign profile found or lobby readable for room $clean',
+          );
+        }
         final targetRuleset = (lobbyRulesetId != null && lobbyRulesetId.trim().isNotEmpty)
             ? lobbyRulesetId.trim()
             : (_localLobbies[clean]?.rulesetId ?? 'generic_tabletop');
@@ -425,6 +429,11 @@ class PartyRoomService {
           'Multiple campaign profiles claim room code $clean without lobby campaignId: $claimantIds',
         );
       } else {
+        if (!allowCreate) {
+          throw StateError(
+            'No campaign profile found or lobby readable for room $clean',
+          );
+        }
         final targetRuleset =
             _localLobbies[clean]?.rulesetId ?? 'generic_tabletop';
         final edition = _parseRulesetEdition(targetRuleset);
@@ -474,7 +483,46 @@ class PartyRoomService {
     String? lobbyRulesetId,
   ]) async {
     final clean = roomCode.trim().toUpperCase();
-    var profile = await profileForRoom(clean, lobbyCampaignId, lobbyRulesetId);
+
+    String? effectiveCampaignId = (lobbyCampaignId != null && lobbyCampaignId.trim().isNotEmpty)
+        ? lobbyCampaignId.trim()
+        : null;
+    String? effectiveRulesetId = (lobbyRulesetId != null && lobbyRulesetId.trim().isNotEmpty)
+        ? lobbyRulesetId.trim()
+        : null;
+    bool allowCreate = effectiveCampaignId != null;
+
+    if (effectiveCampaignId == null) {
+      PartyRoomLobby? readLobby = _localLobbies[clean];
+      if (readLobby == null && isFirebaseAvailable) {
+        try {
+          final doc = await FirebaseFirestore.instance.collection('rooms').doc(clean).get();
+          if (doc.exists && doc.data() != null) {
+            final data = doc.data()!;
+            if (PartyLedgerLegacyImport.hasLegacyLedgerFields(data)) {
+              _rawLegacyDocs[clean] = data;
+            }
+            readLobby = PartyRoomLobby.fromMap(data);
+            _localLobbies[clean] = readLobby;
+          }
+        } catch (_) {}
+      }
+
+      if (readLobby != null) {
+        if (readLobby.campaignId != null && readLobby.campaignId!.trim().isNotEmpty) {
+          effectiveCampaignId = readLobby.campaignId!.trim();
+          allowCreate = true;
+        }
+        effectiveRulesetId ??= readLobby.rulesetId;
+      }
+    }
+
+    var profile = await profileForRoom(
+      clean,
+      effectiveCampaignId,
+      effectiveRulesetId,
+      allowCreate,
+    );
 
     if (RoomProfileGenesisRestamper.isGenesisTimestamp(
             profile.roomState.titleRegister.timestamp) ||
@@ -1444,9 +1492,21 @@ class PartyRoomService {
     final hostKeyHash = CryptoUtils.sha256Hex(hostKey);
     final now = DateTime.now();
     final expiresAt = now.add(defaultLootExpiration);
+    PartyRoomLobby? existingLobby = _localLobbies[cleanCode];
+    if (existingLobby == null && isFirebaseAvailable) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('rooms').doc(cleanCode).get();
+        if (doc.exists && doc.data() != null) {
+          final data = doc.data()!;
+          if (PartyLedgerLegacyImport.hasLegacyLedgerFields(data)) {
+            _rawLegacyDocs[cleanCode] = data;
+          }
+          existingLobby = PartyRoomLobby.fromMap(data);
+          _localLobbies[cleanCode] = existingLobby;
+        }
+      } catch (_) {}
+    }
 
-    final profile = await openRoomProfile(cleanCode);
-    final existingLobby = _localLobbies[cleanCode];
     final cName =
         campaignName ?? existingLobby?.campaignName ?? 'Rehydrated Campaign';
 
@@ -1468,6 +1528,13 @@ class PartyRoomService {
             lastUpdated: now,
             expiresAt: expiresAt,
           );
+
+    final resolvedCampaignId = campaignIdForRoom(lobby);
+    final profile = await openRoomProfile(
+      cleanCode,
+      resolvedCampaignId,
+      lobby.rulesetId,
+    );
 
     _localLobbies[cleanCode] = lobby;
     final rehydrated = _buildSessionState(lobby, profile);
@@ -1695,6 +1762,11 @@ class PartyRoomService {
   /// Returns the current in-memory cached lobby of a room if available
   PartyRoomLobby? getCachedLobby(String roomCode) {
     return _localLobbies[roomCode.trim().toUpperCase()];
+  }
+
+  @visibleForTesting
+  void cacheLobbyForTesting(PartyRoomLobby lobby) {
+    _localLobbies[lobby.roomCode.trim().toUpperCase()] = lobby;
   }
 
   /// Fetches or retrieves the lobby for a room
