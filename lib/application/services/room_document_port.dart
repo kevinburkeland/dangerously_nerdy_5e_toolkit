@@ -1,3 +1,44 @@
+/// Decision planned for a room deletion request.
+enum RoomDeletePlan {
+  none,
+  plainDelete,
+  proofAndDelete,
+  unauthorized,
+}
+
+/// Final outcome of a room deletion operation.
+enum RoomDeleteOutcome {
+  deleted,
+  alreadyGone,
+}
+
+/// Decides the deletion plan based on existing server room data and the provided host key.
+///
+/// Invariants:
+/// - Absent room (`existingRoomData == null`): returns [RoomDeletePlan.none].
+/// - Hostless room (`hostKeyHash` absent or `''`): returns [RoomDeletePlan.plainDelete].
+/// - Hosted room (`hostKeyHash` non-empty):
+///   - If [hostKey] is present and non-empty: returns [RoomDeletePlan.proofAndDelete].
+///   - If [hostKey] is null or empty: returns [RoomDeletePlan.unauthorized].
+RoomDeletePlan planRoomDelete(
+  Map<String, dynamic>? existingRoomData,
+  String? hostKey,
+) {
+  if (existingRoomData == null) {
+    return RoomDeletePlan.none;
+  }
+  final rawHash = existingRoomData['hostKeyHash'];
+  final hasHash = rawHash is String && rawHash.isNotEmpty;
+  if (!hasHash) {
+    return RoomDeletePlan.plainDelete;
+  }
+  final hasKey = hostKey != null && hostKey.isNotEmpty;
+  if (!hasKey) {
+    return RoomDeletePlan.unauthorized;
+  }
+  return RoomDeletePlan.proofAndDelete;
+}
+
 /// Abstract port defining room-document persistence operations
 /// for lobby creation, lease renewals, and host-proven deletions.
 abstract class IRoomDocumentPort {
@@ -8,11 +49,14 @@ abstract class IRoomDocumentPort {
     required Map<String, dynamic> data,
   });
 
-  /// Deletes a room document in a batch. If [hostKey] is provided, writes the
-  /// host proof document (`rooms/{roomCode}/hostProof/current`) and deletes
-  /// the room in the same batch, then deletes the proof document.
-  /// Throws [UnauthorizedHostActionException] if denied by the server or unauthorized.
-  Future<void> deleteRoomWithHostProof({
+  /// Deletes a room document in a transaction according to the room's server state.
+  /// If the room is absent, writes nothing and returns [RoomDeleteOutcome.alreadyGone].
+  /// If the room is hostless, performs a plain delete and returns [RoomDeleteOutcome.deleted].
+  /// If the room is hosted and [hostKey] is provided, writes fresh host proof and deletes
+  /// the room in the transaction, returning [RoomDeleteOutcome.deleted].
+  /// Throws [UnauthorizedHostActionException] if the room is hosted and no key is given,
+  /// or if server denies deletion.
+  Future<RoomDeleteOutcome> deleteRoomWithHostProof({
     required String roomCode,
     String? hostKey,
   });

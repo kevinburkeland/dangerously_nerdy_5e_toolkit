@@ -1,8 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import crypto from 'node:crypto';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 import { assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
 import { createTestEnv } from '../test_helper.js';
+
+const FieldValue = firebase.firestore.FieldValue;
+const Timestamp = firebase.firestore.Timestamp;
 
 function sha256Hex(str) {
   return crypto.createHash('sha256').update(str).digest('hex');
@@ -55,7 +60,7 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
     const proofRef = roomRef.collection('hostProof').doc('current');
 
     const batch = unauthDb.batch();
-    batch.set(proofRef, { hostKey: 'wrong-key-12345' });
+    batch.set(proofRef, { hostKey: 'wrong-key-12345', at: FieldValue.serverTimestamp() });
     batch.delete(roomRef);
 
     await assertFails(batch.commit());
@@ -96,7 +101,7 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
     const proofRef = roomRef.collection('hostProof').doc('current');
 
     const batch = unauthDb.batch();
-    batch.set(proofRef, { hostKey: validHostKey });
+    batch.set(proofRef, { hostKey: validHostKey, at: FieldValue.serverTimestamp() });
     batch.delete(roomRef);
 
     await assertSucceeds(batch.commit());
@@ -119,6 +124,7 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
       });
       await roomRef.collection('hostProof').doc('current').set({
         hostKey: validHostKey,
+        at: Timestamp.now(),
       });
     });
 
@@ -144,6 +150,7 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
         .doc('current');
       await proofRef.set({
         hostKey: validHostKey,
+        at: Timestamp.now(),
       });
     });
 
@@ -170,7 +177,7 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
     const proofRef = roomRef.collection('hostProof').doc('current');
 
     const batch = unauthDb.batch();
-    batch.set(proofRef, { hostKey: validHostKey });
+    batch.set(proofRef, { hostKey: validHostKey, at: FieldValue.serverTimestamp() });
     batch.delete(roomRef);
 
     await assertSucceeds(batch.commit());
@@ -221,7 +228,7 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
     for (let i = 0; i < candidates.length; i++) {
       const wrongKey = candidates[i];
       const batch = unauthDb.batch();
-      batch.set(proofRef, { hostKey: wrongKey });
+      batch.set(proofRef, { hostKey: wrongKey, at: FieldValue.serverTimestamp() });
       batch.delete(roomRef);
 
       try {
@@ -242,7 +249,7 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
 
     // Control: the exact key is accepted in the same run!
     const controlBatch = unauthDb.batch();
-    controlBatch.set(proofRef, { hostKey: validHostKey });
+    controlBatch.set(proofRef, { hostKey: validHostKey, at: FieldValue.serverTimestamp() });
     controlBatch.delete(roomRef);
 
     await assertSucceeds(controlBatch.commit());
@@ -253,4 +260,74 @@ test('R2 Host Proof Semantics and Invariants', async (t) => {
       assert.strictEqual(snap.exists, false);
     });
   });
+
+  await t.test('Host proof law second arm: leftover proofs for all 300+ strings (including exact key) DENY no-proof deletes', async () => {
+    const roomCode = 'ROOM_LEFTOVER_LAW';
+    await testEnv.withSecurityRulesDisabled(async (adminContext) => {
+      await adminContext.firestore().collection('rooms').doc(roomCode).set({
+        roomCode,
+        campaignName: 'Leftover Proof Law Room',
+        hostKeyHash: validHostKeyHash,
+      });
+    });
+
+    const unauthDb = testEnv.unauthenticatedContext().firestore();
+    const roomRef = unauthDb.collection('rooms').doc(roomCode);
+    const proofRef = roomRef.collection('hostProof').doc('current');
+
+    const rand = seededRandom(42);
+    const stringsToTest = [validHostKey];
+
+    // Boundary cases
+    stringsToTest.push('');
+    stringsToTest.push('   ');
+    stringsToTest.push(validHostKey.toUpperCase());
+    stringsToTest.push(` ${validHostKey} `);
+    stringsToTest.push(`\t${validHostKey}`);
+    stringsToTest.push(`${validHostKey}\n`);
+    stringsToTest.push(validHostKeyHash);
+    stringsToTest.push(validHostKeyHash.toUpperCase());
+    stringsToTest.push(validHostKey.slice(0, -1));
+    stringsToTest.push(validHostKey + 'a');
+    stringsToTest.push(validHostKey.replace(/a/g, 'b'));
+    stringsToTest.push(validHostKey.replace(/-/g, ''));
+
+    while (stringsToTest.length < 321) {
+      const len = Math.floor(rand() * 50) + 1;
+      stringsToTest.push(generateRandomString(rand, len));
+    }
+
+    let deniedCount = 0;
+    for (let i = 0; i < stringsToTest.length; i++) {
+      const keyStr = stringsToTest[i];
+      await testEnv.withSecurityRulesDisabled(async (adminContext) => {
+        await adminContext
+          .firestore()
+          .collection('rooms')
+          .doc(roomCode)
+          .collection('hostProof')
+          .doc('current')
+          .set({
+            hostKey: keyStr,
+            at: Timestamp.fromDate(new Date(Date.now() - 60000)),
+          });
+      });
+
+      try {
+        await assertFails(roomRef.delete());
+        deniedCount++;
+      } catch (err) {
+        assert.fail(`Leftover arm seed index ${i} ('${keyStr}') was unexpectedly ALLOWED!`);
+      }
+    }
+
+    assert.strictEqual(deniedCount, stringsToTest.length);
+
+    // Verify room still exists after all denied attempts
+    await testEnv.withSecurityRulesDisabled(async (adminContext) => {
+      const snap = await adminContext.firestore().collection('rooms').doc(roomCode).get();
+      assert.strictEqual(snap.exists, true);
+    });
+  });
 });
+

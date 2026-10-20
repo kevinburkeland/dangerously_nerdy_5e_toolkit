@@ -1735,8 +1735,7 @@ class PartyRoomService {
       } catch (e, st) {
         LoggingService().logNonFatal(e, st,
             reason: 'Firestore deleteCampaign failed for $clean');
-        throw UnauthorizedHostActionException(
-            'Server denied room deletion for $clean: $e');
+        rethrow;
       }
     }
 

@@ -33,6 +33,7 @@ service cloud.firestore {
         && expectedHash.size() > 0
         && existsAfter(proofPath(roomCode))
         && getAfter(proofPath(roomCode)).data.hostKey is string
+        && getAfter(proofPath(roomCode)).data.at == request.time
         && hashing.sha256(getAfter(proofPath(roomCode)).data.hostKey).toHexString().lower() == expectedHash.lower();
     }
 
@@ -106,8 +107,9 @@ service cloud.firestore {
         allow get, list: if false;
 
         allow create, update: if exists(roomPath(roomCode))
-                              && request.resource.data.keys().hasOnly(['hostKey'])
+                              && request.resource.data.keys().hasOnly(['hostKey', 'at'])
                               && request.resource.data.hostKey is string
+                              && request.resource.data.at == request.time
                               && hashing.sha256(request.resource.data.hostKey).toHexString().lower() == effectiveHash(get(roomPath(roomCode)).data).lower();
 
         allow delete: if !exists(roomPath(roomCode));

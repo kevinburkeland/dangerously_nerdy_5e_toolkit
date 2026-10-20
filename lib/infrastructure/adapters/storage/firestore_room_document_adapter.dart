@@ -1,8 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../application/services/room_document_port.dart';
+import '../../../services/logging_service.dart';
 import '../../../services/party/party_room_service.dart';
 import '../../../utils/crypto_utils.dart';
+
+/// Builds the fresh host proof payload containing [hostKey] and the server timestamp sentinel.
+Map<String, dynamic> buildHostProofPayload(String hostKey) {
+  final cleanKey = CryptoUtils.extractHostKey(hostKey);
+  return <String, dynamic>{
+    'hostKey': cleanKey,
+    'at': FieldValue.serverTimestamp(),
+  };
+}
 
 /// Concrete Firestore implementation of [IRoomDocumentPort].
 class FirestoreRoomDocumentAdapter implements IRoomDocumentPort {
@@ -32,7 +42,7 @@ class FirestoreRoomDocumentAdapter implements IRoomDocumentPort {
   }
 
   @override
-  Future<void> deleteRoomWithHostProof({
+  Future<RoomDeleteOutcome> deleteRoomWithHostProof({
     required String roomCode,
     String? hostKey,
   }) async {
@@ -40,29 +50,54 @@ class FirestoreRoomDocumentAdapter implements IRoomDocumentPort {
     final roomRef = _effectiveFirestore.collection('rooms').doc(clean);
     final proofRef = roomRef.collection('hostProof').doc('current');
 
-    final batch = _effectiveFirestore.batch();
-    if (hostKey != null && hostKey.isNotEmpty) {
-      final cleanKey = CryptoUtils.extractHostKey(hostKey);
-      batch.set(proofRef, {'hostKey': cleanKey});
-    }
-    batch.delete(roomRef);
+    RoomDeletePlan? executedPlan;
 
     try {
-      await batch.commit();
+      final outcome = await _effectiveFirestore.runTransaction<RoomDeleteOutcome>((tx) async {
+        final snap = await tx.get(roomRef);
+        final existingData = snap.exists ? snap.data() : null;
+        final plan = planRoomDelete(existingData, hostKey);
+        executedPlan = plan;
+
+        switch (plan) {
+          case RoomDeletePlan.none:
+            return RoomDeleteOutcome.alreadyGone;
+          case RoomDeletePlan.plainDelete:
+            tx.delete(roomRef);
+            return RoomDeleteOutcome.deleted;
+          case RoomDeletePlan.proofAndDelete:
+            tx.set(proofRef, buildHostProofPayload(hostKey!));
+            tx.delete(roomRef);
+            return RoomDeleteOutcome.deleted;
+          case RoomDeletePlan.unauthorized:
+            throw UnauthorizedHostActionException(
+              'DM passkey is required to delete hosted room $clean.',
+            );
+        }
+      });
+
+      if (executedPlan == RoomDeletePlan.proofAndDelete) {
+        try {
+          await proofRef.delete();
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to clean up host proof document after room delete for $clean',
+          );
+        }
+      }
+
+      return outcome;
+    } on UnauthorizedHostActionException {
+      rethrow;
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') {
         throw UnauthorizedHostActionException(
             'Server denied room deletion: invalid host proof or insufficient capability.');
       }
       rethrow;
-    } catch (e) {
-      throw UnauthorizedHostActionException(
-          'Server denied room deletion: $e');
     }
-
-    try {
-      await proofRef.delete();
-    } catch (_) {}
   }
 
   @override

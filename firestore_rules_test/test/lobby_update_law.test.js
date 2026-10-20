@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import crypto from 'node:crypto';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 import { createTestEnv } from '../test_helper.js';
+
+const FieldValue = firebase.firestore.FieldValue;
+const Timestamp = firebase.firestore.Timestamp;
 
 function sha256Hex(str) {
   return crypto.createHash('sha256').update(str).digest('hex');
@@ -119,8 +124,7 @@ test('Lobby Update Law Property Test (500 seeds)', async (t) => {
     // 2. Decide if this seed intends to test clean update or random mutated update
     const isCleanCandidate = rand() > 0.5;
     const updateData = {};
-    let attachProof = false;
-    let proofKey = null;
+    let proofChoice = 'none';
 
     if (isCleanCandidate) {
       // Build a clean update touching only allowed keys with valid values
@@ -169,11 +173,33 @@ test('Lobby Update Law Property Test (500 seeds)', async (t) => {
         }
       }
 
-      // Sometimes attach host proof
-      if (rand() > 0.7) {
-        attachProof = true;
-        proofKey = rand() > 0.5 ? hostKey : 'wrong-host-key';
+      // Draw proof choice from: none, fresh-right-key, fresh-wrong-key, leftover-right-key
+      const proofRoll = rand();
+      if (proofRoll < 0.25) {
+        proofChoice = 'none';
+      } else if (proofRoll < 0.50) {
+        proofChoice = 'fresh-right-key';
+      } else if (proofRoll < 0.75) {
+        proofChoice = 'fresh-wrong-key';
+      } else {
+        proofChoice = 'leftover-right-key';
       }
+    }
+
+    // If leftover proof chosen, seed it in advance with an old timestamp
+    if (proofChoice === 'leftover-right-key') {
+      await testEnv.withSecurityRulesDisabled(async (adminContext) => {
+        await adminContext
+          .firestore()
+          .collection('rooms')
+          .doc(roomCode)
+          .collection('hostProof')
+          .doc('current')
+          .set({
+            hostKey: hostKey,
+            at: Timestamp.fromDate(new Date(Date.now() - 60000)),
+          });
+      });
     }
 
     // 3. Attempt update as unauthenticated user
@@ -182,13 +208,20 @@ test('Lobby Update Law Property Test (500 seeds)', async (t) => {
     let allowed = false;
 
     try {
-      if (attachProof) {
+      if (proofChoice === 'fresh-right-key') {
         const batch = unauthDb.batch();
         const proofRef = roomRef.collection('hostProof').doc('current');
-        batch.set(proofRef, { hostKey: proofKey });
+        batch.set(proofRef, { hostKey: hostKey, at: FieldValue.serverTimestamp() });
+        batch.set(roomRef, updateData, { merge: true });
+        await batch.commit();
+      } else if (proofChoice === 'fresh-wrong-key') {
+        const batch = unauthDb.batch();
+        const proofRef = roomRef.collection('hostProof').doc('current');
+        batch.set(proofRef, { hostKey: 'wrong-host-key', at: FieldValue.serverTimestamp() });
         batch.set(roomRef, updateData, { merge: true });
         await batch.commit();
       } else {
+        // none or leftover-right-key (no proof written in request batch)
         await roomRef.set(updateData, { merge: true });
       }
       allowed = true;
@@ -206,7 +239,7 @@ test('Lobby Update Law Property Test (500 seeds)', async (t) => {
     // - no ledger key affected
     // - no junk key affected
     // - hostKeyHash unchanged (absent = '')
-    // - campaignId / rulesetId unchanged, or first set, or changed with valid proof
+    // - campaignId / rulesetId unchanged, or first set, or changed with a fresh valid proof
     if (allowed) {
       for (const k of Object.keys(updateData)) {
         assert(
@@ -229,20 +262,20 @@ test('Lobby Update Law Property Test (500 seeds)', async (t) => {
         );
       }
 
-      const hasValidProof =
-        isHosted && attachProof && proofKey === hostKey;
+      const hasFreshValidProof =
+        isHosted && proofChoice === 'fresh-right-key';
 
       if (hasCampaignId && 'campaignId' in updateData && updateData.campaignId !== existingDoc.campaignId) {
         assert(
-          hasValidProof,
-          `Seed ${seed}: campaignId change on existing lobby was ALLOWED without valid host proof!`
+          hasFreshValidProof,
+          `Seed ${seed}: campaignId change on existing lobby was ALLOWED without fresh valid host proof!`
         );
       }
 
       if (hasRulesetId && 'rulesetId' in updateData && updateData.rulesetId !== existingDoc.rulesetId) {
         assert(
-          hasValidProof,
-          `Seed ${seed}: rulesetId change on existing lobby was ALLOWED without valid host proof!`
+          hasFreshValidProof,
+          `Seed ${seed}: rulesetId change on existing lobby was ALLOWED without fresh valid host proof!`
         );
       }
     }

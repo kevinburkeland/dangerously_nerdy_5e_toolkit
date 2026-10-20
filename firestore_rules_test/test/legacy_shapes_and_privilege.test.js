@@ -174,7 +174,7 @@ test('Legacy Shapes and Least Privilege Suite (R4, R5, R6)', async (t) => {
       if (type === 'hosted') {
         const batch = unauthDb.batch();
         const proofRef = docRef.collection('hostProof').doc('current');
-        batch.set(proofRef, { hostKey: validHostKey });
+        batch.set(proofRef, { hostKey: validHostKey, at: FieldValue.serverTimestamp() });
         batch.update(docRef, { campaignId: `camp-proven-${type}` });
 
         await assertSucceeds(batch.commit());

@@ -441,7 +441,7 @@ test('Write Sites and Golden Payloads Test Suite (R6)', async (t) => {
     const proofRef = roomRef.collection('hostProof').doc('current');
 
     const batch = unauthDb.batch();
-    batch.set(proofRef, { hostKey: validHostKey });
+    batch.set(proofRef, { hostKey: validHostKey, at: FieldValue.serverTimestamp() });
     batch.delete(roomRef);
 
     await assertSucceeds(batch.commit());

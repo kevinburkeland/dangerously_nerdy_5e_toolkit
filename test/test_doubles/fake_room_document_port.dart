@@ -54,7 +54,7 @@ class RecordingRoomDocumentPort implements IRoomDocumentPort {
   }
 
   @override
-  Future<void> deleteRoomWithHostProof({
+  Future<RoomDeleteOutcome> deleteRoomWithHostProof({
     required String roomCode,
     String? hostKey,
   }) async {
@@ -62,7 +62,9 @@ class RecordingRoomDocumentPort implements IRoomDocumentPort {
     if (shouldThrowOnDelete != null) {
       throw shouldThrowOnDelete!;
     }
-    existingRooms.remove(roomCode.trim().toUpperCase());
+    final clean = roomCode.trim().toUpperCase();
+    final wasPresent = existingRooms.remove(clean);
+    return wasPresent ? RoomDeleteOutcome.deleted : RoomDeleteOutcome.alreadyGone;
   }
 
   @override
