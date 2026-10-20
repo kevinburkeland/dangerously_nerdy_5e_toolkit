@@ -12,6 +12,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dm_dashboard_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/party/campaign_dialogs.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../../test_doubles/fake_room_document_port.dart';
 
 class _CountingCampaignRepo implements ICampaignRepository {
   CampaignProfile? _activeProfile;
@@ -82,6 +84,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     sl.reset();
+    sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
     CampaignProfileService.resetForTesting();
     PartyRoomService.setCustomInstanceForTesting(null);
   });

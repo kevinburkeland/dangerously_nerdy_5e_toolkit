@@ -317,7 +317,7 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 
 ### 🔒 17. Cryptographically Secure RNG & Production Security
 * Built using Dart's native `Random.secure()` (`lib/utils/secure_random.dart`) to ensure completely unbiased, cryptographically secure random distribution.
-* **Strict Content Security Policy (CSP)** and production-hardened Firebase Firestore rules ensure robust client-side isolation and safe multi-user interactions.
+* **Strict Content Security Policy (CSP)** and capability-style Firestore security rules: the room code grants read and join capabilities, host key proof is required for deletion and identity changes, the lobby shape is fixed, and App Check is enforced in the Firebase console.
 * **Data Minimization**: Zero PII collection, no account registration required, and complete user data sovereignty.
 
 ---
@@ -444,7 +444,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── presentation/               # Accessible core & footer widget tests
 │   └── widgets/                    # Character sheet, arena, dice roller, & modal tests
 ├── web/                            # Web platform manifest, strict CSP, & network-first service worker
-├── firestore.rules                 # Production-hardened security rules for Firestore campaigns
+├── firestore.rules                 # Capability-style security rules (room code read/join, host proof, fixed lobby shape)
 ├── firestore.indexes.json          # Firestore indexes configuration
 ├── LEGAL_ATTRIBUTION_MODAL.md      # SRD 5.1 & 5.2.1 Creative Commons attribution & IP safeguards
 ├── PRIVACY_POLICY.md               # Data minimization & privacy policy

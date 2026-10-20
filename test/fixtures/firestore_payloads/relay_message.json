@@ -1,0 +1,9 @@
+{
+  "id": "relay_golden_1",
+  "senderId": "node-alice",
+  "payload": "{\"type\":\"ping\",\"clock\":1234}",
+  "timestamp": 1729425600000,
+  "expireAt": {
+    "__timestamp__": "2026-10-20T04:30:00.000Z"
+  }
+}

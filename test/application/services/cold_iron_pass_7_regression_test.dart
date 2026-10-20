@@ -20,6 +20,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_s
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../../test_doubles/fake_room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/migration/party_ledger_legacy_import.dart';
 
@@ -450,6 +452,7 @@ void main() {
       await AppDatabaseService.instance.resetForTesting();
       AppServices.reset();
       sl.reset();
+      sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
 
       final repId = ReplicaId('dm-node');
       final clock = StatefulHlcClock(replicaId: repId);

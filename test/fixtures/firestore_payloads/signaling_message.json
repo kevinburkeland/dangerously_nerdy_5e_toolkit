@@ -1,0 +1,14 @@
+{
+  "id": "sig_golden_1",
+  "roomCode": "GOLDEN1",
+  "fromNodeId": "node-alice",
+  "toNodeId": "node-bob",
+  "type": "offer",
+  "sdp": "v=0\r\no=- 123456 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n",
+  "candidate": {
+    "candidate": "dummy-candidate",
+    "sdpMid": "0",
+    "sdpMLineIndex": 0
+  },
+  "timestamp": 1729425600000
+}

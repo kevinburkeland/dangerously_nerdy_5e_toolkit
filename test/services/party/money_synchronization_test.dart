@@ -17,6 +17,8 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../../test_doubles/fake_room_document_port.dart';
 
 Widget _buildTestApp({required Widget home}) {
   return MaterialApp(
@@ -58,6 +60,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     AppServices.reset();
     sl.reset();
+    sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
     final repId = ReplicaId('money_sync_replica');
     sl.registerSingleton<ReplicaId>(repId);
     sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));

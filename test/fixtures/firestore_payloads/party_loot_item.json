@@ -1,0 +1,20 @@
+{
+  "id": "loot_golden_1",
+  "name": "Bag of Holding",
+  "category": "gear",
+  "count": 1,
+  "gpValue": 500.0,
+  "description": "A wondrous bag of holding items.",
+  "claimedByPlayer": "Thorin",
+  "isIdentified": true,
+  "requiresAttunement": false,
+  "isAttuned": false,
+  "isArchived": false,
+  "archivedBy": null,
+  "archivedAt": null,
+  "hasConflict": false,
+  "conflictPayload": null,
+  "sourceTableOrMonster": null,
+  "createdAt": "2026-10-20T12:00:00.000Z",
+  "expiresAt": "2026-11-20T12:00:00.000Z"
+}

@@ -1,24 +1,10 @@
 rules_version = '2';
 
+// App Check is enforced in the Firebase console and is not visible to rules.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- HELPER FUNCTIONS ---
-
-    function isAppCheckVerified() {
-      // Gracefully permit requests so debug builds, local dev, and non-Play Store
-      // installs can sync rooms without getting hard-blocked by permission-denied.
-      return true;
-    }
-
-    function isValidCoinMap(data) {
-      return data is map
-        && (!('pp' in data) || ((data.pp is int || data.pp is number) && data.pp >= 0 && data.pp <= 10000000))
-        && (!('gp' in data) || ((data.gp is int || data.gp is number) && data.gp >= 0 && data.gp <= 10000000))
-        && (!('ep' in data) || ((data.ep is int || data.ep is number) && data.ep >= 0 && data.ep <= 10000000))
-        && (!('sp' in data) || ((data.sp is int || data.sp is number) && data.sp >= 0 && data.sp <= 10000000))
-        && (!('cp' in data) || ((data.cp is int || data.cp is number) && data.cp >= 0 && data.cp <= 10000000));
-    }
 
     function isValidName(name) {
       return name is string && name.size() >= 1 && name.size() <= 100;
@@ -34,51 +20,104 @@ service cloud.firestore {
         && ts <= (request.time.toMillis() + 86400000);
     }
 
+    function proofPath(roomCode) {
+      return /databases/$(database)/documents/rooms/$(roomCode)/hostProof/current;
+    }
+
+    function roomPath(roomCode) {
+      return /databases/$(database)/documents/rooms/$(roomCode);
+    }
+
+    function hasHostProof(roomCode, expectedHash) {
+      return expectedHash is string
+        && expectedHash.size() > 0
+        && existsAfter(proofPath(roomCode))
+        && getAfter(proofPath(roomCode)).data.hostKey is string
+        && hashing.sha256(getAfter(proofPath(roomCode)).data.hostKey).toHexString().lower() == expectedHash.lower();
+    }
+
+    function allowedLobbyKeys() {
+      return [
+        'roomCode', 'code', 'campaignId', 'rulesetId', 'campaignName',
+        'hostKeyHash', 'activePlayers', 'partyTelemetry', 'sharedCharacters',
+        'version', 'createdAt', 'lastUpdated', 'expiresAt', 'isStateless'
+      ];
+    }
+
+    function isValidLobbyTypes(data) {
+      return (!('campaignName' in data) || isValidName(data.campaignName))
+        && (!('activePlayers' in data) || (data.activePlayers is list && data.activePlayers.size() <= 50))
+        && (!('partyTelemetry' in data) || (data.partyTelemetry is map && data.partyTelemetry.size() <= 50))
+        && (!('sharedCharacters' in data) || (data.sharedCharacters is map && data.sharedCharacters.size() <= 50))
+        && (!('version' in data) || data.version is number)
+        && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 40))
+        && (!('lastUpdated' in data) || (data.lastUpdated is string && data.lastUpdated.size() <= 40))
+        && (!('expiresAt' in data) || (data.expiresAt is string && data.expiresAt.size() <= 40))
+        && (!('isStateless' in data) || data.isStateless is bool)
+        && (!('campaignId' in data) || (data.campaignId is string && data.campaignId.size() >= 1 && data.campaignId.size() <= 128))
+        && (!('rulesetId' in data) || (data.rulesetId is string && data.rulesetId.size() >= 1 && data.rulesetId.size() <= 128));
+    }
+
+    function effectiveHash(data) {
+      return (!('hostKeyHash' in data) || data.hostKeyHash == null) ? '' : data.hostKeyHash;
+    }
+
     // --- ROOM DOCUMENT RULES ---
     match /rooms/{roomCode} {
-      allow get: if isAppCheckVerified();
+      allow get: if true;
       allow list: if false;
 
-      allow create: if isAppCheckVerified()
-                    && (request.resource.data.roomCode == roomCode || request.resource.data.code == roomCode)
-                    && isValidRoomCode(roomCode)
-                    && request.resource.data.campaignName is string
-                    && request.resource.data.campaignName.size() >= 1
-                    && request.resource.data.campaignName.size() <= 100
-                    && (!('hostKeyHash' in request.resource.data) || 
-                       (request.resource.data.hostKeyHash is string && 
-                        (request.resource.data.hostKeyHash.size() == 0 || request.resource.data.hostKeyHash.size() == 64)));
+      allow create: if isValidRoomCode(roomCode)
+                    && request.resource.data.keys().hasOnly(allowedLobbyKeys())
+                    && isValidName(request.resource.data.campaignName)
+                    && (!('roomCode' in request.resource.data) || request.resource.data.roomCode.lower() == roomCode.lower())
+                    && (!('code' in request.resource.data) || request.resource.data.code.lower() == roomCode.lower())
+                    && (!('hostKeyHash' in request.resource.data) 
+                        || (request.resource.data.hostKeyHash is string 
+                            && (request.resource.data.hostKeyHash.size() == 0 
+                                || request.resource.data.hostKeyHash.matches('^[a-fA-F0-9]{64}$'))))
+                    && isValidLobbyTypes(request.resource.data);
 
-      allow update: if isAppCheckVerified()
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedLobbyKeys())
+                    && effectiveHash(request.resource.data) == effectiveHash(resource.data)
+                    && (!('roomCode' in request.resource.data) || request.resource.data.roomCode.lower() == roomCode.lower())
+                    && (!('code' in request.resource.data) || request.resource.data.code.lower() == roomCode.lower())
                     && (
-                      (!('roomCode' in resource.data) && !('code' in resource.data))
-                      || request.resource.data.roomCode == resource.data.roomCode
-                      || request.resource.data.code == resource.data.code
-                      || request.resource.data.roomCode == roomCode
-                      || request.resource.data.code == roomCode
+                      !('campaignId' in resource.data) 
+                      || resource.data.campaignId == null 
+                      || resource.data.campaignId == ''
+                      || (('campaignId' in request.resource.data) && request.resource.data.campaignId == resource.data.campaignId)
+                      || hasHostProof(roomCode, effectiveHash(resource.data))
                     )
                     && (
-                      !('hostKeyHash' in resource.data)
-                      || resource.data.hostKeyHash == ''
-                      || !('hostKeyHash' in request.resource.data)
-                      || request.resource.data.hostKeyHash == resource.data.hostKeyHash
+                      !('rulesetId' in resource.data) 
+                      || resource.data.rulesetId == null 
+                      || resource.data.rulesetId == ''
+                      || (('rulesetId' in request.resource.data) && request.resource.data.rulesetId == resource.data.rulesetId)
+                      || hasHostProof(roomCode, effectiveHash(resource.data))
                     )
-                    && (!('partyPurse' in request.resource.data) || isValidCoinMap(request.resource.data.partyPurse))
-                    && (!('memberPurses' in request.resource.data) 
-                        || (request.resource.data.memberPurses is map && request.resource.data.memberPurses.size() <= 50))
-                    && (!('characterRoster' in request.resource.data) 
-                        || (request.resource.data.characterRoster is list && request.resource.data.characterRoster.size() <= 50))
-                    && (!('partyTelemetry' in request.resource.data) 
-                        || (request.resource.data.partyTelemetry is map && request.resource.data.partyTelemetry.size() <= 50));
+                    && isValidLobbyTypes(request.resource.data);
 
-      allow delete: if isAppCheckVerified();
+      allow delete: if effectiveHash(resource.data) == ''
+                    || hasHostProof(roomCode, effectiveHash(resource.data));
+
+      // --- SUBCOLLECTION: HOST PROOF ---
+      match /hostProof/current {
+        allow get, list: if false;
+
+        allow create, update: if exists(roomPath(roomCode))
+                              && request.resource.data.keys().hasOnly(['hostKey'])
+                              && request.resource.data.hostKey is string
+                              && hashing.sha256(request.resource.data.hostKey).toHexString().lower() == effectiveHash(get(roomPath(roomCode)).data).lower();
+
+        allow delete: if !exists(roomPath(roomCode));
+      }
 
       // --- SUBCOLLECTION: DEDICATED NODE SIGNALING MAILBOXES ---
       match /nodes/{toNodeId}/signals/{signalId} {
-        allow get, list: if isAppCheckVerified();
+        allow get, list: if true;
 
-        allow create: if isAppCheckVerified()
-                      && request.resource.data.roomCode == roomCode
+        allow create: if request.resource.data.roomCode == roomCode
                       && request.resource.data.toNodeId == toNodeId
                       && request.resource.data.fromNodeId is string
                       && request.resource.data.fromNodeId.size() > 0
@@ -88,22 +127,20 @@ service cloud.firestore {
                       && (!('candidate' in request.resource.data) || request.resource.data.candidate is map)
                       && isRecentTimestamp(request.resource.data.timestamp);
 
-        allow delete: if isAppCheckVerified();
+        allow delete: if true;
         allow update: if false;
       }
 
-      // --- SUBCOLLECTION: LEGACY WEBRTC SIGNALING (Backwards compatibility for cached clients) ---
+      // --- SUBCOLLECTION: LEGACY WEBRTC SIGNALING (Deprecated / Denied) ---
       match /signaling/{signalId} {
-        allow get, list, create, delete: if isAppCheckVerified();
-        allow update: if false;
+        allow get, list, create, update, delete: if false;
       }
 
       // --- SUBCOLLECTION: CRDT FALLBACK RELAY ---
       match /relay_messages/{messageId} {
-        allow get, list: if isAppCheckVerified();
+        allow get, list: if true;
         
-        allow create: if isAppCheckVerified()
-                      && request.resource.data.id == messageId
+        allow create: if request.resource.data.id == messageId
                       && request.resource.data.senderId is string
                       && request.resource.data.senderId.size() > 0
                       && request.resource.data.senderId.size() <= 128
@@ -114,15 +151,14 @@ service cloud.firestore {
                       && request.resource.data.expireAt > request.time;
         
         allow update: if false;
-        allow delete: if isAppCheckVerified(); 
+        allow delete: if false; 
       }
 
       // --- SUBCOLLECTION: LOOT VAULT ---
       match /loot/{lootId} {
-        allow get, list: if isAppCheckVerified();
+        allow get, list: if true;
 
-        allow create: if isAppCheckVerified()
-                      && request.resource.data.id == lootId
+        allow create: if request.resource.data.id == lootId
                       && isValidName(request.resource.data.name)
                       && request.resource.data.gpValue is number
                       && request.resource.data.gpValue >= 0
@@ -130,8 +166,7 @@ service cloud.firestore {
                       && (!('count' in request.resource.data) || ((request.resource.data.count is int || request.resource.data.count is number) && request.resource.data.count >= 1 && request.resource.data.count <= 10000))
                       && (!('claimedByPlayer' in request.resource.data) || request.resource.data.claimedByPlayer == null || isValidName(request.resource.data.claimedByPlayer));
 
-        allow update: if isAppCheckVerified()
-                      && request.resource.data.id == resource.data.id
+        allow update: if request.resource.data.id == resource.data.id
                       && isValidName(request.resource.data.name)
                       && request.resource.data.gpValue is number
                       && request.resource.data.gpValue >= 0
@@ -139,15 +174,14 @@ service cloud.firestore {
                       && (!('count' in request.resource.data) || ((request.resource.data.count is int || request.resource.data.count is number) && request.resource.data.count >= 1 && request.resource.data.count <= 10000))
                       && (!('claimedByPlayer' in request.resource.data) || request.resource.data.claimedByPlayer == null || isValidName(request.resource.data.claimedByPlayer));
 
-        allow delete: if isAppCheckVerified();
+        allow delete: if false;
       }
 
       // --- SUBCOLLECTION: AUDIT EVENTS ---
       match /events/{eventId} {
-        allow get, list: if isAppCheckVerified();
+        allow get, list: if true;
 
-        allow create: if isAppCheckVerified()
-                      && request.resource.data.roomCode == roomCode
+        allow create: if request.resource.data.roomCode == roomCode
                       && request.resource.data.type is string
                       && request.resource.data.type.size() <= 40
                       && isValidName(request.resource.data.playerName)
@@ -155,15 +189,14 @@ service cloud.firestore {
                       && request.resource.data.details.size() <= 5000;
 
         allow update: if false;
-        allow delete: if isAppCheckVerified();
+        allow delete: if false;
       }
 
       // --- SUBCOLLECTION: SHARED DICE ROLLS ---
       match /rolls/{rollId} {
-        allow get, list: if isAppCheckVerified();
+        allow get, list: if true;
 
-        allow create: if isAppCheckVerified()
-                      && request.resource.data.roomCode == roomCode
+        allow create: if request.resource.data.roomCode == roomCode
                       && isValidName(request.resource.data.playerName)
                       && (request.resource.data.total is int || request.resource.data.total is number)
                       && request.resource.data.total >= -100
@@ -173,7 +206,7 @@ service cloud.firestore {
                       && (!('droppedRolls' in request.resource.data) || request.resource.data.droppedRolls == null || request.resource.data.droppedRolls is list);
 
         allow update: if false;
-        allow delete: if isAppCheckVerified();
+        allow delete: if false;
       }
     }
   }

@@ -67,11 +67,43 @@ jobs:
           path: coverage/lcov.info
 
   # -----------------------------------------------------------------------
-  # STAGE 2: BUILD WEB PRODUCTION BUNDLE (PRIMARY WEB TARGET)
+  # STAGE 2: FIRESTORE SECURITY RULES EMULATOR TESTS
+  # -----------------------------------------------------------------------
+  firestore-rules:
+    name: 🔒 Firestore Security Rules Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up Java 21 (required by Firebase Emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🟢 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'firestore_rules_test/package-lock.json'
+
+      - name: 📦 Install Test Harness Dependencies
+        working-directory: firestore_rules_test
+        run: npm ci
+
+      - name: 🧪 Execute Rules Tests in Firestore Emulator
+        working-directory: firestore_rules_test
+        run: npx firebase emulators:exec --only firestore --project demo-dnd5e "npm test"
+
+  # -----------------------------------------------------------------------
+  # STAGE 3: BUILD WEB PRODUCTION BUNDLE (PRIMARY WEB TARGET)
   # -----------------------------------------------------------------------
   build-web:
     name: 🌐 Build & Package Web Bundle
-    needs: validate
+    needs: [validate, firestore-rules]
     runs-on: ubuntu-latest
 
     steps:

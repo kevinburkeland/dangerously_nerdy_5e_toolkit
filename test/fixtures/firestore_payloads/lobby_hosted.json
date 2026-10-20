@@ -1,0 +1,49 @@
+{
+  "roomCode": "GOLDEN1",
+  "code": "GOLDEN1",
+  "campaignId": "camp-golden-1",
+  "rulesetId": "dnd5e_2024",
+  "campaignName": "Kevin's Campaign",
+  "hostKeyHash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+  "activePlayers": [
+    "Thorin",
+    "Gandalf"
+  ],
+  "partyTelemetry": {
+    "thorin-slug": {
+      "id": "thorin-id",
+      "n": "Thorin Oakenshield",
+      "name": "Thorin Oakenshield",
+      "sp": "dwarf",
+      "cl": [],
+      "hp": 45,
+      "mhp": 52,
+      "thp": 5,
+      "ac": 18,
+      "spd": 30,
+      "lvl": 1,
+      "pp": 14,
+      "exh": 0,
+      "dss": 0,
+      "dsf": 0,
+      "re": "v2024",
+      "ts": 1729425600000,
+      "cnd": [
+        "blessed"
+      ],
+      "ss": {
+        "1": 2
+      }
+    }
+  },
+  "sharedCharacters": {
+    "thorin-slug": {
+      "name": "Thorin",
+      "level": 5
+    }
+  },
+  "version": 1,
+  "createdAt": "2026-10-20T12:00:00.000Z",
+  "lastUpdated": "2026-10-20T12:00:00.000Z",
+  "expiresAt": "2026-11-20T12:00:00.000Z"
+}

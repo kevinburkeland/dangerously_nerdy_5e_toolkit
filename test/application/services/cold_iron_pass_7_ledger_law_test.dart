@@ -16,6 +16,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_session_state.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../../test_doubles/fake_room_document_port.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -107,6 +109,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     sl.reset();
+    sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
     CampaignProfileService.resetForTesting();
   });
 

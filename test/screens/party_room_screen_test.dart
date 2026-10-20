@@ -23,6 +23,8 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../test_doubles/fake_room_document_port.dart';
 
 class _MockSyncTransport implements IP2pTransportPort {
   final StreamController<String> _incoming =
@@ -105,6 +107,7 @@ void main() {
         characterRepo: LocalCharacterRepository(),
       );
       sl.registerSingleton<ICampaignRepository>(campRepo);
+      sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
       partyService = PartyRoomService.newInstance(
         replicaId: repId,
         clock: testClock,

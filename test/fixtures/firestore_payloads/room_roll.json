@@ -1,0 +1,21 @@
+{
+  "id": "roll_golden_1",
+  "roomCode": "GOLDEN1",
+  "playerName": "Thorin",
+  "timestamp": {
+    "__timestamp__": "2026-10-20T12:00:00.000Z"
+  },
+  "expireAt": {
+    "__timestamp__": "2026-10-21T12:00:00.000Z"
+  },
+  "formulaString": "1d20+5",
+  "total": 18,
+  "individualRolls": [
+    13
+  ],
+  "isCrit": false,
+  "isFumble": false,
+  "details": [
+    "d20: 13 + 5 = 18"
+  ]
+}

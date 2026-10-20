@@ -28,6 +28,8 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../../test_doubles/fake_room_document_port.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
@@ -223,6 +225,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(authoritativeId);
       final mockRepo = _TestMockCampaignRepo();
       sl.registerSingleton<ICampaignRepository>(mockRepo);
+      sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
 
       final partyService = PartyRoomService(
         replicaId: authoritativeId,
@@ -431,7 +434,10 @@ void main() {
       expect(appPartyService.localNodeId, equals(authoritativeId.value));
 
       // Persistence PartyRoomService
-      final persistencePartyService = PartyRoomService(replicaId: authoritativeId);
+      final persistencePartyService = PartyRoomService(
+        replicaId: authoritativeId,
+        roomDocumentPort: RecordingRoomDocumentPort(),
+      );
       expect(persistencePartyService.replicaId, equals(authoritativeId));
       expect(persistencePartyService.localNodeId, equals(authoritativeId.value));
 
@@ -537,6 +543,7 @@ void main() {
       final party = PartyRoomService(
         replicaId: authoritativeId,
         clock: sharedClock,
+        roomDocumentPort: RecordingRoomDocumentPort(),
       );
 
       expect(orch.replicaId, equals(authoritativeId));

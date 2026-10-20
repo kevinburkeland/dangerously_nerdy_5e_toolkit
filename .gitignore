@@ -28,7 +28,10 @@ scripts/*deploy*.sh
 # Firebase CLI Logs & Emulators
 firebase-debug.log
 firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
 .firebase/
+**/node_modules/
 
 # Flutter / Dart / Pub related
 .dart_tool/

@@ -11,6 +11,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_ledger_operations.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../../test_doubles/fake_room_document_port.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   CampaignProfile? _activeProfile;
@@ -104,6 +106,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     sl.reset();
+    sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
     CampaignProfileService.resetForTesting();
   });
 

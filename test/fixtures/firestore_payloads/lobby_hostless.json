@@ -1,0 +1,17 @@
+{
+  "roomCode": "GOLDEN2",
+  "code": "GOLDEN2",
+  "campaignId": "camp-golden-2",
+  "rulesetId": "dnd5e_2024",
+  "campaignName": "Dice Room GOLDEN2",
+  "hostKeyHash": "",
+  "activePlayers": [
+    "Thorin"
+  ],
+  "partyTelemetry": {},
+  "sharedCharacters": {},
+  "version": 1,
+  "createdAt": "2026-10-20T12:00:00.000Z",
+  "lastUpdated": "2026-10-20T12:00:00.000Z",
+  "expiresAt": "2026-11-20T12:00:00.000Z"
+}

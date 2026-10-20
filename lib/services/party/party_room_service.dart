@@ -21,6 +21,7 @@ import '../../infrastructure/migration/room_profile_genesis_restamper.dart';
 import '../../infrastructure/di/injection_container.dart';
 import '../../utils/crypto_utils.dart';
 import '../../utils/secure_random.dart';
+import '../../application/services/room_document_port.dart';
 import '../logging_service.dart';
 import '../dice_room_service.dart';
 import '../persistence/character_persistence_service.dart';
@@ -139,6 +140,7 @@ class PartyRoomService {
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
+    IRoomDocumentPort? roomDocumentPort,
   }) {
     if (replicaId != null) {
       return PartyRoomService._internal(
@@ -148,6 +150,7 @@ class PartyRoomService {
         diceRoomService: diceRoomService,
         characterPersistenceService: characterPersistenceService,
         campaignProfileService: campaignProfileService,
+        roomDocumentPort: roomDocumentPort,
       );
     }
     return _instance;
@@ -161,6 +164,8 @@ class PartyRoomService {
   final DiceRoomService _diceRoomService;
   final CharacterPersistenceService _characterPersistenceService;
   final CampaignProfileService _campaignProfileService;
+  final IRoomDocumentPort _roomDocPort;
+  IRoomDocumentPort get roomDocPort => _roomDocPort;
 
   PartyRoomService._internal({
     required this.replicaId,
@@ -169,6 +174,7 @@ class PartyRoomService {
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
+    IRoomDocumentPort? roomDocumentPort,
   })  : _clock = clock ??
             (sl.isRegistered<StatefulHlcClock>()
                 ? sl<StatefulHlcClock>()
@@ -181,7 +187,14 @@ class PartyRoomService {
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService() {
+            campaignProfileService ?? CampaignProfileService(),
+        _roomDocPort = roomDocumentPort ??
+            (sl.isRegistered<IRoomDocumentPort>()
+                ? sl<IRoomDocumentPort>()
+                : throw StateError(
+                    'Authoritative IRoomDocumentPort is required but not registered in DI. '
+                    'Pass roomDocumentPort explicitly or register IRoomDocumentPort in DI.',
+                  )) {
     if (_clock.replicaId != replicaId) {
       throw ArgumentError(
         'PartyRoomService writer identity mismatch: '
@@ -198,6 +211,7 @@ class PartyRoomService {
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
+    IRoomDocumentPort? roomDocumentPort,
   })  : replicaId = replicaId ??
             (throw StateError(
               'PartyRoomService requires an authoritative ReplicaId. '
@@ -219,7 +233,14 @@ class PartyRoomService {
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService() {
+            campaignProfileService ?? CampaignProfileService(),
+        _roomDocPort = roomDocumentPort ??
+            (sl.isRegistered<IRoomDocumentPort>()
+                ? sl<IRoomDocumentPort>()
+                : throw StateError(
+                    'PartyRoomService requires an authoritative IRoomDocumentPort. '
+                    'Register IRoomDocumentPort in DI or pass roomDocumentPort explicitly.',
+                  )) {
     if (_clock.replicaId != this.replicaId) {
       throw ArgumentError(
         'PartyRoomService writer identity mismatch: '
@@ -244,7 +265,24 @@ class PartyRoomService {
     }
   }
 
-  bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;
+  bool? _isFirebaseAvailableOverride;
+  bool get isFirebaseAvailable =>
+      _isFirebaseAvailableOverride ?? Firebase.apps.isNotEmpty;
+
+  @visibleForTesting
+  void setFirebaseAvailableForTesting(bool? value) {
+    _isFirebaseAvailableOverride = value;
+  }
+
+  @visibleForTesting
+  void queueOutboxActionForTesting(PartyOutboxAction action) {
+    _queueOutbox(action);
+  }
+
+  @visibleForTesting
+  int getOutboxCountForTesting(String roomCode) {
+    return _outbox[roomCode.trim().toUpperCase()]?.length ?? 0;
+  }
 
   // Local in-memory store for tests, offline mode, or fallback
   final Map<String, PartySessionState> _localRooms = {};
@@ -720,24 +758,16 @@ class PartyRoomService {
 
     final session = _buildSessionState(lobby, profile);
 
-    // 1. Save host membership in local registry with private hostKey
-    final membership = CampaignMembership(
-      roomCode: roomCode,
-      campaignName: cleanName,
-      role: CampaignRole.host,
-      hostKey: hostKey,
-      characterId: cleanPlayer,
-      lastPlayed: now,
-    );
-    await _registry.saveMembership(membership);
-    await _registry.setActiveCampaign(membership);
-
-    // 2. Write lobby to Firestore if available
+    // 1. Write lobby to Firestore if available (create-only guard)
     if (isFirebaseAvailable) {
       try {
-        final docRef =
-            FirebaseFirestore.instance.collection('rooms').doc(roomCode);
-        await docRef.set(lobby.toMap(), SetOptions(merge: true));
+        await _roomDocPort.createRoom(
+          roomCode: roomCode,
+          data: lobby.toMap(),
+        );
+      } on RoomAlreadyExistsException {
+        _localLobbies.remove(roomCode);
+        rethrow;
       } catch (e, stackTrace) {
         LoggingService().logNonFatal(
           e,
@@ -754,6 +784,18 @@ class PartyRoomService {
         ));
       }
     }
+
+    // 2. Save host membership in local registry with private hostKey
+    final membership = CampaignMembership(
+      roomCode: roomCode,
+      campaignName: cleanName,
+      role: CampaignRole.host,
+      hostKey: hostKey,
+      characterId: cleanPlayer,
+      lastPlayed: now,
+    );
+    await _registry.saveMembership(membership);
+    await _registry.setActiveCampaign(membership);
 
     // 3. Update local in-memory state
     _localRooms[roomCode] = session;
@@ -1146,10 +1188,9 @@ class PartyRoomService {
     _localRooms[cleanCode] = session;
     _emitSession(cleanCode);
 
+    final hasHostKey = hostKey != null && hostKey.isNotEmpty;
     if (isFirebaseAvailable) {
       try {
-        final docRef =
-            FirebaseFirestore.instance.collection('rooms').doc(cleanCode);
         final Map<String, dynamic> updateData = {
           'roomCode': cleanCode,
           'code': cleanCode,
@@ -1165,7 +1206,11 @@ class PartyRoomService {
         if (hostKeyHash.isNotEmpty) {
           updateData['hostKeyHash'] = hostKeyHash;
         }
-        await docRef.set(updateData, SetOptions(merge: true));
+        await _roomDocPort.touchRoomLease(
+          roomCode: cleanCode,
+          data: updateData,
+          createIfAbsent: hasHostKey,
+        );
       } catch (e, st) {
         LoggingService().logNonFatal(
           e,
@@ -1678,10 +1723,27 @@ class PartyRoomService {
       }
     }
 
-    // 1. Remove from local membership registry
+    // 1. Server deletion with host proof (must succeed before mutating local state)
+    if (isFirebaseAvailable) {
+      try {
+        await _roomDocPort.deleteRoomWithHostProof(
+          roomCode: clean,
+          hostKey: keyToVerify,
+        );
+      } on UnauthorizedHostActionException {
+        rethrow;
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Firestore deleteCampaign failed for $clean');
+        throw UnauthorizedHostActionException(
+            'Server denied room deletion for $clean: $e');
+      }
+    }
+
+    // 2. Remove from local membership registry
     await _registry.removeMembership(clean);
 
-    // 2. In-memory cleanup
+    // 3. In-memory cleanup
     _localRooms.remove(clean);
     _localLobbies.remove(clean);
     _localLoot.remove(clean);
@@ -1693,18 +1755,6 @@ class PartyRoomService {
     _sessionControllers.remove(clean);
     _updateOutboxCount();
     _emitSession(clean);
-
-    // 3. Firestore deletion
-    if (isFirebaseAvailable) {
-      try {
-        final docRef =
-            FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.delete();
-      } catch (e, st) {
-        LoggingService().logNonFatal(e, st,
-            reason: 'Firestore deleteCampaign failed for $clean');
-      }
-    }
 
     // 4. Cleanup dice room stream
     _diceRoomService.disposeRoomStream(clean);
@@ -3361,13 +3411,47 @@ class PartyRoomService {
     if (pending == null || pending.isEmpty || !isFirebaseAvailable) return;
 
     final List<PartyOutboxAction> toProcess = List.from(pending);
-    final batch = FirebaseFirestore.instance.batch();
-    final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+    final List<PartyOutboxAction> batchActions = [];
 
     for (final action in toProcess) {
       if (action.actionType == 'createRoom') {
-        batch.set(docRef, action.payload, SetOptions(merge: true));
-      } else if (action.actionType == 'addLoot') {
+        try {
+          await _roomDocPort.createRoom(
+            roomCode: clean,
+            data: action.payload,
+          );
+          pending.remove(action);
+          _updateOutboxCount();
+        } on RoomAlreadyExistsException catch (e, st) {
+          // Document now exists: drop that action from outbox and log as fault
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason:
+                'Dropping createRoom outbox replay: room $clean already exists',
+          );
+          pending.remove(action);
+          _updateOutboxCount();
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st,
+              reason: 'createRoom outbox replay failed for room $clean');
+          action.retryCount++;
+          if (action.retryCount >= 3) {
+            pending.remove(action);
+            _updateOutboxCount();
+          }
+        }
+      } else {
+        batchActions.add(action);
+      }
+    }
+
+    if (batchActions.isEmpty) return;
+    final batch = FirebaseFirestore.instance.batch();
+    final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+
+    for (final action in batchActions) {
+      if (action.actionType == 'addLoot') {
         final lootDoc =
             docRef.collection('loot').doc(action.payload['id'] as String);
         batch.set(lootDoc, action.payload);
@@ -3383,12 +3467,12 @@ class PartyRoomService {
 
     try {
       await batch.commit();
-      pending.removeWhere((a) => toProcess.contains(a));
+      pending.removeWhere((a) => batchActions.contains(a));
       _updateOutboxCount();
     } catch (e, st) {
       LoggingService()
           .logNonFatal(e, st, reason: 'Failed to flush outbox for room $clean');
-      for (final action in toProcess) {
+      for (final action in batchActions) {
         action.retryCount++;
       }
       // Purge actions that failed repeatedly (max 3 retries) to unwedge the UI

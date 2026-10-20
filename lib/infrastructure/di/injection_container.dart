@@ -17,6 +17,8 @@ import '../adapters/p2p/firebase_signaling_adapter.dart';
 import '../adapters/p2p/local_wifi_adapter.dart';
 import '../adapters/p2p/webrtc_mesh_adapter.dart';
 import '../adapters/storage/campaign_snapshot_serializer_adapter.dart';
+import '../adapters/storage/firestore_room_document_adapter.dart';
+import '../../application/services/room_document_port.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../modules/dnd5e/dnd5e_ruleset_catalog.dart';
 import '../adapters/remote/github_ingestor_adapter.dart';
@@ -98,6 +100,7 @@ Future<void> initServiceLocator({
   IP2pTransportPort? p2pTransport,
   IStorageDurabilityPort? storageDurabilityPort,
   IPhysicalSnapshotPort? physicalSnapshotPort,
+  IRoomDocumentPort? roomDocumentPort,
   ReplicaId? replicaId,
 }) async {
   installRulesetCatalog();
@@ -158,6 +161,10 @@ Future<void> initServiceLocator({
         networkTimePort: sl<INetworkTimePort>(),
       ));
 
+  final roomDocPort =
+      roomDocumentPort ?? const FirestoreRoomDocumentAdapter();
+  sl.registerSingleton<IRoomDocumentPort>(roomDocPort);
+
   sl.registerLazySingleton<ICombatResolver>(() => const Dnd5eCombatResolver());
 
   sl.registerLazySingleton<CombatEncounterService>(() => CombatEncounterService(
@@ -172,6 +179,7 @@ Future<void> initServiceLocator({
   final partyRoomService = PartyRoomService(
     replicaId: resolvedReplicaId,
     clock: sl<StatefulHlcClock>(),
+    roomDocumentPort: roomDocPort,
   );
   sl.registerSingleton<PartyRoomService>(partyRoomService);
 
