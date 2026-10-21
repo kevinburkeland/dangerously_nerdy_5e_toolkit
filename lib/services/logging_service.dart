@@ -39,13 +39,20 @@ class LoggingService {
   }
 
   @visibleForTesting
-  static void Function(dynamic exception, StackTrace? stackTrace, String? reason)? onNonFatalForTesting;
+  void Function(dynamic exception, StackTrace? stackTrace, String? reason)?
+      onNonFatalForTestingInstance;
+
+  @visibleForTesting
+  static void Function(dynamic exception, StackTrace? stackTrace, String? reason)? get onNonFatalForTesting => _instance.onNonFatalForTestingInstance;
+
+  @visibleForTesting
+  static set onNonFatalForTesting(void Function(dynamic exception, StackTrace? stackTrace, String? reason)? fn) => _instance.onNonFatalForTestingInstance = fn;
 
   /// Logs non-fatal exceptions (e.g. caught Firestore timeouts or parse failures).
   /// Forwards to FirebaseCrashlytics on non-web platforms.
   void logNonFatal(dynamic exception, StackTrace? stackTrace,
       {String? reason}) {
-    onNonFatalForTesting?.call(exception, stackTrace, reason);
+    onNonFatalForTestingInstance?.call(exception, stackTrace, reason);
     final sanitizedReason =
         reason != null ? sanitizeMessage(reason) : 'Non-fatal error caught';
     if (kDebugMode) {

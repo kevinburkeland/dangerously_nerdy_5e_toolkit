@@ -287,7 +287,8 @@ class RoomStateReconciliationService {
     }
 
     // Entity instances: canonical join with fault isolation
-    // Entity instances: granular join with per-instance fault isolation
+    // Granular join with per-instance fault isolation via EntityInstance.join,
+    // preserving equivalence to canonical engine joinEntityInstances(local.entityInstances, remote.entityInstances).
     final instancesMapLocal = <String, EntityInstance>{
       for (final i in local.entityInstances) i.instanceId: i,
     };
@@ -321,7 +322,8 @@ class RoomStateReconciliationService {
       }
     }
 
-    // Containers: granular join with per-container fault isolation
+    // Containers: granular join with per-container fault isolation via LootContainer.join,
+    // preserving equivalence to canonical engine joinContainers(local.containers, remote.containers).
     final containerMapLocal = <String, LootContainer>{
       for (final c in local.containers) c.containerId: c,
     };

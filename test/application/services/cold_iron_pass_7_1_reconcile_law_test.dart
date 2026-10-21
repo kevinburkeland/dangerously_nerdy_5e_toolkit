@@ -26,6 +26,7 @@ void main() {
         'partyPurse',
         'memberPurses',
         'changeLog',
+        'recordVersion',
       };
 
       for (int seed = 0; seed < 350; seed++) {

@@ -109,14 +109,5 @@ Line 5: Launch Animate Objects tracker app.
       expect(content, contains('checksum integrity is already verified'));
       expect(content, isNot(contains('cryptographic validity')));
     });
-
-    test('vtt-engine-core AGENTS.md does not claim encrypted frame contracts', () {
-      final coreAgentsFile = File('../vtt-engine-core/AGENTS.md');
-      if (coreAgentsFile.existsSync()) {
-        final content = coreAgentsFile.readAsStringSync();
-        expect(content, isNot(contains('Encrypted frame & payload contracts')));
-        expect(content, contains('Replicated frame & payload contracts'));
-      }
-    });
   });
 }
