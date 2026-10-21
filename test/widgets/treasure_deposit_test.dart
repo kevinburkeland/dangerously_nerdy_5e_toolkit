@@ -69,6 +69,11 @@ void main() {
         lastPlayed: DateTime.now(),
       );
       await registry.saveMembership(membership);
+      await partyService.createCampaign(
+        campaignName: 'Hoard Test Campaign',
+        customRoomCode: roomCode,
+        playerName: 'DM Kevin',
+      );
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

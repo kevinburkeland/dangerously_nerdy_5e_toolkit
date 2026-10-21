@@ -132,6 +132,11 @@ void main() {
         lastPlayed: DateTime.now(),
       );
       await registry.saveMembership(membership);
+      await partyService.createCampaign(
+        campaignName: 'Chronicles of the Dragon',
+        customRoomCode: roomCode,
+        playerName: 'DM Kevin',
+      );
 
       await partyService.depositCoins(
         roomCode: roomCode,
@@ -279,6 +284,11 @@ void main() {
         lastPlayed: DateTime.now(),
       );
       await registry.saveMembership(membership);
+      await partyService.createCampaign(
+        campaignName: 'Fellowship Campaign',
+        customRoomCode: roomCode,
+        playerName: 'DM',
+      );
 
       await partyService.addCharacterToRoster(
         roomCode: roomCode,

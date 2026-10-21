@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
@@ -99,6 +101,23 @@ void main() {
       lastPlayed: DateTime.now(),
     );
     await registry.saveMembership(membership);
+
+    await campRepo.putProfile(
+      CampaignProfile(
+        id: 'campaign_ROOM-A1B2',
+        name: "The Dragon's Hoard",
+        nodeId: replica.value,
+        edition: RulesetEdition.v2024,
+        createdAt: DateTime.now(),
+        lastPlayedAt: DateTime.now(),
+        roomState: RoomNodeState(
+          roomId: 'room_ROOM-A1B2',
+          roomCode: 'ROOM-A1B2',
+          title: "The Dragon's Hoard",
+          titleTimestamp: clock.nextTimestamp(),
+        ),
+      ),
+    );
 
     // Link character to room
     await roomService.linkCharacterToCampaign(

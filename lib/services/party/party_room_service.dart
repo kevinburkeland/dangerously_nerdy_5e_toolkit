@@ -1157,7 +1157,7 @@ class PartyRoomService {
     final now = DateTime.now();
     final expiresAt = now.add(defaultLootExpiration);
 
-    final profile = await profileForRoom(cleanCode, allowCreate: true);
+    final profile = await profileForRoom(cleanCode, allowCreate: false);
     final existingLobby = _localLobbies[cleanCode];
     final cName = campaignName ??
         existingLobby?.campaignName ??
@@ -1262,7 +1262,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final rawDoc = _rawLegacyDocs[clean];
 
@@ -1363,7 +1363,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
 
     // 1. Update local lobby
@@ -1852,7 +1852,7 @@ class PartyRoomService {
             final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
             final state = _buildSessionState(lobby, profile);
             _localRooms[clean] = state;
@@ -1884,7 +1884,7 @@ class PartyRoomService {
             final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
             final state = _buildSessionState(lobby, profile);
             _localRooms[clean] = state;
@@ -2095,7 +2095,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final slug = _resolveSlugForName(trimmed, lobby, profile);
 
@@ -2133,7 +2133,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final slug = _resolveSlugForName(trimmed, lobby, profile);
 
@@ -2180,7 +2180,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final targetSlugs =
         cleanedRoster.map((s) => _resolveSlugForName(s, lobby, profile)).toSet();
@@ -2228,7 +2228,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
 
     final updatedProfile =
@@ -2282,7 +2282,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final currentDisplay = _buildSessionState(lobby, profile);
 
@@ -2638,7 +2638,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
 
     final perRecipientSyncs = <String, Map<String, int>>{};
@@ -2745,7 +2745,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final slug = (characterSlug != null && characterSlug.trim().isNotEmpty)
         ? characterSlug.trim()
@@ -2801,7 +2801,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final slug = _resolveSlugForName(trimmedName, lobby, profile);
 
@@ -2863,7 +2863,7 @@ class PartyRoomService {
     final profile = await profileForRoom(
       clean,
       lobbyCampaignId: lobby.campaignId,
-      allowCreate: true,
+      allowCreate: false,
     );
     final slug = _resolveSlugForName(trimmedName, lobby, profile);
 
