@@ -69,6 +69,12 @@ abstract class IRoomDocumentPort {
     required Map<String, dynamic> data,
     bool createIfAbsent = false,
   });
+
+  /// Fetches an existing room's raw document map.
+  /// Returns null if the room document does not exist.
+  Future<Map<String, dynamic>?> getRoomDocument({
+    required String roomCode,
+  });
 }
 
 /// Thrown when an attempt is made to create a room whose code is already in use.

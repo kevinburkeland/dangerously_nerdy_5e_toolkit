@@ -467,6 +467,8 @@ void main() {
         final hasIsVisible = RegExp(r'\bisVisible\s*:').hasMatch(callBody);
         final hasRuntimeData = RegExp(r'\bruntimeData\s*:').hasMatch(callBody);
         final hasCustomProperties = RegExp(r'\bcustomProperties\s*:').hasMatch(callBody);
+        final hasRoomCode = RegExp(r'\broomCode\s*:').hasMatch(callBody);
+        final hasRoomId = RegExp(r'\broomId\s*:').hasMatch(callBody);
 
         final isEntityInstanceOrLink = RegExp(
                 r'(instance|entityinstance|link|entitylink|roomentitylink)',
@@ -477,6 +479,8 @@ void main() {
                 caseSensitive: false)
             .hasMatch(receiver);
 
+        final isRelinkFile = filePath.replaceAll('\\', '/').endsWith('lib/services/party/room_code_relink.dart');
+
         bool isViolation = false;
         if (hasPosition || hasIsVisible || hasRuntimeData) {
           if (isEntityInstanceOrLink || isRoomNodeState || receiver.isEmpty) {
@@ -485,6 +489,11 @@ void main() {
         }
         if (hasCustomProperties) {
           if (isRoomNodeState || isEntityInstanceOrLink) {
+            isViolation = true;
+          }
+        }
+        if ((hasRoomCode || hasRoomId) && !isRelinkFile) {
+          if (isRoomNodeState || receiver.isEmpty) {
             isViolation = true;
           }
         }
@@ -518,8 +527,8 @@ void main() {
         violations,
         isEmpty,
         reason:
-            'Immutable configuration fields (position, isVisible, runtimeData, customProperties on EntityInstance/RoomEntityLink, '
-            'and customProperties on RoomNodeState) must not be mutated via copyWith in lib/ (Source Bar I).\n'
+            'Immutable configuration fields (position, isVisible, runtimeData, customProperties, roomCode, roomId on RoomNodeState/EntityInstance/RoomEntityLink) '
+            'must not be mutated via copyWith in lib/ except in room_code_relink.dart (Source Bar I).\n'
             'Violations:\n${violations.join('\n')}',
       );
     });
@@ -552,6 +561,16 @@ void main() {
           customProperties: {'secret': true},
         );
       ''';
+      const badRoomCode = '''
+        final updatedRoom = roomState.copyWith(
+          roomCode: 'NEW_CODE',
+        );
+      ''';
+      const badRoomId = '''
+        final updatedRoom = roomState.copyWith(
+          roomId: 'room_NEW_CODE',
+        );
+      ''';
 
       const goodCharacterCustomProps = '''
         final updatedChar = character.copyWith(
@@ -574,6 +593,23 @@ void main() {
       expect(findImmutableConfigViolations(badInstanceVisibility), isNotEmpty);
       expect(findImmutableConfigViolations(badInstanceRuntimeData), isNotEmpty);
       expect(findImmutableConfigViolations(badLinkCustomProps), isNotEmpty);
+      expect(findImmutableConfigViolations(badRoomCode), isNotEmpty);
+      expect(findImmutableConfigViolations(badRoomId), isNotEmpty);
+
+      expect(
+        findImmutableConfigViolations(
+          badRoomCode,
+          'lib/services/party/room_code_relink.dart',
+        ),
+        isEmpty,
+      );
+      expect(
+        findImmutableConfigViolations(
+          badRoomId,
+          'lib/services/party/room_code_relink.dart',
+        ),
+        isEmpty,
+      );
 
       expect(findImmutableConfigViolations(goodCharacterCustomProps), isEmpty);
       expect(findImmutableConfigViolations(goodCompendiumCustomProps), isEmpty);

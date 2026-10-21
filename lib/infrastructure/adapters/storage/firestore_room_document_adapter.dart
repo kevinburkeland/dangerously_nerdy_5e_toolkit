@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import '../../../application/services/room_document_port.dart';
 import '../../../services/logging_service.dart';
@@ -141,5 +142,19 @@ class FirestoreRoomDocumentAdapter implements IRoomDocumentPort {
     if (updateData.isNotEmpty) {
       await docRef.update(updateData);
     }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getRoomDocument({
+    required String roomCode,
+  }) async {
+    if (_firestore == null && Firebase.apps.isEmpty) {
+      return null;
+    }
+    final clean = roomCode.trim().toUpperCase();
+    final docRef = _effectiveFirestore.collection('rooms').doc(clean);
+    final snap = await docRef.get();
+    if (!snap.exists) return null;
+    return snap.data();
   }
 }

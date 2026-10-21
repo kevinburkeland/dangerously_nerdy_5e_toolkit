@@ -140,7 +140,13 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
       roomCode: _roomCode,
       campaignName: _currentMembership?.campaignName,
       hostKey: _currentMembership?.hostKey,
-    ));
+    ).catchError((e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'ensureRoomExists failed in PartyRoomScreen for $_roomCode',
+      );
+    }));
 
     // Flush any pending outbox actions immediately upon entering the room
     unawaited(_partyService.flushOutbox(_roomCode));

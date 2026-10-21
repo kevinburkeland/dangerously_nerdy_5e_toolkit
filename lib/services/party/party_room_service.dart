@@ -28,6 +28,7 @@ import '../persistence/character_persistence_service.dart';
 import '../persistence/campaign_profile_service.dart';
 import 'campaign_registry_service.dart';
 import 'party_ledger_operations.dart';
+import 'room_code_relink.dart';
 
 class CampaignNotFoundException implements Exception {
   final String message;
@@ -365,20 +366,25 @@ class PartyRoomService {
   ///     fail with an error naming the lobby id and every claiming id.
   ///   - Never pick a profile whose id differs from the lobby's, and never create a second claimant silently.
   /// - When the lobby names no campaign id:
-  ///   - Keep Pass 7 order: `campaign_<ROOMCODE>`, else single claimant, else fail with error naming every id.
-  /// - Edition:
+  /// Resolves or deterministically creates a campaign profile for [roomCode].
+  ///
+  /// - Edition determination:
+  ///   - A creating device uses [RulesEdition.currentRulesetId] ('generic_tabletop' or active).
   ///   - A joining device creates its empty profile with the lobby's rulesetId.
   ///   - A legacy lobby without rulesetId means the core default (generic_tabletop).
+  /// - Room code linking:
+  ///   - If a local profile matches the lobby's campaign ID but has a different or empty room code,
+  ///     it is relinked to the current room code using [RoomCodeRelink.relink].
   /// - Stamping:
-  ///   - Every site that creates or links stamps each register with the injected clock.
+  ///   - Every site that creates stamps each register with the injected clock.
   /// - Resolution only:
   ///   - Does NOT set active profile. Call [openRoomProfile] on room-entry paths to set active profile.
   Future<CampaignProfile> profileForRoom(
-    String roomCode, [
+    String roomCode, {
     String? lobbyCampaignId,
     String? lobbyRulesetId,
-    bool allowCreate = true,
-  ]) async {
+    required bool allowCreate,
+  }) async {
     final clean = roomCode.trim().toUpperCase();
     final allProfiles = await _campaignProfileService.repo.loadAllProfiles();
     final claimants = allProfiles
@@ -396,10 +402,11 @@ class PartyRoomService {
           allProfiles.where((p) => p.id == targetId).firstOrNull;
       if (matchingById != null) {
         if (matchingById.roomState.roomCode.trim().toUpperCase() != clean) {
-          final linked = matchingById.copyWith(
-            roomState: matchingById.roomState.copyWith(
-              roomCode: clean,
-            ),
+          final linked = RoomCodeRelink.relink(
+            matchingById,
+            clean,
+            _clock,
+            stampStagingTitle: false,
           );
           await _campaignProfileService.repo.putProfile(linked);
           resolved = linked;
@@ -515,6 +522,35 @@ class PartyRoomService {
   /// Resolves the campaign profile for [roomCode], re-stamps genesis titles if present,
   /// and sets it as the active profile.
   /// Only room-entry paths call this (create, join, rehydrate, PartyRoomScreen, RoomBannerWidget).
+  /// Reads the room document from Firestore, records legacy ledger fields in [_rawLegacyDocs],
+  /// caches the lobby in [_localLobbies], and returns `null` when the room is absent.
+  /// A read failure is logged with LoggingService().logNonFatal and returns `null`.
+  Future<PartyRoomLobby?> _fetchRoomLobbyFromFirestore(String roomCode) async {
+    final clean = roomCode.trim().toUpperCase();
+    try {
+      final data = await _roomDocPort.getRoomDocument(roomCode: clean);
+      if (data != null) {
+        if (PartyLedgerLegacyImport.hasLegacyLedgerFields(data)) {
+          _rawLegacyDocs[clean] = data;
+        }
+        final lobby = PartyRoomLobby.fromMap(data);
+        _localLobbies[clean] = lobby;
+        return lobby;
+      }
+      return null;
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to read Firestore room document for $clean',
+      );
+      return null;
+    }
+  }
+
+  /// Resolves the campaign profile for [roomCode], re-stamps genesis titles if present,
+  /// and sets it as the active profile.
+  /// Only room-entry paths call this (create, join, rehydrate, PartyRoomScreen, RoomBannerWidget).
   Future<CampaignProfile> openRoomProfile(
     String roomCode, [
     String? lobbyCampaignId,
@@ -532,34 +568,24 @@ class PartyRoomService {
 
     if (effectiveCampaignId == null) {
       PartyRoomLobby? readLobby = _localLobbies[clean];
-      if (readLobby == null && isFirebaseAvailable) {
-        try {
-          final doc = await FirebaseFirestore.instance.collection('rooms').doc(clean).get();
-          if (doc.exists && doc.data() != null) {
-            final data = doc.data()!;
-            if (PartyLedgerLegacyImport.hasLegacyLedgerFields(data)) {
-              _rawLegacyDocs[clean] = data;
-            }
-            readLobby = PartyRoomLobby.fromMap(data);
-            _localLobbies[clean] = readLobby;
-          }
-        } catch (_) {}
+      if (readLobby == null) {
+        readLobby = await _fetchRoomLobbyFromFirestore(clean);
       }
 
       if (readLobby != null) {
         if (readLobby.campaignId != null && readLobby.campaignId!.trim().isNotEmpty) {
           effectiveCampaignId = readLobby.campaignId!.trim();
-          allowCreate = true;
         }
         effectiveRulesetId ??= readLobby.rulesetId;
+        allowCreate = true;
       }
     }
 
     var profile = await profileForRoom(
       clean,
-      effectiveCampaignId,
-      effectiveRulesetId,
-      allowCreate,
+      lobbyCampaignId: effectiveCampaignId,
+      lobbyRulesetId: effectiveRulesetId,
+      allowCreate: allowCreate,
     );
 
     if (RoomProfileGenesisRestamper.isGenesisTimestamp(
@@ -584,19 +610,9 @@ class PartyRoomService {
     if (_localLobbies.containsKey(clean)) {
       return _localLobbies[clean]!;
     }
-    if (isFirebaseAvailable) {
-      try {
-        final doc = await FirebaseFirestore.instance.collection('rooms').doc(clean).get();
-        if (doc.exists && doc.data() != null) {
-          final data = doc.data()!;
-          if (PartyLedgerLegacyImport.hasLegacyLedgerFields(data)) {
-            _rawLegacyDocs[clean] = data;
-          }
-          final lobby = PartyRoomLobby.fromMap(data);
-          _localLobbies[clean] = lobby;
-          return lobby;
-        }
-      } catch (_) {}
+    final fetched = await _fetchRoomLobbyFromFirestore(clean);
+    if (fetched != null) {
+      return fetched;
     }
     final existingSession = _localRooms[clean];
     final lobby = PartyRoomLobby(
@@ -725,21 +741,22 @@ class PartyRoomService {
       final existing =
           await _campaignProfileService.repo.getProfile(linkProfileId.trim());
       if (existing != null) {
-        final nowTs = _clock.nextTimestamp();
-        profile = existing.copyWith(
-          roomState: existing.roomState.copyWith(
-            roomId: 'room_$roomCode',
-            roomCode: roomCode,
-            title: 'Campaign $roomCode Staging',
-            titleTimestamp: nowTs,
-          ),
+        profile = RoomCodeRelink.relink(
+          existing,
+          roomCode,
+          _clock,
+          stampStagingTitle: true,
         );
         await _campaignProfileService.repo.putProfile(profile);
       } else {
-        profile = await profileForRoom(roomCode, linkProfileId.trim());
+        profile = await profileForRoom(
+          roomCode,
+          lobbyCampaignId: linkProfileId.trim(),
+          allowCreate: true,
+        );
       }
     } else {
-      profile = await profileForRoom(roomCode);
+      profile = await profileForRoom(roomCode, allowCreate: true);
     }
     profile = await openRoomProfile(roomCode, profile.id, profile.rulesetId);
 
@@ -865,44 +882,22 @@ class PartyRoomService {
       } catch (_) {}
     }
 
-    if (isFirebaseAvailable) {
-      for (final code in codeCandidates) {
-        try {
-          final docRef =
-              FirebaseFirestore.instance.collection('rooms').doc(code);
-          final snapshot = await docRef.get();
-          if (snapshot.exists && snapshot.data() != null) {
-            rawDoc = snapshot.data()!;
-            cloudLobby = PartyRoomLobby.fromMap(rawDoc);
-            matchedCode = code;
-            break;
-          }
-        } catch (e, stackTrace) {
-          LoggingService().logNonFatal(
-            e,
-            stackTrace,
-            reason:
-                'Firestore check failed for room $code; fallback to local check',
-          );
+    for (final code in codeCandidates) {
+      try {
+        final data = await _roomDocPort.getRoomDocument(roomCode: code);
+        if (data != null) {
+          rawDoc = data;
+          cloudLobby = PartyRoomLobby.fromMap(rawDoc);
+          matchedCode = code;
+          break;
         }
-      }
-
-      // If not found on immediate check, brief retry with propagation delay
-      if (cloudLobby == null) {
-        await Future<void>.delayed(const Duration(milliseconds: 600));
-        for (final code in codeCandidates) {
-          try {
-            final docRef =
-                FirebaseFirestore.instance.collection('rooms').doc(code);
-            final snapshot = await docRef.get();
-            if (snapshot.exists && snapshot.data() != null) {
-              rawDoc = snapshot.data()!;
-              cloudLobby = PartyRoomLobby.fromMap(rawDoc);
-              matchedCode = code;
-              break;
-            }
-          } catch (_) {}
-        }
+      } catch (e, stackTrace) {
+        LoggingService().logNonFatal(
+          e,
+          stackTrace,
+          reason:
+              'Room document read failed for room $code; fallback to local check',
+        );
       }
     }
 
@@ -1154,7 +1149,7 @@ class PartyRoomService {
     final now = DateTime.now();
     final expiresAt = now.add(defaultLootExpiration);
 
-    final profile = await profileForRoom(cleanCode);
+    final profile = await profileForRoom(cleanCode, allowCreate: false);
     final existingLobby = _localLobbies[cleanCode];
     final cName = campaignName ??
         existingLobby?.campaignName ??
@@ -1256,7 +1251,11 @@ class PartyRoomService {
 
     // 3. P1 & P3: Update profile ledger in ONE transform
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final rawDoc = _rawLegacyDocs[clean];
 
     final updatedProfile =
@@ -1353,7 +1352,11 @@ class PartyRoomService {
   }) async {
     final clean = roomCode.trim().toUpperCase();
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
 
     // 1. Update local lobby
     final telemetry = character.toTelemetryDto();
@@ -1538,18 +1541,8 @@ class PartyRoomService {
     final now = DateTime.now();
     final expiresAt = now.add(defaultLootExpiration);
     PartyRoomLobby? existingLobby = _localLobbies[cleanCode];
-    if (existingLobby == null && isFirebaseAvailable) {
-      try {
-        final doc = await FirebaseFirestore.instance.collection('rooms').doc(cleanCode).get();
-        if (doc.exists && doc.data() != null) {
-          final data = doc.data()!;
-          if (PartyLedgerLegacyImport.hasLegacyLedgerFields(data)) {
-            _rawLegacyDocs[cleanCode] = data;
-          }
-          existingLobby = PartyRoomLobby.fromMap(data);
-          _localLobbies[cleanCode] = existingLobby;
-        }
-      } catch (_) {}
+    if (existingLobby == null) {
+      existingLobby = await _fetchRoomLobbyFromFirestore(cleanCode);
     }
 
     final cName =
@@ -1648,7 +1641,11 @@ class PartyRoomService {
 
     // 2. Profile and in-memory update
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final slug = _resolveSlugForName(trimmedPlayer, lobby, profile);
 
     final updatedProfile =
@@ -1846,7 +1843,11 @@ class PartyRoomService {
           try {
             final lobby = PartyRoomLobby.fromMap(snap.data()!);
             _localLobbies[clean] = lobby;
-            final profile = await profileForRoom(clean, lobby.campaignId);
+            final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
             final state = _buildSessionState(lobby, profile);
             _localRooms[clean] = state;
             if (!controller.isClosed) controller.add(state);
@@ -1874,7 +1875,11 @@ class PartyRoomService {
         } else {
           try {
             final lobby = await _getOrFetchLobby(clean);
-            final profile = await profileForRoom(clean, lobby.campaignId);
+            final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
             final state = _buildSessionState(lobby, profile);
             _localRooms[clean] = state;
             if (!controller.isClosed) controller.add(state);
@@ -2075,7 +2080,11 @@ class PartyRoomService {
     if (trimmed.isEmpty) return;
 
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final slug = _resolveSlugForName(trimmed, lobby, profile);
 
     final updatedProfile =
@@ -2109,7 +2118,11 @@ class PartyRoomService {
     if (trimmed.isEmpty) return;
 
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final slug = _resolveSlugForName(trimmed, lobby, profile);
 
     PartyPurse? deletedPurse;
@@ -2152,7 +2165,11 @@ class PartyRoomService {
         roster.map((s) => s.trim()).where((s) => s.isNotEmpty).toSet().toList();
 
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final targetSlugs =
         cleanedRoster.map((s) => _resolveSlugForName(s, lobby, profile)).toSet();
 
@@ -2196,7 +2213,11 @@ class PartyRoomService {
   }) async {
     final clean = roomCode.trim().toUpperCase();
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
 
     final updatedProfile =
         await _campaignProfileService.repo.updateProfile(profile.id, (p) {
@@ -2246,7 +2267,11 @@ class PartyRoomService {
   }) async {
     final clean = roomCode.trim().toUpperCase();
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final currentDisplay = _buildSessionState(lobby, profile);
 
     // Detect overdrafts comparing against displayed balance before update
@@ -2598,7 +2623,11 @@ class PartyRoomService {
     if (shareCount <= 0) return;
 
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
 
     final perRecipientSyncs = <String, Map<String, int>>{};
 
@@ -2701,7 +2730,11 @@ class PartyRoomService {
     if (trimmedName.isEmpty && (characterSlug == null || characterSlug.trim().isEmpty)) return;
 
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final slug = (characterSlug != null && characterSlug.trim().isNotEmpty)
         ? characterSlug.trim()
         : _resolveSlugForName(trimmedName, lobby, profile);
@@ -2753,7 +2786,11 @@ class PartyRoomService {
     if (trimmedName.isEmpty) return;
 
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final slug = _resolveSlugForName(trimmedName, lobby, profile);
 
     PartyPurse updatedMemberPurse = const PartyPurse.empty();
@@ -2811,7 +2848,11 @@ class PartyRoomService {
     if (trimmedName.isEmpty) return;
 
     final lobby = await _getOrFetchLobby(clean);
-    final profile = await profileForRoom(clean, lobby.campaignId);
+    final profile = await profileForRoom(
+      clean,
+      lobbyCampaignId: lobby.campaignId,
+      allowCreate: false,
+    );
     final slug = _resolveSlugForName(trimmedName, lobby, profile);
 
     PartyPurse updatedMemberPurse = const PartyPurse.empty();

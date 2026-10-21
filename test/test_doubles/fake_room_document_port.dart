@@ -51,6 +51,7 @@ class RecordingRoomDocumentPort implements IRoomDocumentPort {
       throw RoomAlreadyExistsException('room code already in use: $clean');
     }
     existingRooms.add(clean);
+    roomDataByCode[clean] = Map<String, dynamic>.from(data);
   }
 
   @override
@@ -63,6 +64,7 @@ class RecordingRoomDocumentPort implements IRoomDocumentPort {
       throw shouldThrowOnDelete!;
     }
     final clean = roomCode.trim().toUpperCase();
+    roomDataByCode.remove(clean);
     final wasPresent = existingRooms.remove(clean);
     return wasPresent ? RoomDeleteOutcome.deleted : RoomDeleteOutcome.alreadyGone;
   }
@@ -84,6 +86,21 @@ class RecordingRoomDocumentPort implements IRoomDocumentPort {
     final clean = roomCode.trim().toUpperCase();
     if (!existingRooms.contains(clean) && createIfAbsent) {
       existingRooms.add(clean);
+      roomDataByCode[clean] = Map<String, dynamic>.from(data);
     }
+  }
+
+  final Map<String, Map<String, dynamic>> roomDataByCode = {};
+  Exception? shouldThrowOnGet;
+
+  @override
+  Future<Map<String, dynamic>?> getRoomDocument({
+    required String roomCode,
+  }) async {
+    if (shouldThrowOnGet != null) {
+      throw shouldThrowOnGet!;
+    }
+    final clean = roomCode.trim().toUpperCase();
+    return roomDataByCode[clean];
   }
 }

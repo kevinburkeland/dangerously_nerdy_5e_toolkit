@@ -193,7 +193,11 @@ void main() {
         character: heroB,
       );
 
-      final profAId = (await serviceA.profileForRoom(roomCode, lobbyCampaignIdBeforeJoin)).id;
+      final profAId = (await serviceA.profileForRoom(
+        roomCode,
+        lobbyCampaignId: lobbyCampaignIdBeforeJoin,
+        allowCreate: false,
+      )).id;
 
       // Full syncs go both ways twice
       await syncReplicas(repoA, repoB, clockB, profAId);

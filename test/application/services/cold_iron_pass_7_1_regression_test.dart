@@ -157,7 +157,10 @@ void main() {
         performedBy: 'DM',
       );
 
-      final profileA = await partyServiceA.profileForRoom(sessionA.roomCode);
+      final profileA = await partyServiceA.profileForRoom(
+        sessionA.roomCode,
+        allowCreate: false,
+      );
       expect(profileA.partyPurse.getBalance('gp'), equals(7));
       expect(profileA.memberPurses['aria']?.getBalance('gp'), equals(50));
 
@@ -464,7 +467,10 @@ void main() {
         clock: clockB,
       );
 
-      final playerProfile = await partyServiceB.profileForRoom('EDITION1');
+      final playerProfile = await partyServiceB.profileForRoom(
+        'EDITION1',
+        allowCreate: true,
+      );
 
       // Reconcile fails at a7fba17 due to Incompatible ruleset edition: "generic_tabletop" vs "v2024"
       final recon = RoomStateReconciliationService();
