@@ -92,11 +92,13 @@ class RecordingRoomDocumentPort implements IRoomDocumentPort {
 
   final Map<String, Map<String, dynamic>> roomDataByCode = {};
   Exception? shouldThrowOnGet;
+  final List<String> getRoomDocumentCalls = [];
 
   @override
   Future<Map<String, dynamic>?> getRoomDocument({
     required String roomCode,
   }) async {
+    getRoomDocumentCalls.add(roomCode);
     if (shouldThrowOnGet != null) {
       throw shouldThrowOnGet!;
     }

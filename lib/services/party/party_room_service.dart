@@ -47,6 +47,10 @@ class UnauthorizedHostActionException implements Exception {
   String toString() => message;
 }
 
+class RoomProfileNotFoundError extends StateError {
+  RoomProfileNotFoundError(super.message);
+}
+
 class ClaimConflictEvent {
   final String roomCode;
   final String lootId;
@@ -421,7 +425,7 @@ class PartyRoomService {
         );
       } else {
         if (!allowCreate) {
-          throw StateError(
+          throw RoomProfileNotFoundError(
             'No campaign profile found or lobby readable for room $clean',
           );
         }
@@ -475,7 +479,7 @@ class PartyRoomService {
         );
       } else {
         if (!allowCreate) {
-          throw StateError(
+          throw RoomProfileNotFoundError(
             'No campaign profile found or lobby readable for room $clean',
           );
         }
@@ -551,6 +555,10 @@ class PartyRoomService {
   /// Resolves the campaign profile for [roomCode], re-stamps genesis titles if present,
   /// and sets it as the active profile.
   /// Only room-entry paths call this (create, join, rehydrate, PartyRoomScreen, RoomBannerWidget).
+  ///
+  /// A lobby read from the server that has no campaignId (the legacy room shape)
+  /// still lets openRoomProfile create campaign_<CODE> when no profile claims the room.
+  /// This follows the legacy order from Pass 7. It never touches a room that already has a profile.
   Future<CampaignProfile> openRoomProfile(
     String roomCode, [
     String? lobbyCampaignId,
@@ -558,33 +566,70 @@ class PartyRoomService {
   ]) async {
     final clean = roomCode.trim().toUpperCase();
 
-    String? effectiveCampaignId = (lobbyCampaignId != null && lobbyCampaignId.trim().isNotEmpty)
-        ? lobbyCampaignId.trim()
-        : null;
-    String? effectiveRulesetId = (lobbyRulesetId != null && lobbyRulesetId.trim().isNotEmpty)
-        ? lobbyRulesetId.trim()
-        : null;
-    bool allowCreate = effectiveCampaignId != null;
+    final passedCampaignId =
+        (lobbyCampaignId != null && lobbyCampaignId.trim().isNotEmpty)
+            ? lobbyCampaignId.trim()
+            : null;
+    final passedRulesetId =
+        (lobbyRulesetId != null && lobbyRulesetId.trim().isNotEmpty)
+            ? lobbyRulesetId.trim()
+            : null;
 
-    if (effectiveCampaignId == null) {
-      PartyRoomLobby? readLobby = _localLobbies[clean];
-      readLobby ??= await _fetchRoomLobbyFromFirestore(clean);
-
-      if (readLobby != null) {
-        if (readLobby.campaignId != null && readLobby.campaignId!.trim().isNotEmpty) {
-          effectiveCampaignId = readLobby.campaignId!.trim();
+    CampaignProfile profile;
+    if (passedCampaignId != null) {
+      profile = await profileForRoom(
+        clean,
+        lobbyCampaignId: passedCampaignId,
+        lobbyRulesetId: passedRulesetId,
+        allowCreate: true,
+      );
+    } else {
+      final cachedLobby = _localLobbies[clean];
+      if (cachedLobby == null) {
+        final fetchedLobby = await _fetchRoomLobbyFromFirestore(clean);
+        final effectiveCid = (fetchedLobby?.campaignId != null &&
+                fetchedLobby!.campaignId!.trim().isNotEmpty)
+            ? fetchedLobby.campaignId!.trim()
+            : null;
+        final effectiveRuleset = passedRulesetId ?? fetchedLobby?.rulesetId;
+        profile = await profileForRoom(
+          clean,
+          lobbyCampaignId: effectiveCid,
+          lobbyRulesetId: effectiveRuleset,
+          allowCreate: fetchedLobby != null,
+        );
+      } else {
+        final cachedCid = (cachedLobby.campaignId != null &&
+                cachedLobby.campaignId!.trim().isNotEmpty)
+            ? cachedLobby.campaignId!.trim()
+            : null;
+        final cachedRuleset = passedRulesetId ?? cachedLobby.rulesetId;
+        try {
+          profile = await profileForRoom(
+            clean,
+            lobbyCampaignId: cachedCid,
+            lobbyRulesetId: cachedRuleset,
+            allowCreate: false,
+          );
+        } on RoomProfileNotFoundError {
+          final fetchedLobby = await _fetchRoomLobbyFromFirestore(clean);
+          if (fetchedLobby == null) {
+            rethrow;
+          }
+          final effectiveCid = (fetchedLobby.campaignId != null &&
+                  fetchedLobby.campaignId!.trim().isNotEmpty)
+              ? fetchedLobby.campaignId!.trim()
+              : null;
+          final effectiveRuleset = passedRulesetId ?? fetchedLobby.rulesetId;
+          profile = await profileForRoom(
+            clean,
+            lobbyCampaignId: effectiveCid,
+            lobbyRulesetId: effectiveRuleset,
+            allowCreate: true,
+          );
         }
-        effectiveRulesetId ??= readLobby.rulesetId;
-        allowCreate = true;
       }
     }
-
-    var profile = await profileForRoom(
-      clean,
-      lobbyCampaignId: effectiveCampaignId,
-      lobbyRulesetId: effectiveRulesetId,
-      allowCreate: allowCreate,
-    );
 
     if (RoomProfileGenesisRestamper.isGenesisTimestamp(
             profile.roomState.titleRegister.timestamp) ||
@@ -594,6 +639,19 @@ class PartyRoomService {
           await _campaignProfileService.repo.updateProfile(profile.id, (p) {
         return RoomProfileGenesisRestamper.restampIfNeeded(
           profile: p,
+          clock: _clock,
+        );
+      });
+    }
+
+    final rawDoc = _rawLegacyDocs[clean];
+    if (rawDoc != null &&
+        PartyLedgerLegacyImport.hasLegacyLedgerFields(rawDoc)) {
+      profile =
+          await _campaignProfileService.repo.updateProfile(profile.id, (p) {
+        return PartyLedgerLegacyImport.importLegacyLedger(
+          profile: p,
+          rawDoc: rawDoc,
           clock: _clock,
         );
       });
@@ -624,7 +682,6 @@ class PartyRoomService {
       lastUpdated: DateTime.now(),
       expiresAt: DateTime.now().add(defaultLootExpiration),
     );
-    _localLobbies[clean] = lobby;
     return lobby;
   }
 

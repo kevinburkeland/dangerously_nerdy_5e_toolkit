@@ -276,6 +276,19 @@ void main() {
       expect(repo.allProfiles, isEmpty);
 
       // Case 2: Lobby is cached with campaignId: campaign_1760000000000 -> creates campaign_1760000000000
+      final fakePort = sl<IRoomDocumentPort>() as RecordingRoomDocumentPort;
+      fakePort.roomDataByCode['CR-X'] = {
+        'roomCode': 'CR-X',
+        'campaignId': 'campaign_1760000000000',
+        'rulesetId': 'v2024',
+        'campaignName': 'Dashboard Campaign',
+        'hostKeyHash': 'hash',
+        'activePlayers': const <String>[],
+        'version': 1,
+        'lastUpdated': DateTime.now().toIso8601String(),
+        'expiresAt':
+            DateTime.now().add(const Duration(hours: 1)).toIso8601String(),
+      };
       partyService.cacheLobbyForTesting(PartyRoomLobby(
         roomCode: 'CR-X',
         campaignId: 'campaign_1760000000000',
