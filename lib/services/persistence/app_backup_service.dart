@@ -152,6 +152,8 @@ class BackupRestoreResult {
   final int restoredHomebrewFeatsCount;
   final int restoredHomebrewBackgroundsCount;
   final int restoredHomebrewOtherCount;
+  final int skippedCount;
+  final List<String> skipReasons;
   final String? errorMessage;
 
   const BackupRestoreResult({
@@ -167,6 +169,8 @@ class BackupRestoreResult {
     this.restoredHomebrewFeatsCount = 0,
     this.restoredHomebrewBackgroundsCount = 0,
     this.restoredHomebrewOtherCount = 0,
+    this.skippedCount = 0,
+    this.skipReasons = const [],
     this.errorMessage,
   });
 
@@ -316,82 +320,129 @@ class AppBackupService {
       final backup =
           AppBackupPayload.fromMap(Map<String, dynamic>.from(decoded));
 
+      if (backup.schemaVersion > currentSchemaVersion) {
+        return BackupRestoreResult(
+          success: false,
+          errorMessage:
+              'Backup schema version ${backup.schemaVersion} is newer than current supported version $currentSchemaVersion.',
+        );
+      }
+
+      int skippedCount = 0;
+      final skipReasons = <String>[];
+
       int presetsRestored = 0;
-      for (final rawPreset in backup.dicePresets) {
+      for (int i = 0; i < backup.dicePresets.length; i++) {
+        final rawPreset = backup.dicePresets[i];
         try {
           final preset = CustomPreset.fromMap(rawPreset);
           await PresetService().savePreset(preset);
           presetsRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('dicePresets[$i]: $e');
+        }
       }
 
       int profilesRestored = 0;
-      for (final rawProfile in backup.dprProfiles) {
+      for (int i = 0; i < backup.dprProfiles.length; i++) {
+        final rawProfile = backup.dprProfiles[i];
         try {
           final profile = DprCombatantProfileSerialization.fromMap(rawProfile);
           await DprPersistenceService().saveProfileToLibrary(profile);
           profilesRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('dprProfiles[$i]: $e');
+        }
       }
 
       int spellsRestored = 0;
-      for (final rawSpell in backup.customSpells) {
+      for (int i = 0; i < backup.customSpells.length; i++) {
+        final rawSpell = backup.customSpells[i];
         try {
           final spell = Spell.fromMap(rawSpell);
           await HomebrewPersistenceService().saveCustomSpell(spell);
           spellsRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customSpells[$i]: $e');
+        }
       }
 
       int monstersRestored = 0;
-      for (final rawMonster in backup.customMonsters) {
+      for (int i = 0; i < backup.customMonsters.length; i++) {
+        final rawMonster = backup.customMonsters[i];
         try {
           final monster = Monster.fromMap(rawMonster);
           await HomebrewPersistenceService().saveCustomMonster(monster);
           monstersRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customMonsters[$i]: $e');
+        }
       }
 
       int itemsRestored = 0;
-      for (final rawItem in backup.customItems) {
+      for (int i = 0; i < backup.customItems.length; i++) {
+        final rawItem = backup.customItems[i];
         try {
           final item = EquipmentItem.fromMap(rawItem);
           await HomebrewPersistenceService().saveCustomItem(item);
           itemsRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customItems[$i]: $e');
+        }
       }
 
       int classesRestored = 0;
-      for (final rawClass in backup.customClasses) {
+      for (int i = 0; i < backup.customClasses.length; i++) {
+        final rawClass = backup.customClasses[i];
         try {
           final cl = CharacterClass.fromMap(rawClass);
           await HomebrewPersistenceService().saveCustomClass(cl);
           classesRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customClasses[$i]: $e');
+        }
       }
 
       int subclassesRestored = 0;
-      for (final rawSub in backup.customSubclasses) {
+      for (int i = 0; i < backup.customSubclasses.length; i++) {
+        final rawSub = backup.customSubclasses[i];
         try {
           final sub = Subclass.fromMap(rawSub);
           await HomebrewPersistenceService().saveCustomSubclass(sub);
           subclassesRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customSubclasses[$i]: $e');
+        }
       }
 
       int racesRestored = 0;
       final parsedRaces = <Race>[];
-      for (final rawRace in backup.customRaces) {
+      for (int i = 0; i < backup.customRaces.length; i++) {
+        final rawRace = backup.customRaces[i];
         try {
           parsedRaces.add(Race.fromMap(rawRace));
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customRaces[$i]: $e');
+        }
       }
       if (backup.customSubraces.isNotEmpty) {
         final parsedSubraces = <Subrace>[];
-        for (final rawSub in backup.customSubraces) {
+        for (int i = 0; i < backup.customSubraces.length; i++) {
+          final rawSub = backup.customSubraces[i];
           try {
             parsedSubraces.add(Subrace.fromMap(rawSub));
-          } catch (_) {}
+          } catch (e) {
+            skippedCount++;
+            skipReasons.add('customSubraces[$i]: $e');
+          }
         }
         for (int i = 0; i < parsedRaces.length; i++) {
           final race = parsedRaces[i];
@@ -445,34 +496,52 @@ class AppBackupService {
         try {
           await HomebrewPersistenceService().saveCustomRace(race);
           racesRestored++;
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to persist custom race ${race.id.slug}',
+          );
+        }
       }
 
       int featsRestored = 0;
-      for (final rawFeat in backup.customFeats) {
+      for (int i = 0; i < backup.customFeats.length; i++) {
+        final rawFeat = backup.customFeats[i];
         try {
           final feat = Feat.fromMap(rawFeat);
           await HomebrewPersistenceService().saveCustomFeat(feat);
           featsRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customFeats[$i]: $e');
+        }
       }
 
       int backgroundsRestored = 0;
-      for (final rawBg in backup.customBackgrounds) {
+      for (int i = 0; i < backup.customBackgrounds.length; i++) {
+        final rawBg = backup.customBackgrounds[i];
         try {
           final bg = Background.fromMap(rawBg);
           await HomebrewPersistenceService().saveCustomBackground(bg);
           backgroundsRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customBackgrounds[$i]: $e');
+        }
       }
 
       int othersRestored = 0;
-      for (final rawOther in backup.customOtherEntries) {
+      for (int i = 0; i < backup.customOtherEntries.length; i++) {
+        final rawOther = backup.customOtherEntries[i];
         try {
           final other = HomebrewCompendiumEntry.fromMap(rawOther);
           await HomebrewPersistenceService().saveCustomOtherEntry(other);
           othersRestored++;
-        } catch (_) {}
+        } catch (e) {
+          skippedCount++;
+          skipReasons.add('customOtherEntries[$i]: $e');
+        }
       }
 
       // Restore entity fluff and user notes
@@ -494,6 +563,8 @@ class AppBackupService {
         restoredHomebrewFeatsCount: featsRestored,
         restoredHomebrewBackgroundsCount: backgroundsRestored,
         restoredHomebrewOtherCount: othersRestored,
+        skippedCount: skippedCount,
+        skipReasons: skipReasons,
       );
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(

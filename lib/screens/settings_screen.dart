@@ -603,10 +603,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             restoreResult.restoredHomebrewItemsCount;
         final homebrewSuffix =
             homebrewCount > 0 ? ', and $homebrewCount homebrew entities' : '';
+        final skippedSuffix = restoreResult.skippedCount > 0
+            ? ', ${restoreResult.skippedCount} records skipped'
+            : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Successfully restored ${restoreResult.restoredPresetsCount} presets, ${restoreResult.restoredDprProfilesCount} character builds$homebrewSuffix!',
+              'Successfully restored ${restoreResult.restoredPresetsCount} presets, ${restoreResult.restoredDprProfilesCount} character builds$homebrewSuffix$skippedSuffix!',
             ),
           ),
         );

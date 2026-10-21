@@ -21,14 +21,96 @@ import 'homebrew_persistence_service.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 import '../../infrastructure/di/injection_container.dart';
 
+/// Pure helper identifying all timestamp paths in [profile] that strictly exceed
+/// [nowMs] + [maxFutureDrift]. Returns a list of offending property paths.
+List<String> futureTimestampViolations(
+  CampaignProfile profile,
+  int nowMs,
+  dynamic maxFutureDrift,
+) {
+  final int driftMs = maxFutureDrift is Duration
+      ? maxFutureDrift.inMilliseconds
+      : (maxFutureDrift as num).toInt();
+  final limit = nowMs + driftMs;
+
+  final allTimestamps = extractCampaignProfileTimestamps(profile);
+  if (!allTimestamps.any((ts) => ts.physicalTime > limit)) {
+    return const [];
+  }
+
+  final violations = <String>[];
+  if (profile.nameRegister.timestamp.physicalTime > limit) {
+    violations.add('nameRegister');
+  }
+  if (profile.notesRegister.timestamp.physicalTime > limit) {
+    violations.add('notesRegister');
+  }
+  if (profile.pinnedRules.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('pinnedRules');
+  }
+  if (profile.partyRoster.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('partyRoster');
+  }
+  final room = profile.roomState;
+  if (room.titleRegister.timestamp.physicalTime > limit) {
+    violations.add('roomState.titleRegister');
+  }
+  if (room.descriptionRegister.timestamp.physicalTime > limit) {
+    violations.add('roomState.descriptionRegister');
+  }
+  if (room.entityLinksCrdt.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('roomState.entityLinksCrdt');
+  }
+  for (final inst in room.entityInstances) {
+    if (inst.displayNameRegister.timestamp.physicalTime > limit) {
+      violations.add('roomState.entityInstances[${inst.instanceId}].displayNameRegister');
+    }
+  }
+  for (final cont in room.containers) {
+    if (cont.nameRegister.timestamp.physicalTime > limit) {
+      violations.add('roomState.containers[${cont.containerId}].nameRegister');
+    }
+  }
+  if (room.activeMinions.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('roomState.activeMinions');
+  }
+  if (room.activeEncounter.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('roomState.activeEncounter');
+  }
+
+  if (violations.isEmpty) {
+    violations.add('unknownFutureTimestamp');
+  }
+
+  return violations;
+}
+
 /// Service coordinating campaign profile JSON snapshots and system-wide backup bundles.
 class DmBackupService {
   static const int currentSchemaVersion = 1;
   static const String currentAppVersion = '1.0.0';
 
   static final DmBackupService _instance = DmBackupService._internal();
-  factory DmBackupService() => _instance;
-  DmBackupService._internal();
+  factory DmBackupService({StatefulHlcClock? clock}) {
+    if (clock != null) {
+      return DmBackupService._internal(clock: clock);
+    }
+    return _instance;
+  }
+  DmBackupService._internal({StatefulHlcClock? clock}) : _clock = clock;
+
+  final StatefulHlcClock? _clock;
+
+  StatefulHlcClock get _effectiveClock {
+    if (_clock != null) return _clock!;
+    if (sl.isRegistered<StatefulHlcClock>()) {
+      return sl<StatefulHlcClock>();
+    }
+    throw StateError(
+      'Authoritative StatefulHlcClock is required for DmBackupService. '
+      'Register StatefulHlcClock in DI or pass clock explicitly.',
+    );
+  }
 
   /// Validates a raw JSON payload before attempting hydration.
   ImportValidationReport validatePayload(String rawJson) {
@@ -70,7 +152,7 @@ class DmBackupService {
       final errors = <String>[];
 
       if (schemaVer > currentSchemaVersion) {
-        warnings.add(
+        errors.add(
             'Payload schema version ($schemaVer) is newer than current ($currentSchemaVersion).');
       }
 
@@ -88,11 +170,13 @@ class DmBackupService {
             'Unrecognized payload type "$type". Attempting fallback parsing.');
       }
 
-      final status = errors.isNotEmpty
-          ? ImportValidationStatus.corrupt
-          : (warnings.isNotEmpty
-              ? ImportValidationStatus.validWithWarnings
-              : ImportValidationStatus.valid);
+      final status = schemaVer > currentSchemaVersion
+          ? ImportValidationStatus.incompatibleVersion
+          : (errors.isNotEmpty
+              ? ImportValidationStatus.corrupt
+              : (warnings.isNotEmpty
+                  ? ImportValidationStatus.validWithWarnings
+                  : ImportValidationStatus.valid));
 
       return ImportValidationReport(
         status: status,
@@ -255,7 +339,11 @@ class DmBackupService {
 
   /// Safely hydrates, validates, and persists an imported campaign profile from raw JSON string.
   /// Returns the imported [CampaignProfile] on success, or `null` if invalid.
-  Future<CampaignProfile?> validateAndImportProfile(String rawJson) async {
+  Future<CampaignProfile?> validateAndImportProfile(
+    String rawJson, {
+    StatefulHlcClock? clock,
+    int? nowMs,
+  }) async {
     try {
       final report = validatePayload(rawJson);
       if (!report.isValid) {
@@ -277,6 +365,20 @@ class DmBackupService {
       }
 
       final profile = CampaignProfileDto.fromMap(campaignMap).toDomain();
+      final effectiveClock = clock ?? _effectiveClock;
+      final currentNow = nowMs ?? DateTime.now().toUtc().millisecondsSinceEpoch;
+      final violations = futureTimestampViolations(
+        profile,
+        currentNow,
+        effectiveClock.maxFutureDrift,
+      );
+      if (violations.isNotEmpty) {
+        LoggingService().logWarning(
+          'Validation failed for imported campaign snapshot: future timestamp violations at ${violations.join(', ')}',
+        );
+        return null;
+      }
+
       final legacyChars =
           CampaignProfileDto.extractLegacyCharacters(campaignMap);
       if (legacyChars.isNotEmpty) {
@@ -287,12 +389,7 @@ class DmBackupService {
       final bool needsDefaultName = profile.name.isEmpty;
       final targetName = needsDefaultName ? 'Imported Campaign' : profile.name;
       final timestamp = needsDefaultName
-          ? (sl.isRegistered<StatefulHlcClock>()
-              ? sl<StatefulHlcClock>().nextTimestamp()
-              : throw StateError(
-                  'Authoritative StatefulHlcClock is required for DmBackupService import. '
-                  'Register StatefulHlcClock in DI.',
-                ))
+          ? effectiveClock.nextTimestamp()
           : profile.nameRegister.timestamp;
       final sanitizedProfile = profile.copyWith(
         id: 'campaign_imported_${now.millisecondsSinceEpoch}',
@@ -318,7 +415,11 @@ class DmBackupService {
   }
 
   /// Restores a full system master snapshot bundle into local persistent storage.
-  Future<bool> restoreFullSystemSnapshot(String rawJson) async {
+  Future<bool> restoreFullSystemSnapshot(
+    String rawJson, {
+    StatefulHlcClock? clock,
+    int? nowMs,
+  }) async {
     try {
       final report = validatePayload(rawJson);
       if (!report.isValid || !report.isFullSystemSnapshot) {
@@ -328,6 +429,8 @@ class DmBackupService {
       }
 
       final decoded = json.decode(rawJson.trim()) as Map<String, dynamic>;
+      final effectiveClock = clock ?? _effectiveClock;
+      final currentNow = nowMs ?? DateTime.now().toUtc().millisecondsSinceEpoch;
 
       // 1. Restore Campaigns
       final campaignService = CampaignProfileService();
@@ -338,6 +441,18 @@ class DmBackupService {
           final campaignId = p['id']?.toString() ?? 'unknown';
           try {
             final profile = CampaignProfileDto.fromMap(p).toDomain();
+            final violations = futureTimestampViolations(
+              profile,
+              currentNow,
+              effectiveClock.maxFutureDrift,
+            );
+            if (violations.isNotEmpty) {
+              anyCampaignFailed = true;
+              LoggingService().logWarning(
+                'Skipping campaign profile $campaignId with future timestamps: ${violations.join(', ')}',
+              );
+              continue;
+            }
             await campaignService.saveProfileImmediate(profile);
           } catch (e, st) {
             anyCampaignFailed = true;
@@ -354,24 +469,40 @@ class DmBackupService {
       // 2. Restore Custom Presets
       final presetService = PresetService();
       final presetsArr = decoded['dicePresets'] as List? ?? [];
-      for (final pr in presetsArr) {
+      for (int i = 0; i < presetsArr.length; i++) {
+        final pr = presetsArr[i];
         if (pr is Map<String, dynamic>) {
           try {
             final preset = CustomPreset.fromMap(pr);
             await presetService.savePreset(preset);
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason:
+                  'Failed to restore dice preset at index $i in system snapshot',
+            );
+          }
         }
       }
 
       // 3. Restore DPR Builds
       final dprService = DprPersistenceService();
       final dprArr = decoded['dprProfiles'] as List? ?? [];
-      for (final d in dprArr) {
+      for (int i = 0; i < dprArr.length; i++) {
+        final d = dprArr[i];
         if (d is Map<String, dynamic>) {
           try {
             final dprProfile = DprCombatantProfileSerialization.fromMap(d);
             await dprService.saveProfileToLibrary(dprProfile);
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason:
+                  'Failed to restore DPR profile at index $i in system snapshot',
+            );
+          }
         }
       }
 
