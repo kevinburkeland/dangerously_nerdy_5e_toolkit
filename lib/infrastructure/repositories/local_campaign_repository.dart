@@ -86,13 +86,17 @@ class LocalCampaignRepository implements ICampaignRepository {
       if (prev != null) {
         try {
           await prev;
-        } catch (_) {}
+        } catch (_) {
+          // intentional: error was reported by the awaited previous operation
+        }
       }
 
       if (reloadToAwait != null) {
         try {
           await reloadToAwait;
-        } catch (_) {}
+        } catch (_) {
+          // intentional: error was reported by the awaited reload operation
+        }
       }
 
       try {
@@ -121,7 +125,9 @@ class LocalCampaignRepository implements ICampaignRepository {
     if (prev != null) {
       try {
         await prev;
-      } catch (_) {}
+      } catch (_) {
+        // intentional: error was reported by the awaited reload operation
+      }
     }
 
     final completer = Completer<List<CampaignProfile>>();
@@ -156,7 +162,9 @@ class LocalCampaignRepository implements ICampaignRepository {
       if (pendingWrite != null) {
         try {
           await pendingWrite;
-        } catch (_) {}
+        } catch (_) {
+          // intentional: error was reported by the awaited write operation
+        }
       }
 
       final success = await _loadSavedRecords();
@@ -480,7 +488,13 @@ class LocalCampaignRepository implements ICampaignRepository {
     try {
       await _db.put(
           AppDatabaseService.boxCampaignProfiles, activeProfileIdKey, id);
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to persist active campaign profile ID: $id',
+      );
+    }
     _emitState();
   }
 

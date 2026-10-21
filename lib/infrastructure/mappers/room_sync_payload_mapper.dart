@@ -9,6 +9,7 @@ import '../../models/room_roll.dart';
 import '../../utils/crypto_utils.dart';
 import '../dtos/campaign_profile_dto.dart';
 import '../dtos/crdt/crdt_or_set_dto.dart';
+import '../../services/logging_service.dart';
 
 export 'package:vtt_engine_core/ports/i_room_sync_payload_port.dart';
 
@@ -71,11 +72,23 @@ class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
           if (decoded.containsKey('pinned_rules_crdt') &&
               decoded['pinned_rules_crdt'] is Map) {
             try {
+              final rulesMap = decoded['pinned_rules_crdt'] as Map;
+              if (rulesMap['items'] is! Map && rulesMap['tombstones'] is! Map) {
+                throw const FormatException(
+                  'Malformed pinned_rules_crdt: missing items and tombstones map',
+                );
+              }
               remoteRulesSet = CrdtOrSetDto.fromMap<String>(
-                Map<dynamic, dynamic>.from(decoded['pinned_rules_crdt'] as Map),
+                Map<dynamic, dynamic>.from(rulesMap),
                 (raw) => raw.toString(),
               );
-            } catch (_) {}
+            } catch (e, st) {
+              LoggingService().logNonFatal(
+                e,
+                st,
+                reason: 'Failed to decode pinned_rules_crdt in full profile payload',
+              );
+            }
           }
 
           PartyPurse? remotePurseDelta;
@@ -85,7 +98,13 @@ class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
               remotePurseDelta = PartyPurse.fromMap(
                 Map<String, dynamic>.from(decoded['party_purse_crdt'] as Map),
               );
-            } catch (_) {}
+            } catch (e, st) {
+              LoggingService().logNonFatal(
+                e,
+                st,
+                reason: 'Failed to decode party_purse_crdt in full profile payload',
+              );
+            }
           }
 
           return FullProfileSyncMessage(

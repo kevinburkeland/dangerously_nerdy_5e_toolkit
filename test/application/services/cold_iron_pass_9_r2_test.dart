@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
-import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';

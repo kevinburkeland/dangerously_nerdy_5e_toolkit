@@ -102,7 +102,7 @@ class DmBackupService {
   final StatefulHlcClock? _clock;
 
   StatefulHlcClock get _effectiveClock {
-    if (_clock != null) return _clock!;
+    if (_clock != null) return _clock;
     if (sl.isRegistered<StatefulHlcClock>()) {
       return sl<StatefulHlcClock>();
     }

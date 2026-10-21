@@ -2,11 +2,9 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
-import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/models/entity_reference.dart';
 import 'package:vtt_engine_core/models/loot_models.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
@@ -303,11 +301,9 @@ void main() {
               case 0:
                 roomCodeA = 'ROOM-A-$seed';
                 roomCodeB = 'ROOM-B-$seed';
-                break;
               case 1:
                 roomIdA = 'room_alpha_$seed';
                 roomIdB = 'room_beta_$seed';
-                break;
               case 2:
                 instancesA.add(EntityInstance(
                   instanceId: 'inst_diff_vis',
@@ -321,7 +317,6 @@ void main() {
                   displayNameTimestamp: clock2.nextTimestamp(),
                   isVisible: false,
                 ));
-                break;
               case 3:
                 containersA.add(LootContainer(
                   containerId: 'cont_diff_lock',
@@ -335,7 +330,6 @@ void main() {
                   nameTimestamp: clock2.nextTimestamp(),
                   isLocked: false,
                 ));
-                break;
             }
           }
 

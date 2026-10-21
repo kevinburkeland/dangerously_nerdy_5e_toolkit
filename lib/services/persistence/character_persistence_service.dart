@@ -102,7 +102,13 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
       try {
         final decoded = json.decode(raw);
         if (decoded is List) return List<dynamic>.from(decoded);
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to JSON decode character roster raw string from database',
+        );
+      }
     }
     return <dynamic>[];
   }
@@ -146,8 +152,12 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
         final prefs = await SharedPreferences.getInstance();
         final encoded = json.encode(rawList);
         await prefs.setString(_kSavedRosterKey, encoded);
-      } catch (_) {
-        // Suppress quota errors from SharedPreferences if payload exceeds 5MB
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to mirror character roster to SharedPreferences',
+        );
       }
     } catch (e) {
       LoggingService().logWarning(
@@ -294,8 +304,12 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
           AppDatabaseService.boxCharacters, _kActiveCharacterIdKey, slug);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kActiveCharacterIdKey, slug);
-    } catch (e) {
-      // Non-fatal
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to save active character ID: $slug',
+      );
     }
   }
 
@@ -307,8 +321,12 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
           AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_kActiveCharacterIdKey);
-    } catch (e) {
-      // Non-fatal
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to clear active character ID from persistence',
+      );
     }
   }
 

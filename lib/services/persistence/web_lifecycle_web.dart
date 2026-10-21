@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
+import '../logging_service.dart';
 import 'debounced_storage_service.dart';
 
 /// Binds browser lifecycle unload event listener on Web to forcefully flush debounced disk writes.
@@ -13,8 +14,12 @@ void setupWebLifecycle(DebouncedStorageService storage) {
       html.window.onPageHide.listen((event) {
         storage.flushAllSync();
       });
-    } catch (_) {
-      // Non-fatal if environment restrictions prevent listener registration
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to bind browser lifecycle unload event listeners on Web',
+      );
     }
   }
 }

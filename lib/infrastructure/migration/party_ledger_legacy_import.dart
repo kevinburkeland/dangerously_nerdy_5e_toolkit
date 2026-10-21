@@ -5,6 +5,7 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../models/party/party_event.dart';
+import '../../services/logging_service.dart';
 
 /// Legacy Firestore ledger migration into the single-owner CRDT [CampaignProfile].
 ///
@@ -54,7 +55,13 @@ class PartyLedgerLegacyImport {
                 telemetryByName[name] = dto.id;
               }
             }
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to parse legacy partyTelemetry entry: ${entry.key}',
+            );
+          }
         }
       }
     }

@@ -98,7 +98,13 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
       try {
         final decoded = json.decode(raw);
         if (decoded is List) return List<dynamic>.from(decoded);
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to JSON decode character roster raw string',
+        );
+      }
     }
     return <dynamic>[];
   }
@@ -269,7 +275,13 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
     try {
       await _db.put(
           AppDatabaseService.boxCharacters, _kActiveCharacterIdKey, id);
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to persist active character ID: $id',
+      );
+    }
   }
 
   @override
@@ -277,7 +289,13 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
     try {
       await _db.delete(
           AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to clear active character ID from database',
+      );
+    }
   }
 
   /// Reparses and updates a single character against current compendiums and rules.

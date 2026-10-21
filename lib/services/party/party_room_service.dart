@@ -568,9 +568,7 @@ class PartyRoomService {
 
     if (effectiveCampaignId == null) {
       PartyRoomLobby? readLobby = _localLobbies[clean];
-      if (readLobby == null) {
-        readLobby = await _fetchRoomLobbyFromFirestore(clean);
-      }
+      readLobby ??= await _fetchRoomLobbyFromFirestore(clean);
 
       if (readLobby != null) {
         if (readLobby.campaignId != null && readLobby.campaignId!.trim().isNotEmpty) {
@@ -879,7 +877,13 @@ class PartyRoomService {
       try {
         cloudLobby = PartyRoomLobby.fromMap(rawDoc);
         _localLobbies[cleanCode] = cloudLobby;
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to parse lobby from raw document for $cleanCode',
+        );
+      }
     }
 
     for (final code in codeCandidates) {
@@ -1098,8 +1102,12 @@ class PartyRoomService {
               .collection('rooms')
               .doc(matchedCode)
               .set(joinPayload, SetOptions(merge: true));
-        } catch (e) {
-          // Non-critical player union error
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to record player union into room $matchedCode',
+          );
         }
       }
 
@@ -1541,9 +1549,7 @@ class PartyRoomService {
     final now = DateTime.now();
     final expiresAt = now.add(defaultLootExpiration);
     PartyRoomLobby? existingLobby = _localLobbies[cleanCode];
-    if (existingLobby == null) {
-      existingLobby = await _fetchRoomLobbyFromFirestore(cleanCode);
-    }
+    existingLobby ??= await _fetchRoomLobbyFromFirestore(cleanCode);
 
     final cName =
         campaignName ?? existingLobby?.campaignName ?? 'Rehydrated Campaign';
@@ -1883,7 +1889,13 @@ class PartyRoomService {
             final state = _buildSessionState(lobby, profile);
             _localRooms[clean] = state;
             if (!controller.isClosed) controller.add(state);
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to build session state for room $clean in watchSession',
+            );
+          }
         }
       }
     });
@@ -3410,8 +3422,12 @@ class PartyRoomService {
             .collection('events')
             .doc(eventId)
             .set(event.toMap());
-      } catch (e) {
-        // Non-fatal event write failure
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to write event $eventId to room $clean',
+        );
       }
     }
   }

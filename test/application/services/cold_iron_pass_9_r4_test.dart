@@ -10,7 +10,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/dm_backup_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
@@ -43,7 +42,6 @@ void main() {
     });
 
     test('1. The 2100 example: validateAndImportProfile returns null, nothing stored, clock unchanged; control imports', () async {
-      final initialClock = clock.latest;
       final year2100Ms = DateTime.utc(2100, 1, 1).millisecondsSinceEpoch;
 
       final baseProfile = CampaignProfile.defaultProfile(
@@ -505,34 +503,24 @@ void main() {
           switch (section) {
             case 'dicePresets':
               targetList = presets;
-              break;
             case 'customSpells':
               targetList = spells;
-              break;
             case 'customMonsters':
               targetList = monsters;
-              break;
             case 'customItems':
               targetList = items;
-              break;
             case 'customClasses':
               targetList = classes;
-              break;
             case 'customSubclasses':
               targetList = subclasses;
-              break;
             case 'customRaces':
               targetList = races;
-              break;
             case 'customFeats':
               targetList = feats;
-              break;
             case 'customBackgrounds':
               targetList = backgrounds;
-              break;
             case 'customOtherEntries':
               targetList = others;
-              break;
             default:
               targetList = [];
           }

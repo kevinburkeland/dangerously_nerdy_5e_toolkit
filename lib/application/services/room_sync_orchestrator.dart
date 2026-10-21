@@ -582,7 +582,13 @@ class RoomSyncOrchestrator {
       final dynamic port = transportPort;
       final code = port.roomCode;
       if (code is String) return code;
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to access roomCode on transportPort',
+      );
+    }
     return null;
   }
 
@@ -665,7 +671,13 @@ class RoomSyncOrchestrator {
     if (payloadToSend != null) {
       try {
         await transportPort.broadcastPayload(payloadToSend!);
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to broadcast sync payload via transportPort',
+        );
+      }
     }
   }
 

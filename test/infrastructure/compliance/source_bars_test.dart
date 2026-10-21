@@ -958,6 +958,137 @@ void main() {
             'Violations:\n${violations.join('\n')}',
       );
     });
+
+    test(
+        'Source Bar K: No empty or unintentional catches in persistence, sync, and party code',
+        () {
+      final targetPaths = [
+        'lib/services/persistence',
+        'lib/services/party',
+        'lib/infrastructure/repositories',
+        'lib/infrastructure/migration',
+        'lib/infrastructure/mappers',
+        'lib/infrastructure/dtos/campaign_profile_dto.dart',
+        'lib/application/services/room_sync_orchestrator.dart',
+      ];
+
+      final filesToCheck = <File>[];
+      for (final p in targetPaths) {
+        if (FileSystemEntity.isFileSync(p)) {
+          filesToCheck.add(File(p));
+        } else if (FileSystemEntity.isDirectorySync(p)) {
+          filesToCheck.addAll(
+            Directory(p)
+                .listSync(recursive: true)
+                .whereType<File>()
+                .where((f) => f.path.endsWith('.dart')),
+          );
+        }
+      }
+
+      final violations = <String>[];
+      for (final file in filesToCheck) {
+        final content = file.readAsStringSync();
+        final fileViolations = _findEmptyCatchViolations(content);
+        for (final v in fileViolations) {
+          violations.add('${file.path}:$v');
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Empty or unintentional catches forbidden in persistence/sync/party code (Source Bar K).\n'
+            'Violations:\n${violations.join('\n')}',
+      );
+    });
+
+    test(
+        'Source Bar K unit validation: catches empty/unintentional blocks and allows // intentional:',
+        () {
+      // Negative case 1: catch (_) {}
+      expect(
+        _findEmptyCatchViolations('void f() { try { a(); } catch (_) {} }'),
+        isNotEmpty,
+      );
+
+      // Negative case 2: catch (e) {}
+      expect(
+        _findEmptyCatchViolations('void f() { try { a(); } catch (e) {} }'),
+        isNotEmpty,
+      );
+
+      // Negative case 3: catch (e, st) { across lines }
+      expect(
+        _findEmptyCatchViolations(
+            'void f() { try { a(); } catch (e, st) {\n  \n} }'),
+        isNotEmpty,
+      );
+
+      // Negative case 4: catch with non-intentional comment
+      expect(
+        _findEmptyCatchViolations(
+            'void f() { try { a(); } catch (e) {\n  // non-fatal comment\n} }'),
+        isNotEmpty,
+      );
+
+      // Positive case 1: catch with // intentional:
+      expect(
+        _findEmptyCatchViolations(
+            'void f() { try { a(); } catch (_) {\n  // intentional: error reported by write queue\n} }'),
+        isEmpty,
+      );
+
+      // Positive case 2: catch with logNonFatal
+      expect(
+        _findEmptyCatchViolations(
+            'void f() { try { a(); } catch (e, st) {\n  LoggingService().logNonFatal(e, st);\n} }'),
+        isEmpty,
+      );
+    });
   });
+}
+
+List<String> _findEmptyCatchViolations(String content) {
+  final violations = <String>[];
+  final catchPattern = RegExp(r'\bcatch\s*(\([^\)]*\))?\s*\{');
+  for (final match in catchPattern.allMatches(content)) {
+    final startBrace = match.end - 1;
+    var depth = 1;
+    var cur = startBrace + 1;
+    while (cur < content.length && depth > 0) {
+      if (content[cur] == '{') {
+        depth++;
+      } else if (content[cur] == '}') {
+        depth--;
+      }
+      cur++;
+    }
+    final body = content.substring(startBrace + 1, cur - 1);
+    final lineNum = content.substring(0, match.start).split('\n').length;
+
+    final lines = body.split('\n');
+    final nonCommentLines = <String>[];
+    final intentionalComments = <String>[];
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+      if (trimmed.startsWith('// intentional:')) {
+        intentionalComments.add(trimmed);
+      } else if (trimmed.startsWith('//') ||
+          trimmed.startsWith('/*') ||
+          trimmed.startsWith('*')) {
+        // regular comment
+      } else {
+        nonCommentLines.add(trimmed);
+      }
+    }
+
+    if (nonCommentLines.isEmpty && intentionalComments.isEmpty) {
+      violations.add('$lineNum -> ${match.group(0)}$body}');
+    }
+  }
+  return violations;
 }
 

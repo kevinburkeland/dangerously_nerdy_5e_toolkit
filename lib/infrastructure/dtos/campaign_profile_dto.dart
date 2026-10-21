@@ -690,7 +690,13 @@ class CampaignProfileDto {
             if (!itemMap.containsKey('invalid_schema')) {
               characters.add(CharacterDto.fromMap(itemMap).toDomain());
             }
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to decode character in campaign profile roster',
+            );
+          }
         }
       }
     }

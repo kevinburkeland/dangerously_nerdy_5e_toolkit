@@ -136,17 +136,21 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
 
   Future<void> _initSyncServices() async {
     // Whenever someone opens or connects to the room, rehydrate and reset 30-day lease
-    unawaited(_partyService.ensureRoomExists(
-      roomCode: _roomCode,
-      campaignName: _currentMembership?.campaignName,
-      hostKey: _currentMembership?.hostKey,
-    ).catchError((e, st) {
-      LoggingService().logNonFatal(
-        e,
-        st,
-        reason: 'ensureRoomExists failed in PartyRoomScreen for $_roomCode',
-      );
-    }));
+    unawaited(() async {
+      try {
+        await _partyService.ensureRoomExists(
+          roomCode: _roomCode,
+          campaignName: _currentMembership?.campaignName,
+          hostKey: _currentMembership?.hostKey,
+        );
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'ensureRoomExists failed in PartyRoomScreen for $_roomCode',
+        );
+      }
+    }());
 
     // Flush any pending outbox actions immediately upon entering the room
     unawaited(_partyService.flushOutbox(_roomCode));

@@ -1,24 +1,15 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
-import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
-import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/models/entity_reference.dart';
-import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/party/room_code_relink.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import '../../test_doubles/fake_room_document_port.dart';
 
@@ -265,6 +256,7 @@ void main() {
       );
       expect(repo.allProfiles, isEmpty);
       expect(loggedError, isNotNull);
+      expect(loggedReason, isNotNull);
     });
   });
 }

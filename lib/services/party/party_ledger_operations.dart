@@ -5,6 +5,7 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import '../../models/party/party_purse.dart';
 import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../infrastructure/migration/party_ledger_legacy_import.dart';
+import '../logging_service.dart';
 
 /// Pure functional member-purse and ledger transforms over [CampaignProfile].
 ///
@@ -38,7 +39,13 @@ class PartyLedgerOperations {
                 (cleanName != null && tName == cleanName)) {
               return true;
             }
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to parse character telemetry during legacy coverage check',
+            );
+          }
         }
       }
     }

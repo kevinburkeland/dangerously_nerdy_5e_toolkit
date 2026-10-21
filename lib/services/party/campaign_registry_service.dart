@@ -42,8 +42,12 @@ class CampaignRegistryService {
         try {
           final map = jsonDecode(itemStr) as Map<String, dynamic>;
           loaded.add(CampaignMembership.fromMap(map));
-        } catch (e) {
-          // Skip corrupted entry
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to parse stored campaign membership entry',
+          );
         }
       }
 

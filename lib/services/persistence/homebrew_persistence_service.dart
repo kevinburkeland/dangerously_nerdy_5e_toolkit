@@ -114,8 +114,12 @@ class HomebrewPersistenceService {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setStringList(key, list);
         }
-      } catch (_) {
-        // Suppress quota exceeded in SharedPreferences
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to mirror string list to SharedPreferences for $key',
+        );
       }
     } catch (e, st) {
       LoggingService()
@@ -160,7 +164,13 @@ class HomebrewPersistenceService {
           if (slug.isNotEmpty) {
             slugIndex['${slug}_$ruleset'] = i;
           }
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to index slug for item $i in category $parsedKey',
+          );
+        }
       }
       _categorySlugIndex[parsedKey] = slugIndex;
     }
@@ -3352,7 +3362,13 @@ class HomebrewPersistenceService {
           final p = prefs ?? await SharedPreferences.getInstance();
           await p.setString(key, json.encode(map));
         }
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to mirror batch raw payloads to SharedPreferences for $key',
+        );
+      }
     } catch (e, st) {
       LoggingService().logNonFatal(e, st,
           reason: 'Failed to batch save raw payloads for $key');
@@ -3410,8 +3426,20 @@ class HomebrewPersistenceService {
             await p.setString(key, json.encode(pMap));
           }
         }
-      } catch (_) {}
-    } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to mirror delete raw payload to SharedPreferences for $key / $entitySlug',
+        );
+      }
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to delete raw payload for $key / $entitySlug',
+      );
+    }
   }
 
   /// Maps an [EntityType] to its raw payload SharedPreferences key.
@@ -3474,7 +3502,13 @@ class HomebrewPersistenceService {
         } else if (dbVal is String && dbVal.isNotEmpty) {
           try {
             rawMap = Map<String, dynamic>.from(json.decode(dbVal) as Map);
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to JSON decode dbVal rawMap for $rawKey',
+            );
+          }
         }
       }
       if (rawMap.isEmpty) {
@@ -3483,7 +3517,13 @@ class HomebrewPersistenceService {
         if (storedRaw != null && storedRaw.isNotEmpty) {
           try {
             rawMap = Map<String, dynamic>.from(json.decode(storedRaw) as Map);
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to JSON decode storedRaw rawMap for $rawKey',
+            );
+          }
         }
       }
 
@@ -3529,7 +3569,13 @@ class HomebrewPersistenceService {
         try {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(rawKey, json.encode(rawMap));
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to persist pruned rawMap to SharedPreferences for $rawKey',
+          );
+        }
       }
 
       // 3. Check legacy parsed store for any SRD duplicates not in rawMap
@@ -3584,7 +3630,13 @@ class HomebrewPersistenceService {
             }
             allSlugsHandled.add(slug);
           }
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to parse legacy JSON entry in $parsedKey',
+          );
+        }
       }
 
       await _saveStringList(parsedKey, reparsed.map(toJson).toList());
