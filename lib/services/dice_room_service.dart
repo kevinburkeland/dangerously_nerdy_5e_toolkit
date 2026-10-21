@@ -35,7 +35,7 @@ class DiceRoomService {
   DiceRoomService._internal();
 
   @visibleForTesting
-  DiceRoomService.newInstance();
+  DiceRoomService.newInstance() : this._internal();
 
   // Centralized active room session notifier
   final ValueNotifier<RoomSession?> activeSessionNotifier =
