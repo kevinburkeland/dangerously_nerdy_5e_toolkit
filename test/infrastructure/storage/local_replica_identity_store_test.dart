@@ -233,9 +233,10 @@ void main() {
       );
 
       const roomCode = 'ROOM99';
-      await partyService.ensureRoomExists(
-        roomCode: roomCode,
+      await partyService.createCampaign(
+        customRoomCode: roomCode,
         campaignName: 'Test Campaign',
+        playerName: 'DM',
       );
 
       // Add a member with personal coins

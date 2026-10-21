@@ -4,7 +4,11 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/session_graph_models.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/storage/firestore_room_document_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
@@ -124,6 +128,22 @@ void main() {
       final service = sl<PartyRoomService>();
       service.setFirebaseAvailableForTesting(true);
 
+      final ts = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: replicaId.value);
+      await sl<ICampaignRepository>().putProfile(CampaignProfile.defaultProfile(
+        id: 'campaign_$roomCode',
+        nodeId: replicaId.value,
+        timestamp: ts,
+      ).copyWith(
+        roomState: RoomNodeState(
+          roomId: 'room_$roomCode',
+          roomCode: roomCode,
+          title: 'Player Room',
+          titleTimestamp: ts,
+          description: '',
+          descriptionTimestamp: ts,
+        ),
+      ));
+
       await service.ensureRoomExists(
         roomCode: roomCode,
         campaignName: 'Player Room',
@@ -143,6 +163,22 @@ void main() {
       const hostKey = 'c7a202d0-0000-0000-0000-000000000000';
       final service = sl<PartyRoomService>();
       service.setFirebaseAvailableForTesting(true);
+
+      final ts = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: replicaId.value);
+      await sl<ICampaignRepository>().putProfile(CampaignProfile.defaultProfile(
+        id: 'campaign_$roomCode',
+        nodeId: replicaId.value,
+        timestamp: ts,
+      ).copyWith(
+        roomState: RoomNodeState(
+          roomId: 'room_$roomCode',
+          roomCode: roomCode,
+          title: 'Host Room',
+          titleTimestamp: ts,
+          description: '',
+          descriptionTimestamp: ts,
+        ),
+      ));
 
       await service.ensureRoomExists(
         roomCode: roomCode,

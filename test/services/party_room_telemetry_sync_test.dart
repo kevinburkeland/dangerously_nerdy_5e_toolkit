@@ -261,6 +261,12 @@ void main() {
 
       final character = CharacterFactory.buildFromDraft(draft);
 
+      await partyService.createCampaign(
+        customRoomCode: 'PALADIN_ROOM',
+        campaignName: 'Paladin Campaign',
+        playerName: 'DM',
+      );
+
       final session = await partyService.linkCharacterToCampaign(
         roomCode: 'PALADIN_ROOM',
         character: character,

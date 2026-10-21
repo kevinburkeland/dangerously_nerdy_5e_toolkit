@@ -120,6 +120,12 @@ void main() {
     test(
         'ensureRoomExists creates or rehydrates room stub and resets 30-day lease',
         () async {
+      await partyService.createCampaign(
+        customRoomCode: 'ROOM-STUB01',
+        campaignName: 'Stateless Adventure',
+        playerName: 'DM',
+      );
+
       final stub = await partyService.ensureRoomExists(
         roomCode: 'ROOM-STUB01',
         campaignName: 'Stateless Adventure',
@@ -782,9 +788,10 @@ void main() {
 
     test('depositCoins and withdrawCoins update purse and do not wedge outbox',
         () async {
-      final session = await partyService.ensureRoomExists(
-        roomCode: 'ROOM-COIN01',
+      final session = await partyService.createCampaign(
+        customRoomCode: 'ROOM-COIN01',
         campaignName: 'Treasure Vault',
+        playerName: 'DM',
       );
 
       await partyService.depositCoins(
