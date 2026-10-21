@@ -32,9 +32,7 @@ class DiceRoomService {
   static final DiceRoomService _instance = DiceRoomService._internal();
   factory DiceRoomService() => _instance;
 
-  DiceRoomService._internal() {
-    _restorePersistedSession();
-  }
+  DiceRoomService._internal();
 
   @visibleForTesting
   DiceRoomService.newInstance();
@@ -48,8 +46,9 @@ class DiceRoomService {
   bool get isSessionRemembered =>
       activeSessionNotifier.value?.isRemembered ?? false;
 
-  /// Restores any previously remembered room session from persistent storage
-  Future<void> _restorePersistedSession() async {
+  /// Restores any previously remembered room session from persistent storage.
+  /// Must be invoked explicitly during application startup, never from the constructor.
+  Future<void> restorePersistedSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final remember = prefs.getBool(_kPersistedRemember) ?? false;

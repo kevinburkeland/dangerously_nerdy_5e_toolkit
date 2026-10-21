@@ -19,7 +19,17 @@ import 'application/storage/storage_durability_coordinator.dart';
 import 'package:vtt_engine_core/storage/models/engine_profile.dart';
 import 'infrastructure/storage/storage_durability_adapter.dart';
 import 'infrastructure/repositories/campaign_storage_migration.dart';
+import 'services/dice_room_service.dart';
 import 'theme/app_theme.dart';
+
+/// Restores persisted application startup state including homebrew libraries and remembered dice room session.
+Future<void> restoreApplicationStartupState({
+  HomebrewPersistenceService? homebrewService,
+  DiceRoomService? diceRoomService,
+}) async {
+  await (homebrewService ?? HomebrewPersistenceService()).syncToLibraries();
+  await (diceRoomService ?? DiceRoomService()).restorePersistedSession();
+}
 
 void main() {
   runZonedGuarded<Future<void>>(() async {
@@ -89,13 +99,13 @@ void main() {
     try {
       prefs = await SharedPreferences.getInstance();
       await services.migrationService.runMigrations(prefs);
-      await HomebrewPersistenceService().syncToLibraries();
+      await restoreApplicationStartupState();
     } catch (e, stackTrace) {
       logger.logNonFatal(
         e,
         stackTrace,
         reason:
-            'Failed to initialize SharedPreferences / migrations / homebrew during startup',
+            'Failed to initialize SharedPreferences / migrations / startup state during startup',
       );
     }
 
