@@ -64,3 +64,7 @@ Network and room state is event-sourced and conflict-free:
 - Causality and ordering are tracked via **Hybrid Logical Clocks (HLC)**.
 - Collisions are resolved deterministically using `nodeId` lexicographical tie-breaking.
 - Detailed rules are documented in `docs/DATA_SAFETY_AND_CRDT.md` and `.agents/rules/crdt_and_sync.md`.
+
+## Legacy Data
+
+Pre-CRDT campaign records stored coins in scalar fields, which map to an initial PN-counter slot (`init`). When two replicas that both hold legacy balances merge, identical balances converge to that balance, while differing balances resolve to the per-denomination maximum rather than their sum. This prevents doubling coins across normal two-device baselines of the same campaign; subsequent credits and debits via CRDT operations mutate independent replica slots and add normally.
