@@ -147,6 +147,7 @@ service cloud.firestore {
                       && request.resource.data.senderId.size() > 0
                       && request.resource.data.senderId.size() <= 128
                       && request.resource.data.payload is string
+                      // maxRelayPayloadLength: 999,999 characters (< 1000000)
                       && request.resource.data.payload.size() < 1000000 
                       && isRecentTimestamp(request.resource.data.timestamp)
                       && request.resource.data.expireAt is timestamp

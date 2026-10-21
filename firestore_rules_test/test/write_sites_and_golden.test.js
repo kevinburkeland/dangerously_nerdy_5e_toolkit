@@ -627,6 +627,56 @@ test('Write Sites and Golden Payloads Test Suite (R6)', async (t) => {
     );
   });
 
+  // R8: relay_messages payload size boundary check
+  await t.test('R8: relay_messages size boundary: 999,999 characters is ALLOWED, 1,000,000 characters is DENIED', async () => {
+    const roomCode = 'ROOM_RELAY_SIZE_BOUND';
+    const unauthDb = testEnv.unauthenticatedContext().firestore();
+
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await ctx.firestore().collection('rooms').doc(roomCode).set({
+        roomCode,
+        code: roomCode,
+        campaignName: `Relay Size ${roomCode}`,
+        lastUpdated: '2026-10-19T12:00:00.000Z',
+        expiresAt: '2026-11-19T12:00:00.000Z',
+      });
+    });
+
+    // 999,999 characters: ALLOWED
+    const payload999k = 'x'.repeat(999999);
+    await assertSucceeds(
+      unauthDb
+        .collection('rooms')
+        .doc(roomCode)
+        .collection('relay_messages')
+        .doc('relay-msg-allowed')
+        .set({
+          id: 'relay-msg-allowed',
+          senderId: 'source-node-1',
+          payload: payload999k,
+          timestamp: Date.now(),
+          expireAt: Timestamp.fromDate(new Date(Date.now() + 3600 * 1000)),
+        })
+    );
+
+    // 1,000,000 characters: DENIED
+    const payload1m = 'x'.repeat(1000000);
+    await assertFails(
+      unauthDb
+        .collection('rooms')
+        .doc(roomCode)
+        .collection('relay_messages')
+        .doc('relay-msg-denied')
+        .set({
+          id: 'relay-msg-denied',
+          senderId: 'source-node-1',
+          payload: payload1m,
+          timestamp: Date.now(),
+          expireAt: Timestamp.fromDate(new Date(Date.now() + 3600 * 1000)),
+        })
+    );
+  });
+
   // lib/services/dice_room_service.dart: _touchRoomInFirestore, broadcastRoll
   await t.test('dice_room_service.dart: _touchRoomInFirestore and broadcastRoll are ALLOWED', async () => {
     const roomCode = 'ROOM_DICE_1';

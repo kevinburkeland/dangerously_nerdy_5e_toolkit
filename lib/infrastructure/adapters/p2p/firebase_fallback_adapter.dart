@@ -5,6 +5,25 @@ import 'package:uuid/uuid.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../../../utils/crypto_utils.dart';
 
+/// Maximum allowed character length for a relay payload document in Firestore.
+/// Matches firestore.rules: request.resource.data.payload.size() < 1000000.
+const int maxRelayPayloadLength = 999999;
+
+/// Exception thrown when an outbound relay payload exceeds [maxRelayPayloadLength].
+class RelayPayloadTooLargeException implements Exception {
+  final int size;
+  final int limit;
+
+  const RelayPayloadTooLargeException({
+    required this.size,
+    required this.limit,
+  });
+
+  @override
+  String toString() =>
+      'RelayPayloadTooLargeException: payload size $size exceeds relay limit of $limit characters';
+}
+
 /// Firebase Firestore-backed relay transport adapter implementing [IP2pTransportPort].
 /// Serves as the robust, reliable 3rd-tier fallback when P2P WebRTC mesh traversal
 /// (STUN/TURN) fails or peers are partitioned.
@@ -176,6 +195,13 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
 
   @override
   Future<void> broadcastPayload(String jsonPayload) async {
+    if (jsonPayload.length > maxRelayPayloadLength) {
+      throw RelayPayloadTooLargeException(
+        size: jsonPayload.length,
+        limit: maxRelayPayloadLength,
+      );
+    }
+
     if (_roomCode == null || _localNodeId == null) {
       throw StateError(
           'FirebaseFallbackAdapter must be initialized before broadcasting.');
