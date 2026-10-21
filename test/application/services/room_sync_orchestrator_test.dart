@@ -175,7 +175,7 @@ class ThrowingReconciliationService extends RoomStateReconciliationService {
   ThrowingReconciliationService() : super(networkTimeProvider: () => 0);
 
   @override
-  CampaignProfile reconcileProfile({
+  ReconciliationResult reconcileProfileSafely({
     required CampaignProfile local,
     required CampaignProfile remote,
     int? inboundTimestampMs,
@@ -1131,7 +1131,7 @@ class _ThrowingHlcReconciliationService extends RoomStateReconciliationService {
   _ThrowingHlcReconciliationService() : super(networkTimeProvider: () => 0);
 
   @override
-  CampaignProfile reconcileProfile({
+  ReconciliationResult reconcileProfileSafely({
     required CampaignProfile local,
     required CampaignProfile remote,
     int? inboundTimestampMs,
@@ -1139,6 +1139,6 @@ class _ThrowingHlcReconciliationService extends RoomStateReconciliationService {
   }) {
     // Malformed HLC missing node and nodeId triggers FormatException
     HybridLogicalClock.fromMap({'pt': 1700000000000, 'lc': 0});
-    return local;
+    return ReconciliationResult(profile: local);
   }
 }

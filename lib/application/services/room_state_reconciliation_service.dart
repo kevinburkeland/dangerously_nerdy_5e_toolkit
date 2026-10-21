@@ -75,16 +75,6 @@ class RoomStateReconciliationService {
     int? inboundTimestampMs,
     int? localTimestampMs,
   }) {
-    if (runtimeType != RoomStateReconciliationService) {
-      final merged = reconcileProfile(
-        local: local,
-        remote: remote,
-        inboundTimestampMs: inboundTimestampMs,
-        localTimestampMs: localTimestampMs,
-      );
-      return ReconciliationResult(profile: merged, fieldFaults: const []);
-    }
-
     if (local.id != remote.id) {
       throw StateError(
         'CampaignProfile id mismatch: "${local.id}" vs "${remote.id}".',
@@ -297,21 +287,72 @@ class RoomStateReconciliationService {
     }
 
     // Entity instances: canonical join with fault isolation
-    List<EntityInstance> mergedInstances = local.entityInstances;
-    try {
-      mergedInstances = joinEntityInstances(local.entityInstances, remote.entityInstances);
-    } catch (e, st) {
-      faults.add(ReconciliationFieldFault(field: 'roomState.entityInstances', error: e, stackTrace: st));
-      mergedInstances = local.entityInstances;
+    // Entity instances: granular join with per-instance fault isolation
+    final instancesMapLocal = <String, EntityInstance>{
+      for (final i in local.entityInstances) i.instanceId: i,
+    };
+    final instancesMapRemote = <String, EntityInstance>{
+      for (final i in remote.entityInstances) i.instanceId: i,
+    };
+    final allInstanceIds = <String>{
+      ...instancesMapLocal.keys,
+      ...instancesMapRemote.keys,
+    }.toList()
+      ..sort();
+    final mergedInstances = <EntityInstance>[];
+    for (final id in allInstanceIds) {
+      final instLocal = instancesMapLocal[id];
+      final instRemote = instancesMapRemote[id];
+      if (instLocal != null && instRemote != null) {
+        try {
+          mergedInstances.add(EntityInstance.join(instLocal, instRemote));
+        } catch (e, st) {
+          faults.add(ReconciliationFieldFault(
+            field: 'roomState.entityInstances[$id]',
+            error: e,
+            stackTrace: st,
+          ));
+          mergedInstances.add(instLocal);
+        }
+      } else if (instLocal != null) {
+        mergedInstances.add(instLocal);
+      } else if (instRemote != null) {
+        mergedInstances.add(instRemote);
+      }
     }
 
-    // Containers: canonical join with fault isolation
-    List<LootContainer> mergedContainers = local.containers;
-    try {
-      mergedContainers = joinContainers(local.containers, remote.containers);
-    } catch (e, st) {
-      faults.add(ReconciliationFieldFault(field: 'roomState.containers', error: e, stackTrace: st));
-      mergedContainers = local.containers;
+    // Containers: granular join with per-container fault isolation
+    final containerMapLocal = <String, LootContainer>{
+      for (final c in local.containers) c.containerId: c,
+    };
+    final containerMapRemote = <String, LootContainer>{
+      for (final c in remote.containers) c.containerId: c,
+    };
+    final allContainerIds = <String>{
+      ...containerMapLocal.keys,
+      ...containerMapRemote.keys,
+    }.toList()
+      ..sort();
+    final mergedContainers = <LootContainer>[];
+    for (final id in allContainerIds) {
+      final cLocal = containerMapLocal[id];
+      final cRemote = containerMapRemote[id];
+      if (cLocal != null && cRemote != null) {
+        try {
+          mergedContainers.add(LootContainer.join(cLocal, cRemote));
+        } catch (e, st) {
+          faults.add(ReconciliationFieldFault(
+            field: 'roomState.containers[$id]',
+            error: e,
+            stackTrace: st,
+          ));
+          mergedContainers.add(cLocal);
+        }
+      } else if (cLocal != null) {
+        mergedContainers.add(cLocal);
+      } else if (cRemote != null) {
+        mergedContainers.add(cRemote);
+      }
     }
 
     final mergedRoomState = RoomNodeState(
