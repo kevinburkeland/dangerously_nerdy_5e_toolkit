@@ -272,6 +272,62 @@ void main() {
             reason: 'Single entity $type via string must throw CatalogNotInstalledError when catalog is uninstalled',
           );
         }
+
+        // Multi-entity bundle containing entity that reaches catalog
+        final bundleMap = {
+          'race': [
+            {
+              'name': 'Catalog Race In Bundle',
+              'size': ['M'],
+              'speed': 30,
+              'additionalSpells': [
+                {
+                  'innate': {
+                    '_': ['light#c']
+                  }
+                }
+              ]
+            }
+          ]
+        };
+        expect(
+          () => pipeline.ingestJsonMap(bundleMap),
+          throwsA(isA<CatalogNotInstalledError>()),
+          reason: 'Bundle containing race with additionalSpells must throw CatalogNotInstalledError',
+        );
+        expect(
+          () => pipeline.ingestJsonString(jsonEncode(bundleMap)),
+          throwsA(isA<CatalogNotInstalledError>()),
+          reason: 'Bundle string containing race with additionalSpells must throw CatalogNotInstalledError',
+        );
+
+        // Native HomebrewBundle envelope with race having additionalSpells
+        final envelopeMap = {
+          'races': [
+            {
+              'name': 'Catalog Race In Envelope',
+              'size': ['M'],
+              'speed': 30,
+              'additionalSpells': [
+                {
+                  'innate': {
+                    '_': ['light#c']
+                  }
+                }
+              ]
+            }
+          ]
+        };
+        expect(
+          () => pipeline.ingestJsonMap(envelopeMap),
+          throwsA(isA<CatalogNotInstalledError>()),
+          reason: 'HomebrewBundle envelope with catalog dependency must throw CatalogNotInstalledError',
+        );
+        expect(
+          () => pipeline.ingestJsonString(jsonEncode(envelopeMap)),
+          throwsA(isA<CatalogNotInstalledError>()),
+          reason: 'HomebrewBundle envelope string with catalog dependency must throw CatalogNotInstalledError',
+        );
       } finally {
         installRulesetCatalog();
       }

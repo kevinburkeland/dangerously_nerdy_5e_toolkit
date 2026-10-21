@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:meta/meta.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
@@ -138,6 +139,21 @@ class CompendiumJsonIngestionPipeline {
             CompendiumGenericEntryParser(
                 transformer: transformer ?? EntryTagTransformer());
 
+  static T _guard<T>(T Function() body, T Function(Object error) onError) {
+    try {
+      return body();
+    } on CatalogNotInstalledError {
+      rethrow;
+    } catch (e) {
+      return onError(e);
+    }
+  }
+
+  @visibleForTesting
+  static T guardForTesting<T>(
+          T Function() body, T Function(Object error) onError) =>
+      _guard(body, onError);
+
   /// Parses an in-memory Map containing single entity maps, multi-entity bundles, or [HomebrewBundle] envelopes.
   IngestionBatchResult ingestJsonMap(Map<String, dynamic> map,
       {RulesetVersion? forceRuleset}) {
@@ -147,29 +163,28 @@ class CompendiumJsonIngestionPipeline {
   /// Parses arbitrary JSON text containing single entity maps, multi-entity bundles, or [HomebrewBundle] envelopes.
   IngestionBatchResult ingestJsonString(String jsonString,
       {RulesetVersion? forceRuleset}) {
-    try {
-      final clean = jsonString.trim();
-      final decoded = json.decode(clean);
+    return _guard(
+      () {
+        final clean = jsonString.trim();
+        final decoded = json.decode(clean);
 
-      if (decoded is List) {
-        return _ingestList(decoded, forceRuleset: forceRuleset);
-      } else if (decoded is Map<String, dynamic>) {
-        return _ingestMap(decoded, forceRuleset: forceRuleset);
-      } else if (decoded is Map) {
-        return _ingestMap(Map<String, dynamic>.from(decoded),
-            forceRuleset: forceRuleset);
-      } else {
-        return const IngestionBatchResult(
-          errors: ['Invalid JSON format: expected Map or List at root.'],
-        );
-      }
-    } on CatalogNotInstalledError {
-      rethrow;
-    } catch (e) {
-      return IngestionBatchResult(
+        if (decoded is List) {
+          return _ingestList(decoded, forceRuleset: forceRuleset);
+        } else if (decoded is Map<String, dynamic>) {
+          return _ingestMap(decoded, forceRuleset: forceRuleset);
+        } else if (decoded is Map) {
+          return _ingestMap(Map<String, dynamic>.from(decoded),
+              forceRuleset: forceRuleset);
+        } else {
+          return const IngestionBatchResult(
+            errors: ['Invalid JSON format: expected Map or List at root.'],
+          );
+        }
+      },
+      (e) => IngestionBatchResult(
         errors: ['Failed to parse JSON: $e'],
-      );
-    }
+      ),
+    );
   }
 
   IngestionBatchResult _ingestList(List<dynamic> list,
@@ -238,7 +253,7 @@ class CompendiumJsonIngestionPipeline {
             lowerKeys.contains('races') ||
             lowerKeys.contains('feats') ||
             lowerKeys.contains('backgrounds'))) {
-      try {
+      final bundleResult = _guard<IngestionBatchResult?>(() {
         final bundle = HomebrewBundle.fromMap(map);
 
         final baseMonsterLookup = <String, Map<String, dynamic>>{};
@@ -701,10 +716,9 @@ class CompendiumJsonIngestionPipeline {
           backgrounds: revitalizedBackgrounds,
           otherEntries: revitalizedOtherEntries,
         );
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        // Fall back to standard map ingestion
+      }, (e) => null);
+      if (bundleResult != null) {
+        return bundleResult;
       }
     }
 
@@ -917,14 +931,11 @@ class CompendiumJsonIngestionPipeline {
       if (list != null) {
         for (final raw in list) {
           if (raw is Map) {
-            try {
-              handler(Map<String, dynamic>.from(raw));
-            } on CatalogNotInstalledError {
-              rethrow;
-            } catch (e) {
-              errors
-                  .add('$entityLabel error (${raw['name'] ?? 'unnamed'}): $e');
-            }
+            _guard<void>(
+              () => handler(Map<String, dynamic>.from(raw)),
+              (e) => errors
+                  .add('$entityLabel error (${raw['name'] ?? 'unnamed'}): $e'),
+            );
           }
         }
       }
@@ -967,18 +978,16 @@ class CompendiumJsonIngestionPipeline {
       }
 
       for (final raw in rawMonsters) {
-        try {
+        _guard<void>(() {
           final parsed = monsterParser.parseMonster(
             raw,
             forceRuleset: forceRuleset,
             baseLookup: lookupBase,
           );
           monsters.add(parsed);
-        } on CatalogNotInstalledError {
-          rethrow;
-        } catch (e) {
+        }, (e) {
           errors.add('Monster error (${raw['name'] ?? 'unnamed'}): $e');
-        }
+        });
       }
     }
 
@@ -1769,29 +1778,27 @@ class CompendiumJsonIngestionPipeline {
             (lowerKeys.contains('time') ||
                 lowerKeys.contains('duration') ||
                 lowerKeys.contains('range')))) {
-      try {
-        final spell = spellParser.parseSpell(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(spells: [spell]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse spell: $e']);
-      }
+      return _guard(
+        () {
+          final spell = spellParser.parseSpell(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(spells: [spell]);
+        },
+        (e) => IngestionBatchResult(errors: ['Failed to parse spell: $e']),
+      );
     }
 
     // 2. Identify Monsters (has cr or hp or ac or statblock)
     if (lowerKeys.contains('cr') ||
         (lowerKeys.contains('hp') &&
             (lowerKeys.contains('ac') || lowerKeys.contains('speed')))) {
-      try {
-        final monster =
-            monsterParser.parseMonster(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(monsters: [monster]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse monster: $e']);
-      }
+      return _guard(
+        () {
+          final monster =
+              monsterParser.parseMonster(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(monsters: [monster]);
+        },
+        (e) => IngestionBatchResult(errors: ['Failed to parse monster: $e']),
+      );
     }
 
     // 3. Identify Classes (has hd and proficiency or classFeatures)
@@ -1799,17 +1806,16 @@ class CompendiumJsonIngestionPipeline {
         lowerKeys.contains('classfeatures') ||
         (lowerKeys.contains('proficiency') &&
             lowerKeys.contains('subclasses'))) {
-      try {
-        final cl = classParser.parseClass(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(
-          classes: [cl],
-          subclasses: cl.subclasses,
-        );
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse class: $e']);
-      }
+      return _guard(
+        () {
+          final cl = classParser.parseClass(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(
+            classes: [cl],
+            subclasses: cl.subclasses,
+          );
+        },
+        (e) => IngestionBatchResult(errors: ['Failed to parse class: $e']),
+      );
     }
 
     // 3b. Identify Subclass Features
@@ -1818,20 +1824,19 @@ class CompendiumJsonIngestionPipeline {
         (lowerKeys.contains('subclassshortname') &&
             !lowerKeys.contains('subclassfeatures'));
     if (isSubclassFeature) {
-      try {
-        SrdClassesLibrary.registerSubclassFeature(map);
-        final entry = genericParser.parseGenericEntry(
-          map,
-          forceRuleset: forceRuleset,
-          defaultCategory: 'Subclass Feature',
-        );
-        return IngestionBatchResult(otherEntries: [entry]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(
-            errors: ['Failed to parse subclass feature: $e']);
-      }
+      return _guard(
+        () {
+          SrdClassesLibrary.registerSubclassFeature(map);
+          final entry = genericParser.parseGenericEntry(
+            map,
+            forceRuleset: forceRuleset,
+            defaultCategory: 'Subclass Feature',
+          );
+          return IngestionBatchResult(otherEntries: [entry]);
+        },
+        (e) => IngestionBatchResult(
+            errors: ['Failed to parse subclass feature: $e']),
+      );
     }
 
     // 3c. Identify Class Features
@@ -1845,19 +1850,18 @@ class CompendiumJsonIngestionPipeline {
             !lowerKeys.contains('shortname') &&
             !lowerKeys.contains('subclasstitle'));
     if (isClassFeature) {
-      try {
-        final entry = genericParser.parseGenericEntry(
-          map,
-          forceRuleset: forceRuleset,
-          defaultCategory: 'Class Feature',
-        );
-        return IngestionBatchResult(otherEntries: [entry]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(
-            errors: ['Failed to parse class feature: $e']);
-      }
+      return _guard(
+        () {
+          final entry = genericParser.parseGenericEntry(
+            map,
+            forceRuleset: forceRuleset,
+            defaultCategory: 'Class Feature',
+          );
+          return IngestionBatchResult(otherEntries: [entry]);
+        },
+        (e) => IngestionBatchResult(
+            errors: ['Failed to parse class feature: $e']),
+      );
     }
 
     // 4. Identify Subclasses (has subclassFeatures, subclassTitle, or shortName + className)
@@ -1873,14 +1877,14 @@ class CompendiumJsonIngestionPipeline {
             (lowerKeys.contains('features') ||
                 lowerKeys.contains('desc') ||
                 lowerKeys.contains('entries')))) {
-      try {
-        final sub = classParser.parseSubclass(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(subclasses: [sub]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse subclass: $e']);
-      }
+      return _guard(
+        () {
+          final sub =
+              classParser.parseSubclass(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(subclasses: [sub]);
+        },
+        (e) => IngestionBatchResult(errors: ['Failed to parse subclass: $e']),
+      );
     }
 
     // 5. Identify Races / Species (has speed or size without ac/hp, or traits)
@@ -1888,42 +1892,40 @@ class CompendiumJsonIngestionPipeline {
         !lowerKeys.contains('ac') &&
         !lowerKeys.contains('hp') &&
         !lowerKeys.contains('school')) {
-      try {
-        final race = raceParser.parseRace(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(races: [race]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse race: $e']);
-      }
+      return _guard(
+        () {
+          final race = raceParser.parseRace(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(races: [race]);
+        },
+        (e) => IngestionBatchResult(errors: ['Failed to parse race: $e']),
+      );
     }
 
     // 6. Identify Feats (has prerequisite or featType or category)
     if (lowerKeys.contains('prerequisite') ||
         lowerKeys.contains('feattype') ||
         (map['category']?.toString().toLowerCase().contains('feat') ?? false)) {
-      try {
-        final feat = featParser.parseFeat(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(feats: [feat]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse feat: $e']);
-      }
+      return _guard(
+        () {
+          final feat = featParser.parseFeat(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(feats: [feat]);
+        },
+        (e) => IngestionBatchResult(errors: ['Failed to parse feat: $e']),
+      );
     }
 
     // 7. Identify Backgrounds (has skillProficiencies or backgroundFeature)
     if (lowerKeys.contains('skillproficiencies') ||
         lowerKeys.contains('backgroundfeature')) {
-      try {
-        final bg =
-            backgroundParser.parseBackground(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(backgrounds: [bg]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse background: $e']);
-      }
+      return _guard(
+        () {
+          final bg =
+              backgroundParser.parseBackground(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(backgrounds: [bg]);
+        },
+        (e) =>
+            IngestionBatchResult(errors: ['Failed to parse background: $e']),
+      );
     }
 
     // 8. Identify Items (has rarity, itemType, reqAttune, or entries)
@@ -1931,14 +1933,13 @@ class CompendiumJsonIngestionPipeline {
         lowerKeys.contains('type') ||
         lowerKeys.contains('reqattune') ||
         lowerKeys.contains('weaponcategory')) {
-      try {
-        final item = itemParser.parseItem(map, forceRuleset: forceRuleset);
-        return IngestionBatchResult(items: [item]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(errors: ['Failed to parse item: $e']);
-      }
+      return _guard(
+        () {
+          final item = itemParser.parseItem(map, forceRuleset: forceRuleset);
+          return IngestionBatchResult(items: [item]);
+        },
+        (e) => IngestionBatchResult(errors: ['Failed to parse item: $e']),
+      );
     }
 
     // 9. Generic Fallback (tables, rules, etc.)
@@ -1956,21 +1957,20 @@ class CompendiumJsonIngestionPipeline {
           errors: ['Malformed entity name.'],
         );
       }
-      try {
-        final entry = genericParser.parseGenericEntry(map,
-            forceRuleset: forceRuleset, defaultCategory: 'Custom');
-        if (entry.name.length > 500 ||
-            entry.id.slug.length > 200 ||
-            entry.name.startsWith('[{')) {
-          return const IngestionBatchResult();
-        }
-        return IngestionBatchResult(otherEntries: [entry]);
-      } on CatalogNotInstalledError {
-        rethrow;
-      } catch (e) {
-        return IngestionBatchResult(
-            errors: ['Failed to parse custom compendium entry: $e']);
-      }
+      return _guard(
+        () {
+          final entry = genericParser.parseGenericEntry(map,
+              forceRuleset: forceRuleset, defaultCategory: 'Custom');
+          if (entry.name.length > 500 ||
+              entry.id.slug.length > 200 ||
+              entry.name.startsWith('[{')) {
+            return const IngestionBatchResult();
+          }
+          return IngestionBatchResult(otherEntries: [entry]);
+        },
+        (e) => IngestionBatchResult(
+            errors: ['Failed to parse custom compendium entry: $e']),
+      );
     }
 
     return const IngestionBatchResult(
