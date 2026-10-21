@@ -137,7 +137,7 @@ class StorageDurabilityCoordinator {
     }
 
     // User-initiated cold-storage snapshot restoration allows rollbacks;
-    // cryptographic validity is already verified via bundle.isValid above.
+    // checksum integrity is already verified via bundle.isValid above.
 
     // Reconcile / save state
     try {

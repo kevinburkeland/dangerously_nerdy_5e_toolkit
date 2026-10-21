@@ -7,7 +7,7 @@
   "display": "standalone",
   "background_color": "#14121E",
   "theme_color": "#14121E",
-  "description": "DangerouslyNerdy 5e Toolkit - 5e Combat Companion, Animate Objects Tracker, & Dice App",
+  "description": "DangerouslyNerdy 5e Toolkit - 5e Combat Companion, Character Builder, & Dice App",
   "orientation": "any",
   "categories": ["games", "utilities", "entertainment"],
   "prefer_related_applications": false,
@@ -20,9 +20,9 @@
       "icons": [{ "src": "pwa_icons/Icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Animate Objects 5e",
-      "short_name": "Animate Objects",
-      "description": "Launch Animate Objects Tracker",
+      "name": "Combat Companion",
+      "short_name": "Combat",
+      "description": "Launch Combat Companion",
       "url": "/",
       "icons": [{ "src": "pwa_icons/Icon-192.png", "sizes": "192x192" }]
     }

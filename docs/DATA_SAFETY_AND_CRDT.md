@@ -15,5 +15,5 @@ Dart lacks deep immutability by default.
 - **Rule:** CRDT wrappers must never expose direct references to mutable lists or maps. Mutations must occur via `.set(newValue, newTimestamp)` or `.add(newItem, newTimestamp)` which return a completely new instance of the CRDT wrapper.
 
 ## 4. Snapshot Checkpoints (Delta Fast-Forward)
-Event-sourced logs become too large to parse over time.
+Transaction logs become too large to parse over time.
 - **Rule:** Network payloads represent incremental deltas. Full room state is derived by grabbing the last milestone JSON snapshot and applying the deltas on top using CRDT `merge()` logic.

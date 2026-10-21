@@ -112,7 +112,7 @@ class _PrivacyPolicyContent extends StatelessWidget {
         Text(
           '• Local Storage: Custom presets are stored locally on your device in browser cache.\n'
           '• Live Rooms: Shared room payloads (room code, optional display name, roll totals) are stream-only and ephemeral.\n'
-          '• Security: Data in transit is encrypted using TLS 1.3 via Firebase Cloud Infrastructure.',
+          '• Security: Data in transit is secured using TLS 1.3 via Firebase Cloud Infrastructure.',
           style: TextStyle(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
               fontSize: 13,
