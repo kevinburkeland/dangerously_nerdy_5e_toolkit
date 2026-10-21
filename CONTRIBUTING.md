@@ -133,7 +133,7 @@ Every commit submitted to this project must be signed off with a `Signed-off-by:
 git commit -s -m "feat: your descriptive commit message"
 ```
 
-This sign-off confirms that you agree to the DCO and assert your right to submit your contribution under the applicable project licenses (AGPLv3 for software, CC-BY-4.0 for SRD game data) without transferring your copyright.
+This sign-off confirms that you agree to the DCO and assert your right to submit your contribution under the applicable project licenses (AGPLv3 for software, CC-BY-4.0 for SRD game data) without transferring your copyright. Sign-off is checked by CI for every commit after baseline `116bb9bad62d771bdee55a41df99536e1a1f4d68`; some earlier commits lack it.
 
 ---
 

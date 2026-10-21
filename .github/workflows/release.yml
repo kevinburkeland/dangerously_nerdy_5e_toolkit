@@ -18,6 +18,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -32,24 +35,24 @@ jobs:
 
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: ☕ Set up Java 17 (JDK)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
 
-      - name: 💙 Set up Flutter SDK (Stable)
-        uses: subosito/flutter-action@v2
+      - name: 💙 Set up Flutter SDK (Pinned Version)
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
           cache: true
           cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
 
       - name: 📦 Install Pub Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: 🔍 Static Code Analysis (Zero Warnings Guard)
         run: flutter analyze
@@ -61,7 +64,7 @@ jobs:
         run: ./scripts/build_web.sh
 
       - name: 📊 Upload Test Coverage Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lcov-coverage-report
           path: coverage/lcov.info
@@ -75,16 +78,16 @@ jobs:
 
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: ☕ Set up Java 21 (required by Firebase Emulator)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: 🟢 Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -99,37 +102,64 @@ jobs:
         run: npx firebase emulators:exec --only firestore --project demo-dnd5e "npm test"
 
   # -----------------------------------------------------------------------
-  # STAGE 3: BUILD WEB PRODUCTION BUNDLE (PRIMARY WEB TARGET)
+  # STAGE 3: DCO SIGN-OFF & WORKFLOW PIN VERIFICATION
+  # -----------------------------------------------------------------------
+  dco:
+    name: 📜 DCO Sign-off & Workflow Pin Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository (Full History)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: 🔒 Verify Action Pinning
+        run: |
+          if grep -nE '^\s*uses:\s*' .github/workflows/*.yml | grep -vE 'uses:\s*[^@]+@[0-9a-fA-F]{40}'; then
+            echo "Error: Found unpinned GitHub Actions above. All actions must be pinned to a 40-character commit SHA."
+            exit 1
+          fi
+
+      - name: 🧪 Run DCO Script Self-Tests
+        run: ./scripts/test_check_dco.sh
+
+      - name: 📜 Verify Commit Sign-offs
+        # Baseline 116bb9bad62d771bdee55a41df99536e1a1f4d68 is the newest unsigned commit in repository history.
+        run: ./scripts/check_dco.sh 116bb9bad62d771bdee55a41df99536e1a1f4d68 HEAD
+
+  # -----------------------------------------------------------------------
+  # STAGE 4: BUILD WEB PRODUCTION BUNDLE (PRIMARY WEB TARGET)
   # -----------------------------------------------------------------------
   build-web:
     name: 🌐 Build & Package Web Bundle
-    needs: [validate, firestore-rules]
+    needs: [validate, firestore-rules, dco]
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: 💙 Set up Flutter SDK (Stable)
-        uses: subosito/flutter-action@v2
+      - name: 💙 Set up Flutter SDK (Pinned Version)
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
           cache: true
 
       - name: 📦 Install Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: 🌐 Build Web Production Artifact
         run: ./scripts/build_web.sh
 
       - name: 📤 Upload Web Build Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: web-production-bundle
           path: build/web/
 
   # -----------------------------------------------------------------------
-  # STAGE 3: BUILD ANDROID RELEASE (.AAB) - RELEASE OR OPT-IN ONLY
+  # STAGE 5: BUILD ANDROID RELEASE (.AAB) - RELEASE OR OPT-IN ONLY
   # -----------------------------------------------------------------------
   build-android:
     name: 🤖 Build Android Release (.aab)
@@ -139,23 +169,23 @@ jobs:
 
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: ☕ Set up Java 17 (JDK)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
 
-      - name: 💙 Set up Flutter SDK (Stable)
-        uses: subosito/flutter-action@v2
+      - name: 💙 Set up Flutter SDK (Pinned Version)
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
           cache: true
 
       - name: 📦 Install Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: 🔑 Decode & Inject Android Keystore Secrets
         env:
@@ -177,19 +207,19 @@ jobs:
             --split-debug-info=build/app/outputs/symbols
 
       - name: 📤 Upload Android AAB Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: android-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
 
       - name: 🗺️ Upload Android Debug Symbol Maps
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: android-debug-symbols
           path: build/app/outputs/symbols/
 
   # -----------------------------------------------------------------------
-  # STAGE 4: BUILD IOS RELEASE (.IPA) - RELEASE OR OPT-IN ONLY
+  # STAGE 6: BUILD IOS RELEASE (.IPA) - RELEASE OR OPT-IN ONLY
   # -----------------------------------------------------------------------
   build-ios:
     name: 🍎 Build iOS Release (.ipa)
@@ -199,16 +229,16 @@ jobs:
 
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: 💙 Set up Flutter SDK (Stable)
-        uses: subosito/flutter-action@v2
+      - name: 💙 Set up Flutter SDK (Pinned Version)
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
           cache: true
 
       - name: 📦 Install Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: 🛠️ Build Obfuscated iOS App Archive (.ipa)
         run: |
@@ -218,13 +248,13 @@ jobs:
             --no-codesign
 
       - name: 📤 Upload iOS IPA Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ios-release-ipa
           path: build/ios/archive/
 
       - name: 🗺️ Upload iOS Debug Symbol Maps
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ios-debug-symbols
           path: build/ios/outputs/symbols/
