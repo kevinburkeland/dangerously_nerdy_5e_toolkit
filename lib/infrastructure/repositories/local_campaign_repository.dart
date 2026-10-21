@@ -234,10 +234,16 @@ class LocalCampaignRepository implements ICampaignRepository {
             newProfiles.add(profile);
           } catch (e, st) {
             newRejectedProfileIds.add(id);
+            final String reason;
+            if (e is FormatException && e.message.contains('recordVersion')) {
+              reason = 'Unsupported campaign recordVersion skipped and preserved for campaign $id: $e';
+            } else {
+              reason = 'Corrupted campaign profile skipped and preserved: $id';
+            }
             LoggingService().logNonFatal(
               e,
               st,
-              reason: 'Corrupted campaign profile skipped and preserved: $id',
+              reason: reason,
             );
           }
         }

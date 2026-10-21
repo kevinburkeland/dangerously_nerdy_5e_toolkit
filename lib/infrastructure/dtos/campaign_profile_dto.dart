@@ -20,6 +20,7 @@ import 'crdt/crdt_lww_register_dto.dart';
 /// legacy schema migrations, and unparsed fallback payloads to the Infrastructure layer.
 @immutable
 class CampaignProfileDto {
+  final int recordVersion;
   final String id;
   final String name;
   final Map<String, dynamic> nameRegister;
@@ -43,6 +44,7 @@ class CampaignProfileDto {
   final List<Map<String, dynamic>> unparsedMinions;
 
   const CampaignProfileDto({
+    this.recordVersion = 1,
     required this.id,
     required this.name,
     this.nameRegister = const {},
@@ -73,6 +75,7 @@ class CampaignProfileDto {
     List<Map<String, dynamic>> unparsedMinions = const [],
   }) {
     return CampaignProfileDto(
+      recordVersion: 1,
       id: profile.id,
       name: profile.name,
       nameRegister: CrdtLwwRegisterDto.toMap(profile.nameRegister, (v) => v),
@@ -272,6 +275,21 @@ class CampaignProfileDto {
       throw const FormatException('CampaignProfileDto.fromMap: "id" must not be null or empty.');
     }
     final idStr = rawId.trim();
+
+    final rawRecordVersion = map['recordVersion'];
+    final int recordVersion;
+    if (rawRecordVersion == null) {
+      recordVersion = 0; // Legacy record
+    } else if (rawRecordVersion is int) {
+      if (rawRecordVersion > 1) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: unsupported recordVersion $rawRecordVersion for campaign $rawId');
+      }
+      recordVersion = rawRecordVersion;
+    } else {
+      throw FormatException(
+          'CampaignProfileDto.fromMap: non-integer recordVersion "$rawRecordVersion" for campaign $rawId');
+    }
 
     final editionStr = map['edition']?.toString() ?? 'v2024';
 
@@ -598,6 +616,7 @@ class CampaignProfileDto {
     }
 
     return CampaignProfileDto(
+      recordVersion: recordVersion,
       id: idStr,
       name: map['name']?.toString() ?? 'Unnamed Campaign',
       nameRegister: nameRegMap,
@@ -624,6 +643,7 @@ class CampaignProfileDto {
 
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
+      'recordVersion': 1,
       'id': id,
       'name': name,
       if (nameRegister.isNotEmpty) 'nameRegister': nameRegister,
