@@ -5,6 +5,7 @@ import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../models/spellbook_data.dart';
+import '../logging_service.dart';
 
 /// Innate/Racial native spell model for spells granted by species or racial heritage.
 @immutable
@@ -440,7 +441,10 @@ class SkillTraitResolver {
           if (g is Map) {
             try {
               refGrants.add(FeatureGrant.fromMap(Map<String, dynamic>.from(g)));
-            } catch (_) {}
+            } catch (e, st) {
+              LoggingService().logNonFatal(e, st,
+                  reason: 'Failed to deserialize subraceRef feature grant');
+            }
           }
         }
       }

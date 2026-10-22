@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import '../../services/logging_service.dart';
 import '../../utils/crypto_utils.dart';
 
 export 'package:vtt_engine_core/ports/transport_state.dart';
@@ -134,20 +135,29 @@ class CascadingTransportRouter implements IP2pTransportPort {
     try {
       await _activateAdapter(localWifiAdapter, TransportState.localWifi);
       return;
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Tier 1 Local Wi-Fi activation failed');
+    }
 
     // Tier 2: WebRTC P2P Mesh (Zero Cost Data Channel, Ephemeral Signaling)
     try {
       await _activateAdapter(webRtcAdapter, TransportState.webRtc);
       return;
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Tier 2 WebRTC Mesh activation failed');
+    }
 
     // Tier 3: Firebase Cloud Relay (Incurs Cost)
     try {
       await _activateAdapter(
           firebaseFallbackAdapter, TransportState.fallbackRelay);
       return;
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Tier 3 Firebase Cloud Relay activation failed');
+    }
 
     // Tier 4: Total Offline
     _changeState(TransportState.offline);
@@ -207,7 +217,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
           }
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Failed to inspect incoming transport payload protocol');
+    }
     if (!_payloadController.isClosed) {
       _payloadController.add(payload);
     }
@@ -262,7 +275,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
       try {
         await _activateAdapter(webRtcAdapter, TransportState.webRtc);
         return;
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Step-down fallback from Local Wi-Fi to WebRTC failed');
+      }
     }
 
     if (_currentState == TransportState.localWifi ||
@@ -273,7 +289,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
           TransportState.fallbackRelay,
         );
         return;
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Step-down fallback to Firebase Relay failed');
+      }
     }
 
     _changeState(TransportState.offline);
@@ -348,7 +367,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
           'timestamp': DateTime.now().millisecondsSinceEpoch,
         });
         firebaseFallbackAdapter.broadcastPayload(ping);
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Failed to broadcast relay heartbeat ping');
+      }
     });
   }
 
@@ -417,8 +439,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
           return;
         }
       }
-    } catch (_) {
-      // Probing failure is non-fatal; the active fallback stream continues unhindered
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason:
+              'Probing failure is non-fatal; the active fallback stream continues unhindered');
     } finally {
       _isProbing = false;
     }
@@ -436,7 +460,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
     if (previousAdapter != null && previousAdapter != higherAdapter) {
       try {
         await previousAdapter.disconnect();
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Failed to disconnect previous adapter during promotion');
+      }
     }
   }
 

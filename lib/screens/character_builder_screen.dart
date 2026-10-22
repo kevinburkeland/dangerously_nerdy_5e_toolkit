@@ -2339,7 +2339,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                               : 0;
                                       final bonusAmt = fixedAmt + flexAmt;
                                       final total = base + bonusAmt;
-                                      final mod = (total - 10) ~/ 2;
+                                      final mod = Dnd5eScoreMath.scoreToModifier(total);
                                       final modStr =
                                           mod >= 0 ? '+$mod' : '$mod';
                                       return Container(
@@ -2793,7 +2793,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 final base = baseScores.getScore(ab);
                 final bonus = bonuses.getScore(ab);
                 final total = base + bonus;
-                final mod = (total - 10) ~/ 2;
+                final mod = Dnd5eScoreMath.scoreToModifier(total);
                 final modStr = mod >= 0 ? '+$mod' : '$mod';
                 return Container(
                   padding:

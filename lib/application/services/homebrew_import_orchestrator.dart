@@ -8,6 +8,7 @@ import 'package:vtt_engine_core/homebrew/models/homebrew_entity.dart';
 import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/github_repo_source.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
+import '../../services/logging_service.dart';
 
 /// Reactive telemetry snapshot emitted during homebrew ingestion.
 @immutable
@@ -214,8 +215,10 @@ class HomebrewImportOrchestrator {
             if (_persister != null) {
               try {
                 await _persister(entity);
-              } catch (_) {
-                // Non-fatal if secondary cache storage fails; CRDT ledger remains authoritative
+              } catch (e, st) {
+                LoggingService().logNonFatal(e, st,
+                    reason:
+                        'Non-fatal if secondary cache storage fails; CRDT ledger remains authoritative');
               }
             }
 
@@ -224,7 +227,10 @@ class HomebrewImportOrchestrator {
               if (pendingBatch.length >= _batchSize) {
                 try {
                   await _batchPersister(List.unmodifiable(pendingBatch));
-                } catch (_) {}
+                } catch (e, st) {
+                  LoggingService().logNonFatal(e, st,
+                      reason: 'Failed to persist homebrew entity batch');
+                }
                 pendingBatch.clear();
                 // Yield to the event loop so frame rendering and UI progress stay fluid
                 await Future<void>.delayed(Duration.zero);
@@ -268,7 +274,10 @@ class HomebrewImportOrchestrator {
         if (pendingBatch.isNotEmpty && _batchPersister != null) {
           try {
             await _batchPersister(List.unmodifiable(pendingBatch));
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(e, st,
+                reason: 'Failed to flush remaining homebrew entity batch');
+          }
           pendingBatch.clear();
         }
 

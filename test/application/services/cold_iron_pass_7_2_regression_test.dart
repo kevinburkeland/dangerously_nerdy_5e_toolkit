@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character, EntityType;
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/migration/room_profile_genesis_restamper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
@@ -90,10 +89,7 @@ void main() {
   });
 
   group('Cold Iron Birdcage Pass 7.2 Regression Suite at df02baa', () {
-    test('G1: restampIfNeeded re-stamps genesis titles with clock node and physicalTime > 0', () {
-      final repA = ReplicaId('dev-a');
-      final clockA = StatefulHlcClock(replicaId: repA);
-
+    test('G1: Zero-timestamp placeholder registers merge deterministically without restamping', () {
       const genesisTs = HybridLogicalClock(physicalTime: 0, logicalCounter: 0, nodeId: 'genesis');
       final genesisProfile = CampaignProfile.raw(
         id: 'camp_1',
@@ -117,32 +113,23 @@ void main() {
         changeLog: const [],
       );
 
-      final restamped = RoomProfileGenesisRestamper.restampIfNeeded(
-        profile: genesisProfile,
-        clock: clockA,
-      );
+      expect(genesisProfile.roomState.title, equals('Campaign CR-X Staging'));
+      expect(genesisProfile.roomState.titleRegister.timestamp.nodeId, equals('genesis'));
+      expect(genesisProfile.roomState.titleRegister.timestamp.physicalTime, equals(0));
 
-      // Expected: title stamp node dev-a, physical time > 0, title text unchanged
-      expect(restamped.roomState.title, equals('Campaign CR-X Staging'));
-      expect(restamped.roomState.titleRegister.timestamp.nodeId, equals('dev-a'));
-      expect(restamped.roomState.titleRegister.timestamp.physicalTime, greaterThan(0));
-      expect(RoomProfileGenesisRestamper.isGenesisTimestamp(restamped.roomState.titleRegister.timestamp), isFalse);
-
-      // Control: a profile built with a real title stamp comes back unchanged
+      final repA = ReplicaId('dev-a');
+      final clockA = StatefulHlcClock(replicaId: repA);
       final realTs = clockA.nextTimestamp();
       final realProfile = genesisProfile.copyWith(
         roomState: genesisProfile.roomState.copyWith(
           title: 'Real Staged',
           titleTimestamp: realTs,
-          description: '',
-          descriptionTimestamp: realTs,
         ),
       );
-      final restampedReal = RoomProfileGenesisRestamper.restampIfNeeded(
-        profile: realProfile,
-        clock: clockA,
-      );
-      expect(restampedReal, equals(realProfile));
+      final recon = RoomStateReconciliationService();
+      final res = recon.reconcileProfileSafely(local: genesisProfile, remote: realProfile);
+      expect(res.profile.roomState.title, equals('Real Staged'));
+      expect(res.fieldFaults, isEmpty);
     });
 
     test('G2: Two profiles for room CR-X with different genesis titles converge with zero faults', () {
@@ -192,19 +179,13 @@ void main() {
         changeLog: const [],
       );
 
-      final clockA = StatefulHlcClock(replicaId: ReplicaId('dev-a'));
-      final clockB = StatefulHlcClock(replicaId: ReplicaId('dev-b'));
-
-      final restampedA = RoomProfileGenesisRestamper.restampIfNeeded(profile: profileA, clock: clockA);
-      final restampedB = RoomProfileGenesisRestamper.restampIfNeeded(profile: profileB, clock: clockB);
-
       final resAB = recon.reconcileProfileSafely(
-        local: restampedA,
-        remote: restampedB,
+        local: profileA,
+        remote: profileB,
       );
       final resBA = recon.reconcileProfileSafely(
-        local: restampedB,
-        remote: restampedA,
+        local: profileB,
+        remote: profileA,
       );
 
       expect(resAB.fieldFaults, isEmpty);
@@ -254,11 +235,11 @@ void main() {
 
       final partyService = PartyRoomService(replicaId: rep, clock: clock);
       await partyService.openRoomProfile('OPEN1');
-      expect(repo.updateProfileCalls, equals(1));
+      expect(repo.updateProfileCalls, equals(0));
 
-      // Second open: should NOT call updateProfile because title/desc were already re-stamped!
+      // Second open: also calls updateProfile 0 times (no restamping on open)
       await partyService.openRoomProfile('OPEN1');
-      expect(repo.updateProfileCalls, equals(1)); // Expected 1 call total, before fix it is 2 (1 call each open)
+      expect(repo.updateProfileCalls, equals(0));
     });
 
     test('R3: openRoomProfile throws when no lobby readable and no local profile exists', () async {

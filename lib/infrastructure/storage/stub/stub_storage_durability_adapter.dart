@@ -3,6 +3,8 @@ import 'package:vtt_engine_core/storage/models/engine_profile.dart';
 import 'package:vtt_engine_core/storage/models/storage_telemetry_report.dart';
 import 'package:vtt_engine_core/storage/ports/i_storage_durability_port.dart';
 
+import '../../../services/logging_service.dart';
+
 /// Non-web fallback adapter for storage durability inspection and persistence.
 class StorageDurabilityAdapter implements IStorageDurabilityPort {
   const StorageDurabilityAdapter();
@@ -22,7 +24,10 @@ class StorageDurabilityAdapter implements IStorageDurabilityPort {
       } else if (Platform.isLinux) {
         os = PlatformOs.linux;
       }
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Failed to inspect platform OS in stub durability adapter');
+    }
 
     return EngineProfile(
       engine: BrowserEngine.other,

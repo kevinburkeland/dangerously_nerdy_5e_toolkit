@@ -45,7 +45,7 @@ class MinionSessionService {
         }
       }
     } catch (_) {
-      // Ignored during testing if ServicesBinding is not yet initialized
+      // intentional: ignored during testing if ServicesBinding is not yet initialized
     }
   }
 

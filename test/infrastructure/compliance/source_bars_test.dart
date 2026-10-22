@@ -960,31 +960,10 @@ void main() {
     });
 
     test(
-        'Source Bar K: No empty or unintentional catches in persistence, sync, and party code',
+        'Source Bar K: No empty or unintentional catches across all of lib/',
         () {
-      final targetPaths = [
-        'lib/services/persistence',
-        'lib/services/party',
-        'lib/infrastructure/repositories',
-        'lib/infrastructure/migration',
-        'lib/infrastructure/mappers',
-        'lib/infrastructure/dtos/campaign_profile_dto.dart',
-        'lib/application/services/room_sync_orchestrator.dart',
-      ];
-
-      final filesToCheck = <File>[];
-      for (final p in targetPaths) {
-        if (FileSystemEntity.isFileSync(p)) {
-          filesToCheck.add(File(p));
-        } else if (FileSystemEntity.isDirectorySync(p)) {
-          filesToCheck.addAll(
-            Directory(p)
-                .listSync(recursive: true)
-                .whereType<File>()
-                .where((f) => f.path.endsWith('.dart')),
-          );
-        }
-      }
+      final filesToCheck = getDartFiles();
+      expect(filesToCheck, isNotEmpty);
 
       final violations = <String>[];
       for (final file in filesToCheck) {
@@ -999,9 +978,56 @@ void main() {
         violations,
         isEmpty,
         reason:
-            'Empty or unintentional catches forbidden in persistence/sync/party code (Source Bar K).\n'
+            'Empty or unintentional catches forbidden across lib/ (Source Bar K).\n'
             'Violations:\n${violations.join('\n')}',
       );
+    });
+
+    test(
+        'Source Bar L: No (<expr> - 10) ~/ 2 ability modifier calculations under lib/ (must use Dnd5eScoreMath.scoreToModifier)',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      // Matches (expr - 10) ~/ 2 with flexible whitespace
+      final modifierPattern = RegExp(r'-\s*10\s*\)\s*~/\s*2');
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final lines = file.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          final line = lines[i];
+          final trimmed = line.trim();
+          if (trimmed.startsWith('//') ||
+              trimmed.startsWith('*') ||
+              trimmed.startsWith('/*')) {
+            continue;
+          }
+          if (modifierPattern.hasMatch(line)) {
+            violations.add('${file.path}:${i + 1} -> $trimmed');
+          }
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'Active production code under lib/ must not calculate ability modifiers using (<expr> - 10) ~/ 2; '
+            'use Dnd5eScoreMath.scoreToModifier (Source Bar L).\n'
+            'Violations:\n${violations.join('\n')}',
+      );
+    });
+
+    test('Source Bar L unit validation: rejects (<expr> - 10) ~/ 2 patterns', () {
+      final modifierPattern = RegExp(r'-\s*10\s*\)\s*~/\s*2');
+      expect(modifierPattern.hasMatch('(score - 10) ~/ 2'), isTrue);
+      expect(
+          modifierPattern.hasMatch('(finalScores.dexterity - 10) ~/ 2'), isTrue);
+      expect(modifierPattern.hasMatch('(total - 10)~/2'), isTrue);
+      expect(
+          modifierPattern.hasMatch('Dnd5eScoreMath.scoreToModifier(total)'),
+          isFalse);
     });
 
     test(

@@ -110,7 +110,9 @@ class PartyRoomLobby {
           try {
             telemetryMap[entry.key] = CharacterTelemetryDto.fromMap(
                 Map<String, dynamic>.from(entry.value as Map));
-          } catch (_) {}
+          } catch (_) {
+            // intentional: corrupted peer telemetry entry dropped during lobby deserialization
+          }
         }
       }
     }

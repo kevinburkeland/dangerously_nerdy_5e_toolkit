@@ -77,8 +77,8 @@ class DmDashboardPartyHud extends StatelessWidget {
             (character.customProperties['maxHp'] as num?)?.toInt() ?? currentHp;
         final finalScores =
             character.baseScores.withBonus(character.bonusScores);
-        final dexMod = (finalScores.dexterity - 10) ~/ 2;
-        final wisMod = (finalScores.wisdom - 10) ~/ 2;
+        final dexMod = Dnd5eScoreMath.scoreToModifier(finalScores.dexterity);
+        final wisMod = Dnd5eScoreMath.scoreToModifier(finalScores.wisdom);
         final ac =
             (character.customProperties['armorClass'] as num?)?.toInt() ??
                 (10 + dexMod);

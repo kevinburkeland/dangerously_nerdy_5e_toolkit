@@ -1,14 +1,18 @@
 import 'dart:convert';
+import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 
 import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
+import '../../models/party/campaign_membership.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../../services/persistence/character_persistence_service.dart';
@@ -195,23 +199,38 @@ class CampaignStorageMigration {
               ? const CrdtOrSet<String>.empty().addBatch(entries)
               : const CrdtOrSet<String>.empty();
 
-          final prof = CampaignProfile(
+          final isAuthor = m.role == CampaignRole.host;
+          final regTs = isAuthor ? clock.nextTimestamp() : HybridLogicalClock.genesis;
+          final prof = CampaignProfile.raw(
             id: 'campaign_${m.roomCode}',
-            name: m.campaignName.trim().isNotEmpty
-                ? m.campaignName.trim()
-                : 'Campaign ${m.roomCode}',
-            nodeId: nodeId,
+            nameRegister: CrdtLwwRegister<String>(
+              value: m.campaignName.trim().isNotEmpty
+                  ? m.campaignName.trim()
+                  : 'Campaign ${m.roomCode}',
+              timestamp: regTs,
+            ),
+            edition: const RulesetIdentifier('generic_tabletop'),
             createdAt: DateTime.now().toUtc(),
             lastPlayedAt: DateTime.now().toUtc(),
             partyRoster: partyRoster,
             roomState: RoomNodeState(
               roomId: 'room_${m.roomCode}',
               roomCode: m.roomCode,
-              title: '${m.campaignName} Staging Area',
-              titleTimestamp: clock.nextTimestamp(),
-              description: 'Active DM session staging node.',
-              descriptionTimestamp: clock.nextTimestamp(),
+              title: m.campaignName.trim().isNotEmpty
+                  ? '${m.campaignName} Staging Area'
+                  : 'Campaign ${m.roomCode} Staging',
+              titleTimestamp: regTs,
+              description: '',
+              descriptionTimestamp: regTs,
             ),
+            partyPurse: const PartyPurse.empty(),
+            memberPurses: const {},
+            pinnedRules: const CrdtOrSet<String>.empty(),
+            notesRegister: CrdtLwwRegister<String>(
+              value: '',
+              timestamp: regTs,
+            ),
+            changeLog: const [],
           );
           try {
             await repo.putProfile(prof);

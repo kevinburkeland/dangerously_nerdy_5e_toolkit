@@ -565,7 +565,7 @@ class CharacterBuilderController extends ChangeNotifier {
   }
 
   void setManualScore(AbilityType ability, int value) {
-    _manualScores[ability] = value.clamp(3, 30);
+    _manualScores[ability] = value.clamp(1, 30);
     _syncDraftScores();
     notifyListeners();
   }

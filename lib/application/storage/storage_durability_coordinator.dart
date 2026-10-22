@@ -52,7 +52,10 @@ class StorageDurabilityCoordinator {
       // Chromium or WebKit Standalone PWA: silently request persistence without user prompt
       try {
         await storagePort.requestPersistence();
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Silent persistence request failed during preflight');
+      }
     } else if (profile.requiresExplicitGesture) {
       // Firefox Desktop: suppress automatic prompt during boot to avoid browser notification blockage
       _requiresContextualPrompt = true;

@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
 import 'dart:async';
 import 'dart:html' as html;
+import '../../../services/logging_service.dart';
 import 'http_fetcher.dart';
 
 HttpFetchClient createPlatformClient() => WebHttpFetchClient();
@@ -15,7 +16,10 @@ class WebHttpFetchClient implements HttpFetchClient {
     // On web, User-Agent is forbidden by browser specs, but Accept header is allowed
     try {
       xhr.setRequestHeader('Accept', 'application/json, text/plain, */*');
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Failed to set Accept header on HttpRequest');
+    }
 
     xhr.onLoad.listen((_) {
       final status = xhr.status ?? 0;

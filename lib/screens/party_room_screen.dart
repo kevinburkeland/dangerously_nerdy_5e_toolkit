@@ -171,7 +171,10 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
           isNewImport: false,
         ));
       }
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Failed to link initial character in party room');
+    }
 
     if (widget.orchestrator != null) {
       _orchestrator = widget.orchestrator;
@@ -902,7 +905,10 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
       if (rawMap != null) {
         try {
           targetChar = Character.fromMap(rawMap);
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st,
+              reason: 'Failed to deserialize character from sharedCharacters map in party room');
+        }
       }
     }
 

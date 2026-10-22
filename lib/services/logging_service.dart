@@ -70,7 +70,7 @@ class LoggingService {
           fatal: false,
         );
       } catch (_) {
-        // Crashlytics not initialized (e.g. headless unit tests or offline run)
+        // intentional: Crashlytics not initialized (e.g. headless unit tests or offline run)
       }
     }
   }
@@ -93,7 +93,7 @@ class LoggingService {
           fatal: true,
         );
       } catch (_) {
-        // Crashlytics not initialized
+        // intentional: Crashlytics not initialized during headless tests or offline run
       }
     }
   }

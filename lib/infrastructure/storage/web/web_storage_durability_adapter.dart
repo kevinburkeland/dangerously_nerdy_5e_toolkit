@@ -4,6 +4,7 @@ import 'package:web/web.dart' as web;
 import 'package:vtt_engine_core/storage/models/engine_profile.dart';
 import 'package:vtt_engine_core/storage/models/storage_telemetry_report.dart';
 import 'package:vtt_engine_core/storage/ports/i_storage_durability_port.dart';
+import '../../../services/logging_service.dart';
 import '../user_agent_parser.dart';
 
 /// Web implementation of [IStorageDurabilityPort] utilizing W3C StorageManager standards.
@@ -30,7 +31,10 @@ class StorageDurabilityAdapter implements IStorageDurabilityPort {
           }
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Failed to inspect standalone mode');
+    }
 
     return UserAgentParser.parse(
       ua,
@@ -48,13 +52,19 @@ class StorageDurabilityAdapter implements IStorageDurabilityPort {
     try {
       final persistedJs = await web.window.navigator.storage.persisted().toDart;
       isPersisted = persistedJs.toDart;
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Failed to inspect storage persistence');
+    }
 
     try {
       final estimate = await web.window.navigator.storage.estimate().toDart;
       bytesUsed = (estimate.usage as num?)?.toInt() ?? 0;
       byteQuota = (estimate.quota as num?)?.toInt() ?? 0;
-    } catch (_) {}
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st,
+          reason: 'Failed to inspect storage estimate');
+    }
 
     return StorageTelemetryReport.safe(
       isPersisted: isPersisted,

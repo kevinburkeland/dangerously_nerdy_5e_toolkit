@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:uuid/uuid.dart';
+import '../../../services/logging_service.dart';
 import 'signaling_message.dart';
 
 /// Adapter managing ephemeral WebRTC signaling (SDP offers, answers, ICE candidates)
@@ -144,12 +145,18 @@ class FirebaseSignalingAdapter {
             'expiresAt': expiresAt.toIso8601String(),
           });
         }
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Failed to ensure signaling room document');
+      }
 
       // Broadcast join presence for late-joiner detection
       try {
         await broadcastJoin();
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Failed to broadcast join presence in signaling adapter');
+      }
     }
   }
 
@@ -345,7 +352,10 @@ class FirebaseSignalingAdapter {
       if (_onDeleteDocument != null) {
         try {
           await _onDeleteDocument(path);
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st,
+              reason: 'Signaling onDeleteDocument callback failed');
+        }
       }
 
       if (isFirebaseAvailable && _roomCode != null) {
@@ -355,7 +365,7 @@ class FirebaseSignalingAdapter {
               .delete()
               .timeout(const Duration(seconds: 5));
         } catch (_) {
-          // Silently ignore if already deleted by peer, Firestore not-found, or network socket timeout
+          // intentional: silently ignore if already deleted by peer, Firestore not-found, or network socket timeout
         }
       }
     } finally {

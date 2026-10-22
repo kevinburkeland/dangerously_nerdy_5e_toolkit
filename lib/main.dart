@@ -82,7 +82,10 @@ void main() {
       await CampaignStorageMigration.runStartupMigration();
       try {
         await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
-      } catch (_) {}
+      } catch (e, st) {
+        logger.logNonFatal(e, st,
+            reason: 'StorageDurabilityCoordinator silent preflight failed');
+      }
       setupWebLifecycle(services.debouncedStorage);
     } catch (e, stackTrace) {
       logger.logNonFatal(

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:typed_data';
 
+import '../services/logging_service.dart';
+
 @JS('eval')
 external void _eval(String code);
 
@@ -24,5 +26,8 @@ Future<void> downloadPngBytesImpl(Uint8List bytes, String filename) async {
         }, 100);
       })();
     ''');
-  } catch (_) {}
+  } catch (e, st) {
+    LoggingService().logNonFatal(e, st,
+        reason: 'Failed to download PNG bytes in web exporter');
+  }
 }

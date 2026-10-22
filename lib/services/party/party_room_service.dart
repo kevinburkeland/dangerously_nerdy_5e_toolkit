@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
+import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
@@ -17,7 +18,6 @@ import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../models/party/party_session_state.dart';
 import '../../models/party/party_room_lobby.dart';
 import '../../infrastructure/migration/party_ledger_legacy_import.dart';
-import '../../infrastructure/migration/room_profile_genesis_restamper.dart';
 import '../../infrastructure/di/injection_container.dart';
 import '../../utils/crypto_utils.dart';
 import '../../utils/secure_random.dart';
@@ -434,12 +434,16 @@ class PartyRoomService {
             : (_localLobbies[clean]?.rulesetId ?? 'generic_tabletop');
         final edition = _parseRulesetEdition(targetRuleset);
 
-        final nowTs = _clock.nextTimestamp();
+        final lobbyName = _localLobbies[clean]?.campaignName.trim();
+        final effectiveName = (lobbyName != null && lobbyName.isNotEmpty)
+            ? lobbyName
+            : 'Campaign $clean';
+        const zeroTs = HybridLogicalClock.genesis;
         final newProfile = CampaignProfile.raw(
           id: targetId,
           nameRegister: CrdtLwwRegister<String>(
-            value: 'Campaign $clean',
-            timestamp: nowTs,
+            value: effectiveName,
+            timestamp: zeroTs,
           ),
           edition: edition,
           createdAt: DateTime.now(),
@@ -448,17 +452,17 @@ class PartyRoomService {
             roomId: 'room_$clean',
             roomCode: clean,
             title: 'Campaign $clean Staging',
-            titleTimestamp: nowTs,
+            titleTimestamp: zeroTs,
             description: '',
-            descriptionTimestamp: nowTs,
+            descriptionTimestamp: zeroTs,
           ),
           partyPurse: const PartyPurse.empty(),
           memberPurses: const {},
           partyRoster: const CrdtOrSet<String>.empty(),
           pinnedRules: const CrdtOrSet<String>.empty(),
-          notesRegister: CrdtLwwRegister<String>(
+          notesRegister: const CrdtLwwRegister<String>(
             value: '',
-            timestamp: nowTs,
+            timestamp: zeroTs,
           ),
           changeLog: const [],
         );
@@ -487,12 +491,16 @@ class PartyRoomService {
             _localLobbies[clean]?.rulesetId ?? 'generic_tabletop';
         final edition = _parseRulesetEdition(targetRuleset);
 
-        final nowTs = _clock.nextTimestamp();
+        final lobbyName = _localLobbies[clean]?.campaignName.trim();
+        final effectiveName = (lobbyName != null && lobbyName.isNotEmpty)
+            ? lobbyName
+            : 'Campaign $clean';
+        const zeroTs = HybridLogicalClock.genesis;
         final newProfile = CampaignProfile.raw(
           id: legacyId,
           nameRegister: CrdtLwwRegister<String>(
-            value: 'Campaign $clean',
-            timestamp: nowTs,
+            value: effectiveName,
+            timestamp: zeroTs,
           ),
           edition: edition,
           createdAt: DateTime.now(),
@@ -501,17 +509,17 @@ class PartyRoomService {
             roomId: 'room_$clean',
             roomCode: clean,
             title: 'Campaign $clean Staging',
-            titleTimestamp: nowTs,
+            titleTimestamp: zeroTs,
             description: '',
-            descriptionTimestamp: nowTs,
+            descriptionTimestamp: zeroTs,
           ),
           partyPurse: const PartyPurse.empty(),
           memberPurses: const {},
           partyRoster: const CrdtOrSet<String>.empty(),
           pinnedRules: const CrdtOrSet<String>.empty(),
-          notesRegister: CrdtLwwRegister<String>(
+          notesRegister: const CrdtLwwRegister<String>(
             value: '',
-            timestamp: nowTs,
+            timestamp: zeroTs,
           ),
           changeLog: const [],
         );
@@ -523,8 +531,7 @@ class PartyRoomService {
     return resolved;
   }
 
-  /// Resolves the campaign profile for [roomCode], re-stamps genesis titles if present,
-  /// and sets it as the active profile.
+  /// Resolves the campaign profile for [roomCode] and sets it as the active profile.
   /// Only room-entry paths call this (create, join, rehydrate, PartyRoomScreen, RoomBannerWidget).
   /// Reads the room document from Firestore, records legacy ledger fields in [_rawLegacyDocs],
   /// caches the lobby in [_localLobbies], and returns `null` when the room is absent.
@@ -631,18 +638,6 @@ class PartyRoomService {
       }
     }
 
-    if (RoomProfileGenesisRestamper.isGenesisTimestamp(
-            profile.roomState.titleRegister.timestamp) ||
-        RoomProfileGenesisRestamper.isGenesisTimestamp(
-            profile.roomState.descriptionRegister.timestamp)) {
-      profile =
-          await _campaignProfileService.repo.updateProfile(profile.id, (p) {
-        return RoomProfileGenesisRestamper.restampIfNeeded(
-          profile: p,
-          clock: _clock,
-        );
-      });
-    }
 
     final rawDoc = _rawLegacyDocs[clean];
     if (rawDoc != null &&

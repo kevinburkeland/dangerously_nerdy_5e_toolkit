@@ -152,7 +152,9 @@ class PartySessionState {
             try {
               partyTelemetry[k.toString()] =
                   CharacterTelemetryDto.fromLegacyCharacterMap(m);
-            } catch (_) {}
+            } catch (_) {
+              // intentional: unparseable legacy character telemetry fallback ignored
+            }
           }
         }
       });

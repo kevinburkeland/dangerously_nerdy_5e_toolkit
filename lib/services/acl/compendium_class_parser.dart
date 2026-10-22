@@ -2,6 +2,7 @@ import '../../models/characters/srd_classes_library.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../logging_service.dart';
 import 'entry_node_transformer.dart';
 
 /// Anti-Corruption Layer (ACL) dedicated transformer for Community Compendium and Homebrew Classes & Subclasses.
@@ -64,7 +65,10 @@ class CompendiumClassParser {
             ));
           } on CatalogNotInstalledError {
             rethrow;
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(e, st,
+                reason: 'Failed to parse compendium subclass in $slug');
+          }
         }
       }
     }
@@ -90,7 +94,10 @@ class CompendiumClassParser {
                 ClassFeatureDecision.fromMap(Map<String, dynamic>.from(dec)));
           } on CatalogNotInstalledError {
             rethrow;
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(e, st,
+                reason: 'Failed to parse class feature decision in $slug');
+          }
         }
       }
     }

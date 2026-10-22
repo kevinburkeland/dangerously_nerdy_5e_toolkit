@@ -160,14 +160,18 @@ class SpellDto {
           try {
             resolvedDamageMath
                 .add(EvaluationMath.fromMap(Map<String, dynamic>.from(dm)));
-          } catch (_) {}
+          } catch (_) {
+            // intentional: unparseable damage math item dropped during deserialization
+          }
         }
       }
     } else if (json['damageMath'] is Map) {
       try {
         resolvedDamageMath.add(EvaluationMath.fromMap(
             Map<String, dynamic>.from(json['damageMath'] as Map)));
-      } catch (_) {}
+      } catch (_) {
+        // intentional: unparseable damage math map dropped during deserialization
+      }
     }
 
     // If damageMath was not explicitly supplied, extract from markdown/text
@@ -264,7 +268,9 @@ class SpellDto {
           try {
             resolvedRefs
                 .add(EntityReference.fromMap(Map<String, dynamic>.from(ref)));
-          } catch (_) {}
+          } catch (_) {
+            // intentional: unparseable entity reference dropped during deserialization
+          }
         }
       }
     }

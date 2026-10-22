@@ -10,6 +10,7 @@ import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../utils/crypto_utils.dart';
 import '../../services/haptic_service.dart';
+import '../../services/logging_service.dart';
 
 /// Dialog to explicitly Create a New Campaign Room
 class CreateCampaignDialog extends StatefulWidget {
@@ -1784,7 +1785,10 @@ class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
       if (rawMap != null) {
         try {
           targetChar = Character.fromMap(rawMap);
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st,
+              reason: 'Failed to deserialize character from sharedCharacters');
+        }
       }
     }
 

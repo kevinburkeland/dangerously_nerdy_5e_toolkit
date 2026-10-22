@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import '../../../services/logging_service.dart';
 import 'firebase_signaling_adapter.dart';
 import 'signaling_message.dart';
 
@@ -128,7 +129,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
       // Broadcast join presence so existing peers can establish connections
       try {
         await signaling.broadcastJoin();
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'WebRTC broadcastJoin presence failed');
+      }
     }
 
     // Start sending periodic heartbeat pings (every 2 seconds)
@@ -155,7 +159,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
       try {
         entry.value.send(RTCDataChannelMessage(pingPayload));
       } catch (_) {
-        // Handled during zombie pruning if unreachable
+        // intentional: peer unreachable; handled during zombie pruning
       }
     }
   }
@@ -293,7 +297,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     if (pc != null) {
       try {
         await pc.setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'WebRTC setRemoteDescription failed');
+      }
       final signaling = _signalingAdapter;
       if (signaling != null) {
         // Consume and delete the answer document
@@ -316,7 +323,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
           candidateMap['sdpMLineIndex'] as int?,
         );
         await pc.addCandidate(candidate);
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'WebRTC addCandidate failed');
+      }
       final signaling = _signalingAdapter;
       if (signaling != null) {
         await signaling.deleteSignal(signalId);
@@ -367,7 +377,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
         });
         try {
           dc.send(RTCDataChannelMessage(pong));
-        } catch (_) {}
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st,
+              reason: 'WebRTC send heartbeat pong failed');
+        }
         return;
       } else if (text.startsWith('{"_protocol":"heartbeat_pong"')) {
         return;
@@ -455,7 +468,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     for (final dc in channels) {
       try {
         dc.close();
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'WebRTC data channel close failed');
+      }
     }
 
     final pcs = List<RTCPeerConnection>.from(_peerConnections.values);
@@ -463,7 +479,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     for (final pc in pcs) {
       try {
         pc.close();
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'WebRTC peer connection close failed');
+      }
     }
     _peerLastActiveTimestamps.clear();
 

@@ -67,7 +67,7 @@ class CrdtOrSetDto {
             final safeMap = Map<String, dynamic>.from(val);
             tombstones[key.toString()] = HybridLogicalClockDto.fromMap(safeMap);
           } catch (_) {
-            // Skip corrupted tombstone
+            // intentional: skip corrupted tombstone during deserialization
           }
         }
       });

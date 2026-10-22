@@ -1223,7 +1223,9 @@ class Subrace extends DomainEntity {
         if (g is Map) {
           try {
             grantsList.add(FeatureGrant.fromMap(Map<String, dynamic>.from(g)));
-          } catch (_) {}
+          } catch (_) {
+            // intentional: unparseable feature grant dropped during entity deserialization
+          }
         }
       }
     }

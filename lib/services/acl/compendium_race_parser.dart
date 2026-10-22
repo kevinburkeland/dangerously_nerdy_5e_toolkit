@@ -1,6 +1,7 @@
 import '../../models/domain/core_types.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../logging_service.dart';
 import 'entry_tag_transformer.dart';
 
 /// Anti-Corruption Layer (ACL) dedicated transformer for Community Compendium and Homebrew Races, Species, and Subraces.
@@ -54,7 +55,10 @@ class CompendiumRaceParser {
                 defaultRaceSlug: slug, forceRuleset: ruleset));
           } on CatalogNotInstalledError {
             rethrow;
-          } catch (_) {}
+          } catch (e, st) {
+            LoggingService().logNonFatal(e, st,
+                reason: 'Failed to parse compendium subrace in $slug');
+          }
         }
       }
     }

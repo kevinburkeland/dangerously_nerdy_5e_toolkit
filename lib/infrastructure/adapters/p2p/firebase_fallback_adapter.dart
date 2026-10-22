@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:uuid/uuid.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import '../../../services/logging_service.dart';
 import '../../../utils/crypto_utils.dart';
 
 /// Maximum allowed character length for a relay payload document in Firestore.
@@ -140,7 +141,10 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
             'expiresAt': expiresAt.toIso8601String(),
           });
         }
-      } catch (_) {}
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'Failed to ensure fallback room document');
+      }
 
       final collection = _effectiveFirestore
           .collection('rooms')
