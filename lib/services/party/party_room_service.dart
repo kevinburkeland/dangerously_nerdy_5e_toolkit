@@ -2,13 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
-import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
-import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_event.dart';
@@ -438,33 +434,14 @@ class PartyRoomService {
         final effectiveName = (lobbyName != null && lobbyName.isNotEmpty)
             ? lobbyName
             : 'Campaign $clean';
-        const zeroTs = HybridLogicalClock.genesis;
-        final newProfile = CampaignProfile.raw(
+        final newProfile = CampaignProfile.placeholder(
           id: targetId,
-          nameRegister: CrdtLwwRegister<String>(
-            value: effectiveName,
-            timestamp: zeroTs,
-          ),
+          roomCode: clean,
+          name: effectiveName,
+          stagingTitle: 'Campaign $clean Staging',
           edition: edition,
           createdAt: DateTime.now(),
           lastPlayedAt: DateTime.now(),
-          roomState: RoomNodeState(
-            roomId: 'room_$clean',
-            roomCode: clean,
-            title: 'Campaign $clean Staging',
-            titleTimestamp: zeroTs,
-            description: '',
-            descriptionTimestamp: zeroTs,
-          ),
-          partyPurse: const PartyPurse.empty(),
-          memberPurses: const {},
-          partyRoster: const CrdtOrSet<String>.empty(),
-          pinnedRules: const CrdtOrSet<String>.empty(),
-          notesRegister: const CrdtLwwRegister<String>(
-            value: '',
-            timestamp: zeroTs,
-          ),
-          changeLog: const [],
         );
         await _campaignProfileService.repo.putProfile(newProfile);
         resolved = newProfile;
@@ -495,33 +472,14 @@ class PartyRoomService {
         final effectiveName = (lobbyName != null && lobbyName.isNotEmpty)
             ? lobbyName
             : 'Campaign $clean';
-        const zeroTs = HybridLogicalClock.genesis;
-        final newProfile = CampaignProfile.raw(
+        final newProfile = CampaignProfile.placeholder(
           id: legacyId,
-          nameRegister: CrdtLwwRegister<String>(
-            value: effectiveName,
-            timestamp: zeroTs,
-          ),
+          roomCode: clean,
+          name: effectiveName,
+          stagingTitle: 'Campaign $clean Staging',
           edition: edition,
           createdAt: DateTime.now(),
           lastPlayedAt: DateTime.now(),
-          roomState: RoomNodeState(
-            roomId: 'room_$clean',
-            roomCode: clean,
-            title: 'Campaign $clean Staging',
-            titleTimestamp: zeroTs,
-            description: '',
-            descriptionTimestamp: zeroTs,
-          ),
-          partyPurse: const PartyPurse.empty(),
-          memberPurses: const {},
-          partyRoster: const CrdtOrSet<String>.empty(),
-          pinnedRules: const CrdtOrSet<String>.empty(),
-          notesRegister: const CrdtLwwRegister<String>(
-            value: '',
-            timestamp: zeroTs,
-          ),
-          changeLog: const [],
         );
         await _campaignProfileService.repo.putProfile(newProfile);
         resolved = newProfile;
@@ -559,8 +517,7 @@ class PartyRoomService {
     }
   }
 
-  /// Resolves the campaign profile for [roomCode], re-stamps genesis titles if present,
-  /// and sets it as the active profile.
+  /// Resolves the campaign profile for [roomCode] and sets it as the active profile.
   /// Only room-entry paths call this (create, join, rehydrate, PartyRoomScreen, RoomBannerWidget).
   ///
   /// A lobby read from the server that has no campaignId (the legacy room shape)

@@ -200,38 +200,56 @@ class CampaignStorageMigration {
               : const CrdtOrSet<String>.empty();
 
           final isAuthor = m.role == CampaignRole.host;
-          final regTs = isAuthor ? clock.nextTimestamp() : HybridLogicalClock.genesis;
-          final prof = CampaignProfile.raw(
-            id: 'campaign_${m.roomCode}',
-            nameRegister: CrdtLwwRegister<String>(
-              value: m.campaignName.trim().isNotEmpty
+          final CampaignProfile prof;
+          if (isAuthor) {
+            final regTs = clock.nextTimestamp();
+            prof = CampaignProfile.raw(
+              id: 'campaign_${m.roomCode}',
+              nameRegister: CrdtLwwRegister<String>(
+                value: m.campaignName.trim().isNotEmpty
+                    ? m.campaignName.trim()
+                    : 'Campaign ${m.roomCode}',
+                timestamp: regTs,
+              ),
+              edition: const RulesetIdentifier('generic_tabletop'),
+              createdAt: DateTime.now().toUtc(),
+              lastPlayedAt: DateTime.now().toUtc(),
+              partyRoster: partyRoster,
+              roomState: RoomNodeState(
+                roomId: 'room_${m.roomCode}',
+                roomCode: m.roomCode,
+                title: m.campaignName.trim().isNotEmpty
+                    ? '${m.campaignName} Staging Area'
+                    : 'Campaign ${m.roomCode} Staging',
+                titleTimestamp: regTs,
+                description: '',
+                descriptionTimestamp: regTs,
+              ),
+              partyPurse: const PartyPurse.empty(),
+              memberPurses: const {},
+              pinnedRules: const CrdtOrSet<String>.empty(),
+              notesRegister: CrdtLwwRegister<String>(
+                value: '',
+                timestamp: regTs,
+              ),
+              changeLog: const [],
+            );
+          } else {
+            prof = CampaignProfile.placeholder(
+              id: 'campaign_${m.roomCode}',
+              roomCode: m.roomCode,
+              name: m.campaignName.trim().isNotEmpty
                   ? m.campaignName.trim()
                   : 'Campaign ${m.roomCode}',
-              timestamp: regTs,
-            ),
-            edition: const RulesetIdentifier('generic_tabletop'),
-            createdAt: DateTime.now().toUtc(),
-            lastPlayedAt: DateTime.now().toUtc(),
-            partyRoster: partyRoster,
-            roomState: RoomNodeState(
-              roomId: 'room_${m.roomCode}',
-              roomCode: m.roomCode,
-              title: m.campaignName.trim().isNotEmpty
+              stagingTitle: m.campaignName.trim().isNotEmpty
                   ? '${m.campaignName} Staging Area'
                   : 'Campaign ${m.roomCode} Staging',
-              titleTimestamp: regTs,
-              description: '',
-              descriptionTimestamp: regTs,
-            ),
-            partyPurse: const PartyPurse.empty(),
-            memberPurses: const {},
-            pinnedRules: const CrdtOrSet<String>.empty(),
-            notesRegister: CrdtLwwRegister<String>(
-              value: '',
-              timestamp: regTs,
-            ),
-            changeLog: const [],
-          );
+              edition: const RulesetIdentifier('generic_tabletop'),
+              createdAt: DateTime.now().toUtc(),
+              lastPlayedAt: DateTime.now().toUtc(),
+              partyRoster: partyRoster,
+            );
+          }
           try {
             await repo.putProfile(prof);
           } catch (e, st) {

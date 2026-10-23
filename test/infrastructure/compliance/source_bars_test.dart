@@ -1073,6 +1073,110 @@ void main() {
         isEmpty,
       );
     });
+
+    test(
+        'Source Bar M: CampaignProfile.raw( may appear only in approved sites with count 1',
+        () {
+      final dartFiles = getDartFiles();
+      expect(dartFiles, isNotEmpty);
+
+      const approvedCounts = {
+        'lib/infrastructure/dtos/campaign_profile_dto.dart': 1,
+        'lib/application/services/room_state_reconciliation_service.dart': 1,
+        'lib/infrastructure/repositories/campaign_storage_migration.dart': 1,
+      };
+
+      final occurrencesByFile = <String, List<int>>{};
+      final violations = <String>[];
+
+      for (final file in dartFiles) {
+        final normalizedPath = file.path.replaceAll('\\', '/');
+        final content = file.readAsStringSync();
+
+        final stripped = StringBuffer();
+        var idx = 0;
+        bool inBlock = false;
+        while (idx < content.length) {
+          if (inBlock) {
+            if (idx + 1 < content.length &&
+                content[idx] == '*' &&
+                content[idx + 1] == '/') {
+              inBlock = false;
+              idx += 2;
+            } else {
+              if (content[idx] == '\n') stripped.write('\n');
+              idx++;
+            }
+          } else if (idx + 1 < content.length &&
+              content[idx] == '/' &&
+              content[idx + 1] == '*') {
+            inBlock = true;
+            idx += 2;
+          } else if (idx + 1 < content.length &&
+              content[idx] == '/' &&
+              content[idx + 1] == '/') {
+            while (idx < content.length && content[idx] != '\n') {
+              idx++;
+            }
+          } else {
+            stripped.write(content[idx]);
+            idx++;
+          }
+        }
+
+        final cleanContent = stripped.toString();
+        const target = 'CampaignProfile.raw(';
+        final lines = cleanContent.split('\n');
+
+        for (var i = 0; i < lines.length; i++) {
+          final line = lines[i];
+          var pos = 0;
+          while (true) {
+            final matchPos = line.indexOf(target, pos);
+            if (matchPos == -1) break;
+            final lineNum = i + 1;
+            occurrencesByFile.putIfAbsent(normalizedPath, () => []).add(lineNum);
+            pos = matchPos + target.length;
+          }
+        }
+      }
+
+      for (final entry in occurrencesByFile.entries) {
+        final path = entry.key;
+        final lines = entry.value;
+        final expected = approvedCounts.entries
+            .where((e) => path.endsWith(e.key))
+            .map((e) => e.value)
+            .firstOrNull;
+
+        if (expected == null) {
+          for (final line in lines) {
+            violations.add('Disallowed site $path:$line -> CampaignProfile.raw(');
+          }
+        } else if (lines.length != expected) {
+          violations.add(
+              'Wrong count for $path: expected $expected, found ${lines.length} at lines $lines');
+        }
+      }
+
+      for (final approved in approvedCounts.entries) {
+        final matchingPath = occurrencesByFile.keys
+            .where((k) => k.endsWith(approved.key))
+            .firstOrNull;
+        if (matchingPath == null) {
+          violations.add(
+              'Missing expected site: ${approved.key} (expected count ${approved.value}, got 0)');
+        }
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason:
+            'CampaignProfile.raw( may only appear in the 3 approved sites with count 1 (Source Bar M):\n'
+            '${violations.join('\n')}',
+      );
+    });
   });
 }
 
