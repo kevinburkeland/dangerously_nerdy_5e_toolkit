@@ -4,6 +4,18 @@ import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 
+BlobRef _randomRef(Random rand) {
+  const hexChars = '0123456789abcdef';
+  final sha = List.generate(64, (_) => hexChars[rand.nextInt(16)]).join();
+  return BlobRef(
+    sha256Hex: sha,
+    byteSize: rand.nextInt(BlobRef.maxByteSize) + 1,
+    width: rand.nextInt(BlobRef.maxLongestSidePx) + 1,
+    height: rand.nextInt(BlobRef.maxLongestSidePx) + 1,
+    format: rand.nextBool() ? BlobFormat.webp : BlobFormat.jpeg,
+  );
+}
+
 void main() {
   group('Cold Iron Birdcage — Pass 7.1 Required Test 1: Reconcile Equals Join Law', () {
     test('reconcileProfileSafely(a, b).profile == CampaignProfile.join(a, b) across 350 seeds', () {
@@ -23,6 +35,7 @@ void main() {
         'pinnedRules_crdt',
         'notesMarkdown',
         'notesRegister',
+        'activeMapRegister',
         'partyPurse',
         'memberPurses',
         'changeLog',
@@ -44,6 +57,39 @@ void main() {
         // 2. Notes registers
         final notesA = CrdtLwwRegister<String>(value: 'Notes A $seed', timestamp: tsA2);
         final notesB = CrdtLwwRegister<String>(value: 'Notes B $seed', timestamp: tsB2);
+
+        // 2b. Active Map registers: noActiveMap, random ref, or null at non-zero timestamp
+        final CrdtLwwRegister<BlobRef?> mapA;
+        switch (rand.nextInt(3)) {
+          case 0:
+            mapA = CampaignProfile.noActiveMap;
+          case 1:
+            mapA = CrdtLwwRegister<BlobRef?>(
+              value: _randomRef(rand),
+              timestamp: HybridLogicalClock(physicalTime: 1000 + rand.nextInt(100), logicalCounter: 1, nodeId: 'node_a'),
+            );
+          default:
+            mapA = CrdtLwwRegister<BlobRef?>(
+              value: null,
+              timestamp: HybridLogicalClock(physicalTime: 1200 + rand.nextInt(100), logicalCounter: 1, nodeId: 'node_a'),
+            );
+        }
+
+        final CrdtLwwRegister<BlobRef?> mapB;
+        switch (rand.nextInt(3)) {
+          case 0:
+            mapB = CampaignProfile.noActiveMap;
+          case 1:
+            mapB = CrdtLwwRegister<BlobRef?>(
+              value: _randomRef(rand),
+              timestamp: HybridLogicalClock(physicalTime: 1050 + rand.nextInt(100), logicalCounter: 1, nodeId: 'node_b'),
+            );
+          default:
+            mapB = CrdtLwwRegister<BlobRef?>(
+              value: null,
+              timestamp: HybridLogicalClock(physicalTime: 1250 + rand.nextInt(100), logicalCounter: 1, nodeId: 'node_b'),
+            );
+        }
 
         // 3. Reserve PartyPurse (PN-counters with both positive and negative values)
         final purseA = PartyPurse.fromCounters({
@@ -235,6 +281,7 @@ void main() {
           partyRoster: rosterA,
           pinnedRules: rulesA,
           notesRegister: notesA,
+          activeMapRegister: mapA,
           partyPurse: purseA,
           memberPurses: memberPursesA,
           changeLog: logA,
@@ -250,6 +297,7 @@ void main() {
           partyRoster: rosterB,
           pinnedRules: rulesB,
           notesRegister: notesB,
+          activeMapRegister: mapB,
           partyPurse: purseB,
           memberPurses: memberPursesB,
           changeLog: logB,
@@ -279,12 +327,16 @@ void main() {
         expect(resAB.fieldFaults, isEmpty, reason: 'Seed $seed forward produced unexpected faults');
         final joinAB = CampaignProfile.join(profA, profB);
         expect(resAB.profile, equals(joinAB), reason: 'Seed $seed forward failed reconcile == join');
+        expect(resAB.profile.activeMapRegister, equals(joinAB.activeMapRegister),
+            reason: 'Seed $seed forward activeMapRegister direct mismatch');
 
         // Reverse: reconcileProfileSafely(profB, profA) == CampaignProfile.join(profB, profA)
         final resBA = recon.reconcileProfileSafely(local: profB, remote: profA);
         expect(resBA.fieldFaults, isEmpty, reason: 'Seed $seed reverse produced unexpected faults');
         final joinBA = CampaignProfile.join(profB, profA);
         expect(resBA.profile, equals(joinBA), reason: 'Seed $seed reverse failed reconcile == join');
+        expect(resBA.profile.activeMapRegister, equals(joinBA.activeMapRegister),
+            reason: 'Seed $seed reverse activeMapRegister direct mismatch');
       }
     });
   });

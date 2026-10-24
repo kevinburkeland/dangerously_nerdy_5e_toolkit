@@ -5,6 +5,7 @@ import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
 import '../../models/animated_object.dart';
 import '../modules/dnd5e/rules/ruleset_edition.dart';
 import '../../models/domain/character_models.dart';
@@ -37,6 +38,7 @@ class CampaignProfileDto {
   final bool hasPinnedRulesCrdt;
   final String notesMarkdown;
   final Map<String, dynamic> notesRegister;
+  final Map<String, dynamic> activeMapRegister;
   final Map<String, dynamic> partyPurse;
   final Map<String, dynamic> memberPurses;
   final List<Map<String, dynamic>> changeLog;
@@ -61,6 +63,7 @@ class CampaignProfileDto {
     this.hasPinnedRulesCrdt = false,
     this.notesMarkdown = '',
     this.notesRegister = const {},
+    this.activeMapRegister = const {},
     this.partyPurse = const {},
     this.memberPurses = const {},
     this.changeLog = const [],
@@ -92,6 +95,10 @@ class CampaignProfileDto {
       hasPinnedRulesCrdt: true,
       notesMarkdown: profile.notesMarkdown,
       notesRegister: CrdtLwwRegisterDto.toMap(profile.notesRegister, (v) => v),
+      activeMapRegister: CrdtLwwRegisterDto.toMap(
+        profile.activeMapRegister,
+        (v) => v?.toMap(),
+      ),
       partyPurse: profile.partyPurse.toMap(),
       memberPurses: profile.memberPurses.map((k, v) => MapEntry(k, v.toMap())),
       changeLog: profile.changeLog.map((e) => e.toMap()).toList(),
@@ -228,6 +235,20 @@ class CampaignProfileDto {
       }
     }
 
+    final parsedActiveMapRegister = activeMapRegister.isNotEmpty
+        ? CrdtLwwRegisterDto.parse<BlobRef?>(
+            activeMapRegister,
+            (v) {
+              if (v == null) return null;
+              if (v is! Map) {
+                throw const FormatException(
+                    'CampaignProfileDto.toDomain: "activeMapRegister" value must be null or a Map.');
+              }
+              return BlobRef.fromMap(Map<String, dynamic>.from(v));
+            },
+          )
+        : CampaignProfile.noActiveMap;
+
     return CampaignProfile.raw(
       id: id,
       name: name,
@@ -241,6 +262,7 @@ class CampaignProfileDto {
       pinnedRules: parsedPinnedRules,
       pinnedRuleIds: parsedPinnedRules == null ? pinned : null,
       notesRegister: parsedNotesRegister,
+      activeMapRegister: parsedActiveMapRegister,
       partyPurse: purse,
       memberPurses: parsedMemberPurses,
       changeLog: parsedEvents,
@@ -571,6 +593,37 @@ class CampaignProfileDto {
       nameRegMap = const <String, dynamic>{};
     }
 
+    final Map<String, dynamic> activeMapRegMap;
+    if (map.containsKey('activeMapRegister')) {
+      final rawReg = map['activeMapRegister'];
+      if (rawReg is! Map) {
+        throw const FormatException(
+            'CampaignProfileDto.fromMap: "activeMapRegister" must be a Map.');
+      }
+      final safeReg = Map<String, dynamic>.from(rawReg);
+      try {
+        CrdtLwwRegisterDto.parse<BlobRef?>(
+          safeReg,
+          (v) {
+            if (v == null) return null;
+            if (v is! Map) {
+              throw const FormatException(
+                  'CampaignProfileDto.fromMap: "activeMapRegister" value must be null or a Map.');
+            }
+            return BlobRef.fromMap(Map<String, dynamic>.from(v));
+          },
+        );
+      } on FormatException {
+        rethrow;
+      } catch (e) {
+        throw FormatException(
+            'CampaignProfileDto.fromMap: "activeMapRegister" contains malformed register or HLC: $e');
+      }
+      activeMapRegMap = safeReg;
+    } else {
+      activeMapRegMap = const <String, dynamic>{};
+    }
+
     final changeLogList = <Map<String, dynamic>>[];
     if (map.containsKey('changeLog')) {
       final rawLog = map['changeLog'];
@@ -612,6 +665,7 @@ class CampaignProfileDto {
       hasPinnedRulesCrdt: hasPinnedCrdt,
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
       notesRegister: notesRegMap,
+      activeMapRegister: activeMapRegMap,
       partyPurse: purseMap,
       memberPurses: memberPursesMap,
       changeLog: changeLogList,
@@ -638,6 +692,7 @@ class CampaignProfileDto {
         'pinnedRules_crdt': pinnedRulesCrdt,
       'notesMarkdown': notesMarkdown,
       if (notesRegister.isNotEmpty) 'notesRegister': notesRegister,
+      if (activeMapRegister.isNotEmpty) 'activeMapRegister': activeMapRegister,
       'partyPurse': partyPurse,
       'memberPurses': memberPurses,
       'changeLog': changeLog,

@@ -2,6 +2,7 @@ import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/utils/aggregate_join_utils.dart';
 import '../../infrastructure/dtos/campaign_edition_codec.dart';
@@ -119,6 +120,15 @@ class RoomStateReconciliationService {
       mergedNotesRegister = local.notesRegister;
     }
 
+    // 2b. Active Map: LWW CRDT register merge with fault isolation
+    CrdtLwwRegister<BlobRef?> mergedActiveMapRegister = local.activeMapRegister;
+    try {
+      mergedActiveMapRegister = local.activeMapRegister.merge(remote.activeMapRegister);
+    } catch (e, st) {
+      faults.add(ReconciliationFieldFault(field: 'activeMap', error: e, stackTrace: st));
+      mergedActiveMapRegister = local.activeMapRegister;
+    }
+
     // 3. Party Purse: CvRDT lattice join across PN-counters with fault isolation
     PartyPurse mergedPurse = local.partyPurse;
     try {
@@ -192,6 +202,7 @@ class RoomStateReconciliationService {
       partyRoster: mergedPartyRoster,
       pinnedRules: mergedPinnedRules,
       notesRegister: mergedNotesRegister,
+      activeMapRegister: mergedActiveMapRegister,
       partyPurse: mergedPurse,
       memberPurses: mergedMemberPurses,
       changeLog: mergedChangeLog,

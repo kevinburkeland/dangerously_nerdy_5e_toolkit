@@ -7,6 +7,7 @@ import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
@@ -974,6 +975,7 @@ void main() {
         CrdtLwwRegister<String> maxNotes = base.notesRegister;
         CrdtLwwRegister<String> maxTitle = base.roomState.titleRegister;
         CrdtLwwRegister<String> maxDesc = base.roomState.descriptionRegister;
+        CrdtLwwRegister<BlobRef?> maxMap = base.activeMapRegister;
         PartyPurse expectedPurse = base.partyPurse;
         final expectedRuleAdds = <String, HybridLogicalClock>{};
         final expectedRuleRemoves = <String, HybridLogicalClock>{};
@@ -981,7 +983,7 @@ void main() {
         final stepCount = minSteps + rand.nextInt(maxSteps - minSteps + 1);
 
         for (int step = 0; step < stepCount; step++) {
-          final action = rand.nextInt(6);
+          final action = rand.nextInt(7);
           final devKeys = devices.keys.toList();
           final chosenKey = devKeys[rand.nextInt(devKeys.length)];
           final chosenDev = devices[chosenKey]!;
@@ -1102,6 +1104,34 @@ void main() {
                   expectedRuleRemoves[ruleId] = rStamp;
                 }
               }
+            case 6:
+              // Active map edit (set random valid ref or clear)
+              final clearMap = rand.nextInt(3) == 0;
+              final BlobRef? newRef;
+              if (clearMap) {
+                newRef = null;
+              } else {
+                final hex = List.generate(
+                  64,
+                  (_) => '0123456789abcdef'[rand.nextInt(16)],
+                ).join();
+                newRef = BlobRef(
+                  sha256Hex: hex,
+                  byteSize: rand.nextInt(1000000) + 1,
+                  width: rand.nextInt(4000) + 1,
+                  height: rand.nextInt(4000) + 1,
+                  format: rand.nextBool() ? BlobFormat.webp : BlobFormat.jpeg,
+                );
+              }
+              final stamp = chosenDev.clock.nextTimestamp();
+              await chosenDev.repo.updateProfile(base.id, (c) {
+                return c.withActiveMap(newRef, stamp);
+              });
+              final readBack = chosenDev.repo.activeProfile!;
+              final wrote = readBack.activeMapRegister;
+              if (wrote.timestamp.compareTo(maxMap.timestamp) > 0) {
+                maxMap = wrote;
+              }
           }
           await Future<void>.delayed(const Duration(milliseconds: 1));
         }
@@ -1139,6 +1169,8 @@ void main() {
           expect(dmProfile.roomState.descriptionRegister.value,
               equals(maxDesc.value),
               reason: 'desc value mismatch at seed $seed');
+          expect(dmProfile.activeMapRegister, equals(maxMap),
+              reason: 'activeMapRegister mismatch at seed $seed');
 
           // Purse equals base plus every recorded credit and debit
           expect(dmProfile.partyPurse.getBalance('gp'),

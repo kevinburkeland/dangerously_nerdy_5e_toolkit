@@ -45,6 +45,9 @@ List<String> futureTimestampViolations(
   if (profile.notesRegister.timestamp.physicalTime > limit) {
     violations.add('notesRegister');
   }
+  if (profile.activeMapRegister.timestamp.physicalTime > limit) {
+    violations.add('activeMapRegister');
+  }
   if (profile.pinnedRules.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
     violations.add('pinnedRules');
   }
