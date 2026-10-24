@@ -1193,6 +1193,8 @@ class _LandingScreenState extends State<LandingScreen> {
                       icon: Icon(Icons.more_vert,
                           color: colorScheme.onSurfaceVariant
                               .withValues(alpha: 0.8)),
+                      constraints:
+                          const BoxConstraints(minWidth: 220, maxWidth: 320),
                       tooltip: 'Campaign Options',
                       onSelected: (val) =>
                           _handleCampaignOption(context, m, val),
@@ -1203,7 +1205,7 @@ class _LandingScreenState extends State<LandingScreen> {
                             children: [
                               Icon(Icons.meeting_room_outlined, size: 18),
                               SizedBox(width: 8),
-                              Text('Open Campaign Room'),
+                              Expanded(child: Text('Open Campaign Room')),
                             ],
                           ),
                         ),
@@ -1215,7 +1217,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 Icon(Icons.dashboard_customize_outlined,
                                     size: 18, color: Colors.purpleAccent),
                                 SizedBox(width: 8),
-                                Text('Open DM Screen'),
+                                Expanded(child: Text('Open DM Screen')),
                               ],
                             ),
                           ),
@@ -1227,11 +1229,29 @@ class _LandingScreenState extends State<LandingScreen> {
                                   Icon(Icons.key,
                                       size: 18, color: Colors.amber),
                                   SizedBox(width: 8),
-                                  Text('Share DM Passkey'),
+                                  Expanded(child: Text('Share DM Passkey')),
                                 ],
                               ),
                             ),
                           const PopupMenuDivider(),
+                          if (!m.hasHostKey)
+                            const PopupMenuItem(
+                              value: 'removeLocal',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline,
+                                      size: 18, color: Colors.orangeAccent),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Remove from this device',
+                                      style:
+                                          TextStyle(color: Colors.orangeAccent),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           const PopupMenuItem(
                             value: 'delete',
                             child: Row(
@@ -1239,8 +1259,10 @@ class _LandingScreenState extends State<LandingScreen> {
                                 Icon(Icons.delete_forever,
                                     size: 18, color: Colors.redAccent),
                                 SizedBox(width: 8),
-                                Text('Delete Campaign',
-                                    style: TextStyle(color: Colors.redAccent)),
+                                Expanded(
+                                  child: Text('Delete Campaign',
+                                      style: TextStyle(color: Colors.redAccent)),
+                                ),
                               ],
                             ),
                           ),
@@ -1252,7 +1274,8 @@ class _LandingScreenState extends State<LandingScreen> {
                                 Icon(Icons.vpn_key_outlined,
                                     size: 18, color: Colors.amber),
                                 SizedBox(width: 8),
-                                Text('Claim DM / Enter Passkey'),
+                                Expanded(
+                                    child: Text('Claim DM / Enter Passkey')),
                               ],
                             ),
                           ),
@@ -1264,9 +1287,11 @@ class _LandingScreenState extends State<LandingScreen> {
                                 Icon(Icons.exit_to_app,
                                     size: 18, color: Colors.orangeAccent),
                                 SizedBox(width: 8),
-                                Text('Leave Campaign',
-                                    style:
-                                        TextStyle(color: Colors.orangeAccent)),
+                                Expanded(
+                                  child: Text('Leave Campaign',
+                                      style:
+                                          TextStyle(color: Colors.orangeAccent)),
+                                ),
                               ],
                             ),
                           ),
@@ -1421,6 +1446,51 @@ class _LandingScreenState extends State<LandingScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                     content: Text('Error leaving campaign: $e'),
+                    backgroundColor: Colors.red),
+              );
+            }
+          }
+        }
+      case 'removeLocal':
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(
+                'Remove "${m.campaignName}" (${m.roomCode}) from this device?'),
+            content: const Text(
+              'This removes the campaign, its DM notes and party ledger from this device only. The online room and other devices are not changed. Without the DM passkey, this device cannot delete the online room.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade800),
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Remove from this device'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true && context.mounted) {
+          try {
+            await PartyRoomService().removeCampaignFromThisDevice(
+              roomCode: m.roomCode,
+            );
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text(
+                        'Removed "${m.campaignName}" from this device')),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text('Error removing campaign: $e'),
                     backgroundColor: Colors.red),
               );
             }

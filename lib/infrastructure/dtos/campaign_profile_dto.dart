@@ -5,7 +5,6 @@ import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import '../../models/animated_object.dart';
 import '../modules/dnd5e/rules/ruleset_edition.dart';
 import '../../models/domain/character_models.dart';
@@ -15,6 +14,7 @@ import 'package:vtt_engine_core/models/party_purse.dart';
 import '../../services/logging_service.dart';
 import 'character_dto.dart';
 import 'crdt/crdt_lww_register_dto.dart';
+import 'campaign_edition_codec.dart';
 
 /// Data Transfer Object for [CampaignProfile], isolating JSON serialization,
 /// legacy schema migrations, and unparsed fallback payloads to the Infrastructure layer.
@@ -79,7 +79,7 @@ class CampaignProfileDto {
       id: profile.id,
       name: profile.name,
       nameRegister: CrdtLwwRegisterDto.toMap(profile.nameRegister, (v) => v),
-      edition: profile.edition is Enum ? (profile.edition as Enum).name : profile.edition.toString(),
+      edition: profile.edition.rulesetId,
       createdAt: profile.createdAt.toIso8601String(),
       lastPlayedAt: profile.lastPlayedAt.toIso8601String(),
       roomState: profile.roomState.toMap(),
@@ -205,28 +205,7 @@ class CampaignProfileDto {
                 ),
               ));
 
-    final dynamic parsedEdition;
-    final cleanEdition = edition.trim().toLowerCase();
-    if (cleanEdition.contains('2024') ||
-        cleanEdition == 'srd5.2.1' ||
-        cleanEdition == 'srd5.2' ||
-        cleanEdition == 'srd2024' ||
-        cleanEdition == 'srd521' ||
-        cleanEdition == 'srd52' ||
-        cleanEdition == '5e-2024' ||
-        cleanEdition == 'v2024' ||
-        cleanEdition.contains('5.2')) {
-      parsedEdition = RulesetEdition.v2024;
-    } else if (cleanEdition.contains('2014') ||
-        cleanEdition == 'srd5.1' ||
-        cleanEdition == 'srd51' ||
-        cleanEdition == '5e-2014' ||
-        cleanEdition == 'v2014' ||
-        cleanEdition.contains('5.1')) {
-      parsedEdition = RulesetEdition.v2014;
-    } else {
-      parsedEdition = RulesetIdentifier(edition);
-    }
+    final parsedEdition = parseStoredCampaignEdition(edition);
 
     final parsedNameRegister = nameRegister.isNotEmpty
         ? CrdtLwwRegisterDto.parse<String>(

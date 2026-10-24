@@ -593,7 +593,7 @@ packages:
     source: hosted
     version: "2.4.1"
   shared_preferences_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: shared_preferences_platform_interface
       sha256: "649dc798a33931919ea356c4305c2d1f81619ea6e92244070b520187b5140ef9"
@@ -777,8 +777,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: e0062a4583c3f7ad6cb10077c773d5b6f26e1d86
-      resolved-ref: e0062a4583c3f7ad6cb10077c773d5b6f26e1d86
+      ref: "3feb34f2c3ecb54e83cb5a40702c4146c03cb3d7"
+      resolved-ref: "3feb34f2c3ecb54e83cb5a40702c4146c03cb3d7"
       url: "https://github.com/kevinburkeland/vtt-engine-core.git"
     source: git
     version: "1.0.0"
@@ -786,8 +786,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: d4f7837f6c46c86609f50756f6a4b3b272b18e78
-      resolved-ref: d4f7837f6c46c86609f50756f6a4b3b272b18e78
+      ref: "1071d5f87fa1966d85d426166e4fea284e289b3b"
+      resolved-ref: "1071d5f87fa1966d85d426166e4fea284e289b3b"
       url: "https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git"
     source: git
     version: "1.0.0"

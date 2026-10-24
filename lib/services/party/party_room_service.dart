@@ -5,12 +5,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_event.dart';
 import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
 import '../../infrastructure/dtos/character_telemetry_dto.dart';
+import '../../infrastructure/dtos/campaign_edition_codec.dart';
 import '../../models/party/party_session_state.dart';
 import '../../models/party/party_room_lobby.dart';
 import '../../infrastructure/migration/party_ledger_legacy_import.dart';
@@ -341,15 +341,7 @@ class PartyRoomService {
     return '';
   }
 
-  static dynamic _parseRulesetEdition(String raw) {
-    final clean = raw.trim().toLowerCase();
-    if (clean.contains('2024') || clean == 'v2024' || clean.contains('5.2')) {
-      return RulesetEdition.v2024;
-    } else if (clean.contains('2014') || clean == 'v2014' || clean.contains('5.1')) {
-      return RulesetEdition.v2014;
-    }
-    return RulesetIdentifier(raw);
-  }
+
 
   /// Deterministically locates or initializes the single campaign profile bound to [roomCode].
   ///
@@ -430,7 +422,7 @@ class PartyRoomService {
         final targetRuleset = (lobbyRulesetId != null && lobbyRulesetId.trim().isNotEmpty)
             ? lobbyRulesetId.trim()
             : (_localLobbies[clean]?.rulesetId ?? 'generic_tabletop');
-        final edition = _parseRulesetEdition(targetRuleset);
+        final edition = parseStoredCampaignEdition(targetRuleset);
 
         final lobbyName = _localLobbies[clean]?.campaignName.trim();
         final effectiveName = (lobbyName != null && lobbyName.isNotEmpty)
@@ -468,7 +460,7 @@ class PartyRoomService {
         }
         final targetRuleset =
             _localLobbies[clean]?.rulesetId ?? 'generic_tabletop';
-        final edition = _parseRulesetEdition(targetRuleset);
+        final edition = parseStoredCampaignEdition(targetRuleset);
 
         final lobbyName = _localLobbies[clean]?.campaignName.trim();
         final effectiveName = (lobbyName != null && lobbyName.isNotEmpty)
@@ -1763,6 +1755,10 @@ class PartyRoomService {
     await _registry.removeMembership(clean);
 
     // 3. In-memory cleanup
+    _clearInMemoryRoomState(clean);
+  }
+
+  void _clearInMemoryRoomState(String clean) {
     _localRooms.remove(clean);
     _localLobbies.remove(clean);
     _localLoot.remove(clean);
@@ -1774,9 +1770,42 @@ class PartyRoomService {
     _sessionControllers.remove(clean);
     _updateOutboxCount();
     _emitSession(clean);
-
-    // 4. Cleanup dice room stream
     _diceRoomService.disposeRoomStream(clean);
+  }
+
+  /// Removes a campaign from this device only:
+  /// 1. Removes local membership (throws if removal fails)
+  /// 2. Deletes local campaign profiles via CampaignProfileService.deleteProfile
+  /// 3. Clears in-memory state
+  /// 4. Zero online effects (no room doc port, no Firebase, no logEvent, characters untouched).
+  Future<void> removeCampaignFromThisDevice({
+    required String roomCode,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+
+    // 1. Remove the membership
+    await _registry.removeMembership(clean);
+
+    // 2. Delete local profiles
+    final allProfiles = await _campaignProfileService.repo.loadAllProfiles();
+    final profileIdsToDelete = <String>{};
+    for (final p in allProfiles) {
+      if (p.roomState.roomCode.trim().toUpperCase() == clean ||
+          p.id == 'campaign_$clean') {
+        profileIdsToDelete.add(p.id);
+      }
+    }
+    final direct = await _campaignProfileService.repo.getProfile('campaign_$clean');
+    if (direct != null) {
+      profileIdsToDelete.add('campaign_$clean');
+    }
+
+    for (final id in profileIdsToDelete) {
+      await _campaignProfileService.deleteProfile(id);
+    }
+
+    // 3. Clear in-memory state
+    _clearInMemoryRoomState(clean);
   }
 
   /// Automatically synchronizes all local campaign memberships into Firestore rooms

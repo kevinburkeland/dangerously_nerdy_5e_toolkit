@@ -123,33 +123,37 @@ class CampaignRegistryService {
 
   /// Removes a campaign membership from device storage
   Future<void> removeMembership(String roomCode) async {
+    final cleanCode = roomCode.trim().toUpperCase();
+    final originalList = membershipsNotifier.value;
+    final originalActive = activeCampaignNotifier.value;
     try {
-      final cleanCode = roomCode.trim().toUpperCase();
       final currentList =
-          List<CampaignMembership>.from(membershipsNotifier.value);
+          List<CampaignMembership>.from(originalList);
       currentList.removeWhere((m) => m.roomCode.toUpperCase() == cleanCode);
+
+      await _persistList(currentList);
 
       membershipsNotifier.value = List.unmodifiable(currentList);
 
-      if (activeCampaignNotifier.value?.roomCode.toUpperCase() == cleanCode) {
-        activeCampaignNotifier.value =
-            currentList.isNotEmpty ? currentList.first : null;
+      if (originalActive?.roomCode.toUpperCase() == cleanCode) {
+        final nextActive = currentList.isNotEmpty ? currentList.first : null;
+        activeCampaignNotifier.value = nextActive;
         final prefs = await SharedPreferences.getInstance();
-        if (activeCampaignNotifier.value != null) {
-          await prefs.setString(
-              _kActiveCampaignKey, activeCampaignNotifier.value!.roomCode);
+        if (nextActive != null) {
+          await prefs.setString(_kActiveCampaignKey, nextActive.roomCode);
         } else {
           await prefs.remove(_kActiveCampaignKey);
         }
       }
-
-      await _persistList(currentList);
     } catch (e, stackTrace) {
+      membershipsNotifier.value = originalList;
+      activeCampaignNotifier.value = originalActive;
       LoggingService().logNonFatal(
         e,
         stackTrace,
         reason: 'Failed to remove campaign membership $roomCode',
       );
+      rethrow;
     }
   }
 

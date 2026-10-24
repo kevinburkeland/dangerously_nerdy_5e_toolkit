@@ -297,7 +297,7 @@ void main() {
         'payload': {
           'id': remoteProfile.id,
           'name': remoteProfile.name,
-          'edition': remoteProfile.edition.name,
+          'edition': remoteProfile.edition.rulesetId,
           'createdAt': remoteProfile.createdAt.toIso8601String(),
           'lastPlayedAt': remoteProfile.lastPlayedAt.toIso8601String(),
           'roomState': remoteProfile.roomState.toMap(),

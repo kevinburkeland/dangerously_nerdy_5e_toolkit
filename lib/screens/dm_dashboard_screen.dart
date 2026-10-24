@@ -210,7 +210,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                             ),
                           ),
                           subtitle: Text(
-                            '${prof.roomState.roomCode.isNotEmpty ? prof.roomState.roomCode : "no room"} • ${prof.edition.label} Edition • ${prof.partyCharacterIds.length} Players • ${prof.roomState.activeEncounterList.length} Encounter',
+                            '${prof.roomState.roomCode.isNotEmpty ? prof.roomState.roomCode : "no room"} • ${prof.rulesEdition.label} Edition • ${prof.partyCharacterIds.length} Players • ${prof.roomState.activeEncounterList.length} Encounter',
                             style: TextStyle(
                                 fontSize: 12,
                                 color: theme.colorScheme.onSurfaceVariant),
@@ -283,7 +283,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
 
   Future<void> _showCreateCampaignDialog() async {
     final nameCtrl = TextEditingController();
-    DmRulesEdition edition = _activeProfile?.edition ?? DmRulesEdition.v2024;
+    DmRulesEdition edition = _activeProfile?.rulesEdition ?? DmRulesEdition.v2024;
 
     await showDialog<void>(
       context: context,
@@ -1240,7 +1240,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: RulesEditionToggle(
-              currentEdition: profile.edition,
+              currentEdition: profile.rulesEdition,
               isDense: true,
               showIcons: true,
               onEditionChanged: _onEditionChanged,
@@ -2278,7 +2278,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   ),
                 ),
                 Text(
-                  '${pinnedItems.length} Pinned (${profile.edition.label})',
+                  '${pinnedItems.length} Pinned (${profile.rulesEdition.label})',
                   style: TextStyle(
                       fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -2299,7 +2299,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                       size: 16, color: theme.colorScheme.primary),
                   const SizedBox(width: 6),
                   Text(
-                    'PINNED RULEBOOK ENTRIES (${profile.edition.label})',
+                    'PINNED RULEBOOK ENTRIES (${profile.rulesEdition.label})',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -2314,7 +2314,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: DmRuleCard(
                       item: item,
-                      edition: profile.edition,
+                      edition: profile.rulesEdition,
                       isPinned: true,
                       onTogglePin: () async {
                         await _controller.togglePinnedRule(item.id);
@@ -2347,7 +2347,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => RulesCompendiumScreen(
-                        initialEdition: profile.edition,
+                        initialEdition: profile.rulesEdition,
                       ),
                     ),
                   );

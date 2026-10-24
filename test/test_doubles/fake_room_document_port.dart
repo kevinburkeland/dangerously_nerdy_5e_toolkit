@@ -105,4 +105,10 @@ class RecordingRoomDocumentPort implements IRoomDocumentPort {
     final clean = roomCode.trim().toUpperCase();
     return roomDataByCode[clean];
   }
+
+  int get totalCalls =>
+      createRoomCalls.length +
+      deleteRoomCalls.length +
+      touchRoomLeaseCalls.length +
+      getRoomDocumentCalls.length;
 }

@@ -1,3 +1,4 @@
+import '../infrastructure/dtos/campaign_edition_codec.dart';
 import '../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 import 'domain/character_models.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
@@ -15,7 +16,16 @@ extension Character5eRulesetExtension on Character {
 }
 
 extension CampaignProfile5eRulesetExtension on CampaignProfile {
-  DmRulesEdition get rulesEdition => edition is DmRulesEdition ? (edition as DmRulesEdition) : DmRulesEdition.fromString(rulesetId);
+  DmRulesEdition get rulesEdition {
+    if (edition is RulesetEdition) {
+      return edition as RulesetEdition;
+    }
+    final parsed = parseStoredCampaignEdition(edition.rulesetId);
+    if (parsed is RulesetEdition) {
+      return parsed;
+    }
+    return DmRulesEdition.v2024;
+  }
 }
 
 extension RulesetString5eExtension on String {

@@ -495,9 +495,9 @@ void main() {
       // 2. In case (iii), A still opens campaign_<ROOMCODE>
       expect(profA.id, equals('campaign_$roomCode'));
 
-      // 3. Editions match (generic_tabletop)
-      expect(profA.edition, equals(const RulesetIdentifier('generic_tabletop')));
-      expect(profB.edition, equals(const RulesetIdentifier('generic_tabletop')));
+      // 3. Editions match (v2024)
+      expect(profA.edition, equals(RulesetEdition.v2024));
+      expect(profB.edition, equals(RulesetEdition.v2024));
 
       // 4. Profiles are equal with zero reconcile faults
       final reconResult = recon.reconcileProfileSafely(local: profA, remote: profB);

@@ -455,7 +455,7 @@ void main() {
       );
 
       final dmProfile = (await repoA.loadAllProfiles()).first;
-      expect(dmProfile.rulesetId, equals('generic_tabletop'));
+      expect(dmProfile.rulesetId, equals('v2024'));
 
       // Player creates profile via profileForRoom (at a7fba17 it uses v2024)
       sl.registerSingleton<ReplicaId>(repB);

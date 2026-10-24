@@ -8,9 +8,8 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 
-import '../../models/domain/character_models.dart';
+import '../../models/dm_screen_data.dart';
 import '../../services/logging_service.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../services/party/campaign_registry_service.dart';
@@ -211,7 +210,7 @@ class CampaignStorageMigration {
                     : 'Campaign ${m.roomCode}',
                 timestamp: regTs,
               ),
-              edition: const RulesetIdentifier('generic_tabletop'),
+              edition: DmRulesEdition.v2024,
               createdAt: DateTime.now().toUtc(),
               lastPlayedAt: DateTime.now().toUtc(),
               partyRoster: partyRoster,
@@ -244,7 +243,7 @@ class CampaignStorageMigration {
               stagingTitle: m.campaignName.trim().isNotEmpty
                   ? '${m.campaignName} Staging Area'
                   : 'Campaign ${m.roomCode} Staging',
-              edition: const RulesetIdentifier('generic_tabletop'),
+              edition: DmRulesEdition.v2024,
               createdAt: DateTime.now().toUtc(),
               lastPlayedAt: DateTime.now().toUtc(),
               partyRoster: partyRoster,

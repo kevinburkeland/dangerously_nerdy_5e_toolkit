@@ -61,80 +61,208 @@ Future<StartupStorageResult> openStorage(AppDatabaseService db) async {
   }
 }
 
-Future<void> _completeNormalStartup(AppServices services, LoggingService logger) async {
-  await initServiceLocator();
-  await CampaignStorageMigration.runStartupMigration();
-  try {
-    await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
-  } catch (e, st) {
-    logger.logNonFatal(e, st,
-        reason: 'StorageDurabilityCoordinator silent preflight failed');
-  }
-  setupWebLifecycle(services.debouncedStorage);
+/// Full-screen view shown when application startup fails after storage has opened.
+class StartupFailedPage extends StatelessWidget {
+  final Object error;
 
-  SharedPreferences? prefs;
-  try {
-    prefs = await SharedPreferences.getInstance();
-    await services.migrationService.runMigrations(prefs);
-    await restoreApplicationStartupState();
-  } catch (e, stackTrace) {
-    logger.logNonFatal(
-      e,
-      stackTrace,
-      reason:
-          'Failed to initialize SharedPreferences / migrations / startup state during startup',
+  const StartupFailedPage({
+    super.key,
+    required this.error,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final errorType = error.runtimeType.toString();
+    final errorMessage = switch (error) {
+      StateError e => e.message,
+      ArgumentError e => e.message?.toString() ?? '',
+      _ => error.toString(),
+    };
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(),
+      home: Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 540),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      size: 64,
+                      color: Color(0xFFE57373),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "The app couldn't start",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Something went wrong while loading your saved data. Your data has not been deleted. Reload the page to try again. If this keeps happening, copy the details below and report it.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: Color(0xFFE0E0E0),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E1E),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF333333)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SelectableText(
+                            errorType,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFEF9A9A),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          SelectableText(
+                            errorMessage,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              color: Color(0xFFEF9A9A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
+}
 
-  final initialSettings = prefs != null
-      ? SettingsProvider.hydrateFromPrefs(prefs)
-      : const AppSettings();
-  final settingsProvider = SettingsProvider(initialSettings: initialSettings);
-
+Future<Widget> completeNormalStartup(
+  AppServices services,
+  LoggingService logger, {
+  @visibleForTesting Future<void> Function()? initServices,
+  @visibleForTesting Future<void> Function()? runMigration,
+  @visibleForTesting Future<void> Function()? setupFirebase,
+}) async {
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    logger.logInfo('Firebase initialized successfully.');
-  } catch (e, stackTrace) {
-    logger.logNonFatal(
-      e,
-      stackTrace,
-      reason:
-          'Firebase initialization failed; falling back to in-memory dice room mode',
-    );
-  }
+    await (initServices ?? initServiceLocator)();
+    await (runMigration ?? CampaignStorageMigration.runStartupMigration)();
+    try {
+      await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
+    } catch (e, st) {
+      logger.logNonFatal(e, st,
+          reason: 'StorageDurabilityCoordinator silent preflight failed');
+    }
+    setupWebLifecycle(services.debouncedStorage);
 
-  try {
-    if (kIsWeb) {
-      const recaptchaSiteKey = String.fromEnvironment(
-        'RECAPTCHA_ENTERPRISE_KEY',
-        defaultValue: '6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF',
-      );
-      await FirebaseAppCheck.instance.activate(
-        providerWeb: ReCaptchaEnterpriseProvider(recaptchaSiteKey),
-      );
-    } else {
-      await FirebaseAppCheck.instance.activate(
-        providerAndroid: const AndroidPlayIntegrityProvider(),
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+      await services.migrationService.runMigrations(prefs);
+      await restoreApplicationStartupState();
+    } catch (e, stackTrace) {
+      logger.logNonFatal(
+        e,
+        stackTrace,
+        reason:
+            'Failed to initialize SharedPreferences / migrations / startup state during startup',
       );
     }
-    logger.logInfo('Firebase App Check initialized successfully.');
-  } catch (e, stackTrace) {
-    logger.logNonFatal(
-      e,
-      stackTrace,
-      reason:
-          'Firebase App Check initialization failed; falling back to standard Firestore access',
-    );
-  }
 
-  runApp(
-    SettingsScope(
+    final initialSettings = prefs != null
+        ? SettingsProvider.hydrateFromPrefs(prefs)
+        : const AppSettings();
+    final settingsProvider = SettingsProvider(initialSettings: initialSettings);
+
+    if (setupFirebase != null) {
+      try {
+        await setupFirebase();
+      } catch (e, stackTrace) {
+        logger.logNonFatal(
+          e,
+          stackTrace,
+          reason:
+              'Firebase initialization failed; falling back to in-memory dice room mode',
+        );
+      }
+    } else {
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        logger.logInfo('Firebase initialized successfully.');
+      } catch (e, stackTrace) {
+        logger.logNonFatal(
+          e,
+          stackTrace,
+          reason:
+              'Firebase initialization failed; falling back to in-memory dice room mode',
+        );
+      }
+
+      try {
+        if (kIsWeb) {
+          const recaptchaSiteKey = String.fromEnvironment(
+            'RECAPTCHA_ENTERPRISE_KEY',
+            defaultValue: '6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF',
+          );
+          await FirebaseAppCheck.instance.activate(
+            providerWeb: ReCaptchaEnterpriseProvider(recaptchaSiteKey),
+          );
+        } else {
+          await FirebaseAppCheck.instance.activate(
+            providerAndroid: const AndroidPlayIntegrityProvider(),
+          );
+        }
+        logger.logInfo('Firebase App Check initialized successfully.');
+      } catch (e, stackTrace) {
+        logger.logNonFatal(
+          e,
+          stackTrace,
+          reason:
+              'Firebase App Check initialization failed; falling back to standard Firestore access',
+        );
+      }
+    }
+
+    return SettingsScope(
       notifier: settingsProvider,
       child: const DangerouslyNerdy5eToolkitApp(),
-    ),
-  );
+    );
+  } catch (error, stack) {
+    logger.logFatal(
+      error,
+      stack,
+      reason: 'completeNormalStartup failed',
+    );
+    return StartupFailedPage(error: error);
+  }
 }
 
 /// Full-screen view shown when durable browser storage cannot be opened.
@@ -356,7 +484,7 @@ void main() {
           home: StorageUnavailablePage(
             databaseService: AppDatabaseService.instance,
             onRetrySuccess: () async {
-              await _completeNormalStartup(services, logger);
+              runApp(await completeNormalStartup(services, logger));
             },
           ),
         ),
@@ -364,7 +492,7 @@ void main() {
       return;
     }
 
-    await _completeNormalStartup(services, logger);
+    runApp(await completeNormalStartup(services, logger));
   }, (Object error, StackTrace stack) {
     AppServices.instance.logger.logFatal(error, stack,
         reason: 'runZonedGuarded uncaught zone exception');

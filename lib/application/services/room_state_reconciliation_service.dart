@@ -3,8 +3,8 @@ import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import 'package:vtt_engine_core/utils/aggregate_join_utils.dart';
+import '../../infrastructure/dtos/campaign_edition_codec.dart';
 import '../../models/domain/loot_models.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_event.dart';
@@ -81,7 +81,10 @@ class RoomStateReconciliationService {
       );
     }
 
-    if (local.rulesetId != remote.rulesetId) {
+    final localRuleset = parseStoredCampaignEdition(local.rulesetId);
+    final remoteRuleset = parseStoredCampaignEdition(remote.rulesetId);
+
+    if (localRuleset.rulesetId != remoteRuleset.rulesetId) {
       throw StateError(
         'Incompatible ruleset edition: "${local.rulesetId}" vs "${remote.rulesetId}".',
       );
@@ -89,7 +92,7 @@ class RoomStateReconciliationService {
 
     final canonicalEdition = local.edition == remote.edition
         ? local.edition
-        : RulesetIdentifier(local.rulesetId);
+        : localRuleset;
 
     final faults = <ReconciliationFieldFault>[];
 

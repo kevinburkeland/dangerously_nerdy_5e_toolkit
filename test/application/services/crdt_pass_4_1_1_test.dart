@@ -732,6 +732,7 @@ void main() {
       final profileWithTombstones = CampaignProfile.raw(
         id: 'camp_tombstone_roundtrip',
         name: 'Tombstone Roundtrip',
+        edition: RulesetEdition.v2024,
         createdAt: DateTime.utc(2026, 1, 1),
         lastPlayedAt: DateTime.utc(2026, 1, 1),
         notesRegister: const CrdtLwwRegister<String>(
