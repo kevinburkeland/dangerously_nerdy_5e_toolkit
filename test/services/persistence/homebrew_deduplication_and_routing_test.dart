@@ -9,15 +9,23 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/tables/srd_tables_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Homebrew Deduplication and Routing Tests', () {
     late HomebrewPersistenceService persistence;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUp('homebrew_dedup_');
       persistence = HomebrewPersistenceService();
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
     });
 
     test(

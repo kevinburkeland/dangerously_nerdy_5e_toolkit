@@ -58,7 +58,7 @@ void main() {
       expect(registry.memberships.isEmpty, isTrue);
     });
 
-    test('6-Word Mnemonic Passkey Export and Import', () async {
+    test('Host membership saves and retrieves hostKey directly', () async {
       final registry = CampaignRegistryService.newInstance();
       const hostKey = 'c9a0b123-4567-489a-bcde-f0123456789a';
 
@@ -72,23 +72,11 @@ void main() {
 
       await registry.saveMembership(hostMembership);
 
-      final mnemonic = registry.exportPasskeyMnemonic('ROOM-DM9999');
-      expect(mnemonic, isNotNull);
-      final words = mnemonic!.split(' ');
-      expect(words.length, equals(6));
-      expect(CryptoUtils.isValidMnemonic(mnemonic), isTrue);
-
-      // Co-DM imports on secondary device
-      final coDmMembership = await registry.importPasskey(
-        roomCode: 'ROOM-DM9999',
-        campaignName: 'Tomb of Annihilation',
-        passkeyOrMnemonic: mnemonic,
-        playerName: 'Co-DM Jane',
-      );
-
-      expect(coDmMembership.role, equals(CampaignRole.coDm));
-      expect(coDmMembership.isDmOrCoDm, isTrue);
-      expect(coDmMembership.characterId, equals('Co-DM Jane'));
+      final retrieved = registry.getMembership('ROOM-DM9999');
+      expect(retrieved, isNotNull);
+      expect(retrieved!.hostKey, equals(hostKey));
+      expect(retrieved.role, equals(CampaignRole.host));
+      expect(retrieved.isDmOrCoDm, isTrue);
     });
 
     test('CryptoUtils room code generator generates unguessable codes', () {

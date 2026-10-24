@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/party/campaign_membership.dart';
-import '../../utils/crypto_utils.dart';
 import '../logging_service.dart';
 
 /// Manages local multi-campaign indexing and host passkey persistence
@@ -10,7 +9,7 @@ class CampaignRegistryService {
   static const String _kRegistryKey = 'user_campaign_registry';
   static const String _kActiveCampaignKey = 'user_active_campaign_code';
 
-  static final CampaignRegistryService _instance =
+  static CampaignRegistryService _instance =
       CampaignRegistryService._internal();
   factory CampaignRegistryService() => _instance;
 
@@ -20,6 +19,13 @@ class CampaignRegistryService {
 
   @visibleForTesting
   CampaignRegistryService.newInstance();
+
+  @visibleForTesting
+  static set instance(CampaignRegistryService value) => _instance = value;
+
+  @visibleForTesting
+  static void resetInstanceForTesting() =>
+      _instance = CampaignRegistryService.newInstance();
 
   final ValueNotifier<List<CampaignMembership>> membershipsNotifier =
       ValueNotifier<List<CampaignMembership>>([]);
@@ -171,39 +177,6 @@ class CampaignRegistryService {
       LoggingService().logNonFatal(e, stackTrace,
           reason: 'Failed to persist active campaign code');
     }
-  }
-
-  /// Exports the 6-word mnemonic passkey for a DM/Host room
-  String? exportPasskeyMnemonic(String roomCode) {
-    final membership = getMembership(roomCode);
-    if (membership != null &&
-        membership.hostKey != null &&
-        membership.hostKey!.isNotEmpty) {
-      return CryptoUtils.encodeHostKeyToMnemonic(membership.hostKey!);
-    }
-    return null;
-  }
-
-  /// Imports a passkey (raw key or mnemonic) for Co-DM rights
-  Future<CampaignMembership> importPasskey({
-    required String roomCode,
-    required String campaignName,
-    required String passkeyOrMnemonic,
-    String? playerName,
-  }) async {
-    final cleanCode = roomCode.trim().toUpperCase();
-    final membership = CampaignMembership(
-      roomCode: cleanCode,
-      campaignName:
-          campaignName.trim().isEmpty ? 'Shared Campaign' : campaignName.trim(),
-      role: CampaignRole.coDm,
-      hostKey: passkeyOrMnemonic.trim(),
-      characterId: playerName,
-      lastPlayed: DateTime.now(),
-    );
-
-    await saveMembership(membership);
-    return membership;
   }
 
   Future<void> _persistList(List<CampaignMembership> list) async {

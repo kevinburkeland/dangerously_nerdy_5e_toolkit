@@ -67,7 +67,7 @@ class HomebrewPersistenceService {
   factory HomebrewPersistenceService() => _instance;
   HomebrewPersistenceService._internal();
 
-  final AppDatabaseService _db = AppDatabaseService.instance;
+  AppDatabaseService get _db => AppDatabaseService.instance;
 
   final Map<String, Map<String, int>> _categorySlugIndex = {};
 
@@ -2891,18 +2891,20 @@ class HomebrewPersistenceService {
   /// Clears all saved homebrew and override data.
   Future<void> clearAllHomebrew() async {
     final prefs = await SharedPreferences.getInstance();
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSpells);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewMonsters);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewItems);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewClasses);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSubclasses);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewRaces);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewFeats);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewBackgrounds);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewOther);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSubraces);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewFluff);
-    await _db.delete(AppDatabaseService.boxHomebrew, _keyCampaignOverrides);
+    if (_db.isBoxOpen(AppDatabaseService.boxHomebrew)) {
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSpells);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewMonsters);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewItems);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewClasses);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSubclasses);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewRaces);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewFeats);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewBackgrounds);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewOther);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSubraces);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewFluff);
+      await _db.delete(AppDatabaseService.boxHomebrew, _keyCampaignOverrides);
+    }
 
     await prefs.remove(_keyHomebrewSpells);
     await prefs.remove(_keyHomebrewMonsters);
@@ -2918,21 +2920,23 @@ class HomebrewPersistenceService {
     await prefs.remove(_keyCampaignOverrides);
 
     // Clear raw payload keys
-    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSpellsRaw);
-    await _db.delete(
-        AppDatabaseService.boxHomebrewRaw, _keyHomebrewMonstersRaw);
-    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewItemsRaw);
-    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewClassesRaw);
-    await _db.delete(
-        AppDatabaseService.boxHomebrewRaw, _keyHomebrewSubclassesRaw);
-    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewRacesRaw);
-    await _db.delete(
-        AppDatabaseService.boxHomebrewRaw, _keyHomebrewSubracesRaw);
-    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewFeatsRaw);
-    await _db.delete(
-        AppDatabaseService.boxHomebrewRaw, _keyHomebrewBackgroundsRaw);
-    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewOtherRaw);
-    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewFluffRaw);
+    if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+      await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSpellsRaw);
+      await _db.delete(
+          AppDatabaseService.boxHomebrewRaw, _keyHomebrewMonstersRaw);
+      await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewItemsRaw);
+      await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewClassesRaw);
+      await _db.delete(
+          AppDatabaseService.boxHomebrewRaw, _keyHomebrewSubclassesRaw);
+      await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewRacesRaw);
+      await _db.delete(
+          AppDatabaseService.boxHomebrewRaw, _keyHomebrewSubracesRaw);
+      await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewFeatsRaw);
+      await _db.delete(
+          AppDatabaseService.boxHomebrewRaw, _keyHomebrewBackgroundsRaw);
+      await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewOtherRaw);
+      await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewFluffRaw);
+    }
 
     await prefs.remove(_keyHomebrewSpellsRaw);
     await prefs.remove(_keyHomebrewMonstersRaw);

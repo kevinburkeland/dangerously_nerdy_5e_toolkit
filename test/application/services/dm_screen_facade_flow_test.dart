@@ -7,9 +7,10 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
+
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -19,10 +20,11 @@ void main() {
     late ReplicaId replicaId;
     late StatefulHlcClock clock;
     late CharacterPersistenceService charService;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      await AppDatabaseService.instance.resetForTesting();
+      await harness.setUp('dm_facade_');
       sl.reset();
 
       replicaId = ReplicaId('dm_screen_flow_node');
@@ -42,9 +44,10 @@ void main() {
       sl.registerSingleton<ICampaignRepository>(repo);
     });
 
-    tearDown(() {
+    tearDown(() async {
       repo.dispose();
       sl.reset();
+      await harness.tearDown();
     });
 
     test('Create, clone, delete, switch via facade then DmDashboardController.loadData reflects exact state', () async {

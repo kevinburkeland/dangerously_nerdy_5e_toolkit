@@ -277,36 +277,8 @@ class CryptoUtils {
     'deepstone', 'everlight',
   ];
 
-  /// Encodes a UUID or hostKey string into a deterministic 6-word human-friendly mnemonic passkey.
-  static String encodeHostKeyToMnemonic(String hostKey) {
-    final trimmed = hostKey.trim();
-    if (trimmed.isEmpty) return 'dragon wizard shield potion goblin scroll';
-
-    // Hash the input with SHA-256 to ensure uniform cryptographic entropy.
-    // This guarantees that any string (UUID, custom passkey, or text) maps deterministically
-    // to a diverse 6-word mnemonic without fallback collisions to index 0.
-    final hashHex = sha256Hex(trimmed);
-    final words = <String>[];
-    final usedIndices = <int>{};
-
-    for (int i = 0; i < 6; i++) {
-      final chunkHex = hashHex.substring(i * 4, (i + 1) * 4);
-      final val = int.tryParse(chunkHex, radix: 16) ?? (i * 37);
-      final index = val % _dndWordList.length;
-
-      int offset = 0;
-      while (usedIndices.contains((index + offset) % _dndWordList.length)) {
-        offset++;
-      }
-      final chosenIndex = (index + offset) % _dndWordList.length;
-      usedIndices.add(chosenIndex);
-      words.add(_dndWordList[chosenIndex]);
-    }
-    return words.join(' ');
-  }
-
-  /// Verifies whether a given mnemonic represents a valid passkey format
-  static bool isValidMnemonic(String phrase) {
+  /// Checks whether a given phrase is a 6-word phrase from the legacy mnemonic word list.
+  static bool isLegacyMnemonicPhrase(String phrase) {
     final words = phrase.trim().toLowerCase().split(RegExp(r'\s+'));
     return words.length == 6 && words.every((w) => _dndWordList.contains(w));
   }

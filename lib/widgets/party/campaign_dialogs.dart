@@ -750,7 +750,7 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
   }
 }
 
-/// Dialog to Share DM Passkey via 6-Word Mnemonic or Raw Key
+/// Dialog to Share DM Passkey via Raw Host Key
 class ShareDmPasskeyDialog extends StatelessWidget {
   final CampaignMembership membership;
 
@@ -768,7 +768,6 @@ class ShareDmPasskeyDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hostKey = membership.hostKey ?? '';
-    final mnemonic = CryptoUtils.encodeHostKeyToMnemonic(hostKey);
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -793,7 +792,18 @@ class ShareDmPasskeyDialog extends StatelessWidget {
                   TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 16),
-            const Text('6-Word Mnemonic Passkey:',
+            const Text('Room Code:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const SizedBox(height: 4),
+            SelectableText(
+              membership.roomCode,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                  fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            const Text('DM passkey:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 6),
             Container(
@@ -806,34 +816,12 @@ class ShareDmPasskeyDialog extends StatelessWidget {
                     color: Colors.amber.shade400.withValues(alpha: 0.4)),
               ),
               child: SelectableText(
-                mnemonic,
+                hostKey,
                 style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    letterSpacing: 0.5),
+                    fontSize: 13,
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 12),
-            const Text('Room Code:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            const SizedBox(height: 4),
-            SelectableText(
-              membership.roomCode,
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                  fontSize: 16),
-            ),
-            const SizedBox(height: 12),
-            const Text('Raw Cryptographic Host Key:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            const SizedBox(height: 4),
-            SelectableText(
-              hostKey,
-              style: TextStyle(
-                  fontSize: 11,
-                  fontFamily: 'monospace',
-                  color: colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -842,8 +830,7 @@ class ShareDmPasskeyDialog extends StatelessWidget {
         TextButton(
           onPressed: () {
             Clipboard.setData(ClipboardData(
-                text:
-                    'Room: ${membership.roomCode}\nPasskey Mnemonic: $mnemonic\nHostKey: $hostKey'));
+                text: 'Room: ${membership.roomCode}\nHostKey: $hostKey'));
             HapticService.lightImpact(context);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('DM Passkey copied to clipboard!')),
@@ -1087,7 +1074,7 @@ class _ClaimDmPasskeyDialogState extends State<ClaimDmPasskeyDialog> {
               maxLines: 2,
               decoration: InputDecoration(
                 labelText: 'DM Passkey / Host Key',
-                hintText: 'Paste UUID or 6-word mnemonic passkey',
+                hintText: 'Paste DM passkey (host key)',
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 suffixIcon: IconButton(

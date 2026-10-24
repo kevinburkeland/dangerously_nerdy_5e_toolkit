@@ -223,12 +223,16 @@ void main() {
         for (int run = 0; run < 20; run++) {
           final tempDir = await Directory.systemTemp.createTemp('hive_x1_control_');
           try {
-            Hive.init(tempDir.path);
-            final box = await Hive.openBox<dynamic>(AppDatabaseService.boxCampaignProfiles);
+            final db = AppDatabaseService.custom(
+              hiveInit: () async => Hive.init(tempDir.path),
+              hiveBoxOpener: Hive.openBox<dynamic>,
+            );
+            await db.init();
             final repo = LocalCampaignRepository(
               replicaId: replicaId,
               clock: StatefulHlcClock(replicaId: replicaId),
-              characterRepo: LocalCharacterRepository(),
+              db: db,
+              characterRepo: LocalCharacterRepository(db: db),
             );
             await repo.loadAllProfiles();
 
@@ -250,13 +254,18 @@ void main() {
 
             await Future.wait([uA, uB, fE]);
             repo.dispose();
-            await box.close();
+            await db.close();
 
-            await Hive.openBox<dynamic>(AppDatabaseService.boxCampaignProfiles);
+            final db2 = AppDatabaseService.custom(
+              hiveInit: () async {},
+              hiveBoxOpener: Hive.openBox<dynamic>,
+            );
+            await db2.init();
             final freshRepo = LocalCampaignRepository(
               replicaId: replicaId,
               clock: StatefulHlcClock(replicaId: replicaId),
-              characterRepo: LocalCharacterRepository(),
+              db: db2,
+              characterRepo: LocalCharacterRepository(db: db2),
             );
             final reloaded = await freshRepo.loadAllProfiles();
             final ids = reloaded.map((p) => p.id).toSet();
@@ -266,7 +275,7 @@ void main() {
               }
             }
             freshRepo.dispose();
-            await Hive.box<dynamic>(AppDatabaseService.boxCampaignProfiles).close();
+            await db2.close();
           } finally {
             await tempDir.delete(recursive: true);
           }

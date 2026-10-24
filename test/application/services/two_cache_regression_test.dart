@@ -1,7 +1,6 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,20 +19,19 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_event.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late Directory tempDir;
+  final harness = HiveTestHarness();
   late StatefulHlcClock clock;
   late LocalCampaignRepository repo;
   late ReplicaId replicaId;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    tempDir = await Directory.systemTemp.createTemp('two_cache_t1_');
-    Hive.init(tempDir.path);
-    await Hive.openBox<dynamic>(AppDatabaseService.boxCampaignProfiles);
-    await Hive.openBox<dynamic>(AppDatabaseService.boxCharacters);
+    await harness.setUp('two_cache_t1_');
 
     sl.reset();
     replicaId = ReplicaId('dm_node_t1');
@@ -54,11 +52,8 @@ void main() {
 
   tearDown(() async {
     repo.dispose();
-    await Hive.close();
-    if (tempDir.existsSync()) {
-      await tempDir.delete(recursive: true);
-    }
     sl.reset();
+    await harness.tearDown();
   });
 
   CampaignProfile createCampaignA() {

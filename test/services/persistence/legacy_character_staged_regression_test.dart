@@ -17,15 +17,22 @@ import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Legacy Character Regression Staged Diagnosis', () {
     late Map<String, dynamic> raw;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      await AppDatabaseService.instance.resetForTesting();
+      await harness.setUpInMemory();
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
     });
 
     setUpAll(() {

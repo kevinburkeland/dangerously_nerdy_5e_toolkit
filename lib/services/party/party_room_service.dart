@@ -287,6 +287,8 @@ class PartyRoomService {
 
   // Local in-memory store for tests, offline mode, or fallback
   final Map<String, PartySessionState> _localRooms = {};
+  @visibleForTesting
+  Map<String, PartySessionState> get localRooms => Map.unmodifiable(_localRooms);
   final Map<String, PartyRoomLobby> _localLobbies = {};
   final Map<String, Map<String, dynamic>> _rawLegacyDocs = {};
   final Map<String, Map<String, PartyLootItem>> _localLoot = {};
@@ -1436,6 +1438,12 @@ class PartyRoomService {
     }
     if (cleanKey.isEmpty) {
       throw Exception('Please enter a valid DM passkey.');
+    }
+
+    if (CryptoUtils.isLegacyMnemonicPhrase(cleanKey)) {
+      throw UnauthorizedHostActionException(
+        'The 6-word phrase is not a passkey. Paste the DM passkey (Host Key) instead.',
+      );
     }
 
     final codeCandidates = <String>{

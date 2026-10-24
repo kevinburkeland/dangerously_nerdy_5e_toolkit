@@ -11,6 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +20,11 @@ void main() {
     late DmBackupService backupService;
     late CampaignProfileService campaignService;
     late HomebrewPersistenceService homebrewService;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUp('dm_backup_');
       await initServiceLocator();
       backupService = DmBackupService();
       campaignService = CampaignProfileService();
@@ -29,8 +32,9 @@ void main() {
       homebrewService = HomebrewPersistenceService();
     });
 
-    tearDown(() {
+    tearDown(() async {
       sl.reset();
+      await harness.tearDown();
     });
 
     test('validates valid campaign payload format', () {

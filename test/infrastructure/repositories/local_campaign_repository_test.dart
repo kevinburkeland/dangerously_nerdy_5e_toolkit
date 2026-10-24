@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profil
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 class _FakeCharRepo implements ICharacterRepository<Character> {
   @override
@@ -37,10 +38,15 @@ class _FakeCharRepo implements ICharacterRepository<Character> {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final harness = HiveTestHarness();
 
   setUp(() async {
-    await AppDatabaseService.instance.resetForTesting();
     SharedPreferences.setMockInitialValues({});
+    await harness.setUp('local_camp_');
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('LocalCampaignRepository Reactive Streams Tests', () {

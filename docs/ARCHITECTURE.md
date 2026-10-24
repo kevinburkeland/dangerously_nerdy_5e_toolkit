@@ -26,7 +26,8 @@ This repository strictly follows **Domain-Driven Design (DDD)** combined with **
 ## Directory Structure & Layer Responsibilities
 
 ### `lib/domain/` & `lib/models/` (The Core Domain)
-The pure Dart center of the application (zero `package:flutter/...` imports).
+Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/
+Note: `lib/models/` is not pure today (known debt).
 - **`lib/domain/ingestion/`**: Structural document parsing, candidate detection, and field extraction ASTs.
 - **`lib/models/`**: D&D 5e domain models (`characters/`, `spells/`, `magic_items/`, `monster_codex/`, `party/`, `arena/`, `dpr/`, `tables/`, `animated_object.dart`, `weapon_mastery.dart`, `exhaustion_state.dart`).
 - **`package:vtt_engine_core`**: System-agnostic tabletop engine primitives:
@@ -98,13 +99,24 @@ Pre-CRDT campaign records stored coins in scalar fields, which map to an initial
 ## Trust Model & Transport Topology
 
 1. **4-Tier Transport Waterfall:**
-   - Peers discover each other via local LAN multicast when on the same network (`LocalWifiAdapter`).
+   - Local Wi-Fi is a stub (`LocalWifiAdapter.initializeRoom` throws `UnsupportedError`; there is no LAN transport).
    - Peer-to-peer data channels are established using WebRTC mesh networking (`WebRtcMeshAdapter`) with polite peer glare handling.
    - If direct P2P connections cannot be negotiated (symmetric NATs, firewalls), traffic seamlessly falls back to Cloud Firestore relay channels (`FirebaseFallbackAdapter`).
-   - If completely disconnected, state changes persist locally and converge automatically upon reconnection.
+   - If completely disconnected, state changes persist locally and converge automatically upon reconnection via five anti-entropy triggers (send on start, transport active, new peer, reply when behind, and periodic 30-second broadcast).
 2. **Relay Hardening & Deduplication:**
    - Fallback relay messages enforce an explicit upper payload limit (`maxRelayPayloadLength = 999999` characters) enforced by both client adapters and Firestore security rules.
    - Inbound transport frames undergo SHA-256 LRU deduplication and sliding lookback filtering to prevent reflection loops and replay attacks.
 3. **Integrity & Authorization:**
    - Physical storage snapshots include constant-time SHA-256 payload checksums.
-   - Writer authority is partitioned: clients can only publish updates to entities they own or have explicit DM delegate authority to modify.
+   - Peer-to-peer sync messages are not authorized per writer; any device in the room can modify any replicated field. DM privileges are enforced only in the client UI.
+
+---
+
+## Trust model as built
+
+- There are no user accounts and no Firebase Auth. The room code is the capability: anyone who has it can read the room and join.
+- The host key is a random UUID made on the DM's device. The room document stores only its SHA-256 hash. Firestore rules require proof of the host key to delete the room or change its identity fields.
+- Any code holder can write the lobby's player fields (shared characters, party telemetry, active players) and can delete signalling documents. This is deliberate: joining must work without the host key.
+- Peer-to-peer sync messages are not authorised per writer. Any device in the room can change any replicated field. The DM role is enforced only in the client UI.
+- App Check with reCAPTCHA is enforced in the Firebase console (not visible in the repo).
+- The DM passkey is the raw host key (see Fix 4).

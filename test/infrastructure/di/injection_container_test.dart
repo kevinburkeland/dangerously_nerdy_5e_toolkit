@@ -17,13 +17,19 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
-  setUp(() {
+  final harness = HiveTestHarness();
+
+  setUp(() async {
     sl.reset();
+    await harness.setUp('di_test_');
   });
 
-  tearDown(() {
+  tearDown(() async {
     sl.reset();
+    await harness.tearDown();
   });
 
   group('InjectionContainer Unit Tests', () {

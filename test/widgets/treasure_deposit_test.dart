@@ -15,6 +15,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -31,10 +32,13 @@ void main() {
   group('TreasureHoardView Campaign Vault Deposit Integration', () {
     late CampaignRegistryService registry;
     late PartyRoomService partyService;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      registry = CampaignRegistryService();
+      await harness.setUpInMemory();
+      registry = CampaignRegistryService.newInstance();
+      CampaignRegistryService.instance = registry;
       final replica = ReplicaId('treasure_deposit_replica');
       final clock = StatefulHlcClock(replicaId: replica);
       final campRepo = LocalCampaignRepository(
@@ -50,10 +54,12 @@ void main() {
         registry: registry,
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
-      addTearDown(() {
+      addTearDown(() async {
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
+        CampaignRegistryService.resetInstanceForTesting();
         sl.reset();
+        await harness.tearDown();
       });
     });
 

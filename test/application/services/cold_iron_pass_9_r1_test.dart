@@ -12,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -106,9 +107,11 @@ void main() {
   late _InMemoryCampaignRepo repo;
   late RecordingRoomDocumentPort recordingPort;
   late PartyRoomService service;
+  final harness = HiveTestHarness();
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUpInMemory();
     sl.reset();
     rep = ReplicaId('test_node_r1_r2');
     clock = StatefulHlcClock(replicaId: rep);
@@ -122,6 +125,10 @@ void main() {
 
     CampaignProfileService.resetForTesting();
     service = PartyRoomService(replicaId: rep, clock: clock);
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('Part A: R1 Invariant - Only room entry may create a campaign profile', () {

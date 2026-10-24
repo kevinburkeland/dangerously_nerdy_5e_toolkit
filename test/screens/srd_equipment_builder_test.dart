@@ -5,10 +5,18 @@ import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_equipment_lib
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_currency_system.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
-  setUp(() {
+  final harness = HiveTestHarness();
+
+  setUp(() async {
+    await harness.setUpInMemory();
     SharedPreferences.setMockInitialValues({});
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('SRD Equipment & Inventory Character Builder Tests', () {

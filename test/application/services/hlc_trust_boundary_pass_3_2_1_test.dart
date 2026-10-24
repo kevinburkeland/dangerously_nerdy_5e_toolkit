@@ -24,6 +24,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 class _FakeCharRepo implements ICharacterRepository<Character> {
   @override
@@ -108,16 +109,18 @@ void main() {
   final localNode = ReplicaId('node_local');
   final remoteNode = ReplicaId('node_remote');
   final rogueNode = ReplicaId('node_rogue');
+  final harness = HiveTestHarness();
 
   setUp(() async {
     sl.reset();
     sl.registerSingleton<ReplicaId>(localNode);
-    await AppDatabaseService.instance.resetForTesting();
+    await harness.setUp('hlc_trust_');
     SharedPreferences.setMockInitialValues({});
   });
 
-  tearDown(() {
+  tearDown(() async {
     sl.reset();
+    await harness.tearDown();
   });
 
   group('Pass 3.2.1: HLC Trust Boundary & Atomic Aggregate Observation', () {

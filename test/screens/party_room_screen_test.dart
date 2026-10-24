@@ -25,6 +25,7 @@ import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connectio
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 class _MockSyncTransport implements IP2pTransportPort {
   final StreamController<String> _incoming =
@@ -93,9 +94,11 @@ void main() {
   group('PartyRoomScreen Widget Tests', () {
     late CampaignRegistryService registry;
     late PartyRoomService partyService;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       registry = CampaignRegistryService.newInstance();
       final repId = ReplicaId('party_room_screen_test_replica');
       final testClock = StatefulHlcClock(
@@ -114,10 +117,11 @@ void main() {
         registry: registry,
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
-      addTearDown(() {
+      addTearDown(() async {
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
         sl.reset();
+        await harness.tearDown();
       });
     });
 

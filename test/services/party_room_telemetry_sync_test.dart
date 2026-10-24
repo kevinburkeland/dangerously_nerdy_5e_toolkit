@@ -16,6 +16,7 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -213,6 +214,8 @@ void main() {
         'PartyRoomService links character and broadcasts minified telemetry map',
         () async {
       SharedPreferences.setMockInitialValues({});
+      final harness = HiveTestHarness();
+      await harness.setUpInMemory();
       final replica = ReplicaId('telemetry_sync_replica');
       final clock = StatefulHlcClock(replicaId: replica);
       final campRepo = LocalCampaignRepository(
@@ -221,10 +224,11 @@ void main() {
         characterRepo: LocalCharacterRepository(),
       );
       sl.registerSingleton<ICampaignRepository>(campRepo);
-      addTearDown(() {
+      addTearDown(() async {
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
         sl.reset();
+        await harness.tearDown();
       });
       final partyService = PartyRoomService.newInstance(
         replicaId: replica,

@@ -12,6 +12,7 @@ import 'models/app_settings.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
 import 'services/app_services.dart';
+import 'services/logging_service.dart';
 import 'services/persistence/app_database_service.dart';
 import 'services/persistence/homebrew_persistence_service.dart';
 import 'services/persistence/web_lifecycle.dart';
@@ -29,6 +30,276 @@ Future<void> restoreApplicationStartupState({
 }) async {
   await (homebrewService ?? HomebrewPersistenceService()).syncToLibraries();
   await (diceRoomService ?? DiceRoomService()).restorePersistedSession();
+}
+
+enum StartupStorageStatus { success, unavailable }
+
+/// Result of trying to open durable storage during startup.
+class StartupStorageResult {
+  final StartupStorageStatus status;
+  final StorageUnavailableException? error;
+
+  const StartupStorageResult.success()
+      : status = StartupStorageStatus.success,
+        error = null;
+
+  const StartupStorageResult.unavailable(this.error)
+      : status = StartupStorageStatus.unavailable;
+
+  bool get isSuccess => status == StartupStorageStatus.success;
+}
+
+/// Attempts to open durable storage, returning [StartupStorageResult.unavailable] if storage cannot be opened.
+Future<StartupStorageResult> openStorage(AppDatabaseService db) async {
+  try {
+    await db.init();
+    return const StartupStorageResult.success();
+  } on StorageUnavailableException catch (e) {
+    return StartupStorageResult.unavailable(e);
+  } catch (e, st) {
+    return StartupStorageResult.unavailable(StorageUnavailableException(e, st));
+  }
+}
+
+Future<void> _completeNormalStartup(AppServices services, LoggingService logger) async {
+  await initServiceLocator();
+  await CampaignStorageMigration.runStartupMigration();
+  try {
+    await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
+  } catch (e, st) {
+    logger.logNonFatal(e, st,
+        reason: 'StorageDurabilityCoordinator silent preflight failed');
+  }
+  setupWebLifecycle(services.debouncedStorage);
+
+  SharedPreferences? prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+    await services.migrationService.runMigrations(prefs);
+    await restoreApplicationStartupState();
+  } catch (e, stackTrace) {
+    logger.logNonFatal(
+      e,
+      stackTrace,
+      reason:
+          'Failed to initialize SharedPreferences / migrations / startup state during startup',
+    );
+  }
+
+  final initialSettings = prefs != null
+      ? SettingsProvider.hydrateFromPrefs(prefs)
+      : const AppSettings();
+  final settingsProvider = SettingsProvider(initialSettings: initialSettings);
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    logger.logInfo('Firebase initialized successfully.');
+  } catch (e, stackTrace) {
+    logger.logNonFatal(
+      e,
+      stackTrace,
+      reason:
+          'Firebase initialization failed; falling back to in-memory dice room mode',
+    );
+  }
+
+  try {
+    if (kIsWeb) {
+      const recaptchaSiteKey = String.fromEnvironment(
+        'RECAPTCHA_ENTERPRISE_KEY',
+        defaultValue: '6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF',
+      );
+      await FirebaseAppCheck.instance.activate(
+        providerWeb: ReCaptchaEnterpriseProvider(recaptchaSiteKey),
+      );
+    } else {
+      await FirebaseAppCheck.instance.activate(
+        providerAndroid: const AndroidPlayIntegrityProvider(),
+      );
+    }
+    logger.logInfo('Firebase App Check initialized successfully.');
+  } catch (e, stackTrace) {
+    logger.logNonFatal(
+      e,
+      stackTrace,
+      reason:
+          'Firebase App Check initialization failed; falling back to standard Firestore access',
+    );
+  }
+
+  runApp(
+    SettingsScope(
+      notifier: settingsProvider,
+      child: const DangerouslyNerdy5eToolkitApp(),
+    ),
+  );
+}
+
+/// Full-screen view shown when durable browser storage cannot be opened.
+class StorageUnavailablePage extends StatefulWidget {
+  final AppDatabaseService databaseService;
+  final Future<void> Function() onRetrySuccess;
+
+  const StorageUnavailablePage({
+    super.key,
+    required this.databaseService,
+    required this.onRetrySuccess,
+  });
+
+  @override
+  State<StorageUnavailablePage> createState() => _StorageUnavailablePageState();
+}
+
+class _StorageUnavailablePageState extends State<StorageUnavailablePage> {
+  bool _isRetrying = false;
+  String? _errorMessage;
+
+  Future<void> _handleRetry() async {
+    setState(() {
+      _isRetrying = true;
+      _errorMessage = null;
+    });
+
+    final result = await openStorage(widget.databaseService);
+    if (!mounted) return;
+
+    if (result.isSuccess) {
+      setState(() {
+        _isRetrying = false;
+      });
+      await widget.onRetrySuccess();
+    } else {
+      setState(() {
+        _isRetrying = false;
+        _errorMessage =
+            'Storage is still unavailable. Please check your browser settings and try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF121212),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 540),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.storage_rounded,
+                    size: 64,
+                    color: Color(0xFFE57373),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Storage unavailable',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'The browser would not let the app save data, so nothing typed now would be kept.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: Color(0xFFE0E0E0),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1E1E),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF333333)),
+                    ),
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Common causes:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          '• Private browsing or incognito mode blocking local storage\n'
+                          '• Storage or cookies blocked for this site in site settings\n'
+                          '• Disk full or storage quota exceeded',
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.4,
+                            color: Color(0xFFB0B0B0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      _errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFFEF5350),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      key: const Key('storage_unavailable_try_again_button'),
+                      onPressed: _isRetrying ? null : _handleRetry,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7C4DFF),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(160, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                      ),
+                      child: _isRetrying
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Try again',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 void main() {
@@ -75,93 +346,25 @@ void main() {
       );
     }
 
-    // 1. Initialize local NoSQL database & web lifecycle before rendering Frame 1
-    try {
-      await AppDatabaseService.instance.init();
-      await initServiceLocator();
-      await CampaignStorageMigration.runStartupMigration();
-      try {
-        await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
-      } catch (e, st) {
-        logger.logNonFatal(e, st,
-            reason: 'StorageDurabilityCoordinator silent preflight failed');
-      }
-      setupWebLifecycle(services.debouncedStorage);
-    } catch (e, stackTrace) {
-      logger.logNonFatal(
-        e,
-        stackTrace,
-        reason:
-            'Failed to initialize AppDatabaseService or WebLifecycle hooks during startup',
+    // 1. Initialize local NoSQL database. If unavailable, do not start normal app or call initServiceLocator.
+    final storageResult = await openStorage(AppDatabaseService.instance);
+    if (!storageResult.isSuccess) {
+      runApp(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.dark(),
+          home: StorageUnavailablePage(
+            databaseService: AppDatabaseService.instance,
+            onRetrySuccess: () async {
+              await _completeNormalStartup(services, logger);
+            },
+          ),
+        ),
       );
+      return;
     }
 
-    // 2. Synchronously pre-hydrate SharedPreferences & run schema migrations
-    // prior to rendering Frame 1 to eliminate any flash-of-unstyled-content (FOUC).
-    SharedPreferences? prefs;
-    try {
-      prefs = await SharedPreferences.getInstance();
-      await services.migrationService.runMigrations(prefs);
-      await restoreApplicationStartupState();
-    } catch (e, stackTrace) {
-      logger.logNonFatal(
-        e,
-        stackTrace,
-        reason:
-            'Failed to initialize SharedPreferences / migrations / startup state during startup',
-      );
-    }
-
-    final initialSettings = prefs != null
-        ? SettingsProvider.hydrateFromPrefs(prefs)
-        : const AppSettings();
-    final settingsProvider = SettingsProvider(initialSettings: initialSettings);
-
-    // 2. Initialize Firebase & App Check
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      logger.logInfo('Firebase initialized successfully.');
-    } catch (e, stackTrace) {
-      logger.logNonFatal(
-        e,
-        stackTrace,
-        reason:
-            'Firebase initialization failed; falling back to in-memory dice room mode',
-      );
-    }
-
-    try {
-      if (kIsWeb) {
-        const recaptchaSiteKey = String.fromEnvironment(
-          'RECAPTCHA_ENTERPRISE_KEY',
-          defaultValue: '6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF',
-        );
-        await FirebaseAppCheck.instance.activate(
-          providerWeb: ReCaptchaEnterpriseProvider(recaptchaSiteKey),
-        );
-      } else {
-        await FirebaseAppCheck.instance.activate(
-          providerAndroid: const AndroidPlayIntegrityProvider(),
-        );
-      }
-      logger.logInfo('Firebase App Check initialized successfully.');
-    } catch (e, stackTrace) {
-      logger.logNonFatal(
-        e,
-        stackTrace,
-        reason:
-            'Firebase App Check initialization failed; falling back to standard Firestore access',
-      );
-    }
-
-    runApp(
-      SettingsScope(
-        notifier: settingsProvider,
-        child: const DangerouslyNerdy5eToolkitApp(),
-      ),
-    );
+    await _completeNormalStartup(services, logger);
   }, (Object error, StackTrace stack) {
     AppServices.instance.logger.logFatal(error, stack,
         reason: 'runZonedGuarded uncaught zone exception');

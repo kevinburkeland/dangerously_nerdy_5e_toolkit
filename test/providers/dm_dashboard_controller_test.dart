@@ -23,6 +23,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -32,10 +33,11 @@ void main() {
     late CharacterPersistenceService characterService;
     late DmDashboardController controller;
     late LocalCampaignRepository campaignRepo;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      await AppDatabaseService.instance.resetForTesting();
+      await harness.setUp('dm_dash_');
       AppServices.reset();
       sl.reset();
       final repId = ReplicaId('test_dm_node');
@@ -58,9 +60,10 @@ void main() {
       );
     });
 
-    tearDown(() {
+    tearDown(() async {
       campaignRepo.dispose();
       sl.reset();
+      await harness.tearDown();
     });
 
     test('Initial loadData resolves relational characters by foreign key IDs',

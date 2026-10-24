@@ -12,15 +12,21 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
+
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final harness = HiveTestHarness();
 
   setUp(() async {
-    await AppDatabaseService.instance.resetForTesting();
     SharedPreferences.setMockInitialValues({});
+    await harness.setUp('writer_auth_');
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('Pass 3.2 Writer Authority & Notes Invariants', () {

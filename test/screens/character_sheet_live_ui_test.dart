@@ -5,10 +5,10 @@ import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/dm_reference/rules_edition_toggle.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 Widget createTestApp() {
   return const MaterialApp(
@@ -52,9 +52,15 @@ Character _createTestHero(String slug, String name) {
 }
 
 void main() {
+  final harness = HiveTestHarness();
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    await AppDatabaseService.instance.resetForTesting();
+    await harness.setUpInMemory();
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('CharacterBuilderScreen Live Sheet & Wizard UI Tests', () {

@@ -136,18 +136,11 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
   }
 
   Future<void> _writeRawRosterToDisk(List<dynamic> rawList) async {
-    try {
-      await _db.put(
-        AppDatabaseService.boxCharacters,
-        _kSavedRosterKey,
-        rawList,
-      );
-    } catch (e) {
-      LoggingService().logWarning(
-        'Failed to save characters roster to repository: $e',
-        e,
-      );
-    }
+    await _db.put(
+      AppDatabaseService.boxCharacters,
+      _kSavedRosterKey,
+      rawList,
+    );
   }
 
   @override

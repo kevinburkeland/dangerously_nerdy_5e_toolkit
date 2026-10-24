@@ -11,6 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/add_feat_di
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/modify_ability_scores_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
 
@@ -19,9 +20,11 @@ void main() {
 
   group('Feat & Stat Modification on Character Sheet Tests', () {
     late Character baseCharacter;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       await initServiceLocator();
       baseCharacter = const Character(
         id: EntityId(slug: 'hero-bob', ruleset: RulesetVersion.v2024),
@@ -70,8 +73,9 @@ void main() {
       );
     });
 
-    tearDown(() {
+    tearDown(() async {
       sl.reset();
+      await harness.tearDown();
     });
 
     test(

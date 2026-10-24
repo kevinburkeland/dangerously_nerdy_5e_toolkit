@@ -5,6 +5,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 Character _createTestHero(String slug, String name) {
   return CharacterFactory.createLevel1Character(
     CharacterCreationRequest(
@@ -33,8 +35,15 @@ Character _createTestHero(String slug, String name) {
 }
 
 void main() {
-  setUp(() {
+  final harness = HiveTestHarness();
+
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUp('char_persist_');
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('CharacterPersistenceService Tests', () {

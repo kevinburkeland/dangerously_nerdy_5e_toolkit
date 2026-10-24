@@ -19,6 +19,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -65,12 +66,16 @@ void main() {
         const PartyPurse.empty().setCoins(gp: 75, sp: 20, replicaId: ReplicaId('init')),
   );
 
+  final harness = HiveTestHarness();
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUpInMemory();
     characterRepo = CharacterPersistenceService();
     await characterRepo.saveCharacter(testHero);
 
-    registry = CampaignRegistryService();
+    registry = CampaignRegistryService.newInstance();
+    CampaignRegistryService.instance = registry;
     final replica = ReplicaId('test_hero_replica');
     final clock = StatefulHlcClock(replicaId: replica);
     final campRepo = LocalCampaignRepository(
@@ -86,10 +91,12 @@ void main() {
       registry: registry,
     );
     PartyRoomService.setCustomInstanceForTesting(roomService);
-    addTearDown(() {
+    addTearDown(() async {
       campRepo.dispose();
       PartyRoomService.resetCustomInstanceForTesting();
+      CampaignRegistryService.resetInstanceForTesting();
       sl.reset();
+      await harness.tearDown();
     });
 
     // Create a mock campaign membership linking Barek

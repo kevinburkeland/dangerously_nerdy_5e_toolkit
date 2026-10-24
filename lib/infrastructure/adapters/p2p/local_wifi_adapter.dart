@@ -74,7 +74,7 @@ class LocalWifiAdapter implements IP2pTransportPort {
       return;
     }
 
-    // Default behavior: Local Wi-Fi requires platform socket or LAN multicast setup.
+    // Default behavior: Local Wi-Fi is a stub requiring platform socket implementation.
     // If no custom handler is provided, throw so the router cascades to WebRTC (Tier 2).
     throw UnsupportedError(
       'Local Wi-Fi transport is not enabled on this host; falling back to WebRTC.',

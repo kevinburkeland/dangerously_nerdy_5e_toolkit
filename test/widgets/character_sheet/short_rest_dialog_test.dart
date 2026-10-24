@@ -6,6 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_vitals_hud.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/short_rest_dialog.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
 
@@ -13,8 +14,10 @@ void main() {
   group('ShortRestDialog Widget Tests', () {
     late Character baseCharacter;
     late CharacterSheetController controller;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
+      await harness.setUpInMemory();
       baseCharacter = const Character(
         id: EntityId(slug: 'fighter-short-rest', ruleset: RulesetVersion.v2024),
         name: 'Gareth',
@@ -46,6 +49,10 @@ void main() {
       );
 
       controller = CharacterSheetController(replicaId: _testReplica, character: baseCharacter);
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
     });
 
     testWidgets('Renders Hit Dice steppers and allows incrementing spent dice',

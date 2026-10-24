@@ -18,7 +18,7 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
   factory CharacterPersistenceService() => _instance;
   CharacterPersistenceService._internal();
 
-  final AppDatabaseService _db = AppDatabaseService.instance;
+  AppDatabaseService get _db => AppDatabaseService.instance;
 
   /// Loads all saved characters from local database.
   /// Automatically migrates legacy records from SharedPreferences if database is unseeded.

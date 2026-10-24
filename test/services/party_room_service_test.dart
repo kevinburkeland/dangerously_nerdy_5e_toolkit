@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -22,10 +23,13 @@ void main() {
     late CampaignRegistryService registry;
     late DiceRoomService diceService;
     late PartyRoomService partyService;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       registry = CampaignRegistryService.newInstance();
+      CampaignRegistryService.instance = registry;
       diceService = DiceRoomService.newInstance();
       final replica = ReplicaId('party_service_test_replica');
       final clock = StatefulHlcClock(replicaId: replica);
@@ -43,10 +47,12 @@ void main() {
         diceRoomService: diceService,
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
-      addTearDown(() {
+      addTearDown(() async {
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
+        CampaignRegistryService.resetInstanceForTesting();
         sl.reset();
+        await harness.tearDown();
       });
     });
 

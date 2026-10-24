@@ -15,6 +15,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,34 +37,35 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
           equals('c4974958-3d12-4217-bf45-ee77e9b0ab83'));
     });
 
-    test(
-        'encodeHostKeyToMnemonic produces 6 distinct non-repeating words for any input',
-        () {
-      final inputs = [
-        'c4974958-3d12-4217-bf45-ee77e9b0ab83',
-        '00000000-0000-0000-0000-000000000000',
-        'sample-passkey-test',
-        'dragon',
-        'ROOM-123456',
-      ];
-
-      for (final input in inputs) {
-        final phrase = CryptoUtils.encodeHostKeyToMnemonic(input);
-        final words = phrase.split(' ');
-        expect(words.length, equals(6), reason: 'Must have 6 words for $input');
-        expect(words.toSet().length, equals(6),
-            reason: 'Words in $phrase must be distinct without repeating');
-        expect(CryptoUtils.isValidMnemonic(phrase), isTrue);
-      }
+    test('isLegacyMnemonicPhrase identifies 6-word phrases from legacy word list', () {
+      expect(
+        CryptoUtils.isLegacyMnemonicPhrase('dragon wizard shield potion goblin scroll'),
+        isTrue,
+      );
+      expect(
+        CryptoUtils.isLegacyMnemonicPhrase('Dragon Wizard Shield Potion Goblin Scroll'),
+        isTrue,
+      );
+      expect(
+        CryptoUtils.isLegacyMnemonicPhrase('not six words'),
+        isFalse,
+      );
+      expect(
+        CryptoUtils.isLegacyMnemonicPhrase('c4974958-3d12-4217-bf45-ee77e9b0ab83'),
+        isFalse,
+      );
     });
   });
 
   group('ClaimDmPasskeyDialog Widget Tests', () {
     late CampaignRegistryService registry;
     late DiceRoomService diceService;
+    late HiveTestHarness harness;
     late PartyRoomService partyService;
 
-    setUp(() {
+    setUp(() async {
+      harness = HiveTestHarness();
+      await harness.setUpInMemory();
       SharedPreferences.setMockInitialValues({});
       registry = CampaignRegistryService.newInstance();
       diceService = DiceRoomService.newInstance();
@@ -83,10 +85,11 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
         diceRoomService: diceService,
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
-      addTearDown(() {
+      addTearDown(() async {
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
         sl.reset();
+        await harness.tearDown();
       });
     });
 

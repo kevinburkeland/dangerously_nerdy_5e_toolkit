@@ -42,6 +42,7 @@ class RoomSyncOrchestrator {
   final Duration telemetryInterval;
   final Duration milestoneInterval;
   final Duration heartbeatTtl;
+  final Duration antiEntropyInterval;
 
   CascadingTransportRouter? get router =>
       transportPort is CascadingTransportRouter
@@ -53,6 +54,9 @@ class RoomSyncOrchestrator {
   StreamSubscription<TransportState>? _transportStateSub;
   Timer? _milestoneTimer;
   Timer? _telemetryTimer;
+  Timer? _antiEntropyTimer;
+  TransportState? _lastTransportState;
+  Set<String> _lastSeenPeers = <String>{};
 
   static const int maxProcessedPayloadHashes = 500;
   final LinkedHashMap<String, bool> _processedPayloadHashes =
@@ -81,6 +85,11 @@ class RoomSyncOrchestrator {
   /// Reactive stream broadcasting sync errors, dead letters, and schema mismatches.
   Stream<SyncErrorEvent> get deadLetterStream => _deadLetterController.stream;
 
+  static bool _isTransportActive(TransportState state) =>
+      state == TransportState.localWifi ||
+      state == TransportState.webRtc ||
+      state == TransportState.fallbackRelay;
+
   RoomSyncOrchestrator({
     IP2pTransportPort? transportPort,
     CascadingTransportRouter? router,
@@ -94,6 +103,7 @@ class RoomSyncOrchestrator {
     required this.replicaId,
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
+    this.antiEntropyInterval = const Duration(seconds: 30),
     Duration? heartbeatTtl,
     required StatefulHlcClock clock,
   })  : transportPort = transportPort ?? router!,
@@ -162,13 +172,119 @@ class RoomSyncOrchestrator {
     if (transportPort is CascadingTransportRouter) {
       _transportStateSub = (transportPort as CascadingTransportRouter)
           .onStateChanged
-          .listen((_) => _emitTelemetry());
+          .listen((_) {
+            _checkTransportAndPeerChanges();
+            _emitTelemetry();
+          });
+    }
+
+    _lastTransportState = transportPort.currentState;
+    _lastSeenPeers = Set<String>.from(transportPort.peerLastSeen.keys);
+
+    // Trigger A: Send on start
+    if (_isTransportActive(transportPort.currentState) &&
+        transportPort.peerLastSeen.isNotEmpty) {
+      final activeProfile = campaignRepo.activeProfile;
+      if (activeProfile != null) {
+        unawaited(_sendFullProfile(activeProfile));
+      }
     }
 
     _startTelemetryMonitor();
+    _startAntiEntropyTimer();
 
     if (isHost) {
       _startMilestoneFlushTimer();
+    }
+  }
+
+  void _startAntiEntropyTimer() {
+    _antiEntropyTimer?.cancel();
+    _antiEntropyTimer = Timer.periodic(antiEntropyInterval, (_) {
+      _handlePeriodicAntiEntropy();
+    });
+  }
+
+  void _handlePeriodicAntiEntropy() {
+    if (!isSynchronizing) return;
+    if (!_isTransportActive(transportPort.currentState)) return;
+    if (transportPort.peerLastSeen.isEmpty) return;
+    final profile = campaignRepo.activeProfile;
+    if (profile != null) {
+      unawaited(_sendFullProfile(profile));
+    }
+  }
+
+  void _checkTransportAndPeerChanges() {
+    if (!isSynchronizing) return;
+    final currentState = transportPort.currentState;
+    final isNowActive = _isTransportActive(currentState);
+    final wasInactive = _lastTransportState == null ||
+        _lastTransportState == TransportState.connecting ||
+        _lastTransportState == TransportState.offline;
+
+    bool shouldSend = false;
+
+    // Trigger B: transport becomes active
+    if (wasInactive && isNowActive) {
+      shouldSend = true;
+    }
+
+    // Trigger C: new peer appears
+    final currentPeers = transportPort.peerLastSeen.keys.toSet();
+    final hasNewPeer =
+        currentPeers.any((peer) => !_lastSeenPeers.contains(peer));
+    if (hasNewPeer) {
+      shouldSend = true;
+    }
+
+    _lastTransportState = currentState;
+    _lastSeenPeers = currentPeers;
+
+    if (shouldSend && isNowActive) {
+      final activeProfile = campaignRepo.activeProfile;
+      if (activeProfile != null) {
+        unawaited(_sendFullProfile(activeProfile));
+      }
+    }
+  }
+
+  /// Sends a full profile sync payload bypassing `_isAppliedProfile`.
+  Future<void> _sendFullProfile(CampaignProfile profile) async {
+    if (!isSynchronizing) return;
+    if (!_isTransportActive(transportPort.currentState)) return;
+
+    // Outbound isolation: do not broadcast a profile whose roomCode differs from the transport's room
+    final activeRoomCode = currentTransportRoomCode;
+    if (activeRoomCode != null && activeRoomCode.trim().isNotEmpty) {
+      if (profile.roomState.roomCode.trim().toUpperCase() !=
+          activeRoomCode.trim().toUpperCase()) {
+        return;
+      }
+    }
+
+    String? payloadToSend;
+    await _syncMutex.protect(() async {
+      _lastEmittedProfile = profile;
+      payloadToSend = payloadMapper.serializeFullProfileSync(
+        profile: profile,
+        originNodeId: localNodeId,
+        originSeq: ++_localSequenceNumber,
+        timestamp: _localTimeProvider(),
+        trackedRulesSet: _trackedRulesSet,
+      );
+    });
+
+    if (payloadToSend != null) {
+      try {
+        await transportPort.broadcastPayload(payloadToSend!);
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to broadcast sync payload via transportPort',
+        );
+      }
     }
   }
 
@@ -222,6 +338,7 @@ class RoomSyncOrchestrator {
     _telemetryTimer?.cancel();
     _emitTelemetry();
     _telemetryTimer = Timer.periodic(telemetryInterval, (_) {
+      _checkTransportAndPeerChanges();
       _emitTelemetry();
     });
   }
@@ -277,6 +394,7 @@ class RoomSyncOrchestrator {
     CampaignProfile Function(CampaignProfile current)? transform;
     void Function(CampaignProfile applied)? onApplied;
     CampaignProfile? pendingAppliedProfile;
+    CampaignProfile? effectiveRemoteForReply;
 
     // 2. Narrow Critical Section: restrict mutex lock strictly to in-memory state
     // reconciliation, vector clock updates, and CRDT joins.
@@ -324,13 +442,18 @@ class RoomSyncOrchestrator {
               effectiveRemotePurse =
                   effectiveRemotePurse.merge(msg.purseDelta!);
             }
-            final remoteWithPurse =
+            var effectiveRemote =
                 remoteProfile.copyWith(partyPurse: effectiveRemotePurse);
+            if (msg.pinnedRulesDelta != null) {
+              effectiveRemote = effectiveRemote.copyWith(
+                pinnedRules:
+                    effectiveRemote.pinnedRules.merge(msg.pinnedRulesDelta!),
+              );
+            }
+            effectiveRemoteForReply = effectiveRemote;
 
             final candidateHlcs = <HybridLogicalClock>[
-              ...extractCampaignProfileTimestamps(remoteWithPurse),
-              if (msg.pinnedRulesDelta != null)
-                ...msg.pinnedRulesDelta!.extractTimestamps(),
+              ...extractCampaignProfileTimestamps(effectiveRemote),
             ];
 
             // Atomically validate all remote CRDT timestamps against future drift policy
@@ -365,13 +488,6 @@ class RoomSyncOrchestrator {
             targetProfileId = remoteProfile.id;
             shouldApply = true;
             transform = (current) {
-              var effectiveRemote = remoteWithPurse;
-              if (msg.pinnedRulesDelta != null) {
-                effectiveRemote = effectiveRemote.copyWith(
-                  pinnedRules:
-                      effectiveRemote.pinnedRules.merge(msg.pinnedRulesDelta!),
-                );
-              }
 
               // Reconcile sub-resources deterministically at field-level via CRDTs
               final reconciliationResult =
@@ -549,6 +665,12 @@ class RoomSyncOrchestrator {
         await _syncMutex.protect(() async {
           _lastEmittedProfile = applied;
         });
+
+        // Trigger D: reply when the sender is behind
+        if (effectiveRemoteForReply != null &&
+            applied != effectiveRemoteForReply) {
+          unawaited(_sendFullProfile(applied));
+        }
       } catch (error, stackTrace) {
         if (pendingAppliedProfile != null) {
           _unrecordAppliedProfile(pendingAppliedProfile!);
@@ -736,9 +858,13 @@ class RoomSyncOrchestrator {
     _milestoneTimer = null;
     _telemetryTimer?.cancel();
     _telemetryTimer = null;
+    _antiEntropyTimer?.cancel();
+    _antiEntropyTimer = null;
     _lastProfileSyncTimestamp = 0;
     _processedPayloadHashes.clear();
     _lastSeenSequenceByNode.clear();
+    _lastSeenPeers.clear();
+    _lastTransportState = null;
     _emitTelemetry();
   }
 

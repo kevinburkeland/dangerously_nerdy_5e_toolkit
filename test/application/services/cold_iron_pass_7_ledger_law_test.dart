@@ -18,6 +18,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -105,12 +106,18 @@ Character _createHero(String slug, String name, {PartyPurse purse = const PartyP
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final harness = HiveTestHarness();
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUpInMemory();
     sl.reset();
     sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
     CampaignProfileService.resetForTesting();
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('Cold Iron Birdcage: Pass 7.1 — Ledger Law Suite through Live Path (Q5)', () {

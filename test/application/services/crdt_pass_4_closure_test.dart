@@ -18,6 +18,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 Character _createTestHero(String slug, String name) {
   return CharacterFactory.createLevel1Character(
@@ -52,9 +53,11 @@ void main() {
   group('Cold Iron Birdcage — Pass 4 Closure Regressions', () {
     final replicaId = ReplicaId('writer-authoritative-1');
     late StatefulHlcClock clock;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       sl.reset();
       clock = StatefulHlcClock(
         replicaId: replicaId,
@@ -73,9 +76,10 @@ void main() {
       CampaignProfileService(replicaId: replicaId, clock: clock);
     });
 
-    tearDown(() {
+    tearDown(() async {
       CampaignProfileService.resetForTesting();
       sl.reset();
+      await harness.tearDown();
     });
 
     // =========================================================================

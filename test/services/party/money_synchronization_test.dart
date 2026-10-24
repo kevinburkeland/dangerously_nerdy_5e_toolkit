@@ -19,6 +19,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 Widget _buildTestApp({required Widget home}) {
   return MaterialApp(
@@ -55,9 +56,11 @@ Character _createHeroWithPurse(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final harness = HiveTestHarness();
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUpInMemory();
     AppServices.reset();
     sl.reset();
     sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
@@ -77,9 +80,10 @@ void main() {
       clock: sl<StatefulHlcClock>(),
     );
     PartyRoomService.setCustomInstanceForTesting(partyService);
-    addTearDown(() {
+    addTearDown(() async {
       PartyRoomService.resetCustomInstanceForTesting();
       sl.reset();
+      await harness.tearDown();
     });
   });
 

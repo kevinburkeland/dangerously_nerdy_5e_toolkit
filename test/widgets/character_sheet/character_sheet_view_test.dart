@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_sheet_view.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -15,9 +16,11 @@ void main() {
   group('CharacterSheetView Widget Tests', () {
     late Character baseCharacter;
     late CharacterSheetController controller;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
 
       baseCharacter = Character(
         id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
@@ -97,9 +100,10 @@ void main() {
       );
     });
 
-    tearDown(() {
+    tearDown(() async {
       controller.dispose();
       AppServices.reset();
+      await harness.tearDown();
     });
 
     testWidgets(

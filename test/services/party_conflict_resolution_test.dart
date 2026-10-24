@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,9 +22,11 @@ void main() {
   late PartyRoomService partyService;
   late CampaignRegistryService registry;
   late DiceRoomService diceService;
+  final harness = HiveTestHarness();
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUp('party_conflict_');
     // ignore: invalid_use_of_visible_for_testing_member
     registry = CampaignRegistryService.newInstance();
     // ignore: invalid_use_of_visible_for_testing_member
@@ -44,10 +47,11 @@ void main() {
       diceRoomService: diceService,
     );
     PartyRoomService.setCustomInstanceForTesting(partyService);
-    addTearDown(() {
+    addTearDown(() async {
       campRepo.dispose();
       PartyRoomService.resetCustomInstanceForTesting();
       sl.reset();
+      await harness.tearDown();
     });
   });
 

@@ -16,6 +16,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_s
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -24,11 +26,12 @@ void main() {
   late StatefulHlcClock clock;
   late CharacterPersistenceService charService;
   late AppDatabaseService db;
+  final harness = HiveTestHarness();
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUp('camp_mig_');
     db = AppDatabaseService.instance;
-    await db.resetForTesting();
     sl.reset();
 
     replicaId = ReplicaId('migration_test_node');
@@ -49,9 +52,10 @@ void main() {
     sl.registerSingleton<ICampaignRepository>(repo);
   });
 
-  tearDown(() {
+  tearDown(() async {
     repo.dispose();
     sl.reset();
+    await harness.tearDown();
   });
 
   group('Campaign Storage Legacy Migrations', () {

@@ -21,12 +21,16 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/homebrew_entity_dto.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group('Homebrew Feats & Class Features Directives (SRD Compliant)', () {
-    setUp(() {
+    final harness = HiveTestHarness();
+
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       sl.reset();
       final repId = ReplicaId('feats_test_replica');
       sl.registerSingleton<ReplicaId>(repId);
@@ -41,8 +45,9 @@ void main() {
       CampaignProfileService(replicaId: repId);
     });
 
-    tearDown(() {
+    tearDown(() async {
       sl.reset();
+      await harness.tearDown();
     });
 
     test('Feat parser extracts armor and tool proficiencies from homebrew JSON',

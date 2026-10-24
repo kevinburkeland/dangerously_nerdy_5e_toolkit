@@ -31,7 +31,7 @@ This document details the application-level synchronization services, transport 
 - **`crdt_purse_delta` Protocol:** Routine currency modifications broadcast lightweight `crdt_purse_delta` packets, merging directly into the local profile via `RoomSyncOrchestrator._handleIncomingPurseDelta` without requiring full document broadcasts.
 - **Vault Dispersal Wealth Conservation:** Dispersing coins from the shared party vault reserve (`isVaultDispersal: true`) withdraws shares from `partyPurse` via `withdrawCoins(...)`, strictly conserving total party wealth without currency inflation.
 - **4-Tier Transport Waterfall & Dynamic Step-Up:**
-  1. Tier 1: Local Wi-Fi (`LocalWifiAdapter`)
+  1. Tier 1: Local Wi-Fi (`LocalWifiAdapter`) [Stub: throws UnsupportedError; cascades to Tier 2]
   2. Tier 2: WebRTC P2P Mesh (`WebRtcMeshAdapter`)
   3. Tier 3: Firebase Cloud Relay (`FirebaseFallbackAdapter`)
   4. Tier 4: Offline Mode

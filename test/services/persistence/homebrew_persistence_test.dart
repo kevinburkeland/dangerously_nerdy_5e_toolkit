@@ -15,19 +15,27 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persi
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/utils/crypto_utils.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('HomebrewPersistenceService Tests', () {
     late HomebrewPersistenceService persistence;
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUp('homebrew_p_');
       EntityFluffService().clear();
       SrdSpeciesLibrary.setCustomSpecies([]);
       SrdSpeciesLibrary.setCustomSubraces([]);
       persistence = HomebrewPersistenceService();
       persistence.invalidateAllCaches();
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
     });
 
     test('saves, loads, and deletes custom spells', () async {

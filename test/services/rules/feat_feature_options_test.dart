@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_re
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
 
@@ -71,6 +72,15 @@ const mockHomebrewFightingStyleFeat = Feat(
 
 void main() {
   group('Feat Feature Options (Homebrew & Optional Feature Progressions)', () {
+    final harness = HiveTestHarness();
+
+    setUp(() async {
+      await harness.setUpInMemory();
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
+    });
     test(
         'FeatAsiExtension identifies invocation and fighting style choices on homebrew feats',
         () {

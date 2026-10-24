@@ -1,19 +1,21 @@
 import 'dart:math';
-import '../services/logging_service.dart';
+import 'package:meta/meta.dart';
 
-/// Top-level cryptographically secure random number generator.
-final Random secureRandom = _initSecureRandom();
+/// Overridable factory function for secure random instances (for testing platform failure).
+@visibleForTesting
+Random Function() secureRandomFactory = () => Random.secure();
 
-Random _initSecureRandom() {
+/// Creates a cryptographically secure [Random] instance or fails closed.
+Random createSecureRandom([Random Function()? factory]) {
+  final create = factory ?? secureRandomFactory;
   try {
-    return Random.secure();
-  } catch (e, stackTrace) {
-    LoggingService().logNonFatal(
-      e,
-      stackTrace,
-      reason:
-          'Cryptographic Random.secure() unavailable on platform; falling back to standard Random',
+    return create();
+  } catch (e) {
+    throw UnsupportedError(
+      'Secure random number generator is unavailable on this platform: $e',
     );
-    return Random();
   }
 }
+
+/// Top-level cryptographically secure random number generator.
+final Random secureRandom = createSecureRandom();

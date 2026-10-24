@@ -9,6 +9,7 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/skills_saves_matrix.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
 
@@ -53,6 +54,16 @@ Character _createTestWarlock({
 
 void main() {
   group('Skill Expertise Controller & UI Tests', () {
+    final harness = HiveTestHarness();
+
+    setUp(() async {
+      await harness.setUpInMemory();
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
+    });
+
     test(
         'CharacterSheetController.setSkillProficiency updates stats to 2x proficiency bonus',
         () async {

@@ -11,6 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 Widget _buildTestApp({Widget? home}) {
   return MaterialApp(
@@ -21,9 +22,11 @@ Widget _buildTestApp({Widget? home}) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final harness = HiveTestHarness();
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUpInMemory();
     AppServices.reset();
     sl.reset();
     await initServiceLocator(
@@ -31,8 +34,9 @@ void main() {
     );
   });
 
-  tearDown(() {
+  tearDown(() async {
     sl.reset();
+    await harness.tearDown();
   });
 
   group('DmDashboardScreen Widget Tests', () {

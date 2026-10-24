@@ -19,22 +19,26 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Cold Iron Birdcage — Pass 4.1.2: Authoritative Presence & Re-addable Roster', () {
     late RoomStateReconciliationService reconciliationService;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       AppServices.reset();
       sl.reset();
       reconciliationService = RoomStateReconciliationService();
     });
 
-    tearDown(() {
+    tearDown(() async {
       sl.reset();
+      await harness.tearDown();
     });
 
     CampaignProfile createSampleProfile({

@@ -9,12 +9,19 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/level_up_wizard_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/add_feat_dialog.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final harness = HiveTestHarness();
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUpInMemory();
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   Character createTestRogueLvl3() {

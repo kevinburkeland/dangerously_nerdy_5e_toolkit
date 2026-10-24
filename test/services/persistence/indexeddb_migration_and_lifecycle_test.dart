@@ -9,11 +9,19 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/debounced_storage_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
   group('IndexedDB / Database Persistence & Web Lifecycle Tests', () {
+    final harness = HiveTestHarness();
+
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      await AppDatabaseService.instance.resetForTesting();
+      await harness.setUp('indexeddb_');
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
     });
 
     test(

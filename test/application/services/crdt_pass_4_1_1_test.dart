@@ -26,6 +26,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_s
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 class _FakeCharRepo implements ICharacterRepository<Character> {
   final Map<String, Character> _storage = {};
@@ -126,6 +127,7 @@ void main() {
     late RoomSyncPayloadMapper payloadMapper;
     late _MockTransportPort mockTransport;
     late ClockSyncService clockSync;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
@@ -134,7 +136,7 @@ void main() {
 
       CampaignProfileService.resetForTesting();
 
-      await AppDatabaseService.instance.resetForTesting();
+      await harness.setUp('crdt_411_');
 
       clock = StatefulHlcClock(
         replicaId: testReplica,
@@ -166,9 +168,10 @@ void main() {
       );
     });
 
-    tearDown(() {
+    tearDown(() async {
       mockTransport.dispose();
       sl.reset();
+      await harness.tearDown();
     });
 
     test('B. Remote drift regression for pinnedRules: far-future item or tombstone HLC rejected before reconciliation', () async {

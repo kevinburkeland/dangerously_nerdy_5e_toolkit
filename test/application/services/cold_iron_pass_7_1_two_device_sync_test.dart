@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -96,9 +97,15 @@ Character _createHero(String slug, String name, {PartyPurse purse = const PartyP
 void main() {
   group('Cold Iron Birdcage: Pass 7.1 — Two-Device Create/Join/Sync Suite (Q4)', () {
     final recon = RoomStateReconciliationService();
+    final harness = HiveTestHarness();
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
     });
 
     Future<void> syncReplicas(

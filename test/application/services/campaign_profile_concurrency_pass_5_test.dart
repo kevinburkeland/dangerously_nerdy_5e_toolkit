@@ -302,7 +302,7 @@ void main() {
 
     test('Required test 1.2: E2 Host milestone flush produces zero broadcast echoes', () async {
       const baseTime = 1700000000000;
-      final mockDb = AppDatabaseService();
+      final mockDb = _RandomDelayDatabaseService();
       final charRepo = LocalCharacterRepository(db: mockDb);
       final clock = StatefulHlcClock(
         replicaId: ReplicaId('host_node'),

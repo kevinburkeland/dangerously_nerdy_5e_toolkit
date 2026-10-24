@@ -11,6 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'dart:io';
+import '../../test_doubles/hive_test_harness.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
@@ -38,9 +39,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Cold Iron Birdcage: Replica Identity Hardening Suite (Pass 1.3)', () {
+    final harness = HiveTestHarness();
+
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      await AppDatabaseService.instance.resetForTesting();
+      await harness.setUp('replica_id_');
       CampaignProfileService.resetForTesting();
       sl.reset();
     });
@@ -48,6 +51,7 @@ void main() {
     tearDown(() async {
       CampaignProfileService.resetForTesting();
       sl.reset();
+      await harness.tearDown();
     });
 
     test('1. One application bootstrap creates one ReplicaId', () async {

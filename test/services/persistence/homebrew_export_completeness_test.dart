@@ -20,15 +20,18 @@ import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Homebrew Export & Import Completeness Test Suite', () {
     late HomebrewPersistenceService persistence;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUp('brew_export_');
       final replica = ReplicaId('homebrew_export_test_replica');
       await initServiceLocator(replicaId: replica);
       CampaignProfileService(
@@ -45,8 +48,9 @@ void main() {
       EntityFluffService().clear();
     });
 
-    tearDown(() {
+    tearDown(() async {
       sl.reset();
+      await harness.tearDown();
     });
 
     test(

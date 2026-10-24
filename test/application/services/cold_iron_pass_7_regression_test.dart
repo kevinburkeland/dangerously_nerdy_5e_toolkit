@@ -24,6 +24,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_
 import '../../test_doubles/fake_room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/migration/party_ledger_legacy_import.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 class IncrementMarker {
   final num value;
@@ -230,6 +231,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Cold Iron Birdcage: Pass 7 Regression Tests (054efe3 baseline)', () {
+    final harness = HiveTestHarness();
+
+    setUp(() async {
+      await harness.setUp('pass7_reg_');
+    });
+
+    tearDown(() async {
+      await harness.tearDown();
+    });
+
     test('F1, counter shadows increments', () {
       final payload = {
         'partyPurse': {'gp': const IncrementMarker(100)},

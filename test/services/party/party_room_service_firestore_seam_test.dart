@@ -19,15 +19,18 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/utils/crypto_utils.dart';
 
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late RecordingRoomDocumentPort fakeRoomDocPort;
   late ReplicaId replicaId;
+  final harness = HiveTestHarness();
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUp('party_firestore_');
     sl.reset();
     replicaId = ReplicaId('replica-dm-1');
     fakeRoomDocPort = RecordingRoomDocumentPort();
@@ -38,8 +41,9 @@ void main() {
     );
   });
 
-  tearDown(() {
+  tearDown(() async {
     sl.reset();
+    await harness.tearDown();
   });
 
   group('PartyRoomService Firestore Seam & Invariants (R2 & R6)', () {

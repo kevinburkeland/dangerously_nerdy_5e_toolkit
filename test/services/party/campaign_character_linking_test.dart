@@ -15,6 +15,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +26,7 @@ void main() {
     late CharacterPersistenceService characterService;
     late CampaignProfileService campaignProfileService;
     late PartyRoomService partyService;
+    final harness = HiveTestHarness();
 
     final testCharacter1 = Character(
       id: const EntityId(slug: 'hero_valeros', ruleset: RulesetVersion.v2024),
@@ -56,6 +58,7 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       final testReplica = ReplicaId('campaign_link_test_replica');
       final clock = StatefulHlcClock(replicaId: testReplica);
       final campRepo = LocalCampaignRepository(
@@ -79,10 +82,11 @@ void main() {
         campaignProfileService: campaignProfileService,
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
-      addTearDown(() {
+      addTearDown(() async {
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
         sl.reset();
+        await harness.tearDown();
       });
 
       // Save starting characters

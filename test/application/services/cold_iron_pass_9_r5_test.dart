@@ -8,22 +8,27 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 
+import '../../test_doubles/hive_test_harness.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Cold Iron Pass 9 — R5: Stored Campaign Record Versioning', () {
     late StatefulHlcClock clock;
     late AppDatabaseService db;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUp('pass9_r5_');
       await initServiceLocator();
       clock = sl<StatefulHlcClock>();
       db = sl<AppDatabaseService>();
     });
 
-    tearDown(() {
+    tearDown(() async {
       sl.reset();
+      await harness.tearDown();
     });
 
     test('1. Legacy record with no recordVersion loads exactly as before (assert field by field)', () {

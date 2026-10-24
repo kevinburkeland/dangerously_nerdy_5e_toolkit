@@ -7,9 +7,11 @@ import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_currency_system.dart';
+import '../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  final harness = HiveTestHarness();
 
   final heroA = Character(
     id: const EntityId(slug: 'valen', ruleset: RulesetVersion.v2024),
@@ -52,8 +54,13 @@ void main() {
     ),
   );
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await harness.setUp('char_repo_consistency_');
+  });
+
+  tearDown(() async {
+    await harness.tearDown();
   });
 
   group('LocalCharacterRepository & CharacterPersistenceService Consistency',

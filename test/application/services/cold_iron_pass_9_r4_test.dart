@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_ser
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
+import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -24,9 +25,11 @@ void main() {
     late HomebrewPersistenceService homebrewService;
     late DmBackupService dmBackupService;
     late AppBackupService appBackupService;
+    final harness = HiveTestHarness();
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      await harness.setUpInMemory();
       await initServiceLocator();
       clock = sl<StatefulHlcClock>();
       campaignService = CampaignProfileService();
@@ -37,8 +40,9 @@ void main() {
       appBackupService = AppBackupService();
     });
 
-    tearDown(() {
+    tearDown(() async {
       sl.reset();
+      await harness.tearDown();
     });
 
     test('1. The 2100 example: validateAndImportProfile returns null, nothing stored, clock unchanged; control imports', () async {
