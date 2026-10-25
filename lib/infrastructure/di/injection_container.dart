@@ -28,6 +28,14 @@ import '../repositories/local_campaign_repository.dart';
 import '../repositories/local_character_repository.dart';
 import '../storage/physical_snapshot_adapter.dart';
 import '../storage/storage_durability_adapter.dart';
+import '../../application/blob/blob_channel_port.dart';
+import '../../application/blob/blob_store_port.dart';
+import '../../application/blob/blob_transfer_service.dart';
+import '../../application/map/active_map_controller.dart';
+import '../../application/map/map_image_intake_port.dart';
+import '../../application/map/map_intake_service.dart';
+import '../map/map_image_intake_adapter.dart';
+import '../storage/blob_store_adapter.dart';
 
 /// Lightweight, type-safe Service Locator for Dependency Injection.
 /// Eradicates singleton constructors in domain/infrastructure repositories
@@ -102,6 +110,9 @@ Future<void> initServiceLocator({
   IPhysicalSnapshotPort? physicalSnapshotPort,
   IRoomDocumentPort? roomDocumentPort,
   ReplicaId? replicaId,
+  BlobStorePort? blobStore,
+  BlobChannelPort? blobChannel,
+  MapImageIntakePort? mapImageIntake,
 }) async {
   installRulesetCatalog();
 
@@ -211,19 +222,63 @@ Future<void> initServiceLocator({
   sl.registerLazySingleton<IRoomSyncPayloadPort>(
       () => const RoomSyncPayloadMapper());
 
+  if (blobChannel != null) {
+    sl.registerSingleton<BlobChannelPort>(blobChannel);
+  }
+
   if (p2pTransport != null) {
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);
   } else {
+    final webRtcAdapter =
+        WebRtcMeshAdapter(signalingAdapter: FirebaseSignalingAdapter());
+    sl.registerSingleton<WebRtcMeshAdapter>(webRtcAdapter);
+    if (blobChannel == null) {
+      sl.registerLazySingleton<BlobChannelPort>(() => sl<WebRtcMeshAdapter>());
+    }
     sl.registerLazySingleton<CascadingTransportRouter>(() =>
         CascadingTransportRouter(
           localWifiAdapter: LocalWifiTransportAdapter(),
-          webRtcAdapter:
-              WebRtcMeshAdapter(signalingAdapter: FirebaseSignalingAdapter()),
+          webRtcAdapter: sl<WebRtcMeshAdapter>(),
           firebaseFallbackAdapter: FirebaseFallbackAdapter(),
         ));
     sl.registerLazySingleton<IP2pTransportPort>(
         () => sl<CascadingTransportRouter>());
   }
+
+  sl.registerLazySingleton<BlobStorePort>(
+    () => blobStore ?? BlobStoreAdapter(),
+  );
+
+  sl.registerLazySingleton<MapImageIntakePort>(
+    () => mapImageIntake ?? MapImageIntakeAdapter(),
+  );
+
+  sl.registerLazySingleton<BlobTransferService>(
+    () => BlobTransferService(
+      channel: sl<BlobChannelPort>(),
+      store: sl<BlobStorePort>(),
+      servableRefs: () => activeMapServableRefs(sl<ICampaignRepository>()),
+    ),
+  );
+
+  sl.registerLazySingleton<MapIntakeService>(
+    () => MapIntakeService(
+      intake: sl<MapImageIntakePort>(),
+      store: sl<BlobStorePort>(),
+      campaignRepo: sl<ICampaignRepository>(),
+      clock: sl<StatefulHlcClock>(),
+    ),
+  );
+
+  sl.registerLazySingleton<ActiveMapController>(
+    () => ActiveMapController(
+      campaignRepo: sl<ICampaignRepository>(),
+      transfer: sl<BlobTransferService>(),
+      store: sl<BlobStorePort>(),
+      channel: sl<BlobChannelPort>(),
+      transportState: () => sl<IP2pTransportPort>().currentState,
+    ),
+  );
 
   sl.registerLazySingleton<RoomSyncOrchestrator>(() => RoomSyncOrchestrator(
         transportPort: sl<IP2pTransportPort>(),

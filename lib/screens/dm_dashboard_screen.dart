@@ -25,6 +25,7 @@ import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import '../infrastructure/storage/local_replica_identity_store.dart';
 import '../infrastructure/di/injection_container.dart';
+import '../presentation/screens/map/map_screen.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
 class DmDashboardScreen extends StatefulWidget {
@@ -1250,6 +1251,18 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
             icon: const Icon(Icons.file_download_outlined),
             tooltip: 'Export Campaign Snapshot',
             onPressed: _exportProfileSnapshot,
+          ),
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            tooltip: 'Map',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MapScreen(canEditMap: true),
+                ),
+              );
+            },
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),

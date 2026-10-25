@@ -6,6 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/screens/map/map_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dm_dashboard_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
@@ -374,6 +375,35 @@ void main() {
           find.text(
               'Failed to import campaign: Invalid or corrupted snapshot JSON.'),
           findsOneWidget);
+    });
+
+    testWidgets('V8 the Map button pushes a MapScreen with canEditMap: true', (tester) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final p = CampaignProfile.defaultProfile(
+        id: 'c_map_test',
+        name: 'Map Campaign',
+        nodeId: 'test_node',
+        timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'),
+      );
+      await CampaignProfileService().saveProfileImmediate(p);
+      await CampaignProfileService().switchProfile(p.id);
+
+      await tester.pumpWidget(_buildTestApp());
+      await tester.pumpAndSettle();
+
+      final mapButtonFinder = find.byTooltip('Map');
+      expect(mapButtonFinder, findsOneWidget);
+
+      await tester.tap(mapButtonFinder);
+      await tester.pumpAndSettle();
+
+      final mapScreenFinder = find.byType(MapScreen);
+      expect(mapScreenFinder, findsOneWidget);
+      final mapScreen = tester.widget<MapScreen>(mapScreenFinder);
+      expect(mapScreen.canEditMap, isTrue);
     });
   });
 }

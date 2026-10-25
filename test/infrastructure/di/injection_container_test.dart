@@ -11,6 +11,7 @@ import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_import_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_channel_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/local_wifi_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
@@ -79,6 +80,7 @@ void main() {
       expect(router, isA<CascadingTransportRouter>());
       expect(sl<IP2pTransportPort>(), equals(router));
       expect(router.localWifiAdapter, isA<LocalWifiTransportAdapter>());
+      expect(identical(sl<BlobChannelPort>(), router.webRtcAdapter), isTrue);
 
       final orchestrator = sl<RoomSyncOrchestrator>();
       expect(orchestrator, isA<RoomSyncOrchestrator>());

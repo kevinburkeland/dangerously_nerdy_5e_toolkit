@@ -26,6 +26,11 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_pa
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
 import '../test_doubles/hive_test_harness.dart';
+import '../test_doubles/fake_blob_network.dart';
+import '../test_doubles/fake_blob_store.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/screens/map/map_screen.dart';
 
 class _MockSyncTransport implements IP2pTransportPort {
   final StreamController<String> _incoming =
@@ -111,6 +116,24 @@ void main() {
       );
       sl.registerSingleton<ICampaignRepository>(campRepo);
       sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
+
+      final net = FakeBlobNetwork();
+      final chan = net.createChannel('party_test');
+      final fakeStore = FakeBlobStore();
+      final transfer = BlobTransferService(
+        channel: chan,
+        store: fakeStore,
+        servableRefs: () => const [],
+      );
+      final mapCtrl = ActiveMapController(
+        campaignRepo: campRepo,
+        transfer: transfer,
+        store: fakeStore,
+        channel: chan,
+        transportState: () => TransportState.webRtc,
+      );
+      sl.registerSingleton<ActiveMapController>(mapCtrl);
+
       partyService = PartyRoomService.newInstance(
         replicaId: repId,
         clock: testClock,
@@ -520,6 +543,69 @@ void main() {
       expect(find.text('Select Active Character'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('V7: the Map button is present for a player and for a DM; tapping it pushes a MapScreen whose canEditMap matches the role', (tester) async {
+      // 1. Player role
+      const playerRoom = 'ROOM-MAP-P';
+      final playerMem = CampaignMembership(
+        roomCode: playerRoom,
+        campaignName: 'Player Campaign',
+        role: CampaignRole.player,
+        characterId: 'Player1',
+        lastPlayed: DateTime.now(),
+      );
+      await registry.saveMembership(playerMem);
+
+      await tester.pumpWidget(createWidgetUnderTest(playerRoom, partyService, registry));
+      await tester.pumpAndSettle();
+
+      final mapButtonFinder = find.byTooltip('Map');
+      expect(mapButtonFinder, findsOneWidget);
+
+      await tester.tap(mapButtonFinder);
+      await tester.pumpAndSettle();
+
+      final playerMapScreenFinder = find.byType(MapScreen);
+      expect(playerMapScreenFinder, findsOneWidget);
+      final playerMapScreen = tester.widget<MapScreen>(playerMapScreenFinder);
+      expect(playerMapScreen.canEditMap, isFalse);
+
+      // Pop back
+      Navigator.pop(tester.element(playerMapScreenFinder));
+      await tester.pumpAndSettle();
+
+      // 2. DM role
+      const dmRoom = 'ROOM-MAP-DM';
+      final dmMem = CampaignMembership(
+        roomCode: dmRoom,
+        campaignName: 'DM Campaign',
+        role: CampaignRole.host,
+        hostKey: 'secret-dm-key',
+        characterId: 'DM Kevin',
+        lastPlayed: DateTime.now(),
+      );
+      await registry.saveMembership(dmMem);
+      await partyService.createCampaign(
+        campaignName: 'DM Campaign',
+        customRoomCode: dmRoom,
+        playerName: 'DM Kevin',
+      );
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(createWidgetUnderTest(dmRoom, partyService, registry));
+      await tester.pumpAndSettle();
+
+      final dmMapButtonFinder = find.byTooltip('Map');
+      expect(dmMapButtonFinder, findsOneWidget);
+
+      await tester.tap(dmMapButtonFinder);
+      await tester.pumpAndSettle();
+
+      final dmMapScreenFinder = find.byType(MapScreen);
+      expect(dmMapScreenFinder, findsOneWidget);
+      final dmMapScreen = tester.widget<MapScreen>(dmMapScreenFinder);
+      expect(dmMapScreen.canEditMap, isTrue);
     });
   });
 }

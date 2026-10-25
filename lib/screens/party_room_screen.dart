@@ -26,6 +26,8 @@ import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../widgets/party/party_vitality_hud.dart';
+import '../application/map/active_map_controller.dart';
+import '../presentation/screens/map/map_screen.dart';
 
 /// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,
 /// Coin Purse with Party Share distribution, Live Dice Feed, and History/Audit Log with Host Trash Recovery.
@@ -200,6 +202,9 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
       try {
         await _partyService.openRoomProfile(_roomCode);
         orchestrator.startSynchronization();
+        if (sl.isRegistered<ActiveMapController>()) {
+          sl<ActiveMapController>().start();
+        }
       } catch (e, st) {
         LoggingService().logNonFatal(
           e,
@@ -429,13 +434,16 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            _roomCode,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.0,
-                              color: colorScheme.primary,
+                          Flexible(
+                            child: Text(
+                              _roomCode,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.0,
+                                color: colorScheme.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -450,15 +458,22 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
                   // P2P Room Connection Telemetry Badge
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: RoomConnectionBadge(
-                      telemetryStream: _telemetryStream ??
-                          (sl.isRegistered<RoomSyncOrchestrator>()
-                              ? sl<RoomSyncOrchestrator>().watchTelemetry()
-                              : const Stream.empty()),
-                      initialTelemetry: _orchestrator?.currentTelemetry ??
-                          (sl.isRegistered<RoomSyncOrchestrator>()
-                              ? sl<RoomSyncOrchestrator>().currentTelemetry
-                              : null),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth:
+                            MediaQuery.sizeOf(context).width < 600 ? 110 : 200,
+                      ),
+                      child: RoomConnectionBadge(
+                        compact: MediaQuery.sizeOf(context).width < 600,
+                        telemetryStream: _telemetryStream ??
+                            (sl.isRegistered<RoomSyncOrchestrator>()
+                                ? sl<RoomSyncOrchestrator>().watchTelemetry()
+                                : const Stream.empty()),
+                        initialTelemetry: _orchestrator?.currentTelemetry ??
+                            (sl.isRegistered<RoomSyncOrchestrator>()
+                                ? sl<RoomSyncOrchestrator>().currentTelemetry
+                                : null),
+                      ),
                     ),
                   ),
                   // Connection / Outbox Sync Status Badge
@@ -549,6 +564,18 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
                         },
                       ),
                   ],
+                  IconButton(
+                    icon: const Icon(Icons.map_outlined),
+                    tooltip: 'Map',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MapScreen(canEditMap: _isDmOrCoDm),
+                        ),
+                      );
+                    },
+                  ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
                     onSelected: (val) {

@@ -188,7 +188,7 @@ class ActiveMapController {
 
   ActiveMapViewState _current = const MapNone();
   final StreamController<ActiveMapViewState> _stateController =
-      StreamController<ActiveMapViewState>.broadcast();
+      StreamController<ActiveMapViewState>.broadcast(sync: true);
 
   bool _started = false;
   bool _disposed = false;
@@ -219,17 +219,22 @@ class ActiveMapController {
   String? get campaignId => _campaignId;
 
   Stream<ActiveMapViewState> get states {
-    return Stream<ActiveMapViewState>.multi((multiController) {
-      multiController.add(_current);
-      final sub = _stateController.stream.listen(
-        multiController.add,
-        onError: multiController.addError,
-        onDone: multiController.close,
-      );
-      multiController.onCancel = () {
-        sub.cancel();
-      };
-    }, isBroadcast: true);
+    late final StreamController<ActiveMapViewState> controller;
+    StreamSubscription<ActiveMapViewState>? sub;
+    controller = StreamController<ActiveMapViewState>.broadcast(
+      sync: true,
+      onListen: () {
+        controller.add(_current);
+        sub = _stateController.stream.listen(
+          controller.add,
+          onError: controller.addError,
+        );
+      },
+      onCancel: () {
+        sub?.cancel();
+      },
+    );
+    return controller.stream;
   }
 
   void start() {
