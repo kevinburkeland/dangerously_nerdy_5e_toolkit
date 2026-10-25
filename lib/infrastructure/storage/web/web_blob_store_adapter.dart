@@ -220,12 +220,6 @@ class BlobStoreAdapter implements BlobStorePort {
     });
   }
 
-  Future<void> _deleteEntry(String sha256Hex) {
-    return _runTransaction<void>('readwrite', (store, deliver, bind, tx) {
-      store.delete(sha256Hex.toJS);
-    });
-  }
-
   @override
   Future<bool> addOwner(String sha256Hex, String campaignId) {
     return _runTransaction<bool>('readwrite', (store, deliver, bind, tx) {
@@ -330,7 +324,7 @@ class BlobStoreAdapter implements BlobStorePort {
   @override
   Future<StoredBlob> get(String sha256Hex) async {
     final res = await _runTransaction<({StoredBlob? blob, bool notFound, BlobVerdict? verdict})>(
-      'readonly',
+      'readwrite',
       (store, deliver, bind, tx) {
         final req = store.get(sha256Hex.toJS);
         bind(req, () {
@@ -341,12 +335,14 @@ class BlobStoreAdapter implements BlobStorePort {
           }
           final parsed = _parseRecord(raw);
           if (parsed == null) {
+            store.delete(sha256Hex.toJS);
             deliver((blob: null, notFound: false, verdict: null));
             return;
           }
           final (stored, _) = parsed;
           final verdict = verifyBlob(stored.ref, stored.bytes);
           if (verdict != BlobVerdict.ok) {
+            store.delete(sha256Hex.toJS);
             deliver((blob: null, notFound: false, verdict: verdict));
             return;
           }
@@ -359,7 +355,6 @@ class BlobStoreAdapter implements BlobStorePort {
       throw BlobNotFoundException(sha256Hex);
     }
     if (res.blob == null) {
-      await _deleteEntry(sha256Hex);
       throw BlobCorruptException(sha256Hex, res.verdict);
     }
     return res.blob!;

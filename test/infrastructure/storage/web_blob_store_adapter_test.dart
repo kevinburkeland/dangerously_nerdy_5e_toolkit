@@ -415,10 +415,11 @@ void main() {
     });
 
     group('W10: aborted transaction throws within 2s, leaves store unchanged; control succeeds', () {
-      Future<BlobStoreAdapter> createWrappingAdapter({
+      Future<({BlobStoreAdapter adapter, AbortRecorder recorder})> createWrappingAdapter({
         required String targetDbName,
         required bool shouldAbort,
       }) async {
+        final recorder = AbortRecorder();
         Future<web.IDBDatabase> wrappingOpener() async {
           final openCompleter = Completer<web.IDBDatabase>();
           final openReq = web.window.indexedDB.open(targetDbName, 1);
@@ -436,38 +437,79 @@ void main() {
           }).toJS;
           final db = await openCompleter.future;
 
-          final origFn = (db as JSObject).getProperty<JSFunction>('transaction'.toJS);
-          final wrapper = ((JSAny storeNames, JSAny? mode) {
-            final tx = origFn.callAsFunction(db, storeNames, mode) as web.IDBTransaction;
+          final origTxFn = (db as JSObject).getProperty<JSFunction>('transaction'.toJS);
+          final txWrapper = ((JSAny storeNames, JSAny? mode) {
+            final tx = origTxFn.callAsFunction(db, storeNames, mode) as web.IDBTransaction;
             if (shouldAbort) {
-              final probe = tx.objectStore('blobs').get('__abort_probe__'.toJS);
-              probe.onsuccess = ((web.Event _) {
-                try {
-                  tx.abort();
-                } catch (_) {}
+              final origObjectStoreFn = (tx as JSObject).getProperty<JSFunction>('objectStore'.toJS);
+              var seenFirstRequestInTx = false;
+
+              final objectStoreWrapper = ((JSAny name) {
+                final store = origObjectStoreFn.callAsFunction(tx, name) as web.IDBObjectStore;
+                final origGet = (store as JSObject).getProperty<JSFunction>('get'.toJS);
+                final origOpenCursor = (store as JSObject).getProperty<JSFunction>('openCursor'.toJS);
+
+                void intercept(web.IDBRequest req) {
+                  if (seenFirstRequestInTx) return;
+                  seenFirstRequestInTx = true;
+                  req.addEventListener(
+                    'success',
+                    ((web.Event _) {
+                      recorder.firstRequestSucceeded = true;
+                      scheduleMicrotask(() {
+                        try {
+                          tx.abort();
+                        } catch (_) {}
+                      });
+                    }).toJS,
+                  );
+                }
+
+                final getWrapper = ((JSAny key) {
+                  final req = origGet.callAsFunction(store, key) as web.IDBRequest;
+                  intercept(req);
+                  return req;
+                }).toJS;
+
+                final openCursorWrapper = (([JSAny? query, JSAny? direction]) {
+                  final req = (query != null
+                      ? (direction != null
+                          ? origOpenCursor.callAsFunction(store, query, direction)
+                          : origOpenCursor.callAsFunction(store, query))
+                      : origOpenCursor.callAsFunction(store)) as web.IDBRequest;
+                  intercept(req);
+                  return req;
+                }).toJS;
+
+                (store as JSObject).setProperty('get'.toJS, getWrapper);
+                (store as JSObject).setProperty('openCursor'.toJS, openCursorWrapper);
+                return store;
               }).toJS;
+
+              (tx as JSObject).setProperty('objectStore'.toJS, objectStoreWrapper);
             }
             return tx;
           }).toJS;
 
-          (db as JSObject).setProperty('transaction'.toJS, wrapper);
+          (db as JSObject).setProperty('transaction'.toJS, txWrapper);
           return db;
         }
 
         final adapter = BlobStoreAdapter(databaseName: targetDbName, opener: wrappingOpener);
         adaptersToClose.add(adapter);
-        return adapter;
+        return (adapter: adapter, recorder: recorder);
       }
 
       test('W10: aborted put of new blob throws within 2s, has is false', () async {
         final bytes = _makeWebp(500);
         final ref = _makeRef(bytes, BlobFormat.webp);
 
-        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
+        final wrapped = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
         await expectLater(
-          adapter.put(ref, bytes, campaignId: 'c1').timeout(const Duration(seconds: 2)),
+          wrapped.adapter.put(ref, bytes, campaignId: 'c1').timeout(const Duration(seconds: 2)),
           throwsA(anything),
         );
+        expect(wrapped.recorder.firstRequestSucceeded, isTrue);
 
         final verifyAdapter = BlobStoreAdapter(databaseName: dbName);
         adaptersToClose.add(verifyAdapter);
@@ -484,11 +526,12 @@ void main() {
         await setupAdapter.close();
 
         // Aborted addOwner
-        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
+        final wrapped = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
         await expectLater(
-          adapter.addOwner(ref.sha256Hex, 'c_new').timeout(const Duration(seconds: 2)),
+          wrapped.adapter.addOwner(ref.sha256Hex, 'c_new').timeout(const Duration(seconds: 2)),
           throwsA(anything),
         );
+        expect(wrapped.recorder.firstRequestSucceeded, isTrue);
 
         // Releasing original owner deletes blob because c_new was never recorded
         final verifyAdapter = BlobStoreAdapter(databaseName: dbName);
@@ -507,11 +550,12 @@ void main() {
         await setupAdapter.close();
 
         // Aborted releaseCampaign
-        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
+        final wrapped = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
         await expectLater(
-          adapter.releaseCampaign('c_keep').timeout(const Duration(seconds: 2)),
+          wrapped.adapter.releaseCampaign('c_keep').timeout(const Duration(seconds: 2)),
           throwsA(anything),
         );
+        expect(wrapped.recorder.firstRequestSucceeded, isTrue);
 
         // Blob is still stored
         final verifyAdapter = BlobStoreAdapter(databaseName: dbName);
@@ -523,7 +567,8 @@ void main() {
         final bytes = _makeWebp(500);
         final ref = _makeRef(bytes, BlobFormat.webp);
 
-        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: false);
+        final wrapped = await createWrappingAdapter(targetDbName: dbName, shouldAbort: false);
+        final adapter = wrapped.adapter;
 
         // put succeeds
         await adapter.put(ref, bytes, campaignId: 'c_orig').timeout(const Duration(seconds: 2));
@@ -539,6 +584,184 @@ void main() {
         // release c_new: now gone
         await adapter.releaseCampaign('c_new').timeout(const Duration(seconds: 2));
         expect(await adapter.has(ref.sha256Hex).timeout(const Duration(seconds: 2)), isFalse);
+      });
+    });
+
+    group('G1: concurrent put and get of damaged/unreadable record (0b)', () {
+      test('G1a: race get and put on damaged record (5 iterations)', () async {
+        for (var i = 0; i < 5; i++) {
+          final testDbName = '${dbName}_g1a_$i';
+          final goodBytes = _makeWebp(500);
+          final ref = _makeRef(goodBytes, BlobFormat.webp);
+          final hash = ref.sha256Hex;
+          final damagedBytes = Uint8List.fromList(goodBytes);
+          damagedBytes[20] ^= 0xFF;
+          final damagedRecord = {
+            'ref': ref.toMap(),
+            'bytes': damagedBytes.toJS,
+            'owners': ['old'],
+          }.jsify()!;
+
+          await _insertRawRecord(testDbName, hash, damagedRecord);
+          final adapter = BlobStoreAdapter(databaseName: testDbName);
+          adaptersToClose.add(adapter);
+
+          final getFuture = adapter.get(hash);
+          final putFuture = adapter.put(ref, goodBytes, campaignId: 'c2');
+
+          Object? getResult;
+          try {
+            getResult = await getFuture.timeout(const Duration(seconds: 2));
+          } catch (e) {
+            getResult = e;
+          }
+          expect(
+            getResult,
+            anyOf(
+              isA<BlobCorruptException>(),
+              predicate<StoredBlob>((b) => b.bytes.length == goodBytes.length),
+            ),
+          );
+
+          await putFuture.timeout(const Duration(seconds: 2));
+
+          expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isTrue);
+          final stored = await adapter.get(hash).timeout(const Duration(seconds: 2));
+          expect(stored.bytes, equals(goodBytes));
+
+          await adapter.releaseCampaign('c2').timeout(const Duration(seconds: 2));
+          expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+
+          await adapter.close();
+          await _deleteIndexedDb(testDbName);
+        }
+      });
+
+      test('G1b: same race with put started first and get second', () async {
+        final testDbName = '${dbName}_g1b';
+        final goodBytes = _makeWebp(500);
+        final ref = _makeRef(goodBytes, BlobFormat.webp);
+        final hash = ref.sha256Hex;
+        final damagedBytes = Uint8List.fromList(goodBytes);
+        damagedBytes[20] ^= 0xFF;
+        final damagedRecord = {
+          'ref': ref.toMap(),
+          'bytes': damagedBytes.toJS,
+          'owners': ['old'],
+        }.jsify()!;
+
+        await _insertRawRecord(testDbName, hash, damagedRecord);
+        final adapter = BlobStoreAdapter(databaseName: testDbName);
+        adaptersToClose.add(adapter);
+
+        final putFuture = adapter.put(ref, goodBytes, campaignId: 'c2');
+        final getFuture = adapter.get(hash);
+
+        await putFuture.timeout(const Duration(seconds: 2));
+        Object? getResult;
+        try {
+          getResult = await getFuture.timeout(const Duration(seconds: 2));
+        } catch (e) {
+          getResult = e;
+        }
+        expect(
+          getResult,
+          anyOf(
+            isA<BlobCorruptException>(),
+            predicate<StoredBlob>((b) => b.bytes.length == goodBytes.length),
+          ),
+        );
+
+        expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isTrue);
+        final stored = await adapter.get(hash).timeout(const Duration(seconds: 2));
+        expect(stored.bytes, equals(goodBytes));
+
+        await adapter.releaseCampaign('c2').timeout(const Duration(seconds: 2));
+        expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+
+        await adapter.close();
+        await _deleteIndexedDb(testDbName);
+      });
+
+      test('G1c: same as G1a with unreadable record (ref.byteSize is oops)', () async {
+        final testDbName = '${dbName}_g1c';
+        final goodBytes = _makeWebp(500);
+        final ref = _makeRef(goodBytes, BlobFormat.webp);
+        final hash = ref.sha256Hex;
+        final badRefMap = ref.toMap();
+        badRefMap['byteSize'] = 'oops';
+        final unreadableRecord = {
+          'ref': badRefMap,
+          'bytes': goodBytes.toJS,
+          'owners': ['old'],
+        }.jsify()!;
+
+        await _insertRawRecord(testDbName, hash, unreadableRecord);
+        final adapter = BlobStoreAdapter(databaseName: testDbName);
+        adaptersToClose.add(adapter);
+
+        final getFuture = adapter.get(hash);
+        final putFuture = adapter.put(ref, goodBytes, campaignId: 'c2');
+
+        Object? getResult;
+        try {
+          getResult = await getFuture.timeout(const Duration(seconds: 2));
+        } catch (e) {
+          getResult = e;
+        }
+        expect(
+          getResult,
+          anyOf(
+            isA<BlobCorruptException>(),
+            predicate<StoredBlob>((b) => b.bytes.length == goodBytes.length),
+          ),
+        );
+
+        await putFuture.timeout(const Duration(seconds: 2));
+
+        expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isTrue);
+        final stored = await adapter.get(hash).timeout(const Duration(seconds: 2));
+        expect(stored.bytes, equals(goodBytes));
+
+        await adapter.releaseCampaign('c2').timeout(const Duration(seconds: 2));
+        expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+
+        await adapter.close();
+        await _deleteIndexedDb(testDbName);
+      });
+
+      test('G1d: control with calls one after the other', () async {
+        final testDbName = '${dbName}_g1d';
+        final goodBytes = _makeWebp(500);
+        final ref = _makeRef(goodBytes, BlobFormat.webp);
+        final hash = ref.sha256Hex;
+        final damagedBytes = Uint8List.fromList(goodBytes);
+        damagedBytes[20] ^= 0xFF;
+        final damagedRecord = {
+          'ref': ref.toMap(),
+          'bytes': damagedBytes.toJS,
+          'owners': ['old'],
+        }.jsify()!;
+
+        await _insertRawRecord(testDbName, hash, damagedRecord);
+        final adapter = BlobStoreAdapter(databaseName: testDbName);
+        adaptersToClose.add(adapter);
+
+        try {
+          await adapter.get(hash).timeout(const Duration(seconds: 2));
+        } on BlobCorruptException catch (_) {}
+
+        await adapter.put(ref, goodBytes, campaignId: 'c2').timeout(const Duration(seconds: 2));
+
+        expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isTrue);
+        final stored = await adapter.get(hash).timeout(const Duration(seconds: 2));
+        expect(stored.bytes, equals(goodBytes));
+
+        await adapter.releaseCampaign('c2').timeout(const Duration(seconds: 2));
+        expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+
+        await adapter.close();
+        await _deleteIndexedDb(testDbName);
       });
     });
   });
@@ -570,4 +793,8 @@ Future<void> _insertRawRecord(String dbName, String sha256Hex, JSAny record) asy
   tx.onerror = ((web.Event _) => txCompleter.completeError(StateError('Raw put failed'))).toJS;
   await txCompleter.future;
   db.close();
+}
+
+class AbortRecorder {
+  bool firstRequestSucceeded = false;
 }

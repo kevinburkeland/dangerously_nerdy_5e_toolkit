@@ -45,6 +45,34 @@ final class BlobFetchIncomplete extends BlobFetchResult {
   String toString() => 'BlobFetchIncomplete($reason, $missingChunks)';
 }
 
+final class BlobDownloadProgress {
+  final String sha256Hex;
+  final int chunksReceived;
+  final int chunksTotal;
+
+  const BlobDownloadProgress({
+    required this.sha256Hex,
+    required this.chunksReceived,
+    required this.chunksTotal,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BlobDownloadProgress &&
+          runtimeType == other.runtimeType &&
+          sha256Hex == other.sha256Hex &&
+          chunksReceived == other.chunksReceived &&
+          chunksTotal == other.chunksTotal;
+
+  @override
+  int get hashCode => Object.hash(sha256Hex, chunksReceived, chunksTotal);
+
+  @override
+  String toString() =>
+      'BlobDownloadProgress($sha256Hex: $chunksReceived/$chunksTotal)';
+}
+
 class _ActiveDownload {
   final BlobRef ref;
   final Set<String> campaignIds;
@@ -84,6 +112,12 @@ class BlobTransferService {
   final StreamController<BlobChannelMessage> _inboundMessages =
       StreamController<BlobChannelMessage>.broadcast();
 
+  final StreamController<BlobDownloadProgress> _downloadProgressController =
+      StreamController<BlobDownloadProgress>.broadcast();
+
+  Stream<BlobDownloadProgress> get downloadProgress =>
+      _downloadProgressController.stream;
+
   bool _isDisposed = false;
 
   BlobTransferService({
@@ -107,6 +141,7 @@ class BlobTransferService {
     _messageSub?.cancel();
     _peersChangedSub?.cancel();
     _inboundMessages.close();
+    _downloadProgressController.close();
     for (final serve in _activeServes.values) {
       serve.cancel();
     }
@@ -283,6 +318,12 @@ class BlobTransferService {
       return BlobFetchIncomplete(BlobIncompleteReason.noDirectPeers, totalChunks);
     }
 
+    _downloadProgressController.add(BlobDownloadProgress(
+      sha256Hex: ref.sha256Hex,
+      chunksReceived: 0,
+      chunksTotal: totalChunks,
+    ));
+
     final chunks = <int, Uint8List>{};
     final excludedPeers = <String>{};
     bool hadCorruptAttempt = false;
@@ -389,6 +430,11 @@ class BlobTransferService {
             // Accept chunk!
             chunks[frame.index] = frame.payload;
             peerContributors.add(currentPeer);
+            _downloadProgressController.add(BlobDownloadProgress(
+              sha256Hex: ref.sha256Hex,
+              chunksReceived: chunks.length,
+              chunksTotal: totalChunks,
+            ));
             resetStallTimer();
 
             if (chunks.length == totalChunks) {
@@ -450,6 +496,11 @@ class BlobTransferService {
           hadCorruptAttempt = true;
           // Throw away every chunk
           chunks.clear();
+          _downloadProgressController.add(BlobDownloadProgress(
+            sha256Hex: ref.sha256Hex,
+            chunksReceived: 0,
+            chunksTotal: totalChunks,
+          ));
           // Exclude every peer that contributed a chunk to this attempt
           excludedPeers.addAll(peerContributors);
           // Start a new attempt with the remaining peers

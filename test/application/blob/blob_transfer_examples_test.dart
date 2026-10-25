@@ -1058,6 +1058,147 @@ void main() {
         playerService.dispose();
       });
     });
+
+    group('BlobTransferService Progress (P1 - P3)', () {
+      test('P1: 5-chunk file from one honest peer: progress events 0..5 of 5, last arrives before fetch returns', () {
+        fakeAsync((async) {
+          final net = FakeBlobNetwork();
+          final dmPort = net.createChannel('dm');
+          final playerPort = net.createChannel('player');
+          net.openChannelBetween('dm', 'player');
+
+          final bytes = _makeWebp(5 * kBlobChunkBytes);
+          final ref = _makeRef(bytes, BlobFormat.webp);
+
+          final dmProg = ProgrammedServingPeer(
+            peerId: 'dm',
+            channel: dmPort,
+            ref: ref,
+            originalBytes: bytes,
+            behavior: PeerBehavior.honest,
+          )..start();
+
+          final playerStore = FakeBlobStore();
+          final playerService = BlobTransferService(
+            channel: playerPort,
+            store: playerStore,
+            servableRefs: () => [],
+          )..start();
+
+          final progressEvents = <BlobDownloadProgress>[];
+          playerService.downloadProgress.listen((p) {
+            if (p.sha256Hex == ref.sha256Hex) {
+              progressEvents.add(p);
+            }
+          });
+
+          BlobFetchResult? result;
+          int? lastProgressOnFetchReturn;
+          playerService.fetch(ref, campaignId: 'c_player').then((r) {
+            result = r;
+            lastProgressOnFetchReturn = progressEvents.isEmpty ? -1 : progressEvents.last.chunksReceived;
+          });
+
+          async.elapse(const Duration(milliseconds: 100));
+
+          expect(result, isA<BlobFetched>());
+          expect(lastProgressOnFetchReturn, equals(5));
+          expect(progressEvents.map((p) => p.chunksReceived).toList(), equals([0, 1, 2, 3, 4, 5]));
+          expect(progressEvents.every((p) => p.chunksTotal == 5), isTrue);
+
+          dmProg.stop();
+          playerService.dispose();
+        });
+      });
+
+      test('P2: peer with bad chunk then honest peer: counts go back to 0 once, then climb to total', () {
+        fakeAsync((async) {
+          final net = FakeBlobNetwork();
+          final p1Port = net.createChannel('p1');
+          final p2Port = net.createChannel('p2');
+          final playerPort = net.createChannel('player');
+
+          net.openChannelBetween('player', 'p1');
+          net.openChannelBetween('player', 'p2');
+
+          final bytes = _makeWebp(3 * kBlobChunkBytes);
+          final ref = _makeRef(bytes, BlobFormat.webp);
+
+          final p1Prog = ProgrammedServingPeer(
+            peerId: 'p1',
+            channel: p1Port,
+            ref: ref,
+            originalBytes: bytes,
+            behavior: PeerBehavior.servesFlippedByte,
+          )..start();
+
+          final p2Prog = ProgrammedServingPeer(
+            peerId: 'p2',
+            channel: p2Port,
+            ref: ref,
+            originalBytes: bytes,
+            behavior: PeerBehavior.honest,
+          )..start();
+
+          final playerStore = FakeBlobStore();
+          final playerService = BlobTransferService(
+            channel: playerPort,
+            store: playerStore,
+            servableRefs: () => [],
+          )..start();
+
+          final receivedCounts = <int>[];
+          playerService.downloadProgress.listen((p) {
+            if (p.sha256Hex == ref.sha256Hex) {
+              receivedCounts.add(p.chunksReceived);
+            }
+          });
+
+          BlobFetchResult? result;
+          playerService.fetch(ref, campaignId: 'c_player').then((r) => result = r);
+
+          async.elapse(const Duration(milliseconds: 100));
+
+          expect(result, isA<BlobFetched>());
+          // p1: 0, 1, 2, 3 -> corrupt reset: 0 -> p2: 1, 2, 3
+          expect(receivedCounts, equals([0, 1, 2, 3, 0, 1, 2, 3]));
+
+          p1Prog.stop();
+          p2Prog.stop();
+          playerService.dispose();
+        });
+      });
+
+      test('P3: fetch that finds blob already stored emits no progress event', () {
+        fakeAsync((async) {
+          final net = FakeBlobNetwork();
+          final playerPort = net.createChannel('player');
+          final playerStore = FakeBlobStore();
+
+          final bytes = _makeWebp(500);
+          final ref = _makeRef(bytes, BlobFormat.webp);
+          playerStore.put(ref, bytes, campaignId: 'c_orig');
+
+          final playerService = BlobTransferService(
+            channel: playerPort,
+            store: playerStore,
+            servableRefs: () => [],
+          )..start();
+
+          final progressEvents = <BlobDownloadProgress>[];
+          playerService.downloadProgress.listen((p) => progressEvents.add(p));
+
+          BlobFetchResult? result;
+          playerService.fetch(ref, campaignId: 'c_new').then((r) => result = r);
+          async.flushMicrotasks();
+
+          expect(result, isA<BlobFetched>());
+          expect(progressEvents, isEmpty);
+
+          playerService.dispose();
+        });
+      });
+    });
   });
 }
 
