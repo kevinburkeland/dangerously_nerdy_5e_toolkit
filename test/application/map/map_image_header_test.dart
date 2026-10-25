@@ -1,8 +1,270 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/map/map_image_header.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/map/map_image_intake_port.dart';
+
+int _crc32(List<int> bytes) {
+  var crc = 0xFFFFFFFF;
+  for (final byte in bytes) {
+    crc ^= byte;
+    for (var i = 0; i < 8; i++) {
+      if ((crc & 1) != 0) {
+        crc = (crc >> 1) ^ 0xEDB88320;
+      } else {
+        crc = crc >> 1;
+      }
+    }
+  }
+  return (crc ^ 0xFFFFFFFF) & 0xFFFFFFFF;
+}
+
+Uint8List _buildTiffExif(int orientation, {bool littleEndian = true}) {
+  final b = BytesBuilder();
+  final endian = littleEndian ? Endian.little : Endian.big;
+  if (littleEndian) {
+    b.add([0x49, 0x49, 0x2A, 0x00]); // II*\0
+  } else {
+    b.add([0x4D, 0x4D, 0x00, 0x2A]); // MM\0*
+  }
+  final ifdOffsetBd = ByteData(4);
+  ifdOffsetBd.setUint32(0, 8, endian);
+  b.add(ifdOffsetBd.buffer.asUint8List());
+
+  final ifdBd = ByteData(2 + 12);
+  ifdBd.setUint16(0, 1, endian); // 1 entry
+  ifdBd.setUint16(2, 0x0112, endian); // Orientation tag
+  ifdBd.setUint16(4, 3, endian); // SHORT
+  ifdBd.setUint32(6, 1, endian); // count 1
+  ifdBd.setUint16(10, orientation, endian); // value
+  ifdBd.setUint16(12, 0, endian); // pad
+  b.add(ifdBd.buffer.asUint8List());
+  return b.toBytes();
+}
+
+Uint8List _buildJpegWithExif(
+  int width,
+  int height,
+  Uint8List tiffBytes, {
+  List<Uint8List>? extraAppSegments,
+}) {
+  final b = BytesBuilder();
+  b.add([0xFF, 0xD8]); // SOI
+  if (extraAppSegments != null) {
+    for (final seg in extraAppSegments) {
+      b.add(seg);
+    }
+  }
+  // APP1 Exif segment
+  b.add([0xFF, 0xE1]);
+  final segLen = 2 + 6 + tiffBytes.length;
+  final lenBd = ByteData(2);
+  lenBd.setUint16(0, segLen);
+  b.add(lenBd.buffer.asUint8List());
+  b.add([0x45, 0x78, 0x69, 0x66, 0x00, 0x00]); // Exif\0\0
+  b.add(tiffBytes);
+
+  // SOF0
+  b.add([0xFF, 0xC0]);
+  final sofBd = ByteData(9);
+  sofBd.setUint16(0, 9);
+  sofBd.setUint8(2, 8);
+  sofBd.setUint16(3, height);
+  sofBd.setUint16(5, width);
+  sofBd.setUint8(7, 3);
+  b.add(sofBd.buffer.asUint8List());
+  return b.toBytes();
+}
+
+Uint8List _buildPngWithExif(
+  int width,
+  int height,
+  Uint8List tiffBytes, {
+  bool afterIdat = false,
+  int? customLength,
+}) {
+  final b = BytesBuilder();
+  b.add([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]); // PNG sig
+  // IHDR
+  final bd = ByteData(17);
+  bd.setUint32(0, 13);
+  bd.setUint8(4, 0x49); bd.setUint8(5, 0x48); bd.setUint8(6, 0x44); bd.setUint8(7, 0x52); // IHDR
+  bd.setUint32(8, width);
+  bd.setUint32(12, height);
+  bd.setUint8(16, 8);
+  b.add(bd.buffer.asUint8List());
+  final ihdrTypeAndData = [
+    0x49, 0x48, 0x44, 0x52,
+    ...bd.buffer.asUint8List().sublist(8, 17),
+    0x02, 0x00, 0x00, 0x00,
+  ];
+  final ihdrCrc = ByteData(4);
+  ihdrCrc.setUint32(0, _crc32(ihdrTypeAndData));
+  b.add([0x02, 0x00, 0x00, 0x00]);
+  b.add(ihdrCrc.buffer.asUint8List());
+
+  void addExifChunk() {
+    final len = customLength ?? tiffBytes.length;
+    final lenBd = ByteData(4);
+    lenBd.setUint32(0, len);
+    b.add(lenBd.buffer.asUint8List());
+    final typeBytes = [0x65, 0x58, 0x49, 0x66]; // eXIf
+    b.add(typeBytes);
+    b.add(tiffBytes);
+    final crcBd = ByteData(4);
+    crcBd.setUint32(0, _crc32([...typeBytes, ...tiffBytes]));
+    b.add(crcBd.buffer.asUint8List());
+  }
+
+  void addIdatChunk() {
+    final lenBd = ByteData(4);
+    lenBd.setUint32(0, 0);
+    b.add(lenBd.buffer.asUint8List());
+    final typeBytes = [0x49, 0x44, 0x41, 0x54]; // IDAT
+    b.add(typeBytes);
+    final crcBd = ByteData(4);
+    crcBd.setUint32(0, _crc32(typeBytes));
+    b.add(crcBd.buffer.asUint8List());
+  }
+
+  if (afterIdat) {
+    addIdatChunk();
+    addExifChunk();
+  } else {
+    addExifChunk();
+    addIdatChunk();
+  }
+
+  return b.toBytes();
+}
+
+Uint8List _buildWebpVp8XWithExif(int width, int height, Uint8List tiffBytes) {
+  final b = BytesBuilder();
+  b.add([0x52, 0x49, 0x46, 0x46]); // RIFF
+  const vp8xSize = 8 + 10;
+  final exifChunkSize = 8 + tiffBytes.length + (tiffBytes.length.isOdd ? 1 : 0);
+  final riffLenBd = ByteData(4);
+  riffLenBd.setUint32(0, 4 + vp8xSize + exifChunkSize, Endian.little);
+  b.add(riffLenBd.buffer.asUint8List());
+  b.add([0x57, 0x45, 0x42, 0x50]); // WEBP
+  // VP8X chunk
+  b.add([0x56, 0x50, 0x38, 0x58]); // VP8X
+  final vp8xLen = ByteData(4);
+  vp8xLen.setUint32(0, 10, Endian.little);
+  b.add(vp8xLen.buffer.asUint8List());
+  b.add([0x08, 0x00, 0x00, 0x00]); // flags: bit 3 (EXIF)
+  final wMinus1 = width - 1;
+  final hMinus1 = height - 1;
+  b.add([wMinus1 & 0xFF, (wMinus1 >> 8) & 0xFF, (wMinus1 >> 16) & 0xFF]);
+  b.add([hMinus1 & 0xFF, (hMinus1 >> 8) & 0xFF, (hMinus1 >> 16) & 0xFF]);
+  // EXIF chunk
+  b.add([0x45, 0x58, 0x49, 0x46]); // EXIF
+  final exifLen = ByteData(4);
+  exifLen.setUint32(0, tiffBytes.length, Endian.little);
+  b.add(exifLen.buffer.asUint8List());
+  b.add(tiffBytes);
+  if (tiffBytes.length.isOdd) {
+    b.add([0x00]);
+  }
+  return b.toBytes();
+}
+
+Uint8List _buildRotatedAvif({
+  int? irotAngle,
+  bool useImir = false,
+  int associatedItemId = 1,
+}) {
+  const base64Avif =
+      'AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAAD5bWV0YQAAAAAAAAAvaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAFBpY3R1cmVIYW5kbGVyAAAAAA5waXRtAAAAAAABAAAAHmlsb2MAAAAARAAAAQABAAAAAQAAASEAAAAmAAAAKGlpbmYAAAAAAAEAAAAaaW5mZQIAAAAAAQAAYXYwMUNvbG9yAAAAAGppcHJwAAAAS2lwY28AAAAUaXNwZQAAAAAAAABAAAAAIAAAABBwaXhpAAAAAAMICAgAAAAMYXYxQ4EADAAAAAATY29scm5jbHgAAgACAAIAAAAAF2lwbWEAAAAAAAAAAQABBAECgwQAAAAubWRhdAoGGBU/+2AQMhwYAAAAUAAAALNXJX+abv+Ty52isD92RpTZ+DQO';
+  final raw = base64Decode(base64Avif);
+  if (irotAngle == null && !useImir) {
+    return raw;
+  }
+  final d = Uint8List.fromList(raw);
+  final bd = ByteData.view(d.buffer);
+
+  final propBox = BytesBuilder();
+  final boxLen = ByteData(4);
+  boxLen.setUint32(0, 9);
+  propBox.add(boxLen.buffer.asUint8List());
+  if (useImir) {
+    propBox.add([0x69, 0x6D, 0x69, 0x72]); // imir
+    propBox.add([0x00]);
+  } else {
+    propBox.add([0x69, 0x72, 0x6F, 0x74]); // irot
+    propBox.add([irotAngle! & 0x03]);
+  }
+  final propBytes = propBox.toBytes();
+
+  // Find ipco:
+  var ipcoEnd = -1;
+  for (var i = 0; i < d.length - 8; i++) {
+    if (d[i] == 0x69 && d[i + 1] == 0x70 && d[i + 2] == 0x63 && d[i + 3] == 0x6F) {
+      final ipcoSize = bd.getUint32(i - 4);
+      ipcoEnd = (i - 4) + ipcoSize;
+      break;
+    }
+  }
+
+  final out = BytesBuilder();
+  out.add(d.sublist(0, ipcoEnd));
+  out.add(propBytes);
+  final afterIpco = d.sublist(ipcoEnd);
+  out.add(afterIpco);
+  final res = out.toBytes();
+  final resBd = ByteData.view(res.buffer);
+
+  // Find ipma in res:
+  var ipmaOffset = -1;
+  for (var i = 0; i < res.length - 8; i++) {
+    if (res[i] == 0x69 && res[i + 1] == 0x70 && res[i + 2] == 0x6D && res[i + 3] == 0x61) {
+      ipmaOffset = i - 4;
+      break;
+    }
+  }
+
+  if (associatedItemId != 1) {
+    resBd.setUint16(ipmaOffset + 16, associatedItemId);
+  }
+  res[ipmaOffset + 18] = 5;
+
+  final oldIpmaSize = resBd.getUint32(ipmaOffset);
+  final ipmaInsertPoint = ipmaOffset + oldIpmaSize;
+  final finalOut = BytesBuilder();
+  finalOut.add(res.sublist(0, ipmaInsertPoint));
+  finalOut.add([0x85]); // essential bit set for transformative property
+  finalOut.add(res.sublist(ipmaInsertPoint));
+  final finalBytes = finalOut.toBytes();
+  final finalBd = ByteData.view(finalBytes.buffer);
+
+  // Update sizes:
+  final metaSize = finalBd.getUint32(32);
+  finalBd.setUint32(32, metaSize + 10);
+
+  final extentOffset = finalBd.getUint32(127);
+  finalBd.setUint32(127, extentOffset + 10);
+
+  for (var i = 0; i < finalBytes.length - 8; i++) {
+    if (finalBytes[i] == 0x69 && finalBytes[i + 1] == 0x70 && finalBytes[i + 2] == 0x72 && finalBytes[i + 3] == 0x70) {
+      final iprpSize = finalBd.getUint32(i - 4);
+      finalBd.setUint32(i - 4, iprpSize + 10);
+      break;
+    }
+  }
+
+  for (var i = 0; i < finalBytes.length - 8; i++) {
+    if (finalBytes[i] == 0x69 && finalBytes[i + 1] == 0x70 && finalBytes[i + 2] == 0x63 && finalBytes[i + 3] == 0x6F) {
+      final ipcoSize = finalBd.getUint32(i - 4);
+      finalBd.setUint32(i - 4, ipcoSize + 9);
+      break;
+    }
+  }
+
+  finalBd.setUint32(ipmaOffset, oldIpmaSize + 1);
+
+  return finalBytes;
+}
 
 Uint8List _buildPng(int width, int height) {
   final b = BytesBuilder();
@@ -397,7 +659,227 @@ void main() {
       }
     });
 
-    test('Law (fuzz): 2000 random byte streams and 2000 mutated headers never throw unhandled, never scan > 16MB', () async {
+    test('OR1: JPEG 400x200 orientations 1-8 in MM and II byte order (16 cases)', () async {
+      for (final littleEndian in [true, false]) {
+        for (var o = 1; o <= 8; o++) {
+          final tiff = _buildTiffExif(o, littleEndian: littleEndian);
+          final jpeg = _buildJpegWithExif(400, 200, tiff);
+          final header = await readMapImageHeader(_makeReader(jpeg), jpeg.length);
+          expect(header.format, equals(MapInputFormat.jpeg));
+          if (o >= 1 && o <= 4) {
+            expect(header.width, equals(400), reason: 'orientation $o littleEndian $littleEndian');
+            expect(header.height, equals(200));
+            expect(header.quarterTurn, isFalse);
+          } else {
+            expect(header.width, equals(200), reason: 'orientation $o littleEndian $littleEndian');
+            expect(header.height, equals(400));
+            expect(header.quarterTurn, isTrue);
+          }
+        }
+      }
+    });
+
+    test('OR2: JPEG with XMP APP1 before Exif (6) gives 200x400; two Exif APP1s (1 then 6) gives 400x200', () async {
+      // 1. XMP APP1 before Exif (orientation 6)
+      final xmpData = utf8.encode('http://ns.adobe.com/xap/1.0/\x00some xmp data');
+      final xmpSeg = BytesBuilder();
+      xmpSeg.add([0xFF, 0xE1]);
+      final xmpLenBd = ByteData(2);
+      xmpLenBd.setUint16(0, 2 + xmpData.length);
+      xmpSeg.add(xmpLenBd.buffer.asUint8List());
+      xmpSeg.add(xmpData);
+
+      final tiff6 = _buildTiffExif(6);
+      final jpegWithXmp = _buildJpegWithExif(400, 200, tiff6, extraAppSegments: [xmpSeg.toBytes()]);
+      final headerXmp = await readMapImageHeader(_makeReader(jpegWithXmp), jpegWithXmp.length);
+      expect(headerXmp.width, equals(200));
+      expect(headerXmp.height, equals(400));
+      expect(headerXmp.quarterTurn, isTrue);
+
+      // 2. Two Exif APP1 segments: first saying 1, second saying 6 -> first wins (400x200)
+      final tiff1 = _buildTiffExif(1);
+      final exif1Seg = BytesBuilder();
+      exif1Seg.add([0xFF, 0xE1]);
+      final exif1LenBd = ByteData(2);
+      exif1LenBd.setUint16(0, 2 + 6 + tiff1.length);
+      exif1Seg.add(exif1LenBd.buffer.asUint8List());
+      exif1Seg.add([0x45, 0x78, 0x69, 0x66, 0x00, 0x00]);
+      exif1Seg.add(tiff1);
+
+      final jpegTwoExif = _buildJpegWithExif(400, 200, tiff6, extraAppSegments: [exif1Seg.toBytes()]);
+      final headerTwoExif = await readMapImageHeader(_makeReader(jpegTwoExif), jpegTwoExif.length);
+      expect(headerTwoExif.width, equals(400));
+      expect(headerTwoExif.height, equals(200));
+      expect(headerTwoExif.quarterTurn, isFalse);
+    });
+
+    test('OR3: Damaged Exif (7 cases) all give 400x200 and are not rejected', () async {
+      // 1. IFD0 offset past end of segment
+      final tiff1 = _buildTiffExif(6);
+      final bd1 = ByteData.view(tiff1.buffer);
+      bd1.setUint32(4, 1000, Endian.little);
+      final jpeg1 = _buildJpegWithExif(400, 200, tiff1);
+      final h1 = await readMapImageHeader(_makeReader(jpeg1), jpeg1.length);
+      expect(h1.width, equals(400));
+      expect(h1.height, equals(200));
+
+      // 2. Entry count larger than segment holds
+      final tiff2 = _buildTiffExif(6);
+      final bd2 = ByteData.view(tiff2.buffer);
+      bd2.setUint16(8, 50, Endian.little);
+      final jpeg2 = _buildJpegWithExif(400, 200, tiff2);
+      final h2 = await readMapImageHeader(_makeReader(jpeg2), jpeg2.length);
+      expect(h2.width, equals(400));
+      expect(h2.height, equals(200));
+
+      // 3. Tag 0x0112 with type LONG (4) instead of SHORT (3)
+      final tiff3 = _buildTiffExif(6);
+      final bd3 = ByteData.view(tiff3.buffer);
+      bd3.setUint16(12, 4, Endian.little);
+      final jpeg3 = _buildJpegWithExif(400, 200, tiff3);
+      final h3 = await readMapImageHeader(_makeReader(jpeg3), jpeg3.length);
+      expect(h3.width, equals(400));
+      expect(h3.height, equals(200));
+
+      // 4. Value 0
+      final tiff4 = _buildTiffExif(0);
+      final jpeg4 = _buildJpegWithExif(400, 200, tiff4);
+      final h4 = await readMapImageHeader(_makeReader(jpeg4), jpeg4.length);
+      expect(h4.width, equals(400));
+      expect(h4.height, equals(200));
+
+      // 5. Value 9
+      final tiff5 = _buildTiffExif(9);
+      final jpeg5 = _buildJpegWithExif(400, 200, tiff5);
+      final h5 = await readMapImageHeader(_makeReader(jpeg5), jpeg5.length);
+      expect(h5.width, equals(400));
+      expect(h5.height, equals(200));
+
+      // 6. Segment ends inside TIFF header (< 8 bytes)
+      final tiff6 = Uint8List.fromList([0x49, 0x49, 0x2A, 0x00, 0x08]);
+      final jpeg6 = _buildJpegWithExif(400, 200, tiff6);
+      final h6 = await readMapImageHeader(_makeReader(jpeg6), jpeg6.length);
+      expect(h6.width, equals(400));
+      expect(h6.height, equals(200));
+
+      // 7. Exif\0\0 followed by XX*\0
+      final tiff7 = _buildTiffExif(6);
+      tiff7[0] = 0x58; // 'X'
+      tiff7[1] = 0x58; // 'X'
+      final jpeg7 = _buildJpegWithExif(400, 200, tiff7);
+      final h7 = await readMapImageHeader(_makeReader(jpeg7), jpeg7.length);
+      expect(h7.width, equals(400));
+      expect(h7.height, equals(200));
+    });
+
+    test('OR4: PNG 400x200: eXIf 6 before IDAT -> 200x400; after IDAT -> 400x200; 70KB eXIf -> 400x200 unread', () async {
+      final tiff6 = _buildTiffExif(6);
+
+      // eXIf 6 before IDAT -> 200x400
+      final pngBefore = _buildPngWithExif(400, 200, tiff6, afterIdat: false);
+      final hBefore = await readMapImageHeader(_makeReader(pngBefore), pngBefore.length);
+      expect(hBefore.width, equals(200));
+      expect(hBefore.height, equals(400));
+      expect(hBefore.quarterTurn, isTrue);
+
+      // eXIf 6 after IDAT -> 400x200
+      final pngAfter = _buildPngWithExif(400, 200, tiff6, afterIdat: true);
+      final hAfter = await readMapImageHeader(_makeReader(pngAfter), pngAfter.length);
+      expect(hAfter.width, equals(400));
+      expect(hAfter.height, equals(200));
+      expect(hAfter.quarterTurn, isFalse);
+
+      // eXIf chunk with 70 KiB of data before IDAT: reader never asks for those 70 KiB
+      final bigTiff = Uint8List(70 * 1024);
+      final png70K = _buildPngWithExif(400, 200, bigTiff, afterIdat: false);
+      var bytesRead = 0;
+      final h70K = await readMapImageHeader(
+        _makeReader(png70K, onRead: (start, end) {
+          bytesRead += (end - start);
+        }),
+        png70K.length,
+      );
+      expect(h70K.width, equals(400));
+      expect(h70K.height, equals(200));
+      expect(h70K.quarterTurn, isFalse);
+      expect(bytesRead, lessThan(1024)); // Proves the 70KB was skipped without reading
+    });
+
+    test('OR5: WebP VP8X with EXIF 6 stored 400x200 gives 400x200, quarterTurn false', () async {
+      final tiff6 = _buildTiffExif(6);
+      final webp = _buildWebpVp8XWithExif(400, 200, tiff6);
+      final header = await readMapImageHeader(_makeReader(webp), webp.length);
+      expect(header.format, equals(MapInputFormat.webp));
+      expect(header.width, equals(400));
+      expect(header.height, equals(200));
+      expect(header.quarterTurn, isFalse);
+    });
+
+    test('OR6: AVIF with irot angles 0, 1, 2, 3, different item id, imir, and plain fixture', () async {
+      // Plain fixture
+      final plain = _buildRotatedAvif();
+      final hPlain = await readMapImageHeader(_makeReader(plain), plain.length);
+      expect(hPlain.width, equals(64));
+      expect(hPlain.height, equals(32));
+      expect(hPlain.quarterTurn, isFalse);
+
+      // Angle 0: 64x32
+      final avif0 = _buildRotatedAvif(irotAngle: 0);
+      final h0 = await readMapImageHeader(_makeReader(avif0), avif0.length);
+      expect(h0.width, equals(64));
+      expect(h0.height, equals(32));
+      expect(h0.quarterTurn, isFalse);
+
+      // Angle 1: 32x64
+      final avif1 = _buildRotatedAvif(irotAngle: 1);
+      final h1 = await readMapImageHeader(_makeReader(avif1), avif1.length);
+      expect(h1.width, equals(32));
+      expect(h1.height, equals(64));
+      expect(h1.quarterTurn, isTrue);
+
+      // Angle 2: 64x32
+      final avif2 = _buildRotatedAvif(irotAngle: 2);
+      final h2 = await readMapImageHeader(_makeReader(avif2), avif2.length);
+      expect(h2.width, equals(64));
+      expect(h2.height, equals(32));
+      expect(h2.quarterTurn, isFalse);
+
+      // Angle 3: 32x64
+      final avif3 = _buildRotatedAvif(irotAngle: 3);
+      final h3 = await readMapImageHeader(_makeReader(avif3), avif3.length);
+      expect(h3.width, equals(32));
+      expect(h3.height, equals(64));
+      expect(h3.quarterTurn, isTrue);
+
+      // irot angle 1 associated with different item id (2): 64x32
+      final avifOther = _buildRotatedAvif(irotAngle: 1, associatedItemId: 2);
+      final hOther = await readMapImageHeader(_makeReader(avifOther), avifOther.length);
+      expect(hOther.width, equals(64));
+      expect(hOther.height, equals(32));
+      expect(hOther.quarterTurn, isFalse);
+
+      // imir box instead of irot: 64x32
+      final avifImir = _buildRotatedAvif(useImir: true);
+      final hImir = await readMapImageHeader(_makeReader(avifImir), avifImir.length);
+      expect(hImir.width, equals(64));
+      expect(hImir.height, equals(32));
+      expect(hImir.quarterTurn, isFalse);
+    });
+
+    test('OR7: JPEG stored as 8193x100 with orientation 6 rejected tooManyPixels with width 100, height 8193', () async {
+      final tiff6 = _buildTiffExif(6);
+      final jpeg = _buildJpegWithExif(8193, 100, tiff6);
+      try {
+        await readMapImageHeader(_makeReader(jpeg), jpeg.length);
+        fail('expected tooManyPixels');
+      } on MapIntakeRejected catch (e) {
+        expect(e.reason, equals(MapRejectReason.tooManyPixels));
+        expect(e.width, equals(100));
+        expect(e.height, equals(8193));
+      }
+    });
+
+    test('Law (fuzz): 2000 random byte streams, 2000 mutated headers, and 1000 orientation mutated headers', () async {
       for (var seed = 0; seed < 2000; seed++) {
         final randRng = Random(seed);
         final len = randRng.nextInt(512) + 1;
@@ -453,8 +935,40 @@ void main() {
           fail('Mutated seed $seed failed with unhandled exception: $e\n$st');
         }
       }
+
+      // 1,000 orientation-specific mutations
+      final orientationTemplates = [
+        _buildJpegWithExif(800, 600, _buildTiffExif(6)),
+        _buildPngWithExif(800, 600, _buildTiffExif(6)),
+        _buildRotatedAvif(irotAngle: 1),
+      ];
+
+      for (var seed = 0; seed < 1000; seed++) {
+        final oRng = Random(seed + 20000);
+        final base = orientationTemplates[oRng.nextInt(orientationTemplates.length)];
+        final mutated = Uint8List.fromList(base);
+
+        final numMutations = oRng.nextInt(8) + 1;
+        for (var m = 0; m < numMutations; m++) {
+          final idx = oRng.nextInt(mutated.length);
+          mutated[idx] = oRng.nextInt(256);
+        }
+
+        final fileSize = mutated.length + oRng.nextInt(50);
+        try {
+          final res = await readMapImageHeader(_makeReader(mutated), fileSize);
+          expect(res.width, greaterThanOrEqualTo(1));
+          expect(res.height, greaterThanOrEqualTo(1));
+          expect(max(res.width, res.height), lessThanOrEqualTo(8192));
+        } on MapIntakeRejected catch (_) {
+          // Expected
+        } catch (e, st) {
+          fail('Orientation mutated seed $seed failed with unhandled exception: $e\n$st');
+        }
+      }
+
       // ignore: avoid_print
-      print('Fuzz law completed: 2000 random seeds + 2000 mutated seeds tested cleanly.');
+      print('Fuzz law completed: 2000 random seeds + 2000 mutated seeds + 1000 orientation seeds tested cleanly.');
     });
 
     test('Law (target size): 5000 seeded pairs in [1, 8192]^2 plus corners', () {

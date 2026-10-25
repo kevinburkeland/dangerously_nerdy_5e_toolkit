@@ -95,19 +95,30 @@ class MapImageIntakeAdapter implements MapImageIntakePort {
       throw const MapIntakeRejected(MapRejectReason.undecodable);
     }
 
-    // 1. Decode bitmap with resize options
+    // 1. Decode bitmap with resize options (resizeWidth only, imageOrientation from-image)
     web.ImageBitmap bitmap;
     try {
       bitmap = await web.window.createImageBitmap(
         inputBlob,
         web.ImageBitmapOptions(
           resizeWidth: targetWidth,
-          resizeHeight: targetHeight,
           resizeQuality: 'high',
+          imageOrientation: 'from-image',
         ),
       ).toDart;
     } catch (_) {
       throw const MapIntakeRejected(MapRejectReason.undecodable);
+    }
+
+    final bitmapHeight = bitmap.height;
+    if ((bitmapHeight - targetHeight).abs() > 1) {
+      final bWidth = bitmap.width;
+      bitmap.close();
+      throw MapIntakeRejected(
+        MapRejectReason.orientationMismatch,
+        width: bWidth,
+        height: bitmapHeight,
+      );
     }
 
     // 2. Create an HTMLCanvasElement of exactly targetWidth x targetHeight, fill opaque white, draw bitmap

@@ -8,6 +8,7 @@ import '../../application/services/clock_sync_service.dart';
 import '../../application/services/combat_encounter_service.dart';
 import '../../application/services/room_state_reconciliation_service.dart';
 import '../../application/services/room_sync_orchestrator.dart';
+import '../../application/services/room_session_starter.dart';
 import '../../application/storage/storage_durability_coordinator.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
@@ -290,5 +291,10 @@ Future<void> initServiceLocator({
         payloadMapper: sl<IRoomSyncPayloadPort>(),
         replicaId: resolvedReplicaId,
         clock: sl<StatefulHlcClock>(),
+      ));
+
+  sl.registerLazySingleton<RoomSessionStarter>(() => RoomSessionStarter(
+        orchestrator: sl<RoomSyncOrchestrator>(),
+        maps: sl<ActiveMapController>(),
       ));
 }

@@ -88,18 +88,15 @@ class _MapViewState extends State<MapView> {
     }
   }
 
-  Future<void> _handleChooseMap() async {
-    final intake = widget.intake ??
-        (sl.isRegistered<MapImageIntakePort>()
-            ? sl<MapImageIntakePort>()
-            : null);
-    final intakeService = widget.intakeService ??
-        (sl.isRegistered<MapIntakeService>()
-            ? sl<MapIntakeService>()
-            : null);
-    if (intake == null || intakeService == null) return;
+  void _handleChooseMap() {
+    final intake = widget.intake ?? sl<MapImageIntakePort>();
+    final intakeService = widget.intakeService ?? sl<MapIntakeService>();
+    _chooseMap(intake, intakeService);
+  }
 
+  Future<void> _chooseMap(MapImageIntakePort intake, MapIntakeService intakeService) async {
     final source = await intake.pick();
+    if (!mounted) return;
     if (source == null) return;
 
     setState(() {
@@ -109,15 +106,17 @@ class _MapViewState extends State<MapView> {
 
     final campaignId = widget.controller.campaignId;
     if (campaignId == null) {
+      if (!mounted) return;
       setState(() {
         _isPreparing = false;
-        _statusMessage = 'The map couldn\'t be shared: No active campaign';
+        _statusMessage = "The map couldn't be shared: No active campaign";
       });
       return;
     }
 
     try {
       final res = await intakeService.setMapFromSource(source, campaignId: campaignId);
+      if (!mounted) return;
       setState(() {
         _isPreparing = false;
         if (res.scaledDown) {
@@ -128,6 +127,7 @@ class _MapViewState extends State<MapView> {
         }
       });
     } on MapIntakeRejected catch (e) {
+      if (!mounted) return;
       setState(() {
         _isPreparing = false;
         switch (e.reason) {
@@ -150,19 +150,25 @@ class _MapViewState extends State<MapView> {
           case MapRejectReason.encoderMismatch:
             _statusMessage =
                 'This browser produced an unexpected image. Try another browser.';
+          case MapRejectReason.orientationMismatch:
+            _statusMessage =
+                'This browser turned the image differently than expected. Rotate it in a photo editor, save it, and try again.';
         }
       });
     } on MapIntakeUnavailableException catch (e) {
+      if (!mounted) return;
       setState(() {
         _isPreparing = false;
         _statusMessage = "The map couldn't be shared: ${e.message}";
       });
     } on BlobStoreUnavailableException catch (e) {
+      if (!mounted) return;
       setState(() {
         _isPreparing = false;
         _statusMessage = "The map couldn't be shared: ${e.message}";
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isPreparing = false;
         final msg = e.toString().replaceFirst('Exception: ', '');
@@ -172,12 +178,9 @@ class _MapViewState extends State<MapView> {
   }
 
   Future<void> _handleClearMap() async {
-    final intakeService = widget.intakeService ??
-        (sl.isRegistered<MapIntakeService>()
-            ? sl<MapIntakeService>()
-            : null);
+    final intakeService = widget.intakeService ?? sl<MapIntakeService>();
     final cId = widget.controller.campaignId;
-    if (intakeService != null && cId != null) {
+    if (cId != null) {
       await intakeService.clearMap(campaignId: cId);
     }
   }

@@ -16,7 +16,13 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/room_banner_widget.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
+import '../test_doubles/fake_blob_network.dart';
+import '../test_doubles/fake_blob_store.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 
 class MockP2pTransport implements IP2pTransportPort {
   String? currentRoomCode;
@@ -103,9 +109,32 @@ class MockNetworkTimePort implements INetworkTimePort {
   Future<int> getNetworkTimeMs() async => DateTime.now().millisecondsSinceEpoch;
 }
 
+class FakePartyRoomService extends Fake implements PartyRoomService {
+  @override
+  Future<CampaignProfile> openRoomProfile(
+    String roomCode, [
+    String? lobbyCampaignId,
+    String? lobbyRulesetId,
+  ]) async {
+    return CampaignProfile.placeholder(
+      id: 'campaign_$roomCode',
+      roomCode: roomCode,
+      name: 'Test Campaign',
+      stagingTitle: 'Test Campaign Staging',
+      createdAt: DateTime.now(),
+      lastPlayedAt: DateTime.now(),
+    );
+  }
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    PartyRoomService.setCustomInstanceForTesting(FakePartyRoomService());
+  });
+
+  tearDown(() {
+    PartyRoomService.setCustomInstanceForTesting(null);
   });
 
   Widget createTestableWidget(Widget child) {
@@ -281,8 +310,29 @@ void main() {
       telemetryInterval: const Duration(milliseconds: 100),
     );
     sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
+    final network = FakeBlobNetwork();
+    final channel = network.createChannel('node');
+    final store = FakeBlobStore();
+    final transfer = BlobTransferService(
+      channel: channel,
+      store: store,
+      servableRefs: () => activeMapServableRefs(orchestrator.campaignRepo),
+    );
+    final mapController = ActiveMapController(
+      campaignRepo: orchestrator.campaignRepo,
+      transfer: transfer,
+      store: store,
+      channel: channel,
+      transportState: () => TransportState.webRtc,
+    );
+    sl.registerSingleton<ActiveMapController>(mapController);
+    sl.registerSingleton<RoomSessionStarter>(
+      RoomSessionStarter(orchestrator: orchestrator, maps: mapController),
+    );
     addTearDown(() {
       orchestrator.stopSynchronization();
+      mapController.dispose();
+      transfer.dispose();
       sl.reset();
     });
 
@@ -319,5 +369,78 @@ void main() {
 
     expect(find.text('Solo Mode'), findsOneWidget);
     expect(mockTransport.isDisconnected, isTrue);
+  });
+
+  testWidgets(
+      'SS1: Banner with an active room code, orchestrator not yet synchronizing: after pumping, orchestrator.isSynchronizing and controller.isStarted are both true',
+      (WidgetTester tester) async {
+    final mockTransport = MockP2pTransport();
+    sl.registerSingleton<IP2pTransportPort>(mockTransport);
+
+    final repo = MockCampaignRepo();
+    final orchestrator = RoomSyncOrchestrator(
+      replicaId: ReplicaId('test_banner_node'),
+      transportPort: mockTransport,
+      payloadMapper: const RoomSyncPayloadMapper(),
+      campaignRepo: repo,
+      reconciliationService: RoomStateReconciliationService(
+        networkTimeProvider: () =>
+            DateTime.now().toUtc().millisecondsSinceEpoch,
+      ),
+      clockSyncService: ClockSyncService(networkTimePort: MockNetworkTimePort()),
+      diceRoomService: DiceRoomService(),
+      clock: StatefulHlcClock(replicaId: ReplicaId('test_banner_node')),
+      telemetryInterval: const Duration(milliseconds: 100),
+    );
+    sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
+
+    final network = FakeBlobNetwork();
+    final channel = network.createChannel('node');
+    final store = FakeBlobStore();
+    final transfer = BlobTransferService(
+      channel: channel,
+      store: store,
+      servableRefs: () => activeMapServableRefs(repo),
+    );
+    final mapController = ActiveMapController(
+      campaignRepo: repo,
+      transfer: transfer,
+      store: store,
+      channel: channel,
+      transportState: () => TransportState.webRtc,
+    );
+    sl.registerSingleton<ActiveMapController>(mapController);
+
+    final starter = RoomSessionStarter(
+      orchestrator: orchestrator,
+      maps: mapController,
+    );
+    sl.registerSingleton<RoomSessionStarter>(starter);
+
+    addTearDown(() {
+      orchestrator.stopSynchronization();
+      mapController.dispose();
+      transfer.dispose();
+      sl.reset();
+    });
+
+    expect(orchestrator.isSynchronizing, isFalse);
+    expect(mapController.isStarted, isFalse);
+
+    await tester.pumpWidget(createTestableWidget(
+      RoomBannerWidget(
+        activeRoomCode: 'ROOM-SS1',
+        playerName: 'Hero',
+        onJoinRoom: (r, p) {},
+        onLeaveRoom: () {},
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(orchestrator.isSynchronizing, isTrue);
+    expect(mapController.isStarted, isTrue);
+
+    orchestrator.stopSynchronization();
+    await tester.pump();
   });
 }

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../application/services/room_sync_orchestrator.dart';
+import '../application/services/room_session_starter.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../models/room_roll.dart';
@@ -93,7 +94,7 @@ class DiceRoomService {
       if (sl.isRegistered<RoomSyncOrchestrator>()) {
         final orchestrator = sl<RoomSyncOrchestrator>();
         if (!orchestrator.isSynchronizing) {
-          orchestrator.startSynchronization();
+          sl<RoomSessionStarter>().start();
         }
       }
     } catch (e, stackTrace) {

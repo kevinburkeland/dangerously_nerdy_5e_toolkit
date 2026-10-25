@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../application/services/cascading_transport_router.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
+import '../application/services/room_session_starter.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../presentation/widgets/room_connection_badge.dart';
@@ -94,7 +95,7 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
           unawaited(() async {
             try {
               await PartyRoomService().openRoomProfile(effectiveRoom);
-              orchestrator.startSynchronization();
+              sl<RoomSessionStarter>().start();
             } catch (e, st) {
               LoggingService().logNonFatal(
                 e,

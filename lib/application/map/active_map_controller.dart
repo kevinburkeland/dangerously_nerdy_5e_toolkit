@@ -218,6 +218,8 @@ class ActiveMapController {
 
   String? get campaignId => _campaignId;
 
+  bool get isStarted => _started;
+
   Stream<ActiveMapViewState> get states {
     late final StreamController<ActiveMapViewState> controller;
     StreamSubscription<ActiveMapViewState>? sub;

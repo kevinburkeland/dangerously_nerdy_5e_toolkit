@@ -6,6 +6,8 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orch
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
@@ -120,6 +122,21 @@ void main() {
 
     test('throws StateError when resolving an unregistered dependency', () {
       expect(() => sl<DateTime>(), throwsStateError);
+    });
+
+    test(
+        'SS5: The registered starter holds identical instances to sl<RoomSyncOrchestrator>() and sl<ActiveMapController>()',
+        () async {
+      await initServiceLocator();
+
+      expect(sl.isRegistered<RoomSessionStarter>(), isTrue);
+      expect(sl.isRegistered<RoomSyncOrchestrator>(), isTrue);
+      expect(sl.isRegistered<ActiveMapController>(), isTrue);
+
+      final starter = sl<RoomSessionStarter>();
+      expect(
+          identical(starter.orchestrator, sl<RoomSyncOrchestrator>()), isTrue);
+      expect(identical(starter.maps, sl<ActiveMapController>()), isTrue);
     });
   });
 }

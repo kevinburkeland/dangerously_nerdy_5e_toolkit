@@ -9,6 +9,7 @@ enum MapRejectReason {
   undecodable,
   outputTooLarge,
   encoderMismatch,
+  orientationMismatch,
 }
 
 final class MapIntakeRejected implements Exception {
@@ -74,8 +75,8 @@ abstract interface class MapImageIntakePort {
   /// Shows the file chooser. Null if the user cancelled.
   Future<MapImageSource?> pick();
 
-  /// Decodes [source] in the browser, scales it to [targetWidth] × [targetHeight],
-  /// and encodes a fresh WebP (or JPEG where WebP can't be encoded).
+  /// Decodes [source] in the browser, scales it to [targetWidth] × [targetHeight]
+  /// (the displayed size), and encodes a fresh WebP (or JPEG where WebP can't be encoded).
   Future<NormalizedMapImage> normalize(
     MapImageSource source, {
     required int targetWidth,

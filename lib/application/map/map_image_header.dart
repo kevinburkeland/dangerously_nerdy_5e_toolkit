@@ -14,11 +14,13 @@ final class MapImageHeader {
   final MapInputFormat format;
   final int width;
   final int height;
+  final bool quarterTurn;
 
   const MapImageHeader({
     required this.format,
     required this.width,
     required this.height,
+    this.quarterTurn = false,
   });
 
   @override
@@ -27,13 +29,15 @@ final class MapImageHeader {
       other is MapImageHeader &&
           format == other.format &&
           width == other.width &&
-          height == other.height;
+          height == other.height &&
+          quarterTurn == other.quarterTurn;
 
   @override
-  int get hashCode => Object.hash(format, width, height);
+  int get hashCode => Object.hash(format, width, height, quarterTurn);
 
   @override
-  String toString() => 'MapImageHeader($format, ${width}x$height)';
+  String toString() =>
+      'MapImageHeader($format, ${width}x$height, quarterTurn: $quarterTurn)';
 }
 
 /// Reads bytes [start, end) of the picked file.
@@ -48,6 +52,43 @@ typedef MapByteRangeReader = Future<Uint8List> Function(int start, int end);
   final targetW = max(1, (width * scale).round());
   final targetH = max(1, (height * scale).round());
   return (width: targetW, height: targetH);
+}
+
+int _readTiffOrientation(Uint8List bytes) {
+  if (bytes.length < 8) return 1;
+  final bd = ByteData.view(bytes.buffer, bytes.offsetInBytes, bytes.length);
+
+  final Endian endian;
+  if (bytes[0] == 0x49 && bytes[1] == 0x49 && bytes[2] == 0x2A && bytes[3] == 0x00) {
+    endian = Endian.little;
+  } else if (bytes[0] == 0x4D && bytes[1] == 0x4D && bytes[2] == 0x00 && bytes[3] == 0x2A) {
+    endian = Endian.big;
+  } else {
+    return 1;
+  }
+
+  final ifd0Offset = bd.getUint32(4, endian);
+  if (ifd0Offset < 8 || ifd0Offset + 2 > bytes.length) return 1;
+
+  final numEntries = bd.getUint16(ifd0Offset, endian);
+  if (ifd0Offset + 2 + numEntries * 12 > bytes.length) return 1;
+
+  for (var i = 0; i < numEntries; i++) {
+    final entryOffset = ifd0Offset + 2 + i * 12;
+    final tag = bd.getUint16(entryOffset, endian);
+    if (tag == 0x0112) {
+      final type = bd.getUint16(entryOffset + 2, endian);
+      final count = bd.getUint32(entryOffset + 4, endian);
+      if (type != 3 || count != 1) return 1;
+      final val = bd.getUint16(entryOffset + 8, endian);
+      if (val >= 1 && val <= 8) {
+        return val;
+      }
+      return 1;
+    }
+  }
+
+  return 1;
 }
 
 Future<MapImageHeader> readMapImageHeader(
@@ -162,6 +203,7 @@ Future<MapImageHeader> readMapImageHeader(
 
   int width = 0;
   int height = 0;
+  bool quarterTurn = false;
 
   // 3. Dimensions
   switch (format) {
@@ -183,10 +225,49 @@ Future<MapImageHeader> readMapImageHeader(
       width = bd.getUint32(8);
       height = bd.getUint32(12);
 
+      // Walk chunks after IHDR: 8 (len + type) + 13 (data) + 4 (crc) = 25 bytes.
+      var chunkOffset = 8 + 4 + 4 + 13 + 4; // 33
+      var chunkCount = 0;
+      bool foundExif = false;
+
+      while (chunkOffset + 8 <= fileSize && chunkCount < 1000) {
+        if (chunkOffset > kMapHeaderScanMaxBytes) {
+          break;
+        }
+        chunkCount++;
+        final cHeader = await safeRead(chunkOffset, chunkOffset + 8);
+        final cbd = ByteData.view(cHeader.buffer, cHeader.offsetInBytes, cHeader.length);
+        final cLen = cbd.getUint32(0);
+        final cType = String.fromCharCodes(cHeader.sublist(4, 8));
+
+        // Reaching IDAT or IEND -> stop
+        if (cType == 'IDAT' || cType == 'IEND') {
+          break;
+        }
+
+        if (chunkOffset + 8 + cLen + 4 > fileSize) {
+          throw const MapIntakeRejected(MapRejectReason.unreadable);
+        }
+
+        if (!foundExif && cType == 'eXIf') {
+          foundExif = true;
+          if (cLen <= 65536) {
+            final exifBytes = await safeRead(chunkOffset + 8, chunkOffset + 8 + cLen);
+            final orientation = _readTiffOrientation(exifBytes);
+            if (orientation >= 5 && orientation <= 8) {
+              quarterTurn = true;
+            }
+          }
+        }
+
+        chunkOffset += 8 + cLen + 4;
+      }
+
     case MapInputFormat.jpeg:
       // Walk segments from offset 2. Skip FF fill bytes.
       var offset = 2;
       bool foundSof = false;
+      bool foundExif = false;
 
       while (offset < fileSize) {
         if (offset > kMapHeaderScanMaxBytes) {
@@ -240,7 +321,7 @@ Future<MapImageHeader> readMapImageHeader(
           foundSof = true;
           break;
         } else {
-          // Other segment: read 2-byte segment length, then skip it
+          // Other segment: read 2-byte segment length
           if (offset + 2 > fileSize) {
             throw const MapIntakeRejected(MapRejectReason.unreadable);
           }
@@ -250,6 +331,24 @@ Future<MapImageHeader> readMapImageHeader(
           if (segLen < 2 || offset + segLen > fileSize) {
             throw const MapIntakeRejected(MapRejectReason.unreadable);
           }
+
+          if (!foundExif && marker == 0xE1 && segLen >= 8) {
+            final head = await safeRead(offset + 2, offset + 8);
+            if (head[0] == 0x45 &&
+                head[1] == 0x78 &&
+                head[2] == 0x69 &&
+                head[3] == 0x66 &&
+                head[4] == 0x00 &&
+                head[5] == 0x00) {
+              foundExif = true;
+              final tiffBytes = await safeRead(offset + 8, offset + segLen);
+              final orientation = _readTiffOrientation(tiffBytes);
+              if (orientation >= 5 && orientation <= 8) {
+                quarterTurn = true;
+              }
+            }
+          }
+
           offset += segLen;
         }
       }
@@ -393,7 +492,7 @@ Future<MapImageHeader> readMapImageHeader(
         throw const MapIntakeRejected(MapRejectReason.unreadable);
       }
 
-      // Read meta box payload into memory to parse iprp -> ipco -> ispe
+      // Read meta box payload into memory to parse ispe, pitm, iprp -> ipco, ipma
       final metaPayload = await safeRead(metaPayloadStart, metaEnd);
       final metaPayloadBd = ByteData.view(metaPayload.buffer, metaPayload.offsetInBytes, metaPayload.length);
 
@@ -401,7 +500,12 @@ Future<MapImageHeader> readMapImageHeader(
       int maxHeight = 0;
       var ispeFound = false;
 
-      // Find iprp inside meta
+      int? primaryItemId;
+      final ipcoProperties = <({String type, int angle})>[];
+      int? ipmaOffset;
+      int? ipmaSize;
+
+      // Scan children of meta: iprp, pitm, etc.
       var pOffset = 0;
       while (pOffset + 8 <= metaPayload.length) {
         final bSize = metaPayloadBd.getUint32(pOffset);
@@ -410,21 +514,32 @@ Future<MapImageHeader> readMapImageHeader(
           throw const MapIntakeRejected(MapRejectReason.unreadable);
         }
 
-        if (bType == 'iprp') {
-          // Inside iprp, find ipco
+        if (bType == 'pitm') {
+          try {
+            if (pOffset + 12 <= metaPayload.length) {
+              final version = metaPayload[pOffset + 8];
+              if (version == 0 && pOffset + 14 <= metaPayload.length) {
+                primaryItemId = metaPayloadBd.getUint16(pOffset + 12);
+              } else if (version != 0 && pOffset + 16 <= metaPayload.length) {
+                primaryItemId = metaPayloadBd.getUint32(pOffset + 12);
+              }
+            }
+          } catch (_) {}
+        } else if (bType == 'iprp') {
+          // Inside iprp, find ipco and ipma
           final iprpEnd = pOffset + bSize;
           var iprpOffset = pOffset + 8;
 
           while (iprpOffset + 8 <= iprpEnd) {
-            final ipcoSize = metaPayloadBd.getUint32(iprpOffset);
-            final ipcoType = String.fromCharCodes(metaPayload.sublist(iprpOffset + 4, iprpOffset + 8));
-            if (ipcoSize < 8 || iprpOffset + ipcoSize > iprpEnd) {
+            final childSize = metaPayloadBd.getUint32(iprpOffset);
+            final childType = String.fromCharCodes(metaPayload.sublist(iprpOffset + 4, iprpOffset + 8));
+            if (childSize < 8 || iprpOffset + childSize > iprpEnd) {
               throw const MapIntakeRejected(MapRejectReason.unreadable);
             }
 
-            if (ipcoType == 'ipco') {
-              // Inside ipco, read every ispe box
-              final ipcoEnd = iprpOffset + ipcoSize;
+            if (childType == 'ipco') {
+              // Inside ipco, read children
+              final ipcoEnd = iprpOffset + childSize;
               var ispeOffset = iprpOffset + 8;
 
               while (ispeOffset + 8 <= ipcoEnd) {
@@ -444,13 +559,25 @@ Future<MapImageHeader> readMapImageHeader(
                   maxWidth = max(maxWidth, ispeWidth);
                   maxHeight = max(maxHeight, ispeHeight);
                   ispeFound = true;
+                  ipcoProperties.add((type: 'ispe', angle: 0));
+                } else if (boxType == 'irot') {
+                  var angle = 0;
+                  if (boxLen >= 9) {
+                    angle = metaPayload[ispeOffset + 8] & 0x03;
+                  }
+                  ipcoProperties.add((type: 'irot', angle: angle));
+                } else {
+                  ipcoProperties.add((type: boxType, angle: 0));
                 }
 
                 ispeOffset += boxLen;
               }
+            } else if (childType == 'ipma') {
+              ipmaOffset = iprpOffset;
+              ipmaSize = childSize;
             }
 
-            iprpOffset += ipcoSize;
+            iprpOffset += childSize;
           }
         }
 
@@ -462,6 +589,71 @@ Future<MapImageHeader> readMapImageHeader(
       }
       width = maxWidth;
       height = maxHeight;
+
+      // If pitm and ipma found, associate primary item
+      if (primaryItemId != null && ipmaOffset != null && ipmaSize != null) {
+        try {
+          final ipmaEnd = ipmaOffset + ipmaSize;
+          if (ipmaOffset + 16 <= ipmaEnd) {
+            final version = metaPayload[ipmaOffset + 8];
+            final flags = (metaPayload[ipmaOffset + 9] << 16) |
+                (metaPayload[ipmaOffset + 10] << 8) |
+                metaPayload[ipmaOffset + 11];
+            final largeAssoc = (flags & 1) != 0;
+            final entryCount = metaPayloadBd.getUint32(ipmaOffset + 12);
+            var curr = ipmaOffset + 16;
+
+            for (var e = 0; e < entryCount && curr < ipmaEnd; e++) {
+              final int itemId;
+              if (version == 0) {
+                if (curr + 2 > ipmaEnd) break;
+                itemId = metaPayloadBd.getUint16(curr);
+                curr += 2;
+              } else {
+                if (curr + 4 > ipmaEnd) break;
+                itemId = metaPayloadBd.getUint32(curr);
+                curr += 4;
+              }
+              if (curr >= ipmaEnd) break;
+              final assocCount = metaPayload[curr];
+              curr += 1;
+
+              for (var a = 0; a < assocCount && curr < ipmaEnd; a++) {
+                final int propIndex;
+                if (largeAssoc) {
+                  if (curr + 2 > ipmaEnd) break;
+                  final assoc = metaPayloadBd.getUint16(curr);
+                  curr += 2;
+                  propIndex = assoc & 0x7FFF;
+                } else {
+                  if (curr + 1 > ipmaEnd) break;
+                  final assoc = metaPayload[curr];
+                  curr += 1;
+                  propIndex = assoc & 0x7F;
+                }
+
+                if (itemId == primaryItemId) {
+                  if (propIndex >= 1 && propIndex <= ipcoProperties.length) {
+                    final prop = ipcoProperties[propIndex - 1];
+                    if (prop.type == 'irot' && (prop.angle == 1 || prop.angle == 3)) {
+                      quarterTurn = true;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (_) {
+          // If pitm or ipma is missing or malformed, treat as not rotated
+        }
+      }
+  }
+
+  // If quarterTurn, displayed width and height are swapped
+  if (quarterTurn) {
+    final temp = width;
+    width = height;
+    height = temp;
   }
 
   // 4. width == 0 or height == 0 -> unreadable.
@@ -482,5 +674,6 @@ Future<MapImageHeader> readMapImageHeader(
     format: format,
     width: width,
     height: height,
+    quarterTurn: quarterTurn,
   );
 }

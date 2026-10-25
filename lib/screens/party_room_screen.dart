@@ -26,7 +26,7 @@ import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../widgets/party/party_vitality_hud.dart';
-import '../application/map/active_map_controller.dart';
+import '../application/services/room_session_starter.dart';
 import '../presentation/screens/map/map_screen.dart';
 
 /// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,
@@ -201,10 +201,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
       }
       try {
         await _partyService.openRoomProfile(_roomCode);
-        orchestrator.startSynchronization();
-        if (sl.isRegistered<ActiveMapController>()) {
-          sl<ActiveMapController>().start();
-        }
+        sl<RoomSessionStarter>().start();
       } catch (e, st) {
         LoggingService().logNonFatal(
           e,

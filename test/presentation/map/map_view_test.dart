@@ -424,5 +424,112 @@ void main() {
       );
       expect(find.byType(MapView), findsOneWidget);
     });
+
+    testWidgets(
+        'NM1: Intake normalize waits on Completer; popping during preparing map does not throw setState after dispose',
+        (tester) async {
+      for (final scenario in ['success', 'rejected', 'exception']) {
+        final completerIntake = _CompleterIntake();
+        final realIntakeService = MapIntakeService(
+          intake: completerIntake,
+          store: store,
+          campaignRepo: repo,
+          clock: StatefulHlcClock(replicaId: ReplicaId('test')),
+        );
+
+        final navKey = GlobalKey<NavigatorState>();
+        await tester.pumpWidget(MaterialApp(
+          navigatorKey: navKey,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => Navigator.of(ctx).push(
+                  MaterialPageRoute(
+                    builder: (_) => Scaffold(
+                      body: MapView(
+                        controller: controller,
+                        intake: completerIntake,
+                        intakeService: realIntakeService,
+                        canEditMap: true,
+                      ),
+                    ),
+                  ),
+                ),
+                child: const Text('Go to map'),
+              ),
+            ),
+          ),
+        ));
+
+        await tester.tap(find.text('Go to map'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Choose map image'), findsOneWidget);
+        await tester.tap(find.text('Choose map image'));
+        await tester.pump();
+        expect(find.text('Preparing map…'), findsOneWidget);
+
+        navKey.currentState!.pop();
+        await tester.pumpAndSettle();
+
+        if (scenario == 'success') {
+          completerIntake.completer.complete(NormalizedMapImage(
+            bytes: _makeValidJpeg(),
+            width: 1,
+            height: 1,
+            format: BlobFormat.jpeg,
+          ));
+        } else if (scenario == 'rejected') {
+          completerIntake.completer.completeError(
+            const MapIntakeRejected(MapRejectReason.orientationMismatch),
+          );
+        } else {
+          completerIntake.completer.completeError(Exception('Network drop'));
+        }
+
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      }
+    });
+
+    testWidgets(
+        'NM2: With no MapIntakeService registered and none passed in, tapping Choose map image throws',
+        (tester) async {
+      final fakeIntake = FakeMapImageIntake();
+      fakeIntake.nextPickResult = FakeMapImageSource(bytes: _makeValidJpeg());
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: MapView(
+            controller: controller,
+            intake: fakeIntake,
+            intakeService: null,
+            canEditMap: true,
+          ),
+        ),
+      ));
+
+      await tester.tap(find.text('Choose map image'));
+      await tester.pump();
+      expect(tester.takeException(), isA<StateError>());
+    });
   });
+}
+
+class _CompleterIntake implements MapImageIntakePort {
+  final completer = Completer<NormalizedMapImage>();
+
+  @override
+  Future<MapImageSource?> pick() async {
+    return FakeMapImageSource(bytes: _makeValidJpeg());
+  }
+
+  @override
+  Future<NormalizedMapImage> normalize(
+    MapImageSource source, {
+    required int targetWidth,
+    required int targetHeight,
+  }) {
+    return completer.future;
+  }
 }
