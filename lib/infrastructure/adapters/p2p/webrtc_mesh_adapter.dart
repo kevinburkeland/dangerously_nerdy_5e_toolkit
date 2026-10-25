@@ -373,6 +373,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
     };
 
     pc.onIceConnectionState = (state) {
+      if (!identical(_peerConnections[peerId], pc)) return;
       if (state == RTCIceConnectionState.RTCIceConnectionStateCompleted ||
           (state == RTCIceConnectionState.RTCIceConnectionStateConnected &&
               _dataChannels[peerId]?.state ==
@@ -422,6 +423,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
     };
 
     dc.onDataChannelState = (state) {
+      if (!identical(_dataChannels[peerId], dc)) return;
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         _peerLastActiveTimestamps[peerId] =
             DateTime.now().millisecondsSinceEpoch;
@@ -495,6 +497,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
     };
 
     dc.onDataChannelState = (state) {
+      if (!identical(_blobDataChannels[peerId], dc)) return;
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         if (!_blobPeersChangedController.isClosed) {
           _blobPeersChangedController.add(openBlobPeers);
@@ -633,6 +636,21 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
 
+    final blobChannels = List<RTCDataChannel>.from(_blobDataChannels.values);
+    _blobDataChannels.clear();
+    _blobSendChains.clear();
+    for (final dc in blobChannels) {
+      try {
+        dc.close();
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'WebRTC blob data channel close failed');
+      }
+    }
+    if (!_blobPeersChangedController.isClosed) {
+      _blobPeersChangedController.add(openBlobPeers);
+    }
+
     await _signalingSubscription?.cancel();
     _signalingSubscription = null;
 
@@ -644,18 +662,6 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
       } catch (e, st) {
         LoggingService().logNonFatal(e, st,
             reason: 'WebRTC data channel close failed');
-      }
-    }
-
-    final blobChannels = List<RTCDataChannel>.from(_blobDataChannels.values);
-    _blobDataChannels.clear();
-    _blobSendChains.clear();
-    for (final dc in blobChannels) {
-      try {
-        dc.close();
-      } catch (e, st) {
-        LoggingService().logNonFatal(e, st,
-            reason: 'WebRTC blob data channel close failed');
       }
     }
 
@@ -674,10 +680,5 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
     await _signalingAdapter?.cleanUpSignalingSession();
     await _incomingPayloadsController.close();
     await _peersChangedController.close();
-    if (!_blobPeersChangedController.isClosed) {
-      _blobPeersChangedController.add(openBlobPeers);
-    }
-    await _blobMessagesController.close();
-    await _blobPeersChangedController.close();
   }
 }

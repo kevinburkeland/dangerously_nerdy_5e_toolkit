@@ -898,6 +898,166 @@ void main() {
         serverService.dispose();
       });
     });
+
+    test('F1a: second fetch joins while put is running: both owners recorded, releases work correctly', () {
+      fakeAsync((async) {
+        final net = FakeBlobNetwork();
+        final dmPort = net.createChannel('dm');
+        final playerPort = net.createChannel('player');
+        net.openChannelBetween('dm', 'player');
+
+        final bytes = _makeWebp(1000);
+        final ref = _makeRef(bytes, BlobFormat.webp);
+
+        final dmProg = ProgrammedServingPeer(
+          peerId: 'dm',
+          channel: dmPort,
+          ref: ref,
+          originalBytes: bytes,
+          behavior: PeerBehavior.honest,
+        )..start();
+
+        final playerStore = FakeBlobStore()..putDelay = const Duration(milliseconds: 50);
+        final playerService = BlobTransferService(
+          channel: playerPort,
+          store: playerStore,
+          servableRefs: () => [],
+        )..start();
+
+        BlobFetchResult? res1;
+        BlobFetchResult? res2;
+        playerService.fetch(ref, campaignId: 'c1').then((r) => res1 = r);
+        async.elapse(const Duration(milliseconds: 20));
+
+        playerService.fetch(ref, campaignId: 'c2').then((r) => res2 = r);
+        async.elapse(const Duration(milliseconds: 100));
+
+        expect(res1, isA<BlobFetched>());
+        expect(res2, isA<BlobFetched>());
+        expect(playerStore.getOwners(ref.sha256Hex), equals({'c1', 'c2'}));
+
+        // Release c1: blob is still there
+        playerStore.releaseCampaign('c1');
+        expect(playerStore.hasSync(ref.sha256Hex), isTrue);
+
+        // Release c2: blob is gone
+        playerStore.releaseCampaign('c2');
+        expect(playerStore.hasSync(ref.sha256Hex), isFalse);
+
+        dmProg.stop();
+        playerService.dispose();
+      });
+    });
+
+    test('F1b: third fetch joins while owner loop is recording second campaign: all three are owners', () {
+      fakeAsync((async) {
+        final net = FakeBlobNetwork();
+        final dmPort = net.createChannel('dm');
+        final playerPort = net.createChannel('player');
+        net.openChannelBetween('dm', 'player');
+
+        final bytes = _makeWebp(1000);
+        final ref = _makeRef(bytes, BlobFormat.webp);
+
+        final dmProg = ProgrammedServingPeer(
+          peerId: 'dm',
+          channel: dmPort,
+          ref: ref,
+          originalBytes: bytes,
+          behavior: PeerBehavior.honest,
+        )..start();
+
+        final playerStore = FakeBlobStore()
+          ..putDelay = const Duration(milliseconds: 50)
+          ..addOwnerDelay = const Duration(milliseconds: 50);
+
+        final playerService = BlobTransferService(
+          channel: playerPort,
+          store: playerStore,
+          servableRefs: () => [],
+        )..start();
+
+        BlobFetchResult? res1;
+        BlobFetchResult? res2;
+        BlobFetchResult? res3;
+
+        // Fetch 1 starts at t=0
+        playerService.fetch(ref, campaignId: 'c1').then((r) => res1 = r);
+        async.elapse(const Duration(milliseconds: 20));
+
+        // Fetch 2 joins while put is running (t=20ms)
+        playerService.fetch(ref, campaignId: 'c2').then((r) => res2 = r);
+
+        // Advance to t=60ms (put finished at t=50ms, owner loop started addOwner for c2)
+        async.elapse(const Duration(milliseconds: 40));
+
+        // Fetch 3 joins while addOwner for c2 is running (t=60ms)
+        playerService.fetch(ref, campaignId: 'c3').then((r) => res3 = r);
+
+        // Advance past all completions
+        async.elapse(const Duration(milliseconds: 150));
+
+        expect(res1, isA<BlobFetched>());
+        expect(res2, isA<BlobFetched>());
+        expect(res3, isA<BlobFetched>());
+        expect(playerStore.getOwners(ref.sha256Hex), equals({'c1', 'c2', 'c3'}));
+
+        dmProg.stop();
+        playerService.dispose();
+      });
+    });
+
+    test('F1c: fetch for c2 joins while put is running and put throws: both callers get error, no owner recorded', () {
+      fakeAsync((async) {
+        final net = FakeBlobNetwork();
+        final dmPort = net.createChannel('dm');
+        final playerPort = net.createChannel('player');
+        net.openChannelBetween('dm', 'player');
+
+        final bytes = _makeWebp(1000);
+        final ref = _makeRef(bytes, BlobFormat.webp);
+
+        final dmProg = ProgrammedServingPeer(
+          peerId: 'dm',
+          channel: dmPort,
+          ref: ref,
+          originalBytes: bytes,
+          behavior: PeerBehavior.honest,
+        )..start();
+
+        final playerStore = FakeBlobStore()
+          ..putDelay = const Duration(milliseconds: 50)
+          ..throwOnPut = true;
+
+        final playerService = BlobTransferService(
+          channel: playerPort,
+          store: playerStore,
+          servableRefs: () => [],
+        )..start();
+
+        Object? err1;
+        Object? err2;
+        playerService.fetch(ref, campaignId: 'c1').catchError((e) {
+          err1 = e;
+          return const BlobFetched();
+        });
+        async.elapse(const Duration(milliseconds: 20));
+
+        playerService.fetch(ref, campaignId: 'c2').catchError((e) {
+          err2 = e;
+          return const BlobFetched();
+        });
+        async.elapse(const Duration(milliseconds: 100));
+
+        expect(err1, isNotNull);
+        expect(err2, isNotNull);
+        expect(playerStore.hasSync(ref.sha256Hex), isFalse);
+        expect(playerStore.getOwners(ref.sha256Hex), isEmpty);
+
+        dmProg.stop();
+        playerService.dispose();
+      });
+    });
   });
 }
 

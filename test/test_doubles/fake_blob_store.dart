@@ -18,6 +18,8 @@ class FakeBlobStore implements BlobStorePort {
 
   bool throwOnPut = false;
   Exception? putException;
+  Duration? putDelay;
+  Duration? addOwnerDelay;
 
   int get count => _blobs.length;
 
@@ -37,7 +39,17 @@ class FakeBlobStore implements BlobStorePort {
 
   @override
   Future<bool> addOwner(String sha256Hex, String campaignId) async {
-    if (!_blobs.containsKey(sha256Hex)) {
+    if (addOwnerDelay != null && addOwnerDelay! > Duration.zero) {
+      await Future<void>.delayed(addOwnerDelay!);
+    }
+    final stored = _blobs[sha256Hex];
+    if (stored == null) {
+      return false;
+    }
+    final verdict = verifyBlob(stored.ref, stored.bytes);
+    if (verdict != BlobVerdict.ok) {
+      _blobs.remove(sha256Hex);
+      _owners.remove(sha256Hex);
       return false;
     }
     _owners.putIfAbsent(sha256Hex, () => {}).add(campaignId);
@@ -52,6 +64,10 @@ class FakeBlobStore implements BlobStorePort {
   }) async {
     putAttempts.add(PutAttempt(ref, bytes, campaignId));
 
+    if (putDelay != null && putDelay! > Duration.zero) {
+      await Future<void>.delayed(putDelay!);
+    }
+
     if (throwOnPut) {
       throw putException ?? StateError('FakeBlobStore: simulated write failure on put');
     }
@@ -61,7 +77,14 @@ class FakeBlobStore implements BlobStorePort {
       throw BlobRejectedException(verdict);
     }
 
-    if (_blobs.containsKey(ref.sha256Hex)) {
+    final existing = _blobs[ref.sha256Hex];
+    if (existing != null) {
+      final existingVerdict = verifyBlob(existing.ref, existing.bytes);
+      if (existingVerdict != BlobVerdict.ok) {
+        _blobs[ref.sha256Hex] = StoredBlob(ref, bytes);
+        _owners[ref.sha256Hex] = {campaignId};
+        return;
+      }
       _owners.putIfAbsent(ref.sha256Hex, () => {}).add(campaignId);
       return;
     }

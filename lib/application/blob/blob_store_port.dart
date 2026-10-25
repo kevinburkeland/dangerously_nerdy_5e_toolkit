@@ -54,8 +54,9 @@ class BlobNotFoundException implements Exception {
 
 class BlobCorruptException implements Exception {
   final String sha256Hex;
-  final BlobVerdict verdict;
-  const BlobCorruptException(this.sha256Hex, this.verdict);
+  /// The verification verdict, or null if the record could not be read.
+  final BlobVerdict? verdict;
+  const BlobCorruptException(this.sha256Hex, [this.verdict]);
 
   @override
   String toString() => 'BlobCorruptException($sha256Hex, $verdict)';
@@ -65,10 +66,13 @@ abstract interface class BlobStorePort {
   Future<bool> has(String sha256Hex);
 
   /// Adds [campaignId] as an owner if the blob is stored. Returns false if it isn't.
+  /// If the stored entry fails verifyBlob or is unreadable, deletes it and returns false.
   Future<bool> addOwner(String sha256Hex, String campaignId);
 
   /// Verifies with verifyBlob first. On anything but ok: throws BlobRejectedException(verdict)
   /// and writes nothing. If the hash is already stored, only adds the owner.
+  /// If the existing entry fails verifyBlob or is unreadable, replaces it with a fresh
+  /// record whose owners are just this campaign.
   Future<void> put(BlobRef ref, Uint8List bytes, {required String campaignId});
 
   /// Returns the stored ref and bytes after re-checking them with verifyBlob.

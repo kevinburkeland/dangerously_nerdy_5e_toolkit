@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -230,5 +231,343 @@ void main() {
       expect(stored.bytes.length, equals(10485760));
       expect(sha256.convert(stored.bytes).toString(), equals(ref.sha256Hex));
     });
+
+    group('W7: five unreadable record shapes reject on get with verdict == null, has becomes false', () {
+      final shapes = {
+        'plain string': 'just a plain string'.toJS,
+        'ref missing': {
+          'bytes': Uint8List(10).toJS,
+          'owners': ['c1'.toJS].toJS,
+        }.jsify()!,
+        'ref.byteSize is oops': {
+          'ref': {
+            'sha256Hex': 'aa' * 32,
+            'byteSize': 'oops',
+            'width': 100,
+            'height': 100,
+            'format': 'webp',
+          },
+          'bytes': Uint8List(10).toJS,
+          'owners': ['c1'.toJS].toJS,
+        }.jsify()!,
+        'bytes is a string': {
+          'ref': {
+            'sha256Hex': 'bb' * 32,
+            'byteSize': 10,
+            'width': 100,
+            'height': 100,
+            'format': 'webp',
+          },
+          'bytes': 'not_a_byte_array',
+          'owners': ['c1'.toJS].toJS,
+        }.jsify()!,
+        'owners is a number': {
+          'ref': {
+            'sha256Hex': 'cc' * 32,
+            'byteSize': 10,
+            'width': 100,
+            'height': 100,
+            'format': 'webp',
+          },
+          'bytes': Uint8List(10).toJS,
+          'owners': 42,
+        }.jsify()!,
+      };
+
+      for (final entry in shapes.entries) {
+        test('W7 (${entry.key}): get throws BlobCorruptException(verdict == null), has is false', () async {
+          final hash = 'deadbeef' * 8;
+          await _insertRawRecord(dbName, hash, entry.value);
+
+          final adapter = createAdapter();
+          await expectLater(
+            adapter.get(hash).timeout(const Duration(seconds: 2)),
+            throwsA(
+              predicate<BlobCorruptException>(
+                (e) => e.sha256Hex == hash && e.verdict == null,
+              ),
+            ),
+          );
+
+          expect(await adapter.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+        });
+      }
+    });
+
+    group('W8: five unreadable record shapes handle addOwner, put, and releaseCampaign cleanly', () {
+      final shapes = {
+        'plain string': 'just a plain string'.toJS,
+        'ref missing': {
+          'bytes': Uint8List(10).toJS,
+          'owners': ['c1'.toJS].toJS,
+        }.jsify()!,
+        'ref.byteSize is oops': {
+          'ref': {
+            'sha256Hex': 'aa' * 32,
+            'byteSize': 'oops',
+            'width': 100,
+            'height': 100,
+            'format': 'webp',
+          },
+          'bytes': Uint8List(10).toJS,
+          'owners': ['c1'.toJS].toJS,
+        }.jsify()!,
+        'bytes is a string': {
+          'ref': {
+            'sha256Hex': 'bb' * 32,
+            'byteSize': 10,
+            'width': 100,
+            'height': 100,
+            'format': 'webp',
+          },
+          'bytes': 'not_a_byte_array',
+          'owners': ['c1'.toJS].toJS,
+        }.jsify()!,
+        'owners is a number': {
+          'ref': {
+            'sha256Hex': 'cc' * 32,
+            'byteSize': 10,
+            'width': 100,
+            'height': 100,
+            'format': 'webp',
+          },
+          'bytes': Uint8List(10).toJS,
+          'owners': 42,
+        }.jsify()!,
+      };
+
+      for (final entry in shapes.entries) {
+        test('W8 (${entry.key}): addOwner returns false and removes record, put succeeds, releaseCampaign completes', () async {
+          final bytes = _makeWebp(500);
+          final ref = _makeRef(bytes, BlobFormat.webp);
+          final hash = ref.sha256Hex;
+
+          // 1. addOwner returns false and record is gone
+          final dbName1 = '${dbName}_w8_add_${entry.key.replaceAll(' ', '_')}';
+          await _insertRawRecord(dbName1, hash, entry.value);
+          final adapter1 = BlobStoreAdapter(databaseName: dbName1);
+          adaptersToClose.add(adapter1);
+          expect(await adapter1.addOwner(hash, 'new_owner').timeout(const Duration(seconds: 2)), isFalse);
+          expect(await adapter1.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+          await adapter1.close();
+          await _deleteIndexedDb(dbName1);
+
+          // 2. put of good bytes under hash succeeds, get returns good bytes, releasing campaign removes it
+          final dbName2 = '${dbName}_w8_put_${entry.key.replaceAll(' ', '_')}';
+          await _insertRawRecord(dbName2, hash, entry.value);
+          final adapter2 = BlobStoreAdapter(databaseName: dbName2);
+          adaptersToClose.add(adapter2);
+          await adapter2.put(ref, bytes, campaignId: 'c1').timeout(const Duration(seconds: 2));
+          final stored = await adapter2.get(hash).timeout(const Duration(seconds: 2));
+          expect(stored.bytes, equals(bytes));
+          await adapter2.releaseCampaign('c1').timeout(const Duration(seconds: 2));
+          expect(await adapter2.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+          await adapter2.close();
+          await _deleteIndexedDb(dbName2);
+
+          // 3. releaseCampaign('x') completes and record is gone
+          final dbName3 = '${dbName}_w8_rel_${entry.key.replaceAll(' ', '_')}';
+          await _insertRawRecord(dbName3, hash, entry.value);
+          final adapter3 = BlobStoreAdapter(databaseName: dbName3);
+          adaptersToClose.add(adapter3);
+          await adapter3.releaseCampaign('x').timeout(const Duration(seconds: 2));
+          expect(await adapter3.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+          await adapter3.close();
+          await _deleteIndexedDb(dbName3);
+        });
+      }
+    });
+
+    test('W9: readable record with flipped byte: addOwner returns false and deletes; put replaces with good bytes', () async {
+      final goodBytes = _makeWebp(1024);
+      final ref = _makeRef(goodBytes, BlobFormat.webp);
+      final hash = ref.sha256Hex;
+
+      final damagedBytes = Uint8List.fromList(goodBytes);
+      damagedBytes[15] ^= 0xFF;
+
+      final damagedRecord = {
+        'ref': ref.toMap(),
+        'bytes': damagedBytes.toJS,
+        'owners': ['campaign_A'],
+      }.jsify()!;
+
+      // 1. addOwner(hash, 'B') returns false and record is gone
+      final dbName1 = '${dbName}_w9_addOwner';
+      await _insertRawRecord(dbName1, hash, damagedRecord);
+      final adapter1 = BlobStoreAdapter(databaseName: dbName1);
+      adaptersToClose.add(adapter1);
+      expect(await adapter1.addOwner(hash, 'campaign_B').timeout(const Duration(seconds: 2)), isFalse);
+      expect(await adapter1.has(hash).timeout(const Duration(seconds: 2)), isFalse);
+      await adapter1.close();
+      await _deleteIndexedDb(dbName1);
+
+      // 2. In fresh database with damaged record: put of good bytes succeeds and get returns good bytes
+      final dbName2 = '${dbName}_w9_put';
+      await _insertRawRecord(dbName2, hash, damagedRecord);
+      final adapter2 = BlobStoreAdapter(databaseName: dbName2);
+      adaptersToClose.add(adapter2);
+      await adapter2.put(ref, goodBytes, campaignId: 'campaign_B').timeout(const Duration(seconds: 2));
+      final stored = await adapter2.get(hash).timeout(const Duration(seconds: 2));
+      expect(stored.bytes, equals(goodBytes));
+      await adapter2.close();
+      await _deleteIndexedDb(dbName2);
+    });
+
+    group('W10: aborted transaction throws within 2s, leaves store unchanged; control succeeds', () {
+      Future<BlobStoreAdapter> createWrappingAdapter({
+        required String targetDbName,
+        required bool shouldAbort,
+      }) async {
+        Future<web.IDBDatabase> wrappingOpener() async {
+          final openCompleter = Completer<web.IDBDatabase>();
+          final openReq = web.window.indexedDB.open(targetDbName, 1);
+          openReq.onupgradeneeded = ((web.IDBVersionChangeEvent _) {
+            final db = openReq.result as web.IDBDatabase;
+            if (!db.objectStoreNames.contains('blobs')) {
+              db.createObjectStore('blobs');
+            }
+          }).toJS;
+          openReq.onsuccess = ((web.Event _) {
+            openCompleter.complete(openReq.result as web.IDBDatabase);
+          }).toJS;
+          openReq.onerror = ((web.Event _) {
+            openCompleter.completeError(StateError('Failed to open test IDB'));
+          }).toJS;
+          final db = await openCompleter.future;
+
+          final origFn = (db as JSObject).getProperty<JSFunction>('transaction'.toJS);
+          final wrapper = ((JSAny storeNames, JSAny? mode) {
+            final tx = origFn.callAsFunction(db, storeNames, mode) as web.IDBTransaction;
+            if (shouldAbort) {
+              final probe = tx.objectStore('blobs').get('__abort_probe__'.toJS);
+              probe.onsuccess = ((web.Event _) {
+                try {
+                  tx.abort();
+                } catch (_) {}
+              }).toJS;
+            }
+            return tx;
+          }).toJS;
+
+          (db as JSObject).setProperty('transaction'.toJS, wrapper);
+          return db;
+        }
+
+        final adapter = BlobStoreAdapter(databaseName: targetDbName, opener: wrappingOpener);
+        adaptersToClose.add(adapter);
+        return adapter;
+      }
+
+      test('W10: aborted put of new blob throws within 2s, has is false', () async {
+        final bytes = _makeWebp(500);
+        final ref = _makeRef(bytes, BlobFormat.webp);
+
+        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
+        await expectLater(
+          adapter.put(ref, bytes, campaignId: 'c1').timeout(const Duration(seconds: 2)),
+          throwsA(anything),
+        );
+
+        final verifyAdapter = BlobStoreAdapter(databaseName: dbName);
+        adaptersToClose.add(verifyAdapter);
+        expect(await verifyAdapter.has(ref.sha256Hex).timeout(const Duration(seconds: 2)), isFalse);
+      });
+
+      test('W10: aborted addOwner of new owner throws within 2s, new owner was not recorded', () async {
+        final bytes = _makeWebp(500);
+        final ref = _makeRef(bytes, BlobFormat.webp);
+
+        // Pre-store with regular adapter
+        final setupAdapter = createAdapter();
+        await setupAdapter.put(ref, bytes, campaignId: 'c_orig').timeout(const Duration(seconds: 2));
+        await setupAdapter.close();
+
+        // Aborted addOwner
+        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
+        await expectLater(
+          adapter.addOwner(ref.sha256Hex, 'c_new').timeout(const Duration(seconds: 2)),
+          throwsA(anything),
+        );
+
+        // Releasing original owner deletes blob because c_new was never recorded
+        final verifyAdapter = BlobStoreAdapter(databaseName: dbName);
+        adaptersToClose.add(verifyAdapter);
+        await verifyAdapter.releaseCampaign('c_orig').timeout(const Duration(seconds: 2));
+        expect(await verifyAdapter.has(ref.sha256Hex).timeout(const Duration(seconds: 2)), isFalse);
+      });
+
+      test('W10: aborted releaseCampaign throws within 2s, blob is still stored', () async {
+        final bytes = _makeWebp(500);
+        final ref = _makeRef(bytes, BlobFormat.webp);
+
+        // Pre-store with regular adapter
+        final setupAdapter = createAdapter();
+        await setupAdapter.put(ref, bytes, campaignId: 'c_keep').timeout(const Duration(seconds: 2));
+        await setupAdapter.close();
+
+        // Aborted releaseCampaign
+        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: true);
+        await expectLater(
+          adapter.releaseCampaign('c_keep').timeout(const Duration(seconds: 2)),
+          throwsA(anything),
+        );
+
+        // Blob is still stored
+        final verifyAdapter = BlobStoreAdapter(databaseName: dbName);
+        adaptersToClose.add(verifyAdapter);
+        expect(await verifyAdapter.has(ref.sha256Hex).timeout(const Duration(seconds: 2)), isTrue);
+      });
+
+      test('W10: control with abort switched off: put, addOwner, releaseCampaign all succeed', () async {
+        final bytes = _makeWebp(500);
+        final ref = _makeRef(bytes, BlobFormat.webp);
+
+        final adapter = await createWrappingAdapter(targetDbName: dbName, shouldAbort: false);
+
+        // put succeeds
+        await adapter.put(ref, bytes, campaignId: 'c_orig').timeout(const Duration(seconds: 2));
+        expect(await adapter.has(ref.sha256Hex).timeout(const Duration(seconds: 2)), isTrue);
+
+        // addOwner succeeds
+        expect(await adapter.addOwner(ref.sha256Hex, 'c_new').timeout(const Duration(seconds: 2)), isTrue);
+
+        // release c_orig: still there because c_new owns it
+        await adapter.releaseCampaign('c_orig').timeout(const Duration(seconds: 2));
+        expect(await adapter.has(ref.sha256Hex).timeout(const Duration(seconds: 2)), isTrue);
+
+        // release c_new: now gone
+        await adapter.releaseCampaign('c_new').timeout(const Duration(seconds: 2));
+        expect(await adapter.has(ref.sha256Hex).timeout(const Duration(seconds: 2)), isFalse);
+      });
+    });
   });
+}
+
+Future<void> _insertRawRecord(String dbName, String sha256Hex, JSAny record) async {
+  final openCompleter = Completer<web.IDBDatabase>();
+  final openReq = web.window.indexedDB.open(dbName, 1);
+  openReq.onupgradeneeded = ((web.IDBVersionChangeEvent _) {
+    final db = openReq.result as web.IDBDatabase;
+    if (!db.objectStoreNames.contains('blobs')) {
+      db.createObjectStore('blobs');
+    }
+  }).toJS;
+  openReq.onsuccess = ((web.Event _) {
+    openCompleter.complete(openReq.result as web.IDBDatabase);
+  }).toJS;
+  openReq.onerror = ((web.Event _) {
+    openCompleter.completeError(StateError('Failed to open test IDB'));
+  }).toJS;
+  final db = await openCompleter.future;
+
+  final tx = db.transaction('blobs'.toJS, 'readwrite');
+  final store = tx.objectStore('blobs');
+  store.put(record, sha256Hex.toJS);
+
+  final txCompleter = Completer<void>();
+  tx.oncomplete = ((web.Event _) => txCompleter.complete()).toJS;
+  tx.onerror = ((web.Event _) => txCompleter.completeError(StateError('Raw put failed'))).toJS;
+  await txCompleter.future;
+  db.close();
 }

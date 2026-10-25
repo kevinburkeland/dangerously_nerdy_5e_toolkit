@@ -258,11 +258,15 @@ class BlobTransferService {
     () async {
       try {
         final result = await _executeFetch(download);
-        download.completer.complete(result);
+        if (!download.completer.isCompleted) {
+          _activeDownloads.remove(hash);
+          download.completer.complete(result);
+        }
       } catch (e, st) {
-        download.completer.completeError(e, st);
-      } finally {
         _activeDownloads.remove(hash);
+        if (!download.completer.isCompleted) {
+          download.completer.completeError(e, st);
+        }
       }
     }();
 
@@ -424,11 +428,22 @@ class BlobTransferService {
 
         final verdict = verifyBlob(ref, fullBytes);
         if (verdict == BlobVerdict.ok) {
-          final campaigns = download.campaignIds.toList();
-          final firstCampaign = campaigns.first;
+          final recordedOwners = <String>{};
+          final firstCampaign = download.campaignIds.first;
           await store.put(ref, fullBytes, campaignId: firstCampaign);
-          for (var i = 1; i < campaigns.length; i++) {
-            await store.addOwner(ref.sha256Hex, campaigns[i]);
+          recordedOwners.add(firstCampaign);
+
+          while (true) {
+            final unrecorded = download.campaignIds.difference(recordedOwners);
+            if (unrecorded.isEmpty) {
+              _activeDownloads.remove(ref.sha256Hex);
+              download.completer.complete(const BlobFetched());
+              break;
+            }
+            for (final c in unrecorded.toList()) {
+              await store.addOwner(ref.sha256Hex, c);
+              recordedOwners.add(c);
+            }
           }
           return const BlobFetched();
         } else {

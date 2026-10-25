@@ -1,10 +1,14 @@
 import 'dart:typed_data';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_channel_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_signaling_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/signaling_message.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/webrtc_mesh_adapter.dart';
+import '../../test_doubles/fake_blob_store.dart';
 
 class FakeRTCDataChannel implements RTCDataChannel {
   @override
@@ -31,6 +35,9 @@ class FakeRTCDataChannel implements RTCDataChannel {
   @override
   RTCDataChannelState? state = RTCDataChannelState.RTCDataChannelConnecting;
 
+  bool delayCloseEvent = false;
+  void Function(RTCDataChannelState state)? heldCloseHandler;
+
   FakeRTCDataChannel({
     this.label,
     this.bufferedAmount = 0,
@@ -47,7 +54,15 @@ class FakeRTCDataChannel implements RTCDataChannel {
   Future<void> close() async {
     isClosed = true;
     state = RTCDataChannelState.RTCDataChannelClosed;
-    onDataChannelState?.call(RTCDataChannelState.RTCDataChannelClosed);
+    if (delayCloseEvent) {
+      heldCloseHandler = onDataChannelState;
+    } else {
+      onDataChannelState?.call(RTCDataChannelState.RTCDataChannelClosed);
+    }
+  }
+
+  void deliverHeldCloseEvent() {
+    heldCloseHandler?.call(RTCDataChannelState.RTCDataChannelClosed);
   }
 
   @override
@@ -79,6 +94,20 @@ class FakeRTCPeerConnection implements RTCPeerConnection {
 
   @override
   void Function(RTCIceConnectionState state)? onIceConnectionState;
+
+  void Function(RTCIceConnectionState state)? heldIceHandler;
+  RTCIceConnectionState? heldIceState;
+
+  void holdIceState(RTCIceConnectionState state) {
+    heldIceHandler = onIceConnectionState;
+    heldIceState = state;
+  }
+
+  void deliverHeldIceEvent() {
+    if (heldIceState != null) {
+      heldIceHandler?.call(heldIceState!);
+    }
+  }
 
   @override
   void Function(RTCDataChannel channel)? onDataChannel;
@@ -909,6 +938,507 @@ void main() {
       expect(testAdapter.openBlobPeers, isEmpty);
 
       await peerSub.cancel();
+    });
+
+    test('D1a: blob stream controllers stay open across 3 disconnect/initialize cycles', () async {
+      final connectionFactory = FakeRtcPeerConnectionFactory();
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: connectionFactory,
+      );
+
+      bool blobMessagesDone = false;
+      final receivedBlobMessages = <BlobChannelMessage>[];
+      final blobSub = testAdapter.blobMessages.listen(
+        receivedBlobMessages.add,
+        onDone: () => blobMessagesDone = true,
+      );
+
+      bool blobPeersDone = false;
+      final receivedPeerEvents = <Set<String>>[];
+      final peersSub = testAdapter.onBlobPeersChanged.listen(
+        receivedPeerEvents.add,
+        onDone: () => blobPeersDone = true,
+      );
+
+      // Cycle 1
+      await testAdapter.initializeRoom('ROOM-D1', 'node-local');
+      final pc1 = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pc1;
+      await testAdapter.connectToPeer('peer-rejoin');
+      final blobDc1 = pc1.channelsByLabel['dn5e_blob']!;
+      blobDc1.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc1.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      blobDc1.onMessage?.call(RTCDataChannelMessage.fromBinary(Uint8List.fromList([1, 2, 3])));
+      blobDc1.onMessage?.call(RTCDataChannelMessage('text-1'));
+      await Future<void>.delayed(Duration.zero);
+      await testAdapter.disconnect();
+
+      // Cycle 2 (same peer id rejoining)
+      await testAdapter.initializeRoom('ROOM-D1', 'node-local');
+      final pc2 = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pc2;
+      await testAdapter.connectToPeer('peer-rejoin');
+      final blobDc2 = pc2.channelsByLabel['dn5e_blob']!;
+      blobDc2.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc2.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      blobDc2.onMessage?.call(RTCDataChannelMessage.fromBinary(Uint8List.fromList([4, 5, 6])));
+      blobDc2.onMessage?.call(RTCDataChannelMessage('text-2'));
+      await Future<void>.delayed(Duration.zero);
+      await testAdapter.disconnect();
+
+      // Cycle 3 (same peer id + second new peer id)
+      await testAdapter.initializeRoom('ROOM-D1', 'node-local');
+      final pc3A = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pc3A;
+      await testAdapter.connectToPeer('peer-rejoin');
+      final blobDc3A = pc3A.channelsByLabel['dn5e_blob']!;
+      blobDc3A.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc3A.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      blobDc3A.onMessage?.call(RTCDataChannelMessage.fromBinary(Uint8List.fromList([7, 8, 9])));
+      blobDc3A.onMessage?.call(RTCDataChannelMessage('text-3A'));
+
+      final pc3B = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pc3B;
+      await testAdapter.connectToPeer('peer-new');
+      final blobDc3B = pc3B.channelsByLabel['dn5e_blob']!;
+      blobDc3B.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc3B.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      blobDc3B.onMessage?.call(RTCDataChannelMessage.fromBinary(Uint8List.fromList([10, 11, 12])));
+      blobDc3B.onMessage?.call(RTCDataChannelMessage('text-3B'));
+      await Future<void>.delayed(Duration.zero);
+      await testAdapter.disconnect();
+
+      expect(blobMessagesDone, isFalse);
+      expect(blobPeersDone, isFalse);
+
+      final texts = receivedBlobMessages.where((m) => m.isText).map((m) => m.text).toList();
+      expect(texts, equals(['text-1', 'text-2', 'text-3A', 'text-3B']));
+
+      final binaryBytes = receivedBlobMessages.where((m) => m.isBinary).map((m) => m.bytes!).toList();
+      expect(binaryBytes.length, equals(4));
+      expect(binaryBytes[0], equals(Uint8List.fromList([1, 2, 3])));
+      expect(binaryBytes[1], equals(Uint8List.fromList([4, 5, 6])));
+      expect(binaryBytes[2], equals(Uint8List.fromList([7, 8, 9])));
+      expect(binaryBytes[3], equals(Uint8List.fromList([10, 11, 12])));
+
+      final hasOpenRejoin = receivedPeerEvents.any((s) => s.contains('peer-rejoin'));
+      final hasOpenNew = receivedPeerEvents.any((s) => s.contains('peer-new'));
+      expect(hasOpenRejoin, isTrue);
+      expect(hasOpenNew, isTrue);
+
+      await blobSub.cancel();
+      await peersSub.cancel();
+    });
+
+    test('D1b: control: mesh text message on newest connection arrives on watchIncomingPayloads after cycles', () async {
+      final connectionFactory = FakeRtcPeerConnectionFactory();
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: connectionFactory,
+      );
+
+      // 2 prior disconnect/initialize cycles
+      for (var i = 0; i < 2; i++) {
+        await testAdapter.initializeRoom('ROOM-D1B', 'node-local');
+        final pc = FakeRTCPeerConnection();
+        connectionFactory.nextConnection = pc;
+        await testAdapter.connectToPeer('peer-old');
+        await testAdapter.disconnect();
+      }
+
+      // 3rd cycle
+      await testAdapter.initializeRoom('ROOM-D1B', 'node-local');
+      final pcNew = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pcNew;
+      await testAdapter.connectToPeer('peer-new');
+
+      final meshMsgs = <String>[];
+      final meshSub = testAdapter.watchIncomingPayloads().listen(meshMsgs.add);
+
+      final meshDc = pcNew.channelsByLabel['dn5e_mesh']!;
+      meshDc.onMessage?.call(RTCDataChannelMessage('hello-mesh-after-cycles'));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(meshMsgs, contains('hello-mesh-after-cycles'));
+      await meshSub.cancel();
+      await testAdapter.disconnect();
+    });
+
+    test('D1c: BlobTransferService started once before disconnect/initialize sends want on new connection', () async {
+      final connectionFactory = FakeRtcPeerConnectionFactory();
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: connectionFactory,
+      );
+      final fakeStore = FakeBlobStore();
+      final service = BlobTransferService(
+        channel: testAdapter,
+        store: fakeStore,
+        servableRefs: () => [],
+      );
+      service.start();
+
+      await testAdapter.initializeRoom('ROOM-D1C', 'node-local');
+      await testAdapter.disconnect();
+
+      await testAdapter.initializeRoom('ROOM-D1C', 'node-local');
+      final pc = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pc;
+      await testAdapter.connectToPeer('node-peer-d1c');
+
+      final blobDc = pc.channelsByLabel['dn5e_blob']!;
+      blobDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      final ref = BlobRef(
+        sha256Hex: 'aa' * 32,
+        byteSize: 100,
+        width: 100,
+        height: 100,
+        format: BlobFormat.webp,
+      );
+
+      service.fetch(ref, campaignId: 'c1');
+      await Future<void>.delayed(Duration.zero);
+
+      final sentWants = blobDc.sentMessages.where((m) => m.text.contains('"want"') == true).toList();
+      expect(sentWants, hasLength(1));
+
+      service.dispose();
+      await testAdapter.disconnect();
+    });
+
+    test('D1d: fetch in progress when disconnect() called returns BlobFetchIncomplete before stallTimeout', () {
+      fakeAsync((async) {
+        final connectionFactory = FakeRtcPeerConnectionFactory();
+        final testAdapter = WebRtcMeshAdapter(
+          signalingAdapter: signalingAdapter,
+          connectionFactory: connectionFactory,
+        );
+        final fakeStore = FakeBlobStore();
+        final service = BlobTransferService(
+          channel: testAdapter,
+          store: fakeStore,
+          servableRefs: () => [],
+          stallTimeout: const Duration(seconds: 10),
+        );
+        service.start();
+
+        testAdapter.initializeRoom('ROOM-D1D', 'node-local');
+        async.flushMicrotasks();
+
+        final pc = FakeRTCPeerConnection();
+        connectionFactory.nextConnection = pc;
+        testAdapter.connectToPeer('peer-d1d');
+        async.flushMicrotasks();
+
+        final blobDc = pc.channelsByLabel['dn5e_blob']!;
+        blobDc.state = RTCDataChannelState.RTCDataChannelOpen;
+        blobDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+        async.flushMicrotasks();
+
+        final ref = BlobRef(
+          sha256Hex: 'bb' * 32,
+          byteSize: 100,
+          width: 100,
+          height: 100,
+          format: BlobFormat.webp,
+        );
+
+        BlobFetchResult? fetchResult;
+        service.fetch(ref, campaignId: 'c1').then((res) => fetchResult = res);
+        async.flushMicrotasks();
+
+        // disconnect during fetch
+        testAdapter.disconnect();
+        async.elapse(const Duration(milliseconds: 50));
+
+        expect(fetchResult, isA<BlobFetchIncomplete>());
+        expect(fakeStore.hasSync(ref.sha256Hex), isFalse);
+
+        service.dispose();
+      });
+    });
+
+    test('O1a: late close of replaced blob channel does not prune or close replacement', () async {
+      final inFlightPc = FakeRTCPeerConnection()..throwOnRollback = true;
+      final replacementPc = FakeRTCPeerConnection();
+      var pcCount = 0;
+      final dynamicFactory = _DynamicFactory((_) {
+        pcCount++;
+        return pcCount == 1 ? inFlightPc : replacementPc;
+      });
+
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: dynamicFactory,
+      );
+
+      await testAdapter.initializeRoom('ROOM-O1A', 'node-A'); // Node A < Node Z -> polite
+      await testAdapter.connectToPeer('node-Z'); // inFlightPc created
+      final oldBlobDc = inFlightPc.channelsByLabel['dn5e_blob']!;
+      oldBlobDc.delayCloseEvent = true;
+      oldBlobDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      oldBlobDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+
+      final emittedPeers = <Set<String>>[];
+      final sub = testAdapter.onBlobPeersChanged.listen(emittedPeers.add);
+
+      // Colliding offer triggers rollback failure and replacement connection
+      final collidingOffer = SignalingMessage(
+        id: 'offer-colliding',
+        roomCode: 'ROOM-O1A',
+        fromNodeId: 'node-Z',
+        toNodeId: 'node-A',
+        type: SignalingType.offer,
+        sdp: 'v=0\r\no=sdp-colliding',
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+      signalingAdapter.emitIncomingSignal(collidingOffer);
+      await Future<void>.delayed(Duration.zero);
+
+      final newBlobDc = replacementPc.channelsByLabel['dn5e_blob']!;
+      newBlobDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      newBlobDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.openBlobPeers, contains('node-Z'));
+
+      emittedPeers.clear();
+      // Deliver old blob channel close event
+      oldBlobDc.deliverHeldCloseEvent();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.openBlobPeers, contains('node-Z'));
+      expect(emittedPeers.any((s) => !s.contains('node-Z')), isFalse);
+      expect(newBlobDc.isClosed, isFalse);
+
+      final frame = Uint8List(37);
+      await testAdapter.sendBlobFrame('node-Z', frame);
+      expect(newBlobDc.sentMessages, hasLength(1));
+
+      await sub.cancel();
+      await testAdapter.disconnect();
+    });
+
+    test('O1b: late close of replaced mesh channel does not prune replacement connection or channels', () async {
+      final inFlightPc = FakeRTCPeerConnection()..throwOnRollback = true;
+      final replacementPc = FakeRTCPeerConnection();
+      var pcCount = 0;
+      final dynamicFactory = _DynamicFactory((_) {
+        pcCount++;
+        return pcCount == 1 ? inFlightPc : replacementPc;
+      });
+
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: dynamicFactory,
+      );
+
+      await testAdapter.initializeRoom('ROOM-O1B', 'node-A');
+      await testAdapter.connectToPeer('node-Z');
+      final oldMeshDc = inFlightPc.dataChannel;
+      oldMeshDc.delayCloseEvent = true;
+
+      final collidingOffer = SignalingMessage(
+        id: 'offer-colliding',
+        roomCode: 'ROOM-O1B',
+        fromNodeId: 'node-Z',
+        toNodeId: 'node-A',
+        type: SignalingType.offer,
+        sdp: 'v=0\r\no=sdp-colliding',
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+      signalingAdapter.emitIncomingSignal(collidingOffer);
+      await Future<void>.delayed(Duration.zero);
+
+      final newMeshDc = replacementPc.dataChannel;
+      replacementPc.onDataChannel?.call(newMeshDc);
+      newMeshDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      newMeshDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      final newBlobDc = replacementPc.channelsByLabel['dn5e_blob']!;
+      newBlobDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      newBlobDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.connectedPeers, contains('node-Z'));
+
+      oldMeshDc.deliverHeldCloseEvent();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.connectedPeers, contains('node-Z'));
+      expect(replacementPc.isClosed, isFalse);
+      expect(newMeshDc.isClosed, isFalse);
+      expect(newBlobDc.isClosed, isFalse);
+
+      await testAdapter.disconnect();
+    });
+
+    test('O1c: late ICE failed from old peer connection does not prune replacement', () async {
+      final inFlightPc = FakeRTCPeerConnection()..throwOnRollback = true;
+      final replacementPc = FakeRTCPeerConnection();
+      var pcCount = 0;
+      final dynamicFactory = _DynamicFactory((_) {
+        pcCount++;
+        return pcCount == 1 ? inFlightPc : replacementPc;
+      });
+
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: dynamicFactory,
+      );
+
+      await testAdapter.initializeRoom('ROOM-O1C', 'node-A');
+      await testAdapter.connectToPeer('node-Z');
+
+      inFlightPc.holdIceState(RTCIceConnectionState.RTCIceConnectionStateFailed);
+
+      final collidingOffer = SignalingMessage(
+        id: 'offer-colliding',
+        roomCode: 'ROOM-O1C',
+        fromNodeId: 'node-Z',
+        toNodeId: 'node-A',
+        type: SignalingType.offer,
+        sdp: 'v=0\r\no=sdp-colliding',
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+      signalingAdapter.emitIncomingSignal(collidingOffer);
+      await Future<void>.delayed(Duration.zero);
+
+      final newMeshDc = replacementPc.dataChannel;
+      replacementPc.onDataChannel?.call(newMeshDc);
+      newMeshDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      newMeshDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.connectedPeers, contains('node-Z'));
+
+      inFlightPc.deliverHeldIceEvent();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.connectedPeers, contains('node-Z'));
+      expect(replacementPc.isClosed, isFalse);
+
+      await testAdapter.disconnect();
+    });
+
+    test('O1d: rejoin case: held close events from prior cycle do not prune reconnected peer', () async {
+      final pc1 = FakeRTCPeerConnection();
+      final pc2 = FakeRTCPeerConnection();
+      var pcCount = 0;
+      final dynamicFactory = _DynamicFactory((_) {
+        pcCount++;
+        return pcCount == 1 ? pc1 : pc2;
+      });
+
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: dynamicFactory,
+      );
+
+      await testAdapter.initializeRoom('ROOM-O1D', 'node-local');
+      await testAdapter.connectToPeer('peer-P');
+      final meshDc1 = pc1.dataChannel..delayCloseEvent = true;
+      pc1.onDataChannel?.call(meshDc1);
+      meshDc1.state = RTCDataChannelState.RTCDataChannelOpen;
+      meshDc1.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      final blobDc1 = pc1.channelsByLabel['dn5e_blob']!..delayCloseEvent = true;
+      blobDc1.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc1.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      await testAdapter.disconnect();
+
+      await testAdapter.initializeRoom('ROOM-O1D', 'node-local');
+      await testAdapter.connectToPeer('peer-P');
+      final meshDc2 = pc2.dataChannel;
+      pc2.onDataChannel?.call(meshDc2);
+      meshDc2.state = RTCDataChannelState.RTCDataChannelOpen;
+      meshDc2.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      final blobDc2 = pc2.channelsByLabel['dn5e_blob']!;
+      blobDc2.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc2.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.connectedPeers, contains('peer-P'));
+      expect(testAdapter.openBlobPeers, contains('peer-P'));
+
+      // Deliver held close events from cycle 1
+      meshDc1.deliverHeldCloseEvent();
+      blobDc1.deliverHeldCloseEvent();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.connectedPeers, contains('peer-P'));
+      expect(testAdapter.openBlobPeers, contains('peer-P'));
+
+      await testAdapter.disconnect();
+    });
+
+    test('O1e: controls: close of current objects still prunes/removes', () async {
+      final connectionFactory = FakeRtcPeerConnectionFactory();
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: connectionFactory,
+      );
+
+      await testAdapter.initializeRoom('ROOM-O1E', 'node-local');
+      final pc = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pc;
+      await testAdapter.connectToPeer('peer-ctl');
+
+      final meshDc = pc.dataChannel..delayCloseEvent = true;
+      pc.onDataChannel?.call(meshDc);
+      meshDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      meshDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      final blobDc = pc.channelsByLabel['dn5e_blob']!..delayCloseEvent = true;
+      blobDc.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(testAdapter.connectedPeers, contains('peer-ctl'));
+      expect(testAdapter.openBlobPeers, contains('peer-ctl'));
+
+      // 1. Current blob channel close removes from openBlobPeers
+      await blobDc.close();
+      blobDc.deliverHeldCloseEvent();
+      await Future<void>.delayed(Duration.zero);
+      expect(testAdapter.openBlobPeers.contains('peer-ctl'), isFalse);
+      expect(testAdapter.connectedPeers, contains('peer-ctl')); // mesh still open
+
+      // Re-register blob channel for next check
+      final blobDc2 = FakeRTCDataChannel(label: 'dn5e_blob');
+      testAdapter.registerMockBlobDataChannel('peer-ctl', blobDc2);
+      blobDc2.state = RTCDataChannelState.RTCDataChannelOpen;
+      blobDc2.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      expect(testAdapter.openBlobPeers, contains('peer-ctl'));
+
+      // 2. Current mesh channel close prunes peer
+      await meshDc.close();
+      meshDc.deliverHeldCloseEvent();
+      await Future<void>.delayed(Duration.zero);
+      expect(testAdapter.connectedPeers.contains('peer-ctl'), isFalse);
+      expect(testAdapter.openBlobPeers.contains('peer-ctl'), isFalse);
+
+      // Re-connect peer for ICE check
+      final pc2 = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = pc2;
+      await testAdapter.connectToPeer('peer-ice');
+      final meshDcIce = pc2.dataChannel;
+      pc2.onDataChannel?.call(meshDcIce);
+      meshDcIce.state = RTCDataChannelState.RTCDataChannelOpen;
+      meshDcIce.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+      expect(testAdapter.connectedPeers, contains('peer-ice'));
+
+      // 3. Current ICE failed prunes peer
+      pc2.holdIceState(RTCIceConnectionState.RTCIceConnectionStateFailed);
+      pc2.deliverHeldIceEvent();
+      await Future<void>.delayed(Duration.zero);
+      expect(testAdapter.connectedPeers.contains('peer-ice'), isFalse);
+
+      await testAdapter.disconnect();
     });
   });
 }
