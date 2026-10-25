@@ -246,11 +246,11 @@ Future<void> initServiceLocator({
   }
 
   sl.registerLazySingleton<BlobStorePort>(
-    () => blobStore ?? BlobStoreAdapter(),
+    () => blobStore ?? const BlobStoreAdapter(),
   );
 
   sl.registerLazySingleton<MapImageIntakePort>(
-    () => mapImageIntake ?? MapImageIntakeAdapter(),
+    () => mapImageIntake ?? const MapImageIntakeAdapter(),
   );
 
   sl.registerLazySingleton<BlobTransferService>(

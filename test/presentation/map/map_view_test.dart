@@ -293,7 +293,7 @@ void main() {
       intake.nextPickResult = source;
 
       // fileTooLarge (250 MB)
-      intakeService.nextError = MapIntakeRejected(
+      intakeService.nextError = const MapIntakeRejected(
         MapRejectReason.fileTooLarge,
         byteSize: 250 * 1024 * 1024,
       );
