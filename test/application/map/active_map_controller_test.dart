@@ -36,6 +36,7 @@ BlobRef _makeRef(Uint8List bytes) {
 CampaignProfile _makeProfile({
   String id = 'camp-1',
   BlobRef? mapRef,
+  MapGrid? grid,
   String notes = '',
 }) {
   const stamp = HybridLogicalClock(
@@ -57,10 +58,24 @@ CampaignProfile _makeProfile({
       value: mapRef,
       timestamp: stamp,
     ),
+    mapGridRegister: CrdtLwwRegister<MapGrid?>(
+      value: grid,
+      timestamp: stamp,
+    ),
     createdAt: DateTime.utc(2026, 1, 1),
     lastPlayedAt: DateTime.utc(2026, 1, 1),
     roomState: const RoomNodeState.empty(),
   );
+}
+
+class _CountingBlobStore extends FakeBlobStore {
+  int getCalls = 0;
+
+  @override
+  Future<StoredBlob> get(String sha256Hex) {
+    getCalls++;
+    return super.get(sha256Hex);
+  }
 }
 
 class _TestTransferService extends BlobTransferService {
@@ -488,6 +503,117 @@ void main() {
         expect(transfer.startCalls, equals(1));
         expect(transfer.fetchCalls, equals(1));
 
+        controller.dispose();
+      });
+    });
+
+    test('GC2: Grid updates on ready map emit MapReady with grid without new fetch/get, non-matching hash gives null grid, sharing new map makes grid null, hiding grid gives visible: false', () {
+      fakeAsync((async) {
+        final countingStore = _CountingBlobStore();
+        final bytes1 = _makeWebp(50);
+        final ref1 = _makeRef(bytes1);
+        countingStore.put(ref1, bytes1, campaignId: 'camp-1');
+
+        final bytes2 = _makeWebp(60);
+        final ref2 = _makeRef(bytes2);
+        countingStore.put(ref2, bytes2, campaignId: 'camp-1');
+
+        transfer.onFetch = (r, c) async => const BlobFetched();
+
+        final controller = ActiveMapController(
+          campaignRepo: repo,
+          transfer: transfer,
+          store: countingStore,
+          channel: channel,
+          transportState: () => currentTransportState,
+        );
+
+        final states = <ActiveMapViewState>[];
+        final sub = controller.states.listen(states.add);
+
+        // 1. Initial profile with map ref1, no grid
+        repo.putProfile(_makeProfile(mapRef: ref1));
+        controller.start();
+        async.flushMicrotasks();
+
+        expect(controller.current, equals(MapReady(ref1, bytes1, grid: null)));
+        final fetchCallsBefore = transfer.fetchCalls;
+        final getCallsBefore = countingStore.getCalls;
+
+        // 2. Setting a matching grid emits MapReady with that grid, no new fetch or store get
+        final grid1 = MapGrid(
+          mapSha256Hex: ref1.sha256Hex,
+          cellCentiPx: 4500,
+          offsetXCentiPx: 100,
+          offsetYCentiPx: 200,
+          feetPerCell: 5,
+          visible: true,
+        );
+        repo.putProfile(_makeProfile(mapRef: ref1, grid: grid1));
+        async.flushMicrotasks();
+
+        expect(controller.current, equals(MapReady(ref1, bytes1, grid: grid1)));
+        expect((controller.current as MapReady).bytes, equals(bytes1));
+        expect(transfer.fetchCalls, equals(fetchCallsBefore));
+        expect(countingStore.getCalls, equals(getCallsBefore));
+
+        // 3. Changing only the grid emits again with the same bytes and no new fetch or store get
+        final grid2 = MapGrid(
+          mapSha256Hex: ref1.sha256Hex,
+          cellCentiPx: 5000,
+          offsetXCentiPx: 0,
+          offsetYCentiPx: 0,
+          feetPerCell: 10,
+          visible: true,
+        );
+        repo.putProfile(_makeProfile(mapRef: ref1, grid: grid2));
+        async.flushMicrotasks();
+
+        expect(controller.current, equals(MapReady(ref1, bytes1, grid: grid2)));
+        expect((controller.current as MapReady).bytes, equals(bytes1));
+        expect(transfer.fetchCalls, equals(fetchCallsBefore));
+        expect(countingStore.getCalls, equals(getCallsBefore));
+
+        // 4. A grid with a different hash gives grid == null
+        final gridOther = MapGrid(
+          mapSha256Hex: 'b' * 64,
+          cellCentiPx: 5000,
+          offsetXCentiPx: 0,
+          offsetYCentiPx: 0,
+          feetPerCell: 5,
+          visible: true,
+        );
+        repo.putProfile(_makeProfile(mapRef: ref1, grid: gridOther));
+        async.flushMicrotasks();
+
+        expect(controller.current, equals(MapReady(ref1, bytes1, grid: null)));
+        expect((controller.current as MapReady).bytes, equals(bytes1));
+        expect(transfer.fetchCalls, equals(fetchCallsBefore));
+        expect(countingStore.getCalls, equals(getCallsBefore));
+
+        // 5. Sharing a new map makes grid null even though the old grid is still in the profile
+        repo.putProfile(_makeProfile(mapRef: ref2, grid: grid1));
+        async.flushMicrotasks();
+
+        expect(controller.current, equals(MapReady(ref2, bytes2, grid: null)));
+        expect((controller.current as MapReady).bytes, equals(bytes2));
+
+        // 6. Hiding the grid gives MapReady with a grid whose visible is false
+        final grid2Hidden = MapGrid(
+          mapSha256Hex: ref2.sha256Hex,
+          cellCentiPx: 5000,
+          offsetXCentiPx: 0,
+          offsetYCentiPx: 0,
+          feetPerCell: 5,
+          visible: false,
+        );
+        repo.putProfile(_makeProfile(mapRef: ref2, grid: grid2Hidden));
+        async.flushMicrotasks();
+
+        expect(controller.current, equals(MapReady(ref2, bytes2, grid: grid2Hidden)));
+        expect((controller.current as MapReady).grid!.visible, isFalse);
+
+        sub.cancel();
         controller.dispose();
       });
     });

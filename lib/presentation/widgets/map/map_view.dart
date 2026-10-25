@@ -1,12 +1,18 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 
 import '../../../application/blob/blob_store_port.dart';
 import '../../../application/map/active_map_controller.dart';
+import '../../../application/map/grid_geometry.dart';
+import '../../../application/map/map_grid_service.dart';
 import '../../../application/map/map_image_intake_port.dart';
 import '../../../application/map/map_intake_service.dart';
 import '../../../infrastructure/di/injection_container.dart';
 import '../../../services/logging_service.dart';
+import 'map_grid_controls.dart';
+import 'map_grid_overlay.dart';
 
 String _formatThousands(int value) {
   final s = value.toString();
@@ -25,6 +31,8 @@ class MapView extends StatefulWidget {
   final ActiveMapController controller;
   final MapIntakeService? intakeService;
   final MapImageIntakePort? intake;
+  final MapGridService? gridService;
+  final TransformationController? transformationController;
   final bool canEditMap;
 
   const MapView({
@@ -32,6 +40,8 @@ class MapView extends StatefulWidget {
     required this.controller,
     this.intakeService,
     this.intake,
+    this.gridService,
+    this.transformationController,
     this.canEditMap = false,
   });
 
@@ -46,17 +56,68 @@ class _MapViewState extends State<MapView> {
   late ActiveMapViewState _currentState;
   StreamSubscription<ActiveMapViewState>? _sub;
 
+  late final TransformationController _internalTransformController;
+  TransformationController get _transformController =>
+      widget.transformationController ?? _internalTransformController;
+
+  double _currentScale = 1.0;
+  String? _lastFittedRefSha;
+  String? _lastMapSha;
+
+  bool _isMeasuring = false;
+  bool _isSettingCorner = false;
+  Offset? _rulerStart;
+  Offset? _rulerEnd;
+  String? _rulerLabel;
+
+  MapGridService get _gridService => widget.gridService ?? sl<MapGridService>();
+
   @override
   void initState() {
     super.initState();
+    _internalTransformController = TransformationController();
+    _transformController.addListener(_onTransformChanged);
     _currentState = widget.controller.current;
+    _syncGridAndRulerState(_currentState);
     _sub = widget.controller.states.listen((state) {
       if (mounted) {
         setState(() {
           _currentState = state;
+          _syncGridAndRulerState(state);
         });
       }
     });
+  }
+
+  void _onTransformChanged() {
+    final s = _transformController.value.getMaxScaleOnAxis();
+    if (s > 0 && (s - _currentScale).abs() > 1e-4 && mounted) {
+      setState(() {
+        _currentScale = s;
+      });
+    }
+  }
+
+  void _syncGridAndRulerState(ActiveMapViewState state) {
+    if (state is MapReady) {
+      if (_lastMapSha != state.ref.sha256Hex ||
+          state.grid == null ||
+          !state.grid!.visible) {
+        _isMeasuring = false;
+        _isSettingCorner = false;
+        _rulerStart = null;
+        _rulerEnd = null;
+        _rulerLabel = null;
+      }
+      _lastMapSha = state.ref.sha256Hex;
+    } else {
+      _isMeasuring = false;
+      _isSettingCorner = false;
+      _rulerStart = null;
+      _rulerEnd = null;
+      _rulerLabel = null;
+      _lastMapSha = null;
+    }
   }
 
   @override
@@ -65,19 +126,27 @@ class _MapViewState extends State<MapView> {
     if (oldWidget.controller != widget.controller) {
       _sub?.cancel();
       _currentState = widget.controller.current;
+      _syncGridAndRulerState(_currentState);
       _sub = widget.controller.states.listen((state) {
         if (mounted) {
           setState(() {
             _currentState = state;
+            _syncGridAndRulerState(state);
           });
         }
       });
+    }
+    if (oldWidget.transformationController != widget.transformationController) {
+      oldWidget.transformationController?.removeListener(_onTransformChanged);
+      _transformController.addListener(_onTransformChanged);
     }
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _transformController.removeListener(_onTransformChanged);
+    _internalTransformController.dispose();
     super.dispose();
   }
 
@@ -178,11 +247,43 @@ class _MapViewState extends State<MapView> {
   }
 
   Future<void> _handleClearMap() async {
-    final intakeService = widget.intakeService ?? sl<MapIntakeService>();
-    final cId = widget.controller.campaignId;
-    if (cId != null) {
-      await intakeService.clearMap(campaignId: cId);
+    final campaignId = widget.controller.campaignId;
+    if (campaignId == null) return;
+    try {
+      final intakeService = widget.intakeService ?? sl<MapIntakeService>();
+      await intakeService.clearMap(campaignId: campaignId);
+    } catch (_) {
+      // intentional: clearMap failure non-fatal to view display
     }
+  }
+
+  void _handleToggleGrid() {
+    final state = _currentState;
+    if (state is! MapReady) return;
+    final campaignId = widget.controller.campaignId;
+    if (campaignId == null) return;
+    toggleMapGrid(
+      gridService: _gridService,
+      campaignId: campaignId,
+      mapRef: state.ref,
+      currentGrid: state.grid,
+    );
+  }
+
+  void _initFit(BoxConstraints constraints, BlobRef ref) {
+    if (_lastFittedRefSha == ref.sha256Hex) return;
+    _lastFittedRefSha = ref.sha256Hex;
+    final scaleX = constraints.maxWidth / ref.width;
+    final scaleY = constraints.maxHeight / ref.height;
+    final fitScale = math.min(scaleX, scaleY).clamp(0.05, 8.0);
+    final tx = (constraints.maxWidth - ref.width * fitScale) / 2.0;
+    final ty = (constraints.maxHeight - ref.height * fitScale) / 2.0;
+    _transformController.removeListener(_onTransformChanged);
+    _transformController.value = Matrix4.identity()
+      ..translateByDouble(tx, ty, 0.0, 1.0)
+      ..scaleByDouble(fitScale, fitScale, 1.0, 1.0);
+    _currentScale = fitScale;
+    _transformController.addListener(_onTransformChanged);
   }
 
   Widget _buildStateContent(ActiveMapViewState state) {
@@ -233,16 +334,91 @@ class _MapViewState extends State<MapView> {
           ),
         );
       case MapReady():
-        return InteractiveViewer(
-          minScale: 0.1,
-          maxScale: 8.0,
-          child: Center(
-            child: Image.memory(
-              state.bytes,
-              gaplessPlayback: true,
-              fit: BoxFit.contain,
-            ),
-          ),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            _initFit(constraints, state.ref);
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTapUp: _isSettingCorner && state.grid != null
+                  ? (details) {
+                      final scene = _transformController.toScene(details.localPosition);
+                      final newGrid = gridWithCornerAt(state.grid!, scene.dx, scene.dy);
+                      final cId = widget.controller.campaignId;
+                      if (cId != null) {
+                        _gridService.setGrid(cId, newGrid);
+                      }
+                      setState(() {
+                        _isSettingCorner = false;
+                      });
+                    }
+                  : null,
+              child: InteractiveViewer(
+                constrained: false,
+                minScale: 0.05,
+                maxScale: 8.0,
+                transformationController: _transformController,
+                panEnabled: !_isMeasuring && !_isSettingCorner,
+                scaleEnabled: true,
+                onInteractionStart: (details) {
+                  if (_isMeasuring && state.grid != null && details.pointerCount == 1) {
+                    final scene = _transformController.toScene(details.localFocalPoint);
+                    final snapped = snapToCellCenter(state.grid!, scene.dx, scene.dy);
+                    setState(() {
+                      _rulerStart = Offset(snapped.x, snapped.y);
+                      _rulerEnd = Offset(snapped.x, snapped.y);
+                      final c1 = cellAt(state.grid!, snapped.x, snapped.y);
+                      final sq = gridDistanceSquares(c1.col, c1.row, c1.col, c1.row);
+                      final ft = gridDistanceFeet(state.grid!, c1.col, c1.row, c1.col, c1.row);
+                      _rulerLabel = '$sq squares · $ft ft';
+                    });
+                  }
+                },
+                onInteractionUpdate: (details) {
+                  if (_isMeasuring && state.grid != null && details.pointerCount == 1) {
+                    final scene = _transformController.toScene(details.localFocalPoint);
+                    final snapped = snapToCellCenter(state.grid!, scene.dx, scene.dy);
+                    setState(() {
+                      _rulerEnd = Offset(snapped.x, snapped.y);
+                      if (_rulerStart != null) {
+                        final c1 = cellAt(state.grid!, _rulerStart!.dx, _rulerStart!.dy);
+                        final c2 = cellAt(state.grid!, snapped.x, snapped.y);
+                        final sq = gridDistanceSquares(c1.col, c1.row, c2.col, c2.row);
+                        final ft = gridDistanceFeet(state.grid!, c1.col, c1.row, c2.col, c2.row);
+                        _rulerLabel = sq == 1 ? '1 square · $ft ft' : '$sq squares · $ft ft';
+                      }
+                    });
+                  }
+                },
+                child: SizedBox(
+                  width: state.ref.width.toDouble(),
+                  height: state.ref.height.toDouble(),
+                  child: Stack(
+                    children: [
+                      Image.memory(
+                        state.bytes,
+                        width: state.ref.width.toDouble(),
+                        height: state.ref.height.toDouble(),
+                        fit: BoxFit.fill,
+                        gaplessPlayback: true,
+                      ),
+                      MapGridOverlay(
+                        grid: state.grid,
+                        scale: _currentScale,
+                        width: state.ref.width,
+                        height: state.ref.height,
+                      ),
+                      MapRulerOverlay(
+                        start: _rulerStart,
+                        end: _rulerEnd,
+                        label: _rulerLabel,
+                        scale: _currentScale,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       case MapFailed():
         final msg = state.error.toString().replaceFirst('Exception: ', '');
@@ -256,10 +432,12 @@ class _MapViewState extends State<MapView> {
     _checkLogging(state);
 
     final isMapSet = state is! MapNone;
+    final hasVisibleGrid = state is MapReady && state.grid != null && state.grid!.visible;
+    final showControlsRow = widget.canEditMap || hasVisibleGrid;
 
     return Column(
       children: [
-        if (widget.canEditMap) ...[
+        if (showControlsRow)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Wrap(
@@ -267,49 +445,90 @@ class _MapViewState extends State<MapView> {
               runSpacing: 8.0,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                ElevatedButton.icon(
-                  onPressed: _isPreparing ? null : _handleChooseMap,
-                  icon: const Icon(Icons.photo_library),
-                  label: const Text('Choose map image'),
-                ),
-                if (isMapSet)
-                  TextButton.icon(
-                    onPressed: _isPreparing ? null : _handleClearMap,
-                    icon: const Icon(Icons.clear),
-                    label: const Text('Clear map'),
+                if (widget.canEditMap) ...[
+                  ElevatedButton.icon(
+                    onPressed: _isPreparing ? null : _handleChooseMap,
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Choose map image'),
+                  ),
+                  if (isMapSet)
+                    TextButton.icon(
+                      onPressed: _isPreparing ? null : _handleClearMap,
+                      icon: const Icon(Icons.clear),
+                      label: const Text('Clear map'),
+                    ),
+                  if (state is MapReady)
+                    OutlinedButton.icon(
+                      onPressed: _isPreparing ? null : _handleToggleGrid,
+                      icon: const Icon(Icons.grid_on),
+                      label: const Text('Grid'),
+                    ),
+                ],
+                if (hasVisibleGrid)
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _isMeasuring = !_isMeasuring;
+                        if (!_isMeasuring) {
+                          _rulerStart = null;
+                          _rulerEnd = null;
+                          _rulerLabel = null;
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.straighten),
+                    label: const Text('Measure'),
+                    style: _isMeasuring
+                        ? OutlinedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primaryContainer,
+                          )
+                        : null,
                   ),
               ],
             ),
           ),
-          if (_isPreparing)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Preparing map…'),
-                ],
-              ),
-            ),
-          if (_statusMessage != null && !_isPreparing)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-              child: Text(
-                _statusMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: 13,
+        if (widget.canEditMap && _isPreparing)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
+                SizedBox(width: 8),
+                Text('Preparing map…'),
+              ],
+            ),
+          ),
+        if (widget.canEditMap && _statusMessage != null && !_isPreparing)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            child: Text(
+              _statusMessage!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 13,
               ),
             ),
-        ],
+          ),
+        if (widget.canEditMap && state is MapReady && state.grid != null && state.grid!.visible && widget.controller.campaignId != null)
+          MapGridControls(
+            campaignId: widget.controller.campaignId!,
+            mapRef: state.ref,
+            grid: state.grid!,
+            gridService: _gridService,
+            onStartSetCorner: () {
+              setState(() {
+                _isSettingCorner = !_isSettingCorner;
+              });
+            },
+            isSettingCorner: _isSettingCorner,
+          ),
         Expanded(
           child: _buildStateContent(state),
         ),

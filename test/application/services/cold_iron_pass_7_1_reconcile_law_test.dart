@@ -16,6 +16,18 @@ BlobRef _randomRef(Random rand) {
   );
 }
 
+MapGrid _randomGrid(Random rand, String sha) {
+  final cell = 1000 + rand.nextInt(50201); // 1000..51200
+  return MapGrid(
+    mapSha256Hex: sha,
+    cellCentiPx: cell,
+    offsetXCentiPx: rand.nextInt(cell),
+    offsetYCentiPx: rand.nextInt(cell),
+    feetPerCell: 1 + rand.nextInt(100),
+    visible: rand.nextBool(),
+  );
+}
+
 void main() {
   group('Cold Iron Birdcage — Pass 7.1 Required Test 1: Reconcile Equals Join Law', () {
     test('reconcileProfileSafely(a, b).profile == CampaignProfile.join(a, b) across 350 seeds', () {
@@ -36,6 +48,7 @@ void main() {
         'notesMarkdown',
         'notesRegister',
         'activeMapRegister',
+        'mapGridRegister',
         'partyPurse',
         'memberPurses',
         'changeLog',
@@ -88,6 +101,39 @@ void main() {
             mapB = CrdtLwwRegister<BlobRef?>(
               value: null,
               timestamp: HybridLogicalClock(physicalTime: 1250 + rand.nextInt(100), logicalCounter: 1, nodeId: 'node_b'),
+            );
+        }
+
+        // 2c. Map Grid registers: noMapGrid, random grid, or null at non-zero timestamp
+        final CrdtLwwRegister<MapGrid?> gridA;
+        switch (rand.nextInt(3)) {
+          case 0:
+            gridA = CampaignProfile.noMapGrid;
+          case 1:
+            gridA = CrdtLwwRegister<MapGrid?>(
+              value: _randomGrid(rand, mapA.value?.sha256Hex ?? '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+              timestamp: HybridLogicalClock(physicalTime: 1000 + rand.nextInt(100), logicalCounter: 2, nodeId: 'node_a'),
+            );
+          default:
+            gridA = CrdtLwwRegister<MapGrid?>(
+              value: null,
+              timestamp: HybridLogicalClock(physicalTime: 1200 + rand.nextInt(100), logicalCounter: 2, nodeId: 'node_a'),
+            );
+        }
+
+        final CrdtLwwRegister<MapGrid?> gridB;
+        switch (rand.nextInt(3)) {
+          case 0:
+            gridB = CampaignProfile.noMapGrid;
+          case 1:
+            gridB = CrdtLwwRegister<MapGrid?>(
+              value: _randomGrid(rand, mapB.value?.sha256Hex ?? '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+              timestamp: HybridLogicalClock(physicalTime: 1050 + rand.nextInt(100), logicalCounter: 2, nodeId: 'node_b'),
+            );
+          default:
+            gridB = CrdtLwwRegister<MapGrid?>(
+              value: null,
+              timestamp: HybridLogicalClock(physicalTime: 1250 + rand.nextInt(100), logicalCounter: 2, nodeId: 'node_b'),
             );
         }
 
@@ -282,6 +328,7 @@ void main() {
           pinnedRules: rulesA,
           notesRegister: notesA,
           activeMapRegister: mapA,
+          mapGridRegister: gridA,
           partyPurse: purseA,
           memberPurses: memberPursesA,
           changeLog: logA,
@@ -298,6 +345,7 @@ void main() {
           pinnedRules: rulesB,
           notesRegister: notesB,
           activeMapRegister: mapB,
+          mapGridRegister: gridB,
           partyPurse: purseB,
           memberPurses: memberPursesB,
           changeLog: logB,
@@ -329,6 +377,8 @@ void main() {
         expect(resAB.profile, equals(joinAB), reason: 'Seed $seed forward failed reconcile == join');
         expect(resAB.profile.activeMapRegister, equals(joinAB.activeMapRegister),
             reason: 'Seed $seed forward activeMapRegister direct mismatch');
+        expect(resAB.profile.mapGridRegister, equals(joinAB.mapGridRegister),
+            reason: 'Seed $seed forward mapGridRegister direct mismatch');
 
         // Reverse: reconcileProfileSafely(profB, profA) == CampaignProfile.join(profB, profA)
         final resBA = recon.reconcileProfileSafely(local: profB, remote: profA);
@@ -337,6 +387,8 @@ void main() {
         expect(resBA.profile, equals(joinBA), reason: 'Seed $seed reverse failed reconcile == join');
         expect(resBA.profile.activeMapRegister, equals(joinBA.activeMapRegister),
             reason: 'Seed $seed reverse activeMapRegister direct mismatch');
+        expect(resBA.profile.mapGridRegister, equals(joinBA.mapGridRegister),
+            reason: 'Seed $seed reverse mapGridRegister direct mismatch');
       }
     });
   });

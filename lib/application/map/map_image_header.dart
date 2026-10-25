@@ -524,7 +524,9 @@ Future<MapImageHeader> readMapImageHeader(
                 primaryItemId = metaPayloadBd.getUint32(pOffset + 12);
               }
             }
-          } catch (_) {}
+          } catch (_) {
+            // intentional: pitm box payload malformed or truncated; leave primaryItemId unset
+          }
         } else if (bType == 'iprp') {
           // Inside iprp, find ipco and ipma
           final iprpEnd = pOffset + bSize;
@@ -644,7 +646,7 @@ Future<MapImageHeader> readMapImageHeader(
             }
           }
         } catch (_) {
-          // If pitm or ipma is missing or malformed, treat as not rotated
+          // intentional: if pitm or ipma is missing or malformed, treat as not rotated
         }
       }
   }

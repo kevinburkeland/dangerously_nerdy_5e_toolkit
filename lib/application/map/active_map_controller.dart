@@ -131,18 +131,20 @@ final class MapStoreUnavailable extends ActiveMapViewState {
 final class MapReady extends ActiveMapViewState {
   final BlobRef ref;
   final Uint8List bytes;
+  final MapGrid? grid;
 
-  const MapReady(this.ref, this.bytes);
+  const MapReady(this.ref, this.bytes, {this.grid});
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is MapReady && ref == other.ref;
+      identical(this, other) ||
+      other is MapReady && ref == other.ref && grid == other.grid;
 
   @override
-  int get hashCode => ref.hashCode;
+  int get hashCode => Object.hash(ref, grid);
 
   @override
-  String toString() => 'MapReady(${ref.sha256Hex})';
+  String toString() => 'MapReady(${ref.sha256Hex}, grid: $grid)';
 }
 
 final class MapFailed extends ActiveMapViewState {
@@ -253,6 +255,15 @@ class ActiveMapController {
     if (_disposed) return;
     final newTarget = _MapTarget(profile?.id, profile?.activeMapRegister.value);
     if (_currentTarget == newTarget) {
+      final ready = _current;
+      if (ready is MapReady && ready.ref == newTarget.ref) {
+        final expectedGrid = (profile?.mapGrid?.mapSha256Hex == ready.ref.sha256Hex)
+            ? profile?.mapGrid
+            : null;
+        if (ready.grid != expectedGrid) {
+          _transitionTo(MapReady(ready.ref, ready.bytes, grid: expectedGrid));
+        }
+      }
       return;
     }
     _currentTarget = newTarget;
@@ -287,7 +298,11 @@ class ActiveMapController {
           final stored = await store.get(ref.sha256Hex);
           if (gen != _generation || _disposed) return;
           _stopRetryTimer();
-          _transitionTo(MapReady(ref, stored.bytes));
+          final prof = campaignRepo.activeProfile;
+          final expectedGrid = (prof?.mapGrid?.mapSha256Hex == ref.sha256Hex)
+              ? prof?.mapGrid
+              : null;
+          _transitionTo(MapReady(ref, stored.bytes, grid: expectedGrid));
         } on BlobNotFoundException {
           if (gen != _generation || _disposed) return;
           _transitionTo(const MapWaitingForPeer());

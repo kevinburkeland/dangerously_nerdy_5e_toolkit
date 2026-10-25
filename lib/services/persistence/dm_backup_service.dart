@@ -48,6 +48,9 @@ List<String> futureTimestampViolations(
   if (profile.activeMapRegister.timestamp.physicalTime > limit) {
     violations.add('activeMapRegister');
   }
+  if (profile.mapGridRegister.timestamp.physicalTime > limit) {
+    violations.add('mapGridRegister');
+  }
   if (profile.pinnedRules.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
     violations.add('pinnedRules');
   }

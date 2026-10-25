@@ -8,6 +8,7 @@ import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
+import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
@@ -976,6 +977,7 @@ void main() {
         CrdtLwwRegister<String> maxTitle = base.roomState.titleRegister;
         CrdtLwwRegister<String> maxDesc = base.roomState.descriptionRegister;
         CrdtLwwRegister<BlobRef?> maxMap = base.activeMapRegister;
+        CrdtLwwRegister<MapGrid?> maxGrid = base.mapGridRegister;
         PartyPurse expectedPurse = base.partyPurse;
         final expectedRuleAdds = <String, HybridLogicalClock>{};
         final expectedRuleRemoves = <String, HybridLogicalClock>{};
@@ -983,7 +985,7 @@ void main() {
         final stepCount = minSteps + rand.nextInt(maxSteps - minSteps + 1);
 
         for (int step = 0; step < stepCount; step++) {
-          final action = rand.nextInt(7);
+          final action = rand.nextInt(8);
           final devKeys = devices.keys.toList();
           final chosenKey = devKeys[rand.nextInt(devKeys.length)];
           final chosenDev = devices[chosenKey]!;
@@ -1132,6 +1134,36 @@ void main() {
               if (wrote.timestamp.compareTo(maxMap.timestamp) > 0) {
                 maxMap = wrote;
               }
+            case 7:
+              // Map grid edit (set random valid grid or clear)
+              final clearGrid = rand.nextInt(3) == 0;
+              final MapGrid? newGrid;
+              if (clearGrid) {
+                newGrid = null;
+              } else {
+                final hex = List.generate(
+                  64,
+                  (_) => '0123456789abcdef'[rand.nextInt(16)],
+                ).join();
+                final cell = 1000 + rand.nextInt(50201);
+                newGrid = MapGrid(
+                  mapSha256Hex: hex,
+                  cellCentiPx: cell,
+                  offsetXCentiPx: rand.nextInt(cell),
+                  offsetYCentiPx: rand.nextInt(cell),
+                  feetPerCell: 1 + rand.nextInt(100),
+                  visible: rand.nextBool(),
+                );
+              }
+              final stamp = chosenDev.clock.nextTimestamp();
+              await chosenDev.repo.updateProfile(base.id, (c) {
+                return c.withMapGrid(newGrid, stamp);
+              });
+              final readBack = chosenDev.repo.activeProfile!;
+              final wrote = readBack.mapGridRegister;
+              if (wrote.timestamp.compareTo(maxGrid.timestamp) > 0) {
+                maxGrid = wrote;
+              }
           }
           await Future<void>.delayed(const Duration(milliseconds: 1));
         }
@@ -1171,6 +1203,8 @@ void main() {
               reason: 'desc value mismatch at seed $seed');
           expect(dmProfile.activeMapRegister, equals(maxMap),
               reason: 'activeMapRegister mismatch at seed $seed');
+          expect(dmProfile.mapGridRegister, equals(maxGrid),
+              reason: 'mapGridRegister mismatch at seed $seed');
 
           // Purse equals base plus every recorded credit and debit
           expect(dmProfile.partyPurse.getBalance('gp'),
