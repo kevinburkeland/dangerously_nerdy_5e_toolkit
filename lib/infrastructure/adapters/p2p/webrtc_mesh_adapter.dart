@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import '../../../application/blob/blob_channel_port.dart';
+import '../../../application/blob/blob_transfer_protocol.dart';
 import '../../../services/logging_service.dart';
 import 'firebase_signaling_adapter.dart';
 import 'signaling_message.dart';
@@ -23,10 +26,10 @@ class DefaultRtcPeerConnectionFactory implements IRtcPeerConnectionFactory {
   }
 }
 
-/// WebRTC P2P DataChannel Mesh adapter implementing [IP2pTransportPort].
+/// WebRTC P2P DataChannel Mesh adapter implementing [IP2pTransportPort] and [BlobChannelPort].
 /// Maintains full mesh DataChannels between all peers in the room, handles
 /// heartbeat ping/pong keepalives, and tracks peer activity timestamps.
-class WebRtcMeshAdapter implements IP2pTransportPort {
+class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
   final FirebaseSignalingAdapter? _signalingAdapter;
   final IRtcPeerConnectionFactory _connectionFactory;
   final Map<String, dynamic> _rtcConfiguration;
@@ -37,11 +40,17 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
 
   final Map<String, RTCPeerConnection> _peerConnections = {};
   final Map<String, RTCDataChannel> _dataChannels = {};
+  final Map<String, RTCDataChannel> _blobDataChannels = {};
   final Map<String, int> _peerLastActiveTimestamps = {};
+  final Map<String, Future<void>> _blobSendChains = {};
 
   StreamController<String> _incomingPayloadsController =
       StreamController<String>.broadcast(sync: false);
   StreamController<Set<String>> _peersChangedController =
+      StreamController<Set<String>>.broadcast();
+  final StreamController<BlobChannelMessage> _blobMessagesController =
+      StreamController<BlobChannelMessage>.broadcast();
+  final StreamController<Set<String>> _blobPeersChangedController =
       StreamController<Set<String>>.broadcast();
   StreamSubscription<SignalingMessage>? _signalingSubscription;
   Timer? _heartbeatTimer;
@@ -86,6 +95,20 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
 
   /// Reactive stream emitting the active set of connected peers on connection changes.
   Stream<Set<String>> get onPeersChanged => _peersChangedController.stream;
+
+  @override
+  Set<String> get openBlobPeers => _blobDataChannels.entries
+      .where((e) => e.value.state == RTCDataChannelState.RTCDataChannelOpen)
+      .map((e) => e.key)
+      .toSet();
+
+  @override
+  Stream<Set<String>> get onBlobPeersChanged =>
+      _blobPeersChangedController.stream;
+
+  @override
+  Stream<BlobChannelMessage> get blobMessages =>
+      _blobMessagesController.stream;
 
   @override
   Duration get heartbeatTtl => const Duration(seconds: 15);
@@ -201,7 +224,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   Future<void> connectToPeer(String peerNodeId) async {
     if (_isDisposed || _peerConnections.containsKey(peerNodeId)) return;
 
-    final pc = await _connectionFactory.createConnection(_rtcConfiguration);
+    final pc = await _createPeerConnectionWithBlobChannel(peerNodeId);
     _peerConnections[peerNodeId] = pc;
 
     // Create outbound DataChannel
@@ -261,18 +284,22 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
           // If rollback fails or platform channels throw, prune and immediately initialize a clean RTCPeerConnection
           prunePeer(peerId);
           final cleanPc =
-              await _connectionFactory.createConnection(_rtcConfiguration);
+              await _createPeerConnectionWithBlobChannel(peerId);
           _peerConnections[peerId] = cleanPc;
         }
       }
     }
 
     final pc = _peerConnections[peerId] ??
-        await _connectionFactory.createConnection(_rtcConfiguration);
+        await _createPeerConnectionWithBlobChannel(peerId);
     _peerConnections[peerId] = pc;
 
     pc.onDataChannel = (channel) {
-      _registerDataChannel(peerId, channel);
+      if (channel.label == 'dn5e_mesh') {
+        _registerDataChannel(peerId, channel);
+      } else {
+        channel.close();
+      }
     };
 
     _setupPeerConnectionCallbacks(peerId, pc);
@@ -420,14 +447,160 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     _registerDataChannel(peerId, dc);
   }
 
+  /// Manually registers an active blob channel (for mocking/testing).
+  void registerMockBlobDataChannel(String peerId, RTCDataChannel dc) {
+    _registerBlobDataChannel(peerId, dc);
+  }
+
+  Future<RTCPeerConnection> _createPeerConnectionWithBlobChannel(
+      String peerId) async {
+    final pc = await _connectionFactory.createConnection(_rtcConfiguration);
+    final blobInit = RTCDataChannelInit()
+      ..ordered = true
+      ..negotiated = true
+      ..id = kBlobChannelId
+      ..binaryType = 'binary';
+    final blobDc = await pc.createDataChannel(kBlobChannelLabel, blobInit);
+    _registerBlobDataChannel(peerId, blobDc);
+    pc.onDataChannel = (channel) {
+      if (channel.label == 'dn5e_mesh') {
+        _registerDataChannel(peerId, channel);
+      } else {
+        channel.close();
+      }
+    };
+    return pc;
+  }
+
+  void _registerBlobDataChannel(String peerId, RTCDataChannel dc) {
+    _blobDataChannels[peerId] = dc;
+
+    dc.onMessage = (RTCDataChannelMessage message) {
+      if (message.isBinary) {
+        if (!_blobMessagesController.isClosed) {
+          _blobMessagesController.add(
+            BlobChannelMessage.bytes(peerId, message.binary),
+          );
+        }
+      } else {
+        final text = message.text;
+        if (text.length <= kBlobMaxControlChars) {
+          if (!_blobMessagesController.isClosed) {
+            _blobMessagesController.add(
+              BlobChannelMessage.text(peerId, text),
+            );
+          }
+        }
+      }
+    };
+
+    dc.onDataChannelState = (state) {
+      if (state == RTCDataChannelState.RTCDataChannelOpen) {
+        if (!_blobPeersChangedController.isClosed) {
+          _blobPeersChangedController.add(openBlobPeers);
+        }
+      } else if (state == RTCDataChannelState.RTCDataChannelClosed) {
+        _blobDataChannels.remove(peerId);
+        _blobSendChains.remove(peerId);
+        if (!_blobPeersChangedController.isClosed) {
+          _blobPeersChangedController.add(openBlobPeers);
+        }
+      }
+    };
+  }
+
   /// Prunes an inactive or closed peer connection from the mesh.
   void prunePeer(String peerId) {
     _dataChannels.remove(peerId)?.close();
+    final blobDc = _blobDataChannels.remove(peerId);
+    blobDc?.close();
     _peerConnections.remove(peerId)?.close();
     _peerLastActiveTimestamps.remove(peerId);
+    _blobSendChains.remove(peerId);
     if (!_peersChangedController.isClosed) {
       _peersChangedController.add(connectedPeers);
     }
+    if (blobDc != null && !_blobPeersChangedController.isClosed) {
+      _blobPeersChangedController.add(openBlobPeers);
+    }
+  }
+
+  @override
+  Future<void> sendBlobText(String peerId, String text) async {
+    final dc = _blobDataChannels[peerId];
+    if (dc == null || dc.state != RTCDataChannelState.RTCDataChannelOpen) {
+      throw StateError('Blob channel for peer $peerId is not open');
+    }
+    await dc.send(RTCDataChannelMessage(text));
+  }
+
+  @override
+  Future<void> sendBlobFrame(String peerId, Uint8List frame) {
+    if (frame.length > kBlobFrameHeaderBytes + kBlobChunkBytes) {
+      throw ArgumentError(
+        'Frame length (${frame.length}) exceeds maximum chunk frame size (${kBlobFrameHeaderBytes + kBlobChunkBytes})',
+      );
+    }
+
+    final dc = _blobDataChannels[peerId];
+    if (dc == null || dc.state != RTCDataChannelState.RTCDataChannelOpen) {
+      throw StateError('Blob channel for peer $peerId is not open');
+    }
+
+    final prev = _blobSendChains[peerId] ?? Future.value();
+    final current = prev.then((_) => _doSendBlobFrame(peerId, dc, frame));
+    _blobSendChains[peerId] = current.catchError((_) {});
+    return current;
+  }
+
+  Future<void> _doSendBlobFrame(
+    String peerId,
+    RTCDataChannel dc,
+    Uint8List frame,
+  ) async {
+    if (dc.state != RTCDataChannelState.RTCDataChannelOpen) {
+      throw StateError('Blob channel for peer $peerId is not open');
+    }
+
+    while ((dc.bufferedAmount ?? 0) > kBlobHighWaterBytes) {
+      dc.bufferedAmountLowThreshold = kBlobLowWaterBytes;
+      final completer = Completer<void>();
+
+      dc.onBufferedAmountLow = (_) {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      };
+
+      final oldStateCallback = dc.onDataChannelState;
+      dc.onDataChannelState = (state) {
+        oldStateCallback?.call(state);
+        if (state == RTCDataChannelState.RTCDataChannelClosed) {
+          if (!completer.isCompleted) {
+            completer.completeError(
+              StateError('Channel closed while waiting on bufferedAmount'),
+            );
+          }
+        }
+      };
+
+      try {
+        await completer.future;
+      } finally {
+        dc.onBufferedAmountLow = null;
+        dc.onDataChannelState = oldStateCallback;
+      }
+
+      if (dc.state != RTCDataChannelState.RTCDataChannelOpen) {
+        throw StateError('Blob channel for peer $peerId closed while waiting');
+      }
+    }
+
+    if (dc.state != RTCDataChannelState.RTCDataChannelOpen) {
+      throw StateError('Blob channel for peer $peerId is not open');
+    }
+
+    await dc.send(RTCDataChannelMessage.fromBinary(frame));
   }
 
   @override
@@ -474,6 +647,18 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
       }
     }
 
+    final blobChannels = List<RTCDataChannel>.from(_blobDataChannels.values);
+    _blobDataChannels.clear();
+    _blobSendChains.clear();
+    for (final dc in blobChannels) {
+      try {
+        dc.close();
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st,
+            reason: 'WebRTC blob data channel close failed');
+      }
+    }
+
     final pcs = List<RTCPeerConnection>.from(_peerConnections.values);
     _peerConnections.clear();
     for (final pc in pcs) {
@@ -489,5 +674,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     await _signalingAdapter?.cleanUpSignalingSession();
     await _incomingPayloadsController.close();
     await _peersChangedController.close();
+    if (!_blobPeersChangedController.isClosed) {
+      _blobPeersChangedController.add(openBlobPeers);
+    }
+    await _blobMessagesController.close();
+    await _blobPeersChangedController.close();
   }
 }
