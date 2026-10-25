@@ -10,6 +10,8 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.d
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.dart';
+import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/hive_test_harness.dart';
 
 void main() {
@@ -42,6 +44,7 @@ void main() {
         characterRepo: charRepo,
       );
       sl.registerSingleton<ICampaignRepository>(repo);
+      sl.registerSingleton<BlobStorePort>(FakeBlobStore());
     });
 
     tearDown(() async {

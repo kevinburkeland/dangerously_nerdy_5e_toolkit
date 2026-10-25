@@ -9,9 +9,23 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
 import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/repositories/campaign_storage_migration.dart';
+import '../../application/blob/blob_store_port.dart';
 import '../party/campaign_registry_service.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/party/party_event.dart';
+
+/// Thrown when a campaign profile is deleted from the repository but its associated
+/// map blob ownership could not be fully released from the blob store.
+class MapFilesNotRemovedException implements Exception {
+  final String profileId;
+  final Object cause;
+
+  const MapFilesNotRemovedException(this.profileId, this.cause);
+
+  @override
+  String toString() =>
+      'MapFilesNotRemovedException(profileId: $profileId, cause: $cause)';
+}
 
 /// Centralized presentation/application facade over [ICampaignRepository].
 ///
@@ -306,6 +320,11 @@ class CampaignProfileService extends ChangeNotifier {
       );
       await repo.putProfile(fresh);
       await repo.setActiveProfileId(fresh.id);
+    }
+    try {
+      await sl<BlobStorePort>().releaseCampaign(profileId);
+    } catch (cause) {
+      throw MapFilesNotRemovedException(profileId, cause);
     }
   }
 

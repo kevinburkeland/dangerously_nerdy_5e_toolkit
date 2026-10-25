@@ -8,6 +8,7 @@ import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../services/party/campaign_registry_service.dart';
 import '../services/party/party_room_service.dart';
+import '../services/persistence/campaign_profile_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
@@ -1484,6 +1485,15 @@ class _LandingScreenState extends State<LandingScreen> {
                 SnackBar(
                     content: Text(
                         'Removed "${m.campaignName}" from this device')),
+              );
+            }
+          } on MapFilesNotRemovedException catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      "Removed. Map files on this device couldn't be deleted: ${e.cause}"),
+                ),
               );
             }
           } catch (e) {

@@ -19,7 +19,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
 
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.dart';
 
 class _ThrowingSharedPrefsStore extends SharedPreferencesStorePlatform {
   final SharedPreferencesStorePlatform delegate;
@@ -74,6 +76,7 @@ void main() {
     sl.registerSingleton<ICampaignRepository>(campRepo);
     sl.registerSingleton<ICharacterRepository>(charRepo);
     sl.registerSingleton<IRoomDocumentPort>(recordingPort);
+    sl.registerSingleton<BlobStorePort>(FakeBlobStore());
 
     final registry = CampaignRegistryService.newInstance();
     CampaignRegistryService.instance = registry;

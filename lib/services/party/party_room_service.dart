@@ -1800,12 +1800,21 @@ class PartyRoomService {
       profileIdsToDelete.add('campaign_$clean');
     }
 
+    MapFilesNotRemovedException? firstMapException;
     for (final id in profileIdsToDelete) {
-      await _campaignProfileService.deleteProfile(id);
+      try {
+        await _campaignProfileService.deleteProfile(id);
+      } on MapFilesNotRemovedException catch (e) {
+        firstMapException ??= e;
+      }
     }
 
     // 3. Clear in-memory state
     _clearInMemoryRoomState(clean);
+
+    if (firstMapException != null) {
+      throw firstMapException;
+    }
   }
 
   /// Automatically synchronizes all local campaign memberships into Firestore rooms

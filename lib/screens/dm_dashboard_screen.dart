@@ -16,6 +16,7 @@ import '../widgets/dm_reference/dm_interactive_tools.dart';
 import '../widgets/dm_reference/dm_rule_card.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../services/persistence/character_persistence_service.dart';
+import '../services/persistence/campaign_profile_service.dart';
 import 'character_sheet_view.dart';
 import 'rules_compendium_screen.dart';
 import '../widgets/party/party_vitality_hud.dart';
@@ -449,6 +450,16 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                 try {
                   await service.deleteProfile(profile.id);
                   await _loadData();
+                } on MapFilesNotRemovedException catch (e) {
+                  await _loadData();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            "Removed. Map files on this device couldn't be deleted: ${e.cause}"),
+                      ),
+                    );
+                  }
                 } catch (e, st) {
                   LoggingService().logNonFatal(
                     e,

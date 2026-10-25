@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character, EntityType;
+import '../test_doubles/fake_blob_store.dart';
 import '../test_doubles/hive_test_harness.dart';
 
 Character _createTestHero(String slug, String name) {
@@ -219,6 +220,7 @@ void main() {
       final testReplica = ReplicaId('campaign_profile_test_replica');
       await initServiceLocator(
         replicaId: testReplica,
+        blobStore: FakeBlobStore(),
       );
     });
 

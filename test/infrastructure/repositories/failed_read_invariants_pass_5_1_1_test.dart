@@ -10,6 +10,8 @@ import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.dart';
+import '../../test_doubles/fake_blob_store.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
@@ -810,6 +812,7 @@ void main() {
         );
         sl.registerSingleton<ICampaignRepository>(repo);
         sl.registerSingleton<CampaignRegistryService>(registry);
+        sl.registerSingleton<BlobStorePort>(FakeBlobStore());
 
         final facade = CampaignProfileService(replicaId: replicaId, clock: clock);
 
