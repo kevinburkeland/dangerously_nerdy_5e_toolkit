@@ -467,7 +467,7 @@ void main() {
 
                 final getWrapper = ((JSAny key) {
                   final req = origGet.callAsFunction(store, key) as web.IDBRequest;
-                  intercept(req);
+                  scheduleMicrotask(() => intercept(req));
                   return req;
                 }).toJS;
 
@@ -477,7 +477,7 @@ void main() {
                           ? origOpenCursor.callAsFunction(store, query, direction)
                           : origOpenCursor.callAsFunction(store, query))
                       : origOpenCursor.callAsFunction(store)) as web.IDBRequest;
-                  intercept(req);
+                  scheduleMicrotask(() => intercept(req));
                   return req;
                 }).toJS;
 
