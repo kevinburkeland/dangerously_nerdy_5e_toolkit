@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -30,7 +31,7 @@ void main() {
       final violations = <String>[];
       for (final entity in testDir.listSync(recursive: true)) {
         if (entity is File) {
-          final content = entity.readAsStringSync();
+          final content = entity.readAsStringSync(encoding: latin1);
           violations.addAll(checkFileViolations(entity.path, content));
         }
       }

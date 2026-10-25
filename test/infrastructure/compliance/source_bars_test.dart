@@ -773,11 +773,15 @@ void main() {
 
       // The sync payload\'s campaignId: in room_sync_payload_mapper.dart and room_sync_orchestrator.dart is a different type; allow those two files by name with a comment.
       // The blob store\'s campaignId: parameter in blob_transfer_service.dart represents blob ownership; allow by name.
+      // The map slice campaignId: parameters represent blob store ownership and active map targeting; allow by name.
       final allowedFilesByName = [
         'party_room_lobby.dart',
         'room_sync_payload_mapper.dart',
         'room_sync_orchestrator.dart',
         'blob_transfer_service.dart',
+        'map_intake_service.dart',
+        'active_map_controller.dart',
+        'map_view.dart',
       ];
 
       final violations = <String>[];
