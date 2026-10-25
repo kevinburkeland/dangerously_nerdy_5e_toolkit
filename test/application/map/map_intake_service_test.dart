@@ -117,8 +117,8 @@ void main() {
       );
       // Pretend byteSize is too large by custom MapImageSource
       final tooBigSource = _FakeSizedSource(bigSource, 209715201);
-      expect(
-        () => service.setMapFromSource(tooBigSource, campaignId: 'camp-1'),
+      await expectLater(
+        service.setMapFromSource(tooBigSource, campaignId: 'camp-1'),
         throwsA(isA<MapIntakeRejected>().having((e) => e.reason, 'reason', MapRejectReason.fileTooLarge)),
       );
       expect(intake.normalizeCalls, equals(0));
@@ -127,8 +127,8 @@ void main() {
 
       // tooManyPixels
       final tooManyPx = FakeMapImageSource(bytes: _makePngHeader(8193, 100));
-      expect(
-        () => service.setMapFromSource(tooManyPx, campaignId: 'camp-1'),
+      await expectLater(
+        service.setMapFromSource(tooManyPx, campaignId: 'camp-1'),
         throwsA(isA<MapIntakeRejected>().having((e) => e.reason, 'reason', MapRejectReason.tooManyPixels)),
       );
       expect(intake.normalizeCalls, equals(0));
@@ -136,8 +136,8 @@ void main() {
       // unsupportedFormat
       final gifBytes = Uint8List.fromList([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0, 0, 0, 0]);
       final gifSource = FakeMapImageSource(bytes: gifBytes);
-      expect(
-        () => service.setMapFromSource(gifSource, campaignId: 'camp-1'),
+      await expectLater(
+        service.setMapFromSource(gifSource, campaignId: 'camp-1'),
         throwsA(isA<MapIntakeRejected>().having((e) => e.reason, 'reason', MapRejectReason.unsupportedFormat)),
       );
       expect(intake.normalizeCalls, equals(0));
@@ -145,8 +145,8 @@ void main() {
       // unreadable
       final corruptBytes = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0]);
       final corruptSource = FakeMapImageSource(bytes: corruptBytes);
-      expect(
-        () => service.setMapFromSource(corruptSource, campaignId: 'camp-1'),
+      await expectLater(
+        service.setMapFromSource(corruptSource, campaignId: 'camp-1'),
         throwsA(isA<MapIntakeRejected>().having((e) => e.reason, 'reason', MapRejectReason.unreadable)),
       );
       expect(intake.normalizeCalls, equals(0));
@@ -159,8 +159,8 @@ void main() {
       store.throwOnPut = true;
       final source = FakeMapImageSource(bytes: _makePngHeader(100, 100));
 
-      expect(
-        () => service.setMapFromSource(source, campaignId: 'camp-1'),
+      await expectLater(
+        service.setMapFromSource(source, campaignId: 'camp-1'),
         throwsA(isA<StateError>()),
       );
       expect(repo.activeProfile!.activeMapRegister.value, equals(initialRef));
@@ -177,8 +177,8 @@ void main() {
       );
       final source = FakeMapImageSource(bytes: _makePngHeader(100, 100));
 
-      expect(
-        () => service.setMapFromSource(source, campaignId: 'camp-1'),
+      await expectLater(
+        service.setMapFromSource(source, campaignId: 'camp-1'),
         throwsA(isA<MapIntakeRejected>().having((e) => e.reason, 'reason', MapRejectReason.encoderMismatch)),
       );
       expect(store.putAttempts, isEmpty);
@@ -204,8 +204,8 @@ void main() {
       );
       final source = FakeMapImageSource(bytes: _makePngHeader(100, 100));
 
-      expect(
-        () => service.setMapFromSource(source, campaignId: 'camp-1'),
+      await expectLater(
+        service.setMapFromSource(source, campaignId: 'camp-1'),
         throwsA(isA<MapIntakeRejected>().having((e) => e.reason, 'reason', MapRejectReason.outputTooLarge)),
       );
       expect(store.putAttempts, isEmpty);
