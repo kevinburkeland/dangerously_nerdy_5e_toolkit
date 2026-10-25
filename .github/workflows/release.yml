@@ -61,7 +61,7 @@ jobs:
         run: flutter test --coverage
 
       - name: 🌐 Web Compiler Tests (Chrome)
-        run: flutter test --platform chrome test/application/services/map_slice_1_1_active_map_test.dart test/application/services/cold_iron_pass_7_1_reconcile_law_test.dart test/application/blob/blob_codec_test.dart test/application/blob/blob_transfer_examples_test.dart test/infrastructure/storage/web_blob_store_adapter_test.dart
+        run: flutter test --platform chrome test/application/services/map_slice_1_1_active_map_test.dart test/application/services/cold_iron_pass_7_1_reconcile_law_test.dart test/application/blob/blob_codec_test.dart test/application/blob/blob_transfer_examples_test.dart test/infrastructure/storage/web_blob_store_adapter_test.dart test/application/map/map_image_header_test.dart test/infrastructure/map/web_map_image_intake_adapter_test.dart test/application/map/map_slice_1_3_flow_test.dart
 
       - name: 🌐 Compile Web Release Bundle
         run: ./scripts/build_web.sh
