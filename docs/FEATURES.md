@@ -283,7 +283,7 @@
 ### 16. Persistence, Offline Storage & Eviction-Immunity Durability
 * **Local NoSQL Storage**: Powered by Hive and IndexedDB (`AppDatabaseService`, `HomebrewPersistenceService`, `CharacterPersistenceService`) for instant startup hydration and zero cold-start delay.
 * **Storage Durability & Eviction-Immunity Subsystem**:
-  - **Hexagonal Domain Core (`lib/domain/storage/`)**: Zero-dependency domain models (`EngineProfile`, `StorageTelemetryReport`, `StorageSnapshotBundle`) and abstract port contracts (`IStorageDurabilityPort`, `IPhysicalSnapshotPort`).
+  - **Hexagonal Domain Core (`vtt-engine-core/lib/storage/`)**: Zero-dependency domain models (`EngineProfile`, `StorageTelemetryReport`, `StorageSnapshotBundle`) and abstract port contracts (`IStorageDurabilityPort`, `IPhysicalSnapshotPort`).
   - **Engine Profiling & Deterministic Token Matching**: Classifies Chromium, WebKit, and Gecko environments without regular expressions, accurately identifying Safari 7-day ITP eviction risks (`isWebKitEvictionRisk`) and Firefox gesture fences (`requiresExplicitGesture`).
   - **Silent Preflight Persistence Negotiation**: Coordinates persistence requests prior to IndexedDB/Hive connection pool initialization to prevent browsers from locking storage into an ephemeral tier. Suppresses boot prompts on Firefox Desktop while silently requesting persistence on Chromium and WebKit Standalone PWAs.
   - **Contextual Persistence Gateways**: Prompts for persistence (`StorageLockOfflineAction`) strictly during user-initiated mutation gestures (saving characters, importing homebrew, exporting campaigns).

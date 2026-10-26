@@ -103,5 +103,20 @@ void main() {
       expect(content, contains('github.com/kevinburkeland/dangerously_nerdy_5e_toolkit'),
           reason: 'README.md must link dangerously_nerdy_5e_toolkit repo');
     });
+
+    test('RT6: README sync sentence accurately describes storage, WebRTC, Firestore and relay', () {
+      final readmeFile = File('README.md');
+      expect(readmeFile.existsSync(), isTrue);
+      final content = readmeFile.readAsStringSync();
+
+      expect(content, contains('WebRTC'),
+          reason: 'README.md must contain WebRTC');
+      expect(content, contains('Firestore'),
+          reason: 'README.md must contain Firestore');
+      expect(content, contains('relay'),
+          reason: 'README.md must contain relay');
+      expect(content, isNot(contains('synchronized peer-to-peer')),
+          reason: 'README.md must not contain "synchronized peer-to-peer"');
+    });
   });
 }

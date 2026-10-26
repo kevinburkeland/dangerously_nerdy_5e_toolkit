@@ -10,113 +10,159 @@ This repository strictly follows **Domain-Driven Design (DDD)** combined with **
                             │ uses
 ┌───────────────────────────▼────────────────────────────┐
 │                    Application Layer                   │
-│        lib/application/services/, storage/             │
+│    lib/application/ (services/, storage/, blob/, map/) │
 └──────────────┬───────────────────────────┬─────────────┘
                │ uses                      │ orchestrates
 ┌──────────────▼─────────────┐ ┌───────────▼─────────────┐
 │        Domain Layer        │ │  Infrastructure Layer   │
 │ lib/domain/ & lib/models/  │ │  lib/infrastructure/    │
-│  - models/ & value_objects │ │   - adapters/ (p2p/etc) │
-│  - domain/ingestion/ ASTs  │ │   - dtos/ & dtos/crdt/  │
+│  - domain/ingestion/ ASTs  │ │   - adapters/ (p2p/etc) │
+│  - lib/models/ (5e domain) │ │   - dtos/ & dtos/crdt/  │
 │  - package:vtt_engine_core │ │   - repositories/       │
 │  - package:vtt_ruleset...  │ │   - modules/dnd5e/      │
 └────────────────────────────┘ └─────────────────────────┘
 ```
 
+The codebase contains modern layered folders (`lib/application/`, `lib/domain/`, `lib/infrastructure/`, `lib/presentation/`) alongside older flat folders (`lib/models/`, `lib/screens/`, `lib/services/`, `lib/widgets/`, `lib/providers/`, `lib/theme/`, `lib/utils/`). The older folders represent the pre-extraction layout that is progressively migrated into the hexagonal architecture.
+
+Decision records are indexed in [docs/decisions/README.md](decisions/README.md).
+The complete component index is maintained in [.agents/rules/codebase_map.md](../.agents/rules/codebase_map.md).
+
+Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ lib/application/ lib/infrastructure/dtos/
+
 ## Directory Structure & Layer Responsibilities
 
-### `lib/domain/` & `lib/models/` (The Core Domain)
-Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/
-Note: `lib/models/` is not pure today (known debt).
-- **`lib/domain/ingestion/`**: Structural document parsing, candidate detection, and field extraction ASTs.
-- **`lib/models/`**: D&D 5e domain models (`characters/`, `spells/`, `magic_items/`, `monster_codex/`, `party/`, `arena/`, `dpr/`, `tables/`, `animated_object.dart`, `weapon_mastery.dart`, `exhaustion_state.dart`).
-- **`package:vtt_engine_core`**: System-agnostic tabletop engine primitives:
-  - CvRDT types (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`, `PnCounter`).
-  - Value objects & models (`HitPoints`, `CampaignProfile`, `PartyPurse`, `SessionGraphModels`).
-  - Abstract ports (`ICampaignRepository`, `ICharacterRepository`, `IP2pTransportPort`, `INetworkTimePort`, `IRoomSyncPayloadPort`).
-  - Ruleset SPI (`IRulesetModule`, `ICombatResolver`, `RulesetEdition`).
-  - Agnostic simulation (`DprSimulator`, `PrecomputedAttack`, `CombatEffectRider`).
-  - Storage durability contracts (`IStorageDurabilityPort`, `IPhysicalSnapshotPort`, `StorageSnapshotBundle`).
-- **`package:vtt_ruleset_dnd5e`**: Reusable D&D 5e mechanics:
-  - Ruleset module & progression (`Dnd5eRulesetModule`, `CharacterProgressionEngine`, `CharacterStatCalculator`).
-  - Combat resolution (`Dnd5eCombatResolver`).
-  - Spellcasting rules engine (`SpellcastingRulesEngine`).
-  - Mechanics & states (`ExhaustionState`, `WeaponMastery`).
-- **RULE:** Pure Dart only. Zero Flutter imports in `lib/domain/` and DTOs, verified by `test/domain/domain_purity_test.dart` and `test/infrastructure/dtos/dto_purity_test.dart`.
+| Folder | Responsibilities |
+|---|---|
+| `lib/application` | Top-level application workflows and use-case coordination. |
+| `lib/application/blob` | Large asset transfer protocol, chunking, verification, and data channel messaging. |
+| `lib/application/map` | Battle map intake, grid manipulation, token rules, candidate resolution, and view states. |
+| `lib/application/services` | Replicated room state reconciliation, encounter lifecycles, and clock synchronization. |
+| `lib/application/storage` | Durability coordination, atomic physical snapshot import/export, and checksum verification. |
+| `lib/domain` | Pure Dart tabletop domain logic with zero platform dependencies. |
+| `lib/domain/ingestion` | Structural document parsing, candidate identification, and field extraction ASTs. |
+| `lib/domain/ingestion/capability` | Ingestion capability descriptors and structural pattern evaluators. |
+| `lib/domain/ingestion/descriptors` | Structural document descriptors and entity metadata definitions. |
+| `lib/domain/ingestion/engine` | Ingestion parser engines, section dividers, and structural token matchers. |
+| `lib/domain/ingestion/models` | Document AST nodes, extraction results, and structural candidate models. |
+| `lib/domain/ingestion/services` | Ingestion workbench orchestration and document candidate detection services. |
+| `lib/infrastructure` | Concrete infrastructure implementations of domain and engine ports. |
+| `lib/infrastructure/adapters` | Platform and network adapters for peer-to-peer transport, storage, and remote ingestion. |
+| `lib/infrastructure/adapters/dtos` | Internal DTO structures for network and serialization transport adapters. |
+| `lib/infrastructure/adapters/p2p` | WebRTC mesh networking, Firestore fallback relay, and signaling adapters. |
+| `lib/infrastructure/adapters/remote` | HTTP fetching and remote GitHub compendium ingestion clients. |
+| `lib/infrastructure/adapters/storage` | Campaign snapshot file serialization adapters. |
+| `lib/infrastructure/di` | Service locator registry and dependency injection container (`sl`). |
+| `lib/infrastructure/dtos` | Wire and disk serialization DTOs enforcing bounds clamping. |
+| `lib/infrastructure/dtos/crdt` | Serialization DTOs for CvRDT primitives and hybrid logical clocks. |
+| `lib/infrastructure/map` | Battle map image intake, encoding, and storage adapters. |
+| `lib/infrastructure/map/stub` | Fallback platform stub for map intake and image decoding. |
+| `lib/infrastructure/map/web` | Web canvas map image re-encoding and dimension scaling adapter. |
+| `lib/infrastructure/mappers` | Anti-corruption layer mappers for external homebrew and room sync payloads. |
+| `lib/infrastructure/migration` | Data store migration scripts and schema evolution utilities. |
+| `lib/infrastructure/modules` | Modular game system adapters for the engine SPI. |
+| `lib/infrastructure/modules/dnd5e` | Concrete D&D 5e engine plug-ins bridging the toolkit to `vtt_ruleset_dnd5e`. |
+| `lib/infrastructure/repositories` | Local campaign and character persistence repositories implementing engine ports. |
+| `lib/infrastructure/resolvers` | Runtime telemetry resolvers and character state evaluators. |
+| `lib/infrastructure/storage` | Storage durability and snapshot platform adapters. |
+| `lib/infrastructure/storage/stub` | Unsupported platform stub for storage durability snapshotting. |
+| `lib/infrastructure/storage/web` | Web IndexedDB blob store and snapshot download/upload adapters. |
+| `lib/models` | D&D 5e domain models and backward-compatible re-export barrels. |
+| `lib/presentation` | Tabletop user interface presentation components and feature shells. |
+| `lib/presentation/codex` | Reusable codex shells, search bars, mode selectors, and filter strips. |
+| `lib/presentation/common` | Common presentation widgets, status indicators, and responsive containers. |
+| `lib/presentation/core` | Core accessible action tiles and formatted text presentation widgets. |
+| `lib/presentation/screens` | Dedicated presentation screen layouts. |
+| `lib/presentation/screens/homebrew` | Homebrew studio views, expert options, and creator workspaces. |
+| `lib/presentation/screens/map` | Dedicated full-screen tabletop battle map view (`MapScreen`). |
+| `lib/presentation/storage` | Durability status banners and storage persistence management widgets. |
+| `lib/presentation/widgets` | Modular presentation UI components and modals. |
+| `lib/presentation/widgets/map` | Battle map rendering canvas, grid overlay, token layer, and control panels. |
+| `lib/providers` | State controllers and change notifiers (`CharacterSheetController`, `SettingsProvider`). |
+| `lib/screens` | Feature screen layouts (Character Sheet, Builder, DM Dashboard, Compendiums). |
+| `lib/services` | Rules engines, persistence services, and Anti-Corruption Layer parsers. |
+| `lib/theme` | Fantasy accent color palettes, OLED black theme, and typography styles. |
+| `lib/utils` | Cryptographic utilities, secure random generation, and platform helpers. |
+| `lib/widgets` | Modular UI components, dialogs, and compendium cards. |
 
-### `lib/application/` (Use Cases & Orchestration)
-The orchestration layer coordinating domain logic and infrastructure ports.
-- **`services/`**:
-  - `RoomStateReconciliationService`: Merges replicated room state deltas with fault isolation.
-  - `CascadingTransportRouter`: Manages the 4-tier transport waterfall (LAN, WebRTC, Firebase relay, offline).
-  - `ClockSyncService`: Maintains authoritative logical time across peers.
-  - `CombatEncounterService`: Manages multi-creature encounter lifecycles and turn execution.
-  - `PartyRoomService`: Handles campaign room connectivity, peer discovery, and state streaming.
-  - `HomebrewImportOrchestrator`: Coordinates safe ingestion and schema migration of external content.
-- **`storage/`**:
-  - `StorageDurabilityCoordinator`: Orchestrates atomic physical snapshot exports and imports with SHA-256 checksum verification.
+## The Battle Map
 
-### `lib/infrastructure/` (Adapters & External I/O)
-Implementations of abstract domain ports, remote gateways, and concrete I/O.
-- **`adapters/`**:
-  - `p2p/`: Transport implementations (`LocalWifiAdapter`, `WebRtcMeshAdapter`, `FirebaseFallbackAdapter`, `FirebaseSignalingAdapter`).
-  - `remote/`: Remote fetch clients (`GithubIngestorAdapter`, `HttpFetchClient`).
-  - `storage/`: `CampaignSnapshotSerializerAdapter`.
-- **`dtos/`**: Wire and disk serialization (`CharacterDto`, `CampaignProfileDto`, `AnimatedObjectDto`, `HomebrewEntityDto`, `crdt/`). Enforces bounds clamping and unparsed payload preservation.
-- **`modules/dnd5e/`**: Concrete plug-ins bridging the toolkit to `vtt_ruleset_dnd5e`.
-- **`repositories/`**: Concrete persistence adapters (`LocalCampaignRepository`, `LocalCharacterRepository`).
-- **`storage/`**: Durability adapters (`PhysicalSnapshotAdapter`, `StorageDurabilityAdapter`).
-- **`di/`**: Service locator registry (`injection_container.dart` via `sl`).
+The battle map subsystem provides tactical grid maps and token movement for shared multiplayer sessions.
 
-### `lib/presentation/`, `lib/screens/`, `lib/widgets/` (The Tabletop UI)
-Flutter presentation layer adhering to strict accessibility standards (minimum 48dp touch targets, `TextScaler.linear(2.0)` scalability).
-- **`presentation/`**: Reusable codex components (`CodexPageShell`, `CodexModeSelector`), accessible action tiles, and connection badges.
-- **`screens/`**: Primary application views (`CharacterSheetView`, `CharacterBuilderScreen`, `ArenaScreen`, `DprCalculatorScreen`, `PartyRoomScreen`, `DmDashboardScreen`).
-- **`widgets/`**: Modular components, dice animations, and modal sheets.
-- **`providers/`**: State controllers (`CharacterSheetController`, `SettingsProvider`).
-- **`theme/`**: Fantasy accent palettes, OLED pitch black mode, and typography.
-- **RULE:** UI code must not contain core business logic or dice simulation math.
+```
+DM Image Pick ──> MapIntakeService ──> WebBlobStoreAdapter (IndexedDB)
+                         │                          │
+                         ▼                          ▼
+                   CampaignProfile          BlobTransferService (WebRTC)
+                 (BlobRef SHA-256)                  │
+                         │                          ▼
+                         └─────────────> ActiveMapController ──> MapView
+```
 
----
+### State & Storage Separation
+- **References in Replicated State:** The campaign state stores only metadata references, never raw image bytes. `CampaignProfile` in `vtt-engine-core/lib/models/campaign_profile.dart` holds `activeMapRegister` (`CrdtLwwRegister<BlobRef?>`), `mapGridRegister` (`CrdtLwwRegister<MapGrid?>`), `mapTokens` (`CrdtOrSet<MapToken>`, token identity), and `mapTokenCells` (`CrdtOrSet<MapTokenCell>`, token position). `BlobRef`, `MapGrid`, and `MapToken` reside in `vtt-engine-core/lib/models/value_objects/`.
+- **Local Content-Addressed Store:** Blobs are stored locally on each device via `BlobStorePort`. `BlobStoreAdapter` (`lib/infrastructure/storage/web/web_blob_store_adapter.dart`) stores chunks in IndexedDB keyed by their SHA-256 hash. If IndexedDB fails to open, the store fails closed, transitioning the controller to `MapStoreUnavailable`.
+
+### Intake Pipeline
+- **Validation & Transcoding:** When a DM selects an image, `MapIntakeService` (`lib/application/map/map_intake_service.dart`) validates header limits before decoding via `lib/application/map/map_image_header.dart`.
+- **Intake Limits:** Constants enforce safety: `kMapInputMaxBytes = 209715200` (200 MiB file size limit), `kMapInputMaxLongestSidePx = 8192` (maximum input dimension), `kMapHeaderScanMaxBytes = 16777216` (16 MiB header scan window), and `kMapOutputMaxLongestSidePx = 4096` (maximum output dimension).
+- **Web Intake Adapter:** On web (`lib/infrastructure/map/web/web_map_image_intake_adapter.dart`), images larger than 4,096 px on their longest side are scaled down and re-encoded to WebP or JPEG. The image's content ID is the SHA-256 hash of the resulting bytes.
+
+### Peer-to-Peer Transfer
+- **Dedicated Data Channel:** `BlobTransferService` (`lib/application/blob/blob_transfer_service.dart`) coordinates file distribution over a dedicated WebRTC data channel (`kBlobChannelLabel = 'dn5e_blob'`) defined in `lib/application/blob/blob_transfer_protocol.dart`.
+- **Swarm Pull Model:** Peers pull missing chunks from any connected peer that holds the complete blob.
+- **Integrity Verification:** `verifyBlob` (`lib/application/blob/blob_verifier.dart`) checks both byte length, format signature, and SHA-256 checksum (returning `BlobVerdict`) before committing received bytes to the local store.
+- **Relay Fallback Behavior:** Only `WebRtcMeshAdapter` implements `BlobChannelPort`. Devices connected exclusively through the Firestore fallback relay cannot transfer or receive large binary assets. When an un-cached map is active over relay, `ActiveMapController` transitions to `MapRelayOnly`, and `MapView` informs the player: `"This map can't reach you over the relay connection. Ask the DM to connect you directly."`.
+
+### Controller & View State
+- **State Machine:** `ActiveMapController` (`lib/application/map/active_map_controller.dart`) manages lifecycle transitions across `MapNone`, `MapLoading`, `MapDownloading`, `MapWaitingForPeer`, `MapConnecting`, `MapRelayOnly`, `MapStoreUnavailable`, `MapReady`, and `MapFailed`.
+- **Grid Geometry:** `MapGridService`, `MapGridEditor` (`lib/application/map/map_grid_editor.dart`), and `lib/application/map/grid_geometry.dart` handle grid cell dimensions, pixel offsets, and Chebyshev 5e distance calculations ("every square counts once").
+- **Token Rules & Placement:** `MapTokenService`, `MapTokenMover` (`lib/application/map/map_token_mover.dart`), `lib/application/map/map_token_rules.dart`, and `lib/application/map/map_token_candidates.dart` govern token authorization: DMs can move any token, while players are restricted to tokens linked to their assigned characters or owned minions.
+- **UI Components:** The map is accessed via `MapScreen` in `lib/presentation/screens/map/map_screen.dart`, launched directly from buttons in `lib/screens/party_room_screen.dart` and `lib/screens/dm_dashboard_screen.dart`. Canvas rendering, token interaction layers, and control toolbars reside in `lib/presentation/widgets/map/` (`MapView`, `MapTokenLayer`, `MapGridOverlay`, `MapGridControls`, `MapTokenPanel`).
+
+## Synchronization & Transport Topology
+
+Party synchronization operates without central authority using a multi-tier transport architecture:
+
+1. **WebRTC Mesh (`WebRtcMeshAdapter`):**
+   - Direct peer-to-peer data channels established via polite peer glare handling.
+   - Carries bidirectional CvRDT state deltas and high-throughput blob transfer.
+2. **Cloud Firestore Fallback Relay (`FirebaseFallbackAdapter`):**
+   - Activated automatically when symmetric NATs or restrictive firewalls prevent direct WebRTC negotiation.
+   - Relays JSON state payloads with an upper bound limit (`maxRelayPayloadLength = 999999` characters).
+   - Inbound frames undergo SHA-256 LRU deduplication and sliding lookback filtering to prevent reflection loops.
+3. **Offline Persistence & Anti-Entropy:**
+   - When disconnected from all network transports, changes persist locally in IndexedDB / Hive.
+   - Upon reconnecting, convergence executes via anti-entropy mechanisms (sync on start, transport activation, new peer connection, reply when behind, and periodic 30-second sweeps).
+4. **Local Wi-Fi Stub (`LocalWifiAdapter`):**
+   - `LocalWifiAdapter.initializeRoom` throws `UnsupportedError`. LAN discovery is currently a non-functional stub.
+
+### Firestore Security & Data Paths
+The Firestore database structure declared in `firestore.rules` enforces capability isolation:
+- `rooms/{roomCode}`: Public lobby document containing `roomCode`, `campaignName`, `hostKeyHash`, `expiresAt`, `createdAt`, `lastUpdated`, `version`, `activePlayers`, `partyTelemetry`, and `sharedCharacters`.
+- `rooms/{roomCode}/hostProof/current`: Write-only administrative proof. Rules verify `effectiveHash(hostProof.key) == room.hostKeyHash` before allowing room deletion or modification of core identity fields (`campaignId`, `rulesetId`).
+- `rooms/{roomCode}/signaling/{signalId}` and `rooms/{roomCode}/nodes/{toNodeId}/signals/{signalId}`: Ephemeral signaling exchange for WebRTC session descriptions and ICE candidates.
+- `rooms/{roomCode}/relay_messages/{messageId}`: Relayed sync messages for devices unable to negotiate direct P2P connections.
+- `rooms/{roomCode}/loot/{lootId}`: Shared party loot log entries.
+- `rooms/{roomCode}/events/{eventId}`: Campaign room activity event log.
+- `rooms/{roomCode}/rolls/{rollId}`: Real-time 3D dice roll results broadcast to party members.
+
+## Trust model as built
+
+- **No User Accounts:** There is no authentication system, sign-in screen, or Firebase Auth integration. The project avoids collecting personal identifying information.
+- **Room Code as Capability:** The 6-character room code represents the capability to discover, read, and join a multiplayer session. Anyone holding the code can participate in room chat, view shared characters, and exchange state deltas.
+- **Host Key & DM Passkey:** The DM device generates a cryptographically secure random UUID v4 (`CryptoUtils.generateHostKey()`). The Firestore room document stores only its SHA-256 hash (`hostKeyHash`). The raw UUID acts as the DM passkey. `PartyRoomService.claimDmRole()` verifies this passkey against `hostKeyHash` to grant co-DM capabilities.
+- **Open Player Writing:** Any client holding the room code can write player presence (`activePlayers`), character summary projections (`sharedCharacters`), and WebRTC signaling documents. This design ensures joining requires no administrative approval or host credentials.
+- **Non-Authoritative P2P Messaging:** State deltas exchanged peer-to-peer or over relay are not authorised per writer; any connected device can emit CRDT joins. DM-specific controls (such as moving any token or modifying foreign characters) are enforced solely in the client UI.
+- **App Check:** reCAPTCHA-based App Check is enabled in the Firebase console to mitigate automated abuse.
 
 ## State-Based Distributed Synchronization (CvRDT)
 
-Network and room state is state-based and conflict-free (CvRDT):
-- **Join-Semilattice Convergence:** State mutations are structured as Convergent Replicated Data Types (CvRDTs) merged via commutative, associative, and idempotent join functions (`CampaignProfile.join`, `RoomNodeState.join`).
-- **Causality & Ordering:** Monotonic causality is tracked via **Hybrid Logical Clocks (HLC)** with deterministic `nodeId` lexicographical tie-breaking.
+- **Join-Semilattice Convergence:** Replicated state converges deterministically via commutative, associative, and idempotent join functions (`CampaignProfile.join`, `RoomNodeState.join`).
+- **Logical Time:** Causality is ordered using Hybrid Logical Clocks (`HybridLogicalClock`) with lexicographical `nodeId` tie-breaking.
 - **Granular Fault Isolation:** Replicated state merges isolate errors per subresource (`entityInstances`, `containers`, `characters`). A malformed or unresolvable entity is preserved without aborting the join of other valid entities.
-- **Currency PN-Counters:** Currency balances replicate across peers using Positive-Negative Counters (`PnCounter`), decrementing via signed differential adjustments rather than positive scalars.
-- Detailed implementation rules are documented in `docs/DATA_SAFETY_AND_CRDT.md` and `.agents/rules/crdt_and_sync.md`.
-
----
+- **Currency Counters:** Party currency balances replicate using Positive-Negative Counters (`PnCounter`), decrementing via signed differential adjustments rather than absolute scalars.
 
 ## Legacy Data
 
 Pre-CRDT campaign records stored coins in scalar fields, which map to an initial PN-counter slot (`init`). When two replicas that both hold legacy balances merge, identical balances converge to that balance, while differing balances resolve to the per-denomination maximum rather than their sum. This prevents doubling coins across normal two-device baselines of the same campaign; subsequent credits and debits via CRDT operations mutate independent replica slots and add normally.
-
----
-
-## Trust Model & Transport Topology
-
-1. **4-Tier Transport Waterfall:**
-   - Local Wi-Fi is a stub (`LocalWifiAdapter.initializeRoom` throws `UnsupportedError`; there is no LAN transport).
-   - Peer-to-peer data channels are established using WebRTC mesh networking (`WebRtcMeshAdapter`) with polite peer glare handling.
-   - If direct P2P connections cannot be negotiated (symmetric NATs, firewalls), traffic seamlessly falls back to Cloud Firestore relay channels (`FirebaseFallbackAdapter`).
-   - If completely disconnected, state changes persist locally and converge automatically upon reconnection via five anti-entropy triggers (send on start, transport active, new peer, reply when behind, and periodic 30-second broadcast).
-2. **Relay Hardening & Deduplication:**
-   - Fallback relay messages enforce an explicit upper payload limit (`maxRelayPayloadLength = 999999` characters) enforced by both client adapters and Firestore security rules.
-   - Inbound transport frames undergo SHA-256 LRU deduplication and sliding lookback filtering to prevent reflection loops and replay attacks.
-3. **Integrity & Authorization:**
-   - Physical storage snapshots include constant-time SHA-256 payload checksums.
-   - Peer-to-peer sync messages are not authorized per writer; any device in the room can modify any replicated field. DM privileges are enforced only in the client UI.
-
----
-
-## Trust model as built
-
-- There are no user accounts and no Firebase Auth. The room code is the capability: anyone who has it can read the room and join.
-- The host key is a random UUID made on the DM's device. The room document stores only its SHA-256 hash. Firestore rules require proof of the host key to delete the room or change its identity fields.
-- Any code holder can write the lobby's player fields (shared characters, party telemetry, active players) and can delete signalling documents. This is deliberate: joining must work without the host key.
-- Peer-to-peer sync messages are not authorised per writer. Any device in the room can change any replicated field. The DM role is enforced only in the client UI.
-- App Check with reCAPTCHA is enforced in the Firebase console (not visible in the repo).
-- The DM passkey is the raw host key (see Fix 4).

@@ -63,3 +63,10 @@ Before completing any engineering task:
 ## 6. Repository Hygiene & Mutation Branches
 - Mutation branches are named `mutation/<slice-id>-<id>` and exist only while their slice is under review. Don't delete them yourself. After the review closes, the reviewer archives them as patches and a later prompt deletes them by exact SHA. CI fails above 20 per repo.
 - READMEs and docs never state test counts or hand-typed status; use generated badges.
+
+## 7. Documentation Maintenance & Link Invariants
+- **Codebase Map Synchronization:** When you add, move or delete a folder or a public type under `lib/`, run `dart run tool/generate_codebase_map.dart` and commit the result.
+- **Architecture Folder Table:** A new folder up to two levels under a layered folder must also get a row in `docs/ARCHITECTURE.md`.
+- **Cross-Repository Paths:** Docs name paths in other repos with the repo name first (e.g. `vtt-engine-core/test/compliance/`).
+- **No File Scheme Links:** Docs never link `file:` paths; use relative repository links.
+

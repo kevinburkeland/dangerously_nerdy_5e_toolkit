@@ -29,6 +29,37 @@ String _joinAndNormalize(String dir, String rel) {
   return res.isEmpty ? '.' : res;
 }
 
+List<String> findMarkdownFiles(String repoRoot) {
+  final rootDir = Directory(repoRoot);
+  final skipNames = {'.git', '.dart_tool', 'build', 'ephemeral', 'node_modules'};
+  final results = <String>[];
+
+  void walk(Directory dir) {
+    for (final entity in dir.listSync(followLinks: false)) {
+      final p = entity.path.replaceAll('\\', '/');
+      final segs = p.split('/');
+      if (segs.any((s) => skipNames.contains(s))) continue;
+      if (p.contains('test/fixtures')) continue;
+      if (entity is Directory) {
+        walk(entity);
+      } else if (entity is File) {
+        var rel = p.startsWith('./') ? p.substring(2) : p;
+        if (repoRoot != '.' && repoRoot.isNotEmpty && rel.startsWith('$repoRoot/')) {
+          rel = rel.substring(repoRoot.length + 1);
+        }
+        if (rel.startsWith('./')) rel = rel.substring(2);
+        if (rel.endsWith('.md') || rel.endsWith('.antigravityrules')) {
+          results.add(rel);
+        }
+      }
+    }
+  }
+
+  walk(rootDir);
+  results.sort();
+  return results;
+}
+
 /// Checks markdown content for bad links, returning one problem per bad link.
 /// Names the link text and target in each problem description.
 List<String> markdownLinkProblems(String markdown, String fileDir) {
@@ -77,11 +108,12 @@ List<String> markdownLinkProblems(String markdown, String fileDir) {
       t = titleMatch.group(1)!;
     }
 
-    if (t.startsWith('file:')) {
+    final lower = t.toLowerCase();
+    if (lower.startsWith('file:')) {
       problems.add('$label($t): file: scheme is forbidden');
       return;
     }
-    if (t.startsWith('http:') || t.startsWith('https:') || t.startsWith('mailto:')) {
+    if (lower.startsWith('http:') || lower.startsWith('https:') || lower.startsWith('mailto:')) {
       return;
     }
     if (t.startsWith('#')) {
@@ -107,18 +139,60 @@ List<String> markdownLinkProblems(String markdown, String fileDir) {
     }
   }
 
-  // Reference definitions: ^[id]: target
+  // Reference definitions: ^[id]: target (excluding footnote definitions)
   final refDefPattern = RegExp(r'^[ \t]*\[([^\]]+)\]:[ \t]*([^\s]+)', multiLine: true);
   for (final m in refDefPattern.allMatches(cleanMarkdown)) {
-    checkTarget('[${m.group(1)!}]', m.group(2)!);
+    final ref = m.group(1)!;
+    if (ref.startsWith('^')) {
+      continue;
+    }
+    checkTarget('[$ref]', m.group(2)!);
   }
 
-  // Inline links and images: ![alt](target) or [text](target)
-  final linkPattern = RegExp(r'(!?)\[([^\]]*)\]\(([^)]+)\)');
-  for (final m in linkPattern.allMatches(cleanMarkdown)) {
-    final prefix = m.group(1) ?? '';
-    final text = m.group(2) ?? '';
-    checkTarget('$prefix[$text]', m.group(3)!);
+  // Autolinks: <scheme:...>
+  final autolinkPattern = RegExp(r'<([a-zA-Z][a-zA-Z0-9+.-]*:[^>\s]+)>');
+  for (final m in autolinkPattern.allMatches(cleanMarkdown)) {
+    final target = m.group(1)!;
+    checkTarget('<$target>', target);
+  }
+
+  // Inline links and images: find every ](target)
+  final targetPattern = RegExp(r'\]\(([^)\n]+)\)');
+  for (final m in targetPattern.allMatches(cleanMarkdown)) {
+    final target = m.group(1)!;
+    final closeBracketIdx = m.start;
+
+    int depth = 1;
+    int idx = closeBracketIdx - 1;
+    int startBracketIdx = -1;
+
+    while (idx >= 0) {
+      final ch = cleanMarkdown[idx];
+      if (ch == '\n') break;
+      if (ch == ']') {
+        depth++;
+      } else if (ch == '[') {
+        depth--;
+        if (depth == 0) {
+          startBracketIdx = idx;
+          break;
+        }
+      }
+      idx--;
+    }
+
+    String label;
+    if (startBracketIdx != -1) {
+      if (startBracketIdx > 0 && cleanMarkdown[startBracketIdx - 1] == '!') {
+        label = cleanMarkdown.substring(startBracketIdx - 1, closeBracketIdx + 1);
+      } else {
+        label = cleanMarkdown.substring(startBracketIdx, closeBracketIdx + 1);
+      }
+    } else {
+      label = '[link]';
+    }
+
+    checkTarget(label, target);
   }
 
   // HTML src and href attributes
@@ -132,34 +206,8 @@ List<String> markdownLinkProblems(String markdown, String fileDir) {
 
 void main() {
   group('Markdown Link Checks', () {
-    test('ML1: real check on app markdown files and docs/ recursively', () {
-      final explicitFiles = [
-        'README.md',
-        'CONTRIBUTING.md',
-        'CODE_OF_CONDUCT.md',
-        'CHANGELOG.md',
-        'PRIVACY_POLICY.md',
-        'TERMS_OF_SERVICE.md',
-      ];
-
-      for (final relPath in explicitFiles) {
-        final file = File(relPath);
-        expect(file.existsSync(), isTrue, reason: 'Expected $relPath to exist');
-      }
-
-      final docsDir = Directory('docs');
-      expect(docsDir.existsSync(), isTrue);
-      final docsFiles = docsDir
-          .listSync(recursive: true)
-          .whereType<File>()
-          .where((f) => f.path.endsWith('.md'))
-          .map((f) => f.path)
-          .toList();
-
-      expect(docsFiles.length, greaterThanOrEqualTo(4),
-          reason: 'Expected at least 4 markdown files under docs/');
-
-      final allFilesToCheck = [...explicitFiles, ...docsFiles];
+    test('ML1: real check on all repository markdown files and .antigravityrules', () {
+      final allFilesToCheck = findMarkdownFiles('.');
       final allProblems = <String>[];
 
       for (final filePath in allFilesToCheck) {
@@ -173,6 +221,44 @@ void main() {
 
       expect(allProblems, isEmpty,
           reason: 'Found markdown link problems in repository:\n${allProblems.join('\n')}');
+    });
+
+    test('ML4: scope control verifying markdown file collection', () {
+      final files = findMarkdownFiles('.');
+      // ignore: avoid_print
+      print('ML4 collected markdown file count: ${files.length}');
+
+      const requiredFiles = [
+        'README.md',
+        'AGENTS.md',
+        'GEMINI.md',
+        '.antigravityrules',
+        '.agents/rules/a11y_and_ui.md',
+        '.agents/rules/architecture.md',
+        '.agents/rules/codebase_map.md',
+        '.agents/rules/crdt_and_sync.md',
+        '.agents/rules/data_and_performance.md',
+        '.agents/rules/dnd_rulesets.md',
+        '.agents/rules/testing_and_workflows.md',
+        '.github/PULL_REQUEST_TEMPLATE.md',
+        'docs/ARCHITECTURE.md',
+        'docs/decisions/0001-party-state-owner.md',
+        'firestore_rules_test/README.md',
+        'web/legal/PRIVACY_POLICY.md',
+      ];
+
+      for (final req in requiredFiles) {
+        expect(files, contains(req), reason: 'ML1 file list must contain $req');
+      }
+
+      for (final f in files) {
+        expect(f.startsWith('test/fixtures/'), isFalse,
+            reason: 'ML1 must not include test/fixtures/: $f');
+        expect(f.contains('.dart_tool/'), isFalse,
+            reason: 'ML1 must not include .dart_tool/: $f');
+        expect(f.startsWith('build/'), isFalse,
+            reason: 'ML1 must not include build/: $f');
+      }
     });
 
     test('ML2: control on the old README fixture', () {
@@ -285,6 +371,59 @@ void main() {
 
         // an https link (fine)
         expect(markdownLinkProblems('[remote](https://example.com/docs)', tempDir.path), isEmpty);
+
+        // new ML3 cases:
+        // 1. badge wrapped link missing outer target
+        final badgeMissingLicense = markdownLinkProblems(
+          '[![b](https://x/y.svg)](MISSING_LICENSE)',
+          tempDir.path,
+        );
+        expect(badgeMissingLicense, hasLength(1));
+        expect(badgeMissingLicense.first, contains('MISSING_LICENSE'));
+
+        // 2. badge wrapped link with existing files
+        expect(
+          markdownLinkProblems('[![b](good.png)](good.txt)', tempDir.path),
+          isEmpty,
+        );
+
+        // 3. badge wrapped link with missing inner image
+        final badgeMissingImg = markdownLinkProblems(
+          '[![b](missing.png)](good.txt)',
+          tempDir.path,
+        );
+        expect(badgeMissingImg, hasLength(1));
+        expect(badgeMissingImg.first, contains('missing.png'));
+
+        // 4. footnotes
+        expect(
+          markdownLinkProblems('[^1]: Some text here.', tempDir.path),
+          isEmpty,
+        );
+        expect(
+          markdownLinkProblems('See this[^1].', tempDir.path),
+          isEmpty,
+        );
+
+        // 5. autolinks
+        final autoFile = markdownLinkProblems('<file:///x>', tempDir.path);
+        expect(autoFile, hasLength(1));
+        expect(autoFile.first, contains('file:'));
+        expect(markdownLinkProblems('<https://example.com>', tempDir.path), isEmpty);
+
+        // 6. case-insensitive schemes
+        final upperFile = markdownLinkProblems('[a](FILE:///x)', tempDir.path);
+        expect(upperFile, hasLength(1));
+        expect(upperFile.first, contains('file:'));
+        expect(markdownLinkProblems('[a](HTTPS://example.com)', tempDir.path), isEmpty);
+
+        // 7. two links on one line
+        final twoOnOneLine = markdownLinkProblems(
+          '[a](good.txt) and [b](missing.txt)',
+          tempDir.path,
+        );
+        expect(twoOnOneLine, hasLength(1));
+        expect(twoOnOneLine.first, contains('missing.txt'));
       } finally {
         tempDir.deleteSync(recursive: true);
       }

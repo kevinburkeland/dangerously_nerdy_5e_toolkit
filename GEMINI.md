@@ -3,15 +3,15 @@
 This project enforces **Domain-Driven Design (DDD)**, **Hexagonal Architecture**, **CvRDT Distributed State Synchronization**, and **SRD 5.1 / 5.2.1 Dual-Ruleset Compliance**.
 
 For full system architecture, fast navigation indexes, and detailed engineering directives, refer to the canonical governance files:
-- [.antigravityrules](file:///.antigravityrules): Repository Constitution & Hard Architectural Invariants
-- [AGENTS.md](file:///AGENTS.md): Architecture & Navigation Operating Manual
-- [.agents/rules/architecture.md](file:///.agents/rules/architecture.md): Hexagonal Boundaries, Layers & Semantic Ownership
-- [.agents/rules/crdt_and_sync.md](file:///.agents/rules/crdt_and_sync.md): CvRDT Convergence, Protocols & Transport Waterfall
-- [.agents/rules/dnd_rulesets.md](file:///.agents/rules/dnd_rulesets.md): 2014 RAW vs 2024 Revised Dual-Ruleset Matrix
-- [.agents/rules/data_and_performance.md](file:///.agents/rules/data_and_performance.md): DTO Boundaries, Hot-Loop Math & Storage Durability
-- [.agents/rules/a11y_and_ui.md](file:///.agents/rules/a11y_and_ui.md): Touch Targets (48dp), Semantics & Dynamic Type Scaling (2.0x)
-- [.agents/rules/testing_and_workflows.md](file:///.agents/rules/testing_and_workflows.md): Targeted Test Commands & Quality Gates
-- [.agents/rules/codebase_map.md](file:///.agents/rules/codebase_map.md): Codebase Fast Lookup Map
+- [.antigravityrules](.antigravityrules): Repository Constitution & Hard Architectural Invariants
+- [AGENTS.md](AGENTS.md): Architecture & Navigation Operating Manual
+- [.agents/rules/architecture.md](.agents/rules/architecture.md): Hexagonal Boundaries, Layers & Semantic Ownership
+- [.agents/rules/crdt_and_sync.md](.agents/rules/crdt_and_sync.md): CvRDT Convergence, Protocols & Transport Waterfall
+- [.agents/rules/dnd_rulesets.md](.agents/rules/dnd_rulesets.md): 2014 RAW vs 2024 Revised Dual-Ruleset Matrix
+- [.agents/rules/data_and_performance.md](.agents/rules/data_and_performance.md): DTO Boundaries, Hot-Loop Math & Storage Durability
+- [.agents/rules/a11y_and_ui.md](.agents/rules/a11y_and_ui.md): Touch Targets (48dp), Semantics & Dynamic Type Scaling (2.0x)
+- [.agents/rules/testing_and_workflows.md](.agents/rules/testing_and_workflows.md): Targeted Test Commands & Quality Gates
+- [.agents/rules/codebase_map.md](.agents/rules/codebase_map.md): Codebase Fast Lookup Map
 
 ---
 

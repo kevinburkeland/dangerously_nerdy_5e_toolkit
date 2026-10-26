@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-10-26
+- Cleanup slice 2: Architecture documentation truth, generated codebase map tool, architecture decision records, markdown link verification, and accurate sync description.
 - Cleanup slice 1: Streamline README, extract feature catalog to docs/FEATURES.md, add mutation branch CI checks, link validation test, and repository hygiene rules.
 - Map slice 1.6: Battle map tokens layout, mover, candidates, view, layer, picker, panel, screens, and source bars.
 

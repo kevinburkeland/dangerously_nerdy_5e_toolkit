@@ -34,7 +34,7 @@
 ### 1.1. Upstream Engine & Ruleset Boundaries & Semantic Ownership
 - **Semantic Ownership Principle:** Reusable D&D mechanics belong in `vtt-ruleset-dnd5e`. Application orchestration and platform integration belong in the toolkit. Generic tabletop concepts belong in `vtt-engine-core`. Ownership follows semantics, not convenience or current call-site count. The toolkit should not silently re-grow a second internal D&D rules engine.
 - **Engine Extension Rule:** Do not reimplement generic engine infrastructure locally merely because the toolkit needs customization. Extend or adapt engine contracts (`IRulesetModule`, `ICombatResolver`, `ISimulationStrategy`, `IP2pTransportPort`) at the ruleset/application boundary.
-- **Agnostic Core (`vtt_engine_core`):** Standalone tabletop domain models (`HitPoints`, `CoreTypes`, `CampaignProfile`, `PartyPurse`), CvRDT primitives (`HybridLogicalClock`, `CrdtOrSet`, `PnCounter`, `CrdtLwwRegister`), storage durability contracts, and ruleset SPI reside in `vtt_engine_core`.
+- **Agnostic Core (`vtt_engine_core`):** Standalone tabletop domain models (`HitPoints`, `EntityReference`, `CampaignProfile`, `PartyPurse`), CvRDT primitives (`HybridLogicalClock`, `CrdtOrSet`, `PnCounter`, `CrdtLwwRegister`), storage durability contracts, and ruleset SPI reside in `vtt_engine_core`.
 - **Reusable Ruleset Module (`vtt_ruleset_dnd5e`):** Canonical D&D 5e dual-ruleset implementation, progression engines, spellcasting rules, combat arbitration, and canonical 5e domain models reside in `vtt_ruleset_dnd5e`.
 
 ### 1.2. Domain Layer (`lib/domain/`, `lib/models/`, `lib/services/rules/`)
@@ -42,7 +42,7 @@
 - **Domain Ingestion Engine (`lib/domain/ingestion/`):** Pure Dart document structure parser, candidate detector, and field extraction ASTs.
 - **D&D 5e Domain Models (`lib/models/`):** Strongly typed 5e entities (`characters/`, `spells/`, `monster_codex/`, `magic_items/`, `weapon_mastery.dart`, `animated_object.dart`, `exhaustion_state.dart`).
 - **Compatibility Re-export Barrels (`lib/models/domain/`):** Provide backward-compatible re-exports for historical import paths. These barrels must not be confused with canonical ownership.
-- **D&D 5e Rules Engines (`lib/services/rules/`):** Concrete rules evaluation (`Dnd5eRulesEngine`, `AcEngineAndInventory`, `CharacterActionsResolver`, `CharacterProgressionEngine`, `CharacterReparseEngine`, `SpellcastingRulesEngine`).
+- **D&D 5e Rules Engines (`lib/services/rules/`):** Concrete rules evaluation (`CharacterActionsResolver`, `CharacterProgressionEngine`, `CharacterReparseEngine`, `SpellcastingRulesEngine`).
 - **Pure Models & Copy-Transforms:** Entities and value objects must have `const` constructors and `copyWith()` mutators. In-place mutating methods (`takeDamage`, `heal`, `applyHeal`, `grantTempHp`) are strictly forbidden; use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`).
 
 ### 1.3. Application Layer (`lib/application/`)
@@ -72,7 +72,7 @@
 When inspecting, editing, or executing commands in an external repository (such as `../vtt-engine-core`):
 1. **Mandatory Ingestion:** The agent MUST view and parse `../<target-repo>/.antigravityrules` and `../<target-repo>/AGENTS.md` before making any modifications.
 2. **Context Suspension:** For any code inside that target repository, the agent MUST explicitly suspend and disregard host-specific guidelines (e.g., Flutter UI widgets, D&D 5e mechanics, 48dp touch targets, SRD legal compendiums).
-3. **Local Governance:** The target repository's rules, pure Dart constraints, and compliance gates (`test/compliance/`) take absolute precedence for that directory.
+3. **Local Governance:** The target repository's rules, pure Dart constraints, and compliance gates (`vtt-engine-core/test/compliance/`) take absolute precedence for that directory.
 4. **Core Isolation:** Never introduce D&D 5e mechanics or Flutter UI into `vtt_engine_core` merely to simplify toolkit code.
 
 ### 1.8. Upstream Pinned Git Dependency Synchronization

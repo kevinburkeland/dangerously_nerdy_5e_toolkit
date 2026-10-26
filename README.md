@@ -30,7 +30,7 @@ See [docs/FEATURES.md](docs/FEATURES.md) for the full list.
 The app pins both packages by exact git SHA.
 Architecture details are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Data safety and replication protocols are documented in [docs/DATA_SAFETY_AND_CRDT.md](docs/DATA_SAFETY_AND_CRDT.md).
-Local-first, no accounts required: all campaign data is stored locally in IndexedDB and synchronized peer-to-peer.
+Local-first, no accounts: your campaigns and characters are stored on your device. Shared rooms sync directly between devices over WebRTC. Firestore holds each room's lobby record (room code, presence, shared character summaries, loot and event logs, dice rolls) and relays sync messages when a direct connection fails. Map images travel only between devices.
 
 ## Run it locally
 

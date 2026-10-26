@@ -83,7 +83,7 @@ dangerously_nerdy_5e_toolkit/
 The following components reside in `../vtt-engine-core` and are consumed via `package:vtt_engine_core`:
 - **CvRDT Primitives:** `HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`, `PnCounter`
 - **Abstract Currency:** `ICurrencySystem`, `CurrencyDenomination`
-- **Generic Domain Models & Value Objects:** `HitPoints`, `CoreTypes`, `EntityReference`, `LootContainer`, `CampaignProfile`, `PartyPurse`, `SessionGraphModels`, `RoomRoll`
+- **Generic Domain Models & Value Objects:** `HitPoints`, `EntityReference`, `LootContainer`, `CampaignProfile`, `PartyPurse`, `RoomRoll`
 - **Abstract Ports:** `ICampaignRepository`, `ICharacterRepository`, `IP2pTransportPort`, `INetworkTimePort`, `IRoomSyncPayloadPort`, `TransportState`
 - **Ruleset SPI:** `IRulesetModule`, `ICombatResolver`, `RulesetEdition`
 - **Agnostic Simulation:** `ISimulationStrategy`, `DprSimulator`, `PrecomputedAttack`, `CombatEffectRider`
@@ -135,7 +135,7 @@ The following components reside in `../vtt-ruleset-dnd5e` and are consumed via `
 When inspecting, editing, refactoring, or running commands inside `../vtt-engine-core`:
 1. **Mandatory Ingestion:** The agent MUST read `../vtt-engine-core/.antigravityrules` and `../vtt-engine-core/AGENTS.md` before making any edits.
 2. **Context Suspension:** For all files inside that target boundary, the agent MUST explicitly suspend and disregard host-specific guidelines (e.g., Flutter UI widgets, D&D 5e mechanics, 48dp touch targets, SRD compendiums) unless the engine's own rules independently require them.
-3. **Local Governance:** The target repository's rules, pure Dart constraints, and compliance gates (`test/compliance/`) take absolute precedence for that directory.
+3. **Local Governance:** The target repository's rules, pure Dart constraints, and compliance gates (`vtt-engine-core/test/compliance/`) take absolute precedence for that directory.
 4. **Core Isolation:** Never introduce D&D 5e mechanics, terminology, or Flutter UI into `vtt_engine_core` merely to simplify toolkit code.
 
 ### 4. Legal & SRD Compliance (Clean Room Policy)
@@ -150,19 +150,19 @@ When inspecting, editing, refactoring, or running commands inside `../vtt-engine
 
 Detailed subsystem policies reside in `.agents/rules/`. Refer to each document for in-depth engineering directives:
 
-- **Architecture & DDD:** [.agents/rules/architecture.md](file:///.agents/rules/architecture.md)
+- **Architecture & DDD:** [.agents/rules/architecture.md](.agents/rules/architecture.md)
   - Detailed hexagonal boundaries, port/adapter structure, dependency injection with `get_it`, and clean-room ACL guidelines.
-- **Distributed State & Sync:** [.agents/rules/crdt_and_sync.md](file:///.agents/rules/crdt_and_sync.md)
+- **Distributed State & Sync:** [.agents/rules/crdt_and_sync.md](.agents/rules/crdt_and_sync.md)
   - Convergence invariants, canonical pure aggregate join (`CampaignProfile.join`, `RoomNodeState.join`), per-subresource fault isolation (`RoomStateReconciliationService`), `crdt_purse_delta` protocol, CRDT structural immutability vs transitive payload immutability, transitive immutability vs value equality, narrow mutex critical sections, 4-tier transport waterfall, W3C polite peer glare handling, trusted local history vs remote drift validation, and permanent writer-authority source bars.
-- **D&D 5e Dual-Ruleset Mechanics:** [.agents/rules/dnd_rulesets.md](file:///.agents/rules/dnd_rulesets.md)
+- **D&D 5e Dual-Ruleset Mechanics:** [.agents/rules/dnd_rulesets.md](.agents/rules/dnd_rulesets.md)
   - 2014 RAW vs 2024 Revised rules divergence, edition-locked characters, draft reconciliation, multiclass spellcaster progression math, action economy typing, and instant death decoupling.
-- **Data Safety & Performance:** [.agents/rules/data_and_performance.md](file:///.agents/rules/data_and_performance.md)
+- **Data Safety & Performance:** [.agents/rules/data_and_performance.md](.agents/rules/data_and_performance.md)
   - Mandatory DTO isolation, bounds clamping, zero runtime regex in hot loops, `CombatEffectRider` numeric ASTs, isolate offloading, debounced storage, and 11-category backup parity.
-- **Accessibility & UI Standards:** [.agents/rules/a11y_and_ui.md](file:///.agents/rules/a11y_and_ui.md)
+- **Accessibility & UI Standards:** [.agents/rules/a11y_and_ui.md](.agents/rules/a11y_and_ui.md)
   - 48x48dp minimum hit targets, screen reader semantics abbreviation expansion, responsive layouts up to `TextScaler.linear(2.0)`, and universal markdown table scrolling via `FormattedMarkdownText`.
-- **Testing & Workflows:** [.agents/rules/testing_and_workflows.md](file:///.agents/rules/testing_and_workflows.md)
+- **Testing & Workflows:** [.agents/rules/testing_and_workflows.md](.agents/rules/testing_and_workflows.md)
   - Fast feedback test targets, static analysis quality gates, production PWA build verification, and test suite setup reliability.
-- **Codebase Fast Lookup Map:** [.agents/rules/codebase_map.md](file:///.agents/rules/codebase_map.md)
+- **Codebase Fast Lookup Map:** [.agents/rules/codebase_map.md](.agents/rules/codebase_map.md)
   - Quick-lookup directory and class index.
 
 ---

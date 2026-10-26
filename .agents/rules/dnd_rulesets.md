@@ -49,7 +49,7 @@ Rather than maintaining a redundant second copy of the SRD in rule text, mechani
 ---
 
 ## 4. RAW Health & Instant Death Decoupling
-Located at `lib/models/value_objects/hit_points.dart` (consumed from `vtt_engine_core`):
+Located at `vtt-engine-core/lib/models/value_objects/hit_points.dart` (consumed from `vtt_engine_core`):
 - **Downed vs Dead:** 0 HP unconsciousness (`isDowned => currentHp <= 0`) is decoupled from permanent death (`isDead`). Standard healing revives downed actors at 0 HP per 5e RAW. Massive damage instant death requires explicit revival (`allowRevive: true` or `revive()`).
 - **Instant Death on Stat Drain:** Reducing Strength or `effectiveMaxHp` to 0 sets `currentHp = 0`, logs instant death, and defeats the actor (`isAlive` returns false if Strength $\le 0$).
 
