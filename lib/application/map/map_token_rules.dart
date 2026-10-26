@@ -16,25 +16,47 @@ final class PlayerActor extends MapTokenActor {
   const PlayerActor(this.rosterSlug);
 }
 
-/// Returns whether [actor] is permitted to move [token] on [profile].
-bool canMoveToken(CampaignProfile profile, MapToken token, MapTokenActor actor) {
+/// Returns whether [actor] is permitted to move [token] given [rosterSlugs] and [minionOwners].
+bool canMoveTokenWith({
+  required Set<String> rosterSlugs,
+  required Map<String, String> minionOwners,
+  required MapToken token,
+  required MapTokenActor actor,
+}) {
   switch (actor) {
     case DmActor():
       return true;
     case PlayerActor(:final rosterSlug):
-      if (rosterSlug == null || !profile.partyRoster.activeValues.contains(rosterSlug)) {
+      if (rosterSlug == null || !rosterSlugs.contains(rosterSlug)) {
         return false;
       }
       switch (token.kind) {
         case MapTokenKind.character:
           return token.refId == rosterSlug;
         case MapTokenKind.minion:
-          final isMinionActive = profile.roomState.activeMinions.items.containsKey(token.refId);
-          return isMinionActive && profile.minionOwner(token.refId) == rosterSlug;
+          return minionOwners[token.refId] == rosterSlug;
         case MapTokenKind.monster:
           return false;
       }
   }
+}
+
+/// Returns whether [actor] is permitted to move [token] on [profile].
+bool canMoveToken(CampaignProfile profile, MapToken token, MapTokenActor actor) {
+  final rosterSlugs = profile.partyRoster.activeValues.toSet();
+  final minionOwners = <String, String>{};
+  for (final minionId in profile.roomState.activeMinions.items.keys) {
+    final owner = profile.minionOwner(minionId);
+    if (owner != null) {
+      minionOwners[minionId] = owner;
+    }
+  }
+  return canMoveTokenWith(
+    rosterSlugs: rosterSlugs,
+    minionOwners: minionOwners,
+    token: token,
+    actor: actor,
+  );
 }
 
 /// Returns true only for DM actors. Placing, removing, and setting owners need it.

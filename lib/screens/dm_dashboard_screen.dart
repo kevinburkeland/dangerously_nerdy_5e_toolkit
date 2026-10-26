@@ -1270,7 +1270,10 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const MapScreen(canEditMap: true),
+                  builder: (_) => MapScreen(
+                    canEditMap: true,
+                    characterNames: characterNamesFromTelemetry(_controller.remoteTelemetryMap),
+                  ),
                 ),
               );
             },

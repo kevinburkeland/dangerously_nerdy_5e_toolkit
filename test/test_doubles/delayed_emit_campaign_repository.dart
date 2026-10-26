@@ -12,6 +12,7 @@ class DelayedEmitCampaignRepository implements ICampaignRepository {
   Duration Function()? futureDelayProvider;
   Duration Function()? emitDelayProvider;
   Object? nextUpdateError;
+  void Function(CampaignProfile current)? onBeforeTransform;
 
   int inFlightWrites = 0;
   int pendingEmits = 0;
@@ -71,7 +72,12 @@ class DelayedEmitCampaignRepository implements ICampaignRepository {
 
     final current = profiles[id];
     if (current == null) throw StateError('Profile not found: $id');
-    final updated = transform(current);
+    if (onBeforeTransform != null) {
+      final hook = onBeforeTransform!;
+      onBeforeTransform = null;
+      hook(profiles[id]!);
+    }
+    final updated = transform(profiles[id]!);
     if (!identical(updated, current) &&
         updated.mapGridRegister.timestamp != current.mapGridRegister.timestamp) {
       serviceWritesCount++;

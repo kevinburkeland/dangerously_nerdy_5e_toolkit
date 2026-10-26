@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 
+import '../../models/domain/minion_instance.dart';
 import '../blob/blob_channel_port.dart';
 import '../blob/blob_store_port.dart';
 import '../blob/blob_transfer_service.dart';
@@ -14,6 +16,25 @@ Iterable<BlobRef> activeMapServableRefs(ICampaignRepository repo) {
     return const [];
   }
   return [activeRef];
+}
+
+@immutable
+final class MapTokenDetail {
+  final String? name; // combatant display name or minion name; null for characters
+  final MinionInstance? minion; // the linked minion, if the token is a minion token and its minion is an active MinionInstance
+
+  const MapTokenDetail({this.name, this.minion});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MapTokenDetail && name == other.name && minion == other.minion;
+
+  @override
+  int get hashCode => Object.hash(name, minion);
+
+  @override
+  String toString() => 'MapTokenDetail(name: $name, minion: $minion)';
 }
 
 sealed class ActiveMapViewState {
@@ -134,6 +155,8 @@ final class MapReady extends ActiveMapViewState {
   final MapGrid? grid;
   final List<PlacedMapToken> tokens;
   final Map<String, String> minionOwners;
+  final Set<String> rosterSlugs;
+  final Map<String, MapTokenDetail> tokenDetails;
 
   const MapReady(
     this.ref,
@@ -141,6 +164,8 @@ final class MapReady extends ActiveMapViewState {
     this.grid,
     this.tokens = const [],
     this.minionOwners = const {},
+    this.rosterSlugs = const {},
+    this.tokenDetails = const {},
   });
 
   @override
@@ -156,6 +181,14 @@ final class MapReady extends ActiveMapViewState {
     for (final entry in minionOwners.entries) {
       if (other.minionOwners[entry.key] != entry.value) return false;
     }
+    if (rosterSlugs.length != other.rosterSlugs.length) return false;
+    for (final slug in rosterSlugs) {
+      if (!other.rosterSlugs.contains(slug)) return false;
+    }
+    if (tokenDetails.length != other.tokenDetails.length) return false;
+    for (final entry in tokenDetails.entries) {
+      if (other.tokenDetails[entry.key] != entry.value) return false;
+    }
     return true;
   }
 
@@ -166,6 +199,9 @@ final class MapReady extends ActiveMapViewState {
         Object.hashAll(tokens),
         Object.hashAllUnordered(
             minionOwners.entries.map((e) => Object.hash(e.key, e.value))),
+        Object.hashAllUnordered(rosterSlugs),
+        Object.hashAllUnordered(
+            tokenDetails.entries.map((e) => Object.hash(e.key, e.value))),
       );
 
   @override
@@ -287,12 +323,16 @@ class ActiveMapController {
             : null;
         final expectedTokens = profile?.tokensOnMap(ready.ref.sha256Hex) ?? const [];
         final expectedOwners = _extractMinionOwners(profile);
+        final expectedRoster = _extractRosterSlugs(profile);
+        final expectedDetails = _extractTokenDetails(profile, expectedTokens);
         final newReady = MapReady(
           ready.ref,
           ready.bytes,
           grid: expectedGrid,
           tokens: expectedTokens,
           minionOwners: expectedOwners,
+          rosterSlugs: expectedRoster,
+          tokenDetails: expectedDetails,
         );
         if (ready != newReady) {
           _transitionTo(newReady);
@@ -328,6 +368,41 @@ class ActiveMapController {
     return Map.unmodifiable(owners);
   }
 
+  Set<String> _extractRosterSlugs(CampaignProfile? profile) {
+    if (profile == null) return const {};
+    return Set.unmodifiable(profile.partyRoster.activeValues.toSet());
+  }
+
+  Map<String, MapTokenDetail> _extractTokenDetails(
+    CampaignProfile? profile,
+    List<PlacedMapToken> tokens,
+  ) {
+    if (profile == null) return const {};
+    final details = <String, MapTokenDetail>{};
+    for (final placed in tokens) {
+      final token = placed.token;
+      switch (token.kind) {
+        case MapTokenKind.character:
+          details[token.id] = const MapTokenDetail();
+        case MapTokenKind.monster:
+          final participant = profile.roomState.activeEncounter.items[token.refId]?.value;
+          final rawName = participant?.entityLink.displayName.trim();
+          final name = (rawName != null && rawName.isNotEmpty) ? rawName : null;
+          details[token.id] = MapTokenDetail(name: name);
+        case MapTokenKind.minion:
+          final minionVal = profile.roomState.activeMinions.items[token.refId]?.value;
+          if (minionVal is MinionInstance) {
+            final rawName = minionVal.name.trim();
+            final name = rawName.isNotEmpty ? rawName : null;
+            details[token.id] = MapTokenDetail(name: name, minion: minionVal);
+          } else {
+            details[token.id] = const MapTokenDetail();
+          }
+      }
+    }
+    return Map.unmodifiable(details);
+  }
+
   Future<void> _fetchCurrentTarget(int gen) async {
     if (_disposed) return;
     if (gen != _generation) return;
@@ -351,12 +426,16 @@ class ActiveMapController {
               : null;
           final expectedTokens = prof?.tokensOnMap(ref.sha256Hex) ?? const [];
           final expectedOwners = _extractMinionOwners(prof);
+          final expectedRoster = _extractRosterSlugs(prof);
+          final expectedDetails = _extractTokenDetails(prof, expectedTokens);
           _transitionTo(MapReady(
             ref,
             stored.bytes,
             grid: expectedGrid,
             tokens: expectedTokens,
             minionOwners: expectedOwners,
+            rosterSlugs: expectedRoster,
+            tokenDetails: expectedDetails,
           ));
         } on BlobNotFoundException {
           if (gen != _generation || _disposed) return;

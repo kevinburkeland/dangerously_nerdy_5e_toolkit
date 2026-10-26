@@ -316,5 +316,169 @@ void main() {
         equals('bilbo_slug'),
       );
     });
+
+    test('TR5 (law over 500 seeds): canMoveTokenWith equals canMoveToken and reference', () {
+      for (int seed = 0; seed < 500; seed++) {
+        final rand = Random(seed + 1000);
+
+        final allSlugs = ['slug_a', 'slug_b', 'slug_c', 'slug_d'];
+        final rosterCount = rand.nextInt(5);
+        final rosterSlugs = allSlugs.take(rosterCount).toSet();
+
+        const ts100 = HybridLogicalClock(physicalTime: 100, logicalCounter: 0, nodeId: 'n1');
+        const ts150 = HybridLogicalClock(physicalTime: 150, logicalCounter: 0, nodeId: 'n1');
+        const ts200 = HybridLogicalClock(physicalTime: 200, logicalCounter: 0, nodeId: 'n1');
+
+        var roster = const CrdtOrSet<String>.empty();
+        for (final s in rosterSlugs) {
+          roster = roster.add(s, s, ts100);
+        }
+
+        var minions = const CrdtOrSet<dynamic>.empty();
+        final activeMinionIds = <String>{};
+        final totalMinions = rand.nextInt(5);
+        for (int m = 0; m < totalMinions; m++) {
+          final mId = 'minion_$m';
+          minions = minions.add(mId, {'id': mId, 'name': 'Minion $m'}, ts100);
+          activeMinionIds.add(mId);
+        }
+        final removedCount = rand.nextInt(3);
+        for (int r = 0; r < removedCount; r++) {
+          final rId = 'rem_minion_$r';
+          minions = minions.add(rId, {'id': rId}, ts100);
+          minions = minions.remove(rId, ts200);
+        }
+
+        var owners = const CrdtOrSet<String>.empty();
+        final referenceOwners = <String, String?>{};
+        for (int m = 0; m < totalMinions + removedCount; m++) {
+          final mId = m < totalMinions ? 'minion_$m' : 'rem_minion_${m - totalMinions}';
+          if (rand.nextBool()) {
+            final chosen = rosterSlugs.isNotEmpty && rand.nextInt(4) != 0
+                ? rosterSlugs.elementAt(rand.nextInt(rosterSlugs.length))
+                : (rand.nextBool() ? 'off_roster_slug' : null);
+            if (chosen != null) {
+              owners = owners.add(mId, chosen, ts150);
+              referenceOwners[mId] = chosen;
+            } else {
+              owners = owners.remove(mId, ts150);
+              referenceOwners[mId] = null;
+            }
+          }
+        }
+
+        var encounter = const CrdtOrSet<EncounterParticipant>.empty();
+        final combatantIds = <String>{};
+        final encCount = rand.nextInt(4);
+        for (int e = 0; e < encCount; e++) {
+          final pId = 'p_$e';
+          combatantIds.add(pId);
+          encounter = encounter.add(
+            pId,
+            EncounterParticipant(
+              participantId: pId,
+              entityLink: RoomEntityLink(entityId: pId, displayName: pId),
+              currentHp: 10,
+              maxHp: 10,
+              defense: 10,
+              initiativeScore: 10,
+            ),
+            ts100,
+          );
+        }
+
+        final tokens = <MapToken>[];
+        for (int t = 0; t < 6; t++) {
+          final kind = MapTokenKind.values[rand.nextInt(MapTokenKind.values.length)];
+          final String refId;
+          switch (kind) {
+            case MapTokenKind.character:
+              refId = rand.nextBool() && rosterSlugs.isNotEmpty
+                  ? rosterSlugs.elementAt(rand.nextInt(rosterSlugs.length))
+                  : 'non_existent_char';
+            case MapTokenKind.minion:
+              refId = rand.nextBool() && activeMinionIds.isNotEmpty
+                  ? activeMinionIds.elementAt(rand.nextInt(activeMinionIds.length))
+                  : (rand.nextBool() ? 'rem_minion_0' : 'non_existent_minion');
+            case MapTokenKind.monster:
+              refId = rand.nextBool() && combatantIds.isNotEmpty
+                  ? combatantIds.elementAt(rand.nextInt(combatantIds.length))
+                  : 'non_existent_monster';
+          }
+          tokens.add(MapToken(
+            id: _tokId(t + 1),
+            mapSha256Hex: _testMapSha,
+            kind: kind,
+            refId: refId,
+            label: 'T$t',
+          ));
+        }
+
+        final profile = CampaignProfile.raw(
+          id: 'camp_rules_tr5_$seed',
+          nameRegister: const CrdtLwwRegister<String>(value: 'Camp', timestamp: ts100),
+          notesRegister: const CrdtLwwRegister<String>(value: 'Notes', timestamp: ts100),
+          partyRoster: roster,
+          minionOwners: owners,
+          roomState: const RoomNodeState.empty().copyWith(
+            activeEncounter: encounter,
+            activeMinions: minions,
+          ),
+          createdAt: DateTime.utc(2026, 1, 1),
+          lastPlayedAt: DateTime.utc(2026, 1, 1),
+        );
+
+        final testRosterSlugs = profile.partyRoster.activeValues.toSet();
+        final testMinionOwners = <String, String>{};
+        for (final mId in profile.roomState.activeMinions.items.keys) {
+          final o = profile.minionOwner(mId);
+          if (o != null) testMinionOwners[mId] = o;
+        }
+
+        final actors = <MapTokenActor>[
+          const MapTokenActor.dm(),
+          if (rosterSlugs.isNotEmpty) MapTokenActor.player(rosterSlugs.elementAt(rand.nextInt(rosterSlugs.length))),
+          const MapTokenActor.player('off_roster_slug'),
+          const MapTokenActor.player(null),
+        ];
+
+        for (final token in tokens) {
+          for (final actor in actors) {
+            final fromProfile = canMoveToken(profile, token, actor);
+            final fromInputs = canMoveTokenWith(
+              rosterSlugs: testRosterSlugs,
+              minionOwners: testMinionOwners,
+              token: token,
+              actor: actor,
+            );
+
+            // Independent reference
+            final bool expected;
+            if (actor is DmActor) {
+              expected = true;
+            } else {
+              final playerSlug = (actor as PlayerActor).rosterSlug;
+              if (playerSlug == null || !rosterSlugs.contains(playerSlug)) {
+                expected = false;
+              } else {
+                switch (token.kind) {
+                  case MapTokenKind.character:
+                    expected = token.refId == playerSlug;
+                  case MapTokenKind.minion:
+                    final isAct = activeMinionIds.contains(token.refId);
+                    final owner = referenceOwners[token.refId];
+                    expected = isAct && owner == playerSlug;
+                  case MapTokenKind.monster:
+                    expected = false;
+                }
+              }
+            }
+
+            expect(fromInputs, equals(fromProfile), reason: 'Seed $seed mismatch between canMoveToken and canMoveTokenWith');
+            expect(fromInputs, equals(expected), reason: 'Seed $seed mismatch with reference');
+          }
+        }
+      }
+    });
   });
 }

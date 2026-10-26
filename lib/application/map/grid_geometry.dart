@@ -93,3 +93,64 @@ bool isCellOnMap(MapGrid g, int imageWidth, int imageHeight, MapTokenCell c) {
   final cy = 2 * g.offsetYCentiPx + (2 * c.row + 1) * g.cellCentiPx;
   return cx >= 0 && cx < 200 * imageWidth && cy >= 0 && cy < 200 * imageHeight;
 }
+
+int _nearestOnAxis(int offsetCentiPx, int cellCentiPx, int imageDimension, int coord) {
+  if (imageDimension <= 0) return 0;
+  final limit = 200 * imageDimension;
+
+  // c is on the image when 0 <= 2*offsetCentiPx + (2*c + 1)*cellCentiPx < 200*imageDimension
+  // In MapTokenCell range [-1, 4095]:
+  // Minimum c:
+  // 2*offset + (2*c + 1)*cell >= 0 <=> (2*c + 1)*cell >= -2*offset <=> 2*c + 1 >= (-2*offset)/cell
+  // Since 0 <= offset < cell:
+  // For c = -1: 2*offset - cell >= 0 <=> 2*offset >= cell
+  // If 2*offset >= cell, c = -1 gives cx >= 0.
+  // Otherwise, for c = 0: 2*offset + cell > 0 (always >= 0).
+  final cMin = (2 * offsetCentiPx >= cellCentiPx) ? -1 : 0;
+  final cxMin = 2 * offsetCentiPx + (2 * cMin + 1) * cellCentiPx;
+  if (cxMin >= limit) {
+    return 0; // No square's centre is on the image
+  }
+
+  // Maximum c in [-1, 4095]:
+  // 2*offset + (2*c + 1)*cell < limit
+  // 2*c*cell + cell < limit - 2*offset
+  // 2*c*cell <= limit - 2*offset - cell - 1
+  // c <= (limit - 2*offset - cell - 1) / (2*cell)
+  final num = limit - 2 * offsetCentiPx - cellCentiPx - 1;
+  final denom = 2 * cellCentiPx;
+  int cMax = (num / denom).floor();
+  if (cMax > MapTokenCell.maxIndex) {
+    cMax = MapTokenCell.maxIndex;
+  }
+  if (cMax < cMin) {
+    return 0;
+  }
+
+  if (coord <= cMin) return cMin;
+  if (coord >= cMax) return cMax;
+  return coord;
+}
+
+/// The square nearest (col, row) whose centre lies on the image (see isCellOnMap).
+/// Column and row are chosen independently. Inputs may be any int.
+({int col, int row}) nearestOnMapCell(MapGrid g, int imageWidth, int imageHeight, int col, int row) {
+  return (
+    col: _nearestOnAxis(g.offsetXCentiPx, g.cellCentiPx, imageWidth, col),
+    row: _nearestOnAxis(g.offsetYCentiPx, g.cellCentiPx, imageHeight, row),
+  );
+}
+
+/// The id of the last entry in [drawn] (drawing order, last = on top) whose square is
+/// the square containing image point (x, y), using cellAt. Null if none.
+String? tokenAt(List<({String id, int col, int row})> drawn, MapGrid g, double x, double y) {
+  final target = cellAt(g, x, y);
+  for (int i = drawn.length - 1; i >= 0; i--) {
+    final entry = drawn[i];
+    if (entry.col == target.col && entry.row == target.row) {
+      return entry.id;
+    }
+  }
+  return null;
+}
+

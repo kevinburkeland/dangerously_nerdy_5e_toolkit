@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 
@@ -10,10 +11,16 @@ import '../../../application/map/map_grid_editor.dart';
 import '../../../application/map/map_grid_service.dart';
 import '../../../application/map/map_image_intake_port.dart';
 import '../../../application/map/map_intake_service.dart';
+import '../../../application/map/map_token_mover.dart';
+import '../../../application/map/map_token_rules.dart';
+import '../../../application/map/map_token_service.dart';
 import '../../../infrastructure/di/injection_container.dart';
 import '../../../services/logging_service.dart';
 import 'map_grid_controls.dart';
 import 'map_grid_overlay.dart';
+import 'map_token_layer.dart';
+import 'map_token_panel.dart';
+import 'map_token_picker.dart';
 
 String _formatThousands(int value) {
   final s = value.toString();
@@ -35,6 +42,12 @@ class MapView extends StatefulWidget {
   final MapGridService? gridService;
   final TransformationController? transformationController;
   final bool canEditMap;
+  final MapTokenService? tokenService;
+  final String? membershipCharacterId;
+  final String playerName;
+  final List<({String slug, String name})> localCharacters;
+  final Map<String, String> characterNames;
+  final void Function(PlacedMapToken? token)? onTokenSelected;
 
   const MapView({
     super.key,
@@ -44,6 +57,12 @@ class MapView extends StatefulWidget {
     this.gridService,
     this.transformationController,
     this.canEditMap = false,
+    this.tokenService,
+    this.membershipCharacterId,
+    this.playerName = '',
+    this.localCharacters = const [],
+    this.characterNames = const {},
+    this.onTokenSelected,
   });
 
   @override
@@ -73,6 +92,17 @@ class _MapViewState extends State<MapView> {
   String? _rulerLabel;
 
   MapGridEditor? _gridEditor;
+  MapTokenMover? _tokenMover;
+  MapTokenActor? _tokenMoverActor;
+  PlacedMapToken? _selectedToken;
+
+  bool _isTokenPressing = false;
+  PlacedMapToken? _pressedToken;
+  MapTokenCell? _tokenDragStartCell;
+  MapTokenCell? _tokenDragPreviewCell;
+  int _activePointerCount = 0;
+  Offset? _pointerDownLocalPosition;
+  String? _tokenMessage;
 
   MapGridService get _gridService =>
       widget.gridService ?? sl<MapGridService>();
@@ -85,12 +115,16 @@ class _MapViewState extends State<MapView> {
     _currentState = widget.controller.current;
     _syncGridAndRulerState(_currentState);
     _syncGridEditor(_currentState);
+    _syncTokenMover(_currentState);
+    _syncTokenSelection(_currentState);
     _sub = widget.controller.states.listen((state) {
       if (mounted) {
         setState(() {
           _currentState = state;
           _syncGridAndRulerState(state);
           _syncGridEditor(state);
+          _syncTokenMover(state);
+          _syncTokenSelection(state);
         });
       }
     });
@@ -103,6 +137,17 @@ class _MapViewState extends State<MapView> {
         _currentScale = s;
       });
     }
+  }
+
+  MapTokenActor _currentActor(MapReady state) {
+    if (widget.canEditMap) return const MapTokenActor.dm();
+    final slug = myRosterSlug(
+      rosterSlugs: state.rosterSlugs,
+      membershipCharacterId: widget.membershipCharacterId,
+      playerName: widget.playerName,
+      localCharacters: widget.localCharacters,
+    );
+    return MapTokenActor.player(slug);
   }
 
   void _syncGridAndRulerState(ActiveMapViewState state) {
@@ -154,6 +199,141 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  void _syncTokenMover(ActiveMapViewState state) {
+    if (state is MapReady) {
+      final campaignId = widget.controller.campaignId;
+      if (campaignId == null) {
+        _tokenMover?.dispose();
+        _tokenMover = null;
+        _tokenMoverActor = null;
+        return;
+      }
+      final actor = _currentActor(state);
+      if (_tokenMover == null ||
+          _tokenMover!.map.sha256Hex != state.ref.sha256Hex ||
+          _tokenMover!.campaignId != campaignId ||
+          _tokenMoverActor != actor) {
+        _tokenMover?.dispose();
+        _tokenMoverActor = actor;
+        _tokenMover = MapTokenMover(
+          getService: () => widget.tokenService ?? sl<MapTokenService>(),
+          campaignId: campaignId,
+          map: state.ref,
+          actor: actor,
+        );
+      } else {
+        _tokenMover!.latestArrived();
+      }
+    } else {
+      _tokenMover?.dispose();
+      _tokenMover = null;
+      _tokenMoverActor = null;
+    }
+  }
+
+  void _syncTokenSelection(ActiveMapViewState state) {
+    if (_selectedToken == null) return;
+    if (state is! MapReady) {
+      _clearSelection();
+      return;
+    }
+    if (_lastMapSha != null && _lastMapSha != state.ref.sha256Hex) {
+      _clearSelection();
+      return;
+    }
+    final latest = state.tokens.firstWhereOrNull((t) => t.token.id == _selectedToken!.token.id);
+    if (latest == null) {
+      _clearSelection();
+    } else {
+      _selectedToken = latest;
+    }
+  }
+
+  void _clearSelection() {
+    if (_selectedToken != null) {
+      setState(() {
+        _selectedToken = null;
+      });
+      widget.onTokenSelected?.call(null);
+    }
+  }
+
+  void _selectToken(PlacedMapToken? token) {
+    if (_selectedToken?.token.id != token?.token.id) {
+      setState(() {
+        _selectedToken = token;
+      });
+      widget.onTokenSelected?.call(token);
+    }
+  }
+
+  void _clearTokenMessage() {
+    if (_tokenMessage != null) {
+      setState(() {
+        _tokenMessage = null;
+      });
+      _tokenMover?.clearMessages();
+    }
+  }
+
+  List<({PlacedMapToken token, int col, int row, bool movable})> _computeDrawnTokens(MapGrid grid, MapReady state) {
+    final sortedTokens = List<PlacedMapToken>.from(state.tokens);
+    if (_selectedToken != null) {
+      final selIdx = sortedTokens.indexWhere((t) => t.token.id == _selectedToken!.token.id);
+      if (selIdx != -1) {
+        final sel = sortedTokens.removeAt(selIdx);
+        sortedTokens.add(sel);
+      }
+    }
+
+    final actor = _currentActor(state);
+    final result = <({PlacedMapToken token, int col, int row, bool movable})>[];
+
+    for (final placed in sortedTokens) {
+      final cell = (_isTokenPressing && _pressedToken?.token.id == placed.token.id && _tokenDragPreviewCell != null)
+          ? _tokenDragPreviewCell!
+          : (_tokenMover?.shownCell(placed.token.id, placed.cell) ?? placed.cell);
+      final clamped = nearestOnMapCell(grid, state.ref.width, state.ref.height, cell.col, cell.row);
+      final movable = canMoveTokenWith(
+        rosterSlugs: state.rosterSlugs,
+        minionOwners: state.minionOwners,
+        token: placed.token,
+        actor: actor,
+      );
+      result.add((token: placed, col: clamped.col, row: clamped.row, movable: movable));
+    }
+    return result;
+  }
+
+  Future<void> _performTokenMove(String tokenId, MapTokenCell destCell) async {
+    final mover = _tokenMover;
+    if (mover == null) return;
+    final result = await mover.move(tokenId, destCell);
+    if (!mounted) return;
+    setState(() {
+      if (mover.lastWriteError != null) {
+        final msg = mover.lastWriteError.toString().replaceFirst('Exception: ', '');
+        _tokenMessage = "Couldn't save the token: $msg";
+      } else if (result != null) {
+        switch (result) {
+          case MapTokenWriteResult.notAllowed:
+            _tokenMessage = "You can't move that token.";
+          case MapTokenWriteResult.notFound:
+            _tokenMessage = 'That token was removed.';
+          case MapTokenWriteResult.noGrid:
+            _tokenMessage = 'Set up the grid first.';
+          case MapTokenWriteResult.offMap:
+            _tokenMessage = 'Tokens must stay on the map.';
+          case MapTokenWriteResult.written:
+          case MapTokenWriteResult.unchanged:
+            _tokenMessage = null;
+          default:
+            break;
+        }
+      }
+    });
+  }
+
   @override
   void didUpdateWidget(MapView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -162,12 +342,16 @@ class _MapViewState extends State<MapView> {
       _currentState = widget.controller.current;
       _syncGridAndRulerState(_currentState);
       _syncGridEditor(_currentState);
+      _syncTokenMover(_currentState);
+      _syncTokenSelection(_currentState);
       _sub = widget.controller.states.listen((state) {
         if (mounted) {
           setState(() {
             _currentState = state;
             _syncGridAndRulerState(state);
             _syncGridEditor(state);
+            _syncTokenMover(state);
+            _syncTokenSelection(state);
           });
         }
       });
@@ -185,6 +369,8 @@ class _MapViewState extends State<MapView> {
     _internalTransformController.dispose();
     _gridEditor?.dispose();
     _gridEditor = null;
+    _tokenMover?.dispose();
+    _tokenMover = null;
     super.dispose();
   }
 
@@ -335,6 +521,38 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  void _handleAddToken() {
+    final state = _currentState;
+    if (state is! MapReady) return;
+    final displayedGrid = (state.grid != null && _gridEditor != null)
+        ? _gridEditor!.displayed(state.grid!)
+        : state.grid;
+    if (displayedGrid == null) return;
+
+    final size = _currentViewportSize;
+    final Offset viewportCenter;
+    if (size != null && size.width > 0 && size.height > 0) {
+      viewportCenter = Offset(size.width / 2.0, size.height / 2.0);
+    } else {
+      viewportCenter = Offset(state.ref.width / 2.0, state.ref.height / 2.0);
+    }
+    final viewCenterScene = _transformController.toScene(viewportCenter);
+
+    _clearTokenMessage();
+    showDialog<bool>(
+      context: context,
+      builder: (context) => MapTokenPickerDialog(
+        campaignRepo: widget.controller.campaignRepo,
+        tokenService: widget.tokenService,
+        campaignId: widget.controller.campaignId!,
+        map: state.ref,
+        grid: displayedGrid,
+        characterNames: widget.characterNames,
+        viewCenterScene: viewCenterScene,
+      ),
+    );
+  }
+
   Widget _buildStateContent(ActiveMapViewState state) {
     switch (state) {
       case MapNone():
@@ -404,69 +622,199 @@ class _MapViewState extends State<MapView> {
                       });
                     }
                   : null,
-              child: InteractiveViewer(
-                boundaryMargin: const EdgeInsets.all(double.infinity),
-                constrained: false,
-                minScale: 0.05,
-                maxScale: 8.0,
-                transformationController: _transformController,
-                panEnabled: !_isMeasuring && !_isSettingCorner,
-                scaleEnabled: true,
-                onInteractionStart: (details) {
-                  if (_isMeasuring && displayedGrid != null && details.pointerCount == 1) {
-                    final scene = _transformController.toScene(details.localFocalPoint);
-                    final snapped = snapToCellCenter(displayedGrid, scene.dx, scene.dy);
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: (event) {
+                  _activePointerCount++;
+                  _clearTokenMessage();
+                  if (_activePointerCount > 1) {
+                    if (_isTokenPressing) {
+                      setState(() {
+                        _isTokenPressing = false;
+                        _pressedToken = null;
+                        _tokenDragStartCell = null;
+                        _tokenDragPreviewCell = null;
+                      });
+                    }
+                    return;
+                  }
+
+                  _pointerDownLocalPosition = event.localPosition;
+
+                  if (_isMeasuring || _isSettingCorner || displayedGrid == null) {
+                    return;
+                  }
+
+                  final scene = _transformController.toScene(event.localPosition);
+                  final drawn = _computeDrawnTokens(displayedGrid, state);
+                  final movablePairs = drawn
+                      .where((d) => d.movable)
+                      .map((d) => (id: d.token.token.id, col: d.col, row: d.row))
+                      .toList();
+                  final hitId = tokenAt(movablePairs, displayedGrid, scene.dx, scene.dy);
+
+                  if (hitId != null) {
+                    final hit = drawn.firstWhere((d) => d.token.token.id == hitId);
                     setState(() {
-                      _rulerStart = Offset(snapped.x, snapped.y);
-                      _rulerEnd = Offset(snapped.x, snapped.y);
-                      final c1 = cellAt(displayedGrid, snapped.x, snapped.y);
-                      final sq = gridDistanceSquares(c1.col, c1.row, c1.col, c1.row);
-                      final ft = gridDistanceFeet(displayedGrid, c1.col, c1.row, c1.col, c1.row);
-                      _rulerLabel = '$sq squares · $ft ft';
+                      _isTokenPressing = true;
+                      _pressedToken = hit.token;
+                      _tokenDragStartCell = MapTokenCell(col: hit.col, row: hit.row);
+                      _tokenDragPreviewCell = _tokenDragStartCell;
                     });
                   }
                 },
-                onInteractionUpdate: (details) {
-                  if (_isMeasuring && displayedGrid != null && details.pointerCount == 1) {
-                    final scene = _transformController.toScene(details.localFocalPoint);
-                    final snapped = snapToCellCenter(displayedGrid, scene.dx, scene.dy);
+                onPointerMove: (event) {
+                  if (_isTokenPressing && displayedGrid != null) {
+                    final scene = _transformController.toScene(event.localPosition);
+                    final c = cellAt(displayedGrid, scene.dx, scene.dy);
+                    final clamped = nearestOnMapCell(displayedGrid, state.ref.width, state.ref.height, c.col, c.row);
+                    final preview = MapTokenCell(col: clamped.col, row: clamped.row);
+                    if (preview != _tokenDragPreviewCell) {
+                      setState(() {
+                        _tokenDragPreviewCell = preview;
+                      });
+                    }
+                  }
+                },
+                onPointerUp: (event) {
+                  _activePointerCount = math.max(0, _activePointerCount - 1);
+                  if (_isMeasuring || _isSettingCorner) return;
+
+                  if (_isTokenPressing) {
+                    final pressed = _pressedToken;
+                    final startCell = _tokenDragStartCell;
+                    final previewCell = _tokenDragPreviewCell;
                     setState(() {
-                      _rulerEnd = Offset(snapped.x, snapped.y);
-                      if (_rulerStart != null) {
-                        final c1 = cellAt(displayedGrid, _rulerStart!.dx, _rulerStart!.dy);
-                        final c2 = cellAt(displayedGrid, snapped.x, snapped.y);
-                        final sq = gridDistanceSquares(c1.col, c1.row, c2.col, c2.row);
-                        final ft = gridDistanceFeet(displayedGrid, c1.col, c1.row, c2.col, c2.row);
-                        _rulerLabel = sq == 1 ? '1 square · $ft ft' : '$sq squares · $ft ft';
+                      _isTokenPressing = false;
+                      _pressedToken = null;
+                      _tokenDragStartCell = null;
+                      _tokenDragPreviewCell = null;
+                    });
+                    if (pressed != null && startCell != null && previewCell != null) {
+                      if (startCell != previewCell) {
+                        _performTokenMove(pressed.token.id, previewCell);
+                      } else if (displayedGrid != null) {
+                        final scene = _transformController.toScene(event.localPosition);
+                        final drawn = _computeDrawnTokens(displayedGrid, state);
+                        final allPairs = drawn
+                            .map((d) => (id: d.token.token.id, col: d.col, row: d.row))
+                            .toList();
+                        final hitId = tokenAt(allPairs, displayedGrid, scene.dx, scene.dy);
+                        if (hitId != null) {
+                          _selectToken(state.tokens.firstWhereOrNull((t) => t.token.id == hitId));
+                        } else {
+                          _selectToken(pressed);
+                        }
                       }
+                    }
+                  } else if (displayedGrid != null && _pointerDownLocalPosition != null) {
+                    final movedDist = (event.localPosition - _pointerDownLocalPosition!).distance;
+                    if (movedDist <= 8.0) {
+                      final scene = _transformController.toScene(event.localPosition);
+                      final drawn = _computeDrawnTokens(displayedGrid, state);
+                      final allPairs = drawn
+                          .map((d) => (id: d.token.token.id, col: d.col, row: d.row))
+                          .toList();
+                      final hitId = tokenAt(allPairs, displayedGrid, scene.dx, scene.dy);
+                      if (hitId != null) {
+                        _selectToken(state.tokens.firstWhereOrNull((t) => t.token.id == hitId));
+                      } else {
+                        _clearSelection();
+                      }
+                    }
+                  }
+                },
+                onPointerCancel: (event) {
+                  _activePointerCount = math.max(0, _activePointerCount - 1);
+                  if (_isTokenPressing) {
+                    setState(() {
+                      _isTokenPressing = false;
+                      _pressedToken = null;
+                      _tokenDragStartCell = null;
+                      _tokenDragPreviewCell = null;
                     });
                   }
                 },
-                child: SizedBox(
-                  width: state.ref.width.toDouble(),
-                  height: state.ref.height.toDouble(),
-                  child: Stack(
-                    children: [
-                      Image.memory(
-                        state.bytes,
-                        width: state.ref.width.toDouble(),
-                        height: state.ref.height.toDouble(),
-                        fit: BoxFit.fill,
-                        gaplessPlayback: true,
-                      ),
-                      MapGridOverlay(
-                        grid: displayedGrid,
-                        scale: _currentScale,
-                        width: state.ref.width,
-                        height: state.ref.height,
-                      ),
-                      MapRulerOverlay(
-                        start: _rulerStart,
-                        end: _rulerEnd,
-                        label: _rulerLabel,
-                        scale: _currentScale,
-                      ),
-                    ],
+                child: InteractiveViewer(
+                  boundaryMargin: const EdgeInsets.all(double.infinity),
+                  constrained: false,
+                  minScale: 0.05,
+                  maxScale: 8.0,
+                  transformationController: _transformController,
+                  panEnabled: !_isMeasuring && !_isSettingCorner && !_isTokenPressing,
+                  scaleEnabled: true,
+                  onInteractionStart: (details) {
+                    if (_isMeasuring && displayedGrid != null && details.pointerCount == 1) {
+                      final scene = _transformController.toScene(details.localFocalPoint);
+                      final snapped = snapToCellCenter(displayedGrid, scene.dx, scene.dy);
+                      setState(() {
+                        _rulerStart = Offset(snapped.x, snapped.y);
+                        _rulerEnd = Offset(snapped.x, snapped.y);
+                        final c1 = cellAt(displayedGrid, snapped.x, snapped.y);
+                        final sq = gridDistanceSquares(c1.col, c1.row, c1.col, c1.row);
+                        final ft = gridDistanceFeet(displayedGrid, c1.col, c1.row, c1.col, c1.row);
+                        _rulerLabel = '$sq squares · $ft ft';
+                      });
+                    }
+                  },
+                  onInteractionUpdate: (details) {
+                    if (_isMeasuring && displayedGrid != null && details.pointerCount == 1) {
+                      final scene = _transformController.toScene(details.localFocalPoint);
+                      final snapped = snapToCellCenter(displayedGrid, scene.dx, scene.dy);
+                      setState(() {
+                        _rulerEnd = Offset(snapped.x, snapped.y);
+                        if (_rulerStart != null) {
+                          final c1 = cellAt(displayedGrid, _rulerStart!.dx, _rulerStart!.dy);
+                          final c2 = cellAt(displayedGrid, snapped.x, snapped.y);
+                          final sq = gridDistanceSquares(c1.col, c1.row, c2.col, c2.row);
+                          final ft = gridDistanceFeet(displayedGrid, c1.col, c1.row, c2.col, c2.row);
+                          _rulerLabel = sq == 1 ? '1 square · $ft ft' : '$sq squares · $ft ft';
+                        }
+                      });
+                    }
+                  },
+                  child: SizedBox(
+                    width: state.ref.width.toDouble(),
+                    height: state.ref.height.toDouble(),
+                    child: Stack(
+                      children: [
+                        Image.memory(
+                          state.bytes,
+                          width: state.ref.width.toDouble(),
+                          height: state.ref.height.toDouble(),
+                          fit: BoxFit.fill,
+                          gaplessPlayback: true,
+                        ),
+                        MapGridOverlay(
+                          grid: displayedGrid,
+                          scale: _currentScale,
+                          width: state.ref.width,
+                          height: state.ref.height,
+                        ),
+                        if (state.grid != null && displayedGrid != null)
+                          MapTokenLayer(
+                            grid: displayedGrid,
+                            imageWidth: state.ref.width,
+                            imageHeight: state.ref.height,
+                            tokens: state.tokens,
+                            tokenDetails: state.tokenDetails,
+                            rosterSlugs: state.rosterSlugs,
+                            minionOwners: state.minionOwners,
+                            actor: _currentActor(state),
+                            mover: _tokenMover,
+                            selectedTokenId: _selectedToken?.token.id,
+                            dragTokenId: _isTokenPressing ? _pressedToken?.token.id : null,
+                            dragPreviewCell: _tokenDragPreviewCell,
+                            dragStartCell: _tokenDragStartCell,
+                          ),
+                        MapRulerOverlay(
+                          start: _rulerStart,
+                          end: _rulerEnd,
+                          label: _rulerLabel,
+                          scale: _currentScale,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -518,6 +866,15 @@ class _MapViewState extends State<MapView> {
                       onPressed: _isPreparing ? null : _handleToggleGrid,
                       icon: const Icon(Icons.grid_on),
                       label: const Text('Grid'),
+                    ),
+                  if (state is MapReady)
+                    Tooltip(
+                      message: state.grid == null ? 'Set up the grid first' : '',
+                      child: OutlinedButton.icon(
+                        onPressed: (_isPreparing || state.grid == null) ? null : _handleAddToken,
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('Add token'),
+                      ),
                     ),
                 ],
                 if (state is MapReady)
@@ -617,6 +974,35 @@ class _MapViewState extends State<MapView> {
             isSettingCorner: _isSettingCorner,
           ),
         ],
+        if (_selectedToken != null && state is MapReady && widget.controller.campaignId != null)
+          MapTokenPanel(
+            token: _selectedToken!,
+            detail: state.tokenDetails[_selectedToken!.token.id],
+            characterNames: widget.characterNames,
+            minionOwners: state.minionOwners,
+            rosterSlugs: state.rosterSlugs,
+            canEditMap: widget.canEditMap,
+            campaignId: widget.controller.campaignId!,
+            map: state.ref,
+            tokenService: widget.tokenService,
+            onClearSelection: () {
+              setState(() {
+                _clearSelection();
+              });
+            },
+          ),
+        if (_tokenMessage != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            child: Text(
+              _tokenMessage!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 13,
+              ),
+            ),
+          ),
         Expanded(
           child: _buildStateContent(state),
         ),

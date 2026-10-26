@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
@@ -42,6 +43,8 @@ CampaignProfile _makeProfile({
   CrdtOrSet<MapTokenCell>? mapTokenCells,
   CrdtOrSet<String>? minionOwners,
   CrdtOrSet<dynamic>? activeMinions,
+  CrdtOrSet<String>? partyRoster,
+  CrdtOrSet<EncounterParticipant>? activeEncounter,
 }) {
   const stamp = HybridLogicalClock(
     physicalTime: 1700000000000,
@@ -69,10 +72,12 @@ CampaignProfile _makeProfile({
     mapTokens: mapTokens ?? const CrdtOrSet<MapToken>.empty(),
     mapTokenCells: mapTokenCells ?? const CrdtOrSet<MapTokenCell>.empty(),
     minionOwners: minionOwners ?? const CrdtOrSet<String>.empty(),
+    partyRoster: partyRoster ?? const CrdtOrSet<String>.empty(),
     createdAt: DateTime.utc(2026, 1, 1),
     lastPlayedAt: DateTime.utc(2026, 1, 1),
     roomState: const RoomNodeState.empty().copyWith(
       activeMinions: activeMinions,
+      activeEncounter: activeEncounter,
     ),
   );
 }
@@ -847,6 +852,239 @@ void main() {
         sub.cancel();
         controller.dispose();
       });
+    });
+
+    test('CT4: roster and token detail changes emit MapReady with identical bytes and no new store.get', () {
+      fakeAsync((async) {
+        final countingStore = _CountingBlobStore();
+        final bytes1 = _makeWebp(1024);
+        final ref1 = _makeRef(bytes1);
+        countingStore.put(ref1, bytes1, campaignId: 'camp-1');
+
+        final controller = ActiveMapController(
+          campaignRepo: repo,
+          transfer: _TestTransferService(channel: channel, store: countingStore, servableRefs: () => activeMapServableRefs(repo)),
+          store: countingStore,
+          channel: channel,
+          transportState: () => currentTransportState,
+        );
+
+        final emits = <ActiveMapViewState>[];
+        final sub = controller.states.listen(emits.add);
+
+        const ts = HybridLogicalClock(physicalTime: 100, logicalCounter: 0, nodeId: 'n1');
+        var roster = const CrdtOrSet<String>.empty().add('thorin', 'thorin', ts);
+
+        final p1 = EncounterParticipant(
+          participantId: 'p1',
+          entityLink: RoomEntityLink(entityId: 'p1', displayName: 'Goblin Boss'),
+        );
+        var encounter = const CrdtOrSet<EncounterParticipant>.empty().add('p1', p1, ts);
+
+        final min1 = MinionInstance(
+          id: 'min1',
+          name: 'Wolf',
+          size: EntitySize.medium,
+          currentHp: 10,
+          maxHp: 10,
+        );
+        final min2 = MinionInstance(
+          id: 'min2',
+          name: 'Bear',
+          size: EntitySize.large,
+          currentHp: 20,
+          maxHp: 20,
+        );
+        var minions = const CrdtOrSet<dynamic>.empty()
+            .add('min1', min1, ts)
+            .add('min2', min2, ts);
+
+        final tokMonster = MapToken(
+          id: 'tok_00000000000000000000000000000001',
+          mapSha256Hex: ref1.sha256Hex,
+          kind: MapTokenKind.monster,
+          refId: 'p1',
+          label: 'M1',
+        );
+        final tokMinion = MapToken(
+          id: 'tok_00000000000000000000000000000002',
+          mapSha256Hex: ref1.sha256Hex,
+          kind: MapTokenKind.minion,
+          refId: 'min1',
+          label: 'N1',
+        );
+
+        var currentProfile = _makeProfile(
+          mapRef: ref1,
+          partyRoster: roster,
+          activeEncounter: encounter,
+          activeMinions: minions,
+        ).withTokenPlaced(tokMonster, MapTokenCell(col: 2, row: 2), ts)
+         .withTokenPlaced(tokMinion, MapTokenCell(col: 4, row: 4), ts);
+
+        repo.putProfile(currentProfile);
+        controller.start();
+        async.flushMicrotasks();
+
+        expect(controller.current, isA<MapReady>());
+        var ready = controller.current as MapReady;
+        expect(ready.rosterSlugs, equals({'thorin'}));
+        expect(ready.tokenDetails[tokMonster.id]?.name, equals('Goblin Boss'));
+        expect(ready.tokenDetails[tokMonster.id]?.minion, isNull);
+        expect(ready.tokenDetails[tokMinion.id]?.name, equals('Wolf'));
+        expect(ready.tokenDetails[tokMinion.id]?.minion?.currentHp, equals(10));
+        expect(countingStore.getCalls, equals(1));
+        final initialBytes = ready.bytes;
+
+        // 1. Add roster slug 'bilbo'
+        emits.clear();
+        currentProfile = currentProfile.copyWith(
+          partyRoster: currentProfile.partyRoster.add('bilbo', 'bilbo', const HybridLogicalClock(physicalTime: 110, logicalCounter: 0, nodeId: 'n1')),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emits.length, equals(1));
+        ready = controller.current as MapReady;
+        expect(ready.rosterSlugs, equals({'thorin', 'bilbo'}));
+        expect(identical(ready.bytes, initialBytes), isTrue);
+        expect(countingStore.getCalls, equals(1));
+
+        // 2. Remove roster slug 'bilbo'
+        emits.clear();
+        currentProfile = currentProfile.copyWith(
+          partyRoster: currentProfile.partyRoster.remove('bilbo', const HybridLogicalClock(physicalTime: 120, logicalCounter: 0, nodeId: 'n1')),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emits.length, equals(1));
+        ready = controller.current as MapReady;
+        expect(ready.rosterSlugs, equals({'thorin'}));
+        expect(identical(ready.bytes, initialBytes), isTrue);
+        expect(countingStore.getCalls, equals(1));
+
+        // 3. Rename participant p1
+        emits.clear();
+        final p1Renamed = EncounterParticipant(
+          participantId: 'p1',
+          entityLink: RoomEntityLink(entityId: 'p1', displayName: 'Hobgoblin Captain'),
+        );
+        currentProfile = currentProfile.copyWith(
+          roomState: currentProfile.roomState.copyWith(
+            activeEncounter: currentProfile.roomState.activeEncounter.add('p1', p1Renamed, const HybridLogicalClock(physicalTime: 130, logicalCounter: 0, nodeId: 'n1')),
+          ),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emits.length, equals(1));
+        ready = controller.current as MapReady;
+        expect(ready.tokenDetails[tokMonster.id]?.name, equals('Hobgoblin Captain'));
+        expect(identical(ready.bytes, initialBytes), isTrue);
+        expect(countingStore.getCalls, equals(1));
+
+        // 4. Change min1 HP to 5
+        emits.clear();
+        final min1Injured = min1.copyWith(currentHp: 5);
+        currentProfile = currentProfile.copyWith(
+          roomState: currentProfile.roomState.copyWith(
+            activeMinions: currentProfile.roomState.activeMinions.add('min1', min1Injured, const HybridLogicalClock(physicalTime: 140, logicalCounter: 0, nodeId: 'n1')),
+          ),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emits.length, equals(1));
+        ready = controller.current as MapReady;
+        expect(ready.tokenDetails[tokMinion.id]?.minion?.currentHp, equals(5));
+        expect(identical(ready.bytes, initialBytes), isTrue);
+        expect(countingStore.getCalls, equals(1));
+
+        // 5. Remove min1
+        emits.clear();
+        currentProfile = currentProfile.copyWith(
+          roomState: currentProfile.roomState.copyWith(
+            activeMinions: currentProfile.roomState.activeMinions.remove('min1', const HybridLogicalClock(physicalTime: 150, logicalCounter: 0, nodeId: 'n1')),
+          ),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emits.length, equals(1));
+        ready = controller.current as MapReady;
+        expect(ready.tokenDetails[tokMinion.id]?.minion, isNull);
+        expect(ready.tokenDetails[tokMinion.id]?.name, isNull);
+        expect(identical(ready.bytes, initialBytes), isTrue);
+        expect(countingStore.getCalls, equals(1));
+
+        // 6. Change min2 (no token on this map) -> emits nothing
+        emits.clear();
+        final min2Changed = min2.copyWith(currentHp: 12);
+        currentProfile = currentProfile.copyWith(
+          roomState: currentProfile.roomState.copyWith(
+            activeMinions: currentProfile.roomState.activeMinions.add('min2', min2Changed, const HybridLogicalClock(physicalTime: 160, logicalCounter: 0, nodeId: 'n1')),
+          ),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emits, isEmpty);
+        expect(countingStore.getCalls, equals(1));
+
+        sub.cancel();
+        controller.dispose();
+      });
+    });
+
+    test('CT5: MapReady equality and hash distribution over rosterSlugs and tokenDetails', () {
+      final bytes = Uint8List(16);
+      final ref = _makeRef(bytes);
+
+      final base = MapReady(
+        ref,
+        bytes,
+        rosterSlugs: const {'s1', 's2'},
+        tokenDetails: const {'tok1': MapTokenDetail(name: 'N1')},
+      );
+
+      final diffRoster = MapReady(
+        ref,
+        bytes,
+        rosterSlugs: const {'s1', 's3'},
+        tokenDetails: const {'tok1': MapTokenDetail(name: 'N1')},
+      );
+      expect(base == diffRoster, isFalse);
+
+      final diffDetail = MapReady(
+        ref,
+        bytes,
+        rosterSlugs: const {'s1', 's2'},
+        tokenDetails: const {'tok1': MapTokenDetail(name: 'N2')},
+      );
+      expect(base == diffDetail, isFalse);
+
+      final rosterHashes = <int>{};
+      for (int i = 0; i < 200; i++) {
+        final state = MapReady(
+          ref,
+          bytes,
+          rosterSlugs: {'slug_$i'},
+        );
+        rosterHashes.add(state.hashCode);
+      }
+      expect(rosterHashes.length, greaterThanOrEqualTo(2));
+
+      final detailHashes = <int>{};
+      for (int i = 0; i < 200; i++) {
+        final state = MapReady(
+          ref,
+          bytes,
+          tokenDetails: {'tok1': MapTokenDetail(name: 'Name_$i')},
+        );
+        detailHashes.add(state.hashCode);
+      }
+      expect(detailHashes.length, greaterThanOrEqualTo(2));
     });
   });
 }

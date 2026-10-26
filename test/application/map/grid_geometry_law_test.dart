@@ -197,5 +197,209 @@ void main() {
         }
       }
     });
+
+    test('GG7 (law, at least 2,000 seeds) nearestOnMapCell', () {
+      int onImageCount = 0;
+      int leftCount = 0;
+      int rightCount = 0;
+      int noOnImageCount = 0;
+
+      int refAxis(int offsetCentiPx, int cellCentiPx, int imageDim, int target) {
+        final onImage = <int>[];
+        for (int c = -1; c <= 4095; c++) {
+          final cx = 2 * offsetCentiPx + (2 * c + 1) * cellCentiPx;
+          if (cx >= 0 && cx < 200 * imageDim) {
+            onImage.add(c);
+          }
+        }
+        if (onImage.isEmpty) return 0;
+        if (target <= onImage.first) return onImage.first;
+        if (target >= onImage.last) return onImage.last;
+        return target;
+      }
+
+      for (int seed = 0; seed < 2000; seed++) {
+        final rand = Random(seed + 9000);
+        final MapGrid g;
+        final int imageWidth;
+        final int imageHeight;
+
+        if (seed % 30 == 0) {
+          // Grid with no on-image columns / rows
+          g = MapGrid(
+            mapSha256Hex: 'a' * 64,
+            cellCentiPx: 50000,
+            offsetXCentiPx: 49000,
+            offsetYCentiPx: 49000,
+            feetPerCell: 5,
+            visible: true,
+          );
+          imageWidth = 1;
+          imageHeight = 1;
+        } else {
+          g = _randomGrid(rand);
+          imageWidth = 1 + rand.nextInt(8192);
+          imageHeight = 1 + rand.nextInt(8192);
+        }
+
+        // Compute on-image columns for reference
+        final onImageCols = <int>[];
+        for (int c = -1; c <= 4095; c++) {
+          final cx = 2 * g.offsetXCentiPx + (2 * c + 1) * g.cellCentiPx;
+          if (cx >= 0 && cx < 200 * imageWidth) {
+            onImageCols.add(c);
+          }
+        }
+
+        final int colInput;
+        if (onImageCols.isEmpty) {
+          noOnImageCount++;
+          colInput = rand.nextInt(20001) - 10000;
+        } else {
+          final mode = rand.nextInt(4);
+          if (mode == 0) {
+            // Strictly left
+            colInput = onImageCols.first - 1 - rand.nextInt(500);
+            leftCount++;
+          } else if (mode == 1) {
+            // Strictly right
+            colInput = onImageCols.last + 1 + rand.nextInt(500);
+            rightCount++;
+          } else if (mode == 2) {
+            // Strictly on-image
+            colInput = onImageCols[rand.nextInt(onImageCols.length)];
+            onImageCount++;
+          } else {
+            // Random in [-10000, 10000]
+            colInput = rand.nextInt(20001) - 10000;
+            if (colInput < onImageCols.first) {
+              leftCount++;
+            } else if (colInput > onImageCols.last) {
+              rightCount++;
+            } else {
+              onImageCount++;
+            }
+          }
+        }
+
+        final rowInput = rand.nextInt(20001) - 10000;
+
+        final actual = nearestOnMapCell(g, imageWidth, imageHeight, colInput, rowInput);
+        final expCol = refAxis(g.offsetXCentiPx, g.cellCentiPx, imageWidth, colInput);
+        final expRow = refAxis(g.offsetYCentiPx, g.cellCentiPx, imageHeight, rowInput);
+
+        expect(actual.col, equals(expCol), reason: 'Seed $seed nearestOnMapCell col mismatch');
+        expect(actual.row, equals(expRow), reason: 'Seed $seed nearestOnMapCell row mismatch');
+
+        // Result fits MapTokenCell
+        expect(actual.col, greaterThanOrEqualTo(MapTokenCell.minIndex));
+        expect(actual.col, lessThanOrEqualTo(MapTokenCell.maxIndex));
+        expect(actual.row, greaterThanOrEqualTo(MapTokenCell.minIndex));
+        expect(actual.row, lessThanOrEqualTo(MapTokenCell.maxIndex));
+
+        // An on-image input comes back unchanged
+        if (onImageCols.contains(colInput)) {
+          expect(actual.col, equals(colInput));
+        }
+      }
+
+      // ignore: avoid_print
+      print('GG7 coverage counts: onImage=$onImageCount, left=$leftCount, right=$rightCount, noOnImage=$noOnImageCount');
+      expect(onImageCount, greaterThanOrEqualTo(300));
+      expect(leftCount, greaterThanOrEqualTo(300));
+      expect(rightCount, greaterThanOrEqualTo(300));
+    });
+
+    test('GG8 (law, at least 2,000 seeds) tokenAt', () {
+      int singleHitCount = 0;
+      int multiHitCount = 0;
+      int missCount = 0;
+
+      for (int seed = 0; seed < 2000; seed++) {
+        final rand = Random(seed + 15000);
+        final g = _randomGrid(rand);
+        final squareSize = g.cellCentiPx / 100.0;
+
+        final entryCount = rand.nextInt(9); // 0 to 8 entries
+        final drawn = <({String id, int col, int row})>[];
+
+        // Choose 1 to 4 distinct squares
+        final distinctSquareCount = 1 + rand.nextInt(4);
+        final squares = <({int col, int row})>[];
+        for (int i = 0; i < distinctSquareCount; i++) {
+          squares.add((col: rand.nextInt(60) - 10, row: rand.nextInt(60) - 10));
+        }
+
+        for (int i = 0; i < entryCount; i++) {
+          final sq = squares[rand.nextInt(squares.length)];
+          drawn.add((id: 'tok_$i', col: sq.col, row: sq.row));
+        }
+
+        // Count entries on each square
+        final entriesOnSquare = <String, List<String>>{};
+        for (final entry in drawn) {
+          entriesOnSquare.putIfAbsent('${entry.col},${entry.row}', () => []).add(entry.id);
+        }
+
+        final ({int col, int row}) targetSquare;
+        final targetChoice = rand.nextInt(3);
+        final singles = entriesOnSquare.entries.where((e) => e.value.length == 1).toList();
+        final multis = entriesOnSquare.entries.where((e) => e.value.length >= 2).toList();
+
+        if (targetChoice == 0 && singles.isNotEmpty) {
+          final chosen = singles[rand.nextInt(singles.length)];
+          final parts = chosen.key.split(',');
+          targetSquare = (col: int.parse(parts[0]), row: int.parse(parts[1]));
+        } else if (targetChoice == 1 && multis.isNotEmpty) {
+          final chosen = multis[rand.nextInt(multis.length)];
+          final parts = chosen.key.split(',');
+          targetSquare = (col: int.parse(parts[0]), row: int.parse(parts[1]));
+        } else {
+          // Miss (square with no entry)
+          int missCol = rand.nextInt(100) + 100;
+          int missRow = rand.nextInt(100) + 100;
+          while (entriesOnSquare.containsKey('$missCol,$missRow')) {
+            missCol++;
+          }
+          targetSquare = (col: missCol, row: missRow);
+        }
+
+        // Point strictly inside targetSquare (between 0.01 px and squareSize - 0.01 px)
+        final topLeftX = (g.offsetXCentiPx + targetSquare.col * g.cellCentiPx) / 100.0;
+        final topLeftY = (g.offsetYCentiPx + targetSquare.row * g.cellCentiPx) / 100.0;
+        final dx = 0.01 + rand.nextDouble() * (squareSize - 0.02);
+        final dy = 0.01 + rand.nextDouble() * (squareSize - 0.02);
+        final px = topLeftX + dx;
+        final py = topLeftY + dy;
+
+        // Reference: last entry on that square
+        String? expId;
+        for (int i = drawn.length - 1; i >= 0; i--) {
+          if (drawn[i].col == targetSquare.col && drawn[i].row == targetSquare.row) {
+            expId = drawn[i].id;
+            break;
+          }
+        }
+
+        final actualId = tokenAt(drawn, g, px, py);
+        expect(actualId, equals(expId), reason: 'Seed $seed tokenAt mismatch');
+
+        final count = entriesOnSquare['${targetSquare.col},${targetSquare.row}']?.length ?? 0;
+        if (count == 0) {
+          missCount++;
+        } else if (count == 1) {
+          singleHitCount++;
+        } else {
+          multiHitCount++;
+        }
+      }
+
+      // ignore: avoid_print
+      print('GG8 coverage counts: singleHit=$singleHitCount, multiHit=$multiHitCount, miss=$missCount');
+      expect(singleHitCount, greaterThanOrEqualTo(200));
+      expect(multiHitCount, greaterThanOrEqualTo(200));
+      expect(missCount, greaterThanOrEqualTo(200));
+    });
   });
 }
+

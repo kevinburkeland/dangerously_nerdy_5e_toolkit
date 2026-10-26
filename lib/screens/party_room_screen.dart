@@ -564,11 +564,26 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
                   IconButton(
                     icon: const Icon(Icons.map_outlined),
                     tooltip: 'Map',
-                    onPressed: () {
+                    onPressed: () async {
+                      List<({String slug, String name})> localChars = const [];
+                      try {
+                        final loaded = await CharacterPersistenceService().loadCharacters();
+                        localChars = loaded.map((c) => (slug: c.id.slug, name: c.name)).toList();
+                      } catch (e, st) {
+                        LoggingService().logNonFatal(e, st,
+                            reason: 'Failed to load local characters for map');
+                      }
+                      if (!context.mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => MapScreen(canEditMap: _isDmOrCoDm),
+                          builder: (_) => MapScreen(
+                            canEditMap: _isDmOrCoDm,
+                            membershipCharacterId: _currentMembership?.characterId,
+                            playerName: _playerName,
+                            localCharacters: localChars,
+                            characterNames: characterNamesFromTelemetry(session?.partyTelemetry ?? const {}),
+                          ),
                         ),
                       );
                     },
