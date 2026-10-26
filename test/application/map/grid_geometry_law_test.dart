@@ -238,8 +238,18 @@ void main() {
           imageHeight = 1;
         } else {
           g = _randomGrid(rand);
-          imageWidth = 1 + rand.nextInt(8192);
-          imageHeight = 1 + rand.nextInt(8192);
+          if (seed % 4 == 0) {
+            // Include image size where a column/row centre lies exactly on the image edge
+            final c = rand.nextInt(20);
+            final exactW = ((2 * g.offsetXCentiPx + (2 * c + 1) * g.cellCentiPx) / 200.0).round();
+            imageWidth = exactW.clamp(1, 8192);
+            final r = rand.nextInt(20);
+            final exactH = ((2 * g.offsetYCentiPx + (2 * r + 1) * g.cellCentiPx) / 200.0).round();
+            imageHeight = exactH.clamp(1, 8192);
+          } else {
+            imageWidth = 1 + rand.nextInt(8192);
+            imageHeight = 1 + rand.nextInt(8192);
+          }
         }
 
         // Compute on-image columns for reference
