@@ -1,6 +1,33 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path/path.dart' as p;
+
+String _getDirname(String filePath) {
+  final idx = filePath.lastIndexOf('/');
+  if (idx == -1) return '.';
+  if (idx == 0) return '/';
+  return filePath.substring(0, idx);
+}
+
+String _joinAndNormalize(String dir, String rel) {
+  final combined = (dir == '.' || dir.isEmpty) ? rel : '$dir/$rel';
+  final isAbsolute = combined.startsWith('/');
+  final segments = <String>[];
+  for (final part in combined.split('/')) {
+    if (part == '' || part == '.') continue;
+    if (part == '..') {
+      if (segments.isNotEmpty && segments.last != '..') {
+        segments.removeLast();
+      } else {
+        segments.add('..');
+      }
+    } else {
+      segments.add(part);
+    }
+  }
+  final res = segments.join('/');
+  if (isAbsolute) return '/$res';
+  return res.isEmpty ? '.' : res;
+}
 
 /// Checks markdown content for bad links, returning one problem per bad link.
 /// Names the link text and target in each problem description.
@@ -74,7 +101,7 @@ List<String> markdownLinkProblems(String markdown, String fileDir) {
     }
     if (targetPath.isEmpty) return;
 
-    final resolved = p.normalize(p.join(fileDir, targetPath));
+    final resolved = _joinAndNormalize(fileDir, targetPath);
     if (!File(resolved).existsSync() && !Directory(resolved).existsSync()) {
       problems.add('$label($t): target does not exist: $resolved');
     }
@@ -137,7 +164,7 @@ void main() {
 
       for (final filePath in allFilesToCheck) {
         final content = File(filePath).readAsStringSync();
-        final fileDir = p.dirname(filePath);
+        final fileDir = _getDirname(filePath);
         final problems = markdownLinkProblems(content, fileDir);
         if (problems.isNotEmpty) {
           allProblems.add('$filePath problems:\n  ${problems.join('\n  ')}');
@@ -182,9 +209,9 @@ void main() {
     test('ML3: cases with strings and temporary directory', () {
       final tempDir = Directory.systemTemp.createTempSync('ml3_cases_');
       try {
-        final goodFile = File(p.join(tempDir.path, 'good.txt'))..writeAsStringSync('good');
-        final spaceFile = File(p.join(tempDir.path, 'foo bar.txt'))..writeAsStringSync('space');
-        final goodImg = File(p.join(tempDir.path, 'good.png'))..writeAsStringSync('png');
+        final goodFile = File('${tempDir.path}/good.txt')..writeAsStringSync('good');
+        final spaceFile = File('${tempDir.path}/foo bar.txt')..writeAsStringSync('space');
+        final goodImg = File('${tempDir.path}/good.png')..writeAsStringSync('png');
 
         expect(goodFile.existsSync(), isTrue);
         expect(spaceFile.existsSync(), isTrue);
