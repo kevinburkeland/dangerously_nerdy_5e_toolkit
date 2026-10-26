@@ -256,7 +256,7 @@ void main() {
           noOnImageCount++;
           colInput = rand.nextInt(20001) - 10000;
         } else {
-          final mode = rand.nextInt(4);
+          final mode = rand.nextInt(5);
           if (mode == 0) {
             // Strictly left
             colInput = onImageCols.first - 1 - rand.nextInt(500);
@@ -269,6 +269,18 @@ void main() {
             // Strictly on-image
             colInput = onImageCols[rand.nextInt(onImageCols.length)];
             onImageCount++;
+          } else if (mode == 3) {
+            // Include values near each edge of the on-image range
+            colInput = rand.nextBool()
+                ? (rand.nextBool() ? onImageCols.first : onImageCols.first - 1)
+                : (rand.nextBool() ? onImageCols.last : onImageCols.last + 1);
+            if (colInput < onImageCols.first) {
+              leftCount++;
+            } else if (colInput > onImageCols.last) {
+              rightCount++;
+            } else {
+              onImageCount++;
+            }
           } else {
             // Random in [-10000, 10000]
             colInput = rand.nextInt(20001) - 10000;
