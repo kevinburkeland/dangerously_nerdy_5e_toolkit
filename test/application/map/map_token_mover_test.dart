@@ -191,27 +191,28 @@ void main() {
           actor: const MapTokenActor.dm(),
         );
 
-        final sub = repo.watchActiveProfile().listen((_) {
+        final tokenId = _tokId(1);
+        final stored = repo.activeProfile!.mapTokenCells.items[tokenId]!.value;
+        MapTokenCell viewStored = stored;
+        final sub = repo.watchActiveProfile().listen((p) {
+          viewStored = p?.mapTokenCells.items[tokenId]?.value ?? viewStored;
           mover.latestArrived();
         });
 
-        final tokenId = _tokId(1);
-        final stored = repo.activeProfile!.mapTokenCells.items[tokenId]!.value;
         final cell1 = MapTokenCell(col: 7, row: 7);
         final cell2 = MapTokenCell(col: 9, row: 9);
 
         final f1 = mover.move(tokenId, cell1);
         final f2 = mover.move(tokenId, cell2);
 
-        expect(mover.shownCell(tokenId, stored), equals(cell2));
+        expect(mover.shownCell(tokenId, viewStored), equals(cell2));
 
         bool allDone = false;
         Future.wait([f1, f2]).then((_) => allDone = true);
 
         while (!allDone || !repo.isIdle) {
           async.elapse(const Duration(milliseconds: 10));
-          final currentStored = repo.activeProfile?.mapTokenCells.items[tokenId]?.value ?? stored;
-          expect(mover.shownCell(tokenId, currentStored), equals(cell2));
+          expect(mover.shownCell(tokenId, viewStored), equals(cell2));
         }
 
         final finalStored = repo.activeProfile!.mapTokenCells.items[tokenId]!.value;
