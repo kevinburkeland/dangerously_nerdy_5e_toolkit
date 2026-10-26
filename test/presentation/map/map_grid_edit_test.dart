@@ -1102,6 +1102,124 @@ void main() {
       dTransform.dispose();
     });
 
+    testWidgets('GR13: in-flight edit is not dropped prematurely when queued behind slow write', (tester) async {
+      Future<({String sizeAt750, int finalCellCentiPx})> runCase({
+        required List<Duration> futureDelays,
+        required List<Duration> emitDelays,
+      }) async {
+        int fIdx = 0;
+        int eIdx = 0;
+        final delayedRepo = DelayedEmitCampaignRepository(
+          _makeProfile(mapRef: mapRef, grid: initialGrid),
+        );
+        delayedRepo.futureDelayProvider = () => futureDelays[fIdx++];
+        delayedRepo.emitDelayProvider = () => emitDelays[eIdx++];
+
+        final dClock = StatefulHlcClock(replicaId: ReplicaId('node-1'));
+        final dChannel = network.createChannel('node-1');
+        final dTransfer = BlobTransferService(
+          channel: dChannel,
+          store: store,
+          servableRefs: () => activeMapServableRefs(delayedRepo),
+        );
+        final dController = ActiveMapController(
+          campaignRepo: delayedRepo,
+          transfer: dTransfer,
+          store: store,
+          channel: dChannel,
+          transportState: () => TransportState.webRtc,
+        );
+        final dGridService = MapGridService(campaignRepo: delayedRepo, clock: dClock);
+        final dTransform = TransformationController();
+
+        dController.start();
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: MapView(
+              key: UniqueKey(),
+              controller: dController,
+              gridService: dGridService,
+              transformationController: dTransform,
+              canEditMap: true,
+            ),
+          ),
+        ));
+        await tester.pumpAndSettle();
+
+        // 0 ms: DM presses "Nudge right"
+        await tester.tap(find.byTooltip('Nudge right'));
+
+        // 420 ms: DM presses "Increase size"
+        await tester.pump(const Duration(milliseconds: 420));
+        await tester.tap(find.byTooltip('Increase size'));
+        await tester.pump();
+
+        // 440 ms: DM presses "Set a corner"
+        await tester.pump(const Duration(milliseconds: 20));
+        await tester.tap(find.text('Set a corner'));
+        await tester.pump();
+
+        // 445 ms: DM taps the map
+        await tester.pump(const Duration(milliseconds: 5));
+        final ivFinder = find.byType(InteractiveViewer);
+        await tester.tapAt(tester.getCenter(ivFinder));
+        await tester.pump();
+
+        // 750 ms (305 ms later): panel size field read, then press "Increase size"
+        await tester.pump(const Duration(milliseconds: 305));
+        final sizeField = find.byType(TextField).first;
+        final sizeAt750 = tester.widget<TextField>(sizeField).controller!.text;
+
+        await tester.tap(find.byTooltip('Increase size'));
+        await tester.pump();
+
+        // 2 s more
+        await tester.pump(const Duration(seconds: 2));
+        await tester.pumpAndSettle();
+
+        final finalCellCentiPx = delayedRepo.activeProfile!.mapGrid!.cellCentiPx;
+
+        await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+        await tester.pumpAndSettle();
+        dController.dispose();
+        dTransform.dispose();
+
+        return (sizeAt750: sizeAt750, finalCellCentiPx: finalCellCentiPx);
+      }
+
+      // Control: second and third emits after 5 ms (each emit before its write finishes)
+      final controlResult = await runCase(
+        futureDelays: [
+          const Duration(milliseconds: 300),
+          const Duration(milliseconds: 10),
+          const Duration(milliseconds: 10),
+        ],
+        emitDelays: [
+          const Duration(milliseconds: 50),
+          const Duration(milliseconds: 5),
+          const Duration(milliseconds: 5),
+        ],
+      );
+      expect(controlResult.sizeAt750, equals('50.5'));
+      expect(controlResult.finalCellCentiPx, equals(5100));
+
+      // Failing example: second and third finish after 10 ms and emit after 200 ms
+      final failingResult = await runCase(
+        futureDelays: [
+          const Duration(milliseconds: 300),
+          const Duration(milliseconds: 10),
+          const Duration(milliseconds: 10),
+        ],
+        emitDelays: [
+          const Duration(milliseconds: 50),
+          const Duration(milliseconds: 200),
+          const Duration(milliseconds: 200),
+        ],
+      );
+      expect(failingResult.sizeAt750, equals('50.5'));
+      expect(failingResult.finalCellCentiPx, equals(5100));
+    });
+
     testWidgets('GL2: Randomized grid edit law with delayed repository (at least 150 seeds)', (tester) async {
       int panelPressWhileInFlightCount = 0;
 

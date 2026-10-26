@@ -7,7 +7,6 @@ import 'map_grid_service.dart';
 class _InFlightEdit {
   final MapGridEdit edit;
   bool isDone = false;
-  bool stateArrived = false;
   _InFlightEdit(this.edit);
 }
 
@@ -49,10 +48,7 @@ class MapGridEditor {
 
   /// Removes all in-flight entries that have completed their writes and have been confirmed by arrived state.
   void latestArrived() {
-    for (final entry in _inFlight) {
-      entry.stateArrived = true;
-    }
-    _inFlight.removeWhere((entry) => entry.isDone && entry.stateArrived);
+    _inFlight.removeWhere((entry) => entry.isDone);
   }
 
   /// Returns [latest] with all in-flight edits (oldest first) and any pending unwritten edit applied on top.
@@ -144,9 +140,6 @@ class MapGridEditor {
         try {
           await service.applyEdit(campaignId, map, toWrite);
           inFlightEntry.isDone = true;
-          if (inFlightEntry.stateArrived) {
-            _inFlight.remove(inFlightEntry);
-          }
         } catch (e) {
           _inFlight.remove(inFlightEntry);
           _lastWriteError = e;

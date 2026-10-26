@@ -51,24 +51,48 @@ void main() {
         return violations;
       }
 
+      ({List<({String name, String content})> files, List<String> problems}) readFolders(List<String> folderPaths) {
+        final files = <({String name, String content})>[];
+        final problems = <String>[];
+        for (final dirPath in folderPaths) {
+          final dir = Directory(dirPath);
+          if (!dir.existsSync()) {
+            problems.add('Folder does not exist: $dirPath');
+            continue;
+          }
+          final dartFiles = dir
+              .listSync(recursive: true)
+              .whereType<File>()
+              .where((f) => f.path.endsWith('.dart'))
+              .toList();
+          if (dartFiles.isEmpty) {
+            problems.add('Folder contains no .dart files: $dirPath');
+            continue;
+          }
+          for (final f in dartFiles) {
+            files.add((name: f.path.replaceAll(r'\', '/'), content: f.readAsStringSync()));
+          }
+        }
+        return (files: files, problems: problems);
+      }
+
       final targetDirs = [
         'lib/presentation/widgets/map',
         'lib/presentation/screens/map',
         'lib/application/map',
       ];
 
-      final diskFiles = <({String name, String content})>[];
-      for (final dirPath in targetDirs) {
-        final dir = Directory(dirPath);
-        if (dir.existsSync()) {
-          for (final f in dir.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
-            diskFiles.add((name: f.path.replaceAll(r'\', '/'), content: f.readAsStringSync()));
-          }
-        }
-      }
+      final readResult = readFolders(targetDirs);
+      expect(readResult.problems, isEmpty, reason: 'SB17 folder reading problems:\n${readResult.problems.join('\n')}');
 
-      final violations = scanForIsRegistered(diskFiles);
+      final violations = scanForIsRegistered(readResult.files);
       expect(violations, isEmpty, reason: 'SB17 violations:\n${violations.join('\n')}');
+
+      // Control 1: missing folder detection
+      const madeUpFolder = 'lib/application/map_nonexistent_dir';
+      final controlRead = readFolders([...targetDirs, madeUpFolder]);
+      expect(controlRead.problems, hasLength(1));
+      expect(controlRead.problems.first, contains(madeUpFolder));
 
       // Control: run the same scanner function on an in-memory pair whose source contains if (sl.isRegistered<Foo>()) {}
       final inMemoryPair = [(
