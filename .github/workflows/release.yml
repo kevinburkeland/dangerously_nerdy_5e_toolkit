@@ -131,6 +131,12 @@ jobs:
         # Baseline 116bb9bad62d771bdee55a41df99536e1a1f4d68 is the newest unsigned commit in repository history.
         run: ./scripts/check_dco.sh 116bb9bad62d771bdee55a41df99536e1a1f4d68 HEAD
 
+      - name: 🧪 Run Mutation Branch Script Self-Tests
+        run: ./scripts/test_check_mutation_branches.sh
+
+      - name: 🔒 Check Mutation Branches Limit
+        run: ./scripts/check_mutation_branches.sh 20
+
   # -----------------------------------------------------------------------
   # STAGE 4: BUILD WEB PRODUCTION BUNDLE (PRIMARY WEB TARGET)
   # -----------------------------------------------------------------------
