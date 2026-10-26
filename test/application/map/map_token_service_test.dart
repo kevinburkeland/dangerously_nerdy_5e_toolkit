@@ -712,7 +712,7 @@ void main() {
                     }
                     return false;
                   }
-                  expect(refCanMove(seen, tok, actor as PlayerActor), isTrue,
+                  expect(refCanMove(seen, tok, actor), isTrue,
                       reason: 'Player move written without permission at seed $seed step $step');
                 }
               }
