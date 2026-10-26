@@ -97,28 +97,31 @@ void main() {
       const goodOrientation = 'throw MapIntakeRejected(MapRejectReason.$requiredOrientationMismatch);';
       expect(requiredOrientationMismatch.allMatches(goodOrientation).length, equals(1));
     });
-    test('SB19: grid_geometry.dart and map_grid_service.dart import nothing from package:flutter', () {
+    test('SB19: grid_geometry.dart, map_grid_service.dart, and map_grid_editor.dart import nothing from package:flutter', () {
       final files = [
         File('lib/application/map/grid_geometry.dart'),
         File('lib/application/map/map_grid_service.dart'),
+        File('lib/application/map/map_grid_editor.dart'),
       ];
+
+      const flutterPkg = 'package:' 'flutter';
 
       for (final file in files) {
         expect(file.existsSync(), isTrue, reason: '${file.path} must exist');
         final content = file.readAsStringSync();
         expect(
-          content.contains('package:flutter'),
+          content.contains(flutterPkg),
           isFalse,
           reason: '${file.path} must not import package:flutter',
         );
       }
 
       // Control: in-memory bad string
-      const badContent = "import 'package:flutter/material.dart';";
-      expect(badContent.contains('package:flutter'), isTrue);
+      const badContent = "import 'package:" "flutter/material.dart';";
+      expect(badContent.contains(flutterPkg), isTrue);
     });
 
-    test('SB20: Under lib/, withMapGrid( appears only in map_grid_service.dart, and MapGrid( only in map_grid_service.dart, grid_geometry.dart, and map_grid_controls.dart', () {
+    test('SB20: Under lib/, withMapGrid( appears only in map_grid_service.dart, and MapGrid( only in map_grid_service.dart and grid_geometry.dart', () {
       final dir = Directory('lib');
       final dartFiles = dir
           .listSync(recursive: true)
@@ -126,8 +129,8 @@ void main() {
           .where((f) => f.path.endsWith('.dart'))
           .toList();
 
-      const withMapGridToken = 'withMapGrid(';
-      final mapGridConstructorPattern = RegExp(r'(?<![a-zA-Z0-9_])MapGrid\(');
+      const withMapGridToken = 'with' 'MapGrid(';
+      final mapGridConstructorPattern = RegExp(r'(?<![a-zA-Z0-9_])' 'Map' r'Grid\(');
 
       final withMapGridHits = <String>[];
       final mapGridConstructorHits = <String>[];
@@ -153,24 +156,23 @@ void main() {
 
       for (final hit in mapGridConstructorHits) {
         final matchesAllowed = hit.endsWith('map_grid_service.dart') ||
-            hit.endsWith('grid_geometry.dart') ||
-            hit.endsWith('map_grid_controls.dart');
+            hit.endsWith('grid_geometry.dart');
         expect(
           matchesAllowed,
           isTrue,
           reason: 'MapGrid( constructor appears in unallowed file: $hit',
         );
       }
-      expect(mapGridConstructorHits.length, equals(3));
+      expect(mapGridConstructorHits.length, equals(2));
 
       // Controls: in-memory bad strings
-      const badWithMapGrid = 'profile.withMapGrid(null, clock);';
+      const badWithMapGrid = 'profile.' 'with' 'MapGrid(null, clock);';
       expect(badWithMapGrid.contains(withMapGridToken), isTrue);
 
-      const badMapGrid = 'final g = MapGrid(mapSha256Hex: "x");';
+      const badMapGrid = 'final g = ' 'Map' 'Grid(mapSha256Hex: "x");';
       expect(mapGridConstructorPattern.hasMatch(badMapGrid), isTrue);
       // Ensure toggleMapGrid does not trigger constructor regex
-      const goodToggle = 'toggleMapGrid(gridService: s);';
+      const goodToggle = 'toggle' 'MapGrid(gridService: s);';
       expect(mapGridConstructorPattern.hasMatch(goodToggle), isFalse);
     });
 
@@ -207,6 +209,96 @@ void main() {
         final badContent = 'call($token);';
         expect(badContent.contains(token), isTrue);
       }
+    });
+
+    test('SB22: Under lib/, .setGrid(, .applyEdit(, .toggleVisible(, and .setCornerAt( are called only in map_grid_editor.dart. map_grid_controls.dart contains no Timer, no MapGridService, and no setGrid', () {
+      final dir = Directory('lib');
+      final dartFiles = dir
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'))
+          .toList();
+
+      const editTokens = [
+        '.set' 'Grid(',
+        '.apply' 'Edit(',
+        '.toggle' 'Visible(',
+        '.set' 'CornerAt(',
+      ];
+
+      for (final token in editTokens) {
+        final hits = <String>[];
+        for (final file in dartFiles) {
+          final content = file.readAsStringSync();
+          if (content.contains(token)) {
+            hits.add(file.path.replaceAll(r'\', '/'));
+          }
+        }
+        for (final hit in hits) {
+          final isAllowed = hit.endsWith('map_grid_editor.dart') ||
+              (hit.endsWith('map_view.dart') &&
+                  (token.contains('toggleVisible') || token.contains('setCornerAt')));
+          expect(
+            isAllowed,
+            isTrue,
+            reason: '$token must appear only in map_grid_editor.dart (or map_view.dart calling the editor). Found in: $hit',
+          );
+        }
+        if (token.contains('setGrid') || token.contains('applyEdit')) {
+          expect(
+            hits,
+            hasLength(1),
+            reason: '$token must appear only in map_grid_editor.dart',
+          );
+          expect(hits.first, endsWith('map_grid_editor.dart'));
+        }
+      }
+
+      final controlsFile = File('lib/presentation/widgets/map/map_grid_controls.dart');
+      expect(controlsFile.existsSync(), isTrue);
+      final controlsContent = controlsFile.readAsStringSync();
+
+      const forbiddenInControls = [
+        'Ti' 'mer',
+        'MapGrid' 'Service',
+        'set' 'Grid',
+      ];
+      for (final token in forbiddenInControls) {
+        expect(
+          controlsContent.contains(token),
+          isFalse,
+          reason: 'map_grid_controls.dart must not contain $token',
+        );
+      }
+
+      // Controls: in-memory bad strings
+      for (final token in editTokens) {
+        final badContent = 'service$token;';
+        expect(badContent.contains(token), isTrue);
+      }
+      for (final token in forbiddenInControls) {
+        final badContent = 'final x = $token;';
+        expect(badContent.contains(token), isTrue);
+      }
+    });
+
+    test('SB23: map_view.dart contains boundaryMargin', () {
+      final file = File('lib/presentation/widgets/map/map_view.dart');
+      expect(file.existsSync(), isTrue);
+      final content = file.readAsStringSync();
+
+      const requiredToken = 'boundary' 'Margin';
+      expect(
+        content.contains(requiredToken),
+        isTrue,
+        reason: 'map_view.dart must contain boundaryMargin',
+      );
+
+      // Controls:
+      const badContent = 'InteractiveViewer(panEnabled: true);';
+      expect(badContent.contains(requiredToken), isFalse);
+      const goodContent = 'InteractiveViewer($requiredToken: const EdgeInsets.all(double.infinity));';
+      expect(goodContent.contains(requiredToken), isTrue);
     });
   });
 }

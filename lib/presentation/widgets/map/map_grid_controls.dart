@@ -1,60 +1,21 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
 import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
-import '../../../application/map/map_grid_service.dart';
-
-/// Helper to toggle the shared map grid on/off.
-void toggleMapGrid({
-  required MapGridService gridService,
-  required String campaignId,
-  required BlobRef mapRef,
-  required MapGrid? currentGrid,
-}) {
-  if (currentGrid == null) {
-    gridService.setGrid(campaignId, gridService.defaultGridFor(mapRef));
-  } else if (currentGrid.visible) {
-    gridService.setGrid(
-      campaignId,
-      MapGrid(
-        mapSha256Hex: currentGrid.mapSha256Hex,
-        cellCentiPx: currentGrid.cellCentiPx,
-        offsetXCentiPx: currentGrid.offsetXCentiPx,
-        offsetYCentiPx: currentGrid.offsetYCentiPx,
-        feetPerCell: currentGrid.feetPerCell,
-        visible: false,
-      ),
-    );
-  } else {
-    gridService.setGrid(
-      campaignId,
-      MapGrid(
-        mapSha256Hex: currentGrid.mapSha256Hex,
-        cellCentiPx: currentGrid.cellCentiPx,
-        offsetXCentiPx: currentGrid.offsetXCentiPx,
-        offsetYCentiPx: currentGrid.offsetYCentiPx,
-        feetPerCell: currentGrid.feetPerCell,
-        visible: true,
-      ),
-    );
-  }
-}
 
 /// Compact controls panel for configuring grid size, alignment, and scale.
 class MapGridControls extends StatefulWidget {
-  final String campaignId;
-  final BlobRef mapRef;
   final MapGrid grid;
-  final MapGridService gridService;
+  final ValueChanged<int> onCellSizeChanged;
+  final void Function(int dx, int dy) onNudge;
+  final ValueChanged<int> onFeetChanged;
   final VoidCallback onStartSetCorner;
   final bool isSettingCorner;
 
   const MapGridControls({
     super.key,
-    required this.campaignId,
-    required this.mapRef,
     required this.grid,
-    required this.gridService,
+    required this.onCellSizeChanged,
+    required this.onNudge,
+    required this.onFeetChanged,
     required this.onStartSetCorner,
     this.isSettingCorner = false,
   });
@@ -64,28 +25,22 @@ class MapGridControls extends StatefulWidget {
 }
 
 class _MapGridControlsState extends State<MapGridControls> {
-  late double _cellSizePx;
-  late int _offsetXCentiPx;
-  late int _offsetYCentiPx;
-  late int _feetPerCell;
-
   late TextEditingController _sizeController;
   late TextEditingController _feetController;
+  late FocusNode _sizeFocusNode;
+  late FocusNode _feetFocusNode;
 
-  String? _errorMessage;
-  Timer? _debounceTimer;
-  bool _hasPendingChange = false;
+  String? _sizeError;
+  String? _feetError;
 
   @override
   void initState() {
     super.initState();
-    _cellSizePx = widget.grid.cellCentiPx / 100.0;
-    _offsetXCentiPx = widget.grid.offsetXCentiPx;
-    _offsetYCentiPx = widget.grid.offsetYCentiPx;
-    _feetPerCell = widget.grid.feetPerCell;
-
-    _sizeController = TextEditingController(text: _formatSize(_cellSizePx));
-    _feetController = TextEditingController(text: _feetPerCell.toString());
+    final displayedSizePx = widget.grid.cellCentiPx / 100.0;
+    _sizeController = TextEditingController(text: _formatSize(displayedSizePx));
+    _feetController = TextEditingController(text: widget.grid.feetPerCell.toString());
+    _sizeFocusNode = FocusNode();
+    _feetFocusNode = FocusNode();
   }
 
   String _formatSize(double size) {
@@ -102,112 +57,84 @@ class _MapGridControlsState extends State<MapGridControls> {
   @override
   void didUpdateWidget(MapGridControls oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.grid != oldWidget.grid && !_hasPendingChange) {
-      _cellSizePx = widget.grid.cellCentiPx / 100.0;
-      _offsetXCentiPx = widget.grid.offsetXCentiPx;
-      _offsetYCentiPx = widget.grid.offsetYCentiPx;
-      _feetPerCell = widget.grid.feetPerCell;
-      _sizeController.text = _formatSize(_cellSizePx);
-      _feetController.text = _feetPerCell.toString();
+    if (!_sizeFocusNode.hasFocus) {
+      final parsedSize = double.tryParse(_sizeController.text);
+      final displayedSizePx = widget.grid.cellCentiPx / 100.0;
+      if (parsedSize == null || (parsedSize - displayedSizePx).abs() > 0.001) {
+        _sizeController.text = _formatSize(displayedSizePx);
+        if (_sizeError != null) {
+          setState(() {
+            _sizeError = null;
+          });
+        }
+      }
+    }
+    if (!_feetFocusNode.hasFocus) {
+      final parsedFeet = int.tryParse(_feetController.text);
+      if (parsedFeet != widget.grid.feetPerCell) {
+        _feetController.text = widget.grid.feetPerCell.toString();
+        if (_feetError != null) {
+          setState(() {
+            _feetError = null;
+          });
+        }
+      }
     }
   }
 
-  void _scheduleDebouncedWrite() {
-    _hasPendingChange = true;
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-      _writeNow();
-    });
-  }
-
-  void _writeNow() {
-    _debounceTimer?.cancel();
-    _debounceTimer = null;
-    if (!_hasPendingChange) return;
-    _hasPendingChange = false;
-    if (_errorMessage != null) return;
-
-    final cellCenti = (_cellSizePx * 100.0).round().clamp(1000, 51200);
-    int offX = _offsetXCentiPx % cellCenti;
-    if (offX < 0) offX += cellCenti;
-    int offY = _offsetYCentiPx % cellCenti;
-    if (offY < 0) offY += cellCenti;
-
-    final updatedGrid = MapGrid(
-      mapSha256Hex: widget.grid.mapSha256Hex,
-      cellCentiPx: cellCenti,
-      offsetXCentiPx: offX,
-      offsetYCentiPx: offY,
-      feetPerCell: _feetPerCell.clamp(1, 100),
-      visible: widget.grid.visible,
-    );
-    widget.gridService.setGrid(widget.campaignId, updatedGrid);
+  @override
+  void dispose() {
+    _sizeController.dispose();
+    _feetController.dispose();
+    _sizeFocusNode.dispose();
+    _feetFocusNode.dispose();
+    super.dispose();
   }
 
   void _stepSize(double delta) {
-    final nextSize = ((_cellSizePx + delta) * 100.0).round() / 100.0;
+    final curSizePx = widget.grid.cellCentiPx / 100.0;
+    final nextSize = ((curSizePx + delta) * 100.0).round() / 100.0;
     if (nextSize < 10.0 || nextSize > 512.0) {
       setState(() {
-        _errorMessage = 'Square size must be between 10 and 512 px.';
+        _sizeError = 'Square size must be between 10 and 512 px.';
       });
       return;
     }
     setState(() {
-      _errorMessage = null;
-      _cellSizePx = nextSize;
-      _sizeController.text = _formatSize(_cellSizePx);
+      _sizeError = null;
     });
-    _scheduleDebouncedWrite();
+    final nextCentiPx = (nextSize * 100.0).round();
+    _sizeController.text = _formatSize(nextSize);
+    widget.onCellSizeChanged(nextCentiPx);
   }
 
   void _onSizeTextChanged(String text) {
     final val = double.tryParse(text);
     if (val == null || val < 10.0 || val > 512.0) {
       setState(() {
-        _errorMessage = 'Square size must be between 10 and 512 px.';
-        _debounceTimer?.cancel();
-        _hasPendingChange = false;
+        _sizeError = 'Square size must be between 10 and 512 px.';
       });
       return;
     }
     setState(() {
-      _errorMessage = null;
-      _cellSizePx = val;
+      _sizeError = null;
     });
-    _scheduleDebouncedWrite();
+    final nextCentiPx = (val * 100.0).round();
+    widget.onCellSizeChanged(nextCentiPx);
   }
 
   void _onFeetTextChanged(String text) {
     final val = int.tryParse(text);
     if (val == null || val < 1 || val > 100) {
+      setState(() {
+        _feetError = 'Feet per square must be a whole number from 1 to 100.';
+      });
       return;
     }
     setState(() {
-      _feetPerCell = val;
+      _feetError = null;
     });
-    _scheduleDebouncedWrite();
-  }
-
-  void _nudge(int dx, int dy) {
-    final cellCenti = (_cellSizePx * 100.0).round();
-    int newX = (_offsetXCentiPx + dx * 100) % cellCenti;
-    if (newX < 0) newX += cellCenti;
-    int newY = (_offsetYCentiPx + dy * 100) % cellCenti;
-    if (newY < 0) newY += cellCenti;
-
-    setState(() {
-      _offsetXCentiPx = newX;
-      _offsetYCentiPx = newY;
-    });
-    _scheduleDebouncedWrite();
-  }
-
-  @override
-  void dispose() {
-    _writeNow();
-    _sizeController.dispose();
-    _feetController.dispose();
-    super.dispose();
+    widget.onFeetChanged(val);
   }
 
   @override
@@ -221,28 +148,26 @@ class _MapGridControlsState extends State<MapGridControls> {
         children: [
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Wrap(
-              spacing: 12.0,
-              runSpacing: 8.0,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              alignment: WrapAlignment.start,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Square size section
+                // Size controls
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Size: ', style: TextStyle(fontSize: 13)),
                     IconButton(
-                      icon: const Icon(Icons.remove, size: 18),
-                      tooltip: 'Decrease size',
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      icon: const Icon(Icons.remove, size: 16),
                       padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                      tooltip: 'Decrease size',
                       onPressed: () => _stepSize(-0.5),
                     ),
                     SizedBox(
-                      width: 58,
+                      width: 52,
                       child: TextField(
                         controller: _sizeController,
+                        focusNode: _sizeFocusNode,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: const InputDecoration(
                           isDense: true,
@@ -254,64 +179,66 @@ class _MapGridControlsState extends State<MapGridControls> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.add, size: 18),
-                      tooltip: 'Increase size',
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      icon: const Icon(Icons.add, size: 16),
                       padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                      tooltip: 'Increase size',
                       onPressed: () => _stepSize(0.5),
                     ),
                     const Text('px', style: TextStyle(fontSize: 13)),
                   ],
                 ),
-                // Line up section
+                const SizedBox(width: 12),
+                // Nudge controls
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ElevatedButton(
-                      onPressed: widget.onStartSetCorner,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        backgroundColor: widget.isSettingCorner
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : null,
-                      ),
-                      child: Text(
-                        widget.isSettingCorner ? 'Tap corner…' : 'Set a corner',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
+                    const Text('Nudge: ', style: TextStyle(fontSize: 13)),
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, size: 18),
+                      icon: const Icon(Icons.arrow_back, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                       tooltip: 'Nudge left',
-                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                      padding: EdgeInsets.zero,
-                      onPressed: () => _nudge(-1, 0),
+                      onPressed: () => widget.onNudge(-1, 0),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.arrow_upward, size: 18),
+                      icon: const Icon(Icons.arrow_upward, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                       tooltip: 'Nudge up',
-                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                      padding: EdgeInsets.zero,
-                      onPressed: () => _nudge(0, -1),
+                      onPressed: () => widget.onNudge(0, -1),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.arrow_downward, size: 18),
+                      icon: const Icon(Icons.arrow_downward, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                       tooltip: 'Nudge down',
-                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                      padding: EdgeInsets.zero,
-                      onPressed: () => _nudge(0, 1),
+                      onPressed: () => widget.onNudge(0, 1),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      tooltip: 'Nudge right',
-                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                      icon: const Icon(Icons.arrow_forward, size: 16),
                       padding: EdgeInsets.zero,
-                      onPressed: () => _nudge(1, 0),
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                      tooltip: 'Nudge right',
+                      onPressed: () => widget.onNudge(1, 0),
                     ),
                   ],
                 ),
-                // Feet per square section
+                const SizedBox(width: 12),
+                // Set corner
+                OutlinedButton.icon(
+                  onPressed: widget.onStartSetCorner,
+                  icon: const Icon(Icons.crop_free, size: 16),
+                  label: const Text('Set a corner', style: TextStyle(fontSize: 13)),
+                  style: widget.isSettingCorner
+                      ? OutlinedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primaryContainer,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                // Feet per square
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -320,6 +247,7 @@ class _MapGridControlsState extends State<MapGridControls> {
                       width: 46,
                       child: TextField(
                         controller: _feetController,
+                        focusNode: _feetFocusNode,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           isDense: true,
@@ -336,11 +264,22 @@ class _MapGridControlsState extends State<MapGridControls> {
               ],
             ),
           ),
-          if (_errorMessage != null)
+          if (_sizeError != null)
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
-                _errorMessage!,
+                _sizeError!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          if (_feetError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                _feetError!,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,
                   fontSize: 12,

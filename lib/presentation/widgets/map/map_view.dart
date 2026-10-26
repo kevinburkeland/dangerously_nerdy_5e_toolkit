@@ -6,6 +6,7 @@ import 'package:vtt_engine_core/vtt_engine_core.dart';
 import '../../../application/blob/blob_store_port.dart';
 import '../../../application/map/active_map_controller.dart';
 import '../../../application/map/grid_geometry.dart';
+import '../../../application/map/map_grid_editor.dart';
 import '../../../application/map/map_grid_service.dart';
 import '../../../application/map/map_image_intake_port.dart';
 import '../../../application/map/map_intake_service.dart';
@@ -63,6 +64,7 @@ class _MapViewState extends State<MapView> {
   double _currentScale = 1.0;
   String? _lastFittedRefSha;
   String? _lastMapSha;
+  Size? _currentViewportSize;
 
   bool _isMeasuring = false;
   bool _isSettingCorner = false;
@@ -70,7 +72,11 @@ class _MapViewState extends State<MapView> {
   Offset? _rulerEnd;
   String? _rulerLabel;
 
-  MapGridService get _gridService => widget.gridService ?? sl<MapGridService>();
+  MapGridEditor? _gridEditor;
+
+  MapGridService? get _gridService =>
+      widget.gridService ??
+      (sl.isRegistered<MapGridService>() ? sl<MapGridService>() : null);
 
   @override
   void initState() {
@@ -79,11 +85,13 @@ class _MapViewState extends State<MapView> {
     _transformController.addListener(_onTransformChanged);
     _currentState = widget.controller.current;
     _syncGridAndRulerState(_currentState);
+    _syncGridEditor(_currentState);
     _sub = widget.controller.states.listen((state) {
       if (mounted) {
         setState(() {
           _currentState = state;
           _syncGridAndRulerState(state);
+          _syncGridEditor(state);
         });
       }
     });
@@ -120,6 +128,31 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  void _syncGridEditor(ActiveMapViewState state) {
+    if (state is MapReady) {
+      final campaignId = widget.controller.campaignId;
+      final service = _gridService;
+      if (campaignId == null || service == null) {
+        _gridEditor?.dispose();
+        _gridEditor = null;
+        return;
+      }
+      if (_gridEditor == null ||
+          _gridEditor!.map.sha256Hex != state.ref.sha256Hex ||
+          _gridEditor!.campaignId != campaignId) {
+        _gridEditor?.dispose();
+        _gridEditor = MapGridEditor(
+          service: service,
+          campaignId: campaignId,
+          map: state.ref,
+        );
+      }
+    } else {
+      _gridEditor?.dispose();
+      _gridEditor = null;
+    }
+  }
+
   @override
   void didUpdateWidget(MapView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -127,11 +160,13 @@ class _MapViewState extends State<MapView> {
       _sub?.cancel();
       _currentState = widget.controller.current;
       _syncGridAndRulerState(_currentState);
+      _syncGridEditor(_currentState);
       _sub = widget.controller.states.listen((state) {
         if (mounted) {
           setState(() {
             _currentState = state;
             _syncGridAndRulerState(state);
+            _syncGridEditor(state);
           });
         }
       });
@@ -147,6 +182,8 @@ class _MapViewState extends State<MapView> {
     _sub?.cancel();
     _transformController.removeListener(_onTransformChanged);
     _internalTransformController.dispose();
+    _gridEditor?.dispose();
+    _gridEditor = null;
     super.dispose();
   }
 
@@ -258,32 +295,42 @@ class _MapViewState extends State<MapView> {
   }
 
   void _handleToggleGrid() {
-    final state = _currentState;
-    if (state is! MapReady) return;
-    final campaignId = widget.controller.campaignId;
-    if (campaignId == null) return;
-    toggleMapGrid(
-      gridService: _gridService,
-      campaignId: campaignId,
-      mapRef: state.ref,
-      currentGrid: state.grid,
-    );
+    _gridEditor?.toggleVisible();
   }
 
-  void _initFit(BoxConstraints constraints, BlobRef ref) {
-    if (_lastFittedRefSha == ref.sha256Hex) return;
-    _lastFittedRefSha = ref.sha256Hex;
-    final scaleX = constraints.maxWidth / ref.width;
-    final scaleY = constraints.maxHeight / ref.height;
+  Matrix4 _computeFitMatrix(Size viewportSize, BlobRef ref) {
+    final scaleX = viewportSize.width / ref.width;
+    final scaleY = viewportSize.height / ref.height;
     final fitScale = math.min(scaleX, scaleY).clamp(0.05, 8.0);
-    final tx = (constraints.maxWidth - ref.width * fitScale) / 2.0;
-    final ty = (constraints.maxHeight - ref.height * fitScale) / 2.0;
-    _transformController.removeListener(_onTransformChanged);
-    _transformController.value = Matrix4.identity()
+    final tx = (viewportSize.width - ref.width * fitScale) / 2.0;
+    final ty = (viewportSize.height - ref.height * fitScale) / 2.0;
+    return Matrix4.identity()
       ..translateByDouble(tx, ty, 0.0, 1.0)
       ..scaleByDouble(fitScale, fitScale, 1.0, 1.0);
-    _currentScale = fitScale;
+  }
+
+  void _applyFitMatrix(Size viewportSize, BlobRef ref) {
+    final matrix = _computeFitMatrix(viewportSize, ref);
+    _transformController.removeListener(_onTransformChanged);
+    _transformController.value = matrix;
+    _currentScale = matrix.getMaxScaleOnAxis();
     _transformController.addListener(_onTransformChanged);
+  }
+
+  void _initFit(Size viewportSize, BlobRef ref) {
+    if (_lastFittedRefSha == ref.sha256Hex) return;
+    _lastFittedRefSha = ref.sha256Hex;
+    _applyFitMatrix(viewportSize, ref);
+  }
+
+  void _handleRecenter() {
+    final state = _currentState;
+    if (state is! MapReady) return;
+    final size = _currentViewportSize;
+    if (size != null && size.width > 0 && size.height > 0) {
+      _applyFitMatrix(size, state.ref);
+      setState(() {});
+    }
   }
 
   Widget _buildStateContent(ActiveMapViewState state) {
@@ -334,25 +381,28 @@ class _MapViewState extends State<MapView> {
           ),
         );
       case MapReady():
+        final displayedGrid = (state.grid != null && _gridEditor != null)
+            ? _gridEditor!.displayed(state.grid!)
+            : state.grid;
+
         return LayoutBuilder(
           builder: (context, constraints) {
-            _initFit(constraints, state.ref);
+            final currentSize = Size(constraints.maxWidth, constraints.maxHeight);
+            _currentViewportSize = currentSize;
+            _initFit(currentSize, state.ref);
             return GestureDetector(
               behavior: HitTestBehavior.translucent,
-              onTapUp: _isSettingCorner && state.grid != null
+              onTapUp: _isSettingCorner && displayedGrid != null
                   ? (details) {
                       final scene = _transformController.toScene(details.localPosition);
-                      final newGrid = gridWithCornerAt(state.grid!, scene.dx, scene.dy);
-                      final cId = widget.controller.campaignId;
-                      if (cId != null) {
-                        _gridService.setGrid(cId, newGrid);
-                      }
+                      _gridEditor?.setCornerAt(scene.dx, scene.dy);
                       setState(() {
                         _isSettingCorner = false;
                       });
                     }
                   : null,
               child: InteractiveViewer(
+                boundaryMargin: const EdgeInsets.all(double.infinity),
                 constrained: false,
                 minScale: 0.05,
                 maxScale: 8.0,
@@ -360,30 +410,30 @@ class _MapViewState extends State<MapView> {
                 panEnabled: !_isMeasuring && !_isSettingCorner,
                 scaleEnabled: true,
                 onInteractionStart: (details) {
-                  if (_isMeasuring && state.grid != null && details.pointerCount == 1) {
+                  if (_isMeasuring && displayedGrid != null && details.pointerCount == 1) {
                     final scene = _transformController.toScene(details.localFocalPoint);
-                    final snapped = snapToCellCenter(state.grid!, scene.dx, scene.dy);
+                    final snapped = snapToCellCenter(displayedGrid, scene.dx, scene.dy);
                     setState(() {
                       _rulerStart = Offset(snapped.x, snapped.y);
                       _rulerEnd = Offset(snapped.x, snapped.y);
-                      final c1 = cellAt(state.grid!, snapped.x, snapped.y);
+                      final c1 = cellAt(displayedGrid, snapped.x, snapped.y);
                       final sq = gridDistanceSquares(c1.col, c1.row, c1.col, c1.row);
-                      final ft = gridDistanceFeet(state.grid!, c1.col, c1.row, c1.col, c1.row);
+                      final ft = gridDistanceFeet(displayedGrid, c1.col, c1.row, c1.col, c1.row);
                       _rulerLabel = '$sq squares · $ft ft';
                     });
                   }
                 },
                 onInteractionUpdate: (details) {
-                  if (_isMeasuring && state.grid != null && details.pointerCount == 1) {
+                  if (_isMeasuring && displayedGrid != null && details.pointerCount == 1) {
                     final scene = _transformController.toScene(details.localFocalPoint);
-                    final snapped = snapToCellCenter(state.grid!, scene.dx, scene.dy);
+                    final snapped = snapToCellCenter(displayedGrid, scene.dx, scene.dy);
                     setState(() {
                       _rulerEnd = Offset(snapped.x, snapped.y);
                       if (_rulerStart != null) {
-                        final c1 = cellAt(state.grid!, _rulerStart!.dx, _rulerStart!.dy);
-                        final c2 = cellAt(state.grid!, snapped.x, snapped.y);
+                        final c1 = cellAt(displayedGrid, _rulerStart!.dx, _rulerStart!.dy);
+                        final c2 = cellAt(displayedGrid, snapped.x, snapped.y);
                         final sq = gridDistanceSquares(c1.col, c1.row, c2.col, c2.row);
-                        final ft = gridDistanceFeet(state.grid!, c1.col, c1.row, c2.col, c2.row);
+                        final ft = gridDistanceFeet(displayedGrid, c1.col, c1.row, c2.col, c2.row);
                         _rulerLabel = sq == 1 ? '1 square · $ft ft' : '$sq squares · $ft ft';
                       }
                     });
@@ -402,7 +452,7 @@ class _MapViewState extends State<MapView> {
                         gaplessPlayback: true,
                       ),
                       MapGridOverlay(
-                        grid: state.grid,
+                        grid: displayedGrid,
                         scale: _currentScale,
                         width: state.ref.width,
                         height: state.ref.height,
@@ -432,8 +482,11 @@ class _MapViewState extends State<MapView> {
     _checkLogging(state);
 
     final isMapSet = state is! MapNone;
-    final hasVisibleGrid = state is MapReady && state.grid != null && state.grid!.visible;
-    final showControlsRow = widget.canEditMap || hasVisibleGrid;
+    final displayedGrid = (state is MapReady && state.grid != null && _gridEditor != null)
+        ? _gridEditor!.displayed(state.grid!)
+        : (state is MapReady ? state.grid : null);
+    final hasVisibleGrid = displayedGrid != null && displayedGrid.visible;
+    final showControlsRow = widget.canEditMap || state is MapReady;
 
     return Column(
       children: [
@@ -464,6 +517,12 @@ class _MapViewState extends State<MapView> {
                       label: const Text('Grid'),
                     ),
                 ],
+                if (state is MapReady)
+                  OutlinedButton.icon(
+                    onPressed: _handleRecenter,
+                    icon: const Icon(Icons.center_focus_strong),
+                    label: const Text('Recenter'),
+                  ),
                 if (hasVisibleGrid)
                   OutlinedButton.icon(
                     onPressed: () {
@@ -516,12 +575,21 @@ class _MapViewState extends State<MapView> {
               ),
             ),
           ),
-        if (widget.canEditMap && state is MapReady && state.grid != null && state.grid!.visible && widget.controller.campaignId != null)
+        if (widget.canEditMap && state is MapReady && displayedGrid != null && displayedGrid.visible && widget.controller.campaignId != null)
           MapGridControls(
-            campaignId: widget.controller.campaignId!,
-            mapRef: state.ref,
-            grid: state.grid!,
-            gridService: _gridService,
+            grid: displayedGrid,
+            onCellSizeChanged: (cellCentiPx) {
+              _gridEditor?.setCellCentiPx(state.grid!, cellCentiPx);
+              setState(() {});
+            },
+            onNudge: (dx, dy) {
+              _gridEditor?.nudge(state.grid!, dx, dy);
+              setState(() {});
+            },
+            onFeetChanged: (feet) {
+              _gridEditor?.setFeetPerCell(state.grid!, feet);
+              setState(() {});
+            },
             onStartSetCorner: () {
               setState(() {
                 _isSettingCorner = !_isSettingCorner;
