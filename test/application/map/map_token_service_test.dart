@@ -696,13 +696,24 @@ void main() {
               expect(repo.profile, equals(beforeCall),
                   reason: 'Profile mutated when result was $result at seed $seed step $step');
             } else if (actor is PlayerActor) {
-              // Player write must have had permission
+              // Player write must have had permission according to reference rule
               final seen = lastSeenProfile!;
               if (action == 1) {
                 // move
                 final tok = seen.activeToken(lastMovedTokenId);
                 if (tok != null) {
-                  expect(canMoveToken(seen, tok, actor), isTrue);
+                  bool refCanMove(CampaignProfile p, MapToken t, PlayerActor a) {
+                    final slug = a.rosterSlug;
+                    if (slug == null || !p.partyRoster.activeValues.contains(slug)) return false;
+                    if (t.kind == MapTokenKind.character) return t.refId == slug;
+                    if (t.kind == MapTokenKind.minion) {
+                      return p.roomState.activeMinions.items.containsKey(t.refId) &&
+                          p.minionOwner(t.refId) == slug;
+                    }
+                    return false;
+                  }
+                  expect(refCanMove(seen, tok, actor as PlayerActor), isTrue,
+                      reason: 'Player move written without permission at seed $seed step $step');
                 }
               }
             }
