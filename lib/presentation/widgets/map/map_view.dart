@@ -74,9 +74,8 @@ class _MapViewState extends State<MapView> {
 
   MapGridEditor? _gridEditor;
 
-  MapGridService? get _gridService =>
-      widget.gridService ??
-      (sl.isRegistered<MapGridService>() ? sl<MapGridService>() : null);
+  MapGridService get _gridService =>
+      widget.gridService ?? sl<MapGridService>();
 
   @override
   void initState() {
@@ -132,7 +131,7 @@ class _MapViewState extends State<MapView> {
     if (state is MapReady) {
       final campaignId = widget.controller.campaignId;
       final service = _gridService;
-      if (campaignId == null || service == null) {
+      if (campaignId == null) {
         _gridEditor?.dispose();
         _gridEditor = null;
         return;
@@ -146,6 +145,8 @@ class _MapViewState extends State<MapView> {
           campaignId: campaignId,
           map: state.ref,
         );
+      } else {
+        _gridEditor!.latestArrived();
       }
     } else {
       _gridEditor?.dispose();
@@ -295,6 +296,7 @@ class _MapViewState extends State<MapView> {
   }
 
   void _handleToggleGrid() {
+    _gridEditor?.clearWriteError();
     _gridEditor?.toggleVisible();
   }
 
@@ -395,6 +397,7 @@ class _MapViewState extends State<MapView> {
               onTapUp: _isSettingCorner && displayedGrid != null
                   ? (details) {
                       final scene = _transformController.toScene(details.localPosition);
+                      _gridEditor?.clearWriteError();
                       _gridEditor?.setCornerAt(scene.dx, scene.dy);
                       setState(() {
                         _isSettingCorner = false;
@@ -575,28 +578,45 @@ class _MapViewState extends State<MapView> {
               ),
             ),
           ),
-        if (widget.canEditMap && state is MapReady && displayedGrid != null && displayedGrid.visible && widget.controller.campaignId != null)
+        if (widget.canEditMap && state is MapReady && displayedGrid != null && displayedGrid.visible && widget.controller.campaignId != null) ...[
+          if (_gridEditor?.lastWriteError != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Text(
+                "Couldn't save the grid: ${_gridEditor!.lastWriteError.toString().replaceFirst('Exception: ', '')}",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 13,
+                ),
+              ),
+            ),
           MapGridControls(
             grid: displayedGrid,
             onCellSizeChanged: (cellCentiPx) {
+              _gridEditor?.clearWriteError();
               _gridEditor?.setCellCentiPx(state.grid!, cellCentiPx);
               setState(() {});
             },
             onNudge: (dx, dy) {
+              _gridEditor?.clearWriteError();
               _gridEditor?.nudge(state.grid!, dx, dy);
               setState(() {});
             },
             onFeetChanged: (feet) {
+              _gridEditor?.clearWriteError();
               _gridEditor?.setFeetPerCell(state.grid!, feet);
               setState(() {});
             },
             onStartSetCorner: () {
+              _gridEditor?.clearWriteError();
               setState(() {
                 _isSettingCorner = !_isSettingCorner;
               });
             },
             isSettingCorner: _isSettingCorner,
           ),
+        ],
         Expanded(
           child: _buildStateContent(state),
         ),

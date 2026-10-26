@@ -7,6 +7,8 @@ import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_serv
 import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/map/map_image_intake_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/map/map_intake_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/map/map_grid_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/map/map_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -164,9 +166,12 @@ void main() {
         channel: channel,
         transportState: () => TransportState.webRtc,
       );
+      final gridService = MapGridService(campaignRepo: repo, clock: clock);
+      sl.registerSingleton<MapGridService>(gridService);
     });
 
     tearDown(() {
+      sl.reset();
       controller.dispose();
     });
 

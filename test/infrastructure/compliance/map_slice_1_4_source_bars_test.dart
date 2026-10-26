@@ -35,38 +35,50 @@ void main() {
       expect(token.allMatches(badContent).length, equals(1));
     });
 
-    test('SB17: Under lib/, none of isRegistered for ActiveMapController, MapIntakeService, MapImageIntakePort, RoomSessionStarter appears', () {
-      final forbiddenTokens = [
-        'isRegistered<' 'ActiveMapController>',
-        'isRegistered<' 'MapIntakeService>',
-        'isRegistered<' 'MapImageIntakePort>',
-        'isRegistered<' 'RoomSessionStarter>',
+    test('SB17: No file under lib/presentation/widgets/map/, lib/presentation/screens/map/ or lib/application/map/ contains isRegistered', () {
+      const isReg = 'is' 'Registered';
+
+      List<String> scanForIsRegistered(List<({String name, String content})> files) {
+        final violations = <String>[];
+        for (final f in files) {
+          final lines = f.content.split('\n');
+          for (var i = 0; i < lines.length; i++) {
+            if (lines[i].contains(isReg)) {
+              violations.add('${f.name}:${i + 1}: ${lines[i].trim()}');
+            }
+          }
+        }
+        return violations;
+      }
+
+      final targetDirs = [
+        'lib/presentation/widgets/map',
+        'lib/presentation/screens/map',
+        'lib/application/map',
       ];
 
-      final dir = Directory('lib');
-      final dartFiles = dir
-          .listSync(recursive: true)
-          .whereType<File>()
-          .where((f) => f.path.endsWith('.dart'))
-          .toList();
-
-      final violations = <String>[];
-      for (final file in dartFiles) {
-        final content = file.readAsStringSync();
-        for (final token in forbiddenTokens) {
-          if (content.contains(token)) {
-            violations.add('${file.path} contains forbidden token: $token');
+      final diskFiles = <({String name, String content})>[];
+      for (final dirPath in targetDirs) {
+        final dir = Directory(dirPath);
+        if (dir.existsSync()) {
+          for (final f in dir.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
+            diskFiles.add((name: f.path.replaceAll(r'\', '/'), content: f.readAsStringSync()));
           }
         }
       }
 
-      expect(violations, isEmpty, reason: 'SB17 violations: $violations');
+      final violations = scanForIsRegistered(diskFiles);
+      expect(violations, isEmpty, reason: 'SB17 violations:\n${violations.join('\n')}');
 
-      // Control: in-memory bad string for each token
-      for (final token in forbiddenTokens) {
-        final badContent = 'if (sl.$token) {}';
-        expect(badContent.contains(token), isTrue);
-      }
+      // Control: run the same scanner function on an in-memory pair whose source contains if (sl.isRegistered<Foo>()) {}
+      final inMemoryPair = [(
+        name: 'test_file.dart',
+        content: 'void check() {\n  if (sl.' '$isReg<Foo>()) {}\n}',
+      )];
+      final controlViolations = scanForIsRegistered(inMemoryPair);
+      expect(controlViolations, hasLength(1));
+      expect(controlViolations.first, contains('test_file.dart'));
+      expect(controlViolations.first, contains(isReg));
     });
 
     test('SB18: In web_map_image_intake_adapter.dart, resizeHeight does not appear, and orientationMismatch appears at least once', () {

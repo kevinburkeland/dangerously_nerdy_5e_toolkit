@@ -12,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/map/map_grid_service.da
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/map/map_grid_controls.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/map/map_view.dart';
 
+import '../../test_doubles/delayed_emit_campaign_repository.dart';
 import '../../test_doubles/fake_blob_network.dart';
 import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/fake_campaign_repository.dart';
@@ -891,5 +892,723 @@ void main() {
       expect(coDmWhilePendingCount, greaterThanOrEqualTo(20));
       expect(leaveWhilePendingCount, greaterThanOrEqualTo(20));
     });
+
+    testWidgets('GR10: press made while a save is running builds on the old value', (tester) async {
+      Future<void> runCase({
+        required Duration emitDelay,
+        required Duration futureDelay,
+      }) async {
+        final delayedRepo = DelayedEmitCampaignRepository(
+          _makeProfile(mapRef: mapRef, grid: initialGrid),
+          futureDelay,
+          emitDelay,
+        );
+        final dClock = StatefulHlcClock(replicaId: ReplicaId('node-1'));
+        final dChannel = network.createChannel('node-1');
+        final dTransfer = BlobTransferService(
+          channel: dChannel,
+          store: store,
+          servableRefs: () => activeMapServableRefs(delayedRepo),
+        );
+        final dController = ActiveMapController(
+          campaignRepo: delayedRepo,
+          transfer: dTransfer,
+          store: store,
+          channel: dChannel,
+          transportState: () => TransportState.webRtc,
+        );
+        final dGridService = MapGridService(campaignRepo: delayedRepo, clock: dClock);
+        final dTransform = TransformationController();
+
+        dController.start();
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: MapView(
+              key: UniqueKey(),
+              controller: dController,
+              gridService: dGridService,
+              transformationController: dTransform,
+              canEditMap: true,
+            ),
+          ),
+        ));
+        await tester.pumpAndSettle();
+
+        // The first + at 0 ms
+        await tester.tap(find.byTooltip('Increase size'));
+
+        // At 405 ms (write running, not yet emitted) the panel shows 50.5 px
+        await tester.pump(const Duration(milliseconds: 405));
+        final sizeField = find.byType(TextField).first;
+        expect(tester.widget<TextField>(sizeField).controller!.text, equals('50.5'));
+
+        // The second + at 410 ms (wait 5 ms)
+        await tester.pump(const Duration(milliseconds: 5));
+        await tester.tap(find.byTooltip('Increase size'));
+        await tester.pump();
+        expect(tester.widget<TextField>(sizeField).controller!.text, equals('51'));
+
+        // After 1 s the grid has cellCentiPx: 5100
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pumpAndSettle();
+
+        final finalGrid = delayedRepo.activeProfile!.mapGrid;
+        expect(finalGrid, isNotNull);
+        expect(finalGrid!.cellCentiPx, equals(5100));
+
+        await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+        await tester.pumpAndSettle();
+
+        dController.dispose();
+        dTransform.dispose();
+      }
+
+      await runCase(emitDelay: const Duration(milliseconds: 30), futureDelay: const Duration(milliseconds: 60));
+      await runCase(emitDelay: const Duration(milliseconds: 60), futureDelay: const Duration(milliseconds: 30));
+      await runCase(emitDelay: const Duration(milliseconds: 50), futureDelay: const Duration(milliseconds: 50));
+      await runCase(emitDelay: Duration.zero, futureDelay: Duration.zero);
+    });
+
+    testWidgets('GR11: write failure shows error message, keeps stored offset, and clears on next action', (tester) async {
+      final delayedRepo = DelayedEmitCampaignRepository(
+        _makeProfile(mapRef: mapRef, grid: initialGrid),
+      );
+      final dClock = StatefulHlcClock(replicaId: ReplicaId('node-1'));
+      final dChannel = network.createChannel('node-1');
+      final dTransfer = BlobTransferService(
+        channel: dChannel,
+        store: store,
+        servableRefs: () => activeMapServableRefs(delayedRepo),
+      );
+      final dController = ActiveMapController(
+        campaignRepo: delayedRepo,
+        transfer: dTransfer,
+        store: store,
+        channel: dChannel,
+        transportState: () => TransportState.webRtc,
+      );
+      final dGridService = MapGridService(campaignRepo: delayedRepo, clock: dClock);
+      final dTransform = TransformationController();
+
+      dController.start();
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: MapView(
+            key: UniqueKey(),
+            controller: dController,
+            gridService: dGridService,
+            transformationController: dTransform,
+            canEditMap: true,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      delayedRepo.nextUpdateError = Exception('storage write failed');
+
+      await tester.tap(find.byTooltip('Nudge right'));
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining("Couldn't save the grid:"), findsOneWidget);
+      expect(delayedRepo.activeProfile!.mapGrid!.offsetXCentiPx, equals(0));
+
+      await tester.tap(find.byTooltip('Nudge right'));
+      await tester.pump();
+      expect(find.textContaining("Couldn't save the grid:"), findsNothing);
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(delayedRepo.activeProfile!.mapGrid!.offsetXCentiPx, equals(100));
+
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+      await tester.pumpAndSettle();
+      dController.dispose();
+      dTransform.dispose();
+    });
+
+    testWidgets('GR12: co-DM update lands while DM edit is in flight', (tester) async {
+      final delayedRepo = DelayedEmitCampaignRepository(
+        _makeProfile(mapRef: mapRef, grid: initialGrid),
+        const Duration(milliseconds: 80),
+        const Duration(milliseconds: 80),
+      );
+      final dClock = StatefulHlcClock(replicaId: ReplicaId('node-1'));
+      final dChannel = network.createChannel('node-1');
+      final dTransfer = BlobTransferService(
+        channel: dChannel,
+        store: store,
+        servableRefs: () => activeMapServableRefs(delayedRepo),
+      );
+      final dController = ActiveMapController(
+        campaignRepo: delayedRepo,
+        transfer: dTransfer,
+        store: store,
+        channel: dChannel,
+        transportState: () => TransportState.webRtc,
+      );
+      final dGridService = MapGridService(campaignRepo: delayedRepo, clock: dClock);
+      final dTransform = TransformationController();
+
+      dController.start();
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: MapView(
+            key: UniqueKey(),
+            controller: dController,
+            gridService: dGridService,
+            transformationController: dTransform,
+            canEditMap: true,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Increase size'));
+      await tester.pump(const Duration(milliseconds: 430));
+
+      final currentProfile = delayedRepo.activeProfile!;
+      final coDmGrid = MapGrid(
+        mapSha256Hex: currentProfile.mapGrid!.mapSha256Hex,
+        cellCentiPx: currentProfile.mapGrid!.cellCentiPx,
+        offsetXCentiPx: currentProfile.mapGrid!.offsetXCentiPx,
+        offsetYCentiPx: currentProfile.mapGrid!.offsetYCentiPx,
+        feetPerCell: 10,
+        visible: currentProfile.mapGrid!.visible,
+      );
+      await delayedRepo.putProfile(
+        _makeProfile(mapRef: mapRef, grid: coDmGrid, timestamp: dClock.nextTimestamp()),
+      );
+      await tester.pump();
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      final finalGrid = delayedRepo.activeProfile!.mapGrid;
+      expect(finalGrid, isNotNull);
+      expect(finalGrid!.feetPerCell, equals(10));
+      expect(finalGrid.cellCentiPx, equals(5050));
+
+      final sizeField = find.byType(TextField).first;
+      expect(tester.widget<TextField>(sizeField).controller!.text, equals('50.5'));
+      final feetField = find.byType(TextField).at(1);
+      expect(tester.widget<TextField>(feetField).controller!.text, equals('10'));
+
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+      await tester.pumpAndSettle();
+      dController.dispose();
+      dTransform.dispose();
+    });
+
+    testWidgets('GL2: Randomized grid edit law with delayed repository (at least 150 seeds)', (tester) async {
+      int panelPressWhileInFlightCount = 0;
+
+      for (int seed = 0; seed < 150; seed++) {
+        final rng = Random(seed * 31337 + 101);
+        final recordedSteps = <String>[];
+
+        final testClock = StatefulHlcClock(replicaId: ReplicaId('node-$seed'));
+        final testRepo = DelayedEmitCampaignRepository(
+          null,
+          Duration.zero,
+          Duration.zero,
+        );
+        testRepo.futureDelayProvider = () => Duration(milliseconds: rng.nextInt(101));
+        testRepo.emitDelayProvider = () => Duration(milliseconds: rng.nextInt(101));
+
+        final testChannel = network.createChannel('node-$seed');
+        final testTransfer = BlobTransferService(
+          channel: testChannel,
+          store: store,
+          servableRefs: () => activeMapServableRefs(testRepo),
+        );
+        final testController = ActiveMapController(
+          campaignRepo: testRepo,
+          transfer: testTransfer,
+          store: store,
+          channel: testChannel,
+          transportState: () => TransportState.webRtc,
+        );
+        final testGridService = MapGridService(campaignRepo: testRepo, clock: testClock);
+        final testTransformController = TransformationController();
+
+        final startingGrid = MapGrid(
+          mapSha256Hex: mapRef.sha256Hex,
+          cellCentiPx: 5000,
+          offsetXCentiPx: 0,
+          offsetYCentiPx: 0,
+          feetPerCell: 5,
+          visible: true,
+        );
+        testRepo.putProfile(_makeProfile(
+          mapRef: mapRef,
+          grid: startingGrid,
+          timestamp: testClock.nextTimestamp(),
+        ));
+        testController.start();
+
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: MapView(
+              key: ValueKey('map-gl2-seed-$seed'),
+              controller: testController,
+              gridService: testGridService,
+              transformationController: testTransformController,
+              canEditMap: true,
+            ),
+          ),
+        ));
+        await tester.pumpAndSettle();
+
+        // Standalone reference model (pure arithmetic, zero lib/ imports)
+        _Gl2Model? modelM = _Gl2Model(
+          mapSha256Hex: mapRef.sha256Hex,
+          cellCentiPx: 5000,
+          offsetXCentiPx: 0,
+          offsetYCentiPx: 0,
+          feetPerCell: 5,
+          visible: true,
+        );
+        final _Gl2Edit modelP = _Gl2Edit();
+        int modelDueMs = -1;
+        int modelWrites = 0;
+        int modelNowMs = 0;
+        bool hasLeftScreen = false;
+        bool seedHadPressWhileInFlight = false;
+
+        void modelFlush() {
+          if (modelDueMs >= 0) {
+            modelDueMs = -1;
+            if (modelM != null && modelM!.mapSha256Hex == mapRef.sha256Hex && !modelP.isEmpty) {
+              modelM = _applyEditToGl2Model(modelM!, modelP);
+              modelWrites++;
+            }
+            modelP.clear();
+          }
+        }
+
+        void modelAdvance(int dt) {
+          final target = modelNowMs + dt;
+          if (modelDueMs >= 0 && modelDueMs <= target) {
+            if (modelM != null && modelM!.mapSha256Hex == mapRef.sha256Hex && !modelP.isEmpty) {
+              modelM = _applyEditToGl2Model(modelM!, modelP);
+              modelWrites++;
+            }
+            modelP.clear();
+            modelDueMs = -1;
+          }
+          modelNowMs = target;
+        }
+
+        _Gl2Model? modelDisplayed() =>
+            (modelM != null) ? _applyEditToGl2Model(modelM!, modelP) : null;
+
+        final stepCount = rng.nextInt(13) + 8; // 8 to 20 steps
+        for (int step = 0; step < stepCount; step++) {
+          if (hasLeftScreen) break;
+
+          final gap = (!modelP.isEmpty && rng.nextDouble() < 0.45)
+              ? (401 + rng.nextInt(40))
+              : (rng.nextBool() ? rng.nextInt(400) : (400 + rng.nextInt(601)));
+          modelAdvance(gap);
+          await tester.pump(Duration(milliseconds: gap));
+
+          final isPanelOpen = modelDisplayed() != null && modelDisplayed()!.visible;
+
+          final availableSteps = <int>[];
+          if (isPanelOpen) {
+            availableSteps.addAll([0, 1, 2, 3, 4, 6]);
+          }
+          availableSteps.add(5);
+          availableSteps.add(7);
+          if (step == stepCount - 1) {
+            availableSteps.add(8);
+          }
+
+          final int chosenStep;
+          if (testRepo.inFlightWrites > 0 && isPanelOpen && rng.nextDouble() < 0.8) {
+            // Bias toward panel press while write is in flight
+            chosenStep = rng.nextInt(5);
+          } else if (!modelP.isEmpty && availableSteps.contains(8) && rng.nextDouble() < 0.7) {
+            chosenStep = 8;
+          } else if (!modelP.isEmpty && rng.nextDouble() < 0.6) {
+            final raceOptions = <int>[5, 7];
+            if (isPanelOpen) raceOptions.add(6);
+            if (availableSteps.contains(8)) raceOptions.add(8);
+            chosenStep = raceOptions[rng.nextInt(raceOptions.length)];
+          } else {
+            chosenStep = availableSteps[rng.nextInt(availableSteps.length)];
+          }
+
+          if (testRepo.inFlightWrites > 0 && chosenStep <= 4) {
+            seedHadPressWhileInFlight = true;
+          }
+
+          recordedSteps.add('step $step: choice=$chosenStep, gap=$gap, inFlightWrites=${testRepo.inFlightWrites}');
+
+          switch (chosenStep) {
+            case 0: // +
+              final cur = modelDisplayed()!;
+              final nextPx = ((cur.cellCentiPx! / 100.0 + 0.5) * 100.0).round() / 100.0;
+              if (nextPx <= 512.0) {
+                modelP.mergeWith(_Gl2Edit(cellCentiPx: (nextPx * 100.0).round()));
+                modelDueMs = modelNowMs + 400;
+              }
+              final btn = find.byTooltip('Increase size');
+              await tester.ensureVisible(btn);
+              await tester.tap(btn);
+              await tester.pump();
+            case 1: // -
+              final cur = modelDisplayed()!;
+              final nextPx = ((cur.cellCentiPx! / 100.0 - 0.5) * 100.0).round() / 100.0;
+              if (nextPx >= 10.0) {
+                modelP.mergeWith(_Gl2Edit(cellCentiPx: (nextPx * 100.0).round()));
+                modelDueMs = modelNowMs + 400;
+              }
+              final btn = find.byTooltip('Decrease size');
+              await tester.ensureVisible(btn);
+              await tester.tap(btn);
+              await tester.pump();
+            case 2: // nudge
+              final dir = rng.nextInt(4);
+              final dx = dir == 0 ? -1 : (dir == 3 ? 1 : 0);
+              final dy = dir == 1 ? -1 : (dir == 2 ? 1 : 0);
+              final cur = modelDisplayed()!;
+              final cell = cur.cellCentiPx!;
+              int? nx;
+              if (dx != 0) {
+                nx = (cur.offsetXCentiPx! + dx * 100) % cell;
+                if (nx < 0) nx += cell;
+              }
+              int? ny;
+              if (dy != 0) {
+                ny = (cur.offsetYCentiPx! + dy * 100) % cell;
+                if (ny < 0) ny += cell;
+              }
+              modelP.mergeWith(_Gl2Edit(offsetXCentiPx: nx, offsetYCentiPx: ny));
+              modelDueMs = modelNowMs + 400;
+
+              final tooltip = dir == 0
+                  ? 'Nudge left'
+                  : (dir == 1
+                      ? 'Nudge up'
+                      : (dir == 2 ? 'Nudge down' : 'Nudge right'));
+              final btn = find.byTooltip(tooltip);
+              await tester.ensureVisible(btn);
+              await tester.tap(btn);
+              await tester.pump();
+            case 3: // type size
+              final valid = rng.nextBool();
+              final curSize = modelDisplayed()!.cellCentiPx! ~/ 100;
+              int sizeVal = valid ? (rng.nextInt(100) + 20) : (rng.nextInt(2) == 0 ? 5 : 600);
+              if (valid && sizeVal == curSize) {
+                sizeVal = (sizeVal >= 512) ? 511 : sizeVal + 1;
+              }
+              if (valid) {
+                modelP.mergeWith(_Gl2Edit(cellCentiPx: sizeVal * 100));
+                modelDueMs = modelNowMs + 400;
+              }
+              final sizeField = find.byType(TextField).first;
+              await tester.ensureVisible(sizeField);
+              await tester.enterText(sizeField, sizeVal.toString());
+              FocusManager.instance.primaryFocus?.unfocus();
+              await tester.pump();
+            case 4: // type feet
+              final valid = rng.nextBool();
+              final curFeet = modelDisplayed()!.feetPerCell!;
+              int feetVal = valid ? (rng.nextInt(50) + 1) : (rng.nextInt(2) == 0 ? 0 : 150);
+              if (valid && feetVal == curFeet) {
+                feetVal = (feetVal >= 100) ? 99 : feetVal + 1;
+              }
+              if (valid) {
+                modelP.mergeWith(_Gl2Edit(feetPerCell: feetVal));
+                modelDueMs = modelNowMs + 400;
+              }
+              final feetField = find.byType(TextField).at(1);
+              await tester.ensureVisible(feetField);
+              await tester.enterText(feetField, feetVal.toString());
+              FocusManager.instance.primaryFocus?.unfocus();
+              await tester.pump();
+            case 5: // Grid toggle
+              modelFlush();
+              while (!testRepo.isIdle) {
+                modelAdvance(10);
+                await tester.pump(const Duration(milliseconds: 10));
+              }
+              if (modelM == null || modelM!.mapSha256Hex != mapRef.sha256Hex) {
+                modelM = _Gl2Model(
+                  mapSha256Hex: mapRef.sha256Hex,
+                  cellCentiPx: 5000,
+                  offsetXCentiPx: 0,
+                  offsetYCentiPx: 0,
+                  feetPerCell: 5,
+                  visible: true,
+                );
+              } else {
+                modelM = _Gl2Model(
+                  mapSha256Hex: modelM!.mapSha256Hex,
+                  cellCentiPx: modelM!.cellCentiPx,
+                  offsetXCentiPx: modelM!.offsetXCentiPx,
+                  offsetYCentiPx: modelM!.offsetYCentiPx,
+                  feetPerCell: modelM!.feetPerCell,
+                  visible: !modelM!.visible,
+                );
+              }
+              modelWrites++;
+              await tester.tap(find.widgetWithText(OutlinedButton, 'Grid'));
+              await tester.pump();
+            case 6: // corner
+              modelFlush();
+              while (!testRepo.isIdle) {
+                modelAdvance(10);
+                await tester.pump(const Duration(milliseconds: 10));
+              }
+              final ivFinder = find.byType(InteractiveViewer);
+              final ivSize = tester.getSize(ivFinder);
+              final tapX = rng.nextDouble() * (ivSize.width - 20.0) + 10.0;
+              final tapY = rng.nextDouble() * (ivSize.height - 20.0) + 10.0;
+              final scene = testTransformController.toScene(Offset(tapX, tapY));
+              if (modelM != null && modelM!.mapSha256Hex == mapRef.sha256Hex) {
+                final cell = modelM!.cellCentiPx!;
+                final xCenti = (scene.dx * 100.0).round();
+                final yCenti = (scene.dy * 100.0).round();
+                var newOffsetX = xCenti % cell;
+                if (newOffsetX < 0) newOffsetX += cell;
+                var newOffsetY = yCenti % cell;
+                if (newOffsetY < 0) newOffsetY += cell;
+                modelM = _Gl2Model(
+                  mapSha256Hex: modelM!.mapSha256Hex,
+                  cellCentiPx: cell,
+                  offsetXCentiPx: newOffsetX,
+                  offsetYCentiPx: newOffsetY,
+                  feetPerCell: modelM!.feetPerCell,
+                  visible: modelM!.visible,
+                );
+                modelWrites++;
+              }
+              final cornerBtn = find.text('Set a corner');
+              await tester.ensureVisible(cornerBtn);
+              await tester.tap(cornerBtn);
+              await tester.pump();
+              final ivTopLeft = tester.getTopLeft(ivFinder);
+              await tester.tapAt(ivTopLeft + Offset(tapX, tapY));
+              await tester.pump();
+            case 7: // co-DM update
+              while (!testRepo.isIdle) {
+                modelAdvance(10);
+                await tester.pump(const Duration(milliseconds: 10));
+              }
+              final kind = rng.nextInt(3);
+              final _Gl2Model? coDmGrid;
+              if (kind == 0) {
+                coDmGrid = null;
+              } else {
+                coDmGrid = _Gl2Model(
+                  mapSha256Hex: mapRef.sha256Hex,
+                  cellCentiPx: (rng.nextInt(20) + 30) * 100,
+                  offsetXCentiPx: rng.nextInt(10) * 100,
+                  offsetYCentiPx: rng.nextInt(10) * 100,
+                  feetPerCell: rng.nextInt(10) + 5,
+                  visible: kind == 1,
+                );
+              }
+              modelM = coDmGrid;
+              final p = _makeProfile(
+                mapRef: mapRef,
+                grid: coDmGrid != null
+                    ? MapGrid(
+                        mapSha256Hex: coDmGrid.mapSha256Hex,
+                        cellCentiPx: coDmGrid.cellCentiPx!,
+                        offsetXCentiPx: coDmGrid.offsetXCentiPx!,
+                        offsetYCentiPx: coDmGrid.offsetYCentiPx!,
+                        feetPerCell: coDmGrid.feetPerCell!,
+                        visible: coDmGrid.visible,
+                      )
+                    : null,
+                timestamp: testClock.nextTimestamp(),
+              );
+              await testRepo.putProfile(p);
+              await tester.pump();
+            case 8: // leave screen
+              modelFlush();
+              hasLeftScreen = true;
+              await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Text('Out'))));
+              await tester.pump();
+          }
+
+          // Pump until repository is idle before checking L1
+          while (!testRepo.isIdle) {
+            modelAdvance(10);
+            await tester.pump(const Duration(milliseconds: 10));
+          }
+
+          // L1 check
+          if (!hasLeftScreen) {
+            final disp = modelDisplayed();
+            if (disp == null || !disp.visible) {
+              expect(
+                find.byType(MapGridControls),
+                findsNothing,
+                reason: 'Seed $seed step $step: expected no panel when grid is null or hidden',
+              );
+            } else {
+              expect(
+                find.byType(MapGridControls),
+                findsOneWidget,
+                reason: 'Seed $seed step $step: expected panel visible',
+              );
+              final hasSizeError = find.text('Square size must be between 10 and 512 px.').evaluate().isNotEmpty;
+              final hasFeetError = find.text('Feet per square must be a whole number from 1 to 100.').evaluate().isNotEmpty;
+
+              if (!hasSizeError) {
+                final sizeField = find.byType(TextField).first;
+                final expectedSizeText = (disp.cellCentiPx! / 100.0 % 1 == 0)
+                    ? (disp.cellCentiPx! ~/ 100).toString()
+                    : (disp.cellCentiPx! / 100.0).toStringAsFixed(1);
+                expect(
+                  tester.widget<TextField>(sizeField).controller!.text,
+                  equals(expectedSizeText),
+                  reason: 'Seed $seed step $step: size field mismatch\nSteps:\n${recordedSteps.join('\n')}',
+                );
+              }
+
+              if (!hasFeetError) {
+                final feetField = find.byType(TextField).at(1);
+                expect(
+                  tester.widget<TextField>(feetField).controller!.text,
+                  equals(disp.feetPerCell!.toString()),
+                  reason: 'Seed $seed step $step: feet field mismatch\nSteps:\n${recordedSteps.join('\n')}',
+                );
+              }
+            }
+          }
+        }
+
+        // Settle for 1 s and pump until idle
+        modelAdvance(1000);
+        await tester.pump(const Duration(seconds: 1));
+        while (!testRepo.isIdle) {
+          modelAdvance(10);
+          await tester.pump(const Duration(milliseconds: 10));
+        }
+        await tester.pumpAndSettle();
+
+        // L2: Profile grid equals model M
+        final profileGrid = testRepo.activeProfile?.mapGrid;
+        final finalModel = modelM;
+        if (finalModel == null) {
+          expect(profileGrid, isNull, reason: 'Seed $seed failure:\n${recordedSteps.join('\n')}');
+        } else {
+          expect(profileGrid, isNotNull, reason: 'Seed $seed failure:\n${recordedSteps.join('\n')}');
+          expect(
+            profileGrid!.cellCentiPx == finalModel.cellCentiPx &&
+                profileGrid.offsetXCentiPx == finalModel.offsetXCentiPx &&
+                profileGrid.offsetYCentiPx == finalModel.offsetYCentiPx &&
+                profileGrid.feetPerCell == finalModel.feetPerCell &&
+                profileGrid.visible == finalModel.visible,
+            isTrue,
+            reason: 'Seed $seed failure:\n${recordedSteps.join('\n')}\nprofile: $profileGrid\nmodel: cell=${finalModel.cellCentiPx}, ox=${finalModel.offsetXCentiPx}, oy=${finalModel.offsetYCentiPx}, feet=${finalModel.feetPerCell}, visible=${finalModel.visible}',
+          );
+        }
+
+        // L3: Number of service writes equals modelWrites
+        expect(
+          testRepo.serviceWritesCount,
+          equals(modelWrites),
+          reason: 'Seed $seed: service writes (${testRepo.serviceWritesCount}) != model ($modelWrites)\nSteps:\n${recordedSteps.join('\n')}',
+        );
+
+        if (seedHadPressWhileInFlight) {
+          panelPressWhileInFlightCount++;
+        }
+
+        await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SizedBox())));
+        await tester.pumpAndSettle();
+        testController.dispose();
+        testTransformController.dispose();
+      }
+
+      // ignore: avoid_print
+      print('GL2 coverage count: panelPressWhileInFlight=$panelPressWhileInFlightCount');
+      expect(
+        panelPressWhileInFlightCount,
+        greaterThanOrEqualTo(30),
+        reason: 'GL2 coverage requirement: at least 30 seeds with panel press while write in flight',
+      );
+    });
   });
 }
+
+class _Gl2Model {
+  int? cellCentiPx;
+  int? offsetXCentiPx;
+  int? offsetYCentiPx;
+  int? feetPerCell;
+  bool visible;
+  final String mapSha256Hex;
+
+  _Gl2Model({
+    required this.mapSha256Hex,
+    required this.cellCentiPx,
+    required this.offsetXCentiPx,
+    required this.offsetYCentiPx,
+    required this.feetPerCell,
+    required this.visible,
+  });
+}
+
+class _Gl2Edit {
+  int? cellCentiPx;
+  int? offsetXCentiPx;
+  int? offsetYCentiPx;
+  int? feetPerCell;
+
+  _Gl2Edit({
+    this.cellCentiPx,
+    this.offsetXCentiPx,
+    this.offsetYCentiPx,
+    this.feetPerCell,
+  });
+
+  bool get isEmpty =>
+      cellCentiPx == null &&
+      offsetXCentiPx == null &&
+      offsetYCentiPx == null &&
+      feetPerCell == null;
+
+  void mergeWith(_Gl2Edit other) {
+    if (other.cellCentiPx != null) cellCentiPx = other.cellCentiPx;
+    if (other.offsetXCentiPx != null) offsetXCentiPx = other.offsetXCentiPx;
+    if (other.offsetYCentiPx != null) offsetYCentiPx = other.offsetYCentiPx;
+    if (other.feetPerCell != null) feetPerCell = other.feetPerCell;
+  }
+
+  void clear() {
+    cellCentiPx = null;
+    offsetXCentiPx = null;
+    offsetYCentiPx = null;
+    feetPerCell = null;
+  }
+}
+
+_Gl2Model _applyEditToGl2Model(_Gl2Model base, _Gl2Edit edit) {
+  final newCell = edit.cellCentiPx ?? base.cellCentiPx!;
+  final rawX = edit.offsetXCentiPx ?? base.offsetXCentiPx!;
+  final rawY = edit.offsetYCentiPx ?? base.offsetYCentiPx!;
+  var newX = rawX % newCell;
+  if (newX < 0) newX += newCell;
+  var newY = rawY % newCell;
+  if (newY < 0) newY += newCell;
+
+  return _Gl2Model(
+    mapSha256Hex: base.mapSha256Hex,
+    cellCentiPx: newCell,
+    offsetXCentiPx: newX,
+    offsetYCentiPx: newY,
+    feetPerCell: edit.feetPerCell ?? base.feetPerCell,
+    visible: base.visible,
+  );
+}
+
