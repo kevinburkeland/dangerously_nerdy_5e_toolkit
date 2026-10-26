@@ -21,7 +21,14 @@ f20="$TMP_DIR/20.txt"
 for i in $(seq 1 20); do
   echo -e "0123456789abcdef0123456789abcdef01234567\trefs/heads/mutation/branch-$i" >> "$f20"
 done
-"$CHECK_MUTATION" 20 "$f20" >/dev/null
+set +e
+out2=$("$CHECK_MUTATION" 20 "$f20" 2>&1)
+rc2=$?
+set -e
+if [ "$rc2" -ne 0 ]; then
+  echo "FAIL: MB2 expected pass with 20 refs and limit 20, got exit code $rc2: $out2" >&2
+  exit 1
+fi
 
 # MB3 21 mutation/ refs with limit 20: fail, and the output lists all 21 names.
 f21="$TMP_DIR/21.txt"
