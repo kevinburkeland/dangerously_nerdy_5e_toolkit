@@ -9,6 +9,7 @@ import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
 import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
+import 'package:vtt_engine_core/models/value_objects/map_token.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
@@ -981,11 +982,16 @@ void main() {
         PartyPurse expectedPurse = base.partyPurse;
         final expectedRuleAdds = <String, HybridLogicalClock>{};
         final expectedRuleRemoves = <String, HybridLogicalClock>{};
+        CampaignProfile coreJoin = base;
+        final placedTokenIds = <String>[];
+        int tokenSeq = 0;
+        String nextTokenId() => 'tok_${(++tokenSeq).toRadixString(16).padLeft(32, '0')}';
+        const testMapSha = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
         final stepCount = minSteps + rand.nextInt(maxSteps - minSteps + 1);
 
         for (int step = 0; step < stepCount; step++) {
-          final action = rand.nextInt(8);
+          final action = rand.nextInt(12);
           final devKeys = devices.keys.toList();
           final chosenKey = devKeys[rand.nextInt(devKeys.length)];
           final chosenDev = devices[chosenKey]!;
@@ -1164,6 +1170,52 @@ void main() {
               if (wrote.timestamp.compareTo(maxGrid.timestamp) > 0) {
                 maxGrid = wrote;
               }
+            case 8:
+              // Place a token (fresh id)
+              final tid = nextTokenId();
+              placedTokenIds.add(tid);
+              final tok = MapToken(id: tid, mapSha256Hex: testMapSha, kind: MapTokenKind.character, refId: 'c1', label: 'T');
+              final cell = MapTokenCell(col: rand.nextInt(20), row: rand.nextInt(20));
+              final stamp = chosenDev.clock.nextTimestamp();
+              await chosenDev.repo.updateProfile(base.id, (c) {
+                final next = c.withTokenPlaced(tok, cell, stamp);
+                coreJoin = CampaignProfile.join(coreJoin, next);
+                return next;
+              });
+            case 9:
+              // Move a known token
+              if (placedTokenIds.isNotEmpty) {
+                final tid = placedTokenIds[rand.nextInt(placedTokenIds.length)];
+                final cell = MapTokenCell(col: rand.nextInt(50), row: rand.nextInt(50));
+                final stamp = chosenDev.clock.nextTimestamp();
+                await chosenDev.repo.updateProfile(base.id, (c) {
+                  final next = c.withTokenMoved(tid, cell, stamp);
+                  coreJoin = CampaignProfile.join(coreJoin, next);
+                  return next;
+                });
+              }
+            case 10:
+              // Remove a known token
+              if (placedTokenIds.isNotEmpty) {
+                final tid = placedTokenIds[rand.nextInt(placedTokenIds.length)];
+                final stamp = chosenDev.clock.nextTimestamp();
+                await chosenDev.repo.updateProfile(base.id, (c) {
+                  final next = c.withTokenRemoved(tid, stamp);
+                  coreJoin = CampaignProfile.join(coreJoin, next);
+                  return next;
+                });
+              }
+            case 11:
+              // Set or clear an owner
+              final minionId = 'minion_${rand.nextInt(3)}';
+              final isClear = rand.nextBool();
+              final ownerSlug = isClear ? null : 'char_${rand.nextInt(3)}';
+              final stamp = chosenDev.clock.nextTimestamp();
+              await chosenDev.repo.updateProfile(base.id, (c) {
+                final next = c.withMinionOwner(minionId, ownerSlug, stamp);
+                coreJoin = CampaignProfile.join(coreJoin, next);
+                return next;
+              });
           }
           await Future<void>.delayed(const Duration(milliseconds: 1));
         }
@@ -1205,6 +1257,27 @@ void main() {
               reason: 'activeMapRegister mismatch at seed $seed');
           expect(dmProfile.mapGridRegister, equals(maxGrid),
               reason: 'mapGridRegister mismatch at seed $seed');
+
+          // Token fields equal core join of all writes across all devices
+          expect(dmProfile.mapTokens, equals(p1Profile.mapTokens),
+              reason: 'mapTokens dm != p1 at seed $seed');
+          expect(p1Profile.mapTokens, equals(p2Profile.mapTokens),
+              reason: 'mapTokens p1 != p2 at seed $seed');
+          expect(dmProfile.mapTokenCells, equals(p1Profile.mapTokenCells),
+              reason: 'mapTokenCells dm != p1 at seed $seed');
+          expect(p1Profile.mapTokenCells, equals(p2Profile.mapTokenCells),
+              reason: 'mapTokenCells p1 != p2 at seed $seed');
+          expect(dmProfile.minionOwners, equals(p1Profile.minionOwners),
+              reason: 'minionOwners dm != p1 at seed $seed');
+          expect(p1Profile.minionOwners, equals(p2Profile.minionOwners),
+              reason: 'minionOwners p1 != p2 at seed $seed');
+
+          expect(dmProfile.mapTokens, equals(coreJoin.mapTokens),
+              reason: 'mapTokens != coreJoin at seed $seed');
+          expect(dmProfile.mapTokenCells, equals(coreJoin.mapTokenCells),
+              reason: 'mapTokenCells != coreJoin at seed $seed');
+          expect(dmProfile.minionOwners, equals(coreJoin.minionOwners),
+              reason: 'minionOwners != coreJoin at seed $seed');
 
           // Purse equals base plus every recorded credit and debit
           expect(dmProfile.partyPurse.getBalance('gp'),

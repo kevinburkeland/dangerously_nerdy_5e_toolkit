@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
+import 'package:vtt_engine_core/models/value_objects/map_token.dart';
 
 int _coordToCell(double coord, int offsetCentiPx, int cellCentiPx) {
   final centi = coord * 100.0;
@@ -82,4 +83,13 @@ MapGrid gridWithCornerAt(MapGrid g, double x, double y) {
     feetPerCell: g.feetPerCell,
     visible: g.visible,
   );
+}
+
+/// Returns true if the centre of the square lies inside the image:
+/// 0 <= 2*offsetXCentiPx + (2*col + 1)*cellCentiPx < 200*imageWidth
+/// and similarly for row and imageHeight.
+bool isCellOnMap(MapGrid g, int imageWidth, int imageHeight, MapTokenCell c) {
+  final cx = 2 * g.offsetXCentiPx + (2 * c.col + 1) * g.cellCentiPx;
+  final cy = 2 * g.offsetYCentiPx + (2 * c.row + 1) * g.cellCentiPx;
+  return cx >= 0 && cx < 200 * imageWidth && cy >= 0 && cy < 200 * imageHeight;
 }

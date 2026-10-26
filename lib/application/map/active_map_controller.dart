@@ -132,19 +132,44 @@ final class MapReady extends ActiveMapViewState {
   final BlobRef ref;
   final Uint8List bytes;
   final MapGrid? grid;
+  final List<PlacedMapToken> tokens;
+  final Map<String, String> minionOwners;
 
-  const MapReady(this.ref, this.bytes, {this.grid});
+  const MapReady(
+    this.ref,
+    this.bytes, {
+    this.grid,
+    this.tokens = const [],
+    this.minionOwners = const {},
+  });
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is MapReady && ref == other.ref && grid == other.grid;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! MapReady) return false;
+    if (ref != other.ref || grid != other.grid) return false;
+    if (tokens.length != other.tokens.length) return false;
+    for (int i = 0; i < tokens.length; i++) {
+      if (tokens[i] != other.tokens[i]) return false;
+    }
+    if (minionOwners.length != other.minionOwners.length) return false;
+    for (final entry in minionOwners.entries) {
+      if (other.minionOwners[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
 
   @override
-  int get hashCode => Object.hash(ref, grid);
+  int get hashCode => Object.hash(
+        ref,
+        grid,
+        Object.hashAll(tokens),
+        Object.hashAllUnordered(
+            minionOwners.entries.map((e) => Object.hash(e.key, e.value))),
+      );
 
   @override
-  String toString() => 'MapReady(${ref.sha256Hex}, grid: $grid)';
+  String toString() => 'MapReady(${ref.sha256Hex}, grid: $grid, tokens: ${tokens.length})';
 }
 
 final class MapFailed extends ActiveMapViewState {
@@ -260,8 +285,17 @@ class ActiveMapController {
         final expectedGrid = (profile?.mapGrid?.mapSha256Hex == ready.ref.sha256Hex)
             ? profile?.mapGrid
             : null;
-        if (ready.grid != expectedGrid) {
-          _transitionTo(MapReady(ready.ref, ready.bytes, grid: expectedGrid));
+        final expectedTokens = profile?.tokensOnMap(ready.ref.sha256Hex) ?? const [];
+        final expectedOwners = _extractMinionOwners(profile);
+        final newReady = MapReady(
+          ready.ref,
+          ready.bytes,
+          grid: expectedGrid,
+          tokens: expectedTokens,
+          minionOwners: expectedOwners,
+        );
+        if (ready != newReady) {
+          _transitionTo(newReady);
         }
       }
       return;
@@ -279,6 +313,19 @@ class ActiveMapController {
 
     _transitionTo(const MapLoading());
     _fetchCurrentTarget(gen);
+  }
+
+  Map<String, String> _extractMinionOwners(CampaignProfile? profile) {
+    if (profile == null) return const {};
+    final activeMinionIds = profile.roomState.activeMinions.items.keys;
+    final owners = <String, String>{};
+    for (final minionId in activeMinionIds) {
+      final owner = profile.minionOwner(minionId);
+      if (owner != null) {
+        owners[minionId] = owner;
+      }
+    }
+    return Map.unmodifiable(owners);
   }
 
   Future<void> _fetchCurrentTarget(int gen) async {
@@ -302,7 +349,15 @@ class ActiveMapController {
           final expectedGrid = (prof?.mapGrid?.mapSha256Hex == ref.sha256Hex)
               ? prof?.mapGrid
               : null;
-          _transitionTo(MapReady(ref, stored.bytes, grid: expectedGrid));
+          final expectedTokens = prof?.tokensOnMap(ref.sha256Hex) ?? const [];
+          final expectedOwners = _extractMinionOwners(prof);
+          _transitionTo(MapReady(
+            ref,
+            stored.bytes,
+            grid: expectedGrid,
+            tokens: expectedTokens,
+            minionOwners: expectedOwners,
+          ));
         } on BlobNotFoundException {
           if (gen != _generation || _disposed) return;
           _transitionTo(const MapWaitingForPeer());

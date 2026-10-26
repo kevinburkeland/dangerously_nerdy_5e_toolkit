@@ -4,6 +4,7 @@ import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
 import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
+import 'package:vtt_engine_core/models/value_objects/map_token.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/utils/aggregate_join_utils.dart';
 import '../../infrastructure/dtos/campaign_edition_codec.dart';
@@ -195,6 +196,33 @@ class RoomStateReconciliationService {
       mergedPinnedRules = local.pinnedRules;
     }
 
+    // 6b. Map Tokens: canonical CRDT OR-set join with fault isolation
+    CrdtOrSet<MapToken> mergedMapTokens = local.mapTokens;
+    try {
+      mergedMapTokens = local.mapTokens.merge(remote.mapTokens);
+    } catch (e, st) {
+      faults.add(ReconciliationFieldFault(field: 'mapTokens', error: e, stackTrace: st));
+      mergedMapTokens = local.mapTokens;
+    }
+
+    // 6c. Map Token Cells: canonical CRDT OR-set join with fault isolation
+    CrdtOrSet<MapTokenCell> mergedMapTokenCells = local.mapTokenCells;
+    try {
+      mergedMapTokenCells = local.mapTokenCells.merge(remote.mapTokenCells);
+    } catch (e, st) {
+      faults.add(ReconciliationFieldFault(field: 'mapTokenCells', error: e, stackTrace: st));
+      mergedMapTokenCells = local.mapTokenCells;
+    }
+
+    // 6d. Minion Owners: canonical CRDT OR-set join with fault isolation
+    CrdtOrSet<String> mergedMinionOwners = local.minionOwners;
+    try {
+      mergedMinionOwners = local.minionOwners.merge(remote.minionOwners);
+    } catch (e, st) {
+      faults.add(ReconciliationFieldFault(field: 'minionOwners', error: e, stackTrace: st));
+      mergedMinionOwners = local.minionOwners;
+    }
+
     // 7. Room Node State: Sub-resource reconciliation with narrow fault isolation
     final roomRecon = _reconcileRoomStateSafely(
       local: local.roomState,
@@ -214,6 +242,9 @@ class RoomStateReconciliationService {
       notesRegister: mergedNotesRegister,
       activeMapRegister: mergedActiveMapRegister,
       mapGridRegister: mergedMapGridRegister,
+      mapTokens: mergedMapTokens,
+      mapTokenCells: mergedMapTokenCells,
+      minionOwners: mergedMinionOwners,
       partyPurse: mergedPurse,
       memberPurses: mergedMemberPurses,
       changeLog: mergedChangeLog,

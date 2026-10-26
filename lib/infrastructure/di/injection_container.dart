@@ -36,6 +36,8 @@ import '../../application/map/active_map_controller.dart';
 import '../../application/map/map_image_intake_port.dart';
 import '../../application/map/map_intake_service.dart';
 import '../../application/map/map_grid_service.dart';
+import '../../application/map/map_token_service.dart';
+import 'package:uuid/uuid.dart';
 import '../map/map_image_intake_adapter.dart';
 import '../storage/blob_store_adapter.dart';
 
@@ -277,6 +279,14 @@ Future<void> initServiceLocator({
     () => MapGridService(
       campaignRepo: sl<ICampaignRepository>(),
       clock: sl<StatefulHlcClock>(),
+    ),
+  );
+
+  sl.registerLazySingleton<MapTokenService>(
+    () => MapTokenService(
+      campaignRepo: sl<ICampaignRepository>(),
+      clock: sl<StatefulHlcClock>(),
+      newTokenId: () => 'tok_${const Uuid().v4().replaceAll('-', '')}',
     ),
   );
 

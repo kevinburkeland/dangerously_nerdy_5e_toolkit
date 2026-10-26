@@ -7,6 +7,7 @@ import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/value_objects/blob_ref.dart';
 import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
+import 'package:vtt_engine_core/models/value_objects/map_token.dart';
 import '../../models/animated_object.dart';
 import '../modules/dnd5e/rules/ruleset_edition.dart';
 import '../../models/domain/character_models.dart';
@@ -41,6 +42,12 @@ class CampaignProfileDto {
   final Map<String, dynamic> notesRegister;
   final Map<String, dynamic> activeMapRegister;
   final Map<String, dynamic> mapGridRegister;
+  final Map<String, dynamic> mapTokensCrdt;
+  final bool hasMapTokensCrdt;
+  final Map<String, dynamic> mapTokenCellsCrdt;
+  final bool hasMapTokenCellsCrdt;
+  final Map<String, dynamic> minionOwnersCrdt;
+  final bool hasMinionOwnersCrdt;
   final Map<String, dynamic> partyPurse;
   final Map<String, dynamic> memberPurses;
   final List<Map<String, dynamic>> changeLog;
@@ -67,6 +74,12 @@ class CampaignProfileDto {
     this.notesRegister = const {},
     this.activeMapRegister = const {},
     this.mapGridRegister = const {},
+    this.mapTokensCrdt = const {},
+    this.hasMapTokensCrdt = false,
+    this.mapTokenCellsCrdt = const {},
+    this.hasMapTokenCellsCrdt = false,
+    this.minionOwnersCrdt = const {},
+    this.hasMinionOwnersCrdt = false,
     this.partyPurse = const {},
     this.memberPurses = const {},
     this.changeLog = const [],
@@ -106,6 +119,12 @@ class CampaignProfileDto {
         profile.mapGridRegister,
         (v) => v?.toMap(),
       ),
+      mapTokensCrdt: profile.mapTokens.toMap((t) => t.toMap()),
+      hasMapTokensCrdt: profile.mapTokens.items.isNotEmpty || profile.mapTokens.tombstones.isNotEmpty,
+      mapTokenCellsCrdt: profile.mapTokenCells.toMap((c) => c.toMap()),
+      hasMapTokenCellsCrdt: profile.mapTokenCells.items.isNotEmpty || profile.mapTokenCells.tombstones.isNotEmpty,
+      minionOwnersCrdt: profile.minionOwners.toMap((slug) => slug),
+      hasMinionOwnersCrdt: profile.minionOwners.items.isNotEmpty || profile.minionOwners.tombstones.isNotEmpty,
       partyPurse: profile.partyPurse.toMap(),
       memberPurses: profile.memberPurses.map((k, v) => MapEntry(k, v.toMap())),
       changeLog: profile.changeLog.map((e) => e.toMap()).toList(),
@@ -270,6 +289,51 @@ class CampaignProfileDto {
           )
         : CampaignProfile.noMapGrid;
 
+    final CrdtOrSet<MapToken> parsedMapTokens;
+    if (hasMapTokensCrdt || mapTokensCrdt.isNotEmpty) {
+      parsedMapTokens = CrdtOrSet<MapToken>.fromMap(
+        mapTokensCrdt,
+        (v) {
+          if (v is! Map) {
+            throw const FormatException('CampaignProfileDto.toDomain: MapToken item must be a Map');
+          }
+          return MapToken.fromMap(Map<String, dynamic>.from(v));
+        },
+      );
+    } else {
+      parsedMapTokens = const CrdtOrSet<MapToken>.empty();
+    }
+
+    final CrdtOrSet<MapTokenCell> parsedMapTokenCells;
+    if (hasMapTokenCellsCrdt || mapTokenCellsCrdt.isNotEmpty) {
+      parsedMapTokenCells = CrdtOrSet<MapTokenCell>.fromMap(
+        mapTokenCellsCrdt,
+        (v) {
+          if (v is! Map) {
+            throw const FormatException('CampaignProfileDto.toDomain: MapTokenCell item must be a Map');
+          }
+          return MapTokenCell.fromMap(Map<String, dynamic>.from(v));
+        },
+      );
+    } else {
+      parsedMapTokenCells = const CrdtOrSet<MapTokenCell>.empty();
+    }
+
+    final CrdtOrSet<String> parsedMinionOwners;
+    if (hasMinionOwnersCrdt || minionOwnersCrdt.isNotEmpty) {
+      parsedMinionOwners = CrdtOrSet<String>.fromMap(
+        minionOwnersCrdt,
+        (v) {
+          if (v is! String || v.isEmpty) {
+            throw const FormatException('CampaignProfileDto.toDomain: minionOwner item must be a non-empty String');
+          }
+          return v;
+        },
+      );
+    } else {
+      parsedMinionOwners = const CrdtOrSet<String>.empty();
+    }
+
     return CampaignProfile.raw(
       id: id,
       name: name,
@@ -285,6 +349,9 @@ class CampaignProfileDto {
       notesRegister: parsedNotesRegister,
       activeMapRegister: parsedActiveMapRegister,
       mapGridRegister: parsedMapGridRegister,
+      mapTokens: parsedMapTokens,
+      mapTokenCells: parsedMapTokenCells,
+      minionOwners: parsedMinionOwners,
       partyPurse: purse,
       memberPurses: parsedMemberPurses,
       changeLog: parsedEvents,
@@ -647,6 +714,92 @@ class CampaignProfileDto {
     }
 
     final Map<String, dynamic> mapGridRegMap;
+    final bool hasMapTokensCrdt = map.containsKey('mapTokens_crdt');
+    final Map<String, dynamic> mapTokensCrdtMap;
+    if (hasMapTokensCrdt) {
+      final rawTokens = map['mapTokens_crdt'];
+      if (rawTokens is! Map) {
+        throw const FormatException('CampaignProfileDto.fromMap: "mapTokens_crdt" must be a Map.');
+      }
+      try {
+        final parsed = CrdtOrSet<MapToken>.fromMap(
+          Map<String, dynamic>.from(rawTokens),
+          (v) {
+            if (v is! Map) {
+              throw const FormatException('MapToken item must be a Map');
+            }
+            return MapToken.fromMap(Map<String, dynamic>.from(v));
+          },
+        );
+        for (final entry in parsed.items.entries) {
+          if (entry.key != entry.value.value.id) {
+            throw FormatException('CampaignProfileDto.fromMap: mapTokens key "${entry.key}" does not match token id "${entry.value.value.id}".');
+          }
+        }
+        mapTokensCrdtMap = parsed.toMap((t) => t.toMap());
+      } on FormatException {
+        rethrow;
+      } catch (e) {
+        throw FormatException('CampaignProfileDto.fromMap: "mapTokens_crdt" contains malformed items or tombstones: $e');
+      }
+    } else {
+      mapTokensCrdtMap = const <String, dynamic>{};
+    }
+
+    final bool hasMapTokenCellsCrdt = map.containsKey('mapTokenCells_crdt');
+    final Map<String, dynamic> mapTokenCellsCrdtMap;
+    if (hasMapTokenCellsCrdt) {
+      final rawCells = map['mapTokenCells_crdt'];
+      if (rawCells is! Map) {
+        throw const FormatException('CampaignProfileDto.fromMap: "mapTokenCells_crdt" must be a Map.');
+      }
+      try {
+        final parsed = CrdtOrSet<MapTokenCell>.fromMap(
+          Map<String, dynamic>.from(rawCells),
+          (v) {
+            if (v is! Map) {
+              throw const FormatException('MapTokenCell item must be a Map');
+            }
+            return MapTokenCell.fromMap(Map<String, dynamic>.from(v));
+          },
+        );
+        mapTokenCellsCrdtMap = parsed.toMap((c) => c.toMap());
+      } on FormatException {
+        rethrow;
+      } catch (e) {
+        throw FormatException('CampaignProfileDto.fromMap: "mapTokenCells_crdt" contains malformed items or tombstones: $e');
+      }
+    } else {
+      mapTokenCellsCrdtMap = const <String, dynamic>{};
+    }
+
+    final bool hasMinionOwnersCrdt = map.containsKey('minionOwners_crdt');
+    final Map<String, dynamic> minionOwnersCrdtMap;
+    if (hasMinionOwnersCrdt) {
+      final rawOwners = map['minionOwners_crdt'];
+      if (rawOwners is! Map) {
+        throw const FormatException('CampaignProfileDto.fromMap: "minionOwners_crdt" must be a Map.');
+      }
+      try {
+        final parsed = CrdtOrSet<String>.fromMap(
+          Map<String, dynamic>.from(rawOwners),
+          (v) {
+            if (v is! String || v.isEmpty) {
+              throw const FormatException('minionOwner item must be a non-empty String');
+            }
+            return v;
+          },
+        );
+        minionOwnersCrdtMap = parsed.toMap((v) => v);
+      } on FormatException {
+        rethrow;
+      } catch (e) {
+        throw FormatException('CampaignProfileDto.fromMap: "minionOwners_crdt" contains malformed items or tombstones: $e');
+      }
+    } else {
+      minionOwnersCrdtMap = const <String, dynamic>{};
+    }
+
     if (map.containsKey('mapGridRegister')) {
       final rawReg = map['mapGridRegister'];
       if (rawReg is! Map) {
@@ -720,6 +873,12 @@ class CampaignProfileDto {
       notesRegister: notesRegMap,
       activeMapRegister: activeMapRegMap,
       mapGridRegister: mapGridRegMap,
+      mapTokensCrdt: mapTokensCrdtMap,
+      hasMapTokensCrdt: hasMapTokensCrdt,
+      mapTokenCellsCrdt: mapTokenCellsCrdtMap,
+      hasMapTokenCellsCrdt: hasMapTokenCellsCrdt,
+      minionOwnersCrdt: minionOwnersCrdtMap,
+      hasMinionOwnersCrdt: hasMinionOwnersCrdt,
       partyPurse: purseMap,
       memberPurses: memberPursesMap,
       changeLog: changeLogList,
@@ -748,6 +907,9 @@ class CampaignProfileDto {
       if (notesRegister.isNotEmpty) 'notesRegister': notesRegister,
       if (activeMapRegister.isNotEmpty) 'activeMapRegister': activeMapRegister,
       if (mapGridRegister.isNotEmpty) 'mapGridRegister': mapGridRegister,
+      if (_hasCrdtContent(mapTokensCrdt)) 'mapTokens_crdt': mapTokensCrdt,
+      if (_hasCrdtContent(mapTokenCellsCrdt)) 'mapTokenCells_crdt': mapTokenCellsCrdt,
+      if (_hasCrdtContent(minionOwnersCrdt)) 'minionOwners_crdt': minionOwnersCrdt,
       'partyPurse': partyPurse,
       'memberPurses': memberPurses,
       'changeLog': changeLog,
@@ -798,5 +960,14 @@ class CampaignProfileDto {
   static String _deriveDeterministicRoomCode(String campaignId) {
     final digest = sha256.convert(utf8.encode(campaignId)).toString().toUpperCase();
     return 'CR-${digest.substring(0, 6)}';
+  }
+
+  static bool _hasCrdtContent(Map<String, dynamic> crdtMap) {
+    if (crdtMap.isEmpty) return false;
+    final items = crdtMap['items'];
+    final tombstones = crdtMap['tombstones'];
+    final hasItems = items is Map && items.isNotEmpty;
+    final hasTombstones = tombstones is Map && tombstones.isNotEmpty;
+    return hasItems || hasTombstones;
   }
 }

@@ -51,6 +51,15 @@ List<String> futureTimestampViolations(
   if (profile.mapGridRegister.timestamp.physicalTime > limit) {
     violations.add('mapGridRegister');
   }
+  if (profile.mapTokens.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('mapTokens');
+  }
+  if (profile.mapTokenCells.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('mapTokenCells');
+  }
+  if (profile.minionOwners.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
+    violations.add('minionOwners');
+  }
   if (profile.pinnedRules.extractTimestamps().any((ts) => ts.physicalTime > limit)) {
     violations.add('pinnedRules');
   }

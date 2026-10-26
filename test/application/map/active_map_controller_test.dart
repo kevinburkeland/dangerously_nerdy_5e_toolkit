@@ -38,6 +38,10 @@ CampaignProfile _makeProfile({
   BlobRef? mapRef,
   MapGrid? grid,
   String notes = '',
+  CrdtOrSet<MapToken>? mapTokens,
+  CrdtOrSet<MapTokenCell>? mapTokenCells,
+  CrdtOrSet<String>? minionOwners,
+  CrdtOrSet<dynamic>? activeMinions,
 }) {
   const stamp = HybridLogicalClock(
     physicalTime: 1700000000000,
@@ -62,9 +66,14 @@ CampaignProfile _makeProfile({
       value: grid,
       timestamp: stamp,
     ),
+    mapTokens: mapTokens ?? const CrdtOrSet<MapToken>.empty(),
+    mapTokenCells: mapTokenCells ?? const CrdtOrSet<MapTokenCell>.empty(),
+    minionOwners: minionOwners ?? const CrdtOrSet<String>.empty(),
     createdAt: DateTime.utc(2026, 1, 1),
     lastPlayedAt: DateTime.utc(2026, 1, 1),
-    roomState: const RoomNodeState.empty(),
+    roomState: const RoomNodeState.empty().copyWith(
+      activeMinions: activeMinions,
+    ),
   );
 }
 
@@ -612,6 +621,228 @@ void main() {
 
         expect(controller.current, equals(MapReady(ref2, bytes2, grid: grid2Hidden)));
         expect((controller.current as MapReady).grid!.visible, isFalse);
+
+        sub.cancel();
+        controller.dispose();
+      });
+    });
+
+    test('CT1: Token placement, move, removal, and minion owner changes emit MapReady with identical bytes, no new store.get calls, and exactly one state per action', () {
+      fakeAsync((async) {
+        final countingStore = _CountingBlobStore();
+        final bytes1 = _makeWebp(1024);
+        final ref1 = _makeRef(bytes1);
+        final bytes2 = _makeWebp(2048);
+        final ref2 = _makeRef(bytes2);
+        countingStore.put(ref1, bytes1, campaignId: 'camp-1');
+        countingStore.put(ref2, bytes2, campaignId: 'camp-1');
+
+        final controller = ActiveMapController(
+          campaignRepo: repo,
+          transfer: _TestTransferService(
+            channel: channel,
+            store: countingStore,
+            servableRefs: () => activeMapServableRefs(repo),
+          ),
+          store: countingStore,
+          channel: channel,
+          transportState: () => currentTransportState,
+        );
+
+        final emittedStates = <ActiveMapViewState>[];
+        final sub = controller.states.listen(emittedStates.add);
+
+        // Active minions in room
+        const stamp = HybridLogicalClock(physicalTime: 100, logicalCounter: 0, nodeId: 'n1');
+        final minions = const CrdtOrSet<dynamic>.empty().add('m1', {'id': 'm1'}, stamp);
+
+        var currentProfile = _makeProfile(mapRef: ref1, activeMinions: minions);
+        repo.putProfile(currentProfile);
+        controller.start();
+        async.flushMicrotasks();
+
+        expect(controller.current, isA<MapReady>());
+        final initialReady = controller.current as MapReady;
+        final getCallsBefore = countingStore.getCalls;
+        expect(getCallsBefore, equals(1));
+        final stateCountBefore = emittedStates.length;
+
+        // 1. Placing a token on this map emits exactly 1 MapReady listing it, with identical bytes and no new store.get
+        final tok1 = MapToken(id: 'tok_00000000000000000000000000000001', mapSha256Hex: ref1.sha256Hex, kind: MapTokenKind.character, refId: 'c1', label: 'T1');
+        final cell1 = MapTokenCell(col: 2, row: 3);
+        currentProfile = currentProfile.withTokenPlaced(tok1, cell1, const HybridLogicalClock(physicalTime: 200, logicalCounter: 0, nodeId: 'n1'));
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emittedStates.length, equals(stateCountBefore + 1));
+        final readyAfterPlace = controller.current as MapReady;
+        expect(identical(readyAfterPlace.bytes, initialReady.bytes), isTrue);
+        expect(countingStore.getCalls, equals(getCallsBefore));
+        expect(readyAfterPlace.tokens.length, equals(1));
+        expect(readyAfterPlace.tokens.first.token.id, equals(tok1.id));
+        expect(readyAfterPlace.tokens.first.cell, equals(cell1));
+
+        // 2. Token on another map isn't listed and emits nothing (target map tokens unchanged)
+        final tokOther = MapToken(id: 'tok_00000000000000000000000000000002', mapSha256Hex: ref2.sha256Hex, kind: MapTokenKind.character, refId: 'c2', label: 'T2');
+        currentProfile = currentProfile.withTokenPlaced(tokOther, MapTokenCell(col: 5, row: 5), const HybridLogicalClock(physicalTime: 250, logicalCounter: 0, nodeId: 'n1'));
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emittedStates.length, equals(stateCountBefore + 1)); // No new state emitted
+        expect((controller.current as MapReady).tokens.length, equals(1));
+
+        // 3. Move emits the new cell (exactly one state)
+        final cell1Moved = MapTokenCell(col: 4, row: 6);
+        currentProfile = currentProfile.withTokenMoved(tok1.id, cell1Moved, const HybridLogicalClock(physicalTime: 300, logicalCounter: 0, nodeId: 'n1'));
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emittedStates.length, equals(stateCountBefore + 2));
+        final readyAfterMove = controller.current as MapReady;
+        expect(readyAfterMove.tokens.first.cell, equals(cell1Moved));
+        expect(identical(readyAfterMove.bytes, initialReady.bytes), isTrue);
+        expect(countingStore.getCalls, equals(getCallsBefore));
+
+        // 4. Setting an owner changes minionOwners (exactly one state)
+        currentProfile = currentProfile.withMinionOwner('m1', 'thorin', const HybridLogicalClock(physicalTime: 400, logicalCounter: 0, nodeId: 'n1'));
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emittedStates.length, equals(stateCountBefore + 3));
+        final readyAfterOwnerSet = controller.current as MapReady;
+        expect(readyAfterOwnerSet.minionOwners['m1'], equals('thorin'));
+        expect(identical(readyAfterOwnerSet.bytes, initialReady.bytes), isTrue);
+
+        // 5. Clearing an owner changes minionOwners (exactly one state)
+        currentProfile = currentProfile.withMinionOwner('m1', null, const HybridLogicalClock(physicalTime: 500, logicalCounter: 0, nodeId: 'n1'));
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emittedStates.length, equals(stateCountBefore + 4));
+        final readyAfterOwnerClear = controller.current as MapReady;
+        expect(readyAfterOwnerClear.minionOwners.containsKey('m1'), isFalse);
+        expect(identical(readyAfterOwnerClear.bytes, initialReady.bytes), isTrue);
+
+        // 6. Removal emits a list without it (exactly one state)
+        currentProfile = currentProfile.withTokenRemoved(tok1.id, const HybridLogicalClock(physicalTime: 600, logicalCounter: 0, nodeId: 'n1'));
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emittedStates.length, equals(stateCountBefore + 5));
+        final readyAfterRemove = controller.current as MapReady;
+        expect(readyAfterRemove.tokens, isEmpty);
+        expect(identical(readyAfterRemove.bytes, initialReady.bytes), isTrue);
+        expect(countingStore.getCalls, equals(getCallsBefore));
+
+        sub.cancel();
+        controller.dispose();
+      });
+    });
+
+    test('CT2: Profile change to notes only emits nothing', () {
+      fakeAsync((async) {
+        final bytes = _makeWebp(1024);
+        final ref = _makeRef(bytes);
+        store.put(ref, bytes, campaignId: 'camp-1');
+
+        final controller = ActiveMapController(
+          campaignRepo: repo,
+          transfer: transfer,
+          store: store,
+          channel: channel,
+          transportState: () => currentTransportState,
+        );
+
+        final emittedStates = <ActiveMapViewState>[];
+        final sub = controller.states.listen(emittedStates.add);
+
+        var currentProfile = _makeProfile(mapRef: ref, notes: 'Original notes');
+        repo.putProfile(currentProfile);
+        controller.start();
+        async.flushMicrotasks();
+
+        expect(controller.current, isA<MapReady>());
+        final countAfterReady = emittedStates.length;
+
+        // Change notes only
+        currentProfile = currentProfile.copyWith(
+          notesRegister: const CrdtLwwRegister<String>(
+            value: 'Updated notes',
+            timestamp: HybridLogicalClock(physicalTime: 200, logicalCounter: 0, nodeId: 'n1'),
+          ),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(emittedStates.length, equals(countAfterReady));
+
+        sub.cancel();
+        controller.dispose();
+      });
+    });
+
+    test('CT3: Switching to another map and back brings old map tokens back with their cells', () {
+      fakeAsync((async) {
+        final bytes1 = _makeWebp(1024);
+        final ref1 = _makeRef(bytes1);
+        final bytes2 = _makeWebp(2048);
+        final ref2 = _makeRef(bytes2);
+        store.put(ref1, bytes1, campaignId: 'camp-1');
+        store.put(ref2, bytes2, campaignId: 'camp-1');
+
+        final controller = ActiveMapController(
+          campaignRepo: repo,
+          transfer: transfer,
+          store: store,
+          channel: channel,
+          transportState: () => currentTransportState,
+        );
+
+        final sub = controller.states.listen((_) {});
+
+        final tok1 = MapToken(id: 'tok_00000000000000000000000000000001', mapSha256Hex: ref1.sha256Hex, kind: MapTokenKind.character, refId: 'c1', label: 'T1');
+        final cell1 = MapTokenCell(col: 5, row: 8);
+
+        var currentProfile = _makeProfile(mapRef: ref1).withTokenPlaced(tok1, cell1, const HybridLogicalClock(physicalTime: 100, logicalCounter: 0, nodeId: 'n1'));
+        repo.putProfile(currentProfile);
+        controller.start();
+        async.flushMicrotasks();
+
+        expect(controller.current, isA<MapReady>());
+        expect((controller.current as MapReady).ref, equals(ref1));
+        expect((controller.current as MapReady).tokens.length, equals(1));
+        expect((controller.current as MapReady).tokens.first.cell, equals(cell1));
+
+        // Switch to map 2
+        currentProfile = currentProfile.copyWith(
+          activeMapRegister: CrdtLwwRegister<BlobRef?>(
+            value: ref2,
+            timestamp: const HybridLogicalClock(physicalTime: 200, logicalCounter: 0, nodeId: 'n1'),
+          ),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(controller.current, isA<MapReady>());
+        expect((controller.current as MapReady).ref, equals(ref2));
+        expect((controller.current as MapReady).tokens, isEmpty);
+
+        // Switch back to map 1
+        currentProfile = currentProfile.copyWith(
+          activeMapRegister: CrdtLwwRegister<BlobRef?>(
+            value: ref1,
+            timestamp: const HybridLogicalClock(physicalTime: 300, logicalCounter: 0, nodeId: 'n1'),
+          ),
+        );
+        repo.putProfile(currentProfile);
+        async.flushMicrotasks();
+
+        expect(controller.current, isA<MapReady>());
+        final readyBack = controller.current as MapReady;
+        expect(readyBack.ref, equals(ref1));
+        expect(readyBack.tokens.length, equals(1));
+        expect(readyBack.tokens.first.token.id, equals(tok1.id));
+        expect(readyBack.tokens.first.cell, equals(cell1));
 
         sub.cancel();
         controller.dispose();

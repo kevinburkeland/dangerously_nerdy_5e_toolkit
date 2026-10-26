@@ -49,6 +49,9 @@ void main() {
         'notesRegister',
         'activeMapRegister',
         'mapGridRegister',
+        'mapTokens_crdt',
+        'mapTokenCells_crdt',
+        'minionOwners_crdt',
         'partyPurse',
         'memberPurses',
         'changeLog',
@@ -317,6 +320,57 @@ void main() {
           ),
         );
 
+        // 8b. Map Tokens, Cells, and Minion Owners
+        String tokId(int i) => 'tok_${i.toRadixString(16).padLeft(32, '0')}';
+        const dummyMapSha = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
+        var tokensA = const CrdtOrSet<MapToken>.empty()
+            .add(tokId(0), MapToken(id: tokId(0), mapSha256Hex: dummyMapSha, kind: MapTokenKind.character, refId: 'aria', label: 'A'), tsA1)
+            .add(tokId(1), MapToken(id: tokId(1), mapSha256Hex: dummyMapSha, kind: MapTokenKind.minion, refId: 'm1', label: 'M1'), tsA1);
+        var cellsA = const CrdtOrSet<MapTokenCell>.empty()
+            .add(tokId(0), MapTokenCell(col: 0, row: 0), tsA1)
+            .add(tokId(1), MapTokenCell(col: 1, row: 1), tsA1);
+        if (rand.nextBool()) {
+          tokensA = tokensA.add(tokId(2), MapToken(id: tokId(2), mapSha256Hex: dummyMapSha, kind: MapTokenKind.monster, refId: 'p1', label: 'G1'), tsA1);
+          cellsA = cellsA.add(tokId(2), MapTokenCell(col: 2, row: 2), tsA1);
+        }
+        // Moves and removals on A
+        cellsA = cellsA.add(tokId(0), MapTokenCell(col: 5 + rand.nextInt(5), row: 5 + rand.nextInt(5)), tsA2);
+        if (rand.nextBool()) {
+          tokensA = tokensA.remove(tokId(1), tsA2);
+        }
+
+        var tokensB = const CrdtOrSet<MapToken>.empty()
+            .add(tokId(0), MapToken(id: tokId(0), mapSha256Hex: dummyMapSha, kind: MapTokenKind.character, refId: 'aria', label: 'A'), tsB1)
+            .add(tokId(3), MapToken(id: tokId(3), mapSha256Hex: dummyMapSha, kind: MapTokenKind.minion, refId: 'm2', label: 'M2'), tsB1);
+        var cellsB = const CrdtOrSet<MapTokenCell>.empty()
+            .add(tokId(0), MapTokenCell(col: 10, row: 10), tsB1)
+            .add(tokId(3), MapTokenCell(col: 3, row: 3), tsB1);
+        if (rand.nextBool()) {
+          tokensB = tokensB.add(tokId(2), MapToken(id: tokId(2), mapSha256Hex: dummyMapSha, kind: MapTokenKind.monster, refId: 'p1', label: 'G1'), tsB1);
+          cellsB = cellsB.add(tokId(2), MapTokenCell(col: 20, row: 20), tsB1);
+        }
+        // Moves and removals on B
+        cellsB = cellsB.add(tokId(0), MapTokenCell(col: 15 + rand.nextInt(5), row: 15 + rand.nextInt(5)), tsB2);
+        if (rand.nextBool()) {
+          tokensB = tokensB.remove(tokId(3), tsB2);
+        }
+
+        // Minion owners
+        var ownersA = const CrdtOrSet<String>.empty()
+            .add('m1', 'aria', tsA1)
+            .add('m2', 'bram', tsA1);
+        if (rand.nextBool()) {
+          ownersA = ownersA.remove('m2', tsA2);
+        }
+
+        var ownersB = const CrdtOrSet<String>.empty()
+            .add('m1', 'dorian', tsB1)
+            .add('m3', 'dorian', tsB1);
+        if (rand.nextBool()) {
+          ownersB = ownersB.remove('m1', tsB2);
+        }
+
         final profA = CampaignProfile.raw(
           id: 'camp_law_1',
           nameRegister: nameA,
@@ -329,6 +383,9 @@ void main() {
           notesRegister: notesA,
           activeMapRegister: mapA,
           mapGridRegister: gridA,
+          mapTokens: tokensA,
+          mapTokenCells: cellsA,
+          minionOwners: ownersA,
           partyPurse: purseA,
           memberPurses: memberPursesA,
           changeLog: logA,
@@ -346,6 +403,9 @@ void main() {
           notesRegister: notesB,
           activeMapRegister: mapB,
           mapGridRegister: gridB,
+          mapTokens: tokensB,
+          mapTokenCells: cellsB,
+          minionOwners: ownersB,
           partyPurse: purseB,
           memberPurses: memberPursesB,
           changeLog: logB,
@@ -379,6 +439,12 @@ void main() {
             reason: 'Seed $seed forward activeMapRegister direct mismatch');
         expect(resAB.profile.mapGridRegister, equals(joinAB.mapGridRegister),
             reason: 'Seed $seed forward mapGridRegister direct mismatch');
+        expect(resAB.profile.mapTokens, equals(joinAB.mapTokens),
+            reason: 'Seed $seed forward mapTokens direct mismatch');
+        expect(resAB.profile.mapTokenCells, equals(joinAB.mapTokenCells),
+            reason: 'Seed $seed forward mapTokenCells direct mismatch');
+        expect(resAB.profile.minionOwners, equals(joinAB.minionOwners),
+            reason: 'Seed $seed forward minionOwners direct mismatch');
 
         // Reverse: reconcileProfileSafely(profB, profA) == CampaignProfile.join(profB, profA)
         final resBA = recon.reconcileProfileSafely(local: profB, remote: profA);
@@ -389,6 +455,12 @@ void main() {
             reason: 'Seed $seed reverse activeMapRegister direct mismatch');
         expect(resBA.profile.mapGridRegister, equals(joinBA.mapGridRegister),
             reason: 'Seed $seed reverse mapGridRegister direct mismatch');
+        expect(resBA.profile.mapTokens, equals(joinBA.mapTokens),
+            reason: 'Seed $seed reverse mapTokens direct mismatch');
+        expect(resBA.profile.mapTokenCells, equals(joinBA.mapTokenCells),
+            reason: 'Seed $seed reverse mapTokenCells direct mismatch');
+        expect(resBA.profile.minionOwners, equals(joinBA.minionOwners),
+            reason: 'Seed $seed reverse minionOwners direct mismatch');
       }
     });
   });

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
+import 'package:vtt_engine_core/models/value_objects/map_token.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/map/grid_geometry.dart';
 
 MapGrid _randomGrid(Random rand) {
@@ -139,6 +140,60 @@ void main() {
             final cell = cellAt(g, lineX, 0.0);
             expect(cell.col, equals(i), reason: 'Seed $seed GG5 line $i at $lineX must belong to column $i');
           }
+        }
+      }
+    });
+
+    test('GG6 (law over 2000 seeds): isCellOnMap equals cellCenter in [0, width) x [0, height)', () {
+      for (int seed = 0; seed < 2000; seed++) {
+        final rand = Random(seed);
+        final g = _randomGrid(rand);
+        final imageWidth = 1 + rand.nextInt(4096);
+        final imageHeight = 1 + rand.nextInt(4096);
+
+        // Random cells in range [-1, 4095]
+        for (int k = 0; k < 5; k++) {
+          final int col;
+          final int row;
+          if (rand.nextBool()) {
+            // Around map borders
+            final cell = cellAt(g, rand.nextDouble() * imageWidth, rand.nextDouble() * imageHeight);
+            col = (cell.col + rand.nextInt(5) - 2).clamp(-1, 4095);
+            row = (cell.row + rand.nextInt(5) - 2).clamp(-1, 4095);
+          } else {
+            col = rand.nextInt(4097) - 1;
+            row = rand.nextInt(4097) - 1;
+          }
+          final cellObj = MapTokenCell(col: col, row: row);
+          final center = cellCenter(g, col, row);
+          final expected = center.x >= 0.0 && center.x < imageWidth && center.y >= 0.0 && center.y < imageHeight;
+          expect(isCellOnMap(g, imageWidth, imageHeight, cellObj), equals(expected),
+              reason: 'Seed $seed cell ($col, $row) on ($imageWidth x $imageHeight)');
+        }
+
+        // Edge-aligned cases
+        if (seed % 10 == 0) {
+          final kCol = rand.nextInt(10);
+          final edgeGrid = MapGrid(
+            mapSha256Hex: 'a' * 64,
+            cellCentiPx: 2000,
+            offsetXCentiPx: 0,
+            offsetYCentiPx: 0,
+            feetPerCell: 5,
+            visible: true,
+          );
+          final exactW = (2 * kCol + 1) * 10;
+          final exactCell = MapTokenCell(col: kCol, row: 0);
+          final exactCenter = cellCenter(edgeGrid, kCol, 0);
+          expect(exactCenter.x, equals(exactW.toDouble()));
+          expect(isCellOnMap(edgeGrid, exactW, 100, exactCell), isFalse);
+
+          final kRow = rand.nextInt(10);
+          final exactH = (2 * kRow + 1) * 10;
+          final exactCellY = MapTokenCell(col: 0, row: kRow);
+          final exactCenterY = cellCenter(edgeGrid, 0, kRow);
+          expect(exactCenterY.y, equals(exactH.toDouble()));
+          expect(isCellOnMap(edgeGrid, 100, exactH, exactCellY), isFalse);
         }
       }
     });
