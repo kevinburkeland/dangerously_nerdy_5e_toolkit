@@ -59,3 +59,7 @@ This script compiles Flutter Web to `build/web`, injects dynamic build version t
 Before completing any engineering task:
 1. **Verification:** Ensure static analysis (`flutter analyze`) reports zero issues and relevant test suites pass.
 2. **Living Documentation:** Update living documentation (`README.md`, `AGENTS.md`, or `.agents/rules/`) when architecture, public behavior, or documented capabilities change. Do not perform documentation churn for routine internal code changes.
+
+## 6. Repository Hygiene & Mutation Branches
+- Mutation branches are named `mutation/<slice-id>-<id>` and exist only while their slice is under review. Don't delete them yourself. After the review closes, the reviewer archives them as patches and a later prompt deletes them by exact SHA. CI fails above 20 per repo.
+- READMEs and docs never state test counts or hand-typed status; use generated badges.
