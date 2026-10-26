@@ -358,6 +358,8 @@ void main() {
         }
 
         expect(mover.lastRefusal, equals(MapTokenWriteResult.notFound));
+        final stored = MapTokenCell(col: 2, row: 2);
+        expect(mover.shownCell(tokenId, stored), equals(stored));
         final onMap = repo.activeProfile!.tokensOnMap(_mapSha);
         expect(onMap.any((t) => t.token.id == tokenId), isFalse);
 
