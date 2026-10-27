@@ -1,0 +1,35 @@
+From c9fef67d01f4a70248d380bcf7abea37ae7440f3 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 16:16:14 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/infrastructure/compliance/markdown_links_test.dart | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/test/infrastructure/compliance/markdown_links_test.dart b/test/infrastructure/compliance/markdown_links_test.dart
+index 7580c5e..4e330bc 100644
+--- a/test/infrastructure/compliance/markdown_links_test.dart
++++ b/test/infrastructure/compliance/markdown_links_test.dart
+@@ -139,13 +139,10 @@ List<String> markdownLinkProblems(String markdown, String fileDir) {
+     }
+   }
+ 
+-  // Reference definitions: ^[id]: target (excluding footnote definitions)
++  // Reference definitions: ^[id]: target
+   final refDefPattern = RegExp(r'^[ \t]*\[([^\]]+)\]:[ \t]*([^\s]+)', multiLine: true);
+   for (final m in refDefPattern.allMatches(cleanMarkdown)) {
+     final ref = m.group(1)!;
+-    if (ref.startsWith('^')) {
+-      continue;
+-    }
+     checkTarget('[$ref]', m.group(2)!);
+   }
+ 
+-- 
+2.55.0
+

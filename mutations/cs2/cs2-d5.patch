@@ -1,0 +1,29 @@
+From 41b226049d8338d497320c72769f71fae4737447 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 16:17:32 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D5?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ docs/ARCHITECTURE.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+index eb08281..521395b 100644
+--- a/docs/ARCHITECTURE.md
++++ b/docs/ARCHITECTURE.md
+@@ -36,7 +36,7 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/
+ |---|---|
+ | `lib/application` | Top-level application workflows and use-case coordination. |
+ | `lib/application/blob` | Large asset transfer protocol, chunking, verification, and data channel messaging. |
+-| `lib/application/map` | Battle map intake, grid manipulation, token rules, candidate resolution, and view states. |
++| `lib/application/map` | Battle map intake, grid manipulation, token rules, candidate resolution, and view states (`lib/application/map/no_such_file.dart`). |
+ | `lib/application/services` | Replicated room state reconciliation, encounter lifecycles, and clock synchronization. |
+ | `lib/application/storage` | Durability coordination, atomic physical snapshot import/export, and checksum verification. |
+ | `lib/domain` | Pure Dart tabletop domain logic with zero platform dependencies. |
+-- 
+2.55.0
+

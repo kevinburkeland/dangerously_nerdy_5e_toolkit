@@ -1,0 +1,29 @@
+From 674e112bc669a267d351d1757be1e25396680f9f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 16:19:04 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D9?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ README.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 06d4003..58fe5a8 100644
+--- a/README.md
++++ b/README.md
+@@ -30,7 +30,7 @@ See [docs/FEATURES.md](docs/FEATURES.md) for the full list.
+ The app pins both packages by exact git SHA.
+ Architecture details are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+ Data safety and replication protocols are documented in [docs/DATA_SAFETY_AND_CRDT.md](docs/DATA_SAFETY_AND_CRDT.md).
+-Local-first, no accounts: your campaigns and characters are stored on your device. Shared rooms sync directly between devices over WebRTC. Firestore holds each room's lobby record (room code, presence, shared character summaries, loot and event logs, dice rolls) and relays sync messages when a direct connection fails. Map images travel only between devices.
++Local-first, no accounts required: all campaign data is stored locally in IndexedDB and synchronized peer-to-peer.
+ 
+ ## Run it locally
+ 
+-- 
+2.55.0
+

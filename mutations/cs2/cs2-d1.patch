@@ -1,0 +1,70 @@
+From 691bf711638e89e89d4d696200dfd6795adf9d63 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 16:15:50 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../compliance/markdown_links_test.dart       | 43 +++----------------
+ 1 file changed, 6 insertions(+), 37 deletions(-)
+
+diff --git a/test/infrastructure/compliance/markdown_links_test.dart b/test/infrastructure/compliance/markdown_links_test.dart
+index 7580c5e..6870316 100644
+--- a/test/infrastructure/compliance/markdown_links_test.dart
++++ b/test/infrastructure/compliance/markdown_links_test.dart
+@@ -156,43 +156,12 @@ List<String> markdownLinkProblems(String markdown, String fileDir) {
+     checkTarget('<$target>', target);
+   }
+ 
+-  // Inline links and images: find every ](target)
+-  final targetPattern = RegExp(r'\]\(([^)\n]+)\)');
+-  for (final m in targetPattern.allMatches(cleanMarkdown)) {
+-    final target = m.group(1)!;
+-    final closeBracketIdx = m.start;
+-
+-    int depth = 1;
+-    int idx = closeBracketIdx - 1;
+-    int startBracketIdx = -1;
+-
+-    while (idx >= 0) {
+-      final ch = cleanMarkdown[idx];
+-      if (ch == '\n') break;
+-      if (ch == ']') {
+-        depth++;
+-      } else if (ch == '[') {
+-        depth--;
+-        if (depth == 0) {
+-          startBracketIdx = idx;
+-          break;
+-        }
+-      }
+-      idx--;
+-    }
+-
+-    String label;
+-    if (startBracketIdx != -1) {
+-      if (startBracketIdx > 0 && cleanMarkdown[startBracketIdx - 1] == '!') {
+-        label = cleanMarkdown.substring(startBracketIdx - 1, closeBracketIdx + 1);
+-      } else {
+-        label = cleanMarkdown.substring(startBracketIdx, closeBracketIdx + 1);
+-      }
+-    } else {
+-      label = '[link]';
+-    }
+-
+-    checkTarget(label, target);
++  // Inline links and images: single regex match per link
++  final inlinePattern = RegExp(r'\[([^\]]+)\]\(([^)\n]+)\)');
++  for (final m in inlinePattern.allMatches(cleanMarkdown)) {
++    final label = m.group(1)!;
++    final target = m.group(2)!;
++    checkTarget('[$label]', target);
+   }
+ 
+   // HTML src and href attributes
+-- 
+2.55.0
+
