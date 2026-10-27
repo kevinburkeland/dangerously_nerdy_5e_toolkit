@@ -101,18 +101,28 @@ DM Image Pick ──> MapIntakeService ──> WebBlobStoreAdapter (IndexedDB)
 
 ### State & Storage Separation
 - **References in Replicated State:** The campaign state stores only metadata references, never raw image bytes. `CampaignProfile` in `vtt-engine-core/lib/models/campaign_profile.dart` holds `activeMapRegister` (`CrdtLwwRegister<BlobRef?>`), `mapGridRegister` (`CrdtLwwRegister<MapGrid?>`), `mapTokens` (`CrdtOrSet<MapToken>`, token identity), and `mapTokenCells` (`CrdtOrSet<MapTokenCell>`, token position). `BlobRef`, `MapGrid`, and `MapToken` reside in `vtt-engine-core/lib/models/value_objects/`.
-- **Local Content-Addressed Store:** Blobs are stored locally on each device via `BlobStorePort`. `BlobStoreAdapter` (`lib/infrastructure/storage/web/web_blob_store_adapter.dart`) stores chunks in IndexedDB keyed by their SHA-256 hash. If IndexedDB fails to open, the store fails closed, transitioning the controller to `MapStoreUnavailable`.
+- **Local Content-Addressed Store:** Blobs are stored locally on each device via `BlobStorePort`. `BlobStoreAdapter` (`lib/infrastructure/storage/web/web_blob_store_adapter.dart`) stores whole blobs in IndexedDB keyed by their SHA-256 hash. If IndexedDB fails to open, the store fails closed, transitioning the controller to `MapStoreUnavailable`.
 
 ### Intake Pipeline
 - **Validation & Transcoding:** When a DM selects an image, `MapIntakeService` (`lib/application/map/map_intake_service.dart`) validates header limits before decoding via `lib/application/map/map_image_header.dart`.
 - **Intake Limits:** Constants enforce safety: `kMapInputMaxBytes = 209715200` (200 MiB file size limit), `kMapInputMaxLongestSidePx = 8192` (maximum input dimension), `kMapHeaderScanMaxBytes = 16777216` (16 MiB header scan window), and `kMapOutputMaxLongestSidePx = 4096` (maximum output dimension).
-- **Web Intake Adapter:** On web (`lib/infrastructure/map/web/web_map_image_intake_adapter.dart`), images larger than 4,096 px on their longest side are scaled down and re-encoded to WebP or JPEG. The image's content ID is the SHA-256 hash of the resulting bytes.
+- **Web Intake Adapter:** On web (`lib/infrastructure/map/web/web_map_image_intake_adapter.dart`), every image is drawn to an HTML canvas element and re-encoded, dropping all file metadata (EXIF, GPS location). Images larger than 4,096 px on their longest side are scaled down during decode. The re-encoding is performed via:
+  ```dart
+  final canvas = web.document.createElement('canvas') as web.HTMLCanvasElement;
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  final ctx = canvas.getContext('2d') as web.CanvasRenderingContext2D;
+  ctx.fillStyle = '#FFFFFF'.toJS;
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
+  ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+  ```
+  The image's content ID is the SHA-256 hash of the resulting bytes from `canvas.toBlob`.
 
 ### Peer-to-Peer Transfer
 - **Dedicated Data Channel:** `BlobTransferService` (`lib/application/blob/blob_transfer_service.dart`) coordinates file distribution over a dedicated WebRTC data channel (`kBlobChannelLabel = 'dn5e_blob'`) defined in `lib/application/blob/blob_transfer_protocol.dart`.
 - **Swarm Pull Model:** Peers pull missing chunks from any connected peer that holds the complete blob.
 - **Integrity Verification:** `verifyBlob` (`lib/application/blob/blob_verifier.dart`) checks both byte length, format signature, and SHA-256 checksum (returning `BlobVerdict`) before committing received bytes to the local store.
-- **Relay Fallback Behavior:** Only `WebRtcMeshAdapter` implements `BlobChannelPort`. Devices connected exclusively through the Firestore fallback relay cannot transfer or receive large binary assets. When an un-cached map is active over relay, `ActiveMapController` transitions to `MapRelayOnly`, and `MapView` informs the player: `"This map can't reach you over the relay connection. Ask the DM to connect you directly."`.
+- **Relay Fallback Behavior:** Only `WebRtcMeshAdapter` implements `BlobChannelPort`. Devices connected exclusively through the Firestore fallback relay cannot transfer or receive large binary assets. When an un-cached map is active over relay, `ActiveMapController` transitions to `MapRelayOnly`, and `MapView` informs the player: "This map can't reach you over the relay connection. Ask the DM to connect you directly.".
 
 ### Controller & View State
 - **State Machine:** `ActiveMapController` (`lib/application/map/active_map_controller.dart`) manages lifecycle transitions across `MapNone`, `MapLoading`, `MapDownloading`, `MapWaitingForPeer`, `MapConnecting`, `MapRelayOnly`, `MapStoreUnavailable`, `MapReady`, and `MapFailed`.
@@ -139,9 +149,9 @@ Party synchronization operates without central authority using a multi-tier tran
 
 ### Firestore Security & Data Paths
 The Firestore database structure declared in `firestore.rules` enforces capability isolation:
-- `rooms/{roomCode}`: Public lobby document containing `roomCode`, `campaignName`, `hostKeyHash`, `expiresAt`, `createdAt`, `lastUpdated`, `version`, `activePlayers`, `partyTelemetry`, and `sharedCharacters`.
+- `rooms/{roomCode}`: Public lobby document containing `roomCode`, `code`, `campaignId`, `rulesetId`, `campaignName`, `hostKeyHash`, `activePlayers`, `partyTelemetry`, `sharedCharacters`, `version`, `createdAt`, `lastUpdated`, `expiresAt`, and `isStateless`.
 - `rooms/{roomCode}/hostProof/current`: Write-only administrative proof. Rules verify `effectiveHash(hostProof.key) == room.hostKeyHash` before allowing room deletion or modification of core identity fields (`campaignId`, `rulesetId`).
-- `rooms/{roomCode}/signaling/{signalId}` and `rooms/{roomCode}/nodes/{toNodeId}/signals/{signalId}`: Ephemeral signaling exchange for WebRTC session descriptions and ICE candidates.
+- `rooms/{roomCode}/signaling/{signalId}` is legacy: `firestore.rules` denies all access to it. The live signalling path is `rooms/{roomCode}/nodes/{toNodeId}/signals/{signalId}` for ephemeral signaling exchange of WebRTC session descriptions and ICE candidates.
 - `rooms/{roomCode}/relay_messages/{messageId}`: Relayed sync messages for devices unable to negotiate direct P2P connections.
 - `rooms/{roomCode}/loot/{lootId}`: Shared party loot log entries.
 - `rooms/{roomCode}/events/{eventId}`: Campaign room activity event log.
@@ -150,11 +160,11 @@ The Firestore database structure declared in `firestore.rules` enforces capabili
 ## Trust model as built
 
 - **No User Accounts:** There is no authentication system, sign-in screen, or Firebase Auth integration. The project avoids collecting personal identifying information.
-- **Room Code as Capability:** The 6-character room code represents the capability to discover, read, and join a multiplayer session. Anyone holding the code can participate in room chat, view shared characters, and exchange state deltas.
+- **Room Code as Capability:** The 6-character room code represents the capability to discover, read, and join a multiplayer session. Anyone holding the code can view shared characters and exchange state deltas.
 - **Host Key & DM Passkey:** The DM device generates a cryptographically secure random UUID v4 (`CryptoUtils.generateHostKey()`). The Firestore room document stores only its SHA-256 hash (`hostKeyHash`). The raw UUID acts as the DM passkey. `PartyRoomService.claimDmRole()` verifies this passkey against `hostKeyHash` to grant co-DM capabilities.
 - **Open Player Writing:** Any client holding the room code can write player presence (`activePlayers`), character summary projections (`sharedCharacters`), and WebRTC signaling documents. This design ensures joining requires no administrative approval or host credentials.
 - **Non-Authoritative P2P Messaging:** State deltas exchanged peer-to-peer or over relay are not authorised per writer; any connected device can emit CRDT joins. DM-specific controls (such as moving any token or modifying foreign characters) are enforced solely in the client UI.
-- **App Check:** reCAPTCHA-based App Check is enabled in the Firebase console to mitigate automated abuse.
+- **App Check:** reCAPTCHA-based App Check is enforced in the Firebase console (external infrastructure configuration not represented in the repository) to mitigate automated abuse.
 
 ## State-Based Distributed Synchronization (CvRDT)
 

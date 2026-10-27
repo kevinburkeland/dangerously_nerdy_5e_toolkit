@@ -141,7 +141,7 @@ When inspecting, editing, refactoring, or running commands inside `../vtt-engine
 ### 4. Legal & SRD Compliance (Clean Room Policy)
 - **Strict CC-BY-4.0 SRD 5.1 & 5.2.1 Content:** Bundled compendiums, fixtures, and code must contain ZERO Wizards of the Coast Product Identity terms (e.g., Beholder, Mind Flayer, Faerûn, Eberron, Hexblade, Artificer). Use generic SRD equivalents only.
 - **Enforced via Invariant Suite:** `test/infrastructure/compliance/srd_legal_compliance_test.dart` audits all bundled static compendiums (`SrdClassesLibrary`, `SrdBackgroundsLibrary`, `SrdSpeciesLibrary`, `MonsterCodexLibrary`, `MagicItemLibrary`) on every run.
-- **Zero Third-Party Tool Coupling:** Core logic must not contain proprietary site keys, splatbook abbreviations, or tool-specific bundle names. External pipe syntax (`Spell|Source#c`) is isolated into dedicated infrastructure ACL parsers (`CompendiumPipeParser`).
+- **Zero Third-Party Tool Coupling:** Core logic must not contain proprietary site keys, splatbook abbreviations, or tool-specific bundle names. External pipe syntax ('Spell|Source#c') is isolated into dedicated infrastructure ACL parsers (`CompendiumPipeParser`).
 - **Unknown Stays Unknown (Anti-Hallucination):** Never synthesize or assume plausible tabletop defaults. Missing attributes remain `null`. Retain all unrecognized incoming keys in `unparsedPayload`.
 
 ---

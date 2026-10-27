@@ -8,19 +8,8 @@ import '../../../tool/codebase_map_generator.dart';
 const kSdkTypeAllowlist = <String>{
   'UnsupportedError', // dart:core
   'TextScaler', // package:flutter
-  'Widget', // package:flutter
-  'State', // package:flutter
-  'StatefulWidget', // package:flutter
-  'StatelessWidget', // package:flutter
-  'BuildContext', // package:flutter
-  'Directory', // dart:io
-  'File', // dart:io
-  'Platform', // dart:io
-  'Uint8List', // dart:typed_data
-  'Stream', // dart:async
-  'Future', // dart:async
-  'DateTime', // dart:core
-  'Duration', // dart:core
+  'Map', // dart:core
+  'String', // dart:core
 };
 
 String _normalizeRelPath(String repoRoot, String fullPath) {
@@ -147,21 +136,33 @@ List<String> unknownClassNames(String doc, Set<String> declared, Set<String> all
     if (fileExtensions.any((ext) => raw.endsWith(ext))) {
       continue;
     }
-    final String ident;
-    if (raw.contains('.')) {
-      ident = raw.split('.').first;
-    } else {
-      ident = raw;
-    }
-
-    if (capIdentPattern.hasMatch(ident)) {
-      if (!declared.contains(ident) && !allowlist.contains(ident)) {
-        problems.add('Unknown class name: `$raw` (identifier: $ident)');
+    final parts = raw.split(RegExp(r'[^a-zA-Z0-9_]+'));
+    for (final ident in parts) {
+      if (capIdentPattern.hasMatch(ident)) {
+        if (!declared.contains(ident) && !allowlist.contains(ident)) {
+          problems.add('Unknown class name: `$raw` (identifier: $ident)');
+        }
       }
     }
   }
-
   return problems;
+}
+
+List<String> checkDocFiles(List<String> targetFiles, Set<String> declared, Set<String> allowlist) {
+  final allProblems = <String>[];
+  for (final filePath in targetFiles) {
+    final file = File(filePath);
+    if (!file.existsSync()) {
+      allProblems.add('Missing target file: $filePath');
+      continue;
+    }
+    final content = file.readAsStringSync();
+    final problems = unknownClassNames(content, declared, allowlist);
+    if (problems.isNotEmpty) {
+      allProblems.add('$filePath:\n  ${problems.join('\n  ')}');
+    }
+  }
+  return allProblems;
 }
 
 List<Directory> resolveScannedLibDirectories(String repoRoot) {
@@ -339,19 +340,34 @@ void main() {
         }
       }
 
-      final allProblems = <String>[];
-      for (final filePath in targetFiles) {
-        final file = File(filePath);
-        if (!file.existsSync()) continue;
-        final content = file.readAsStringSync();
-        final problems = unknownClassNames(content, declared, kSdkTypeAllowlist);
-        if (problems.isNotEmpty) {
-          allProblems.add('$filePath:\n  ${problems.join('\n  ')}');
-        }
-      }
+      final allProblems = checkDocFiles(targetFiles, declared, kSdkTypeAllowlist);
 
       expect(allProblems, isEmpty,
           reason: 'Found unknown class names in navigation docs:\n${allProblems.join('\n')}');
+    });
+
+    test('DT3d (control): calling the DT3 check with a target list that includes docs/no_such_file.md gives exactly one problem naming it', () {
+      final libs = resolveScannedLibDirectories('.');
+      final declared = declaredTypeNames(libs);
+      final problems = checkDocFiles(['docs/no_such_file.md'], declared, kSdkTypeAllowlist);
+      expect(problems, hasLength(1));
+      expect(problems.first, contains('docs/no_such_file.md'));
+    });
+
+    test('DT3e (control): generic types and multi-token backticked spans validation', () {
+      final libs = resolveScannedLibDirectories('.');
+      final declared = declaredTypeNames(libs);
+
+      final p1 = unknownClassNames('`CrdtLwwRegister<ZzFake?>`', declared, kSdkTypeAllowlist);
+      expect(p1, hasLength(1));
+      expect(p1.first, contains('ZzFake'));
+
+      final p2 = unknownClassNames('`CrdtLwwRegister<BlobRef?>`', declared, kSdkTypeAllowlist);
+      expect(p2, isEmpty);
+
+      final p3 = unknownClassNames('`Map<String, ZzOther>`', declared, kSdkTypeAllowlist);
+      expect(p3, hasLength(1));
+      expect(p3.first, contains('ZzOther'));
     });
 
     test('DT4c (control): renderFolderIndex generates deterministic table', () {

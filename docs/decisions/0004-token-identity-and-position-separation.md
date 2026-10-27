@@ -12,7 +12,7 @@ A map token's static identity and its dynamic cell position are decoupled into d
 final CrdtOrSet<MapToken> mapTokens;
 final CrdtOrSet<MapTokenCell> mapTokenCells;
 ```
-- `mapTokens` holds token identity (`id`, `mapId`, `kind`, `linkId`, `label`) and is placed once upon creation.
+- `mapTokens` holds token identity (`id`, `mapSha256Hex`, `kind`, `refId`, `label`) and is placed once upon creation.
 - `mapTokenCells` holds token grid coordinates keyed by `tokenId`.
 Moving a token updates only its `MapTokenCell` in `mapTokenCells`. Removing a token removes its identity from `mapTokens`.
 

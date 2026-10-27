@@ -65,7 +65,7 @@
 ### 1.6. Clean Room Anti-Corruption Layer (ACL)
 - **Zero Third-Party Tool Coupling:** Core logic must not contain proprietary site keys, splatbook abbreviations, or tool-specific bundle names.
 - **Agnostic Structural Ingestion:** Ingestion adapters dynamically traverse payloads using generic structural indicators (`name`, `entries`, `hitDie`, `stats`, `type`, `level`, `actions`).
-- **External Syntax Isolation:** External pipe-delimited syntax (`Feature|Class|Source|Level`, `Spell|Source#c`) is isolated into dedicated infrastructure ACL parsers (`CompendiumPipeParser`).
+- **External Syntax Isolation:** External pipe-delimited syntax ('Feature|Class|Source|Level', 'Spell|Source#c') is isolated into dedicated infrastructure ACL parsers (`CompendiumPipeParser`).
 - **Capability-Driven Mechanics:** Combat calculations, attack substitutions, and capabilities must resolve via domain `FeatureGrant`s (`GrantType.attackAbilitySubstitution`, `GrantType.capabilityFlag`) or normalized capability flags (`flags['initiativeBonusMode']`). Never pattern match on non-SRD class, subclass, or feat names.
 
 ### 1.7. Cross-Boundary Repository Pivot Protocol
