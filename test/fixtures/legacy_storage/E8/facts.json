@@ -1,0 +1,149 @@
+{
+  "activeCampaignId": "campaign_LEGACYA",
+  "activeCharacterId": "char_wizard_cleric",
+  "campaigns": [
+    {
+      "activeMapSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "activeMinionIds": [
+        "minion_1"
+      ],
+      "changeLogCount": 1,
+      "edition": "v2024",
+      "grid": {
+        "cellCentiPx": 5000,
+        "feetPerCell": 5,
+        "mapSha256Hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "offsetXCentiPx": 0,
+        "offsetYCentiPx": 0,
+        "visible": true
+      },
+      "id": "campaign_LEGACYA",
+      "liveEntityLinkIds": [
+        "item_potion_healing"
+      ],
+      "memberPurses": {
+        "char_fighter": {
+          "cp": 0,
+          "ep": 0,
+          "gp": 12,
+          "pp": 0,
+          "sp": 0
+        }
+      },
+      "name": "Legacy Campaign A",
+      "notes": "Notes for A",
+      "partyPurse": {
+        "cp": 0,
+        "ep": 0,
+        "gp": 50,
+        "pp": 0,
+        "sp": 7
+      },
+      "partyRosterIds": [
+        "char_fighter",
+        "char_wizard_cleric"
+      ],
+      "pinnedRuleIds": [
+        "cover",
+        "resting"
+      ],
+      "roomCode": "LEGA01",
+      "tokenIds": []
+    },
+    {
+      "activeMapSha256": null,
+      "activeMinionIds": [],
+      "changeLogCount": 0,
+      "edition": "v2014",
+      "grid": null,
+      "id": "campaign_LEGACYB",
+      "liveEntityLinkIds": [],
+      "memberPurses": {},
+      "name": "Legacy Campaign B",
+      "notes": "",
+      "partyPurse": {
+        "cp": 0,
+        "ep": 0,
+        "gp": 0,
+        "pp": 0,
+        "sp": 0
+      },
+      "partyRosterIds": [],
+      "pinnedRuleIds": [],
+      "roomCode": "LEGB02",
+      "tokenIds": []
+    }
+  ],
+  "characters": [
+    {
+      "classes": [
+        {
+          "id": "fighter",
+          "level": 1
+        }
+      ],
+      "currentHp": 8,
+      "equippedItemIds": [
+        "chain_mail"
+      ],
+      "id": "char_fighter",
+      "inventory": [
+        {
+          "id": "chain_mail",
+          "quantity": 1
+        },
+        {
+          "id": "longsword",
+          "quantity": 1
+        },
+        {
+          "id": "shield",
+          "quantity": 1
+        }
+      ],
+      "knownSpellIds": [],
+      "maxHp": 12,
+      "name": "Fighter One",
+      "preparedSpellIds": []
+    },
+    {
+      "classes": [
+        {
+          "id": "cleric",
+          "level": 1
+        },
+        {
+          "id": "wizard",
+          "level": 2
+        }
+      ],
+      "currentHp": 16,
+      "equippedItemIds": [],
+      "id": "char_wizard_cleric",
+      "inventory": [],
+      "knownSpellIds": [
+        "cure_wounds",
+        "magic_missile"
+      ],
+      "maxHp": 20,
+      "name": "Mage Cleric",
+      "preparedSpellIds": [
+        "cure_wounds",
+        "magic_missile"
+      ]
+    }
+  ],
+  "registryMemberships": [
+    {
+      "characterId": "char_fighter",
+      "role": "player",
+      "roomCode": "LEGC03"
+    }
+  ],
+  "settings": {
+    "accent": "celestialAmber",
+    "haptic": "light",
+    "rulesEdition": "v2024",
+    "theme": "dark"
+  }
+}

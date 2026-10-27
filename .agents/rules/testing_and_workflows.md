@@ -62,6 +62,8 @@ Before completing any engineering task:
 
 ## 6. Repository Hygiene & Mutation Branches
 - Mutation branches are named `mutation/<slice-id>-<id>` and exist only while their slice is under review. Don't delete them yourself. After the review closes, the reviewer archives them as patches and a later prompt deletes them by exact SHA. CI fails above 20 per repo.
+- Mutation branches are retired with `scripts/retire_mutation_branches.sh <slice-id>` at the start of the next slice, after the review closes. Never delete them by hand.
+- The legacy load law (`test/infrastructure/legacy/legacy_load_law_test.dart`) must stay green. Never edit or regenerate files under `test/fixtures/legacy_storage/`; a new stored format gets a new era folder.
 - READMEs and docs never state test counts or hand-typed status; use generated badges.
 
 ## 7. Documentation Maintenance & Link Invariants

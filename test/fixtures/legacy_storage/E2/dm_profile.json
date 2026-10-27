@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "appVersion": "1.0.0",
+  "exportedAt": "2026-10-26T18:32:06.773885",
+  "type": "campaign_profile",
+  "campaign": {
+    "id": "campaign_LEGACYA",
+    "name": "Legacy Campaign A",
+    "edition": "v2024",
+    "createdAt": "2026-01-01T12:00:00.000Z",
+    "lastPlayedAt": "2026-01-01T12:00:00.000Z",
+    "roomState": {
+      "roomId": "room_LEGACYA",
+      "roomCode": "LEGA01",
+      "title": "Legacy Room A",
+      "description": "",
+      "entityLinks": [
+        {
+          "refType": "equipment",
+          "entityId": "item_potion_healing",
+          "displayName": "Potion of Healing",
+          "notes": null,
+          "position": null,
+          "isIsolatedClone": false,
+          "cloneRuntimeData": null
+        }
+      ],
+      "containers": [],
+      "activeEncounter": [],
+      "activeEncounter_crdt": {
+        "items": {},
+        "tombstones": {}
+      },
+      "activeMinions": [
+        {
+          "id": "minion_1",
+          "name": "Animated Dagger",
+          "size": "tiny",
+          "currentHp": 20,
+          "maxHp": 20,
+          "tempHp": 0,
+          "damageType": "Bludgeoning",
+          "isSilvered": false,
+          "customAc": null,
+          "customAttackBonus": null,
+          "customDamageDiceCount": null,
+          "customDamageDiceSides": null,
+          "customDamageBonus": null,
+          "secondaryDamageDiceCount": 0,
+          "secondaryDamageDiceSides": 0,
+          "secondaryDamageType": null,
+          "hasPackTactics": false,
+          "specialTrait": null,
+          "statBlockId": null,
+          "marker": "standard",
+          "customProperties": {}
+        }
+      ],
+      "activeMinions_crdt": {
+        "items": {
+          "minion_1": {
+            "v": {
+              "id": "minion_1",
+              "name": "Animated Dagger",
+              "size": "tiny",
+              "currentHp": 20,
+              "maxHp": 20,
+              "tempHp": 0,
+              "damageType": "Bludgeoning",
+              "isSilvered": false,
+              "customAc": null,
+              "customAttackBonus": null,
+              "customDamageDiceCount": null,
+              "customDamageDiceSides": null,
+              "customDamageBonus": null,
+              "secondaryDamageDiceCount": 0,
+              "secondaryDamageDiceSides": 0,
+              "secondaryDamageType": null,
+              "hasPackTactics": false,
+              "specialTrait": null,
+              "statBlockId": null,
+              "marker": "standard",
+              "customProperties": {}
+            },
+            "ts": {
+              "pt": 1767268800000,
+              "lc": 3,
+              "node": "e2_writer"
+            }
+          }
+        },
+        "tombstones": {}
+      },
+      "customProperties": {}
+    },
+    "partyCharacterIds": [
+      "char_fighter",
+      "char_wizard_cleric"
+    ],
+    "pinnedRuleIds": [
+      "cover",
+      "resting"
+    ],
+    "notesMarkdown": "Notes for A",
+    "notesRegister": {
+      "v": "Notes for A",
+      "ts": {
+        "pt": 1767268800000,
+        "lc": 0,
+        "node": "e2_writer"
+      }
+    },
+    "partyPurse": {
+      "sp": 7,
+      "spCounter": {
+        "positive": {
+          "e2_writer": 7
+        },
+        "negative": {}
+      },
+      "gp": 50,
+      "gpCounter": {
+        "positive": {
+          "e2_writer": 50
+        },
+        "negative": {}
+      },
+      "denominationCounters": {
+        "sp": {
+          "positive": {
+            "e2_writer": 7
+          },
+          "negative": {}
+        },
+        "gp": {
+          "positive": {
+            "e2_writer": 50
+          },
+          "negative": {}
+        }
+      }
+    },
+    "changeLog": [
+      {
+        "id": "event_1",
+        "roomCode": "LEGA01",
+        "type": "coinDeposit",
+        "playerName": "Fighter One",
+        "details": "Found 50 gp and 7 sp",
+        "timestamp": "2026-01-01T12:00:00.000Z"
+      }
+    ]
+  }
+}

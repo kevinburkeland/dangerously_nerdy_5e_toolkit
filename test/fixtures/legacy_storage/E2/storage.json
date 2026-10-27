@@ -1,0 +1,393 @@
+{
+  "boxes": {
+    "dn_campaign_profiles_v1": {
+      "dn5e_campaign_active_id": "campaign_LEGACYA",
+      "dn5e_campaign_profile_campaign_LEGACYA": "{\"id\":\"campaign_LEGACYA\",\"name\":\"Legacy Campaign A\",\"edition\":\"v2024\",\"createdAt\":\"2026-01-01T12:00:00.000Z\",\"lastPlayedAt\":\"2026-01-01T12:00:00.000Z\",\"roomState\":{\"roomId\":\"room_LEGACYA\",\"roomCode\":\"LEGA01\",\"title\":\"Legacy Room A\",\"description\":\"\",\"entityLinks\":[{\"refType\":\"equipment\",\"entityId\":\"item_potion_healing\",\"displayName\":\"Potion of Healing\",\"notes\":null,\"position\":null,\"isIsolatedClone\":false,\"cloneRuntimeData\":null}],\"containers\":[],\"activeEncounter\":[],\"activeEncounter_crdt\":{\"items\":{},\"tombstones\":{}},\"activeMinions\":[{\"id\":\"minion_1\",\"name\":\"Animated Dagger\",\"size\":\"tiny\",\"currentHp\":20,\"maxHp\":20,\"tempHp\":0,\"damageType\":\"Bludgeoning\",\"isSilvered\":false,\"customAc\":null,\"customAttackBonus\":null,\"customDamageDiceCount\":null,\"customDamageDiceSides\":null,\"customDamageBonus\":null,\"secondaryDamageDiceCount\":0,\"secondaryDamageDiceSides\":0,\"secondaryDamageType\":null,\"hasPackTactics\":false,\"specialTrait\":null,\"statBlockId\":null,\"marker\":\"standard\",\"customProperties\":{}}],\"activeMinions_crdt\":{\"items\":{\"minion_1\":{\"v\":{\"id\":\"minion_1\",\"name\":\"Animated Dagger\",\"size\":\"tiny\",\"currentHp\":20,\"maxHp\":20,\"tempHp\":0,\"damageType\":\"Bludgeoning\",\"isSilvered\":false,\"customAc\":null,\"customAttackBonus\":null,\"customDamageDiceCount\":null,\"customDamageDiceSides\":null,\"customDamageBonus\":null,\"secondaryDamageDiceCount\":0,\"secondaryDamageDiceSides\":0,\"secondaryDamageType\":null,\"hasPackTactics\":false,\"specialTrait\":null,\"statBlockId\":null,\"marker\":\"standard\",\"customProperties\":{}},\"ts\":{\"pt\":1767268800000,\"lc\":3,\"node\":\"e2_writer\"}}},\"tombstones\":{}},\"customProperties\":{}},\"partyCharacterIds\":[\"char_fighter\",\"char_wizard_cleric\"],\"pinnedRuleIds\":[\"cover\",\"resting\"],\"notesMarkdown\":\"Notes for A\",\"notesRegister\":{\"v\":\"Notes for A\",\"ts\":{\"pt\":1767268800000,\"lc\":0,\"node\":\"e2_writer\"}},\"partyPurse\":{\"sp\":7,\"spCounter\":{\"positive\":{\"e2_writer\":7},\"negative\":{}},\"gp\":50,\"gpCounter\":{\"positive\":{\"e2_writer\":50},\"negative\":{}},\"denominationCounters\":{\"sp\":{\"positive\":{\"e2_writer\":7},\"negative\":{}},\"gp\":{\"positive\":{\"e2_writer\":50},\"negative\":{}}}},\"changeLog\":[{\"id\":\"event_1\",\"roomCode\":\"LEGA01\",\"type\":\"coinDeposit\",\"playerName\":\"Fighter One\",\"details\":\"Found 50 gp and 7 sp\",\"timestamp\":\"2026-01-01T12:00:00.000Z\"}]}",
+      "dn5e_campaign_profile_campaign_LEGACYB": "{\"id\":\"campaign_LEGACYB\",\"name\":\"Legacy Campaign B\",\"edition\":\"v2014\",\"createdAt\":\"2026-01-01T12:00:00.000Z\",\"lastPlayedAt\":\"2026-01-01T12:00:00.000Z\",\"roomState\":{\"roomId\":\"room_LEGACYB\",\"roomCode\":\"LEGB02\",\"title\":\"Legacy Campaign B\",\"description\":\"\",\"entityLinks\":[],\"containers\":[],\"activeEncounter\":[],\"activeEncounter_crdt\":{\"items\":{},\"tombstones\":{}},\"activeMinions\":[],\"activeMinions_crdt\":{\"items\":{},\"tombstones\":{}},\"customProperties\":{}},\"partyCharacterIds\":[],\"pinnedRuleIds\":[],\"notesMarkdown\":\"\",\"notesRegister\":{\"v\":\"\",\"ts\":{\"pt\":1767268800000,\"lc\":0,\"node\":\"e2_writer\"}},\"partyPurse\":{},\"changeLog\":[]}",
+      "dn5e_campaign_profile_index": [
+        "campaign_LEGACYA",
+        "campaign_LEGACYB"
+      ]
+    },
+    "dn_characters_v1": {
+      "saved_active_character_id_v1": "char_wizard_cleric",
+      "saved_characters_roster_v1": [
+        {
+          "allocatedSpells": {},
+          "armorClass": 10,
+          "backgroundRef": null,
+          "baseScores": {
+            "charisma": 8,
+            "constitution": 13,
+            "dexterity": 14,
+            "intelligence": 12,
+            "strength": 15,
+            "wisdom": 10
+          },
+          "baseSpeedFeet": 30,
+          "bonusScores": {
+            "charisma": 0,
+            "constitution": 0,
+            "dexterity": 0,
+            "intelligence": 0,
+            "strength": 0,
+            "wisdom": 0
+          },
+          "cantrips": [],
+          "conditions": [],
+          "currentHp": 8,
+          "customProperties": {
+            "maxHp": 12
+          },
+          "feats": [],
+          "id": {
+            "ruleset": "v2024",
+            "slug": "char_fighter"
+          },
+          "inventory": [
+            {
+              "customProperties": {},
+              "instanceId": "item_chain_mail",
+              "isAttuned": false,
+              "isEquipped": true,
+              "itemRef": {
+                "displayName": "Chain Mail",
+                "grantedSkills": [],
+                "refType": "equipment",
+                "rulesetPreferred": null,
+                "slug": "chain_mail"
+              },
+              "quantity": 1,
+              "requiresAttunement": false
+            },
+            {
+              "customProperties": {},
+              "instanceId": "item_longsword",
+              "isAttuned": false,
+              "isEquipped": false,
+              "itemRef": {
+                "displayName": "Longsword",
+                "grantedSkills": [],
+                "refType": "equipment",
+                "rulesetPreferred": null,
+                "slug": "longsword"
+              },
+              "quantity": 1,
+              "requiresAttunement": false
+            },
+            {
+              "customProperties": {},
+              "instanceId": "item_shield",
+              "isAttuned": false,
+              "isEquipped": false,
+              "itemRef": {
+                "displayName": "Shield",
+                "grantedSkills": [],
+                "refType": "equipment",
+                "rulesetPreferred": null,
+                "slug": "shield"
+              },
+              "quantity": 1,
+              "requiresAttunement": false
+            }
+          ],
+          "languages": [
+            "Common"
+          ],
+          "maxAttunementSlots": 3,
+          "maxHp": 12,
+          "name": "Fighter One",
+          "progression": {
+            "classes": [
+              {
+                "classRef": {
+                  "displayName": "Fighter",
+                  "grantedSkills": [],
+                  "refType": "classDefinition",
+                  "rulesetPreferred": null,
+                  "slug": "fighter"
+                },
+                "customProperties": {},
+                "hitDie": "d10",
+                "hitPointsRolled": [],
+                "isStartingClass": true,
+                "level": 1,
+                "selectedFeatureOptions": {},
+                "subclassRef": null
+              }
+            ],
+            "experiencePoints": 0,
+            "manualHpRolls": {}
+          },
+          "purse": {},
+          "resources": {
+            "currentHitDice": {},
+            "currentHp": 8,
+            "customResourcesCurrent": {},
+            "customResourcesMax": {},
+            "deathSaveFailures": 0,
+            "deathSaveSuccesses": 0,
+            "exhaustionLevel": 0,
+            "hasHeroicInspiration": false,
+            "spellSlots": {
+              "currentSlots": {},
+              "maxSlots": {},
+              "pactMagicCurrent": 0,
+              "pactMagicMax": 0,
+              "pactMagicSlotLevel": 0
+            },
+            "tempHp": 0
+          },
+          "rulesEdition": "v2014",
+          "rulesetId": "dnd5e_2014",
+          "savingThrowProficiencies": [],
+          "skillProficiencies": {},
+          "speciesRef": {
+            "displayName": "Human",
+            "grantedSkills": [],
+            "refType": "species",
+            "rulesetPreferred": null,
+            "slug": "human"
+          },
+          "spellsKnown": [],
+          "spellsPrepared": [],
+          "tempHp": 0,
+          "toolProficiencies": [],
+          "traitProficiencies": {}
+        },
+        {
+          "allocatedSpells": {},
+          "armorClass": 10,
+          "backgroundRef": null,
+          "baseScores": {
+            "charisma": 8,
+            "constitution": 13,
+            "dexterity": 14,
+            "intelligence": 12,
+            "strength": 15,
+            "wisdom": 10
+          },
+          "baseSpeedFeet": 30,
+          "bonusScores": {
+            "charisma": 0,
+            "constitution": 0,
+            "dexterity": 0,
+            "intelligence": 0,
+            "strength": 0,
+            "wisdom": 0
+          },
+          "cantrips": [],
+          "conditions": [],
+          "currentHp": 16,
+          "customProperties": {
+            "maxHp": 20
+          },
+          "feats": [],
+          "id": {
+            "ruleset": "v2024",
+            "slug": "char_wizard_cleric"
+          },
+          "inventory": [],
+          "languages": [
+            "Common"
+          ],
+          "maxAttunementSlots": 3,
+          "maxHp": 20,
+          "name": "Mage Cleric",
+          "progression": {
+            "classes": [
+              {
+                "classRef": {
+                  "displayName": "Wizard",
+                  "grantedSkills": [],
+                  "refType": "classDefinition",
+                  "rulesetPreferred": null,
+                  "slug": "wizard"
+                },
+                "customProperties": {},
+                "hitDie": "d6",
+                "hitPointsRolled": [],
+                "isStartingClass": true,
+                "level": 2,
+                "selectedFeatureOptions": {},
+                "subclassRef": null
+              },
+              {
+                "classRef": {
+                  "displayName": "Cleric",
+                  "grantedSkills": [],
+                  "refType": "classDefinition",
+                  "rulesetPreferred": null,
+                  "slug": "cleric"
+                },
+                "customProperties": {},
+                "hitDie": "d8",
+                "hitPointsRolled": [],
+                "isStartingClass": false,
+                "level": 1,
+                "selectedFeatureOptions": {},
+                "subclassRef": null
+              }
+            ],
+            "experiencePoints": 0,
+            "manualHpRolls": {}
+          },
+          "purse": {},
+          "resources": {
+            "currentHitDice": {},
+            "currentHp": 16,
+            "customResourcesCurrent": {},
+            "customResourcesMax": {},
+            "deathSaveFailures": 0,
+            "deathSaveSuccesses": 0,
+            "exhaustionLevel": 0,
+            "hasHeroicInspiration": false,
+            "spellSlots": {
+              "currentSlots": {},
+              "maxSlots": {},
+              "pactMagicCurrent": 0,
+              "pactMagicMax": 0,
+              "pactMagicSlotLevel": 0
+            },
+            "tempHp": 0
+          },
+          "rulesEdition": "v2014",
+          "rulesetId": "dnd5e_2014",
+          "savingThrowProficiencies": [],
+          "skillProficiencies": {},
+          "speciesRef": {
+            "displayName": "Elf",
+            "grantedSkills": [],
+            "refType": "species",
+            "rulesetPreferred": null,
+            "slug": "elf"
+          },
+          "spellsKnown": [
+            {
+              "displayName": "Magic Missile",
+              "grantedSkills": [],
+              "refType": "spell",
+              "rulesetPreferred": null,
+              "slug": "magic_missile"
+            },
+            {
+              "displayName": "Cure Wounds",
+              "grantedSkills": [],
+              "refType": "spell",
+              "rulesetPreferred": null,
+              "slug": "cure_wounds"
+            }
+          ],
+          "spellsPrepared": [
+            {
+              "displayName": "Magic Missile",
+              "grantedSkills": [],
+              "refType": "spell",
+              "rulesetPreferred": null,
+              "slug": "magic_missile"
+            },
+            {
+              "displayName": "Cure Wounds",
+              "grantedSkills": [],
+              "refType": "spell",
+              "rulesetPreferred": null,
+              "slug": "cure_wounds"
+            }
+          ],
+          "tempHp": 0,
+          "toolProficiencies": [],
+          "traitProficiencies": {}
+        }
+      ]
+    },
+    "dn_homebrew_raw_v1": {},
+    "dn_homebrew_store_v1": {},
+    "dn_metadata_v1": {}
+  },
+  "commit": "355e312ecc33b2bfe52238760f36931837d34c4c",
+  "era": "E2",
+  "prefs": {
+    "pinned_class_ids_v1": {
+      "t": "sl",
+      "v": []
+    },
+    "pinned_feat_ids_v1": {
+      "t": "sl",
+      "v": []
+    },
+    "pinned_race_ids_v1": {
+      "t": "sl",
+      "v": []
+    },
+    "setting_3d_dice": {
+      "t": "b",
+      "v": true
+    },
+    "setting_bypassed_homebrew_slugs": {
+      "t": "sl",
+      "v": []
+    },
+    "setting_crit_fumble_fx": {
+      "t": "b",
+      "v": true
+    },
+    "setting_enable_glyph_animations": {
+      "t": "b",
+      "v": true
+    },
+    "setting_fantasy_accent_v2": {
+      "t": "s",
+      "v": "celestialAmber"
+    },
+    "setting_haptic_level_v2": {
+      "t": "s",
+      "v": "light"
+    },
+    "setting_oled_pitch_black": {
+      "t": "b",
+      "v": false
+    },
+    "setting_performance_mode": {
+      "t": "b",
+      "v": false
+    },
+    "setting_pinned_item_ids": {
+      "t": "sl",
+      "v": []
+    },
+    "setting_pinned_monster_ids": {
+      "t": "sl",
+      "v": []
+    },
+    "setting_pinned_rule_ids": {
+      "t": "sl",
+      "v": []
+    },
+    "setting_pinned_spell_ids": {
+      "t": "sl",
+      "v": []
+    },
+    "setting_rules_edition_v2": {
+      "t": "s",
+      "v": "v2024"
+    },
+    "setting_spell_particles": {
+      "t": "b",
+      "v": true
+    },
+    "setting_theme_mode_v2": {
+      "t": "s",
+      "v": "dark"
+    },
+    "setting_wizard_ordering_preset": {
+      "t": "s",
+      "v": "classic2014"
+    },
+    "user_campaign_registry": {
+      "t": "sl",
+      "v": [
+        "{\"roomCode\":\"LEGC03\",\"campaignName\":\"Unmapped Adopted Campaign\",\"role\":\"player\",\"hostKey\":null,\"characterId\":\"char_fighter\",\"lastPlayed\":\"2026-01-01T12:00:00.000Z\"}"
+      ]
+    }
+  }
+}
