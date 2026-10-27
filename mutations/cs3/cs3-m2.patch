@@ -1,0 +1,76 @@
+From 43182166bbd0b7920a73be070fc8567fa6af3b42 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:51:27 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?m2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/retire_mutation_branches.sh | 36 ++++++++++++++---------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/scripts/retire_mutation_branches.sh b/scripts/retire_mutation_branches.sh
+index 31e1910..f376933 100755
+--- a/scripts/retire_mutation_branches.sh
++++ b/scripts/retire_mutation_branches.sh
+@@ -277,29 +277,12 @@ if [ "$dry_run" -eq 1 ]; then
+   exit 0
+ fi
+ 
+-# 7. Commit and push the archive
+-if [ "$any_needs_archive" -eq 1 ]; then
+-  git add mutations/
+-  # Ensure no changes outside mutations/
+-  status_outside=$(git status --porcelain | grep -v '^.. mutations/' || true)
+-  if [ -n "$status_outside" ]; then
+-    echo "Error: Unexpected uncommitted changes outside mutations/ directory." >&2
+-    exit 1
+-  fi
+-
+-  git commit -s -m "Mutation archive: $slice_id"
+-  if ! git push origin main; then
+-    echo "Error: Failed to push archive commit to origin main." >&2
+-    exit 1
+-  fi
+-fi
+-
++# Mutation cs3-m2: Delete remote branches before pushing archive
+ # Test-only hook between steps 7 and 8 (e.g. for RM4 to mutate remote branch)
+ if [ -n "${RETIRE_TEST_POST_ARCHIVE_HOOK:-}" ]; then
+   eval "$RETIRE_TEST_POST_ARCHIVE_HOOK"
+ fi
+ 
+-# 8. Delete remote branches with atomic push & lease per branch
+ delete_args=()
+ for i in "${!matched_branches[@]}"; do
+   b="${matched_branches[$i]}"
+@@ -312,6 +295,23 @@ if ! git push --atomic origin "${delete_args[@]}"; then
+   exit 1
+ fi
+ 
++# 7. Commit and push the archive
++if [ "$any_needs_archive" -eq 1 ]; then
++  git add mutations/
++  # Ensure no changes outside mutations/
++  status_outside=$(git status --porcelain | grep -v '^.. mutations/' || true)
++  if [ -n "$status_outside" ]; then
++    echo "Error: Unexpected uncommitted changes outside mutations/ directory." >&2
++    exit 1
++  fi
++
++  git commit -s -m "Mutation archive: $slice_id"
++  if ! git push origin main; then
++    echo "Error: Failed to push archive commit to origin main." >&2
++    exit 1
++  fi
++fi
++
+ # 9. Print ls-remote after retirement
+ echo "Remote mutation branches matching slice '$slice_id' after retirement:"
+ git ls-remote --heads origin "refs/heads/mutation/${slice_id}-*" || true
+-- 
+2.55.0
+

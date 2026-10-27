@@ -1,0 +1,34 @@
+From a7d6aacb6bc12d369c6d9d24738aa95d129f76fb Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:55:55 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?l5?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../repositories/campaign_storage_migration.dart            | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/lib/infrastructure/repositories/campaign_storage_migration.dart b/lib/infrastructure/repositories/campaign_storage_migration.dart
+index 80c7afb..e88b89c 100644
+--- a/lib/infrastructure/repositories/campaign_storage_migration.dart
++++ b/lib/infrastructure/repositories/campaign_storage_migration.dart
+@@ -43,6 +43,12 @@ class CampaignStorageMigration {
+ 
+     final db = databaseService ?? AppDatabaseService.instance;
+     final charService = characterPersistenceService ?? CharacterPersistenceService();
++
++    // Mutation cs3-l5: rewrite every profile on every boot with fresh timestamp
++    final profiles = await repo.loadAllProfiles();
++    for (final p in profiles) {
++      await repo.updateProfile(p.id, (curr) => curr.copyWith(lastPlayedAt: DateTime.now()));
++    }
+     final regService = registryService ?? CampaignRegistryService();
+ 
+     // Ensure storage records are loaded and prefs->hive copy completes
+-- 
+2.55.0
+

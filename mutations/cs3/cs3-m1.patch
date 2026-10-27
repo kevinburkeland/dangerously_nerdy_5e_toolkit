@@ -1,0 +1,31 @@
+From 2b30ea82512ec0ec588274b380344d1fa033972c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:50:33 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?m1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/retire_mutation_branches.sh | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/retire_mutation_branches.sh b/scripts/retire_mutation_branches.sh
+index 31e1910..72cc48d 100755
+--- a/scripts/retire_mutation_branches.sh
++++ b/scripts/retire_mutation_branches.sh
+@@ -226,7 +226,8 @@ if [ "$any_needs_archive" -eq 1 ]; then
+       git am "$patch_file" >/dev/null 2>&1
+       am_tree=$(git rev-parse HEAD^{tree})
+       expected_tree=$(git rev-parse "${head_sha}^{tree}")
+-      if [ "$am_tree" != "$expected_tree" ]; then
++      # Tree comparison intentionally skipped for mutation cs3-m1
++      if false && [ "$am_tree" != "$expected_tree" ]; then
+         echo "Error: Tree mismatch for patch '$patch_file'. Expected $expected_tree, got $am_tree." >&2
+         exit 1
+       fi
+-- 
+2.55.0
+

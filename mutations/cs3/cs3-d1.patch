@@ -1,0 +1,38 @@
+From 88232c12bc830b55e386b108121544e224301adb Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:57:01 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?d1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/infrastructure/compliance/docs_truth_test.dart | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/test/infrastructure/compliance/docs_truth_test.dart b/test/infrastructure/compliance/docs_truth_test.dart
+index 198bf76..3deb0db 100644
+--- a/test/infrastructure/compliance/docs_truth_test.dart
++++ b/test/infrastructure/compliance/docs_truth_test.dart
+@@ -136,12 +136,10 @@ List<String> unknownClassNames(String doc, Set<String> declared, Set<String> all
+     if (fileExtensions.any((ext) => raw.endsWith(ext))) {
+       continue;
+     }
+-    final parts = raw.split(RegExp(r'[^a-zA-Z0-9_]+'));
+-    for (final ident in parts) {
+-      if (capIdentPattern.hasMatch(ident)) {
+-        if (!declared.contains(ident) && !allowlist.contains(ident)) {
+-          problems.add('Unknown class name: `$raw` (identifier: $ident)');
+-        }
++    // Mutation cs3-d1: only check single-identifier spans
++    if (capIdentPattern.hasMatch(raw)) {
++      if (!declared.contains(raw) && !allowlist.contains(raw)) {
++        problems.add('Unknown class name: `$raw`');
+       }
+     }
+   }
+-- 
+2.55.0
+

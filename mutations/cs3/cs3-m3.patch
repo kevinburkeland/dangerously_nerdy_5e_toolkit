@@ -1,0 +1,31 @@
+From df7d10d86c3272b00cdc6a9d5236b2e973ad5cbb Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:51:44 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?m3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/retire_mutation_branches.sh | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/retire_mutation_branches.sh b/scripts/retire_mutation_branches.sh
+index 31e1910..c64a0b1 100755
+--- a/scripts/retire_mutation_branches.sh
++++ b/scripts/retire_mutation_branches.sh
+@@ -304,7 +304,8 @@ delete_args=()
+ for i in "${!matched_branches[@]}"; do
+   b="${matched_branches[$i]}"
+   head_sha="${matched_heads[$i]}"
+-  delete_args+=("--force-with-lease=refs/heads/$b:$head_sha" ":refs/heads/$b")
++  # Mutation cs3-m3: dropped --force-with-lease
++  delete_args+=(":refs/heads/$b")
+ done
+ 
+ if ! git push --atomic origin "${delete_args[@]}"; then
+-- 
+2.55.0
+

@@ -1,0 +1,77 @@
+From 7f1cb9cb6cc3fd7e181f88723b73bc241606d7a4 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:53:30 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?m4?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/retire_mutation_branches.sh | 28 +++++++++++++---------------
+ 1 file changed, 13 insertions(+), 15 deletions(-)
+
+diff --git a/scripts/retire_mutation_branches.sh b/scripts/retire_mutation_branches.sh
+index 31e1910..c35a86d 100755
+--- a/scripts/retire_mutation_branches.sh
++++ b/scripts/retire_mutation_branches.sh
+@@ -40,10 +40,7 @@ if [ "$current_branch" != "main" ]; then
+ fi
+ 
+ # Precondition: local main equals origin/main after fetch
+-if ! git fetch origin main; then
+-  echo "Error: Failed to fetch origin main." >&2
+-  exit 1
+-fi
++git fetch origin main || true
+ 
+ local_main_sha=$(git rev-parse refs/heads/main)
+ origin_main_sha=$(git rev-parse refs/remotes/origin/main)
+@@ -73,10 +70,8 @@ cleanup() {
+ trap cleanup EXIT
+ 
+ # 2. List refs/heads/mutation/<slice-id>-* with git ls-remote
+-if ! raw_ls=$(git ls-remote --heads origin "refs/heads/mutation/${slice_id}-*"); then
+-  echo "Error: git ls-remote failed to query origin." >&2
+-  exit 1
+-fi
++# Mutation cs3-m4: failed ls-remote treated as empty list
++raw_ls=$(git ls-remote --heads origin "refs/heads/mutation/${slice_id}-*" 2>/dev/null || true)
+ 
+ matched_branches=()
+ matched_heads=()
+@@ -92,10 +87,11 @@ while IFS= read -r line || [ -n "$line" ]; do
+   fi
+ done <<< "$raw_ls"
+ 
+-if [ "${#matched_branches[@]}" -eq 0 ]; then
+-  echo "Error: No remote mutation branches found matching slice id '$slice_id'." >&2
+-  exit 1
+-fi
++# Mutation cs3-m4: empty-match check removed
++# if [ "${#matched_branches[@]}" -eq 0 ]; then
++#   echo "Error: No remote mutation branches found matching slice id '$slice_id'." >&2
++#   exit 1
++# fi
+ 
+ echo "Remote mutation branches matching slice '$slice_id' before retirement:"
+ for i in "${!matched_branches[@]}"; do
+@@ -307,9 +303,11 @@ for i in "${!matched_branches[@]}"; do
+   delete_args+=("--force-with-lease=refs/heads/$b:$head_sha" ":refs/heads/$b")
+ done
+ 
+-if ! git push --atomic origin "${delete_args[@]}"; then
+-  echo "Error: Atomic leased deletion push failed. One or more branch leases were refused." >&2
+-  exit 1
++if [ "${#matched_branches[@]}" -gt 0 ]; then
++  if ! git push --atomic origin "${delete_args[@]}"; then
++    echo "Error: Atomic leased deletion push failed. One or more branch leases were refused." >&2
++    exit 1
++  fi
+ fi
+ 
+ # 9. Print ls-remote after retirement
+-- 
+2.55.0
+

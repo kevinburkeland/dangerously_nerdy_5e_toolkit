@@ -1,0 +1,32 @@
+From 5bb85b8399e3d8397eefa2eb63e3d4234308f6ed Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:54:00 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?l1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/dtos/campaign_profile_dto.dart | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/infrastructure/dtos/campaign_profile_dto.dart b/lib/infrastructure/dtos/campaign_profile_dto.dart
+index 3dd2c24..f5de766 100644
+--- a/lib/infrastructure/dtos/campaign_profile_dto.dart
++++ b/lib/infrastructure/dtos/campaign_profile_dto.dart
+@@ -437,8 +437,8 @@ class CampaignProfileDto {
+     final extractedIds = <String>[];
+     final unparsedRoster = <Map<String, dynamic>>[];
+ 
+-    // Migrate partyCharacterIds or legacy partyRoster
+-    final rawParty = map['partyCharacterIds'] ?? map['partyRoster'] ?? [];
++    // Migrate partyCharacterIds or legacy partyRoster (Mutation cs3-l1: ignored)
++    final rawParty = const [];
+     if (rawParty is List) {
+       for (final raw in rawParty) {
+         if (raw is String) {
+-- 
+2.55.0
+

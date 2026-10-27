@@ -1,0 +1,45 @@
+From 7da05868c26615465caa2c7cc7157ddb8dbab0c0 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 26 Oct 2026 18:55:01 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs3-?=
+ =?UTF-8?q?l3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../repositories/local_campaign_repository.dart | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/lib/infrastructure/repositories/local_campaign_repository.dart b/lib/infrastructure/repositories/local_campaign_repository.dart
+index 4b8aeaa..0ad15a9 100644
+--- a/lib/infrastructure/repositories/local_campaign_repository.dart
++++ b/lib/infrastructure/repositories/local_campaign_repository.dart
+@@ -218,14 +218,15 @@ class LocalCampaignRepository implements ICampaignRepository {
+         String? rawJson = _db
+             .get(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id')
+             ?.toString();
+-        if (rawJson == null || rawJson.isEmpty) {
+-          final prefs = await SharedPreferences.getInstance();
+-          rawJson = prefs.getString('$profileKeyPrefix$id');
+-          if (rawJson != null && rawJson.isNotEmpty) {
+-            await _db.put(AppDatabaseService.boxCampaignProfiles,
+-                '$profileKeyPrefix$id', rawJson);
+-          }
+-        }
++        // Mutation cs3-l3: dropped SharedPreferences record fallback
++        // if (rawJson == null || rawJson.isEmpty) {
++        //   final prefs = await SharedPreferences.getInstance();
++        //   rawJson = prefs.getString('$profileKeyPrefix$id');
++        //   if (rawJson != null && rawJson.isNotEmpty) {
++        //     await _db.put(AppDatabaseService.boxCampaignProfiles,
++        //         '$profileKeyPrefix$id', rawJson);
++        //   }
++        // }
+ 
+         if (rawJson != null && rawJson.isNotEmpty) {
+           try {
+-- 
+2.55.0
+
