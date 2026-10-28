@@ -52,6 +52,17 @@ class CharacterActionsResolver {
       HapticService.lightImpact(context);
       final cleanFormula = formula.replaceAll(' ', '');
       final rollResult = SpellRollEngine.roll(formula: cleanFormula);
+      if (rollResult == null) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+            content: Text('Can\'t roll "$formula": not dice notation'),
+          ),
+        );
+        return;
+      }
 
       final roomService = DiceRoomService();
       final activeRoom = roomService.activeRoomCode;

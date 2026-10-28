@@ -26,6 +26,17 @@ class InteractiveRollActionCard extends StatelessWidget {
 
     final cleanFormula = formula.replaceAll(' ', '');
     final rollResult = SpellRollEngine.roll(formula: cleanFormula);
+    if (rollResult == null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          content: Text('Can\'t roll "$formula": not dice notation'),
+        ),
+      );
+      return;
+    }
 
     final roomService = DiceRoomService();
     final activeRoom = roomService.activeRoomCode;

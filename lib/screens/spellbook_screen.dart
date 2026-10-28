@@ -203,6 +203,12 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   void _performSpellRoll(String formula, String spellName) {
     HapticService.lightImpact(context);
     final result = SpellRollEngine.roll(formula: formula);
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Can\'t roll "$formula": not dice notation')),
+      );
+      return;
+    }
     final modStr = result.modifier != 0
         ? (result.modifier > 0
             ? ' + ${result.modifier}'

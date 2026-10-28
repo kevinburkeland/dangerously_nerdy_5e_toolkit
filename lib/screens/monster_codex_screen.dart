@@ -246,6 +246,12 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
   void _performQuickRoll(String formula, String label) {
     HapticService.lightImpact(context);
     final result = SpellRollEngine.roll(formula: formula);
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Can\'t roll "$formula": not dice notation')),
+      );
+      return;
+    }
     final modStr = result.modifier != 0
         ? (result.modifier > 0
             ? ' + ${result.modifier}'

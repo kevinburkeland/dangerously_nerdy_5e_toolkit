@@ -261,7 +261,7 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
     return resolved;
   }
 
-  SingleAttackRoll _rollSingleAttack(CreatureAction action, Random rnd) {
+  SingleAttackRoll? _rollSingleAttack(CreatureAction action, Random rnd) {
     final roll1 = rnd.nextInt(20) + 1;
     int? roll2;
     int effectiveD20 = roll1;
@@ -287,6 +287,12 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
       if (formulaMatch != null) {
         final formula = formulaMatch.group(1)!;
         dmgResult = SpellRollEngine.roll(formula: formula);
+        if (dmgResult == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Can\'t roll "$formula": not dice notation')),
+          );
+          return null;
+        }
       }
     }
 
@@ -312,8 +318,12 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
         ? _resolveMultiattackActions(_selectedAction)
         : [_selectedAction];
 
-    final attackRolls =
-        attackActions.map((act) => _rollSingleAttack(act, rnd)).toList();
+    final attackRolls = <SingleAttackRoll>[];
+    for (final act in attackActions) {
+      final roll = _rollSingleAttack(act, rnd);
+      if (roll == null) return;
+      attackRolls.add(roll);
+    }
 
     final result = MonsterActionResult(
       actionName: _selectedAction.name,

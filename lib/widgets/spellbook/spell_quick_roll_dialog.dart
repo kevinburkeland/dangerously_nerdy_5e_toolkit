@@ -95,6 +95,12 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
       formula: formula,
       abilityModifier: _selectedAbilityMod,
     );
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Can\'t roll "$formula": not dice notation')),
+      );
+      return;
+    }
 
     final spellName = widget.spell.getName(widget.edition);
     final levelLabel = widget.spell.level == 0
