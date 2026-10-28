@@ -449,6 +449,7 @@ void main() {
         'activeMapSha256': null,
         'activeMinionIds': activeMinions,
         'changeLogCount': p.changeLog.length,
+        // Edition fact is the stored string, not the old app's reading: E1's own code reads stored generic_tabletop as v2014 (RulesetEdition.fromString falls through), while today's codec maps it to v2024 on purpose (Pass 12 decision, campaign_edition_codec.dart).
         'edition': p.id == 'campaign_LEGACYA' ? 'v2024' : 'v2014',
         'grid': null,
         'id': p.id,
@@ -530,7 +531,8 @@ void main() {
     };
 
     // Write outputs to target directory
-    final outDir = Directory('/home/kevin/Documents/dangerously_nerdy_5e_toolkit/test/fixtures/legacy_storage/E5');
+    final outDirPath = Platform.environment['ERA_OUT_DIR'] ?? 'test/fixtures/legacy_storage/E5';
+    final outDir = Directory(outDirPath);
     await outDir.create(recursive: true);
 
     await File('${outDir.path}/storage.json').writeAsString(

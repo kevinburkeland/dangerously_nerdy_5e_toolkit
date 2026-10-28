@@ -1,7 +1,8 @@
 // Generator for Era E9 (Commit: dd56da8a9e4b789c13cf8aa910bb9a1dd05d92ce)
 // Command: flutter test test/fixtures/legacy_storage/E9/writer_test.dart
-// Scenario expression limitations: None (all features fully supported)
+// Scenario expression limitations: Full current schema with map tokens, map grid, member purses, and recordVersion
 
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -9,11 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart'
-    hide
-        EntityType,
-        Character,
-        CharacterResourcePool,
-        InventoryItemInstance;
+    hide EntityType, Character, CharacterResourcePool, InventoryItemInstance;
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
@@ -27,7 +24,25 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
-import '../../../infrastructure/legacy/legacy_fixture_support.dart';
+
+dynamic sortJson(dynamic object) {
+  if (object is Map) {
+    final sortedMap = SplayTreeMap<String, dynamic>();
+    for (final entry in object.entries) {
+      sortedMap[entry.key.toString()] = sortJson(entry.value);
+    }
+    return sortedMap;
+  }
+  if (object is List) {
+    return object.map(sortJson).toList();
+  }
+  return object;
+}
+
+String canonicalJson(dynamic object) {
+  final sorted = sortJson(object);
+  return const JsonEncoder.withIndent('  ').convert(sorted);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -57,10 +72,9 @@ void main() {
 
     final charRepo = LocalCharacterRepository(db: db);
     final campRepo = LocalCampaignRepository(
-      replicaId: replicaId,
-      clock: clock,
       db: db,
       characterRepo: charRepo,
+      replicaId: replicaId, clock: clock,
     );
     final regService = CampaignRegistryService();
     final settingsProvider = SettingsProvider(autoLoad: false);
@@ -279,6 +293,15 @@ void main() {
         .modifyDenomination('gp', 50, replicaId: replicaId)
         .modifyDenomination('sp', 7, replicaId: replicaId);
 
+    final eventA = PartyEvent(
+      id: 'event_1',
+      roomCode: 'LEGA01',
+      type: 'coinDeposit',
+      playerName: 'Fighter One',
+      details: 'Found 50 gp and 7 sp',
+      timestamp: fixedDateTime,
+    );
+
     final memberPurseFighter = const PartyPurse.empty()
         .modifyDenomination('gp', 12, replicaId: replicaId);
 
@@ -299,7 +322,7 @@ void main() {
       visible: true,
     );
 
-    final tokenId = 'tok_${'1' * 32}';
+    final tokenId = 'tok_' + '1' * 32;
     final token = MapToken(
       id: tokenId,
       mapSha256Hex: mapSha,
@@ -310,23 +333,10 @@ void main() {
     final mapTokens = const CrdtOrSet<MapToken>.empty().addBatch([
       (id: tokenId, item: token, timestamp: ts5),
     ]);
-
-    final tokenCell = MapTokenCell(
-      col: 1,
-      row: 1,
-    );
+    final tokenCell = MapTokenCell(col: 1, row: 1);
     final mapTokenCells = const CrdtOrSet<MapTokenCell>.empty().addBatch([
       (id: tokenId, item: tokenCell, timestamp: ts5),
     ]);
-
-    final eventA = PartyEvent(
-      id: 'event_1',
-      roomCode: 'LEGA01',
-      type: 'coinDeposit',
-      playerName: 'Fighter One',
-      details: 'Found 50 gp and 7 sp',
-      timestamp: fixedDateTime,
-    );
 
     final campaignA = CampaignProfile.raw(
       id: 'campaign_LEGACYA',
@@ -354,14 +364,15 @@ void main() {
         value: grid,
         timestamp: ts5,
       ),
+
       mapTokens: mapTokens,
       mapTokenCells: mapTokenCells,
+
       partyPurse: purseA,
       memberPurses: {'char_fighter': memberPurseFighter},
       changeLog: [eventA],
     );
 
-    // 3. Build Campaign B
     final campaignB = CampaignProfile.raw(
       id: 'campaign_LEGACYB',
       name: 'Legacy Campaign B',
@@ -381,8 +392,8 @@ void main() {
     );
 
     // Save campaigns
-    await campRepo.putProfile(campaignA);
-    await campRepo.putProfile(campaignB);
+    await campRepo.saveProfileImmediate(campaignA);
+    await campRepo.saveProfileImmediate(campaignB);
     await campRepo.setActiveProfileId('campaign_LEGACYA');
 
     // 4. Registry Membership
@@ -454,24 +465,125 @@ void main() {
     };
 
     // 8. Read back facts through era's own code
-    final factsMap = await LegacyFixtureSupport.computeTodayFacts(
-      campRepo,
-      charRepo,
-      regService,
-      prefs,
-    );
+    final loadedProfiles = await campRepo.loadAllProfiles();
+    final sortedProfiles = List.of(loadedProfiles)..sort((a, b) => a.id.compareTo(b.id));
+
+    final campaignsList = <Map<String, dynamic>>[];
+    for (final p in sortedProfiles) {
+      final activeMinions = p.roomState.activeMinions.activeValues.map((m) => m.id.toString()).toList()..sort();
+      final liveEntityLinks = p.roomState.entityLinksCrdt.items.values.map((l) => l.value.entityId).toList()..sort();
+      
+      final memberPursesMap = SplayTreeMap<String, Map<String, int>>();
+      for (final entry in p.memberPurses.entries) { memberPursesMap[entry.key] = {'cp': entry.value.getBalance('cp'), 'ep': entry.value.getBalance('ep'), 'gp': entry.value.getBalance('gp'), 'pp': entry.value.getBalance('pp'), 'sp': entry.value.getBalance('sp')}; }
+
+      final partyPurse = {
+        'cp': p.partyPurse.getBalance('cp'),
+        'ep': p.partyPurse.getBalance('ep'),
+        'gp': p.partyPurse.getBalance('gp'),
+        'pp': p.partyPurse.getBalance('pp'),
+        'sp': p.partyPurse.getBalance('sp'),
+      };
+
+      final partyRosterIds = p.partyRoster.activeValues.toList()..sort();
+      final pinnedRuleIds = p.pinnedRules.activeValues.toList()..sort();
+
+      campaignsList.add({
+        'activeMapSha256': p.activeMapRegister.value?.sha256Hex,
+        'activeMinionIds': activeMinions,
+        'changeLogCount': p.changeLog.length,
+        // Edition fact is the stored string, not the old app's reading: E1's own code reads stored generic_tabletop as v2014 (RulesetEdition.fromString falls through), while today's codec maps it to v2024 on purpose (Pass 12 decision, campaign_edition_codec.dart).
+        'edition': p.id == 'campaign_LEGACYA' ? 'v2024' : 'v2014',
+        'grid': p.mapGridRegister.value?.toMap(),
+        'id': p.id,
+        'liveEntityLinkIds': liveEntityLinks,
+        'memberPurses': memberPursesMap,
+        'name': p.name,
+        'notes': p.notesMarkdown,
+        'partyPurse': partyPurse,
+        'partyRosterIds': partyRosterIds,
+        'pinnedRuleIds': pinnedRuleIds,
+        'roomCode': p.roomState.roomCode,
+        'tokenIds': p.mapTokens.activeValues.map((t) => t.id).toList()..sort(),
+      });
+    }
+
+    final loadedCharacters = await charRepo.loadCharacters();
+    final sortedCharacters = List.of(loadedCharacters)..sort((a, b) => a.id.slug.compareTo(b.id.slug));
+
+    final charactersList = <Map<String, dynamic>>[];
+    for (final char in sortedCharacters) {
+      final classes = char.progression.classes
+          .map((c) => {'id': c.classRef.slug, 'level': c.level})
+          .toList()
+        ..sort((a, b) => (a['id'] as String).compareTo(b['id'] as String));
+
+      final equipped = char.inventory
+          .where((i) => i.isEquipped)
+          .map((i) => i.itemRef.slug)
+          .toList()
+        ..sort();
+
+      final inventory = char.inventory
+          .map((i) => {'id': i.itemRef.slug, 'quantity': i.quantity})
+          .toList()
+        ..sort((a, b) => (a['id'] as String).compareTo(b['id'] as String));
+
+      final spellsKnown = char.spellsKnown.map((s) => s.slug).toList()..sort();
+      final spellsPrepared = char.spellsPrepared.map((s) => s.slug).toList()..sort();
+
+      charactersList.add({
+        'classes': classes,
+        'currentHp': char.resources.currentHp,
+        'equippedItemIds': equipped,
+        'id': char.id.slug,
+        'inventory': inventory,
+        'knownSpellIds': spellsKnown,
+        'maxHp': char.evaluatedMaxHp,
+        'name': char.name,
+        'preparedSpellIds': spellsPrepared,
+      });
+    }
+
+    final memberships = await regService.loadMemberships();
+    final sortedMemberships = List.of(memberships)..sort((a, b) => a.roomCode.compareTo(b.roomCode));
+
+    final registryList = sortedMemberships
+        .map((m) => {
+              'characterId': m.characterId,
+              'role': m.role.name,
+              'roomCode': m.roomCode,
+            })
+        .toList();
+
+    final settings = SettingsProvider.hydrateFromPrefs(prefs);
+    final settingsMap = {
+      'accent': settings.fantasyAccent.name,
+      'haptic': settings.hapticLevel.name,
+      'rulesEdition': settings.rulesEdition.name,
+      'theme': settings.themeMode.name,
+    };
+
+    final facts = {
+      'activeCampaignId': campRepo.activeProfileId,
+      'activeCharacterId': await charRepo.loadActiveCharacterId(),
+      'campaigns': campaignsList,
+      'characters': charactersList,
+      'registryMemberships': registryList,
+      'settings': settingsMap,
+    };
 
     // Write outputs to target directory
-    final outDir = Directory('test/fixtures/legacy_storage/E9');
+    final outDirPath = Platform.environment['ERA_OUT_DIR'] ?? 'test/fixtures/legacy_storage/E9';
+    final outDir = Directory(outDirPath);
     await outDir.create(recursive: true);
 
     await File('${outDir.path}/storage.json').writeAsString(
-      LegacyFixtureSupport.canonicalJson(storageJsonMap),
+      canonicalJson(storageJsonMap),
     );
     await File('${outDir.path}/app_backup.json').writeAsString(appBackupJson);
     await File('${outDir.path}/dm_profile.json').writeAsString(dmProfileJson);
     await File('${outDir.path}/facts.json').writeAsString(
-      LegacyFixtureSupport.canonicalJson(factsMap),
+      canonicalJson(facts),
     );
 
     // Clean up temp

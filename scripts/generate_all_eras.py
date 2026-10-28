@@ -879,6 +879,7 @@ void main() {{
         'activeMapSha256': {"p.activeMapRegister.value?.sha256Hex" if has_map_grid else "null"},
         'activeMinionIds': activeMinions,
         'changeLogCount': p.changeLog.length,
+        // Edition fact is the stored string, not the old app's reading: E1's own code reads stored generic_tabletop as v2014 (RulesetEdition.fromString falls through), while today's codec maps it to v2024 on purpose (Pass 12 decision, campaign_edition_codec.dart).
         'edition': p.id == 'campaign_LEGACYA' ? '{edition_str_a}' : 'v2014',
         'grid': {"p.mapGridRegister.value?.toMap()" if has_map_grid else "null"},
         'id': p.id,
@@ -960,7 +961,8 @@ void main() {{
     }};
 
     // Write outputs to target directory
-    final outDir = Directory('{REPO_DIR}/test/fixtures/legacy_storage/{era}');
+    final outDirPath = Platform.environment['ERA_OUT_DIR'] ?? 'test/fixtures/legacy_storage/{era}';
+    final outDir = Directory(outDirPath);
     await outDir.create(recursive: true);
 
     await File('${{outDir.path}}/storage.json').writeAsString(
@@ -995,16 +997,13 @@ def run_era(era: str, custom_dest: str = None):
         subprocess.check_call(["flutter", "pub", "get"], cwd=tmp_wt)
 
         test_content = generate_test_dart(era)
-        if custom_dest:
-            test_content = test_content.replace(
-                f"final outDir = Directory('{REPO_DIR}/test/fixtures/legacy_storage/{era}');",
-                f"final outDir = Directory('{custom_dest}');"
-            )
         test_path = os.path.join(tmp_wt, "test", "writer_test.dart")
         with open(test_path, "w") as f:
             f.write(test_content)
 
-        subprocess.check_call(["flutter", "test", "test/writer_test.dart"], cwd=tmp_wt)
+        env = os.environ.copy()
+        env["ERA_OUT_DIR"] = os.path.abspath(dest_dir)
+        subprocess.check_call(["flutter", "test", "test/writer_test.dart"], cwd=tmp_wt, env=env)
 
         # Copy generator source to destination as .txt
         with open(os.path.join(dest_dir, "writer_test.dart.txt"), "w") as f:
