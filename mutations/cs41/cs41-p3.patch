@@ -1,0 +1,37 @@
+From d66be4f9593404537eae8e3770b6627225b56422 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 27 Oct 2026 22:05:29 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/infrastructure/legacy/legacy_load_law_test.dart | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/test/infrastructure/legacy/legacy_load_law_test.dart b/test/infrastructure/legacy/legacy_load_law_test.dart
+index a1e072a..a6ee73f 100644
+--- a/test/infrastructure/legacy/legacy_load_law_test.dart
++++ b/test/infrastructure/legacy/legacy_load_law_test.dart
+@@ -47,7 +47,15 @@ const Map<String, String> kOptionalCampaignRecordKeys = {
+ };
+ 
+ /// Known losses registry. Must only shrink over time; stale entries fail the law.
+-const List<KnownLoss> knownLosses = [];
++const List<KnownLoss> knownLosses = [
++  KnownLoss(
++    id: 'KL-STALE-CANARY',
++    fixture: 'E1',
++    check: 'LL1',
++    path: 'settings.theme',
++    reason: 'synthetic stale known loss for mutation P3',
++  ),
++];
+ 
+ void main() {
+   TestWidgetsFlutterBinding.ensureInitialized();
+-- 
+2.55.0
+

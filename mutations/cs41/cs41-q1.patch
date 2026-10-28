@@ -1,0 +1,38 @@
+From 80e116d1ab21994ba51c51a84e383b9c840fe8c5 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 27 Oct 2026 22:06:04 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20Q1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/app_backup_service.dart | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/lib/services/persistence/app_backup_service.dart b/lib/services/persistence/app_backup_service.dart
+index c72ece7..7fd2e87 100644
+--- a/lib/services/persistence/app_backup_service.dart
++++ b/lib/services/persistence/app_backup_service.dart
+@@ -535,16 +535,7 @@ class AppBackupService {
+         userNotesData: backup.userNotesData,
+       );
+ 
+-      final prefs = await SharedPreferences.getInstance();
+-      final base = SettingsProvider.hydrateFromPrefs(prefs);
+-      final decodedSettings = decodeAppBackupSettings(
+-        backup.settings,
+-        base: base,
+-      );
+-      skippedCount += decodedSettings.skipped.length;
+-      skipReasons.addAll(decodedSettings.skipped);
+-      await SettingsProvider.writeToPrefs(prefs, decodedSettings.settings);
+-      final int settingsRestored = decodedSettings.appliedCount;
++      const int settingsRestored = 0;
+ 
+       return BackupRestoreResult(
+         success: true,
+-- 
+2.55.0
+

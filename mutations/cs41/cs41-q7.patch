@@ -1,0 +1,31 @@
+From 0b0b5f01a74eecf740af8aa1ba71901135ca0e4a Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 27 Oct 2026 22:18:59 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20Q7?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/screens/settings_screen.dart | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/lib/screens/settings_screen.dart b/lib/screens/settings_screen.dart
+index d8c9380..e58a819 100644
+--- a/lib/screens/settings_screen.dart
++++ b/lib/screens/settings_screen.dart
+@@ -595,9 +595,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
+     if (result == true && controller.text.trim().isNotEmpty && mounted) {
+       final restoreResult =
+           await AppBackupService().importFullBackupJson(controller.text);
+-      if (restoreResult.success && mounted) {
+-        await SettingsScope.of(context, listen: false).reloadFromPreferences();
+-      }
++      // MUTATION Q7: skip reloadFromPreferences
+       if (!mounted) return;
+       if (restoreResult.success) {
+         HapticService.mediumImpact(context);
+-- 
+2.55.0
+

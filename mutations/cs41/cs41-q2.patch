@@ -1,0 +1,29 @@
+From 773bfbecfd3c9afaa129e50e6d65528ea6f86efd Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 27 Oct 2026 22:06:17 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20Q2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/app_backup_settings_codec.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/persistence/app_backup_settings_codec.dart b/lib/services/persistence/app_backup_settings_codec.dart
+index 2d577fa..9383215 100644
+--- a/lib/services/persistence/app_backup_settings_codec.dart
++++ b/lib/services/persistence/app_backup_settings_codec.dart
+@@ -140,7 +140,7 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
+ 
+   final current = AppSettings(
+     themeMode: themeMode ?? base.themeMode,
+-    fantasyAccent: fantasyAccent ?? base.fantasyAccent,
++    fantasyAccent: fantasyAccent ?? const AppSettings().fantasyAccent,
+     oledPitchBlack: oledPitchBlack ?? base.oledPitchBlack,
+     hapticLevel: hapticLevel ?? base.hapticLevel,
+     wizardOrderingPreset: wizardOrderingPreset ?? base.wizardOrderingPreset,
+-- 
+2.55.0
+

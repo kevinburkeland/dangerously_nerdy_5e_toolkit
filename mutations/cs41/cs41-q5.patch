@@ -1,0 +1,52 @@
+From 615bc3171ee8033253da0616b2fa423a88e2068e Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 27 Oct 2026 22:18:27 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20Q5?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/app_backup_settings_codec.dart | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/lib/services/persistence/app_backup_settings_codec.dart b/lib/services/persistence/app_backup_settings_codec.dart
+index 2d577fa..25e68a5 100644
+--- a/lib/services/persistence/app_backup_settings_codec.dart
++++ b/lib/services/persistence/app_backup_settings_codec.dart
+@@ -7,7 +7,6 @@ import '../../models/dm_screen_data.dart';
+ const List<String> kAppBackupSettingsKeys = [
+   'themeMode',
+   'fantasyAccent',
+-  'oledPitchBlack',
+   'hapticLevel',
+   'wizardOrderingPreset',
+   'enableCritFumbleFx',
+@@ -43,7 +42,6 @@ Map<String, dynamic> encodeAppBackupSettings(AppSettings s) {
+   return <String, dynamic>{
+     'themeMode': s.themeMode.name,
+     'fantasyAccent': s.fantasyAccent.name,
+-    'oledPitchBlack': s.oledPitchBlack,
+     'hapticLevel': s.hapticLevel.name,
+     'wizardOrderingPreset': s.wizardOrderingPreset.name,
+     'enableCritFumbleFx': s.enableCritFumbleFx,
+@@ -120,7 +118,6 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
+ 
+   final themeMode = parseEnum('themeMode', ThemeMode.values);
+   final fantasyAccent = parseEnum('fantasyAccent', FantasyAccent.values);
+-  final oledPitchBlack = parseBool('oledPitchBlack');
+   final hapticLevel = parseEnum('hapticLevel', HapticFeedbackLevel.values);
+   final wizardOrderingPreset =
+       parseEnum('wizardOrderingPreset', WizardOrderingPreset.values);
+@@ -141,7 +138,6 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
+   final current = AppSettings(
+     themeMode: themeMode ?? base.themeMode,
+     fantasyAccent: fantasyAccent ?? base.fantasyAccent,
+-    oledPitchBlack: oledPitchBlack ?? base.oledPitchBlack,
+     hapticLevel: hapticLevel ?? base.hapticLevel,
+     wizardOrderingPreset: wizardOrderingPreset ?? base.wizardOrderingPreset,
+     enableCritFumbleFx: enableCritFumbleFx ?? base.enableCritFumbleFx,
+-- 
+2.55.0
+

@@ -1,0 +1,36 @@
+From d7863ef2aa69bb3065535d742a7f85980eeb9988 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 27 Oct 2026 22:18:48 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20Q6?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/app_backup_service.dart | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/lib/services/persistence/app_backup_service.dart b/lib/services/persistence/app_backup_service.dart
+index c72ece7..1c3d97d 100644
+--- a/lib/services/persistence/app_backup_service.dart
++++ b/lib/services/persistence/app_backup_service.dart
+@@ -305,6 +305,15 @@ class AppBackupService {
+       final backup =
+           AppBackupPayload.fromMap(Map<String, dynamic>.from(decoded));
+ 
++      {
++        final earlyPrefs = await SharedPreferences.getInstance();
++        final earlyBase = SettingsProvider.hydrateFromPrefs(earlyPrefs);
++        final earlyDecoded = decodeAppBackupSettings(
++          backup.settings,
++          base: earlyBase,
++        );
++        await SettingsProvider.writeToPrefs(earlyPrefs, earlyDecoded.settings);
++      }
+       if (backup.schemaVersion > currentSchemaVersion) {
+         return BackupRestoreResult(
+           success: false,
+-- 
+2.55.0
+

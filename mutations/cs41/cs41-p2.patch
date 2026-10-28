@@ -1,0 +1,31 @@
+From 5a433badde5a1cce21c2531c5bd7649438370acc Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 27 Oct 2026 22:05:13 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/infrastructure/legacy/legacy_fixture_derivations.dart | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/test/infrastructure/legacy/legacy_fixture_derivations.dart b/test/infrastructure/legacy/legacy_fixture_derivations.dart
+index 3298e88..ed4fb76 100644
+--- a/test/infrastructure/legacy/legacy_fixture_derivations.dart
++++ b/test/infrastructure/legacy/legacy_fixture_derivations.dart
+@@ -481,9 +481,7 @@ class LegacyFixtureDerivations {
+     final purse =
+         Map<String, dynamic>.from(campAMap['partyPurse'] as Map? ?? {});
+ 
+-    purse.remove('denominationCounters');
+-    purse.remove('customCounters');
+-    purse.removeWhere((k, _) => k.toLowerCase().endsWith('counter'));
++    // MUTATION P2: keep E1 counters
+     campAMap['partyPurse'] = purse;
+     campBox[campAKey] = json.encode(campAMap);
+ 
+-- 
+2.55.0
+
