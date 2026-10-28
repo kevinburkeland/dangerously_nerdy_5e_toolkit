@@ -4,7 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-10-28
-- Cleanup slice 5: Restore lost settings screen widget tests, add test-name ratchet script, self-test suite, CI workflow integration, and unified settings codec field table.
+- Cleanup slice 5: Restore lost settings screen widget tests, add test-name ratchet script, self-test suite, CI workflow integration, unified settings codec field table, and arena damage adjustment ordering delegating to upstream ruleset.
 
 ## 2026-10-27
 - Cleanup slice 4.1: Checked legacy inventory (`B1`–`B30`) with real controls (`LC1`–`LC5`), derived fixtures, and upstream pin bumps. Full backup restore now restores settings; a missing key keeps the current value, a bad value is skipped and reported.

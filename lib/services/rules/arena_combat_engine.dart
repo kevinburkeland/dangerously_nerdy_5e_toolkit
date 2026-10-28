@@ -3361,33 +3361,30 @@ class ArenaCombatEngine {
     final sb = defender.getStatBlock(edition);
     final dmgLower = damageType.toLowerCase().trim();
 
-    // Flooded Abyss: Submerged creatures have natural resistance to fire damage
-    int workingDamage = rawDamage;
-    if (environment == ArenaEnvironment.floodedAbyss && dmgLower == 'fire') {
-      workingDamage = (workingDamage / 2).floor();
-    }
-
     // Check Immunity (0 damage)
     final immunities = (sb.damageImmunities ?? '').toLowerCase();
-    if (immunities.isNotEmpty &&
-        (immunities.contains(dmgLower) || immunities.contains('all'))) {
-      return 0;
-    }
+    final immune = immunities.isNotEmpty &&
+        (immunities.contains(dmgLower) || immunities.contains('all'));
 
-    // Check Vulnerability (Double damage)
-    final vulnerabilities = (sb.damageVulnerabilities ?? '').toLowerCase();
-    if (vulnerabilities.isNotEmpty && vulnerabilities.contains(dmgLower)) {
-      workingDamage = workingDamage * 2;
-    }
-
-    // Check Resistance (Half damage)
+    // Check Resistance (Flooded Abyss grants natural fire resistance to submerged creatures)
     final resistances = (sb.damageResistances ?? '').toLowerCase();
-    if (resistances.isNotEmpty &&
-        (resistances.contains(dmgLower) || resistances.contains('all'))) {
-      workingDamage = (workingDamage / 2).floor();
+    var resistant = resistances.isNotEmpty &&
+        (resistances.contains(dmgLower) || resistances.contains('all'));
+    if (environment == ArenaEnvironment.floodedAbyss && dmgLower == 'fire') {
+      resistant = true;
     }
 
-    return max(0, workingDamage);
+    // Check Vulnerability
+    final vulnerabilities = (sb.damageVulnerabilities ?? '').toLowerCase();
+    final vulnerable =
+        vulnerabilities.isNotEmpty && vulnerabilities.contains(dmgLower);
+
+    return adjustDamageForDefenses(
+      rawDamage,
+      immune: immune,
+      resistant: resistant,
+      vulnerable: vulnerable,
+    );
   }
 
   /// Evaluates and executes off-turn Legendary Actions for living opposing legendary combatants
