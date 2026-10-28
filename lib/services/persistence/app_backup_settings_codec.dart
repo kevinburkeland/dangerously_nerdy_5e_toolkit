@@ -212,11 +212,6 @@ final List<AppBackupSettingsField> kAppBackupSettingsFields = [
     getter: (s) => s.pinnedClassIds,
     setter: (s, v) => s.copyWith(pinnedClassIds: v),
   ),
-  AppBackupSettingsField.forStringSet(
-    key: 'pinnedRaceIds',
-    getter: (s) => s.pinnedRaceIds,
-    setter: (s, v) => s.copyWith(pinnedRaceIds: v),
-  ),
 ];
 
 /// Canonical list of 18 settings keys exported and restored by full app backups, derived from [kAppBackupSettingsFields].
