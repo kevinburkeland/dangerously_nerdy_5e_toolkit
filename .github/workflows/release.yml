@@ -131,6 +131,12 @@ jobs:
         # Baseline 116bb9bad62d771bdee55a41df99536e1a1f4d68 is the newest unsigned commit in repository history.
         run: ./scripts/check_dco.sh 116bb9bad62d771bdee55a41df99536e1a1f4d68 HEAD
 
+      - name: 🧪 Run Test Name Ratchet Script Self-Tests
+        run: ./scripts/test_check_test_names.sh
+
+      - name: 🔒 Verify Test Names Ratchet
+        run: python3 -I scripts/check_test_names.py 12d9961f18614080b20cc0ac63c0185434f3757b HEAD
+
       - name: 🧪 Run Mutation Branch Script Self-Tests
         run: ./scripts/test_check_mutation_branches.sh
 
