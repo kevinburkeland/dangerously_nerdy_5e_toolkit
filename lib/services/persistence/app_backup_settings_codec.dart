@@ -277,3 +277,5 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
     skipped: skipped,
   );
 }
+
+const _secondMap = {'themeMode': 1};
