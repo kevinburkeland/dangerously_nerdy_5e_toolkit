@@ -191,6 +191,35 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
+  /// Writes all 19 [AppSettings] fields to [prefs] using canonical v2 storage keys.
+  static Future<void> writeToPrefs(
+    SharedPreferences prefs,
+    AppSettings s,
+  ) async {
+    await Future.wait([
+      prefs.setString(_kThemeModeV2, s.themeMode.name),
+      prefs.setString(_kFantasyAccentV2, s.fantasyAccent.name),
+      prefs.setBool(_kOledPitchBlack, s.oledPitchBlack),
+      prefs.setString(_kHapticLevelV2, s.hapticLevel.name),
+      prefs.setString(_kWizardOrderingPreset, s.wizardOrderingPreset.name),
+      prefs.setBool(_kCritFumbleFx, s.enableCritFumbleFx),
+      prefs.setBool(_kSpellParticles, s.enableSpellParticles),
+      prefs.setBool(_k3dDice, s.enable3dDiceOverlays),
+      prefs.setBool(_kGlyphAnimations, s.enableGlyphAnimations),
+      prefs.setBool(_kPerformanceMode, s.performanceMode),
+      prefs.setString(_kRulesEditionV2, s.rulesEdition.name),
+      prefs.setStringList(_kPinnedRuleIds, s.pinnedRuleIds.toList()),
+      prefs.setStringList(_kPinnedSpellIds, s.pinnedSpellIds.toList()),
+      prefs.setStringList(_kPinnedMonsterIds, s.pinnedMonsterIds.toList()),
+      prefs.setStringList(_kPinnedItemIds, s.pinnedItemIds.toList()),
+      prefs.setStringList(_kPinnedFeatIds, s.pinnedFeatIds.toList()),
+      prefs.setStringList(_kPinnedClassIds, s.pinnedClassIds.toList()),
+      prefs.setStringList(_kPinnedRaceIds, s.pinnedRaceIds.toList()),
+      prefs.setStringList(
+          _kBypassedHomebrewSlugs, s.bypassedHomebrewSlugs.toList()),
+    ]);
+  }
+
   /// Updates settings in-memory and flushes changes to persistent storage.
   Future<void> updateSettings(AppSettings newSettings) async {
     _settings = newSettings;
@@ -198,36 +227,7 @@ class SettingsProvider extends ChangeNotifier {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await Future.wait([
-        prefs.setString(_kThemeModeV2, newSettings.themeMode.name),
-        prefs.setString(_kFantasyAccentV2, newSettings.fantasyAccent.name),
-        prefs.setBool(_kOledPitchBlack, newSettings.oledPitchBlack),
-        prefs.setString(_kHapticLevelV2, newSettings.hapticLevel.name),
-        prefs.setString(
-            _kWizardOrderingPreset, newSettings.wizardOrderingPreset.name),
-        prefs.setBool(_kCritFumbleFx, newSettings.enableCritFumbleFx),
-        prefs.setBool(_kSpellParticles, newSettings.enableSpellParticles),
-        prefs.setBool(_k3dDice, newSettings.enable3dDiceOverlays),
-        prefs.setBool(_kGlyphAnimations, newSettings.enableGlyphAnimations),
-        prefs.setBool(_kPerformanceMode, newSettings.performanceMode),
-        prefs.setString(_kRulesEditionV2, newSettings.rulesEdition.name),
-        prefs.setStringList(
-            _kPinnedRuleIds, newSettings.pinnedRuleIds.toList()),
-        prefs.setStringList(
-            _kPinnedSpellIds, newSettings.pinnedSpellIds.toList()),
-        prefs.setStringList(
-            _kPinnedMonsterIds, newSettings.pinnedMonsterIds.toList()),
-        prefs.setStringList(
-            _kPinnedItemIds, newSettings.pinnedItemIds.toList()),
-        prefs.setStringList(
-            _kPinnedFeatIds, newSettings.pinnedFeatIds.toList()),
-        prefs.setStringList(
-            _kPinnedClassIds, newSettings.pinnedClassIds.toList()),
-        prefs.setStringList(
-            _kPinnedRaceIds, newSettings.pinnedRaceIds.toList()),
-        prefs.setStringList(_kBypassedHomebrewSlugs,
-            newSettings.bypassedHomebrewSlugs.toList()),
-      ]);
+      await writeToPrefs(prefs, newSettings);
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
         e,

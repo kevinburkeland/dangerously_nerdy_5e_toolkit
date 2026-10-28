@@ -159,9 +159,17 @@ void main() {
               '"schemaVersion": ${AppBackupService.currentSchemaVersion}'));
       expect(backupJson, contains('"arcaneSapphire"'));
 
+      await SettingsProvider(
+        initialSettings: const AppSettings(),
+        autoLoad: false,
+      ).updateSettings(const AppSettings());
+
       final restoreResult =
           await AppBackupService().importFullBackupJson(backupJson);
       expect(restoreResult.success, isTrue);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(SettingsProvider.hydrateFromPrefs(prefs), equals(initialSettings));
     });
 
     test('Gracefully rejects corrupted JSON in backup import', () async {

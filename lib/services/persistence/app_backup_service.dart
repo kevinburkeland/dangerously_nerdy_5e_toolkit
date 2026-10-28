@@ -10,10 +10,12 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/dpr/dpr_serialization.dart';
+import '../../providers/settings_provider.dart';
 import '../fluff/entity_fluff_service.dart';
 import '../logging_service.dart';
 import '../minion_session_service.dart';
 import '../preset_service.dart';
+import 'app_backup_settings_codec.dart';
 import 'dpr_persistence_service.dart';
 import 'homebrew_persistence_service.dart';
 
@@ -22,6 +24,7 @@ class AppBackupPayload {
   final int schemaVersion;
   final DateTime exportedAt;
   final Map<String, dynamic> settings;
+  final bool settingsWasMalformed;
   final List<Map<String, dynamic>> dicePresets;
   final List<Map<String, dynamic>> dprProfiles;
   final List<Map<String, dynamic>> customSpells;
@@ -41,6 +44,7 @@ class AppBackupPayload {
     required this.schemaVersion,
     required this.exportedAt,
     required this.settings,
+    this.settingsWasMalformed = false,
     required this.dicePresets,
     required this.dprProfiles,
     this.customSpells = const [],
@@ -78,11 +82,17 @@ class AppBackupPayload {
       };
 
   factory AppBackupPayload.fromMap(Map<String, dynamic> map) {
+    final rawSettings = map['settings'];
+    final settingsWasMalformed =
+        map.containsKey('settings') && rawSettings != null && rawSettings is! Map;
     return AppBackupPayload(
       schemaVersion: (map['schemaVersion'] as num?)?.toInt() ?? 1,
       exportedAt: DateTime.tryParse(map['exportedAt']?.toString() ?? '') ??
           DateTime.now(),
-      settings: Map<String, dynamic>.from(map['settings'] as Map? ?? {}),
+      settings: rawSettings is Map
+          ? Map<String, dynamic>.from(rawSettings)
+          : const {},
+      settingsWasMalformed: settingsWasMalformed,
       dicePresets: (map['dicePresets'] as List? ?? [])
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
@@ -141,6 +151,7 @@ class AppBackupPayload {
 /// Diagnostic result of a full-app backup restoration
 class BackupRestoreResult {
   final bool success;
+  final int restoredSettingsCount;
   final int restoredPresetsCount;
   final int restoredDprProfilesCount;
   final int restoredHomebrewSpellsCount;
@@ -158,6 +169,7 @@ class BackupRestoreResult {
 
   const BackupRestoreResult({
     required this.success,
+    this.restoredSettingsCount = 0,
     this.restoredPresetsCount = 0,
     this.restoredDprProfilesCount = 0,
     this.restoredHomebrewSpellsCount = 0,
@@ -259,26 +271,7 @@ class AppBackupService {
     final payload = AppBackupPayload(
       schemaVersion: currentSchemaVersion,
       exportedAt: DateTime.now(),
-      settings: {
-        'themeMode': currentSettings.themeMode.name,
-        'fantasyAccent': currentSettings.fantasyAccent.name,
-        'oledPitchBlack': currentSettings.oledPitchBlack,
-        'hapticLevel': currentSettings.hapticLevel.name,
-        'wizardOrderingPreset': currentSettings.wizardOrderingPreset.name,
-        'enableCritFumbleFx': currentSettings.enableCritFumbleFx,
-        'enableSpellParticles': currentSettings.enableSpellParticles,
-        'enable3dDiceOverlays': currentSettings.enable3dDiceOverlays,
-        'enableGlyphAnimations': currentSettings.enableGlyphAnimations,
-        'performanceMode': currentSettings.performanceMode,
-        'rulesEdition': currentSettings.rulesEdition.name,
-        'pinnedRuleIds': currentSettings.pinnedRuleIds.toList(),
-        'pinnedSpellIds': currentSettings.pinnedSpellIds.toList(),
-        'pinnedMonsterIds': currentSettings.pinnedMonsterIds.toList(),
-        'pinnedItemIds': currentSettings.pinnedItemIds.toList(),
-        'pinnedFeatIds': currentSettings.pinnedFeatIds.toList(),
-        'pinnedClassIds': currentSettings.pinnedClassIds.toList(),
-        'pinnedRaceIds': currentSettings.pinnedRaceIds.toList(),
-      },
+      settings: encodeAppBackupSettings(currentSettings),
       dicePresets: customPresets.map((p) => p.toMap()).toList(),
       dprProfiles: dprProfiles.map((p) => p.toMap()).toList(),
       customSpells: customSpells.map((s) => s.toMap()).toList(),
@@ -330,6 +323,25 @@ class AppBackupService {
 
       int skippedCount = 0;
       final skipReasons = <String>[];
+
+      int settingsRestored = 0;
+      if (backup.settingsWasMalformed) {
+        skippedCount++;
+        skipReasons.add('settings: expected object');
+      } else if (backup.settings.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final base = SettingsProvider.hydrateFromPrefs(prefs);
+        final decodedSettings = decodeAppBackupSettings(
+          backup.settings,
+          base: base,
+        );
+        skippedCount += decodedSettings.skipped.length;
+        skipReasons.addAll(decodedSettings.skipped);
+        if (decodedSettings.appliedCount > 0) {
+          await SettingsProvider.writeToPrefs(prefs, decodedSettings.settings);
+        }
+        settingsRestored = decodedSettings.appliedCount;
+      }
 
       int presetsRestored = 0;
       for (int i = 0; i < backup.dicePresets.length; i++) {
@@ -552,6 +564,7 @@ class AppBackupService {
 
       return BackupRestoreResult(
         success: true,
+        restoredSettingsCount: settingsRestored,
         restoredPresetsCount: presetsRestored,
         restoredDprProfilesCount: profilesRestored,
         restoredHomebrewSpellsCount: spellsRestored,

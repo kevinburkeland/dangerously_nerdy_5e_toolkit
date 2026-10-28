@@ -11,9 +11,8 @@
 // inventory is a checked claim in legacy_inventory.dart.
 //
 // Note on LB1 settings restore: In Part 0 of Cleanup slice 4.1, AppBackupService.importFullBackupJson
-// (lib/services/persistence/app_backup_service.dart:322) parses backup.settings and ignores it, so LB1
-// records the 44 resulting settings losses across E1–E9, DB1, and DB2 in knownLosses (fixed in Part B
-// of Cleanup slice 4.1).
+// ignored backup.settings; this loss was fixed in Part B of Cleanup slice 4.1 via
+// app_backup_settings_codec.dart and SettingsProvider.writeToPrefs, so knownLosses is empty.
 
 import 'dart:convert';
 import 'dart:io';
@@ -26,6 +25,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/debounced_storage_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
 import 'legacy_fixture_derivations.dart';
 import 'legacy_fixture_support.dart';
@@ -47,30 +47,7 @@ const Map<String, String> kOptionalCampaignRecordKeys = {
 };
 
 /// Known losses registry. Must only shrink over time; stale entries fail the law.
-final List<KnownLoss> knownLosses = [
-  for (final backupId in [
-    'E1',
-    'E2',
-    'E3',
-    'E4',
-    'E5',
-    'E6',
-    'E7',
-    'E8',
-    'E9',
-    'DB1',
-    'DB2',
-  ])
-    for (final field in ['accent', 'haptic', 'rulesEdition', 'theme'])
-      KnownLoss(
-        id: 'KL-LB1-$backupId-settings.$field',
-        fixture: backupId,
-        check: 'LB1',
-        path: 'settings.$field',
-        reason:
-            'lib/services/persistence/app_backup_service.dart:322 (importFullBackupJson parses backup.settings and ignores it)',
-      ),
-];
+const List<KnownLoss> knownLosses = [];
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -623,6 +600,7 @@ void main() {
 
           await AppDatabaseService.instance.close();
         } finally {
+          DebouncedStorageService().cancelAllForTesting();
           try {
             await AppDatabaseService.instance.close();
           } catch (_) {}
@@ -738,6 +716,7 @@ void main() {
 
           await AppDatabaseService.instance.close();
         } finally {
+          DebouncedStorageService().cancelAllForTesting();
           try {
             await AppDatabaseService.instance.close();
           } catch (_) {}

@@ -595,9 +595,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (result == true && controller.text.trim().isNotEmpty && mounted) {
       final restoreResult =
           await AppBackupService().importFullBackupJson(controller.text);
+      if (restoreResult.success && mounted) {
+        await SettingsScope.of(context, listen: false).reloadFromPreferences();
+      }
       if (!mounted) return;
       if (restoreResult.success) {
         HapticService.mediumImpact(context);
+        final settingsSuffix =
+            restoreResult.restoredSettingsCount > 0 ? ', settings' : '';
         final homebrewCount = restoreResult.restoredHomebrewSpellsCount +
             restoreResult.restoredHomebrewMonstersCount +
             restoreResult.restoredHomebrewItemsCount;
@@ -609,7 +614,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Successfully restored ${restoreResult.restoredPresetsCount} presets, ${restoreResult.restoredDprProfilesCount} character builds$homebrewSuffix$skippedSuffix!',
+              'Successfully restored ${restoreResult.restoredPresetsCount} presets, ${restoreResult.restoredDprProfilesCount} character builds$settingsSuffix$homebrewSuffix$skippedSuffix!',
             ),
           ),
         );
