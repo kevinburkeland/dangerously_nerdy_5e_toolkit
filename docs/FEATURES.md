@@ -294,7 +294,7 @@
   - Immutable cache-first strategy for app shell assets (`index.html`, `flutter.js`, `main.dart.js`, `canvaskit/*`, wasm binaries) while strictly excluding APIs, external domains, and dynamic websocket streams to preserve IndexedDB as the singular offline authority.
 * **Web Lifecycle Management**:
   - Synchronous disk flush on `paused`, `inactive`, `detached`, or `hidden` lifecycle state changes to guarantee zero data loss on browser tab closes or mobile app switches.
-* **Comprehensive Backup & Restore**: Full JSON and atomic cold-storage backup export and import for campaigns, DM notes, custom homebrew bundles, and characters.
+* **Comprehensive Backup & Restore**: Full JSON and atomic cold-storage backup export and import (including user settings, theme, rules edition, and pinned compendium lists) for campaigns, DM notes, custom homebrew bundles, and characters.
 
 ---
 
