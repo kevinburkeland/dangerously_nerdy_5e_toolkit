@@ -215,7 +215,7 @@ final List<AppBackupSettingsField> kAppBackupSettingsFields = [
   AppBackupSettingsField.forStringSet(
     key: 'pinnedRaceIds',
     getter: (s) => s.pinnedRaceIds,
-    setter: (s, v) => s.copyWith(pinnedRaceIds: v),
+    setter: (s, v) => s.copyWith(pinnedClassIds: v),
   ),
 ];
 
