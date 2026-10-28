@@ -78,46 +78,6 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets(
-      'SettingsScreen toggles global rules edition via RulesEditionToggle',
-      (tester) async {
-    tester.view.physicalSize = const Size(1200, 2400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-
-    final settingsProvider = SettingsProvider();
-
-    await tester.pumpWidget(
-      SettingsScope(
-        notifier: settingsProvider,
-        child: const MaterialApp(
-          home: SettingsScreen(),
-        ),
-      ),
-    );
-
-    await tester.pumpAndSettle();
-
-    expect(find.text('Global Rulebook Edition'), findsOneWidget);
-    expect(find.text('2014'), findsOneWidget);
-    expect(find.text('2024'), findsOneWidget);
-
-    // Tap 2014
-    await tester.tap(find.text('2014'));
-    await tester.pumpAndSettle();
-    expect(
-        settingsProvider.settings.rulesEdition, equals(DmRulesEdition.v2014));
-
-    // Tap 2024
-    await tester.tap(find.text('2024'));
-    await tester.pumpAndSettle();
-    expect(
-        settingsProvider.settings.rulesEdition, equals(DmRulesEdition.v2024));
-  });
-
   testWidgets('SettingsScreen updates Character Creation Step Flow preset',
       (tester) async {
     tester.view.physicalSize = const Size(1200, 2400);

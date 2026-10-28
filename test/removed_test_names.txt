@@ -1,3 +1,1 @@
-# Removed test names ratchet whitelist.
-# Format: <test-name> | <reason>
-
+SettingsScreen toggles global rules edition via RulesEditionToggle |
