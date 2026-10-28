@@ -52,6 +52,22 @@ List<String> checkAppSettingsKeySetParity(
   return problems;
 }
 
+/// Counts occurrences of each settings key as a string literal ('key' or "key") in [sourceText],
+/// returning one problem per key whose count != 1.
+List<String> checkSettingsCodecKeyLiteralOccurrences(String sourceText) {
+  final problems = <String>[];
+  for (final key in kAppBackupSettingsKeys) {
+    final pattern = RegExp("['\"]${RegExp.escape(key)}['\"]");
+    final count = pattern.allMatches(sourceText).length;
+    if (count != 1) {
+      problems.add(
+        'Settings key "$key" appears $count times as string literal in codec source (expected exactly 1)',
+      );
+    }
+  }
+  return problems;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -113,5 +129,29 @@ void main() {
         checkAppSettingsKeySetParity(withoutOled, kAppBackupSettingsKeys);
     expect(problemsMinus, hasLength(1));
     expect(problemsMinus.single, contains('oledPitchBlack'));
+  });
+
+  test('SR6: Source bar: each of the 18 settings keys appears exactly once as a string literal in the codec file', () {
+    final source = File('lib/services/persistence/app_backup_settings_codec.dart')
+        .readAsStringSync();
+    final problems = checkSettingsCodecKeyLiteralOccurrences(source);
+    expect(problems, isEmpty, reason: problems.join('\n'));
+  });
+
+  test('SR6c: Control: checkSettingsCodecKeyLiteralOccurrences fails on extra themeMode and missing pinnedRaceIds', () {
+    final source = File('lib/services/persistence/app_backup_settings_codec.dart')
+        .readAsStringSync();
+
+    final withExtra = "$source\n  const dummy = 'themeMode';\n";
+    final problemsPlus = checkSettingsCodecKeyLiteralOccurrences(withExtra);
+    expect(problemsPlus, hasLength(1));
+    expect(problemsPlus.single, contains('themeMode'));
+
+    final withoutPinnedRace =
+        source.replaceAll("'pinnedRaceIds'", "'ignored'");
+    final problemsMinus =
+        checkSettingsCodecKeyLiteralOccurrences(withoutPinnedRace);
+    expect(problemsMinus, hasLength(1));
+    expect(problemsMinus.single, contains('pinnedRaceIds'));
   });
 }
