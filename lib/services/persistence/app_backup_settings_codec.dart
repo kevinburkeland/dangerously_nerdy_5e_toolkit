@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../models/app_settings.dart';
 import '../../models/dm_screen_data.dart';
 
-/// Canonical set of 18 settings keys exported and restored by full app backups.
+/// Canonical list of 18 settings keys exported and restored by full app backups, in export order.
 /// Intentionally excludes device-local `bypassedHomebrewSlugs`.
-const Set<String> kAppBackupSettingsKeys = {
+const List<String> kAppBackupSettingsKeys = [
   'themeMode',
   'fantasyAccent',
   'oledPitchBlack',
@@ -23,7 +23,7 @@ const Set<String> kAppBackupSettingsKeys = {
   'pinnedFeatIds',
   'pinnedClassIds',
   'pinnedRaceIds',
-};
+];
 
 /// Result of decoding a backup's `settings` map onto an existing [AppSettings] base.
 class AppBackupSettingsDecodeResult {
@@ -68,12 +68,11 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
   Map<String, dynamic> raw, {
   required AppSettings base,
 }) {
-  var current = base;
   var appliedCount = 0;
   final skipped = <String>[];
 
   T? parseEnum<T extends Enum>(String key, List<T> values) {
-    if (!raw.containsKey(key) || raw[key] == null) return null;
+    if (!raw.containsKey(key)) return null;
     final val = raw[key];
     if (val is String) {
       for (final candidate in values) {
@@ -88,7 +87,7 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
   }
 
   bool? parseBool(String key) {
-    if (!raw.containsKey(key) || raw[key] == null) return null;
+    if (!raw.containsKey(key)) return null;
     final val = raw[key];
     if (val is bool) {
       appliedCount++;
@@ -99,27 +98,23 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
   }
 
   Set<String>? parseStringSet(String key) {
-    if (!raw.containsKey(key) || raw[key] == null) return null;
+    if (!raw.containsKey(key)) return null;
     final val = raw[key];
     if (val is! List) {
       skipped.add('settings.$key: expected List, got ${val.runtimeType}');
       return null;
     }
     final valid = <String>{};
-    var badCount = 0;
     for (final element in val) {
-      if (element is String && element.isNotEmpty) {
-        valid.add(element);
-      } else {
-        badCount++;
+      if (element is! String) {
+        skipped.add(
+          'settings.$key: expected List<String>, found ${element.runtimeType}',
+        );
+        return null;
       }
+      valid.add(element);
     }
     appliedCount++;
-    if (badCount > 0) {
-      skipped.add(
-        'settings.$key: dropped $badCount non-string or empty element(s)',
-      );
-    }
     return valid;
   }
 
@@ -143,7 +138,7 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
   final pinnedClassIds = parseStringSet('pinnedClassIds');
   final pinnedRaceIds = parseStringSet('pinnedRaceIds');
 
-  current = AppSettings(
+  final current = AppSettings(
     themeMode: themeMode ?? base.themeMode,
     fantasyAccent: fantasyAccent ?? base.fantasyAccent,
     oledPitchBlack: oledPitchBlack ?? base.oledPitchBlack,

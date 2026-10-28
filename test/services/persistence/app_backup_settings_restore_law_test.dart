@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/custom_preset.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/debounced_storage_service.dart';
@@ -11,13 +10,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persi
 import 'package:dangerously_nerdy_5e_toolkit/services/preset_service.dart';
 import 'app_backup_settings_test_support.dart';
 
-int _readRestoredSettingsCount(BackupRestoreResult result) {
-  try {
-    return (result as dynamic).restoredSettingsCount as int;
-  } on NoSuchMethodError {
-    return 0;
-  }
-}
+const String kExpectedDefaultExportSettingsJson =
+    '{"themeMode":"dark","fantasyAccent":"paladinGold","oledPitchBlack":false,"hapticLevel":"light","wizardOrderingPreset":"classic2014","enableCritFumbleFx":true,"enableSpellParticles":true,"enable3dDiceOverlays":true,"enableGlyphAnimations":true,"performanceMode":false,"rulesEdition":"v2024","pinnedRuleIds":[],"pinnedSpellIds":[],"pinnedMonsterIds":[],"pinnedItemIds":[],"pinnedFeatIds":[],"pinnedClassIds":[],"pinnedRaceIds":[]}';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,91 +33,59 @@ void main() {
         await AppBackupService().exportFullBackupJson(const AppSettings());
     final decoded = json.decode(jsonStr) as Map<String, dynamic>;
     expect(
-      decoded['settings'],
-      equals(const <String, dynamic>{
-        'themeMode': 'dark',
-        'fantasyAccent': 'paladinGold',
-        'oledPitchBlack': false,
-        'hapticLevel': 'light',
-        'wizardOrderingPreset': 'classic2014',
-        'enableCritFumbleFx': true,
-        'enableSpellParticles': true,
-        'enable3dDiceOverlays': true,
-        'enableGlyphAnimations': true,
-        'performanceMode': false,
-        'rulesEdition': 'v2024',
-        'pinnedRuleIds': <dynamic>[],
-        'pinnedSpellIds': <dynamic>[],
-        'pinnedMonsterIds': <dynamic>[],
-        'pinnedItemIds': <dynamic>[],
-        'pinnedFeatIds': <dynamic>[],
-        'pinnedClassIds': <dynamic>[],
-        'pinnedRaceIds': <dynamic>[],
-      }),
+      jsonEncode(decoded['settings']),
+      equals(kExpectedDefaultExportSettingsJson),
     );
   });
 
-  test('SR1: Full 18-field round-trip and bypassedHomebrewSlugs preservation',
-      () async {
-    final backupJson = await AppBackupService()
-        .exportFullBackupJson(kDistinctNonDefaultSettings);
+  test('SR1: Round-trip law over seeds 0..24 through AppBackupService', () async {
+    for (var seed = 0; seed <= 24; seed++) {
+      SharedPreferences.setMockInitialValues({});
+      PresetService().clearCacheForTesting();
+      HomebrewPersistenceService().invalidateAllCaches();
+      await HomebrewPersistenceService().clearAllHomebrew();
 
-    // Inject an attacker bypassedHomebrewSlugs into the backup JSON to verify it is ignored
-    final map = json.decode(backupJson) as Map<String, dynamic>;
-    final settingsMap = Map<String, dynamic>.from(map['settings'] as Map);
-    settingsMap['bypassedHomebrewSlugs'] = ['hb_attacker'];
-    map['settings'] = settingsMap;
+      final s = randomSettings(seed);
+      final opp = opposite(s);
 
-    // Reset SharedPreferences to const AppSettings() with bypassedHomebrewSlugs: {'hb_keep_me'}
-    final seedSettings =
-        const AppSettings().copyWith(bypassedHomebrewSlugs: {'hb_keep_me'});
-    final provider = SettingsProvider(
-      initialSettings: seedSettings,
-      autoLoad: false,
-    );
-    await provider.updateSettings(seedSettings);
+      final provider = SettingsProvider(
+        initialSettings: opp,
+        autoLoad: false,
+      );
+      await provider.updateSettings(opp);
 
-    final result =
-        await AppBackupService().importFullBackupJson(json.encode(map));
-    expect(result.success, isTrue);
-    expect(_readRestoredSettingsCount(result), equals(18));
-    expect(result.skippedCount, equals(0));
+      final backupJson = await AppBackupService().exportFullBackupJson(s);
+      final result = await AppBackupService().importFullBackupJson(backupJson);
+      expect(result.success, isTrue, reason: 'seed $seed: restore failed');
 
-    final prefs = await SharedPreferences.getInstance();
-    final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
-    expect(hydrated, equals(kDistinctNonDefaultSettings));
-    expect(hydrated.bypassedHomebrewSlugs, equals({'hb_keep_me'}));
+      final prefs = await SharedPreferences.getInstance();
+      final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
+      final expected = s.copyWith(
+        bypassedHomebrewSlugs: opp.bypassedHomebrewSlugs,
+      );
+      final diff = firstSettingsDiff(expected, hydrated);
+      expect(
+        diff,
+        isNull,
+        reason: 'seed $seed: first differing field: $diff',
+      );
+    }
   });
 
   group('SR3: Partial, missing, and malformed settings in backup', () {
-    Future<SharedPreferences> seedNonDefaultPrefs() async {
+    const c = kKnownNonDefaultSettings;
+
+    Future<SharedPreferences> seedKnownPrefs() async {
       final provider = SettingsProvider(
-        initialSettings: kDistinctNonDefaultSettings,
+        initialSettings: c,
         autoLoad: false,
       );
-      await provider.updateSettings(kDistinctNonDefaultSettings);
+      await provider.updateSettings(c);
       return SharedPreferences.getInstance();
     }
 
-    test('Case 1: "settings" key absent from backup JSON', () async {
-      final prefs = await seedNonDefaultPrefs();
-      final result = await AppBackupService().importFullBackupJson(
-        json.encode({
-          'schemaVersion': 3,
-          'exportedAt': '2026-01-01T00:00:00.000Z',
-        }),
-      );
-      expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(0));
-      expect(result.skippedCount, equals(0));
-      expect(
-        SettingsProvider.hydrateFromPrefs(prefs),
-        equals(kDistinctNonDefaultSettings),
-      );
-    });
-
-    test('Case 2: "settings": {} empty object', () async {
-      final prefs = await seedNonDefaultPrefs();
+    test('Case 1: settings: {} -> settings equal c, no skips', () async {
+      final prefs = await seedKnownPrefs();
       final result = await AppBackupService().importFullBackupJson(
         json.encode({
           'schemaVersion': 3,
@@ -132,177 +94,200 @@ void main() {
         }),
       );
       expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(0));
       expect(result.skippedCount, equals(0));
-      expect(
-        SettingsProvider.hydrateFromPrefs(prefs),
-        equals(kDistinctNonDefaultSettings),
-      );
+      expect(result.skipReasons, isEmpty);
+      final diff = firstSettingsDiff(c, SettingsProvider.hydrateFromPrefs(prefs));
+      expect(diff, isNull, reason: 'unexpected settings diff: $diff');
     });
 
-    test('Case 3: "settings": "not-a-map" skips settings and still restores dicePresets', () async {
-      final prefs = await seedNonDefaultPrefs();
-      final preset = CustomPreset(
-        id: 'preset_sr3_c3',
-        name: 'SR3 Preset',
-        count: 2,
-        modifier: 3,
-      );
+    test('Case 2: settings: {themeMode: light} only -> only themeMode changes; every other field equals c',
+        () async {
+      final prefs = await seedKnownPrefs();
       final result = await AppBackupService().importFullBackupJson(
         json.encode({
           'schemaVersion': 3,
           'exportedAt': '2026-01-01T00:00:00.000Z',
-          'settings': 'not-a-map',
-          'dicePresets': [preset.toMap()],
+          'settings': {'themeMode': 'light'},
         }),
       );
       expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(0));
-      expect(result.skippedCount, equals(1));
-      expect(result.skipReasons, contains('settings: expected object'));
-      expect(result.restoredPresetsCount, equals(1));
-      expect(
-        SettingsProvider.hydrateFromPrefs(prefs),
-        equals(kDistinctNonDefaultSettings),
-      );
-    });
-
-    test('Case 4: "settings": {"themeMode": "dark"} updates only themeMode', () async {
-      final prefs = await seedNonDefaultPrefs();
-      final result = await AppBackupService().importFullBackupJson(
-        json.encode({
-          'schemaVersion': 3,
-          'exportedAt': '2026-01-01T00:00:00.000Z',
-          'settings': {'themeMode': 'dark'},
-        }),
-      );
-      expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(1));
       expect(result.skippedCount, equals(0));
-      expect(
-        SettingsProvider.hydrateFromPrefs(prefs),
-        equals(kDistinctNonDefaultSettings.copyWith(themeMode: ThemeMode.dark)),
-      );
+      expect(result.skipReasons, isEmpty);
+      final expected = c.copyWith(themeMode: ThemeMode.light);
+      final diff =
+          firstSettingsDiff(expected, SettingsProvider.hydrateFromPrefs(prefs));
+      expect(diff, isNull, reason: 'unexpected settings diff: $diff');
     });
 
-    test('Case 5: unknown enum name skips bad field and applies valid field', () async {
-      final base = kDistinctNonDefaultSettings.copyWith(oledPitchBlack: false);
-      final provider = SettingsProvider(initialSettings: base, autoLoad: false);
-      await provider.updateSettings(base);
-      final prefs = await SharedPreferences.getInstance();
-
+    test('Case 3: fantasyAccent: neonPink -> accent equals c, one skip reason starting with settings.fantasyAccent:',
+        () async {
+      final prefs = await seedKnownPrefs();
       final result = await AppBackupService().importFullBackupJson(
         json.encode({
           'schemaVersion': 3,
           'exportedAt': '2026-01-01T00:00:00.000Z',
-          'settings': {'themeMode': 'neon', 'oledPitchBlack': true},
+          'settings': {'fantasyAccent': 'neonPink'},
         }),
       );
       expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(1));
       expect(result.skippedCount, equals(1));
-      expect(
-        result.skipReasons.any((r) => r.startsWith('settings.themeMode:')),
-        isTrue,
-      );
+      expect(result.skipReasons, hasLength(1));
+      expect(result.skipReasons.single, startsWith('settings.fantasyAccent:'));
       final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
-      expect(hydrated.themeMode, equals(ThemeMode.light));
-      expect(hydrated.oledPitchBlack, isTrue);
+      expect(hydrated.fantasyAccent, equals(c.fantasyAccent));
+      final diff = firstSettingsDiff(c, hydrated);
+      expect(diff, isNull, reason: 'unexpected settings diff: $diff');
     });
 
-    test('Case 6: wrong type for bool skips bad field and applies valid field', () async {
-      final base = kDistinctNonDefaultSettings.copyWith(
-        oledPitchBlack: false,
-        performanceMode: false,
-      );
-      final provider = SettingsProvider(initialSettings: base, autoLoad: false);
-      await provider.updateSettings(base);
-      final prefs = await SharedPreferences.getInstance();
+    group('Case 4: Wrong types, one case each', () {
+      test('themeMode: 3 -> equals c, one skip naming settings.themeMode',
+          () async {
+        final prefs = await seedKnownPrefs();
+        final result = await AppBackupService().importFullBackupJson(
+          json.encode({
+            'schemaVersion': 3,
+            'exportedAt': '2026-01-01T00:00:00.000Z',
+            'settings': {'themeMode': 3},
+          }),
+        );
+        expect(result.success, isTrue);
+        expect(result.skippedCount, equals(1));
+        expect(result.skipReasons, hasLength(1));
+        expect(result.skipReasons.single, contains('settings.themeMode'));
+        final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
+        expect(hydrated.themeMode, equals(c.themeMode));
+      });
 
+      test('oledPitchBlack: "true" -> equals c, one skip naming settings.oledPitchBlack',
+          () async {
+        final prefs = await seedKnownPrefs();
+        final result = await AppBackupService().importFullBackupJson(
+          json.encode({
+            'schemaVersion': 3,
+            'exportedAt': '2026-01-01T00:00:00.000Z',
+            'settings': {'oledPitchBlack': 'true'},
+          }),
+        );
+        expect(result.success, isTrue);
+        expect(result.skippedCount, equals(1));
+        expect(result.skipReasons, hasLength(1));
+        expect(result.skipReasons.single, contains('settings.oledPitchBlack'));
+        final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
+        expect(hydrated.oledPitchBlack, equals(c.oledPitchBlack));
+      });
+
+      test('pinnedRuleIds: "rule_stealth" -> equals c, one skip naming settings.pinnedRuleIds',
+          () async {
+        final prefs = await seedKnownPrefs();
+        final result = await AppBackupService().importFullBackupJson(
+          json.encode({
+            'schemaVersion': 3,
+            'exportedAt': '2026-01-01T00:00:00.000Z',
+            'settings': {'pinnedRuleIds': 'rule_stealth'},
+          }),
+        );
+        expect(result.success, isTrue);
+        expect(result.skippedCount, equals(1));
+        expect(result.skipReasons, hasLength(1));
+        expect(result.skipReasons.single, contains('settings.pinnedRuleIds'));
+        final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
+        expect(hydrated.pinnedRuleIds, equals(c.pinnedRuleIds));
+      });
+
+      test('pinnedSpellIds: ["ok", 7] -> equals c, one skip naming settings.pinnedSpellIds',
+          () async {
+        final prefs = await seedKnownPrefs();
+        final result = await AppBackupService().importFullBackupJson(
+          json.encode({
+            'schemaVersion': 3,
+            'exportedAt': '2026-01-01T00:00:00.000Z',
+            'settings': {
+              'pinnedSpellIds': ['ok', 7],
+            },
+          }),
+        );
+        expect(result.success, isTrue);
+        expect(result.skippedCount, equals(1));
+        expect(result.skipReasons, hasLength(1));
+        expect(result.skipReasons.single, contains('settings.pinnedSpellIds'));
+        final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
+        expect(hydrated.pinnedSpellIds, equals(c.pinnedSpellIds));
+      });
+    });
+
+    test('Case 5: rulesEdition: generic_tabletop -> edition equals c, one skip naming settings.rulesEdition',
+        () async {
+      final prefs = await seedKnownPrefs();
       final result = await AppBackupService().importFullBackupJson(
         json.encode({
           'schemaVersion': 3,
           'exportedAt': '2026-01-01T00:00:00.000Z',
-          'settings': {'oledPitchBlack': 'yes', 'performanceMode': true},
+          'settings': {'rulesEdition': 'generic_tabletop'},
         }),
       );
       expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(1));
       expect(result.skippedCount, equals(1));
-      expect(
-        result.skipReasons.any((r) => r.startsWith('settings.oledPitchBlack:')),
-        isTrue,
-      );
+      expect(result.skipReasons, hasLength(1));
+      expect(result.skipReasons.single, contains('settings.rulesEdition'));
       final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
-      expect(hydrated.oledPitchBlack, isFalse);
-      expect(hydrated.performanceMode, isTrue);
+      expect(hydrated.rulesEdition, equals(c.rulesEdition));
     });
 
-    test('Case 7: wrong type for list skips pinnedSpellIds', () async {
-      final prefs = await seedNonDefaultPrefs();
+    test('Case 6: unknown future key (futureSetting: true) -> no change, no skip',
+        () async {
+      final prefs = await seedKnownPrefs();
       final result = await AppBackupService().importFullBackupJson(
         json.encode({
           'schemaVersion': 3,
           'exportedAt': '2026-01-01T00:00:00.000Z',
-          'settings': {'pinnedSpellIds': 'fireball'},
+          'settings': {'futureSetting': true},
         }),
       );
       expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(0));
-      expect(result.skippedCount, equals(1));
-      expect(
-        result.skipReasons.any((r) => r.startsWith('settings.pinnedSpellIds:')),
-        isTrue,
-      );
-      expect(
-        SettingsProvider.hydrateFromPrefs(prefs).pinnedSpellIds,
-        equals(kDistinctNonDefaultSettings.pinnedSpellIds),
-      );
-    });
-
-    test('Case 8: non-string and empty element in list keeps valid elements and records skip', () async {
-      final prefs = await seedNonDefaultPrefs();
-      final result = await AppBackupService().importFullBackupJson(
-        json.encode({
-          'schemaVersion': 3,
-          'exportedAt': '2026-01-01T00:00:00.000Z',
-          'settings': {
-            'pinnedSpellIds': ['acid_arrow', 42, ''],
-          },
-        }),
-      );
-      expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(1));
-      expect(result.skippedCount, equals(1));
-      expect(
-        result.skipReasons.any((r) => r.startsWith('settings.pinnedSpellIds:')),
-        isTrue,
-      );
-      expect(
-        SettingsProvider.hydrateFromPrefs(prefs).pinnedSpellIds,
-        equals({'acid_arrow'}),
-      );
-    });
-
-    test('Case 9: unknown future key is ignored without skip error', () async {
-      final prefs = await seedNonDefaultPrefs();
-      final result = await AppBackupService().importFullBackupJson(
-        json.encode({
-          'schemaVersion': 3,
-          'exportedAt': '2026-01-01T00:00:00.000Z',
-          'settings': {
-            'futureSettingFrom2027': true,
-            'themeMode': 'dark',
-          },
-        }),
-      );
-      expect(result.success, isTrue);
-      expect(_readRestoredSettingsCount(result), equals(1));
       expect(result.skippedCount, equals(0));
-      expect(
-        SettingsProvider.hydrateFromPrefs(prefs).themeMode,
-        equals(ThemeMode.dark),
+      expect(result.skipReasons, isEmpty);
+      final diff = firstSettingsDiff(c, SettingsProvider.hydrateFromPrefs(prefs));
+      expect(diff, isNull, reason: 'unexpected settings diff: $diff');
+    });
+
+    test('Case 7: schemaVersion: 4 with valid different settings -> import fails and settings equal c',
+        () async {
+      final prefs = await seedKnownPrefs();
+      final different = opposite(c);
+      final exportedDifferent =
+          await AppBackupService().exportFullBackupJson(different);
+      final decoded = json.decode(exportedDifferent) as Map<String, dynamic>;
+      decoded['schemaVersion'] = 4;
+
+      final result =
+          await AppBackupService().importFullBackupJson(json.encode(decoded));
+      expect(result.success, isFalse);
+      final diff = firstSettingsDiff(c, SettingsProvider.hydrateFromPrefs(prefs));
+      expect(diff, isNull, reason: 'unexpected settings diff: $diff');
+    });
+
+    test('Case 8: valid backup with one malformed customSpells record and all different settings -> malformed record skipped and every setting applied',
+        () async {
+      final prefs = await seedKnownPrefs();
+      final different = opposite(c);
+      final exportedDifferent =
+          await AppBackupService().exportFullBackupJson(different);
+      final decoded = json.decode(exportedDifferent) as Map<String, dynamic>;
+      decoded['customSpells'] = [
+        {'level': 'not_an_int_and_missing_required_fields'},
+      ];
+
+      final result =
+          await AppBackupService().importFullBackupJson(json.encode(decoded));
+      expect(result.success, isTrue);
+      expect(result.skippedCount, equals(1));
+      expect(result.skipReasons.single, startsWith('customSpells[0]:'));
+      final expected = different.copyWith(
+        bypassedHomebrewSlugs: c.bypassedHomebrewSlugs,
       );
+      final diff =
+          firstSettingsDiff(expected, SettingsProvider.hydrateFromPrefs(prefs));
+      expect(diff, isNull, reason: 'unexpected settings diff: $diff');
     });
   });
 }

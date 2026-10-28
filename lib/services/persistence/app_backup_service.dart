@@ -24,7 +24,6 @@ class AppBackupPayload {
   final int schemaVersion;
   final DateTime exportedAt;
   final Map<String, dynamic> settings;
-  final bool settingsWasMalformed;
   final List<Map<String, dynamic>> dicePresets;
   final List<Map<String, dynamic>> dprProfiles;
   final List<Map<String, dynamic>> customSpells;
@@ -44,7 +43,6 @@ class AppBackupPayload {
     required this.schemaVersion,
     required this.exportedAt,
     required this.settings,
-    this.settingsWasMalformed = false,
     required this.dicePresets,
     required this.dprProfiles,
     this.customSpells = const [],
@@ -82,17 +80,11 @@ class AppBackupPayload {
       };
 
   factory AppBackupPayload.fromMap(Map<String, dynamic> map) {
-    final rawSettings = map['settings'];
-    final settingsWasMalformed =
-        map.containsKey('settings') && rawSettings != null && rawSettings is! Map;
     return AppBackupPayload(
       schemaVersion: (map['schemaVersion'] as num?)?.toInt() ?? 1,
       exportedAt: DateTime.tryParse(map['exportedAt']?.toString() ?? '') ??
           DateTime.now(),
-      settings: rawSettings is Map
-          ? Map<String, dynamic>.from(rawSettings)
-          : const {},
-      settingsWasMalformed: settingsWasMalformed,
+      settings: Map<String, dynamic>.from(map['settings'] as Map? ?? {}),
       dicePresets: (map['dicePresets'] as List? ?? [])
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
@@ -324,25 +316,6 @@ class AppBackupService {
       int skippedCount = 0;
       final skipReasons = <String>[];
 
-      int settingsRestored = 0;
-      if (backup.settingsWasMalformed) {
-        skippedCount++;
-        skipReasons.add('settings: expected object');
-      } else if (backup.settings.isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
-        final base = SettingsProvider.hydrateFromPrefs(prefs);
-        final decodedSettings = decodeAppBackupSettings(
-          backup.settings,
-          base: base,
-        );
-        skippedCount += decodedSettings.skipped.length;
-        skipReasons.addAll(decodedSettings.skipped);
-        if (decodedSettings.appliedCount > 0) {
-          await SettingsProvider.writeToPrefs(prefs, decodedSettings.settings);
-        }
-        settingsRestored = decodedSettings.appliedCount;
-      }
-
       int presetsRestored = 0;
       for (int i = 0; i < backup.dicePresets.length; i++) {
         final rawPreset = backup.dicePresets[i];
@@ -561,6 +534,17 @@ class AppBackupService {
         fluffData: backup.fluffData,
         userNotesData: backup.userNotesData,
       );
+
+      final prefs = await SharedPreferences.getInstance();
+      final base = SettingsProvider.hydrateFromPrefs(prefs);
+      final decodedSettings = decodeAppBackupSettings(
+        backup.settings,
+        base: base,
+      );
+      skippedCount += decodedSettings.skipped.length;
+      skipReasons.addAll(decodedSettings.skipped);
+      await SettingsProvider.writeToPrefs(prefs, decodedSettings.settings);
+      final int settingsRestored = decodedSettings.appliedCount;
 
       return BackupRestoreResult(
         success: true,

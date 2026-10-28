@@ -1,11 +1,16 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
-import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_settings_codec.dart';
 import 'app_backup_settings_test_support.dart';
 
+/// Named exclusion constant for [AppSettings] fields that are intentionally not backed up.
+const Map<String, String> kExcludedAppSettingsFields = {
+  'bypassedHomebrewSlugs':
+      'never exported; adding it would change the backup format',
+};
+
+/// Extracts the `final` field names declared in `class AppSettings` from [sourceText].
 Set<String> extractAppSettingsFieldNames(String sourceText) {
   final classMatch = RegExp(
     r'class\s+AppSettings\s*\{([\s\S]*?)^\}',
@@ -15,25 +20,34 @@ Set<String> extractAppSettingsFieldNames(String sourceText) {
     throw StateError('class AppSettings not found in source');
   }
   final body = classMatch.group(1)!;
-  final fieldRegex = RegExp(r'^\s*final\s+[\w<>?,\s]+\s+(\w+)\s*;', multiLine: true);
+  final fieldRegex =
+      RegExp(r'^\s*final\s+[\w<>?,\s]+\s+(\w+)\s*;', multiLine: true);
   return fieldRegex.allMatches(body).map((m) => m.group(1)!).toSet();
 }
 
-List<String> checkAppSettingsKeySetParity(String appSettingsSource) {
-  final fieldNames = extractAppSettingsFieldNames(appSettingsSource);
+/// Compares [declaredFieldNames] against [codecKeys] plus [kExcludedAppSettingsFields],
+/// returning one problem per missing or extra field name.
+List<String> checkAppSettingsKeySetParity(
+  Set<String> declaredFieldNames,
+  Iterable<String> codecKeys,
+) {
   final problems = <String>[];
-  final unbacked = fieldNames.difference(kAppBackupSettingsKeys);
-  if (unbacked.length != 1 || !unbacked.contains('bypassedHomebrewSlugs')) {
-    final unexpected = unbacked.difference(const {'bypassedHomebrewSlugs'});
-    problems.add(
-      'AppSettings fields not in kAppBackupSettingsKeys (expected only bypassedHomebrewSlugs): $unbacked (unexpected: $unexpected)',
-    );
+  final codecKeySet = codecKeys.toSet();
+  final expectedSet = {...codecKeySet, ...kExcludedAppSettingsFields.keys};
+
+  for (final field in declaredFieldNames) {
+    if (!expectedSet.contains(field)) {
+      problems.add(
+        'AppSettings field "$field" is neither in kAppBackupSettingsKeys nor in kExcludedAppSettingsFields',
+      );
+    }
   }
-  final extraKeys = kAppBackupSettingsKeys.difference(fieldNames);
-  if (extraKeys.isNotEmpty) {
-    problems.add(
-      'kAppBackupSettingsKeys contains keys not on AppSettings: $extraKeys',
-    );
+  for (final key in expectedSet) {
+    if (!declaredFieldNames.contains(key)) {
+      problems.add(
+        'Codec or exclusion key "$key" is not declared on class AppSettings',
+      );
+    }
   }
   return problems;
 }
@@ -41,79 +55,63 @@ List<String> checkAppSettingsKeySetParity(String appSettingsSource) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('SR2: Every single field in kAppBackupSettingsKeys is wired (18-case loop)', () {
-    for (final key in kAppBackupSettingsKeys) {
-      test('Field "$key" is wired through decode, writeToPrefs, and hydrateFromPrefs',
-          () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
+  test('SR2: Codec round-trip law over seeds 0..199', () {
+    for (var seed = 0; seed <= 199; seed++) {
+      final s = randomSettings(seed);
+      final opp = opposite(s);
 
-        final m = encodeAppBackupSettings(const AppSettings());
-        final distinctMap =
-            encodeAppBackupSettings(kDistinctNonDefaultSettings);
-        final singleKeyMap = <String, dynamic>{
-          key: distinctMap[key],
-        };
-        m[key] = distinctMap[key];
+      final exported = encodeAppBackupSettings(s);
+      final roundTrippedMap =
+          jsonDecode(jsonEncode(exported)) as Map<String, dynamic>;
+      final decoded = decodeAppBackupSettings(
+        roundTrippedMap,
+        base: opp,
+      );
 
-        // 1. Decode single changed key onto const AppSettings()
-        final decoded = decodeAppBackupSettings(
-          singleKeyMap,
-          base: const AppSettings(),
-        );
-        expect(
-          decoded.appliedCount,
-          equals(1),
-          reason: 'Field "$key" was not counted as applied',
-        );
-        expect(
-          decoded.skipped,
-          isEmpty,
-          reason: 'Field "$key" was unexpectedly skipped: ${decoded.skipped}',
-        );
-        expect(
-          decoded.settings,
-          isNot(equals(const AppSettings())),
-          reason:
-              'Field "$key" is not wired in decodeAppBackupSettings (settings remained const AppSettings())',
-        );
-
-        // 2. Also verify full 18-key map with only key modified differs only in key
-        final decodedFromFull = decodeAppBackupSettings(
-          m,
-          base: const AppSettings(),
-        );
-        expect(decodedFromFull.appliedCount, equals(18));
-        expect(decodedFromFull.skipped, isEmpty);
-        expect(decodedFromFull.settings, equals(decoded.settings));
-
-        // 3. Persist via writeToPrefs and verify hydrateFromPrefs matches
-        await SettingsProvider.writeToPrefs(prefs, decoded.settings);
-        final hydrated = SettingsProvider.hydrateFromPrefs(prefs);
-        expect(
-          hydrated,
-          equals(decoded.settings),
-          reason:
-              'Field "$key" did not round-trip through writeToPrefs/hydrateFromPrefs',
-        );
-      });
+      final expected = s.copyWith(
+        bypassedHomebrewSlugs: opp.bypassedHomebrewSlugs,
+      );
+      final diff = firstSettingsDiff(expected, decoded.settings);
+      expect(
+        diff,
+        isNull,
+        reason: 'seed $seed: first differing field: $diff',
+      );
+      expect(
+        decoded.skipped,
+        isEmpty,
+        reason: 'seed $seed: unexpected skip reasons: ${decoded.skipped}',
+      );
+      expect(
+        decoded.appliedCount,
+        equals(18),
+        reason: 'seed $seed: expected 18 applied settings, got ${decoded.appliedCount}',
+      );
     }
   });
 
-  test('SR4: Key-set parity between AppSettings fields and kAppBackupSettingsKeys', () {
+  test('SR4: Source bar comparing AppSettings fields against kAppBackupSettingsKeys + exclusion constant', () {
     final source = File('lib/models/app_settings.dart').readAsStringSync();
-    final problems = checkAppSettingsKeySetParity(source);
+    final declaredFields = extractAppSettingsFieldNames(source);
+    final problems =
+        checkAppSettingsKeySetParity(declaredFields, kAppBackupSettingsKeys);
     expect(problems, isEmpty, reason: problems.join('\n'));
   });
 
-  test('SR4c: Control: injecting final bool unbackedField; into AppSettings fails parity check', () {
+  test('SR4c: Control: checkAppSettingsKeySetParity fails on madeUpField and missing oledPitchBlack', () {
     final source = File('lib/models/app_settings.dart').readAsStringSync();
-    final injected = source.replaceFirst(
-      'class AppSettings {',
-      'class AppSettings {\n  final bool unbackedField;',
-    );
-    final problems = checkAppSettingsKeySetParity(injected);
-    expect(problems, isNotEmpty);
-    expect(problems.join('\n'), contains('unbackedField'));
+    final declaredFields = extractAppSettingsFieldNames(source);
+
+    final withMadeUp = {...declaredFields, 'madeUpField'};
+    final problemsPlus =
+        checkAppSettingsKeySetParity(withMadeUp, kAppBackupSettingsKeys);
+    expect(problemsPlus, hasLength(1));
+    expect(problemsPlus.single, contains('madeUpField'));
+
+    final withoutOled = {...declaredFields}..remove('oledPitchBlack');
+    final problemsMinus =
+        checkAppSettingsKeySetParity(withoutOled, kAppBackupSettingsKeys);
+    expect(problemsMinus, hasLength(1));
+    expect(problemsMinus.single, contains('oledPitchBlack'));
   });
 }
