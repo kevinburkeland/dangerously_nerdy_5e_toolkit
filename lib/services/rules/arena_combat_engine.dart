@@ -3366,13 +3366,15 @@ class ArenaCombatEngine {
     final immune = immunities.isNotEmpty &&
         (immunities.contains(dmgLower) || immunities.contains('all'));
 
-    // Check Resistance (Flooded Abyss grants natural fire resistance to submerged creatures)
-    final resistances = (sb.damageResistances ?? '').toLowerCase();
-    var resistant = resistances.isNotEmpty &&
-        (resistances.contains(dmgLower) || resistances.contains('all'));
+    int workingDamage = rawDamage;
     if (environment == ArenaEnvironment.floodedAbyss && dmgLower == 'fire') {
-      resistant = true;
+      workingDamage = (workingDamage / 2).floor();
     }
+
+    // Check Resistance
+    final resistances = (sb.damageResistances ?? '').toLowerCase();
+    final resistant = resistances.isNotEmpty &&
+        (resistances.contains(dmgLower) || resistances.contains('all'));
 
     // Check Vulnerability
     final vulnerabilities = (sb.damageVulnerabilities ?? '').toLowerCase();
@@ -3380,7 +3382,7 @@ class ArenaCombatEngine {
         vulnerabilities.isNotEmpty && vulnerabilities.contains(dmgLower);
 
     return adjustDamageForDefenses(
-      rawDamage,
+      workingDamage,
       immune: immune,
       resistant: resistant,
       vulnerable: vulnerable,
