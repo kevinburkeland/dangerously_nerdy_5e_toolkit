@@ -122,7 +122,7 @@ const List<SpellItem> srdLevel3Spells = [
           description: 'a tiny ball of bat guano and pitch'),
       duration: 'Instantaneous',
       classes: [SpellClass.sorcerer, SpellClass.wizard],
-      rollFormula: '8d6',
+      rollFormula: '8d6 fire',
       scalingFormula: SpellScalingFormula(
           baseDiceCount: 8, diceSides: 6, dicePerSlotLevel: 1),
       damageOrHealType: 'Fire',
