@@ -1,7 +1,7 @@
 # Cleanup slice 5 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 85e43ff3bd1628e3dd43f29145f4c99996b580c8, app 12d9961f18614080b20cc0ac63c0185434f3757b
-Last pushed heads (CI green): core caf09939ce2a3e5c942bf9d22da9f1dd7cb7cf99, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4, app b3cae10df3a55e09f5ee83fcf6347ae91b10f8a9
+Last pushed heads (CI green): core caf09939ce2a3e5c942bf9d22da9f1dd7cb7cf99, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4, app f7079d614e227be2d2df7843e32692e30acccb2f
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
 
 ## Steps
@@ -11,10 +11,10 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 - [x] Step 4 Ruleset docs truth: ruleset 93dec7b4582f6fbf918667c4faee4587db875471 run 40770095951
 - [x] Step 5 Damage order: Step 5a ruleset 523263bca9e7c370ce6dd2abedd6e8f89fac19fc run 40770386080, Step 5b app 30e93fd7c1ecf8c437b1506ae6d17bff5194fc15 run 40771479118
 - [x] Step 6 Dice expression: Step 6a ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4 run 40774812584, Step 6b app b3cae10df3a55e09f5ee83fcf6347ae91b10f8a9 run 40775799206
-- [ ] Step 7 Mutations and report
+- [x] Step 7 Mutations and report: 15 mutation branches pushed and verified (T1, T2, K1, K2, K3, G1, G2, V1, V2, V3, E1, E2, E3, E4, E5)
 
 ## Next
-Step 7: Mutations and final report.
+Cleanup slice 5 complete.
 
 ## Open issues and deviations
 None.
