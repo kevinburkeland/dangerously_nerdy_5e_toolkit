@@ -3382,7 +3382,7 @@ class ArenaCombatEngine {
     return adjustDamageForDefenses(
       rawDamage,
       immune: immune,
-      resistant: resistant,
+      resistant: false,
       vulnerable: vulnerable,
     );
   }
