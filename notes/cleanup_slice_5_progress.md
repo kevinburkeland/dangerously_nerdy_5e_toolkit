@@ -6,11 +6,11 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 
 ## Steps
 - [x] Step 1 Retire cs41: core 13f4f84d0fab332490b8d0dcbc1609f7124d752d run 40761057967, ruleset f90b46a902ac16709f51cceadaa8b8c9676eb690 run 40761080847, app 26707e9c60328d3a96661022b7fbfaa738e1e582 run 40761148654
-- [x] Step 2 Lost tests and the test-name ratchet: core caf099312ced27dc49919124fdace59a91b4a673 run 40764851573, ruleset 1b96b9f2910787383bb8f8e0292723c5cf8c39b9 run 40764855709, app 0acec2ee0aa4825946fa5c26b52a8eb9c0b29a24 run 40764859362
-- [x] Step 3 One settings table: app 7f1d1af7ef248bfb32d2e057ba3b018eecad64df run 40767671428
-- [x] Step 4 Ruleset docs truth: ruleset 93dec7b4582f6fbf918667c4faee4587db875471 run 40770095951
+- [x] Step 2 Lost tests and the test-name ratchet: core caf099312ced27dc49919124fdace59a91b4a673 run 40764851573, ruleset 1b96b9f8e459f794dec3ed57d429bcf090e38a1a run 40764855709, app 0acec2eb331e0877a25a38ea7fd7fb9bc0272476 run 40764859362
+- [x] Step 3 One settings table: app 7f1d1af5356a63a87f90e97f337d4d0c6cc843e6 run 40767671428
+- [x] Step 4 Ruleset docs truth: ruleset 93dec7bbfa5340c8d984c3de757e5abb436ffb98 run 40770095951
 - [x] Step 5 Damage order: Step 5a ruleset 523263bca9e7c370ce6dd2abedd6e8f89fac19fc run 40770386080, Step 5b app 30e93fd7c1ecf8c437b1506ae6d17bff5194fc15 run 40771479118
-- [x] Step 6 Dice expression: Step 6a ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4 run 40774812584, Step 6b app b3cae10df3a55e09f5ee83fcf6347ae91b10f8a9 run 40775799206
+- [x] Step 6 Dice expression: Step 6a ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4 run 40774812584, Step 6b app b3cae10d345684c931381a2f1aecbbff6160a928 run 40775799206
 - [x] Step 7 Mutations and report: 15 mutation branches pushed and verified (T1, T2, K1, K2, K3, G1, G2, V1, V2, V3, E1, E2, E3, E4, E5)
 
 ## Next
