@@ -1,0 +1,29 @@
+From a5a88a66c9cc3b5e4b4c8c07a0a8ce0cd5497687 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 28 Oct 2026 15:13:45 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20K2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/app_backup_settings_codec.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/persistence/app_backup_settings_codec.dart b/lib/services/persistence/app_backup_settings_codec.dart
+index 631f81a..2a20199 100644
+--- a/lib/services/persistence/app_backup_settings_codec.dart
++++ b/lib/services/persistence/app_backup_settings_codec.dart
+@@ -215,7 +215,7 @@ final List<AppBackupSettingsField> kAppBackupSettingsFields = [
+   AppBackupSettingsField.forStringSet(
+     key: 'pinnedRaceIds',
+     getter: (s) => s.pinnedRaceIds,
+-    setter: (s, v) => s.copyWith(pinnedRaceIds: v),
++    setter: (s, v) => s.copyWith(pinnedClassIds: v),
+   ),
+ ];
+ 
+-- 
+2.55.0
+

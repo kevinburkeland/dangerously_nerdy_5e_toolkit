@@ -1,0 +1,67 @@
+From a4c8c1d486ab33e451d40f68a66d78b4573ccb7f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 28 Oct 2026 15:12:07 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20T1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/screens/settings_screen_test.dart | 40 --------------------------
+ 1 file changed, 40 deletions(-)
+
+diff --git a/test/screens/settings_screen_test.dart b/test/screens/settings_screen_test.dart
+index 429099d..09b7505 100644
+--- a/test/screens/settings_screen_test.dart
++++ b/test/screens/settings_screen_test.dart
+@@ -78,46 +78,6 @@ void main() {
+     await tester.pumpAndSettle();
+   });
+ 
+-  testWidgets(
+-      'SettingsScreen toggles global rules edition via RulesEditionToggle',
+-      (tester) async {
+-    tester.view.physicalSize = const Size(1200, 2400);
+-    tester.view.devicePixelRatio = 1.0;
+-    addTearDown(() {
+-      tester.view.resetPhysicalSize();
+-      tester.view.resetDevicePixelRatio();
+-    });
+-
+-    final settingsProvider = SettingsProvider();
+-
+-    await tester.pumpWidget(
+-      SettingsScope(
+-        notifier: settingsProvider,
+-        child: const MaterialApp(
+-          home: SettingsScreen(),
+-        ),
+-      ),
+-    );
+-
+-    await tester.pumpAndSettle();
+-
+-    expect(find.text('Global Rulebook Edition'), findsOneWidget);
+-    expect(find.text('2014'), findsOneWidget);
+-    expect(find.text('2024'), findsOneWidget);
+-
+-    // Tap 2014
+-    await tester.tap(find.text('2014'));
+-    await tester.pumpAndSettle();
+-    expect(
+-        settingsProvider.settings.rulesEdition, equals(DmRulesEdition.v2014));
+-
+-    // Tap 2024
+-    await tester.tap(find.text('2024'));
+-    await tester.pumpAndSettle();
+-    expect(
+-        settingsProvider.settings.rulesEdition, equals(DmRulesEdition.v2024));
+-  });
+-
+   testWidgets('SettingsScreen updates Character Creation Step Flow preset',
+       (tester) async {
+     tester.view.physicalSize = const Size(1200, 2400);
+-- 
+2.55.0
+

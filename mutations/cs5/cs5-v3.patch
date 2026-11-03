@@ -1,0 +1,29 @@
+From 7cdbef6df875103946b22b31590823d89f310d3b Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 31 Oct 2026 17:19:13 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20V3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/rules/arena_combat_engine.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/rules/arena_combat_engine.dart b/lib/services/rules/arena_combat_engine.dart
+index d9d538d..9d4ad0f 100644
+--- a/lib/services/rules/arena_combat_engine.dart
++++ b/lib/services/rules/arena_combat_engine.dart
+@@ -3382,7 +3382,7 @@ class ArenaCombatEngine {
+     return adjustDamageForDefenses(
+       rawDamage,
+       immune: immune,
+-      resistant: resistant,
++      resistant: false,
+       vulnerable: vulnerable,
+     );
+   }
+-- 
+2.55.0
+

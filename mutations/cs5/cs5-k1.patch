@@ -1,0 +1,32 @@
+From bfca33c29d617df4d467fbe3b8208c9710fa0a7b Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 28 Oct 2026 15:13:18 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20K1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/app_backup_settings_codec.dart | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/lib/services/persistence/app_backup_settings_codec.dart b/lib/services/persistence/app_backup_settings_codec.dart
+index 631f81a..b82aa9c 100644
+--- a/lib/services/persistence/app_backup_settings_codec.dart
++++ b/lib/services/persistence/app_backup_settings_codec.dart
+@@ -212,11 +212,6 @@ final List<AppBackupSettingsField> kAppBackupSettingsFields = [
+     getter: (s) => s.pinnedClassIds,
+     setter: (s, v) => s.copyWith(pinnedClassIds: v),
+   ),
+-  AppBackupSettingsField.forStringSet(
+-    key: 'pinnedRaceIds',
+-    getter: (s) => s.pinnedRaceIds,
+-    setter: (s, v) => s.copyWith(pinnedRaceIds: v),
+-  ),
+ ];
+ 
+ /// Canonical list of 18 settings keys exported and restored by full app backups, derived from [kAppBackupSettingsFields].
+-- 
+2.55.0
+

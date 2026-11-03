@@ -1,0 +1,26 @@
+From d79c83a366bfa2ae4b34b6c5d145a6e8d074035c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 28 Oct 2026 15:14:09 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20K3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/app_backup_settings_codec.dart | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/services/persistence/app_backup_settings_codec.dart b/lib/services/persistence/app_backup_settings_codec.dart
+index 631f81a..507ec4c 100644
+--- a/lib/services/persistence/app_backup_settings_codec.dart
++++ b/lib/services/persistence/app_backup_settings_codec.dart
+@@ -277,3 +277,5 @@ AppBackupSettingsDecodeResult decodeAppBackupSettings(
+     skipped: skipped,
+   );
+ }
++
++const _secondMap = {'themeMode': 1};
+-- 
+2.55.0
+

@@ -1,0 +1,50 @@
+From 6495f22134e6969a9c183b7f4ba4272e4f181a31 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 31 Oct 2026 17:18:57 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20V2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/rules/arena_combat_engine.dart | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/lib/services/rules/arena_combat_engine.dart b/lib/services/rules/arena_combat_engine.dart
+index d9d538d..39e8994 100644
+--- a/lib/services/rules/arena_combat_engine.dart
++++ b/lib/services/rules/arena_combat_engine.dart
+@@ -3366,21 +3366,23 @@ class ArenaCombatEngine {
+     final immune = immunities.isNotEmpty &&
+         (immunities.contains(dmgLower) || immunities.contains('all'));
+ 
+-    // Check Resistance (Flooded Abyss grants natural fire resistance to submerged creatures)
+-    final resistances = (sb.damageResistances ?? '').toLowerCase();
+-    var resistant = resistances.isNotEmpty &&
+-        (resistances.contains(dmgLower) || resistances.contains('all'));
++    int workingDamage = rawDamage;
+     if (environment == ArenaEnvironment.floodedAbyss && dmgLower == 'fire') {
+-      resistant = true;
++      workingDamage = (workingDamage / 2).floor();
+     }
+ 
++    // Check Resistance
++    final resistances = (sb.damageResistances ?? '').toLowerCase();
++    final resistant = resistances.isNotEmpty &&
++        (resistances.contains(dmgLower) || resistances.contains('all'));
++
+     // Check Vulnerability
+     final vulnerabilities = (sb.damageVulnerabilities ?? '').toLowerCase();
+     final vulnerable =
+         vulnerabilities.isNotEmpty && vulnerabilities.contains(dmgLower);
+ 
+     return adjustDamageForDefenses(
+-      rawDamage,
++      workingDamage,
+       immune: immune,
+       resistant: resistant,
+       vulnerable: vulnerable,
+-- 
+2.55.0
+

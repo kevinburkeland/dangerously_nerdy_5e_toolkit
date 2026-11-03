@@ -1,0 +1,29 @@
+From c91eac9560f0651c1493f11e427e79a5785789d3 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 31 Oct 2026 17:20:43 -0700
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20E5?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/spells/level_3_spells.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/models/spells/level_3_spells.dart b/lib/models/spells/level_3_spells.dart
+index a50e325..6fba983 100644
+--- a/lib/models/spells/level_3_spells.dart
++++ b/lib/models/spells/level_3_spells.dart
+@@ -122,7 +122,7 @@ const List<SpellItem> srdLevel3Spells = [
+           description: 'a tiny ball of bat guano and pitch'),
+       duration: 'Instantaneous',
+       classes: [SpellClass.sorcerer, SpellClass.wizard],
+-      rollFormula: '8d6',
++      rollFormula: '8d6 fire',
+       scalingFormula: SpellScalingFormula(
+           baseDiceCount: 8, diceSides: 6, dicePerSlotLevel: 1),
+       damageOrHealType: 'Fire',
+-- 
+2.55.0
+
