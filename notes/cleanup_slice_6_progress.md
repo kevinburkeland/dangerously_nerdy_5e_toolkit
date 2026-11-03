@@ -17,4 +17,4 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 Implement Step 3: Replace five fake SHAs in notes/cleanup_slice_5_progress.md with real SHAs, implement scripts/check_notes_shas.py and test_check_notes_shas.sh, run controls and tests, integrate into CI workflow, and push.
 
 ## Open issues and deviations
-In ruleset, mutation/cs5-g2 had two commits on origin instead of one. Per user instruction, squashed into a single commit with identical tree 5e198e51f0f903aba9f5c351f55e112803194ed9 before retirement.
+In ruleset, mutation/cs5-g2 had two commits on origin instead of one. Per user instruction, squashed into a single commit with identical tree before retirement.
