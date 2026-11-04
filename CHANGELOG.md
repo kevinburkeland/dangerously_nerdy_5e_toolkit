@@ -4,7 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-03
-- Cleanup slice 6: Ratchet sees renamed and moved test files with --no-renames and self-tests TN9-TN11; real SHAs in progress notes verified by check_notes_shas and CI integration.
+- Cleanup slice 6: Ratchet sees renamed and moved test files with --no-renames and self-tests TN9-TN11; real SHAs in progress notes verified by check_notes_shas and CI integration; reachability law with controls RC1, RL1, RL2.
 
 ## 2026-10-28
 - Cleanup slice 5: Restore lost settings screen widget tests, add test-name ratchet script, self-test suite, CI workflow integration, unified settings codec field table, arena damage adjustment ordering delegating to upstream ruleset, and unified dice expression handling with graceful invalid notation rejection across all roll call sites.
