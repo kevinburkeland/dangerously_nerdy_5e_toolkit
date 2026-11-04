@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/models/weapon_mastery.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/rules/ruleset_context.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 
 void main() {
   group('Weapon Mastery', () {

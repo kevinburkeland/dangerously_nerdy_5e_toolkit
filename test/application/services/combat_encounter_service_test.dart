@@ -1,7 +1,7 @@
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_combat_resolver.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';

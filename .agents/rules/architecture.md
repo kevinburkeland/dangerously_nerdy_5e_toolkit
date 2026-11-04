@@ -40,7 +40,7 @@
 ### 1.2. Domain Layer (`lib/domain/`, `lib/models/`, `lib/services/rules/`)
 - **Zero Flutter Engine Runtime:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use pure Dart (`package:meta/meta.dart`). Enforced by `test/domain/domain_purity_test.dart`.
 - **Domain Ingestion Engine (`lib/domain/ingestion/`):** Pure Dart document structure parser, candidate detector, and field extraction ASTs.
-- **D&D 5e Domain Models (`lib/models/`):** Strongly typed 5e entities (`characters/`, `spells/`, `monster_codex/`, `magic_items/`, `weapon_mastery.dart`, `animated_object.dart`, `exhaustion_state.dart`).
+- **D&D 5e Domain Models (`lib/models/`):** Strongly typed 5e entities (`characters/`, `spells/`, `monster_codex/`, `magic_items/`, `animated_object.dart`).
 - **Compatibility Re-export Barrels (`lib/models/domain/`):** Provide backward-compatible re-exports for historical import paths. These barrels must not be confused with canonical ownership.
 - **D&D 5e Rules Engines (`lib/services/rules/`):** Concrete rules evaluation (`CharacterActionsResolver`, `CharacterProgressionEngine`, `CharacterReparseEngine`, `SpellcastingRulesEngine`).
 - **Pure Models & Copy-Transforms:** Entities and value objects must have `const` constructors and `copyWith()` mutators. In-place mutating methods (`takeDamage`, `heal`, `applyHeal`, `grantTempHp`) are strictly forbidden; use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`).

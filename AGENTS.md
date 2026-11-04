@@ -29,9 +29,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── dpr/                        # DprBuildProfile, WeaponPreset
 │   │   ├── tables/                     # RollableTable, RollableTableRow
 │   │   ├── domain/                     # Compatibility re-export barrels (bridges legacy imports to engine or models)
-│   │   ├── animated_object.dart        # Animate Objects 5e spell entity
-│   │   ├── weapon_mastery.dart         # 2024 Weapon Mastery properties
-│   │   └── exhaustion_state.dart       # Dual-ruleset exhaustion tracking
+│   │   └── animated_object.dart        # Animate Objects 5e spell entity
 │   ├── application/                    # Application orchestration & use cases
 │   │   ├── services/                   # CascadingTransportRouter, RoomStateReconciliationService, ClockSyncService,
 │   │   │                               # CombatEncounterService, PartyRoomService, RoomSyncOrchestrator, HomebrewImportOrchestrator

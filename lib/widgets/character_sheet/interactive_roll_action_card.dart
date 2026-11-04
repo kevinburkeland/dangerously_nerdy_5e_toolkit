@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/room_roll.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
-import '../../services/rules/character_stat_calculator.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../../services/rules/spellcasting_rules_engine.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/secure_random.dart';

@@ -5,7 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priorit
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progression_engine.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_stat_calculator.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 
 void main() {
   group('CharacterProgressionEngine Unit Tests', () {

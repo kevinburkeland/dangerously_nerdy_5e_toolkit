@@ -10,7 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_import_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_combat_resolver.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';

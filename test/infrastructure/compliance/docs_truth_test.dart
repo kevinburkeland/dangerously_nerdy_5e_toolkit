@@ -244,8 +244,9 @@ void main() {
   group('Documentation Truth & Coverage Invariants', () {
     test('DT1c (control): required architecture folder calculation behaves as specified', () {
       final folders = requiredArchitectureFolders('.');
-      expect(folders.length, greaterThanOrEqualTo(50),
-          reason: 'Expected at least 50 required architecture folders');
+      // The floor follows deleted folders in Cleanup slice 6.
+      expect(folders.length, greaterThanOrEqualTo(49),
+          reason: 'Expected at least 49 required architecture folders');
       expect(folders, contains('lib/application/blob'));
       expect(folders, contains('lib/application/map'));
       expect(folders, contains('lib/infrastructure/map/web'));

@@ -6,7 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipme
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progression_engine.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/rules/spell_allocation_validator.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/level_up_wizard_dialog.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 

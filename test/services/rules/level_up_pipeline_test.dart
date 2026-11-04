@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/rules/level_up_pipeline.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progression_engine.dart';
 
 void main() {
   group('LevelUpPipeline Tests', () {
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('advances current class with fixed average HP', () {
-      final updated = LevelUpPipeline.applyLevelUp(
+      final updated = CharacterProgressionEngine.applyLevelUp(
         baseWizard,
         const LevelUpRequest(
           targetClassSlug: 'wizard',
@@ -74,7 +74,7 @@ void main() {
     });
 
     test('advances level with ASI (+2 to INT)', () {
-      final updated = LevelUpPipeline.applyLevelUp(
+      final updated = CharacterProgressionEngine.applyLevelUp(
         baseWizard,
         const LevelUpRequest(
           targetClassSlug: 'wizard',
@@ -91,7 +91,7 @@ void main() {
     });
 
     test('advances level with Tough Feat (+2 HP per level)', () {
-      final updated = LevelUpPipeline.applyLevelUp(
+      final updated = CharacterProgressionEngine.applyLevelUp(
         baseWizard,
         const LevelUpRequest(
           targetClassSlug: 'wizard',
@@ -117,7 +117,7 @@ void main() {
       // Wizard STR 8, DEX 14, CON 14, INT 16, WIS 12, CHA 10
       // Trying to multiclass into Paladin (requires STR 13 and CHA 13)
       final validation =
-          LevelUpPipeline.validateMulticlass(baseWizard, 'paladin');
+          CharacterProgressionEngine.validateMulticlass(baseWizard, 'paladin');
       expect(validation.isValid, isFalse);
       expect(validation.errors.any((e) => e.contains('paladin')), isTrue);
     });
@@ -125,10 +125,10 @@ void main() {
     test('multiclassing succeeds when prerequisites are satisfied', () {
       // Character has DEX 14 (satisfies Rogue requirement) and INT 16 (satisfies Wizard requirement)
       final validation =
-          LevelUpPipeline.validateMulticlass(baseWizard, 'rogue');
+          CharacterProgressionEngine.validateMulticlass(baseWizard, 'rogue');
       expect(validation.isValid, isTrue);
 
-      final multiclassChar = LevelUpPipeline.applyLevelUp(
+      final multiclassChar = CharacterProgressionEngine.applyLevelUp(
         baseWizard,
         const LevelUpRequest(
           targetClassSlug: 'rogue',

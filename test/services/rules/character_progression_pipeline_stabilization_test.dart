@@ -6,7 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/feature_grant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progression_engine.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/rules/spell_allocation_validator.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/spellcasting_rules_engine.dart';
 
 void main() {

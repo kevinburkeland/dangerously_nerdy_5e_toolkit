@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/models/generic_tabletop_primitives.dart';
 import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import 'package:vtt_engine_core/simulation/dpr_simulator.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/dnd_5e_combat_resolver.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 
 void main() {
   group('D&D 5e Combat Resolver & Vitals Invariants', () {

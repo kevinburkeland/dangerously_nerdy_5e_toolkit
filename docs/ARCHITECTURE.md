@@ -48,7 +48,6 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ 
 | `lib/domain/ingestion/services` | Ingestion workbench orchestration and document candidate detection services. |
 | `lib/infrastructure` | Concrete infrastructure implementations of domain and engine ports. |
 | `lib/infrastructure/adapters` | Platform and network adapters for peer-to-peer transport, storage, and remote ingestion. |
-| `lib/infrastructure/adapters/dtos` | Internal DTO structures for network and serialization transport adapters. |
 | `lib/infrastructure/adapters/p2p` | WebRTC mesh networking, Firestore fallback relay, and signaling adapters. |
 | `lib/infrastructure/adapters/remote` | HTTP fetching and remote GitHub compendium ingestion clients. |
 | `lib/infrastructure/adapters/storage` | Campaign snapshot file serialization adapters. |
