@@ -1,3 +1,5 @@
+# Removed test names ratchet whitelist.
+# Format: <test-name> | <reason>
 Accessibility: supports 2.0x dynamic type scaling without RenderFlex overflow | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 AccessibleActionTile | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 CompendiumSpellIngestionPipeline Tests | exercised only lib/services/ingestion/compendium_spell_ingestion_pipeline.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
@@ -23,15 +25,15 @@ StorageDurabilityBanner & StorageLockOfflineAction Widget Tests | exercised only
 V. SessionGraphService explicit bind and unbind operations | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 Zero-Friction Invariant: completely hidden if isPersisted is true | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 Zero-Friction Invariant: completely hidden if standalone PWA | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
-aggregates party passive stats across multiple characters | exercised only lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+aggregates party passive stats across multiple characters | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 binds entity links to room node | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 defensively extracts damage type from root metadata if entries lack tags | exercised only lib/services/ingestion/compendium_spell_ingestion_pipeline.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 distributes room container loot to target character atomically | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 ensures minimum touch target dimensions >= 48x48dp | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 exposes proper Semantics node and narrative speech | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 ingests 2024 spell record with full metadata and scaling entries | exercised only lib/services/ingestion/compendium_spell_ingestion_pipeline.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
-instantiates isolated combat clone participant | exercised only lib/widgets/dm_dashboard/dm_dashboard_encounter_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
-opens HP adjustment dialog on HP button tap | exercised only lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+instantiates isolated combat clone participant | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+opens HP adjustment dialog on HP button tap | exercised only lib/widgets/dm_dashboard/dm_dashboard_encounter_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 renders active minion card with dismiss button | exercised only lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 renders combatant details, initiative, and HP | exercised only lib/widgets/dm_dashboard/dm_dashboard_encounter_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 renders empty state when minion list is empty | exercised only lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
