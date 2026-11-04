@@ -1,0 +1,29 @@
+From 797b6ad7388480d6ce62a1ca1f2f34fcfc25b26c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 3 Nov 2026 17:51:25 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ notes/cleanup_slice_5_progress.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/notes/cleanup_slice_5_progress.md b/notes/cleanup_slice_5_progress.md
+index b416123..b0c729a 100644
+--- a/notes/cleanup_slice_5_progress.md
++++ b/notes/cleanup_slice_5_progress.md
+@@ -5,7 +5,7 @@ Last pushed heads (CI green): core caf099312ced27dc49919124fdace59a91b4a673, rul
+ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
+ 
+ ## Steps
+-- [x] Step 1 Retire cs41: core 13f4f84d0fab332490b8d0dcbc1609f7124d752d run 40761057967, ruleset f90b46a902ac16709f51cceadaa8b8c9676eb690 run 40761080847, app 26707e9c60328d3a96661022b7fbfaa738e1e582 run 40761148654
++- [x] Step 1 Retire cs41: core 13f4f84d00000000000000000000000000000000 run 40761057967, ruleset f90b46a902ac16709f51cceadaa8b8c9676eb690 run 40761080847, app 26707e9c60328d3a96661022b7fbfaa738e1e582 run 40761148654
+ - [x] Step 2 Lost tests and the test-name ratchet: core caf099312ced27dc49919124fdace59a91b4a673 run 40764851573, ruleset 1b96b9f8e459f794dec3ed57d429bcf090e38a1a run 40764855709, app 0acec2eb331e0877a25a38ea7fd7fb9bc0272476 run 40764859362
+ - [x] Step 3 One settings table: app 7f1d1af5356a63a87f90e97f337d4d0c6cc843e6 run 40767671428
+ - [x] Step 4 Ruleset docs truth: ruleset 93dec7bbfa5340c8d984c3de757e5abb436ffb98 run 40770095951
+-- 
+2.55.0
+

@@ -1,0 +1,37 @@
+From 6e048c194bb259f316479bd66cfa7e7dd52e0395 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 3 Nov 2026 17:52:55 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D4?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/infrastructure/compliance/reachability_law_test.dart | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/test/infrastructure/compliance/reachability_law_test.dart b/test/infrastructure/compliance/reachability_law_test.dart
+index b041669..fd63589 100644
+--- a/test/infrastructure/compliance/reachability_law_test.dart
++++ b/test/infrastructure/compliance/reachability_law_test.dart
+@@ -229,13 +229,15 @@ List<String> directiveTargets(String path, String source) {
+             }
+           }
+ 
++          bool firstUriOnly = true;
+           while (i < n && clean[i] != ';') {
+             final ch = clean[i];
+             if (ch == "'" || ch == '"' || (ch == 'r' && i + 1 < n && (clean[i + 1] == "'" || clean[i + 1] == '"'))) {
+               final uri = extractStringAt(i);
+               final nextI = skipStringLiteral(i);
+               i = nextI;
+-              if (!isPartOf && uri != null) {
++              if (!isPartOf && uri != null && firstUriOnly) {
++                firstUriOnly = false;
+                 final resolved = resolveUri(path, uri);
+                 if (resolved != null) {
+                   targets.add(resolved);
+-- 
+2.55.0
+
