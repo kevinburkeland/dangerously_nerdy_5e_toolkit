@@ -1,0 +1,20 @@
+# Cleanup slice 7 progress notes
+Status: IN PROGRESS
+Start heads: core 3776d5b5f5eb3d33bfa07cbef48280a4179bb78e, ruleset 854ae142393a7b69120deeed046d307106715f6c, app b4badc20ec5b78a937f2f9405f57f913dbaaf121
+Last pushed heads (CI green): core fa35b438bc6dbfa589989ad903268c401d9bf6b5, ruleset 4bf82201da6fb2bb55ff2d50665a14e6768bec65, app 0a131ac9c7bdd41af68b3d7b6ed2d48e088ee4c4
+Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
+
+## Steps
+- [x] Step 1 Retire cs6: core fa35b438bc6dbfa589989ad903268c401d9bf6b5 run 41903199666, ruleset 4bf82201da6fb2bb55ff2d50665a14e6768bec65 run 41903217036, app 0a131ac9c7bdd41af68b3d7b6ed2d48e088ee4c4 run 41903240468
+- [ ] Step 2 Removal list reasons and header
+- [ ] Step 3 Dynamic ratchet and implicit-dynamic ceilings
+- [ ] Step 4 Strict casts: callbacks and guarded reads
+- [ ] Step 5 Strict casts: the rest
+- [ ] Step 6 Strict casts on, with a canary
+- [ ] Step 7 Mutations and report
+
+## Next
+Step 2: correct the three reasons and restore the two header lines in test/removed_test_names.txt.
+
+## Open issues and deviations
+None.
