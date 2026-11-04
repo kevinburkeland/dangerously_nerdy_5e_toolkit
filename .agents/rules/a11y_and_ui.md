@@ -15,7 +15,7 @@ All UI components must satisfy strict tabletop usability, mobile responsiveness,
   - "AC" -> "Armor Class", "HP" -> "Hit Points", "DC" -> "Difficulty Class"
   - "GP" -> "Gold Pieces", "SP" -> "Silver Pieces", "CP" -> "Copper Pieces"
   - "RAW" -> "Rules As Written", "PB" -> "Proficiency Bonus"
-- Use `AccessibleActionTile` (`lib/presentation/core/accessible_action_tile.dart`) for narrative voice and accessibility announcements.
+- Use `A11yService` (`lib/services/a11y_service.dart`) and `SemanticsService.announce` for screen reader announcements (rolls, HP changes, combat summaries).
 
 ## 3. Dynamic Type & Responsive Layouts (Up to 2.0x)
 - UI layouts must render cleanly without `RenderFlex` overflow errors when tested under `TextScaler.linear(2.0)`.

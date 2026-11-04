@@ -370,7 +370,8 @@ To eliminate all grouping dependence and achieve mathematical join-semilattice c
    - $G_1$ remains permanently dead (targeted by its tombstone). $G_2$ is independently active.
 
 5. **Re-Bind Payload Inheritance Policy:**
-   - **Fresh Incarnation Baseline Policy:** When `SessionGraphService.bindEntityToRoom` binds after removal or without an existing incarnation, a fresh incarnation baseline is established:
+   - **Note on Live Paths:** The app has no live bind path today. `SessionGraphService` was removed in Cleanup slice 6 as unreachable dead code. Any future bind path must follow this policy and test it.
+   - **Fresh Incarnation Baseline Policy:** When binding an entity after removal or without an existing incarnation, a fresh incarnation baseline must be established:
      - `incarnationTimestamp` is set to `effectiveTimestamp`.
      - `displayName` carries forward and is stamped with `effectiveTimestamp`.
      - Pre-removal notes from old incarnations (`notesRegister.timestamp < effectiveTimestamp`) are **not** inherited and are explicitly cleared (`clearNotes: true, notesTimestamp: effectiveTimestamp`).

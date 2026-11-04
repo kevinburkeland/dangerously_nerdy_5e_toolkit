@@ -5,7 +5,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/ability_score_step.dart';
-import 'package:dangerously_nerdy_5e_toolkit/widgets/dm_dashboard/dm_dashboard_party_hud.dart';
 
 void main() {
   setUp(() {
@@ -15,57 +14,6 @@ void main() {
   group('F2 Ability Modifier Regression Tests on Both Screens', () {
     const testScores = [1, 8, 9, 10, 11, 20, 30];
     const expectedModifiers = [-5, -1, -1, 0, 0, 5, 10];
-
-    testWidgets(
-        'DmDashboardPartyHud: scores 1, 8, 9, 10, 11, 20, 30 give −5, −1, −1, 0, 0, +5, +10 (via AC and PP)',
-        (tester) async {
-      for (var i = 0; i < testScores.length; i++) {
-        final score = testScores[i];
-        final expectedMod = expectedModifiers[i];
-
-        final character = Character(
-          id: EntityId(slug: 'test_char_$score', ruleset: RulesetVersion.v2024),
-          name: 'Hero $score',
-          speciesRef: const EntityReference.empty(
-            refType: EntityType.species,
-            slug: 'human',
-            displayName: 'Human',
-          ),
-          baseScores: AbilityScores(
-            strength: 10,
-            dexterity: score,
-            constitution: 10,
-            intelligence: 10,
-            wisdom: score,
-            charisma: 10,
-          ),
-          resources: const CharacterResourcePool(currentHp: 20),
-        );
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: DmDashboardPartyHud(partyRoster: [character]),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        final expectedAc = 10 + expectedMod;
-        final expectedPp = 10 + expectedMod;
-
-        expect(
-          find.text('AC $expectedAc'),
-          findsOneWidget,
-          reason: 'Score $score should produce modifier $expectedMod for Dex resulting in AC $expectedAc',
-        );
-        expect(
-          find.text('PP $expectedPp'),
-          findsOneWidget,
-          reason: 'Score $score should produce modifier $expectedMod for Wis resulting in PP $expectedPp',
-        );
-      }
-    });
 
     Future<void> advanceToAbilityScores(WidgetTester tester) async {
       for (int i = 0; i < 10; i++) {

@@ -289,7 +289,7 @@
   - **Contextual Persistence Gateways**: Prompts for persistence (`StorageLockOfflineAction`) strictly during user-initiated mutation gestures (saving characters, importing homebrew, exporting campaigns).
   - **Tamper-Evident Cold Storage Backups**: Exports atomic binary snapshots (`StorageSnapshotBundle`) sealed with constant-time pure Dart SHA-256 verification against `SHA-256(vaultId + payloadBytes)`.
   - **30-Second Sliding Lookback Reconciliation**: Hydration verifies cryptographic integrity and validates HLC timestamps against a 30-second sliding lookback window to prevent stale snapshots from overwriting fresh local CRDT vectors.
-  - **Ambient & Accessible Telemetry UI (`StorageDurabilityBanner`)**: Zero-friction invariant hides warnings when storage is persisted or running as a standalone PWA; displays non-modal dismissible notices for Safari browser tabs and high-contrast alerts for storage pressure $\ge 80\%$, fully compliant with WCAG 48x48dp touch targets and 2.0x Dynamic Type scaling.
+  - **Silent Startup Persistence Negotiation**: Runs a silent preflight storage check at startup (`lib/main.dart`), requesting persistent storage from the browser environment on Chromium and WebKit Standalone PWAs without blocking app boot.
 * **PWA App Shell Cache Shield (`web/service_worker.js` & `web/sw.js`)**:
   - Immutable cache-first strategy for app shell assets (`index.html`, `flutter.js`, `main.dart.js`, `canvaskit/*`, wasm binaries) while strictly excluding APIs, external domains, and dynamic websocket streams to preserve IndexedDB as the singular offline authority.
 * **Web Lifecycle Management**:
@@ -355,8 +355,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   │   └── crdt/               # Fault-tolerant CRDT DTOs: HybridLogicalClockDto, CrdtLwwRegisterDto, CrdtOrSetDto
 │   │   ├── repositories/           # LocalCampaignRepository, LocalCharacterRepository
 │   │   └── resolvers/              # CharacterTelemetryResolver
-│   ├── presentation/
-│   │   └── core/                   # Accessible core widgets & AccessibleActionTile
+│   ├── presentation/               # Reusable presentation layer (codex, map widgets, site footer)
 │   ├── providers/                  # Reactive state controllers: CharacterSheetController, SettingsProvider
 │   ├── screens/                    # Application screens
 │   │   ├── arena_simulator_screen.dart # Monster Fighting Arena & Monte Carlo simulator
@@ -366,7 +365,6 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── dice_roller_screen.dart # Dice roller, 3D physics, presets, & multiplayer rooms
 │   │   ├── dm_dashboard_screen.dart # DM Command Console, vitality HUD, & scratchpad
 │   │   ├── dm_reference_screen.dart # DM reference screen
-│   │   ├── dm_screen.dart          # DM quick screen
 │   │   ├── dpr_calculator_screen.dart # DPR calculator, multi-curve graph, & character builder
 │   │   ├── feats_compendium_screen.dart # Feats, Origin Feats, & Epic Boons compendium
 │   │   ├── glyph_showcase_screen.dart # Techno-Rune Glyph Studio, Codex & Style Guide

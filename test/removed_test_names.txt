@@ -1,3 +1,41 @@
-# Removed test names ratchet whitelist.
-# Format: <test-name> | <reason>
-
+Accessibility: supports 2.0x dynamic type scaling without RenderFlex overflow | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+AccessibleActionTile | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+CompendiumSpellIngestionPipeline Tests | exercised only lib/services/ingestion/compendium_spell_ingestion_pipeline.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+Condition 1 (Safari Tab Risk): renders dismissible banner and dismisses cleanly | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+Condition 2 (Firefox Pending): StorageLockOfflineAction renders and triggers requestPersistence | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+Condition 3 (Storage Pressure >= 80%): renders critical alert with export action | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+DmDashboardEncounterCard Widget Tests | exercised only lib/widgets/dm_dashboard/dm_dashboard_encounter_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+DmDashboardMinionHud Widget Tests | exercised only lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+DmDashboardPartyHud Widget Tests | exercised only lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+DmDashboardPartyHud: scores 1, 8, 9, 10, 11, 20, 30 give −5, −1, −1, 0, 0, +5, +10 (via AC and PP) | exercised only lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+FeatureListItem renders and opens bottom sheet modal with Semantics | exercised only lib/widgets/character_sheet/feature_list_item.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+HomebrewImportDialog defaults to Auto-Detect | exercised only lib/widgets/homebrew/homebrew_import_dialog.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+InteractiveRollActionCard Widget Tests | exercised only lib/widgets/character_sheet/interactive_roll_action_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+InteractiveSpellTile and SpellListItem render DndGlyph.spell | exercised only lib/widgets/character_sheet/spell_list_item.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+R. SessionGraphService re-bind payload inheritance: starts fresh baseline and prevents stale notes leakage | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+RL1: unreachableFiles minus kUnreachableStartList is empty with zero missing targets | exercised only unreachable files allowlist, unreachable from lib/main.dart; removed in Cleanup slice 6
+RL2: every path in kUnreachableStartList exists and is unreachable | exercised only unreachable files allowlist, unreachable from lib/main.dart; removed in Cleanup slice 6
+Renders weapon name, to-hit bonus, and damage formula with rollable semantics | exercised only lib/widgets/character_sheet/interactive_roll_action_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+SessionGraphService & Room Integration Tests | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+SpellListItem renders and opens spell detail modal | exercised only lib/widgets/character_sheet/spell_list_item.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+SrdSkillsLibrary contains all 18 standard 5e skills with abilities | exercised only lib/models/characters/srd_skills_library.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+StorageDurabilityBanner & StorageLockOfflineAction Widget Tests | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+V. SessionGraphService explicit bind and unbind operations | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+Zero-Friction Invariant: completely hidden if isPersisted is true | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+Zero-Friction Invariant: completely hidden if standalone PWA | exercised only lib/presentation/storage/storage_durability_banner.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+aggregates party passive stats across multiple characters | exercised only lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+binds entity links to room node | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+defensively extracts damage type from root metadata if entries lack tags | exercised only lib/services/ingestion/compendium_spell_ingestion_pipeline.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+distributes room container loot to target character atomically | exercised only lib/services/party/session_graph_service.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+ensures minimum touch target dimensions >= 48x48dp | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+exposes proper Semantics node and narrative speech | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+ingests 2024 spell record with full metadata and scaling entries | exercised only lib/services/ingestion/compendium_spell_ingestion_pipeline.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+instantiates isolated combat clone participant | exercised only lib/widgets/dm_dashboard/dm_dashboard_encounter_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+opens HP adjustment dialog on HP button tap | exercised only lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+renders active minion card with dismiss button | exercised only lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+renders combatant details, initiative, and HP | exercised only lib/widgets/dm_dashboard/dm_dashboard_encounter_card.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+renders empty state when minion list is empty | exercised only lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+renders empty state when roster is empty | exercised only lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+renders party member vitals and AC | exercised only lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+renders without overflow under 2.0x dynamic type scaling | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
+respects disableAnimations for reduced motion preferences | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6

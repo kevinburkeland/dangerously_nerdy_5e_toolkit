@@ -245,8 +245,8 @@ void main() {
     test('DT1c (control): required architecture folder calculation behaves as specified', () {
       final folders = requiredArchitectureFolders('.');
       // The floor follows deleted folders in Cleanup slice 6.
-      expect(folders.length, greaterThanOrEqualTo(49),
-          reason: 'Expected at least 49 required architecture folders');
+      expect(folders.length, greaterThanOrEqualTo(47),
+          reason: 'Expected at least 47 required architecture folders');
       expect(folders, contains('lib/application/blob'));
       expect(folders, contains('lib/application/map'));
       expect(folders, contains('lib/infrastructure/map/web'));

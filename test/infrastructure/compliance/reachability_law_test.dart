@@ -2,24 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const kUnreachableStartList = <String>[
-  'lib/models/characters/srd_skills_library.dart',
-  'lib/presentation/core/accessible_action_tile.dart',
-  'lib/presentation/storage/storage_durability_banner.dart',
-  'lib/services/ingestion/compendium_spell_ingestion_pipeline.dart',
-  'lib/services/party/session_graph_service.dart',
-  'lib/utils/glyph_image_exporter.dart',
-  'lib/utils/glyph_image_exporter_stub.dart',
-  'lib/utils/glyph_image_exporter_web.dart',
-  'lib/widgets/character_sheet/feature_list_item.dart',
-  'lib/widgets/character_sheet/interactive_roll_action_card.dart',
-  'lib/widgets/character_sheet/spell_list_item.dart',
-  'lib/widgets/dm_dashboard/dm_dashboard_encounter_card.dart',
-  'lib/widgets/dm_dashboard/dm_dashboard_minion_hud.dart',
-  'lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart',
-  'lib/widgets/homebrew/homebrew_import_dialog.dart',
-];
-
 String stripCommentsOutsideStrings(String source) {
   final buf = StringBuffer();
   final n = source.length;
@@ -430,30 +412,13 @@ import 'b.dart' deferred as d;
       return files;
     }
 
-    test('RL1: unreachableFiles minus kUnreachableStartList is empty with zero missing targets', () {
+    test('RL1: unreachableFiles is empty with zero missing targets', () {
       final files = loadRealLibFiles();
       final missing = <String>[];
       final unreached = unreachableFiles(files, 'lib/main.dart', missingProblems: missing);
-      final unlisted = unreached.where((p) => !kUnreachableStartList.contains(p)).toList();
 
       expect(missing, isEmpty, reason: 'Found missing targets: $missing');
-      expect(unlisted, isEmpty, reason: 'Found unlisted unreachable files: $unlisted');
-    });
-
-    test('RL2: every path in kUnreachableStartList exists and is unreachable', () {
-      final files = loadRealLibFiles();
-      final unreached = unreachableFiles(files, 'lib/main.dart').toSet();
-
-      final staleEntries = <String>[];
-      for (final path in kUnreachableStartList) {
-        if (!files.containsKey(path)) {
-          staleEntries.add('File does not exist: $path');
-        } else if (!unreached.contains(path)) {
-          staleEntries.add('File is reachable: $path');
-        }
-      }
-
-      expect(staleEntries, isEmpty, reason: 'Found stale entries in kUnreachableStartList: $staleEntries');
+      expect(unreached, isEmpty, reason: 'Found unreachable files: $unreached');
     });
   });
 }

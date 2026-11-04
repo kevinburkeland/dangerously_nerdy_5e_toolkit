@@ -70,11 +70,9 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ 
 | `lib/presentation` | Tabletop user interface presentation components and feature shells. |
 | `lib/presentation/codex` | Reusable codex shells, search bars, mode selectors, and filter strips. |
 | `lib/presentation/common` | Common presentation widgets, status indicators, and responsive containers. |
-| `lib/presentation/core` | Core accessible action tiles and formatted text presentation widgets. |
 | `lib/presentation/screens` | Dedicated presentation screen layouts. |
 | `lib/presentation/screens/homebrew` | Homebrew studio views, expert options, and creator workspaces. |
 | `lib/presentation/screens/map` | Dedicated full-screen tabletop battle map view (`MapScreen`). |
-| `lib/presentation/storage` | Durability status banners and storage persistence management widgets. |
 | `lib/presentation/widgets` | Modular presentation UI components and modals. |
 | `lib/presentation/widgets/map` | Battle map rendering canvas, grid overlay, token layer, and control panels. |
 | `lib/providers` | State controllers and change notifiers (`CharacterSheetController`, `SettingsProvider`). |

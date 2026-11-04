@@ -18,7 +18,6 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/races/race_detail_dialog.da
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_header_banner.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_vitals_hud.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive_spell_tile.dart';
-import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/spell_list_item.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/skills_saves_matrix.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/short_rest_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
@@ -235,22 +234,17 @@ void main() {
       expect(find.byType(DndGlyph), findsAtLeastNWidgets(3));
     });
 
-    testWidgets('InteractiveSpellTile and SpellListItem render DndGlyph.spell',
+    testWidgets('InteractiveSpellTile renders DndGlyph.spell',
         (tester) async {
       await tester.pumpWidget(
         wrapWithSettings(
-          Column(
-            children: [
-              InteractiveSpellTile(
-                  spell: testSpell, controller: testController),
-              SpellListItem(spell: testSpell),
-            ],
-          ),
+          InteractiveSpellTile(
+              spell: testSpell, controller: testController),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(DndGlyph), findsAtLeastNWidgets(2));
+      expect(find.byType(DndGlyph), findsAtLeastNWidgets(1));
     });
 
     testWidgets('ShortRestDialog renders Hit Die DndGlyph.genericUi',

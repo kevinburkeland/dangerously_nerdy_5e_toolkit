@@ -10,7 +10,6 @@ import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/party/session_graph_service.dart';
 
 void main() {
   group('Cold Iron Birdcage — Pass 4.1: Convergence Closure & Deletion Semantics', () {
@@ -194,9 +193,11 @@ void main() {
       );
       final base = createSampleProfile(roomState: baseRoom);
 
-      // Replica A unbinds 'monster-orc' with SessionGraphService
+      // Replica A unbinds 'monster-orc' directly via CRDT remove
       const unbindHlc = HybridLogicalClock(physicalTime: 2500, logicalCounter: 1, nodeId: 'nodeA');
-      final roomA = SessionGraphService.unbindEntityFromRoom(baseRoom, 'monster-orc', timestamp: unbindHlc);
+      final roomA = baseRoom.copyWith(
+        entityLinksCrdt: baseRoom.entityLinksCrdt.remove('monster-orc', unbindHlc),
+      );
       final repA = base.copyWith(roomState: roomA);
 
       // Replica B was offline with stale 'monster-orc'
@@ -295,10 +296,11 @@ void main() {
 
       // Replica B unbinds 'boss-dragon'
       final repB = base.copyWith(
-        roomState: SessionGraphService.unbindEntityFromRoom(
-          base.roomState,
-          'boss-dragon',
-          timestamp: const HybridLogicalClock(physicalTime: 200, logicalCounter: 1, nodeId: 'nodeB'),
+        roomState: base.roomState.copyWith(
+          entityLinksCrdt: base.roomState.entityLinksCrdt.remove(
+            'boss-dragon',
+            const HybridLogicalClock(physicalTime: 200, logicalCounter: 1, nodeId: 'nodeB'),
+          ),
         ),
       );
 

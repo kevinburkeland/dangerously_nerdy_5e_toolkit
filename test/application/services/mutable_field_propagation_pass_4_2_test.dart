@@ -5,7 +5,6 @@ import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/party/session_graph_service.dart';
 import 'package:vtt_engine_core/models/aggregate_hlc_extractor.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/loot_models.dart';
@@ -1192,53 +1191,6 @@ void main() {
         expect(composed.incarnationTimestamp, equals(tsG));
       });
 
-      test('R. SessionGraphService re-bind payload inheritance: starts fresh baseline and prevents stale notes leakage', () {
-        final clock = StatefulHlcClock(replicaId: ReplicaId("test-dm"), timeProvider: () => 1000);
-        var room = RoomNodeState(roomId: "r1", roomCode: "R1", title: "Throne Room");
-
-        final ts1 = clock.nextTimestamp();
-        final link = RoomEntityLink(
-          entityId: "boss-npc",
-          displayName: "Goblin King",
-          displayNameTimestamp: ts1,
-          notes: "Carries crown key",
-          notesTimestamp: ts1,
-          incarnationTimestamp: ts1,
-        );
-
-        // Bind initial incarnation
-        room = SessionGraphService.bindEntityToRoom(room, link, timestamp: ts1, clock: clock);
-        expect(room.entityLinks.length, equals(1));
-        expect(room.entityLinks.first.notes, equals("Carries crown key"));
-
-        // Unbind / remove
-        final ts2 = clock.nextTimestamp();
-        room = SessionGraphService.unbindEntityFromRoom(room, "boss-npc", timestamp: ts2, clock: clock);
-        expect(room.entityLinks, isEmpty);
-
-        // Re-bind using old link object (which carried old notes from ts1)
-        final ts3 = clock.nextTimestamp();
-        room = SessionGraphService.bindEntityToRoom(room, link, timestamp: ts3, clock: clock);
-        expect(room.entityLinks.length, equals(1));
-        final readded = room.entityLinks.first;
-        expect(readded.displayName, equals("Goblin King"));
-        // Notes must be cleared/reset for the new incarnation
-        expect(readded.notes, isNull);
-        expect(readded.incarnationTimestamp, equals(ts3));
-
-        // Now test explicitly authored notes for the new generation are preserved
-        final ts4 = clock.nextTimestamp();
-        final freshLinkWithNotes = RoomEntityLink(
-          entityId: "boss-npc-2",
-          displayName: "Goblin Shaman",
-          notes: "Knows fireball ritual",
-        );
-        room = SessionGraphService.bindEntityToRoom(room, freshLinkWithNotes, timestamp: ts4, clock: clock);
-        final shaman = room.entityLinks.firstWhere((l) => l.entityId == "boss-npc-2");
-        expect(shaman.notes, equals("Knows fireball ritual"));
-        expect(shaman.notesRegister.timestamp, equals(ts4));
-      });
-
       test('Z. Application Reconciliation: RoomStateReconciliationService safely reconciles stale and current states', () {
         final base = createCommonBase();
         const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "n1");
@@ -1482,51 +1434,6 @@ void main() {
         // Explicit converter
         final converted = EntityLinkCrdtSet.fromCrdtOrSet(legacyOrSet);
         expect(converted, isA<EntityLinkCrdtSet>());
-      });
-
-      test('V. SessionGraphService explicit bind and unbind operations', () {
-        const ts10 = HybridLogicalClock(physicalTime: 10, logicalCounter: 0, nodeId: "n1");
-        const ts20 = HybridLogicalClock(physicalTime: 20, logicalCounter: 0, nodeId: "n1");
-        const ts30 = HybridLogicalClock(physicalTime: 30, logicalCounter: 0, nodeId: "n1");
-        const ts40 = HybridLogicalClock(physicalTime: 40, logicalCounter: 0, nodeId: "n1");
-
-        var room = RoomNodeState(roomId: "r1", roomCode: "RC");
-        final link = RoomEntityLink(
-          entityId: "char-1",
-          displayName: "Hero",
-        );
-
-        // 1. Initial bind -> creates G1
-        room = SessionGraphService.bindEntityToRoom(room, link, timestamp: ts10);
-        expect(room.entityLinks.length, equals(1));
-        expect(room.entityLinks.first.incarnationTimestamp, equals(ts10));
-        expect(room.entityLinks.first.displayName, equals("Hero"));
-
-        // 2. Ordinary update to same generation
-        final updatedLink = room.entityLinks.first.copyWith(
-          displayName: "Hero Updated",
-          displayNameTimestamp: ts20,
-        );
-        room = SessionGraphService.bindEntityToRoom(room, updatedLink, timestamp: ts20);
-        expect(room.entityLinks.length, equals(1));
-        expect(room.entityLinks.first.displayName, equals("Hero Updated"));
-        expect(room.entityLinks.first.incarnationTimestamp, equals(ts10));
-
-        // 3. Unbind -> removes G1
-        room = SessionGraphService.unbindEntityFromRoom(room, "char-1", timestamp: ts30);
-        expect(room.entityLinks, isEmpty);
-        expect(room.entityLinksCrdt.isRemoved("char-1"), isTrue);
-        expect(room.entityLinksCrdt.tombstones["char-1"]!.targetGeneration, equals(ts10));
-
-        // 4. Re-bind -> creates G2
-        final readdLink = RoomEntityLink(
-          entityId: "char-1",
-          displayName: "Hero Returned",
-        );
-        room = SessionGraphService.bindEntityToRoom(room, readdLink, timestamp: ts40);
-        expect(room.entityLinks.length, equals(1));
-        expect(room.entityLinks.first.displayName, equals("Hero Returned"));
-        expect(room.entityLinks.first.incarnationTimestamp, equals(ts40));
       });
 
       test('P. Mutation sequence property tests with merge consistency over 100 transitions', () {

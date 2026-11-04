@@ -50,18 +50,17 @@ dangerously_nerdy_5e_toolkit/
 │   │   └── storage/                    # PhysicalSnapshotAdapter, StorageDurabilityAdapter
 │   ├── presentation/                   # Reusable accessible UI components
 │   │   ├── codex/                      # CodexPageShell, CodexHeaderConfig, CodexModeSelector, CodexFilterStrip
-│   │   ├── core/                       # AccessibleActionTile
 │   │   ├── screens/homebrew/           # HomebrewExpertOptionsView
 │   │   └── widgets/                    # RoomConnectionBadge
 │   ├── providers/                      # CharacterSheetController, SettingsProvider
 │   ├── screens/                        # Primary screen layouts (Character Sheet, Builder, Arena, DPR, Codices, Compendiums, Party Room, DM Dashboard)
 │   ├── services/                       # Persistence, ACL parsers & legacy rules engines
 │   │   ├── acl/                        # CompendiumJsonIngestionPipeline, CompendiumPipeParser, StatBlockAclParser, EntryNodeTransformer
-│   │   ├── party/                      # CampaignRegistryService, PartyRoomService, SessionGraphService
+│   │   ├── party/                      # CampaignRegistryService, PartyRoomService
 │   │   ├── persistence/                # AppDatabaseService (Hive/IndexedDB), CharacterPersistenceService, HomebrewPersistenceService, AppBackupService
 │   │   ├── repository/                 # LayeredPriorityRepository (SRD / Homebrew / Campaign)
 │   │   └── rules/                      # Dnd5eRulesEngine, AcEngineAndInventory, CharacterActionsResolver, CharacterProgressionEngine,
-│   │                                   # CharacterReparseEngine, CharacterStatCalculator, CharacterValidationEngine, SpellcastingRulesEngine
+│   │                                   # CharacterReparseEngine, CharacterValidationEngine, SpellcastingRulesEngine
 │   ├── theme/                          # AppTheme: 9 fantasy accent palettes, OLED pitch black, domain UI extensions
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters, PWA helpers
 │   └── widgets/                        # Modular Flutter UI components

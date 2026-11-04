@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_skills_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_species_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_backgrounds_library.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 
 void main() {
   group('SRD Character Libraries Tests', () {
@@ -26,27 +24,6 @@ void main() {
       final findBySlug = SrdFeatsLibrary.findBySlug('grappler');
       expect(findBySlug, isNotNull);
       expect(findBySlug!.name, equals('Grappler'));
-    });
-
-    test('SrdSkillsLibrary contains all 18 standard 5e skills with abilities',
-        () {
-      const allSkills = SrdSkillsLibrary.allSkills;
-      expect(allSkills.length, 18);
-
-      final ath = SrdSkillsLibrary.getDefinition(SkillType.athletics);
-      expect(ath.name, 'Athletics');
-      expect(ath.defaultAbility, AbilityType.strength);
-
-      final perc = SrdSkillsLibrary.getDefinition(SkillType.perception);
-      expect(perc.name, 'Perception');
-      expect(perc.defaultAbility, AbilityType.wisdom);
-
-      final stl = SrdSkillsLibrary.getDefinition(SkillType.stealth);
-      expect(stl.name, 'Stealth');
-      expect(stl.defaultAbility, AbilityType.dexterity);
-
-      final dexSkills = SrdSkillsLibrary.getByAbility(AbilityType.dexterity);
-      expect(dexSkills.length, 3); // Acrobatics, Sleight of Hand, Stealth
     });
 
     test(
