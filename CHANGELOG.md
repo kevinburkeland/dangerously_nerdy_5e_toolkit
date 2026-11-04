@@ -4,7 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-04
-- Cleanup slice 7: Retire cs6 mutation branches; restore test removal list header and align deleted file reasons.
+- Cleanup slice 7: Retire cs6 mutation branches; restore test removal list header and align deleted file reasons; add dynamic ratchet test, implicit-dynamic ceilings script, and CI verification.
 
 ## 2026-11-03
 - Cleanup slice 6: Ratchet sees renamed and moved test files with --no-renames and self-tests TN9-TN11; real SHAs in progress notes verified by check_notes_shas and CI integration; reachability law with controls RC1, RL1; remove 36 unreachable files across re-export shims and dead features with zero allowlist.
