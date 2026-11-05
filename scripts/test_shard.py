@@ -18,7 +18,7 @@ def find_test_files(root_dir="test"):
 
 
 def shard_files(files, index, total):
-    return [f for pos, f in enumerate(files) if pos % total == index]
+    return [f for pos, f in enumerate(files) if pos % total == (index + 1) % total]
 
 
 def parse_int(val, name):
