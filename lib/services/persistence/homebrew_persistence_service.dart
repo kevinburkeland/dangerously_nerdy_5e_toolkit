@@ -3674,7 +3674,7 @@ class HomebrewPersistenceService {
     }
   }
 
-  RulesetVersion _mapDomainRulesetToCore(dynamic ruleset) {
+  RulesetVersion _mapDomainRulesetToCore(ruleset) {
     if (ruleset is RulesetVersion) return ruleset;
     return (ruleset.is2014 as bool) ? RulesetVersion.v2014 : RulesetVersion.v2024;
   }
