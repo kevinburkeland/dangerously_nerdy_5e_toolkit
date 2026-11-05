@@ -6,7 +6,8 @@ cd "$REPO_DIR"
 
 # Cleanup slice 7: initial ceilings at app start head
 RAW_TYPE_CEILING=58
-INFERENCE_CEILING=120
+# Cleanup slice 7 Step 4: lowered after typing error callbacks
+INFERENCE_CEILING=105
 
 BACKUP="$(mktemp)"
 cp analysis_options.yaml "$BACKUP"

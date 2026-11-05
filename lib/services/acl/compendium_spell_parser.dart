@@ -58,8 +58,9 @@ class CompendiumSpellParser {
 
     // Damage Math & Evaluation
     var damageMath = List<EvaluationMath>.from(transformed.extractedMath);
-    if (damageMath.isEmpty && raw['damageInflict'] is List) {
-      for (final dmg in raw['damageInflict']) {
+    final rawDamageInflict = raw['damageInflict'];
+    if (damageMath.isEmpty && rawDamageInflict is List) {
+      for (final dmg in rawDamageInflict) {
         final dmgType = DamageType.fromLooseString(dmg?.toString());
         if (dmgType != DamageType.untyped) {
           damageMath.add(EvaluationMath(

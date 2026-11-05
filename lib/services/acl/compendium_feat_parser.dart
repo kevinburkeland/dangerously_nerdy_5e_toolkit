@@ -152,8 +152,9 @@ class CompendiumFeatParser {
           if (!abilities.contains(mapped)) abilities.add(mapped);
           if (v is num && v.toInt() > 0) amount = v.toInt();
         } else if (key == 'choose' && v is Map) {
-          if (v['from'] is List) {
-            for (final item in v['from']) {
+          final fromList = v['from'];
+          if (fromList is List) {
+            for (final item in fromList) {
               final mapped =
                   _expandAbility(item.toString().toLowerCase().trim());
               if (!abilities.contains(mapped)) abilities.add(mapped);

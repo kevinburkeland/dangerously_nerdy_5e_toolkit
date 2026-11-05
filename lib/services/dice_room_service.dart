@@ -378,7 +378,7 @@ class DiceRoomService {
             _localControllers[cleanCode]!.add(getCachedRolls(cleanCode));
           }
           _persistRolls(cleanCode);
-        }, onError: (error, stackTrace) {
+        }, onError: (Object error, StackTrace stackTrace) {
           LoggingService().logNonFatal(
             error,
             stackTrace,
@@ -414,7 +414,7 @@ class DiceRoomService {
               subscriberController.add(rolls);
             }
           },
-          onError: (error, stackTrace) {
+          onError: (Object error, StackTrace stackTrace) {
             if (!subscriberController.isClosed) {
               subscriberController.addError(error, stackTrace);
             }

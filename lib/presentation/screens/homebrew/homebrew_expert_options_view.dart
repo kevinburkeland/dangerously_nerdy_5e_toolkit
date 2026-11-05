@@ -156,7 +156,7 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
           });
         }
       },
-      onError: (error) {
+      onError: (Object error) {
         if (mounted) {
           setState(() {
             _isIngesting = false;

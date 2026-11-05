@@ -86,8 +86,9 @@ class CompendiumClassParser {
 
     // Feature Decisions
     final featureDecisions = <ClassFeatureDecision>[];
-    if (raw['featureDecisions'] is List) {
-      for (final dec in raw['featureDecisions']) {
+    final rawDecisions = raw['featureDecisions'];
+    if (rawDecisions is List) {
+      for (final dec in rawDecisions) {
         if (dec is Map) {
           try {
             featureDecisions.add(

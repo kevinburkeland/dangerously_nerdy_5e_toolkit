@@ -252,8 +252,9 @@ class CommunityCompendiumImporterService {
   }) {
     bool processedAsBundle = false;
 
-    if (map['spell'] is List) {
-      for (final e in map['spell']) {
+    final rawSpells = map['spell'];
+    if (rawSpells is List) {
+      for (final e in rawSpells) {
         if (e is Map<String, dynamic>) {
           try {
             spells.add(adapters.parseSpell(e, forceRuleset: forceRuleset));
@@ -265,8 +266,9 @@ class CommunityCompendiumImporterService {
       processedAsBundle = true;
     }
 
-    if (map['monster'] is List) {
-      for (final e in map['monster']) {
+    final rawMonsters = map['monster'];
+    if (rawMonsters is List) {
+      for (final e in rawMonsters) {
         if (e is Map<String, dynamic>) {
           try {
             monsters.add(adapters.parseMonster(e, forceRuleset: forceRuleset));
@@ -278,8 +280,9 @@ class CommunityCompendiumImporterService {
       processedAsBundle = true;
     }
 
-    if (map['item'] is List) {
-      for (final e in map['item']) {
+    final rawItems = map['item'];
+    if (rawItems is List) {
+      for (final e in rawItems) {
         if (e is Map<String, dynamic>) {
           try {
             items.add(adapters.parseItem(e, forceRuleset: forceRuleset));
@@ -417,8 +420,9 @@ class CommunityCompendiumImporterService {
       }
     }
 
-    if (map['class'] is List) {
-      for (final e in map['class']) {
+    final rawClasses = map['class'];
+    if (rawClasses is List) {
+      for (final e in rawClasses) {
         if (e is Map<String, dynamic>) {
           try {
             classes.add(adapters.parseClass(
@@ -435,8 +439,9 @@ class CommunityCompendiumImporterService {
       processedAsBundle = true;
     }
 
-    if (map['subclass'] is List) {
-      for (final e in map['subclass']) {
+    final rawSubclasses = map['subclass'];
+    if (rawSubclasses is List) {
+      for (final e in rawSubclasses) {
         if (e is Map<String, dynamic>) {
           try {
             subclasses.add(adapters.parseSubclass(
@@ -540,8 +545,9 @@ class CommunityCompendiumImporterService {
       }
     }
 
-    if (map['race'] is List) {
-      for (final e in map['race']) {
+    final rawRaces = map['race'];
+    if (rawRaces is List) {
+      for (final e in rawRaces) {
         if (e is Map<String, dynamic>) {
           try {
             races.add(adapters.parseRace(e, forceRuleset: forceRuleset));
@@ -586,8 +592,9 @@ class CommunityCompendiumImporterService {
       processedAsBundle = true;
     }
 
-    if (map['feat'] is List) {
-      for (final e in map['feat']) {
+    final rawFeats = map['feat'];
+    if (rawFeats is List) {
+      for (final e in rawFeats) {
         if (e is Map<String, dynamic>) {
           try {
             feats.add(adapters.parseFeat(e, forceRuleset: forceRuleset));
@@ -599,8 +606,9 @@ class CommunityCompendiumImporterService {
       processedAsBundle = true;
     }
 
-    if (map['background'] is List) {
-      for (final e in map['background']) {
+    final rawBackgrounds = map['background'];
+    if (rawBackgrounds is List) {
+      for (final e in rawBackgrounds) {
         if (e is Map<String, dynamic>) {
           try {
             backgrounds

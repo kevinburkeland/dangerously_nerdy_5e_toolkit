@@ -313,7 +313,7 @@ class RoomSyncOrchestrator {
           (t) {
             if (!subController.isClosed) subController.add(t);
           },
-          onError: (err, st) {
+          onError: (Object err, StackTrace st) {
             if (!subController.isClosed) subController.addError(err, st);
           },
         );

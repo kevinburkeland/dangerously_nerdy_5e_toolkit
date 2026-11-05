@@ -112,7 +112,7 @@ class DebouncedStorageService {
 
     for (final entry in tasksToFlush.entries) {
       try {
-        unawaited(entry.value().catchError((e, stackTrace) {
+        unawaited(entry.value().catchError((Object e, StackTrace stackTrace) {
           _logger.logNonFatal(
             e,
             stackTrace,

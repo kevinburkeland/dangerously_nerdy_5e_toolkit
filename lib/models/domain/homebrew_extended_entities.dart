@@ -1430,8 +1430,9 @@ extension FeatAsiExtension on Feat {
           if (!abilities.contains(parsed)) abilities.add(parsed);
           if (v is num && v.toInt() > 0) amount = v.toInt();
         } else if (key == 'choose' && v is Map) {
-          if (v['from'] is List) {
-            for (final item in v['from']) {
+          final fromList = v['from'];
+          if (fromList is List) {
+            for (final item in fromList) {
               final parsed = AbilityType.fromLooseString(item.toString());
               if (!abilities.contains(parsed)) abilities.add(parsed);
             }

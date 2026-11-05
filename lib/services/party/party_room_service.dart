@@ -1919,7 +1919,7 @@ class PartyRoomService {
               controller.add(_localRooms[clean]);
             }
           }
-        }, onError: (e, st) {
+        }, onError: (Object e, StackTrace st) {
           LoggingService()
               .logNonFatal(e, st, reason: 'streamSession error for $clean');
           if (!controller.isClosed && _localRooms.containsKey(clean)) {
@@ -1982,7 +1982,7 @@ class PartyRoomService {
             lootMap[item.id] = item;
           }
           return items;
-        }).handleError((e, st) {
+        }).handleError((Object e, StackTrace st) {
           LoggingService()
               .logNonFatal(e, st, reason: 'streamLoot error for $clean');
           final list = _localLoot[clean]?.values.toList() ?? [];
@@ -2028,7 +2028,7 @@ class PartyRoomService {
               snap.docs.map((d) => PartyEvent.fromMap(d.data())).toList();
           _localEvents[clean] = events;
           return events;
-        }).handleError((e, st) {
+        }).handleError((Object e, StackTrace st) {
           LoggingService()
               .logNonFatal(e, st, reason: 'streamEvents error for $clean');
           return _localEvents[clean] ?? [];

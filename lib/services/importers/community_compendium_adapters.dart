@@ -418,15 +418,17 @@ class CommunityCompendiumAdapters {
 
     // Parse explicit featureDecisions or optionalfeatureProg
     final featureDecisions = <ClassFeatureDecision>[];
-    if (json['featureDecisions'] is List) {
-      for (final decMap in json['featureDecisions']) {
+    final rawDecisions = json['featureDecisions'];
+    final rawOptionalProg = json['optionalfeatureProg'];
+    if (rawDecisions is List) {
+      for (final decMap in rawDecisions) {
         if (decMap is Map<String, dynamic>) {
           featureDecisions.add(ClassFeatureDecision.fromMap(decMap));
         }
       }
-    } else if (json['optionalfeatureProg'] is List) {
+    } else if (rawOptionalProg is List) {
       // Community optional feature progression
-      for (final prog in json['optionalfeatureProg']) {
+      for (final prog in rawOptionalProg) {
         if (prog is Map) {
           final progName = prog['name']?.toString() ?? 'Class Choice';
           final progTypeStr =
