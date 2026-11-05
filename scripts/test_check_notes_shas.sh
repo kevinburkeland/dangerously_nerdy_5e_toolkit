@@ -5,7 +5,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK_SCRIPT="$SCRIPT_DIR/check_notes_shas.py"
 
 TMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TMP_DIR"' EXIT
+SERVER_PID=""
+
+cleanup() {
+  if [ -n "$SERVER_PID" ]; then
+    kill "$SERVER_PID" 2>/dev/null || true
+  fi
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT INT TERM
 
 setup_repo() {
   local dir="$1"
@@ -176,4 +184,166 @@ setup_repo() {
   fi
 )
 
-echo "All notes SHA check self-tests passed (NS1 - NS7)."
+# Start local fixture server for NS8-NS13
+SERVER_DIR="$TMP_DIR/server"
+mkdir -p "$SERVER_DIR/repos/test-org/test-repo/actions/runs"
+PORT_FILE="$TMP_DIR/server.port"
+
+(
+  cd "$SERVER_DIR"
+  python3 -c "
+import http.server, socketserver
+
+class Handler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+with socketserver.TCPServer(('127.0.0.1', 0), Handler) as httpd:
+    port = httpd.server_address[1]
+    with open('$PORT_FILE', 'w') as f:
+        f.write(str(port))
+    httpd.serve_forever()
+"
+) &
+SERVER_PID=$!
+
+while [ ! -s "$PORT_FILE" ]; do
+  sleep 0.05
+done
+SERVER_PORT=$(cat "$PORT_FILE")
+API_BASE="http://127.0.0.1:$SERVER_PORT"
+
+# NS8 (control): a notes line <real sha> run 111 where fixture 111 has that head_sha and success passes, and summary says 1 run id checked.
+(
+  repo="$TMP_DIR/repo_ns8"
+  setup_repo "$repo"
+  sha=$(git -C "$repo" rev-parse HEAD)
+
+  echo "{\"head_sha\": \"$sha\", \"conclusion\": \"success\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/111"
+  notes="$TMP_DIR/notes_ns8.md"
+  echo "Step 1: $sha run 111" > "$notes"
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  if [[ "$out" != *"1 run id(s) checked"* ]] || [[ "$out" != *"All SHAs are valid commits"* ]]; then
+    echo "FAIL: NS8 expected pass with 1 run id checked, got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS9: run 222 with no fixture file (404) fails, naming file, line and 222.
+(
+  repo="$TMP_DIR/repo_ns9"
+  setup_repo "$repo"
+  sha=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$TMP_DIR/notes_ns9.md"
+  echo "Step 2: $sha run 222" > "$notes"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: NS9 expected failure for 404 run id, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out" != *"$notes:1:"* ]] || [[ "$out" != *"222"* ]] || [[ "$out" != *"not found"* ]]; then
+    echo "FAIL: NS9 expected failure output to name file, line 1, 222, and not found, got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS10: fixture head_sha is a different SHA: fails, head_sha is …
+(
+  repo="$TMP_DIR/repo_ns10"
+  setup_repo "$repo"
+  sha=$(git -C "$repo" rev-parse HEAD)
+
+  echo "{\"head_sha\": \"0000000000000000000000000000000000000000\", \"conclusion\": \"success\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/333"
+  notes="$TMP_DIR/notes_ns10.md"
+  echo "Step 3: $sha run 333" > "$notes"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: NS10 expected failure for head_sha mismatch, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out" != *"head_sha is"* ]]; then
+    echo "FAIL: NS10 expected output to state 'head_sha is', got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS11: fixture conclusion failure: fails, conclusion is failure.
+(
+  repo="$TMP_DIR/repo_ns11"
+  setup_repo "$repo"
+  sha=$(git -C "$repo" rev-parse HEAD)
+
+  echo "{\"head_sha\": \"$sha\", \"conclusion\": \"failure\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/444"
+  notes="$TMP_DIR/notes_ns11.md"
+  echo "Step 4: $sha run 444" > "$notes"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: NS11 expected failure for non-success conclusion, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out" != *"conclusion is failure"* ]]; then
+    echo "FAIL: NS11 expected output to state 'conclusion is failure', got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS12: run 3333333 with no SHA before it fails, run id without its head SHA.
+(
+  repo="$TMP_DIR/repo_ns12"
+  setup_repo "$repo"
+
+  notes="$TMP_DIR/notes_ns12.md"
+  echo "Orphan run 3333333 without SHA" > "$notes"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: NS12 expected failure for run id without its head SHA, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out" != *"run id without its head SHA"* ]]; then
+    echo "FAIL: NS12 expected output to state 'run id without its head SHA', got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS13: the server is stopped (or --api-base points at a closed port): fails, could not verify.
+(
+  repo="$TMP_DIR/repo_ns13"
+  setup_repo "$repo"
+  sha=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$TMP_DIR/notes_ns13.md"
+  echo "Step 5: $sha run 111" > "$notes"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "http://127.0.0.1:65534" "$notes" 2>&1)
+  rc=$?
+  set -e
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: NS13 expected failure when server is unreachable, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out" != *"could not verify"* ]]; then
+    echo "FAIL: NS13 expected output to state 'could not verify', got: $out" >&2
+    exit 1
+  fi
+)
+
+echo "All notes SHA check self-tests passed (NS1 - NS13)."
