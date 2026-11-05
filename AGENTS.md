@@ -117,6 +117,7 @@ The following components reside in `../vtt-ruleset-dnd5e` and are consumed via `
   - Application services orchestrate domain logic through abstract ports; they must never import concrete infrastructure adapters or DTOs directly.
   - Immutability: Domain entities and value objects must have `const` constructors and `copyWith()` mutators. In-place mutating methods are forbidden; use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`).
   - Compatibility barrels in `lib/models/domain/` exist solely to preserve legacy import paths; do not treat them as canonical domain definitions.
+  - Strict Analysis & Type Safety: The app analyzer runs with `strict-casts`; `scripts/check_strict_analysis.sh` holds the `dynamic`-related ceilings and the canary, and fixes follow the ladder (type the source, use the guard, visible cast) with no defaults and no ignore comments.
 
 ### 2. Upstream Pinned Git Dependency Synchronization Protocol
 `vtt_engine_core` and `vtt_ruleset_dnd5e` are consumed strictly via pinned Git dependencies (`ref: <commit-sha>`) in `pubspec.yaml`. Never treat the repositories as integrated merely because local working trees are compatible. When making upstream changes:

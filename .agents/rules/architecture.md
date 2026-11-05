@@ -84,3 +84,6 @@ When inspecting, editing, or executing commands in an external repository (such 
   4. Ensure `pubspec_overrides.yaml` and `dependency_overrides` are eliminated.
   5. Run `flutter pub get` so the pinned Git commits are actually fetched into the pub cache and locked in `pubspec.lock`.
   6. Run `flutter analyze` and `flutter test` against the fetched Git dependencies before considering work complete.
+
+### 1.9. Strict Analysis & Type Safety
+- The app analyzer runs with `strict-casts`; `scripts/check_strict_analysis.sh` holds the `dynamic`-related ceilings and the canary, and fixes follow the ladder (type the source, use the guard, visible cast) with no defaults and no ignore comments.
