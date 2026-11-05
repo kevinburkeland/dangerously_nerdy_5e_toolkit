@@ -1238,7 +1238,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
     return null;
   }
 
-  static bool _isFeatureDeclaration(Map<String, dynamic> m) {
+  static bool _isFeatureDeclaration(Map m) {
     if (m['name'] == null) return false;
     return m.containsKey('className') ||
         m.containsKey('class') ||
