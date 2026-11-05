@@ -1,0 +1,28 @@
+From c04aff4c4364ebae7769a943ea8ba78a2fa10f0c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 4 Nov 2026 17:52:53 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20Y1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/dice_room_service.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/services/dice_room_service.dart b/lib/services/dice_room_service.dart
+index d9810e6..aa17f65 100644
+--- a/lib/services/dice_room_service.dart
++++ b/lib/services/dice_room_service.dart
+@@ -267,6 +267,7 @@ class DiceRoomService {
+   }
+ 
+   Future<void> _loadPersistedRolls(String roomCode) async {
++    final dynamic probe = 0;
+     final cleanCode = roomCode.trim().toUpperCase();
+     try {
+       final prefs = await SharedPreferences.getInstance();
+-- 
+2.55.0
+

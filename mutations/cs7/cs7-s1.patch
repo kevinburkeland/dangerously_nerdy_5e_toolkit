@@ -1,0 +1,29 @@
+From e454e5183d33c208d3c115f2545e794f179bf236 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 4 Nov 2026 17:51:42 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20S1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/adapters/remote/github_ingestor_adapter.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/infrastructure/adapters/remote/github_ingestor_adapter.dart b/lib/infrastructure/adapters/remote/github_ingestor_adapter.dart
+index a616cae..86418cf 100644
+--- a/lib/infrastructure/adapters/remote/github_ingestor_adapter.dart
++++ b/lib/infrastructure/adapters/remote/github_ingestor_adapter.dart
+@@ -725,7 +725,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
+               final merged = Map<String, dynamic>.from(resolvedTarget);
+               node.forEach((k, v) {
+                 if (k != r'$ref' && k != 'ref') {
+-                  merged[k as String] =
++                  merged[k] =
+                       _resolveRefs(v, localCache, rootDoc, visiting: visited);
+                 }
+               });
+-- 
+2.55.0
+
