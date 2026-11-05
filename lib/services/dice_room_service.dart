@@ -267,6 +267,7 @@ class DiceRoomService {
   }
 
   Future<void> _loadPersistedRolls(String roomCode) async {
+    final dynamic probe = 0;
     final cleanCode = roomCode.trim().toUpperCase();
     try {
       final prefs = await SharedPreferences.getInstance();
