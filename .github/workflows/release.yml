@@ -27,22 +27,15 @@ concurrency:
 
 jobs:
   # -----------------------------------------------------------------------
-  # STAGE 1: VALIDATION & TESTING (LINT, ANALYZE, TEST COVERAGE)
+  # STAGE 1: VALIDATION & TESTING (SPLIT ACROSS PARALLEL JOBS)
   # -----------------------------------------------------------------------
-  validate:
-    name: 🧪 Validation & Test Suite
+  analyze:
+    name: 🔍 Static Code Analysis & Strict Analysis
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: ☕ Set up Java 17 (JDK)
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
 
       - name: 💙 Set up Flutter SDK (Pinned Version)
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
@@ -60,20 +53,80 @@ jobs:
       - name: 🔒 Verify Strict Analysis Ceilings
         run: ./scripts/check_strict_analysis.sh
 
-      - name: 🧪 Execute Unit & Widget Test Suite with Coverage
-        run: flutter test --coverage
+  test:
+    name: 🧪 Unit & Widget Test Suite (Shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
 
-      - name: 🌐 Web Compiler Tests (Chrome)
-        run: flutter test --platform chrome test/application/services/map_slice_1_1_active_map_test.dart test/application/services/cold_iron_pass_7_1_reconcile_law_test.dart test/application/blob/blob_codec_test.dart test/application/blob/blob_transfer_examples_test.dart test/infrastructure/storage/web_blob_store_adapter_test.dart test/application/map/map_image_header_test.dart test/infrastructure/map/web_map_image_intake_adapter_test.dart test/application/map/map_slice_1_3_flow_test.dart test/infrastructure/adapters/webrtc_loopback_test.dart test/application/map/grid_geometry_law_test.dart
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: 🌐 Compile Web Release Bundle
-        run: ./scripts/build_web.sh
+      - name: 💙 Set up Flutter SDK (Pinned Version)
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
+
+      - name: 📦 Install Pub Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: 🧪 Execute Sharded Unit & Widget Test Suite with Coverage
+        run: |
+          python3 -I scripts/test_shard.py list ${{ strategy.job-index }} ${{ strategy.job-total }} > "$RUNNER_TEMP/shard_files.txt"
+          echo "Shard ${{ strategy.job-index }} of ${{ strategy.job-total }}: $(wc -l < "$RUNNER_TEMP/shard_files.txt") files"
+          mapfile -t files < "$RUNNER_TEMP/shard_files.txt"
+          [ "${#files[@]}" -gt 0 ] || { echo "empty shard"; exit 1; }
+          flutter test --coverage "${files[@]}"
 
       - name: 📊 Upload Test Coverage Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: lcov-coverage-report
+          name: lcov-coverage-report-${{ strategy.job-index }}
           path: coverage/lcov.info
+
+  web-tests:
+    name: 🌐 Web Compiler Tests (Chrome)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: 💙 Set up Flutter SDK (Pinned Version)
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
+
+      - name: 📦 Install Pub Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: 🌐 Web Compiler Tests (Chrome)
+        run: flutter test --platform chrome test/application/services/map_slice_1_1_active_map_test.dart test/application/services/cold_iron_pass_7_1_reconcile_law_test.dart test/application/blob/blob_codec_test.dart test/application/blob/blob_transfer_examples_test.dart test/infrastructure/storage/web_blob_store_adapter_test.dart test/application/map/map_image_header_test.dart test/infrastructure/map/web_map_image_intake_adapter_test.dart test/application/map/map_slice_1_3_flow_test.dart test/infrastructure/adapters/webrtc_loopback_test.dart test/application/map/grid_geometry_law_test.dart
+
+  tests-complete:
+    name: 🏁 All Tests Complete Verification
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: 🧪 Run Test Shard Script Self-Tests
+        run: ./scripts/test_test_shard.sh
+
+      - name: 🔒 Verify Test Sharding Integrity
+        run: python3 -I scripts/test_shard.py check 4
+
+      - name: 🔒 Verify Test Shard Workflow Configuration
+        run: python3 -I scripts/test_shard.py check-workflow .github/workflows/release.yml
 
   # -----------------------------------------------------------------------
   # STAGE 2: FIRESTORE SECURITY RULES EMULATOR TESTS
@@ -165,7 +218,6 @@ jobs:
   # -----------------------------------------------------------------------
   build-web:
     name: 🌐 Build & Package Web Bundle
-    needs: [validate, firestore-rules, dco]
     runs-on: ubuntu-latest
 
     steps:
@@ -195,7 +247,7 @@ jobs:
   # -----------------------------------------------------------------------
   build-android:
     name: 🤖 Build Android Release (.aab)
-    needs: validate
+    needs: [analyze, tests-complete, web-tests]
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.build_mobile == true)
     runs-on: ubuntu-latest
 
@@ -255,7 +307,7 @@ jobs:
   # -----------------------------------------------------------------------
   build-ios:
     name: 🍎 Build iOS Release (.ipa)
-    needs: validate
+    needs: [analyze, tests-complete, web-tests]
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.build_mobile == true)
     runs-on: macos-latest
 
