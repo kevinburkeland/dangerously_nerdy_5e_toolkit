@@ -22,28 +22,7 @@ int countDynamic(String source) {
     final type = ctx['type'] as String;
 
     if (type == 'code') {
-      if (source.startsWith('//', i)) {
-        while (i < n && source[i] != '\n') {
-          i++;
-        }
-        continue;
-      }
-      if (source.startsWith('/*', i)) {
-        int depth = 1;
-        i += 2;
-        while (i < n && depth > 0) {
-          if (source.startsWith('/*', i)) {
-            depth++;
-            i += 2;
-          } else if (source.startsWith('*/', i)) {
-            depth--;
-            i += 2;
-          } else {
-            i++;
-          }
-        }
-        continue;
-      }
+      // stop skipping comments
 
       if (source[i] == 'r' && i + 1 < n && (source[i + 1] == "'" || source[i + 1] == '"')) {
         final q = source[i + 1];
