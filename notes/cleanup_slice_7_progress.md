@@ -6,8 +6,8 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 
 ## Steps
 - [x] Step 1 Retire cs6: core fa35b438bc6dbfa589989ad903268c401d9bf6b5 run 41903199666, ruleset 4bf82201da6fb2bb55ff2d50665a14e6768bec65 run 41903215050, app 0a131ac9c7bdd41af68b3d7b6ed2d48e088ee4c4 run 41903240468
-- [x] Step 2 Removal list reasons and header: app 88c8fb049e08be49930863b8626cff9c8469bded run 41906212814
-- [x] Step 3 Dynamic ratchet and implicit-dynamic ceilings: app 7f25f230956365bf7c415cf694777736faa76c42 run 41909642471
+- [x] Step 2 Removal list reasons and header: app 88c8fb049e08be49930863b8626cff9c8469bded run 41909642471
+- [x] Step 3 Dynamic ratchet and implicit-dynamic ceilings: app 7f25f230956365bf7c415cf694777736faa76c42 run 41906212814
 - [x] Step 4 Strict casts: callbacks and guarded reads: app ef6628d077280ef046cdb3fc54af714355a51243 run 41938271463
 - [x] Step 5 Strict casts: the rest: app e3653ec469dd1a8e530f05632263153c5a7d1b30 run 41942354823
 - [x] Step 6 Strict casts on, with a canary: app b62d2693d11b422afe914cf329a985120f931ba1 run 41949474802
