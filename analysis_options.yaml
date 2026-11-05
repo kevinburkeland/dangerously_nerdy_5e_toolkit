@@ -1,6 +1,5 @@
 analyzer:
   language:
-    strict-casts: true
   exclude:
     - build/**
     - android/**
