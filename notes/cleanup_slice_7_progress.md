@@ -1,7 +1,7 @@
 # Cleanup slice 7 progress notes
 Status: IN PROGRESS
 Start heads: core 3776d5b5f5eb3d33bfa07cbef48280a4179bb78e, ruleset 854ae142393a7b69120deeed046d307106715f6c, app b4badc20ec5b78a937f2f9405f57f913dbaaf121
-Last pushed heads (CI green): core fa35b438bc6dbfa589989ad903268c401d9bf6b5, ruleset 4bf82201da6fb2bb55ff2d50665a14e6768bec65, app e3653ec469dd1a8e530f05632263153c5a7d1b30
+Last pushed heads (CI green): core fa35b438bc6dbfa589989ad903268c401d9bf6b5, ruleset 4bf82201da6fb2bb55ff2d50665a14e6768bec65, app b62d2693d11b422afe914cf329a985120f931ba1
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
 
 ## Steps
@@ -10,11 +10,11 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 - [x] Step 3 Dynamic ratchet and implicit-dynamic ceilings: app 7f25f230956365bf7c415cf694777736faa76c42 run 41909642471
 - [x] Step 4 Strict casts: callbacks and guarded reads: app ef6628d077280ef046cdb3fc54af714355a51243 run 41938271463
 - [x] Step 5 Strict casts: the rest: app e3653ec469dd1a8e530f05632263153c5a7d1b30 run 41942354823
-- [ ] Step 6 Strict casts on, with a canary
+- [x] Step 6 Strict casts on, with a canary: app b62d2693d11b422afe914cf329a985120f931ba1 run 41949474802
 - [ ] Step 7 Mutations and report
 
 ## Next
-Step 6: turn on strict-casts permanently, extend check_strict_analysis.sh with canary and options/ignore guards, update docs.
+Step 7: mutations S1-S4 and Y1-Y4, capture final numbers and outputs, assemble final report.
 
 ## Open issues and deviations
 None.
