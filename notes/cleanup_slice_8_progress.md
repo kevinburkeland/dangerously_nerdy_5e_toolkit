@@ -17,4 +17,4 @@ Step 5: extend check_notes_shas to verify CI run ids against GitHub API with cac
 
 ## Open issues and deviations
 After retiring cs7 mutation branches, git checkout in fresh CI clone did not fetch the 8 unreferenced mutation branch heads that were referenced in notes/cleanup_slice_7_progress.md line 14, causing CI check_notes_shas to fail. Pushed archive/cs7-* tags to origin to allow actions/checkout to fetch the archived mutation commit objects without leaving mutation heads open.
-Prompt cited test/domain/reachability_law_test.dart in Step 4 verification command, but the actual file path in codebase is test/infrastructure/compliance/reachability_law_test.dart.
+Prompt cited reachability_law_test.dart under test/domain/ (file does not exist in domain/), but actual file is test/infrastructure/compliance/reachability_law_test.dart.
