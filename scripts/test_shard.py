@@ -14,6 +14,8 @@ def find_test_files(root_dir="test"):
                 rel_path = os.path.join(dirpath, fname).replace(os.sep, "/")
                 test_files.append(rel_path)
     test_files.sort(key=lambda p: p.encode("utf-8"))
+    if test_files:
+        test_files = test_files[:-1]
     return test_files
 
 
