@@ -8,6 +8,22 @@ IGNORE_COUNT=51
 RAW_TYPE_CEILING=58
 INFERENCE_CEILING=105
 
+# Ensure only root analysis_options.yaml exists
+options_files=()
+while IFS= read -r f; do
+  [ -n "$f" ] && options_files+=("$f")
+done < <(git ls-files --cached --others --exclude-standard | grep -E '(^|/)analysis_options\.yaml$' || true)
+
+if [ "${#options_files[@]}" -ne 1 ] || [ "${options_files[0]}" != "analysis_options.yaml" ]; then
+  echo "FAIL: extra analysis_options.yaml (only the root file is allowed):" >&2
+  for f in "${options_files[@]}"; do
+    if [ "$f" != "analysis_options.yaml" ]; then
+      echo "  $f" >&2
+    fi
+  done
+  exit 1
+fi
+
 # --- Phase 1: Validate analysis_options.yaml ---
 python3 - << 'PYEOF'
 import sys
