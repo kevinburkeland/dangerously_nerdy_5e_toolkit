@@ -4,7 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-04
-- Cleanup slice 8: Retire cs7 mutation branches; split unit test suite across 4 parallel shards via test_shard.py with workflow matrix integration; enforce single root analysis_options.yaml in check_strict_analysis.sh.
+- Cleanup slice 8: Retire cs7 mutation branches; split unit test suite across 4 parallel shards via test_shard.py with workflow matrix integration; enforce single root analysis_options.yaml in check_strict_analysis.sh; lower dynamic ceiling to 1054 via Object? cast in webrtc_mesh_adapter and direct ruleset pass in homebrew_persistence_service.
 - Cleanup slice 7: Retire cs6 mutation branches; restore test removal list header and align deleted file reasons; add dynamic ratchet test, implicit-dynamic ceilings script, and CI verification; type 10 error callbacks and promote 14 guarded for loops under strict-casts; make explicit remaining 24 strict cast sites and update test suites with dynamic ceiling ratchet at 1056; turn on strict-casts permanently with canary and options/ignore guards in check_strict_analysis.sh and documentation updates.
 
 ## 2026-11-03

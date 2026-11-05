@@ -138,8 +138,8 @@ int countDynamic(String source) {
   return count;
 }
 
-// Cleanup slice 7: initial ceiling at app start head
-const kDynamicCeiling = 1056;
+// Cleanup slice 8 Step 4: dynamic ceiling lowered to 1054
+const kDynamicCeiling = 1054;
 
 void main() {
   group('dynamic ratchet', () {

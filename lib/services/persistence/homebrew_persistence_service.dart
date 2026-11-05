@@ -3674,11 +3674,6 @@ class HomebrewPersistenceService {
     }
   }
 
-  RulesetVersion _mapDomainRulesetToCore(dynamic ruleset) {
-    if (ruleset is RulesetVersion) return ruleset;
-    return (ruleset.is2014 as bool) ? RulesetVersion.v2014 : RulesetVersion.v2024;
-  }
-
   /// Persists a batch of [HomebrewEntity] items parsed from remote repositories
   /// into canonical storage collections and optionally synchronizes runtime libraries.
   Future<void> saveHomebrewEntitiesBatch(
@@ -3786,7 +3781,6 @@ class HomebrewPersistenceService {
 
     for (final entity in entities) {
       final payload = Map<String, dynamic>.from(entity.rawPayload);
-      final coreRuleset = _mapDomainRulesetToCore(entity.ruleset);
       final typeLower = entity.entityType.toLowerCase().trim();
 
       final isFluff = typeLower.endsWith('fluff') ||
@@ -3843,7 +3837,7 @@ class HomebrewPersistenceService {
             continue;
           }
           monsters
-              .add(adapters.parseMonster(payload, forceRuleset: coreRuleset));
+              .add(adapters.parseMonster(payload, forceRuleset: entity.ruleset));
           monsterPayloads.add(payload);
         } else {
           switch (typeLower) {
@@ -3858,7 +3852,7 @@ class HomebrewPersistenceService {
                 break;
               }
               spells
-                  .add(adapters.parseSpell(payload, forceRuleset: coreRuleset));
+                  .add(adapters.parseSpell(payload, forceRuleset: entity.ruleset));
               spellPayloads.add(payload);
             case 'equipment' ||
                   'item' ||
@@ -3876,7 +3870,7 @@ class HomebrewPersistenceService {
                       SrdMatchResult.notSrd) {
                 break;
               }
-              items.add(adapters.parseItem(payload, forceRuleset: coreRuleset));
+              items.add(adapters.parseItem(payload, forceRuleset: entity.ruleset));
               itemPayloads.add(payload);
             case 'class':
               if (excludeSrdCanon &&
@@ -3890,7 +3884,7 @@ class HomebrewPersistenceService {
               }
               classes.add(adapters.parseClass(
                 payload,
-                forceRuleset: coreRuleset,
+                forceRuleset: entity.ruleset,
                 classFeatureMap: batchClassFeatureMap.isNotEmpty
                     ? batchClassFeatureMap
                     : null,
@@ -3911,7 +3905,7 @@ class HomebrewPersistenceService {
               }
               subclasses.add(adapters.parseSubclass(
                 payload,
-                forceRuleset: coreRuleset,
+                forceRuleset: entity.ruleset,
                 subclassFeatureMap: batchSubclassFeatureMap.isNotEmpty
                     ? batchSubclassFeatureMap
                     : null,
@@ -3927,11 +3921,11 @@ class HomebrewPersistenceService {
                       SrdMatchResult.notSrd) {
                 break;
               }
-              races.add(adapters.parseRace(payload, forceRuleset: coreRuleset));
+              races.add(adapters.parseRace(payload, forceRuleset: entity.ruleset));
               racePayloads.add(payload);
             case 'subrace':
               final sub =
-                  raceParser.parseSubrace(payload, forceRuleset: coreRuleset);
+                  raceParser.parseSubrace(payload, forceRuleset: entity.ruleset);
               if (excludeSrdCanon &&
                   srdIndex.checkEntity(
                         slug: sub.id.slug,
@@ -3971,7 +3965,7 @@ class HomebrewPersistenceService {
                   final parentName = (payload['raceName'] as String?) ??
                       sub.raceSlug.replaceAll('-', ' ');
                   races.add(Race(
-                    id: EntityId(slug: sub.raceSlug, ruleset: coreRuleset),
+                    id: EntityId(slug: sub.raceSlug, ruleset: entity.ruleset),
                     name: parentName,
                     traitsMarkdown: '',
                     subraces: [sub],
@@ -3994,7 +3988,7 @@ class HomebrewPersistenceService {
                       SrdMatchResult.notSrd) {
                 break;
               }
-              feats.add(adapters.parseFeat(payload, forceRuleset: coreRuleset));
+              feats.add(adapters.parseFeat(payload, forceRuleset: entity.ruleset));
               featPayloads.add(payload);
             case 'background':
               if (excludeSrdCanon &&
@@ -4007,7 +4001,7 @@ class HomebrewPersistenceService {
                 break;
               }
               backgrounds.add(
-                  adapters.parseBackground(payload, forceRuleset: coreRuleset));
+                  adapters.parseBackground(payload, forceRuleset: entity.ruleset));
               backgroundPayloads.add(payload);
             default:
               if (excludeSrdCanon &&
@@ -4022,7 +4016,7 @@ class HomebrewPersistenceService {
               final entry = genericParser.parseGenericEntry(
                 payload,
                 defaultCategory: entity.entityType,
-                forceRuleset: coreRuleset,
+                forceRuleset: entity.ruleset,
               );
               others.add(entry);
               otherPayloads.add(payload);
@@ -4041,7 +4035,7 @@ class HomebrewPersistenceService {
         final entry = genericParser.parseGenericEntry(
           payload,
           defaultCategory: entity.entityType,
-          forceRuleset: coreRuleset,
+          forceRuleset: entity.ruleset,
         );
         others.add(entry);
         otherPayloads.add(payload);
