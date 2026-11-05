@@ -197,7 +197,7 @@ class CharacterFactory {
       for (final skill in draft.backgroundRef!.grantedSkills) {
         if (!compiledSkills.containsKey(skill) ||
             compiledSkills[skill] == SkillProficiencyLevel.none) {
-          compiledSkills[skill] = SkillProficiencyLevel.proficient;
+          compiledSkills[skill as SkillType] = SkillProficiencyLevel.proficient;
         }
       }
       final bgSkillsRaw =

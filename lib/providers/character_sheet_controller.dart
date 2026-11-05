@@ -1435,7 +1435,7 @@ class CharacterSheetController extends ChangeNotifier {
           } else if (item is Map) {
             final tName = item.keys.firstWhere(
                 (k) => k != 'any' && k != 'anyArtisansTool',
-                orElse: () => '');
+                orElse: () => '') as String;
             if (tName.isNotEmpty && !updatedTools.contains(tName)) {
               updatedTools.add(tName);
             }
@@ -1637,7 +1637,7 @@ class CharacterSheetController extends ChangeNotifier {
         } else if (item is Map) {
           final tName = item.keys.firstWhere(
               (k) => k != 'any' && k != 'anyArtisansTool',
-              orElse: () => '');
+              orElse: () => '') as String;
           if (tName.isNotEmpty) featTools.add(tName);
         }
       }

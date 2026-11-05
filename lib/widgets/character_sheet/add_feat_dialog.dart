@@ -205,7 +205,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
         if (t is Map) {
           final tName = t.keys.firstWhere(
               (k) => k != 'any' && k != 'anyArtisansTool',
-              orElse: () => '');
+              orElse: () => '') as String;
           if (tName.isNotEmpty && !granted.contains(tName)) granted.add(tName);
         }
       }

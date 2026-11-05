@@ -734,7 +734,7 @@ class ArenaCombatant {
 
     switch (rider) {
       case ConditionRider(
-          :final condition,
+          :final condition as ArenaCondition,
           :final requiresSave,
           :final saveDc,
           :final saveAttributeKey

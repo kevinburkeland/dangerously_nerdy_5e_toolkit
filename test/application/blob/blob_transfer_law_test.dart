@@ -206,7 +206,7 @@ void main() {
             try {
               BlobFetchResult? result;
               Object? fetchError;
-              service.fetch(ref, campaignId: 'c_$seed').then(
+              service.fetch(ref, campaignId: 'c_$seed').then<void>(
                 (r) => result = r,
                 onError: (e) => fetchError = e,
               );

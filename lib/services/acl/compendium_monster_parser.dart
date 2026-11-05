@@ -538,7 +538,7 @@ class CompendiumMonsterParser {
           if (mode == 'canHover' || mode == 'hover') {
             parts.add('(hover)');
           } else {
-            parts.add(mode);
+            parts.add(mode as String);
           }
         } else if (val == false) {
           // ignore false flags
@@ -801,7 +801,7 @@ class CompendiumMonsterParser {
               arr.add(items);
             }
           } else if (items != null) {
-            target[key] = items is List ? List.from(items) : [items];
+            target[key as String] = items is List ? List.from(items) : [items];
           }
         } else if (mode == 'prependArr') {
           final items = rule['items'];
@@ -813,7 +813,7 @@ class CompendiumMonsterParser {
               arr.insert(0, items);
             }
           } else if (items != null) {
-            target[key] = items is List ? List.from(items) : [items];
+            target[key as String] = items is List ? List.from(items) : [items];
           }
         } else if (mode == 'replaceArr') {
           final replace = rule['replace'];

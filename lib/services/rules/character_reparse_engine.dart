@@ -27,8 +27,9 @@ class CharacterReparseEngine {
     final startingClass = character.progression.startingClass;
     final classSlug = startingClass?.classRef.slug;
     final speciesSlug = character.speciesRef.slug;
-    final subraceSlug = (character.customProperties['subrace'] is Map
-            ? character.customProperties['subrace']['slug']
+    final subraceRaw = character.customProperties['subrace'];
+    final String? subraceSlug = (subraceRaw is Map
+            ? subraceRaw['slug'] as String?
             : null) ??
         character.customProperties['subspecies']?.toString();
     final backgroundSlug = character.backgroundRef?.slug;

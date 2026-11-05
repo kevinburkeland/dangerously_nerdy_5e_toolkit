@@ -272,7 +272,7 @@ class DiceRoomService {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString('$_kPersistedRoomRollsPrefix$cleanCode');
       if (raw != null && raw.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(raw);
+        final decoded = jsonDecode(raw) as List<dynamic>;
         final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
         final loaded = decoded
             .map((item) =>

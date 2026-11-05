@@ -818,7 +818,9 @@ void main() {
 
         void assertStorageInvariants(String stepDesc) {
           final box = mockDb.writtenData[AppDatabaseService.boxCampaignProfiles] ?? {};
-          final currentIndex = List<String>.from(box[LocalCampaignRepository.profileIndexKey] ?? []);
+          final currentIndex = List<String>.from(
+              (box[LocalCampaignRepository.profileIndexKey] ?? [])
+                  as Iterable<dynamic>);
 
           for (final id in storedIds) {
             expect(currentIndex, contains(id),

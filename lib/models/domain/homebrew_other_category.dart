@@ -86,7 +86,8 @@ enum HomebrewOtherCategory {
             caseSensitive: false);
         for (final col in colLabels) {
           final colStr =
-              col is Map ? (col['entry'] ?? col.toString()) : col.toString();
+              (col is Map ? (col['entry'] ?? col.toString()) : col.toString())
+                  as String;
           if (diceRegex.hasMatch(colStr)) {
             return true;
           }

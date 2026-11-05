@@ -725,7 +725,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
               final merged = Map<String, dynamic>.from(resolvedTarget);
               node.forEach((k, v) {
                 if (k != r'$ref' && k != 'ref') {
-                  merged[k] =
+                  merged[k as String] =
                       _resolveRefs(v, localCache, rootDoc, visiting: visited);
                 }
               });

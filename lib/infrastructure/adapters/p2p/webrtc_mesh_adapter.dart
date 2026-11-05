@@ -367,7 +367,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
       if (signaling != null && candidate.candidate != null) {
         signaling.sendIceCandidate(
           toNodeId: peerId,
-          candidate: candidate.toMap(),
+          candidate: candidate.toMap() as Map<String, dynamic>,
         );
       }
     };

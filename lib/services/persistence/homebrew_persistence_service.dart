@@ -3676,7 +3676,7 @@ class HomebrewPersistenceService {
 
   RulesetVersion _mapDomainRulesetToCore(dynamic ruleset) {
     if (ruleset is RulesetVersion) return ruleset;
-    return ruleset.is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024;
+    return (ruleset.is2014 as bool) ? RulesetVersion.v2014 : RulesetVersion.v2024;
   }
 
   /// Persists a batch of [HomebrewEntity] items parsed from remote repositories
