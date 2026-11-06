@@ -82,6 +82,21 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ 
 | `lib/utils` | Cryptographic utilities, secure random generation, and platform helpers. |
 | `lib/widgets` | Modular UI components, dialogs, and compendium cards. |
 
+## Layer import table
+
+<!-- layer-table:start -->
+| Folder | May import these app folders | Flutter allowed? |
+|---|---|---|
+| `domain` | `domain` | no |
+| `utils` | `domain`, `utils` | no |
+| `models` | `domain`, `models`, `utils` | no |
+| `application` | `domain`, `models`, `utils`, `application` | no |
+| `services` | `domain`, `models`, `utils`, `application`, `services`, `infrastructure` | yes |
+| `infrastructure` | `domain`, `models`, `utils`, `application`, `services`, `infrastructure` | yes |
+| `providers` | everything above, and `providers` | yes |
+| `presentation`, `screens`, `widgets`, `theme` | everything above, and `presentation`, `screens`, `widgets`, `theme` | yes |
+<!-- layer-table:end -->
+
 ## The Battle Map
 
 The battle map subsystem provides tactical grid maps and token movement for shared multiplayer sessions.
