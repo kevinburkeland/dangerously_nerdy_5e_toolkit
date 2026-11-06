@@ -1,0 +1,31 @@
+From 2529172dc84fb95f9c45b323e47eb05583b5994d Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 5 Nov 2026 20:42:49 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20d2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/dice_room_service.dart | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/lib/services/dice_room_service.dart b/lib/services/dice_room_service.dart
+index 3cd65a18..162497e4 100644
+--- a/lib/services/dice_room_service.dart
++++ b/lib/services/dice_room_service.dart
+@@ -145,9 +145,7 @@ class DiceRoomService {
+   Future<void> _disconnectTransport() async {
+     try {
+       final orchestrator = _orchestrator ?? _instance._orchestrator;
+-      if (orchestrator != null) {
+-        orchestrator.stopSynchronization();
+-      }
++      // orchestrator.stopSynchronization() omitted by mutation
+       final transport = _transport ?? _instance._transport;
+       if (transport != null) {
+         await transport.disconnect();
+-- 
+2.55.0
+

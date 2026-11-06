@@ -1,0 +1,28 @@
+From 7f48642336dc51c68d2d5080e233502bb04d34f5 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 5 Nov 2026 20:40:29 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20l3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/campaign_profile_service.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/services/persistence/campaign_profile_service.dart b/lib/services/persistence/campaign_profile_service.dart
+index 3d79fb53..12ef6746 100644
+--- a/lib/services/persistence/campaign_profile_service.dart
++++ b/lib/services/persistence/campaign_profile_service.dart
+@@ -43,6 +43,7 @@ class CampaignProfileService extends ChangeNotifier {
+     BlobStorePort Function()? blobStoreProvider,
+     CampaignRegistryService? registryService,
+   }) {
++    final dummy = registryService ?? CampaignRegistryService();
+     if (repo != null) {
+       return CampaignProfileService._internal(
+         replicaId: replicaId,
+-- 
+2.55.0
+

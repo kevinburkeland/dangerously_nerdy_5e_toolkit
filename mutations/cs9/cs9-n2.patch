@@ -1,0 +1,28 @@
+From e3627929f1287927dff50e0f19404356e90abb10 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 5 Nov 2026 20:38:56 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20n2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ notes/cleanup_slice_8_progress.md | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/notes/cleanup_slice_8_progress.md b/notes/cleanup_slice_8_progress.md
+index 1162ec11..b4380e2a 100644
+--- a/notes/cleanup_slice_8_progress.md
++++ b/notes/cleanup_slice_8_progress.md
+@@ -13,7 +13,6 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core
+ - [x] Step 6 Mutations and report
+ 
+ ## Red runs on main
+-24ba806a077527be49d5c6fa79bb41e59804a753 red run 41966504591
+ 74b801785774b3a9dabda5598f78b8a966921c33 red run 41967067058
+ 
+ ## Next
+-- 
+2.55.0
+

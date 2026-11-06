@@ -1,0 +1,28 @@
+From 505a0e2d2cd71531e8f96d182fc9245ef6d4ea0b Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 5 Nov 2026 20:39:58 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20l2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/party/party_room_service.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/services/party/party_room_service.dart b/lib/services/party/party_room_service.dart
+index 2ed42c09..40a0afa6 100644
+--- a/lib/services/party/party_room_service.dart
++++ b/lib/services/party/party_room_service.dart
+@@ -223,6 +223,7 @@ class PartyRoomService {
+             characterPersistenceService ?? CharacterPersistenceService(),
+         _campaignProfileService =
+             campaignProfileService ?? CampaignProfileService() {
++    if (sl.isRegistered<StatefulHlcClock>()) {}
+     if (_clock.replicaId != this.replicaId) {
+       throw ArgumentError(
+         'PartyRoomService writer identity mismatch: '
+-- 
+2.55.0
+

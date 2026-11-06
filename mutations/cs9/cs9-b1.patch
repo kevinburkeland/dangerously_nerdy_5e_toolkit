@@ -1,0 +1,25 @@
+From 73333515c9b89fd700f9e67aeb3c606472d8c542 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 5 Nov 2026 20:40:56 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20b1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/screens/character_builder_screen.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/screens/character_builder_screen.dart b/lib/screens/character_builder_screen.dart
+index 3d26c39f..714e0d4b 100644
+--- a/lib/screens/character_builder_screen.dart
++++ b/lib/screens/character_builder_screen.dart
+@@ -6240,3 +6240,4 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
+     );
+   }
+ }
++// mutation line
+-- 
+2.55.0
+

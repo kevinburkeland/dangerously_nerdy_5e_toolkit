@@ -1,0 +1,31 @@
+From 731d5d40d7fe9dfb507901445a0737fb201652ca Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 5 Nov 2026 20:41:51 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20d1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/di/injection_container.dart | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/lib/infrastructure/di/injection_container.dart b/lib/infrastructure/di/injection_container.dart
+index d2c54efe..2abeae12 100644
+--- a/lib/infrastructure/di/injection_container.dart
++++ b/lib/infrastructure/di/injection_container.dart
+@@ -353,10 +353,6 @@ Future<void> initServiceLocator({
+         clock: sl<StatefulHlcClock>(),
+       ));
+ 
+-  sl.registerLazySingleton<RoomSessionStarter>(() => RoomSessionStarter(
+-        orchestrator: sl<RoomSyncOrchestrator>(),
+-        maps: sl<ActiveMapController>(),
+-      ));
+ 
+   DiceRoomService.configure(
+     transport: sl<IP2pTransportPort>(),
+-- 
+2.55.0
+

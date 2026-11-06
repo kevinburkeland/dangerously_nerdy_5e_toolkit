@@ -1,0 +1,36 @@
+From 252f69e0aa4ca93629be6d83949583b0913865b7 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 5 Nov 2026 20:39:30 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20l1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/campaign_profile_service.dart | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/services/persistence/campaign_profile_service.dart b/lib/services/persistence/campaign_profile_service.dart
+index 3d79fb53..67d9e94f 100644
+--- a/lib/services/persistence/campaign_profile_service.dart
++++ b/lib/services/persistence/campaign_profile_service.dart
+@@ -8,6 +8,7 @@ import 'package:vtt_engine_core/models/session_graph_models.dart';
+ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+ 
+ import '../../infrastructure/repositories/campaign_storage_migration.dart';
++import '../../infrastructure/di/injection_container.dart';
+ import '../../application/blob/blob_store_port.dart';
+ import '../party/campaign_registry_service.dart';
+ import '../../models/dm_screen_data.dart';
+@@ -43,6 +44,7 @@ class CampaignProfileService extends ChangeNotifier {
+     BlobStorePort Function()? blobStoreProvider,
+     CampaignRegistryService? registryService,
+   }) {
++    sl<ICampaignRepository>();
+     if (repo != null) {
+       return CampaignProfileService._internal(
+         replicaId: replicaId,
+-- 
+2.55.0
+
