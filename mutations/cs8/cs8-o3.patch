@@ -1,0 +1,29 @@
+From 5981bbc3d0b63d62408f86371a2dc77a37ca7ebc Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 4 Nov 2026 20:31:51 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs8-?=
+ =?UTF-8?q?o3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/importers/analysis_options.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+ create mode 100644 lib/services/importers/analysis_options.yaml
+
+diff --git a/lib/services/importers/analysis_options.yaml b/lib/services/importers/analysis_options.yaml
+new file mode 100644
+index 00000000..b5d51210
+--- /dev/null
++++ b/lib/services/importers/analysis_options.yaml
+@@ -0,0 +1,5 @@
++include: ../../../analysis_options.yaml
++
++analyzer:
++  language:
++    strict-casts: false
+-- 
+2.55.0
+

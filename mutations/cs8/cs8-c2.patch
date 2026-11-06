@@ -1,0 +1,30 @@
+From bb064ca494a0bbebc3e6211345d2c3025bd7226e Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 4 Nov 2026 20:30:25 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs8-?=
+ =?UTF-8?q?c2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/test_shard.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/test_shard.py b/scripts/test_shard.py
+index 2252cb82..a7ed9524 100755
+--- a/scripts/test_shard.py
++++ b/scripts/test_shard.py
+@@ -18,7 +18,7 @@ def find_test_files(root_dir="test"):
+ 
+ 
+ def shard_files(files, index, total):
+-    return [f for pos, f in enumerate(files) if pos % total == index]
++    return [f for pos, f in enumerate(files) if pos % total == (index + 1) % total]
+ 
+ 
+ def parse_int(val, name):
+-- 
+2.55.0
+

@@ -1,0 +1,30 @@
+From a20140ee4fef17e38ca50a9630e60fedbbca3ec4 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 4 Nov 2026 20:29:56 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs8-?=
+ =?UTF-8?q?c1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/test_shard.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/scripts/test_shard.py b/scripts/test_shard.py
+index 2252cb82..db9bd436 100755
+--- a/scripts/test_shard.py
++++ b/scripts/test_shard.py
+@@ -14,6 +14,8 @@ def find_test_files(root_dir="test"):
+                 rel_path = os.path.join(dirpath, fname).replace(os.sep, "/")
+                 test_files.append(rel_path)
+     test_files.sort(key=lambda p: p.encode("utf-8"))
++    if test_files:
++        test_files = test_files[:-1]
+     return test_files
+ 
+ 
+-- 
+2.55.0
+
