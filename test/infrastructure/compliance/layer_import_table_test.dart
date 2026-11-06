@@ -236,6 +236,10 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     kinds: {'flutter'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
+  'lib/models/dice_roll.dart': AllowlistEntry(
+    kinds: {'models -> widgets'},
+    reason: 'mutation test',
+  ),
   'lib/models/dm_screen_data.dart': AllowlistEntry(
     kinds: {'models -> infrastructure'},
     reason: 'compatibility re-export (folder-layout slice)',
