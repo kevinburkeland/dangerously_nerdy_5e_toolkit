@@ -1,7 +1,7 @@
 # Cleanup slice 10 progress notes
 Status: IN PROGRESS
 Start heads: core a393545a225852ca96b53313082b9b86694c72b5, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app b663b438f920d282d4702069df62cd9f2784c46a
-Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 4cadc0750bd4550eaa9bd1a10a8704d0b2111659
+Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 1f7b154ecc4b14e8c901d334b5c7016f3bc17fe1
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
 
 ## Steps
@@ -10,7 +10,7 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 - [x] Step 3 Required bindings and the unbound law: app 2e26f1480738ce07eb87d73f4ea0204cb4ce738e run 42177603193
 - [x] Step 4 Startup migration takes its collaborators: app 4230d5e13e11a12563cda4b0af2505f6aef00bc9 run 42179373020
 - [x] Step 5 The layer import table: app 4cadc0750bd4550eaa9bd1a10a8704d0b2111659 run 42180507182
-- [ ] Step 6 Models stop reaching up
+- [x] Step 6 Models stop reaching up: app 1f7b154ecc4b14e8c901d334b5c7016f3bc17fe1 run 42298625336
 - [ ] Step 7 Mutations and report
 
 ## Fix checklist
@@ -31,6 +31,11 @@ Fix 4.3 done: added runStartupMigrationFromServices in lib/main.dart and wired c
 Fix 4.4 done: updated test/infrastructure/repositories/startup_migration_characterization_test.dart to call runStartupMigrationFromServices().
 Fix 4.5 done: updated migration callers in test/application/services/cold_iron_pass_10_placeholder_production_path_test.dart, test/application/services/cold_iron_pass_7_1_regression_test.dart, test/infrastructure/repositories/failed_read_invariants_pass_5_1_1_test.dart, test/providers/dm_dashboard_controller_test.dart, and test/services/party/cold_iron_pass_12_remove_local_test.dart to pass required collaborators.
 Fix 4.6 done: restored B1c in test/cold_iron_pass_12_startup_test.dart to use initServices: () async {} and registered PartyRoomService and configured test services in setUp.
+Fix 6.1 done: replaced package:flutter/foundation.dart with package:meta/meta.dart in 7 models files.
+Fix 6.2 done: replaced ruleset re-export shims with package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart across 4 models files.
+Fix 6.3 done: moved landing_tool_item.dart to lib/presentation/common/landing_tool_item.dart and updated callers.
+Fix 6.4 done: extracted UI members from action_economy_models.dart and summon_preset.dart into presentation widgets.
+Fix 6.5 done: moved EntityFluff to lib/models/domain/entity_fluff.dart (Technique 1), retained remaining 3 under Technique 3 with documented reasons in allowlist.
 
 ## Red runs on main
 798af00e2be82d4fb94d9bbceebfb44bad6a80bf red run 42172773744
@@ -39,7 +44,7 @@ a3ab7072c8db9f8e85ad924ebb98cc67dee185f4 red run 42175698585
 e20afbbfbba889ac7ea793d0afa4c18f55914a00 red run 42297554185
 
 ## Next
-Execute Step 6 fix commit, then record Step 6 green run and advance to Step 7.
+Execute Step 7: create 10 cs10 mutation branches, verify failure modes, run exit checks, finalize progress notes, and write final report.
 
 ## Open issues and deviations
 - In Step 2, Rule 5 ("In `lib/`, a call to a member whose name ends in `ForTesting` (pattern: `\b\w*ForTesting\s*\(` that is not its declaration) is allowed only inside the file that declares that member") also flagged two external `*ForTesting()` calls in `lib/services/app_services.dart` (`_instance.debouncedStorage.cancelAllForTesting()` and `CampaignProfileService.resetForTesting()` inside `AppServices.reset()`), which were not listed in the prompt's table of files to touch. Removed those external `*ForTesting()` calls and their two `// ignore: invalid_use_of_visible_for_testing_member` comments from `lib/services/app_services.dart`, and lowered `IGNORE_COUNT` from 51 to 49 in `scripts/check_strict_analysis.sh`.
@@ -47,4 +52,4 @@ Execute Step 6 fix commit, then record Step 6 green run and advance to Step 7.
 - The notes-only commit `798af00e2be82d4fb94d9bbceebfb44bad6a80bf` (`Cleanup slice 10: progress notes after step 2`, listed under `## Red runs on main`) failed DT2 in `test/infrastructure/compliance/docs_truth_test.dart` because the `## Next` section in `notes/cleanup_slice_10_progress.md` mentioned the future path `test/infrastructure/di/unbound_collaborator_law_test.dart` before Step 3 created that file; fixed by Step 3 commit `f89caa3f1ce6d299887d8bdbcb20b8cfcaeb7634` creating `test/infrastructure/di/unbound_collaborator_law_test.dart` and removing uncreated file paths from `## Next`.
 - The first Step 3 commit `f89caa3f1ce6d299887d8bdbcb20b8cfcaeb7634` (`Cleanup slice 10: step 3 required bindings and the unbound law`, listed under `## Red runs on main`) failed 10 test files in the sharded suite that invoked `CampaignProfileService().logCampaignEvent(...)` (via `CharacterSheetController`), `DiceRoomService()` (`leaveRoom`/`joinRoom`/`restorePersistedSession`/`broadcastRoll`), or `DmBackupService().restoreFullSystemSnapshot(...)` without configuring those services in test `setUp`; fixed in `a3ab7072c8db9f8e85ad924ebb98cc67dee185f4` by configuring the services in `test/test_doubles/hive_test_harness.dart` and in the 7 remaining standalone test `setUp` blocks.
 - Commit `a3ab7072c8db9f8e85ad924ebb98cc67dee185f4` (`Cleanup slice 10: step 3 configure test setups for unbound collaborator law`, listed under `## Red runs on main`) timed out in `test/screens/party_room_screen_test.dart` and `test/widgets/treasure_deposit_test.dart` because `configureTestCampaignProfileService()` defaulted `registryService` to `CampaignRegistryService()` whose `_internal()` constructor starts an unawaited `loadMemberships()` inside `FakeAsync` during `setUp`; fixed by defaulting `registryService` in `test/test_doubles/service_test_configurator.dart` to `CampaignRegistryService.newInstance()`.
-- Commit `e20afbbfbba889ac7ea793d0afa4c18f55914a00` (`Cleanup slice 10: step 6 models stop reaching up`, listed under `## Red runs on main`) failed in Shard 2 on `test/infrastructure/compliance/dynamic_ratchet_test.dart` because callback signatures on `CharacterCombatAction` used `dynamic context`, adding 7 occurrences of the keyword `dynamic` in `lib/` and exceeding `kDynamicCeiling` (1061 > 1054); fixed in the Step 6 fix commit by changing the callback parameter types from `dynamic` to `Object?` in `lib/models/domain/action_economy_models.dart` and `lib/services/rules/character_actions_resolver.dart`.
+- Commit `e20afbbfbba889ac7ea793d0afa4c18f55914a00` (`Cleanup slice 10: step 6 models stop reaching up`, listed under `## Red runs on main`) failed in Shard 2 on `test/infrastructure/compliance/dynamic_ratchet_test.dart` because callback signatures on `CharacterCombatAction` used `dynamic context`, adding 7 occurrences of the keyword `dynamic` in `lib/` and exceeding `kDynamicCeiling` (1061 > 1054); fixed in commit `1f7b154ecc4b14e8c901d334b5c7016f3bc17fe1` by changing the callback parameter types from `dynamic` to `Object?` in `lib/models/domain/action_economy_models.dart` and `lib/services/rules/character_actions_resolver.dart`.
