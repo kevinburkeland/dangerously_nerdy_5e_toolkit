@@ -1,14 +1,14 @@
 # Cleanup slice 10 progress notes
 Status: IN PROGRESS
 Start heads: core a393545a225852ca96b53313082b9b86694c72b5, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app b663b438f920d282d4702069df62cd9f2784c46a
-Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 2e26f1480738ce07eb87d73f4ea0204cb4ce738e
+Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 4230d5e13e11a12563cda4b0af2505f6aef00bc9
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
 
 ## Steps
 - [x] Step 1 Retire cs9: core 02e38f27a25042bf34a7359893d84e3f8c006a7e run 42169627679, core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a run 42170055398, app 16d603cf65cfcbbe5cac6274f1b2a9f52dc155e6 run 42169663727
 - [x] Step 2 The container knows no services: app 4c7572eeb87958475af8d8d280239caa6ae66e7b run 42172325614
 - [x] Step 3 Required bindings and the unbound law: app 2e26f1480738ce07eb87d73f4ea0204cb4ce738e run 42177603193
-- [ ] Step 4 Startup migration takes its collaborators
+- [x] Step 4 Startup migration takes its collaborators: app 4230d5e13e11a12563cda4b0af2505f6aef00bc9 run 42179373020
 - [ ] Step 5 The layer import table
 - [ ] Step 6 Models stop reaching up
 - [ ] Step 7 Mutations and report
@@ -25,6 +25,12 @@ Fix 3.3 done: made DmBackupService.configure take required StatefulHlcClock cloc
 Fix 3.4 done: added DiceRoomService.bind, delegated DiceRoomService.configure to _instance.bind with all three collaborators required, removed _instance fallback borrowing from newInstance, and added _requireTransport, _requireOrchestrator, and _requireSessionStarter at the top of restorePersistedSession, joinRoom, leaveRoom, leaveRoomAsync, and broadcastRoll in lib/services/dice_room_service.dart.
 Fix 3.5 done: updated PartyRoomService.newInstance default _diceRoomService to DiceRoomService() in lib/services/party/party_room_service.dart and lowered IGNORE_COUNT from 49 to 48 in scripts/check_strict_analysis.sh.
 Fix 3.6 done: updated test setups in test/test_doubles/service_test_configurator.dart, test/test_doubles/hive_test_harness.dart, and 25 test files to bind required collaborators via configure, newInstance, or bind.
+Fix 4.1 done: made CampaignStorageMigration.runStartupMigration take required non-null repository, databaseService, characterPersistenceService, registryService, clock, and nodeId parameters with no replicaId or ?? defaults in lib/infrastructure/repositories/campaign_storage_migration.dart.
+Fix 4.2 done: deleted _instance, its fields, configure, and resetForTesting from CampaignStorageMigration, removed CampaignStorageMigration.configure from lib/infrastructure/di/injection_container.dart and test/test_doubles/service_test_configurator.dart, and made characterPersistenceService and registryService required and non-null in migrateLegacyCharacters and adoptRegistryMemberships in lib/infrastructure/repositories/campaign_storage_migration.dart and lib/services/persistence/campaign_profile_service.dart.
+Fix 4.3 done: added runStartupMigrationFromServices in lib/main.dart and wired completeNormalStartup to call it when runMigration is null.
+Fix 4.4 done: updated test/infrastructure/repositories/startup_migration_characterization_test.dart to call runStartupMigrationFromServices().
+Fix 4.5 done: updated migration callers in test/application/services/cold_iron_pass_10_placeholder_production_path_test.dart, test/application/services/cold_iron_pass_7_1_regression_test.dart, test/infrastructure/repositories/failed_read_invariants_pass_5_1_1_test.dart, test/providers/dm_dashboard_controller_test.dart, and test/services/party/cold_iron_pass_12_remove_local_test.dart to pass required collaborators.
+Fix 4.6 done: restored B1c in test/cold_iron_pass_12_startup_test.dart to use initServices: () async {} and registered PartyRoomService and configured test services in setUp.
 
 ## Red runs on main
 798af00e2be82d4fb94d9bbceebfb44bad6a80bf red run 42172773744
@@ -32,7 +38,7 @@ f89caa3f1ce6d299887d8bdbcb20b8cfcaeb7634 red run 42174422239
 a3ab7072c8db9f8e85ad924ebb98cc67dee185f4 red run 42175698585
 
 ## Next
-Execute Step 4: make CampaignStorageMigration.runStartupMigration and adoptRegistryMemberships take required non-null collaborators with no singleton state or fallbacks, add runStartupMigrationFromServices in lib/main.dart, update callers and tests, and add bar rule 7.
+Execute Step 5: add the layer import table section to docs/ARCHITECTURE.md and create the layer import table compliance test with exact allowlist, staleness check, doc sync check, and in-memory controls.
 
 ## Open issues and deviations
 - In Step 2, Rule 5 ("In `lib/`, a call to a member whose name ends in `ForTesting` (pattern: `\b\w*ForTesting\s*\(` that is not its declaration) is allowed only inside the file that declares that member") also flagged two external `*ForTesting()` calls in `lib/services/app_services.dart` (`_instance.debouncedStorage.cancelAllForTesting()` and `CampaignProfileService.resetForTesting()` inside `AppServices.reset()`), which were not listed in the prompt's table of files to touch. Removed those external `*ForTesting()` calls and their two `// ignore: invalid_use_of_visible_for_testing_member` comments from `lib/services/app_services.dart`, and lowered `IGNORE_COUNT` from 51 to 49 in `scripts/check_strict_analysis.sh`.
