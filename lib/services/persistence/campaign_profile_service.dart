@@ -8,6 +8,7 @@ import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
 import '../../infrastructure/repositories/campaign_storage_migration.dart';
+import '../../infrastructure/di/injection_container.dart';
 import '../../application/blob/blob_store_port.dart';
 import '../party/campaign_registry_service.dart';
 import '../../models/dm_screen_data.dart';
@@ -43,6 +44,7 @@ class CampaignProfileService extends ChangeNotifier {
     BlobStorePort Function()? blobStoreProvider,
     CampaignRegistryService? registryService,
   }) {
+    sl<ICampaignRepository>();
     if (repo != null) {
       return CampaignProfileService._internal(
         replicaId: replicaId,
