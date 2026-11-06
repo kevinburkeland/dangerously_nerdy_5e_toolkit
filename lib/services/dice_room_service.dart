@@ -73,7 +73,7 @@ class DiceRoomService {
   }
 
   IP2pTransportPort _requireTransport() {
-    final t = _transport;
+    final t = _transport ?? _instance._transport;
     if (t != null) return t;
     throw StateError(
       'DiceRoomService has no IP2pTransportPort bound. '
