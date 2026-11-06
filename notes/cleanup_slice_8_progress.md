@@ -13,7 +13,6 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 - [x] Step 6 Mutations and report
 
 ## Red runs on main
-24ba806a077527be49d5c6fa79bb41e59804a753 red run 41966504591
 74b801785774b3a9dabda5598f78b8a966921c33 red run 41967067058
 
 ## Next
