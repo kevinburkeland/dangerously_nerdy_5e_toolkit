@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import '../application/services/room_session_starter.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
-import '../infrastructure/di/injection_container.dart';
 import '../models/room_roll.dart';
 import '../utils/secure_random.dart';
 import 'logging_service.dart';
@@ -37,6 +36,39 @@ class DiceRoomService {
 
   @visibleForTesting
   DiceRoomService.newInstance() : this._internal();
+
+  IP2pTransportPort? _transport;
+  RoomSyncOrchestrator? _orchestrator;
+  RoomSessionStarter? _sessionStarter;
+
+  /// Binds runtime collaborators established during container bootstrap.
+  static void configure({
+    IP2pTransportPort? transport,
+    RoomSyncOrchestrator? orchestrator,
+    RoomSessionStarter? sessionStarter,
+  }) {
+    _instance._transport = transport;
+    _instance._orchestrator = orchestrator;
+    _instance._sessionStarter = sessionStarter;
+  }
+
+  static void bindTransport(IP2pTransportPort transport) {
+    _instance._transport = transport;
+  }
+
+  static void bindOrchestrator(RoomSyncOrchestrator orchestrator) {
+    _instance._orchestrator = orchestrator;
+  }
+
+  static void bindSessionStarter(RoomSessionStarter sessionStarter) {
+    _instance._sessionStarter = sessionStarter;
+  }
+
+  static void resetTestingState() {
+    _instance._transport = null;
+    _instance._orchestrator = null;
+    _instance._sessionStarter = null;
+  }
 
   // Centralized active room session notifier
   final ValueNotifier<RoomSession?> activeSessionNotifier =
@@ -83,18 +115,20 @@ class DiceRoomService {
     }
   }
 
-  /// Connects the P2P mesh transport and starts room synchronization if registered in DI
+  /// Connects the P2P mesh transport and starts room synchronization if available.
   Future<void> _connectTransport(String roomCode, String playerName) async {
     try {
-      if (sl.isRegistered<IP2pTransportPort>()) {
+      final transport = _transport ?? _instance._transport;
+      if (transport != null) {
         final localNodeId =
             '$playerName-${roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
-        await sl<IP2pTransportPort>().initializeRoom(roomCode, localNodeId);
+        await transport.initializeRoom(roomCode, localNodeId);
       }
-      if (sl.isRegistered<RoomSyncOrchestrator>()) {
-        final orchestrator = sl<RoomSyncOrchestrator>();
+      final orchestrator = _orchestrator ?? _instance._orchestrator;
+      if (orchestrator != null) {
         if (!orchestrator.isSynchronizing) {
-          sl<RoomSessionStarter>().start();
+          final starter = _sessionStarter ?? _instance._sessionStarter;
+          starter?.start();
         }
       }
     } catch (e, stackTrace) {
@@ -110,11 +144,13 @@ class DiceRoomService {
   /// Gracefully tears down P2P transport and synchronization when leaving a room
   Future<void> _disconnectTransport() async {
     try {
-      if (sl.isRegistered<RoomSyncOrchestrator>()) {
-        sl<RoomSyncOrchestrator>().stopSynchronization();
+      final orchestrator = _orchestrator ?? _instance._orchestrator;
+      if (orchestrator != null) {
+        orchestrator.stopSynchronization();
       }
-      if (sl.isRegistered<IP2pTransportPort>()) {
-        await sl<IP2pTransportPort>().disconnect();
+      final transport = _transport ?? _instance._transport;
+      if (transport != null) {
+        await transport.disconnect();
       }
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
@@ -486,14 +522,15 @@ class DiceRoomService {
 
     // 2. Broadcast via P2P transport mesh if available
     try {
-      if (sl.isRegistered<IP2pTransportPort>()) {
+      final transport = _transport ?? _instance._transport;
+      if (transport != null) {
         final p2pPayload = jsonEncode({
           'type': 'dice_roll',
           'roomCode': cleanCode,
           'payload': roll.toJsonMap(),
           'timestamp': DateTime.now().millisecondsSinceEpoch,
         });
-        unawaited(sl<IP2pTransportPort>().broadcastPayload(p2pPayload));
+        unawaited(transport.broadcastPayload(p2pPayload));
       }
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(

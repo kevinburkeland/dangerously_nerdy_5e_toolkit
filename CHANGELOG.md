@@ -4,7 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-05
-- Cleanup slice 9: Retire script pushes archive tags atomically with leased branch deletions; notes check verifies run-id form and red runs, and adds self-tests NS14-NS22; DI graph law and characterization tests pin normal-startup behavior across migration, persistence, dice room, party room, and screens.
+- Cleanup slice 9: Retire script pushes archive tags atomically with leased branch deletions; notes check verifies run-id form and red runs, and adds self-tests NS14-NS22; DI graph law and characterization tests pin normal-startup behavior across migration, persistence, dice room, party room, and screens; campaign and dice room services off the locator with no isRegistered in lib/services.
 
 ## 2026-11-04
 - Cleanup slice 8: Retire cs7 mutation branches; split unit test suite across 4 parallel shards via test_shard.py with workflow matrix integration; enforce single root analysis_options.yaml in check_strict_analysis.sh; lower dynamic ceiling to 1054 via Object? cast in webrtc_mesh_adapter and direct ruleset pass in homebrew_persistence_service; verify CI run IDs in check_notes_shas.py with API caching and fail-closed semantics, fix run ID in cleanup_slice_7_progress.md, and add NS8-NS13 self-tests.

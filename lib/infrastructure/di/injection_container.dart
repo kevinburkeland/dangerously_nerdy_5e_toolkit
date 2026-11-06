@@ -79,6 +79,15 @@ class InjectionContainer {
     if (instance is BlobStorePort) {
       CampaignProfileService.bindBlobStore(instance);
     }
+    if (instance is IP2pTransportPort) {
+      DiceRoomService.bindTransport(instance);
+    }
+    if (instance is RoomSyncOrchestrator) {
+      DiceRoomService.bindOrchestrator(instance);
+    }
+    if (instance is RoomSessionStarter) {
+      DiceRoomService.bindSessionStarter(instance);
+    }
   }
 
   /// Registers a factory that creates a fresh instance on every resolution.
@@ -119,6 +128,7 @@ class InjectionContainer {
     CampaignProfileService.fullResetForTesting();
     DmBackupService.resetForTesting();
     CampaignStorageMigration.resetForTesting();
+    DiceRoomService.resetTestingState();
   }
 }
 
@@ -347,4 +357,10 @@ Future<void> initServiceLocator({
         orchestrator: sl<RoomSyncOrchestrator>(),
         maps: sl<ActiveMapController>(),
       ));
+
+  DiceRoomService.configure(
+    transport: sl<IP2pTransportPort>(),
+    orchestrator: sl<RoomSyncOrchestrator>(),
+    sessionStarter: sl<RoomSessionStarter>(),
+  );
 }

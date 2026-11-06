@@ -125,13 +125,14 @@ class PartyRoomService {
   static const Duration defaultLootExpiration = Duration(days: 30);
 
   static PartyRoomService get _instance {
-    if (sl.isRegistered<PartyRoomService>()) {
+    try {
       return sl<PartyRoomService>();
+    } on StateError {
+      throw StateError(
+        'PartyRoomService requires an authoritative ReplicaId. '
+        'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
+      );
     }
-    throw StateError(
-      'PartyRoomService requires an authoritative ReplicaId. '
-      'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
-    );
   }
 
   factory PartyRoomService({
@@ -146,12 +147,12 @@ class PartyRoomService {
     if (replicaId != null) {
       return PartyRoomService._internal(
         replicaId: replicaId,
-        clock: clock,
+        clock: clock ?? sl<StatefulHlcClock>(),
+        roomDocumentPort: roomDocumentPort ?? sl<IRoomDocumentPort>(),
         registry: registry,
         diceRoomService: diceRoomService,
         characterPersistenceService: characterPersistenceService,
         campaignProfileService: campaignProfileService,
-        roomDocumentPort: roomDocumentPort,
       );
     }
     return _instance;
@@ -170,32 +171,20 @@ class PartyRoomService {
 
   PartyRoomService._internal({
     required this.replicaId,
-    StatefulHlcClock? clock,
+    required StatefulHlcClock clock,
+    required IRoomDocumentPort roomDocumentPort,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-    IRoomDocumentPort? roomDocumentPort,
-  })  : _clock = clock ??
-            (sl.isRegistered<StatefulHlcClock>()
-                ? sl<StatefulHlcClock>()
-                : throw StateError(
-                    'Authoritative StatefulHlcClock is required but not registered in DI. '
-                    'Pass clock explicitly or register StatefulHlcClock in DI.',
-                  )),
+  })  : _clock = clock,
+        _roomDocPort = roomDocumentPort,
         _registry = registry ?? CampaignRegistryService(),
         _diceRoomService = diceRoomService ?? DiceRoomService(),
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService(),
-        _roomDocPort = roomDocumentPort ??
-            (sl.isRegistered<IRoomDocumentPort>()
-                ? sl<IRoomDocumentPort>()
-                : throw StateError(
-                    'Authoritative IRoomDocumentPort is required but not registered in DI. '
-                    'Pass roomDocumentPort explicitly or register IRoomDocumentPort in DI.',
-                  )) {
+            campaignProfileService ?? CampaignProfileService() {
     if (_clock.replicaId != replicaId) {
       throw ArgumentError(
         'PartyRoomService writer identity mismatch: '
@@ -208,23 +197,22 @@ class PartyRoomService {
   PartyRoomService.newInstance({
     ReplicaId? replicaId,
     StatefulHlcClock? clock,
+    IRoomDocumentPort? roomDocumentPort,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-    IRoomDocumentPort? roomDocumentPort,
   })  : replicaId = replicaId ??
             (throw StateError(
               'PartyRoomService requires an authoritative ReplicaId. '
               'Pass replicaId explicitly.',
             )),
         _clock = clock ??
-            (sl.isRegistered<StatefulHlcClock>()
-                ? sl<StatefulHlcClock>()
-                : throw StateError(
-                    'PartyRoomService requires an authoritative StatefulHlcClock. '
-                    'Register StatefulHlcClock in DI or pass clock explicitly.',
-                  )),
+            (throw StateError(
+              'PartyRoomService requires an authoritative StatefulHlcClock. '
+              'Pass clock explicitly.',
+            )),
+        _roomDocPort = roomDocumentPort ?? sl<IRoomDocumentPort>(),
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),
@@ -234,14 +222,7 @@ class PartyRoomService {
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService(),
-        _roomDocPort = roomDocumentPort ??
-            (sl.isRegistered<IRoomDocumentPort>()
-                ? sl<IRoomDocumentPort>()
-                : throw StateError(
-                    'PartyRoomService requires an authoritative IRoomDocumentPort. '
-                    'Register IRoomDocumentPort in DI or pass roomDocumentPort explicitly.',
-                  )) {
+            campaignProfileService ?? CampaignProfileService() {
     if (_clock.replicaId != this.replicaId) {
       throw ArgumentError(
         'PartyRoomService writer identity mismatch: '
@@ -251,16 +232,12 @@ class PartyRoomService {
   }
 
   static void resetCustomInstanceForTesting() {
-    if (sl.isRegistered<PartyRoomService>()) {
-      sl.unregister<PartyRoomService>();
-    }
+    sl.unregister<PartyRoomService>();
   }
 
   @visibleForTesting
   static void setCustomInstanceForTesting(PartyRoomService? instance) {
-    if (sl.isRegistered<PartyRoomService>()) {
-      sl.unregister<PartyRoomService>();
-    }
+    sl.unregister<PartyRoomService>();
     if (instance != null) {
       sl.registerSingleton<PartyRoomService>(instance);
     }
