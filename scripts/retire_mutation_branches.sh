@@ -327,10 +327,6 @@ for i in "${!matched_branches[@]}"; do
   b="${matched_branches[$i]}"
   head_sha="${matched_heads[$i]}"
   push_args+=("--force-with-lease=refs/heads/$b:$head_sha" ":refs/heads/$b")
-  if [ "${branch_needs_tag[$b]}" -eq 1 ]; then
-    leaf="${b#mutation/}"
-    push_args+=("--force-with-lease=refs/tags/archive/$leaf:" "$head_sha:refs/tags/archive/$leaf")
-  fi
 done
 
 if ! git push --atomic origin "${push_args[@]}"; then
