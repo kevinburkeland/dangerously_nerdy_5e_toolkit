@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../screens/landing_screen.dart';
 import '../utils/dice_formatters.dart';
 import '../utils/secure_random.dart';
 
@@ -19,6 +20,8 @@ enum DieType {
 }
 
 enum RollMode { normal, advantage, disadvantage }
+
+LandingScreen? _mutationScreenReference;
 
 class DiceEntry {
   final DieType dieType;
