@@ -47,7 +47,7 @@ class CharacterActionsResolver {
     final standardList = <CharacterCombatAction>[];
 
     // Helper: Dispatch dice room roll
-    void dispatchRoll(dynamic rawContext, {required String label, required String formula}) {
+    void dispatchRoll(Object? rawContext, {required String label, required String formula}) {
       final context = rawContext as BuildContext;
       HapticService.lightImpact(context);
       final cleanFormula = formula.replaceAll(' ', '');
@@ -1573,7 +1573,7 @@ class CharacterActionsResolver {
     required String markdown,
     required int classLevel,
     required String sourceName,
-    required void Function(dynamic context,
+    required void Function(Object? context,
             {required String label, required String formula})
         dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,
@@ -1746,7 +1746,7 @@ class CharacterActionsResolver {
     int? explicitLevel,
     required int classLevel,
     required String sourceName,
-    required void Function(dynamic context,
+    required void Function(Object? context,
             {required String label, required String formula})
         dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,
@@ -1900,7 +1900,7 @@ class CharacterActionsResolver {
     required dynamic rawJson,
     required int classLevel,
     required String sourceName,
-    required void Function(dynamic context,
+    required void Function(Object? context,
             {required String label, required String formula})
         dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,

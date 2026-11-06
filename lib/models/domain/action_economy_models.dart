@@ -27,9 +27,9 @@ class CharacterCombatAction {
   final String? resourceCost;
   final bool isAttack;
   final bool dealsDamage;
-  final void Function(dynamic context)? onRollAttack;
-  final void Function(dynamic context)? onRollDamage;
-  final void Function(dynamic context)? onExecute;
+  final void Function(Object? context)? onRollAttack;
+  final void Function(Object? context)? onRollDamage;
+  final void Function(Object? context)? onExecute;
 
   const CharacterCombatAction({
     required this.id,
