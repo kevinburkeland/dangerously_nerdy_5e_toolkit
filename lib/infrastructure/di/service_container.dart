@@ -1,3 +1,5 @@
+import '../../services/dice_room_service.dart';
+
 /// Lightweight, type-safe Service Locator for Dependency Injection.
 /// Eradicates singleton constructors in domain/infrastructure repositories
 /// while providing zero-dependency IoC resolution.
@@ -52,6 +54,7 @@ class InjectionContainer {
 
   /// Clears all registrations (primarily used in test teardowns).
   void reset() {
+    DiceRoomService.resetForTesting();
     _factories.clear();
     _singletons.clear();
   }
