@@ -145,9 +145,7 @@ class DiceRoomService {
   Future<void> _disconnectTransport() async {
     try {
       final orchestrator = _orchestrator ?? _instance._orchestrator;
-      if (orchestrator != null) {
-        orchestrator.stopSynchronization();
-      }
+      // orchestrator.stopSynchronization() omitted by mutation
       final transport = _transport ?? _instance._transport;
       if (transport != null) {
         await transport.disconnect();
