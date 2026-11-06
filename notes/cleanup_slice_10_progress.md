@@ -1,7 +1,7 @@
 # Cleanup slice 10 progress notes
 Status: IN PROGRESS
 Start heads: core a393545a225852ca96b53313082b9b86694c72b5, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app b663b438f920d282d4702069df62cd9f2784c46a
-Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 4230d5e13e11a12563cda4b0af2505f6aef00bc9
+Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 4cadc0750bd4550eaa9bd1a10a8704d0b2111659
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
 
 ## Steps
@@ -9,7 +9,7 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 - [x] Step 2 The container knows no services: app 4c7572eeb87958475af8d8d280239caa6ae66e7b run 42172325614
 - [x] Step 3 Required bindings and the unbound law: app 2e26f1480738ce07eb87d73f4ea0204cb4ce738e run 42177603193
 - [x] Step 4 Startup migration takes its collaborators: app 4230d5e13e11a12563cda4b0af2505f6aef00bc9 run 42179373020
-- [ ] Step 5 The layer import table
+- [x] Step 5 The layer import table: app 4cadc0750bd4550eaa9bd1a10a8704d0b2111659 run 42180507182
 - [ ] Step 6 Models stop reaching up
 - [ ] Step 7 Mutations and report
 
@@ -38,7 +38,7 @@ f89caa3f1ce6d299887d8bdbcb20b8cfcaeb7634 red run 42174422239
 a3ab7072c8db9f8e85ad924ebb98cc67dee185f4 red run 42175698585
 
 ## Next
-Execute Step 5: add the layer import table section to docs/ARCHITECTURE.md and create the layer import table compliance test with exact allowlist, staleness check, doc sync check, and in-memory controls.
+Execute Step 6: eliminate upward dependencies from models by replacing flutter/foundation imports with meta in 7 files, replacing ruleset re-export shims with package imports, moving landing_tool_item.dart to presentation, moving UI members out of models into presentation widgets, and decoupling models from services.
 
 ## Open issues and deviations
 - In Step 2, Rule 5 ("In `lib/`, a call to a member whose name ends in `ForTesting` (pattern: `\b\w*ForTesting\s*\(` that is not its declaration) is allowed only inside the file that declares that member") also flagged two external `*ForTesting()` calls in `lib/services/app_services.dart` (`_instance.debouncedStorage.cancelAllForTesting()` and `CampaignProfileService.resetForTesting()` inside `AppServices.reset()`), which were not listed in the prompt's table of files to touch. Removed those external `*ForTesting()` calls and their two `// ignore: invalid_use_of_visible_for_testing_member` comments from `lib/services/app_services.dart`, and lowered `IGNORE_COUNT` from 51 to 49 in `scripts/check_strict_analysis.sh`.
