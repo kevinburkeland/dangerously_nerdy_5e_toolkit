@@ -1,0 +1,39 @@
+From 0a872c75597fdd0654659f09541c13b499510de5 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 6 Nov 2026 13:52:20 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs10?=
+ =?UTF-8?q?-y1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/dice_roll.dart | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/lib/models/dice_roll.dart b/lib/models/dice_roll.dart
+index 9d26854b..e82154d4 100644
+--- a/lib/models/dice_roll.dart
++++ b/lib/models/dice_roll.dart
+@@ -1,4 +1,5 @@
+ import 'dart:math';
++import 'package:flutter/foundation.dart';
+ import '../utils/dice_formatters.dart';
+ import '../utils/secure_random.dart';
+ 
+@@ -32,7 +33,10 @@ class DiceEntry {
+   })  : count = count.clamp(1, 100),
+         customSides = customSides.clamp(2, 1000);
+ 
+-  int get sides => dieType == DieType.custom ? customSides : dieType.sides;
++  int get sides {
++    debugPrint('dice roll');
++    return dieType == DieType.custom ? customSides : dieType.sides;
++  }
+ 
+   String get dieLabel =>
+       dieType == DieType.custom ? 'd$customSides' : dieType.label;
+-- 
+2.55.0
+

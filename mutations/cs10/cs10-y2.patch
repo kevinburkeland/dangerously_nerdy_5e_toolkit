@@ -1,0 +1,36 @@
+From 2c1be9639e046f3a4f771535f245c6bb20633049 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 6 Nov 2026 13:52:58 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs10?=
+ =?UTF-8?q?-y2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/dice_roll.dart | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/models/dice_roll.dart b/lib/models/dice_roll.dart
+index 9d26854b..444bb53c 100644
+--- a/lib/models/dice_roll.dart
++++ b/lib/models/dice_roll.dart
+@@ -1,4 +1,5 @@
+ import 'dart:math';
++import '../screens/landing_screen.dart';
+ import '../utils/dice_formatters.dart';
+ import '../utils/secure_random.dart';
+ 
+@@ -20,6 +21,8 @@ enum DieType {
+ 
+ enum RollMode { normal, advantage, disadvantage }
+ 
++LandingScreen? _mutationScreenReference;
++
+ class DiceEntry {
+   final DieType dieType;
+   final int count;
+-- 
+2.55.0
+

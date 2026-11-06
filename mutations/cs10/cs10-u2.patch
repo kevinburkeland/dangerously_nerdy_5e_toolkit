@@ -1,0 +1,30 @@
+From a9431481d9158550b20b3e24d77edbc359a5ea0f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 6 Nov 2026 13:50:17 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs10?=
+ =?UTF-8?q?-u2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/dice_room_service.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/dice_room_service.dart b/lib/services/dice_room_service.dart
+index 134c91a8..df310b9d 100644
+--- a/lib/services/dice_room_service.dart
++++ b/lib/services/dice_room_service.dart
+@@ -73,7 +73,7 @@ class DiceRoomService {
+   }
+ 
+   IP2pTransportPort _requireTransport() {
+-    final t = _transport;
++    final t = _transport ?? _instance._transport;
+     if (t != null) return t;
+     throw StateError(
+       'DiceRoomService has no IP2pTransportPort bound. '
+-- 
+2.55.0
+

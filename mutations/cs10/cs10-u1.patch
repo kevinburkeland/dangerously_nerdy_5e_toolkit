@@ -1,0 +1,31 @@
+From 12684ae88d62e903038ddeb105446a59e2672e19 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 6 Nov 2026 13:49:38 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs10?=
+ =?UTF-8?q?-u1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/dice_room_service.dart | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/services/dice_room_service.dart b/lib/services/dice_room_service.dart
+index 134c91a8..fabd3436 100644
+--- a/lib/services/dice_room_service.dart
++++ b/lib/services/dice_room_service.dart
+@@ -554,7 +554,8 @@ class DiceRoomService {
+ 
+   /// Broadcasts a roll to the specified room across local cache, P2P mesh, and cloud Firestore
+   Future<void> broadcastRoll(RoomRoll roll) async {
+-    final transport = _requireTransport();
++    final t = _transport; if (t == null) return;
++    final transport = t;
+     final cleanCode = roll.roomCode.trim().toUpperCase();
+ 
+     // 1. Immediately cache in local room list and notify local listeners for instant 0ms latency UI
+-- 
+2.55.0
+

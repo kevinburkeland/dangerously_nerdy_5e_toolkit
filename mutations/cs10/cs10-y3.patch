@@ -1,0 +1,32 @@
+From ff6fafe7d1068d654f423d2a476e68eb8ed1b2d1 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 6 Nov 2026 13:53:41 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs10?=
+ =?UTF-8?q?-y3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/infrastructure/compliance/layer_import_table_test.dart | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/test/infrastructure/compliance/layer_import_table_test.dart b/test/infrastructure/compliance/layer_import_table_test.dart
+index 865720c2..a0e0d5b7 100644
+--- a/test/infrastructure/compliance/layer_import_table_test.dart
++++ b/test/infrastructure/compliance/layer_import_table_test.dart
+@@ -236,6 +236,10 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
+     kinds: {'flutter'},
+     reason: 'UI data in models (Cleanup slice 10.1)',
+   ),
++  'lib/models/dice_roll.dart': AllowlistEntry(
++    kinds: {'models -> widgets'},
++    reason: 'mutation test',
++  ),
+   'lib/models/dm_screen_data.dart': AllowlistEntry(
+     kinds: {'models -> infrastructure'},
+     reason: 'compatibility re-export (folder-layout slice)',
+-- 
+2.55.0
+

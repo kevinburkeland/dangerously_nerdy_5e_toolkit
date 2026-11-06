@@ -1,0 +1,30 @@
+From 36521b8f1c87320e4393f82456ed7ea5b8b31886 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 6 Nov 2026 13:50:57 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs10?=
+ =?UTF-8?q?-u3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/campaign_profile_service.dart | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/services/persistence/campaign_profile_service.dart b/lib/services/persistence/campaign_profile_service.dart
+index d66801b6..30fcf7f9 100644
+--- a/lib/services/persistence/campaign_profile_service.dart
++++ b/lib/services/persistence/campaign_profile_service.dart
+@@ -124,6 +124,8 @@ class CampaignProfileService extends ChangeNotifier {
+     _instance._registryService = null;
+   }
+ 
++  Future<void> touchRepository() async { _requireRepository(); }
++
+   ICampaignRepository _requireRepository() {
+     final r = _repository;
+     if (r != null) return r;
+-- 
+2.55.0
+

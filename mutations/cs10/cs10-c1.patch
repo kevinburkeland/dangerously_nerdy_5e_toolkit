@@ -1,0 +1,35 @@
+From d18c8cd8a152273d7e01215eef5f3766ee71bd64 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 6 Nov 2026 13:47:48 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20cs10?=
+ =?UTF-8?q?-c1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/di/service_container.dart | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/infrastructure/di/service_container.dart b/lib/infrastructure/di/service_container.dart
+index 253c3df1..38c97f23 100644
+--- a/lib/infrastructure/di/service_container.dart
++++ b/lib/infrastructure/di/service_container.dart
+@@ -1,3 +1,5 @@
++import '../../services/dice_room_service.dart';
++
+ /// Lightweight, type-safe Service Locator for Dependency Injection.
+ /// Eradicates singleton constructors in domain/infrastructure repositories
+ /// while providing zero-dependency IoC resolution.
+@@ -52,6 +54,7 @@ class InjectionContainer {
+ 
+   /// Clears all registrations (primarily used in test teardowns).
+   void reset() {
++    DiceRoomService.resetForTesting();
+     _factories.clear();
+     _singletons.clear();
+   }
+-- 
+2.55.0
+
