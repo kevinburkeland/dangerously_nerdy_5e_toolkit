@@ -86,7 +86,9 @@ void main() {
     final rootWidget = await completeNormalStartup(
       AppServices.instance,
       LoggingService(),
-      initServices: () async {},
+      initServices: () async {
+        await initServiceLocator();
+      },
       runMigration: () async {},
       setupFirebase: () async {},
     );

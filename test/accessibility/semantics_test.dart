@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
@@ -6,6 +8,15 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/interactive/pressable_card.
 
 void main() {
   group('Accessibility & Semantics Tests', () {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    await initServiceLocator();
+  });
+
+  tearDown(() {
+    sl.reset();
+  });
+
     testWidgets('PressableCard exposes configured semantics correctly',
         (tester) async {
       final handle = tester.ensureSemantics();

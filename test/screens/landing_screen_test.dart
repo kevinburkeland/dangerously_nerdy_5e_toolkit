@@ -10,11 +10,22 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/monster_codex_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dpr_calculator_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/spellbook_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/item_compendium_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
+
+class _FakeLandingPartyRoomService extends Fake implements PartyRoomService {
+  @override
+  Future<void> syncAllExistingCampaignsToFirestore() async {}
+}
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    PartyRoomService.setCustomInstanceForTesting(_FakeLandingPartyRoomService());
+  });
+
+  tearDown(() {
+    PartyRoomService.setCustomInstanceForTesting(null);
   });
   Widget createTestableWidget(Widget child) {
     return MaterialApp(

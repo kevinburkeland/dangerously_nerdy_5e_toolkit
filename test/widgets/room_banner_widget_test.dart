@@ -127,14 +127,41 @@ class FakePartyRoomService extends Fake implements PartyRoomService {
   }
 }
 
+
+class FakeRoomSessionStarter extends Fake implements RoomSessionStarter {
+  @override
+  void start() {}
+}
+
+class FakeRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator {
+  @override
+  bool get isSynchronizing => false;
+
+  @override
+  Stream<RoomConnectionTelemetry> watchTelemetry() => const Stream.empty();
+
+  @override
+  RoomConnectionTelemetry get currentTelemetry =>
+      const RoomConnectionTelemetry(state: TransportState.offline, peerCount: 0);
+
+  @override
+  void stopSynchronization() {}
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    sl.reset();
     PartyRoomService.setCustomInstanceForTesting(FakePartyRoomService());
+    final mockTransport = MockP2pTransport();
+    sl.registerSingleton<IP2pTransportPort>(mockTransport);
+    sl.registerSingleton<RoomSyncOrchestrator>(FakeRoomSyncOrchestrator());
+    sl.registerSingleton<RoomSessionStarter>(FakeRoomSessionStarter());
   });
 
   tearDown(() {
     PartyRoomService.setCustomInstanceForTesting(null);
+    sl.reset();
   });
 
   Widget createTestableWidget(Widget child) {

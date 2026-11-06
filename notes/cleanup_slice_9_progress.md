@@ -17,10 +17,12 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 
 ## Red runs on main
 629b575f93aca7f85263610be8cb2b2fa13d1865 red run 42146037357
+6e05455e589c77a1e59421ff51e2cda37ec3d506 red run 42160028930
 
 ## Next
-Step 7 Screens without isRegistered, and the locator bars.
+Step 7 Screens without isRegistered, and the locator bars (verifying CI on fix commit).
 
 ## Open issues and deviations
 The CI failure on 629b575f93aca7f85263610be8cb2b2fa13d1865 occurred because unit tests that manually register collaborators in the DI container without running full bootstrap lacked forwarding into CampaignProfileService, CampaignStorageMigration, and DmBackupService, and mutable static fields in CampaignStorageMigration triggered collaborator hygiene source bar inspection. Fixed by forwarding DI container singleton registrations and encapsulating migration instance state in 211069cda4707a97ec23a43f6bfa192d185be914.
+The CI failure on 6e05455e589c77a1e59421ff51e2cda37ec3d506 occurred because removing isRegistered guards from LandingScreen, PartyRoomScreen, and RoomBannerWidget caused 12 existing screen and widget tests that mounted these components without running DI registration to fail with StateError. Fixed by supplying required collaborator fakes in test setups in this fix commit.
 

@@ -1,3 +1,4 @@
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -133,6 +134,26 @@ void main() {
         transportState: () => TransportState.webRtc,
       );
       sl.registerSingleton<ActiveMapController>(mapCtrl);
+      final mockTransport = _MockSyncTransport();
+      sl.registerSingleton<IP2pTransportPort>(mockTransport);
+      final orchestrator = RoomSyncOrchestrator(
+        replicaId: repId,
+        transportPort: mockTransport,
+        payloadMapper: const RoomSyncPayloadMapper(),
+        campaignRepo: campRepo,
+        reconciliationService: RoomStateReconciliationService(
+          networkTimeProvider: () =>
+              DateTime.now().toUtc().millisecondsSinceEpoch,
+        ),
+        clockSyncService: ClockSyncService(networkTimePort: _MockTimePort()),
+        diceRoomService: DiceRoomService(),
+        clock: testClock,
+        telemetryInterval: const Duration(milliseconds: 100),
+      );
+      sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
+      final starter = RoomSessionStarter(orchestrator: orchestrator, maps: mapCtrl);
+      sl.registerSingleton<RoomSessionStarter>(starter);
+
 
       partyService = PartyRoomService.newInstance(
         replicaId: repId,
@@ -141,6 +162,7 @@ void main() {
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
       addTearDown(() async {
+        orchestrator.stopSynchronization();
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
         sl.reset();

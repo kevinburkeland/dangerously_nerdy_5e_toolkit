@@ -1,3 +1,16 @@
+import 'dart:async';
+import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import 'package:vtt_engine_core/ports/i_network_time_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import '../test_doubles/fake_blob_network.dart';
+import '../test_doubles/fake_blob_store.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +34,34 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_
 import '../test_doubles/fake_room_document_port.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import '../test_doubles/hive_test_harness.dart';
+
+
+class _MockDmSheetTransport implements IP2pTransportPort {
+  final StreamController<String> _incoming = StreamController<String>.broadcast();
+  @override
+  TransportState get currentState => TransportState.offline;
+  @override
+  Map<String, int> get peerLastSeen => const {};
+  @override
+  Future<void> initializeRoom(String roomCode, String localNodeId) async {}
+  @override
+  Future<void> broadcastPayload(String jsonPayload) async {}
+  @override
+  Stream<String> watchIncomingPayloads() => _incoming.stream;
+  @override
+  Future<void> disconnect() async {}
+  @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+  @override
+  Future<void> prepareSession() async {}
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async => false;
+}
+
+class _MockDmSheetTimePort implements INetworkTimePort {
+  @override
+  Future<int> getNetworkTimeMs() async => DateTime.now().millisecondsSinceEpoch;
+}
 
 Widget _buildTestApp({required Widget home}) {
   return MaterialApp(
@@ -83,6 +124,43 @@ void main() {
       characterRepo: LocalCharacterRepository(),
     );
     sl.registerSingleton<ICampaignRepository>(campRepo);
+    final mockTransport = _MockDmSheetTransport();
+    sl.registerSingleton<IP2pTransportPort>(mockTransport);
+    final orchestrator = RoomSyncOrchestrator(
+      replicaId: repId,
+      transportPort: mockTransport,
+      payloadMapper: const RoomSyncPayloadMapper(),
+      campaignRepo: campRepo,
+      reconciliationService: RoomStateReconciliationService(
+        networkTimeProvider: () =>
+            DateTime.now().toUtc().millisecondsSinceEpoch,
+      ),
+      clockSyncService: ClockSyncService(networkTimePort: _MockDmSheetTimePort()),
+      diceRoomService: DiceRoomService(),
+      clock: sl<StatefulHlcClock>(),
+      telemetryInterval: const Duration(milliseconds: 100),
+    );
+    sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
+
+    final net = FakeBlobNetwork();
+    final chan = net.createChannel("dm_sheet_test");
+    final fakeStore = FakeBlobStore();
+    final transfer = BlobTransferService(
+      channel: chan,
+      store: fakeStore,
+      servableRefs: () => const [],
+    );
+    final mapCtrl = ActiveMapController(
+      campaignRepo: campRepo,
+      transfer: transfer,
+      store: fakeStore,
+      channel: chan,
+      transportState: () => TransportState.webRtc,
+    );
+    sl.registerSingleton<ActiveMapController>(mapCtrl);
+    final starter = RoomSessionStarter(orchestrator: orchestrator, maps: mapCtrl);
+    sl.registerSingleton<RoomSessionStarter>(starter);
+
     addTearDown(campRepo.dispose);
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
@@ -90,6 +168,7 @@ void main() {
     );
     PartyRoomService.setCustomInstanceForTesting(partyService);
     addTearDown(() async {
+      orchestrator.stopSynchronization();
       PartyRoomService.resetCustomInstanceForTesting();
       sl.reset();
       await harness.tearDown();

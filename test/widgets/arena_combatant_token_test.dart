@@ -7,8 +7,22 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/arena/arena_condition_chip.
 import 'package:dangerously_nerdy_5e_toolkit/widgets/arena/arena_condition_toggle_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/arena/arena_combatant_card.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+
+class _FakePartyRoomService extends Fake implements PartyRoomService {
+  @override
+  Future<void> syncAllExistingCampaignsToFirestore() async {}
+}
 
 void main() {
+  setUp(() {
+    PartyRoomService.setCustomInstanceForTesting(_FakePartyRoomService());
+  });
+
+  tearDown(() {
+    PartyRoomService.setCustomInstanceForTesting(null);
+  });
+
   group('ArenaCombatantToken & Condition Chips Widget Tests', () {
     testWidgets('renders ArenaCombatantToken with glyph and condition chips',
         (tester) async {

@@ -1,10 +1,96 @@
+import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connection_telemetry.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 
+
+class _MockDiceP2pTransport implements IP2pTransportPort {
+  final StreamController<String> _incomingController = StreamController<String>.broadcast();
+  @override
+  TransportState get currentState => TransportState.offline;
+  @override
+  Map<String, int> get peerLastSeen => const {};
+  @override
+  Future<void> initializeRoom(String roomCode, String localNodeId) async {}
+  @override
+  Future<void> broadcastPayload(String jsonPayload) async {}
+  @override
+  Stream<String> watchIncomingPayloads() => _incomingController.stream;
+  @override
+  Future<void> disconnect() async {}
+  @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+  @override
+  Future<void> prepareSession() async {}
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async => false;
+}
+
+class _FakeDiceRoomSessionStarter extends Fake implements RoomSessionStarter {
+  @override
+  void start() {}
+}
+
+class _FakeDiceRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator {
+  @override
+  bool get isSynchronizing => false;
+  @override
+  Stream<RoomConnectionTelemetry> watchTelemetry() => const Stream.empty();
+  @override
+  RoomConnectionTelemetry get currentTelemetry =>
+      const RoomConnectionTelemetry(state: TransportState.offline, peerCount: 0);
+  @override
+  void stopSynchronization() {}
+}
+
+class _FakeDicePartyRoomService extends Fake implements PartyRoomService {
+  @override
+  Future<void> syncAllExistingCampaignsToFirestore() async {}
+
+  @override
+  Future<CampaignProfile> openRoomProfile(
+    String roomCode, [
+    String? lobbyCampaignId,
+    String? lobbyRulesetId,
+  ]) async {
+    return CampaignProfile.placeholder(
+      id: "campaign_\$roomCode",
+      roomCode: roomCode,
+      name: "Test Campaign",
+      stagingTitle: "Test Campaign Staging",
+      createdAt: DateTime.now(),
+      lastPlayedAt: DateTime.now(),
+    );
+  }
+}
+
 void main() {
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    sl.reset();
+    sl.registerSingleton<IP2pTransportPort>(_MockDiceP2pTransport());
+    sl.registerSingleton<RoomSyncOrchestrator>(_FakeDiceRoomSyncOrchestrator());
+    sl.registerSingleton<RoomSessionStarter>(_FakeDiceRoomSessionStarter());
+    PartyRoomService.setCustomInstanceForTesting(_FakeDicePartyRoomService());
+  });
+
+  tearDown(() {
+    DiceRoomService().leaveRoom();
+    PartyRoomService.setCustomInstanceForTesting(null);
+    sl.reset();
+  });
+
   Widget createTestableWidget(Widget child) {
     return MaterialApp(
       home: child,

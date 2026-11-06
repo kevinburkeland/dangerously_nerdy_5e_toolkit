@@ -1,3 +1,4 @@
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
@@ -6,6 +7,11 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/dm_reference_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _FakeDmScreenPartyRoomService extends Fake implements PartyRoomService {
+  @override
+  Future<void> syncAllExistingCampaignsToFirestore() async {}
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +29,11 @@ void main() {
   group('DmReferenceScreen Widget Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      PartyRoomService.setCustomInstanceForTesting(_FakeDmScreenPartyRoomService());
+    });
+
+    tearDown(() {
+      PartyRoomService.setCustomInstanceForTesting(null);
     });
     testWidgets('renders Rules Compendium with title, quick roller, and cards',
         (WidgetTester tester) async {

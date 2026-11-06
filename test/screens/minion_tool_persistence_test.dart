@@ -5,15 +5,23 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/minion_tool_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/minion_session_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+
+class _FakePartyRoomService extends Fake implements PartyRoomService {
+  @override
+  Future<void> syncAllExistingCampaignsToFirestore() async {}
+}
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     MinionSessionService().clearCacheForTesting();
+    PartyRoomService.setCustomInstanceForTesting(_FakePartyRoomService());
   });
 
   tearDown(() {
     MinionSessionService().clearCacheForTesting();
+    PartyRoomService.setCustomInstanceForTesting(null);
   });
 
   Widget createTestableApp() {
