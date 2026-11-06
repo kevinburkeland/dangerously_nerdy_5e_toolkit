@@ -554,7 +554,8 @@ class DiceRoomService {
 
   /// Broadcasts a roll to the specified room across local cache, P2P mesh, and cloud Firestore
   Future<void> broadcastRoll(RoomRoll roll) async {
-    final transport = _requireTransport();
+    final t = _transport; if (t == null) return;
+    final transport = t;
     final cleanCode = roll.roomCode.trim().toUpperCase();
 
     // 1. Immediately cache in local room list and notify local listeners for instant 0ms latency UI
