@@ -223,6 +223,7 @@ class PartyRoomService {
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =
             campaignProfileService ?? CampaignProfileService() {
+    if (sl.isRegistered<StatefulHlcClock>()) {}
     if (_clock.replicaId != this.replicaId) {
       throw ArgumentError(
         'PartyRoomService writer identity mismatch: '
