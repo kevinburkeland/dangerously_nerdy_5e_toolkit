@@ -1,5 +1,5 @@
 # Cleanup slice 10 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core a393545a225852ca96b53313082b9b86694c72b5, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app b663b438f920d282d4702069df62cd9f2784c46a
 Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 1f7b154ecc4b14e8c901d334b5c7016f3bc17fe1
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
@@ -11,7 +11,17 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 - [x] Step 4 Startup migration takes its collaborators: app 4230d5e13e11a12563cda4b0af2505f6aef00bc9 run 42179373020
 - [x] Step 5 The layer import table: app 4cadc0750bd4550eaa9bd1a10a8704d0b2111659 run 42180507182
 - [x] Step 6 Models stop reaching up: app 1f7b154ecc4b14e8c901d334b5c7016f3bc17fe1 run 42298625336
-- [ ] Step 7 Mutations and report
+- [x] Step 7 Mutations and report:
+  - mutation/cs10-c1 d18c8cd8a152273d7e01215eef5f3766ee71bd64
+  - mutation/cs10-c2 2626c25fada0a8b4af2194295eccf3781abf8e23
+  - mutation/cs10-u1 12684ae88d62e903038ddeb105446a59e2672e19
+  - mutation/cs10-u2 a9431481d9158550b20b3e24d77edbc359a5ea0f
+  - mutation/cs10-u3 36521b8f1c87320e4393f82456ed7ea5b8b31886
+  - mutation/cs10-m1 bc709baf792086ff510d7679acd6756275705e12
+  - mutation/cs10-y1 0a872c75597fdd0654659f09541c13b499510de5
+  - mutation/cs10-y2 2c1be9639e046f3a4f771535f245c6bb20633049
+  - mutation/cs10-y3 ff6fafe7d1068d654f423d2a476e68eb8ed1b2d1
+  - mutation/cs10-y4 899470c7a320846e811bff1626604702ac1bc667
 
 ## Fix checklist
 Fix 2.1 done: moved InjectionContainer and sl into lib/infrastructure/di/service_container.dart with zero imports and re-exported it from lib/infrastructure/di/injection_container.dart.
@@ -44,7 +54,7 @@ a3ab7072c8db9f8e85ad924ebb98cc67dee185f4 red run 42175698585
 e20afbbfbba889ac7ea793d0afa4c18f55914a00 red run 42297554185
 
 ## Next
-Execute Step 7: create 10 cs10 mutation branches, verify failure modes, run exit checks, finalize progress notes, and write final report.
+None — Cleanup slice 10 is complete.
 
 ## Open issues and deviations
 - In Step 2, Rule 5 ("In `lib/`, a call to a member whose name ends in `ForTesting` (pattern: `\b\w*ForTesting\s*\(` that is not its declaration) is allowed only inside the file that declares that member") also flagged two external `*ForTesting()` calls in `lib/services/app_services.dart` (`_instance.debouncedStorage.cancelAllForTesting()` and `CampaignProfileService.resetForTesting()` inside `AppServices.reset()`), which were not listed in the prompt's table of files to touch. Removed those external `*ForTesting()` calls and their two `// ignore: invalid_use_of_visible_for_testing_member` comments from `lib/services/app_services.dart`, and lowered `IGNORE_COUNT` from 51 to 49 in `scripts/check_strict_analysis.sh`.
