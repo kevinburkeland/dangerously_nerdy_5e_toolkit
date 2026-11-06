@@ -10,6 +10,7 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import '../../infrastructure/repositories/campaign_storage_migration.dart';
 import '../../application/blob/blob_store_port.dart';
 import '../party/campaign_registry_service.dart';
+import 'character_persistence_service.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/party/party_event.dart';
 
@@ -221,6 +222,7 @@ class CampaignProfileService extends ChangeNotifier {
       clock: activeClock,
       nodeId: nodeId,
       registryService: activeRegistry,
+      characterPersistenceService: CharacterPersistenceService(),
     );
     if (activeRepo.allProfiles.isEmpty) {
       final defaultProfile = CampaignProfile.defaultProfile(

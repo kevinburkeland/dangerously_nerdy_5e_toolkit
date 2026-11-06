@@ -387,6 +387,7 @@ void main() {
         clock: clock,
         nodeId: replicaId.value,
         registryService: registry,
+        characterPersistenceService: CharacterPersistenceService(),
       );
 
       expect(jsonEncode(mockDb.writtenData), equals(before));

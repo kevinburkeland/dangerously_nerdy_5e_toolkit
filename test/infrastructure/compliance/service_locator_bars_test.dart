@@ -7,6 +7,8 @@ const String kInjectionContainerTarget =
     'lib/infrastructure/di/injection_container.dart';
 const String kServiceContainerTarget =
     'lib/infrastructure/di/service_container.dart';
+const String kCampaignStorageMigrationTarget =
+    'lib/infrastructure/repositories/campaign_storage_migration.dart';
 
 /// Allowlist of files outside `lib/infrastructure/di/` and `lib/main.dart`
 /// permitted to import `injection_container.dart`.
@@ -50,7 +52,7 @@ const Map<String, int> kExpectedIsRegisteredCounts = {
 
 /// Ceilings for service locator usages and collaborator `??` defaults.
 const int kSlUsesCeiling = 56;
-const int kCollaboratorDefaultsCeiling = 50;
+const int kCollaboratorDefaultsCeiling = 45;
 
 String normalizePath(String path) {
   final parts = path.split('/');
@@ -534,6 +536,181 @@ bool _isAllowedCollaboratorMemberHeader(
   return false;
 }
 
+/// Evaluates Rule 7 against in-memory [source] of `campaign_storage_migration.dart`.
+/// `lib/infrastructure/repositories/campaign_storage_migration.dart` has no `static`
+/// field other than `const`, and no public static function in it has a nullable
+/// parameter (no `?` after a parameter type) or an optional positional parameter (`[`).
+List<String> findCampaignStorageMigrationViolations(
+  String filePath,
+  String source,
+) {
+  final stripped = stripCommentsAndStringsPreservingLines(source);
+  final rawLines = source.split('\n');
+  final violations = <String>[];
+
+  final lineStarts = <int>[0];
+  for (int i = 0; i < stripped.length; i++) {
+    if (stripped[i] == '\n') {
+      lineStarts.add(i + 1);
+    }
+  }
+  int lineForOffset(int offset) {
+    int lo = 0;
+    int hi = lineStarts.length - 1;
+    while (lo <= hi) {
+      final mid = (lo + hi) >> 1;
+      if (lineStarts[mid] <= offset) {
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return hi + 1;
+  }
+
+  final classMatch = RegExp(r'\bclass\s+([A-Za-z_]\w*)\b').allMatches(stripped);
+  for (final cm in classMatch) {
+    final openBrace = stripped.indexOf('{', cm.end);
+    if (openBrace == -1) continue;
+    int depth = 1;
+    int p = openBrace + 1;
+    while (p < stripped.length && depth > 0) {
+      if (stripped[p] == '{') depth++;
+      if (stripped[p] == '}') depth--;
+      p++;
+    }
+    final bodyStart = openBrace + 1;
+    final bodyEnd = p - 1;
+
+    int i = bodyStart;
+    int braceDepth = 0;
+    int parenDepth = 0;
+    int stmtStart = bodyStart;
+
+    while (i < bodyEnd) {
+      final ch = stripped[i];
+      if (ch == '(' && braceDepth == 0) {
+        parenDepth++;
+        i++;
+        continue;
+      }
+      if (ch == ')' && braceDepth == 0) {
+        if (parenDepth > 0) parenDepth--;
+        i++;
+        continue;
+      }
+      if (ch == ';' && braceDepth == 0 && parenDepth == 0) {
+        final stmt = stripped.substring(stmtStart, i + 1);
+        _checkStaticMemberHeader(
+          filePath,
+          rawLines,
+          stripped,
+          stmtStart,
+          stmt,
+          isFieldOrAbstract: true,
+          lineForOffset: lineForOffset,
+          violations: violations,
+        );
+        stmtStart = i + 1;
+        i++;
+        continue;
+      }
+      if (ch == '{' && parenDepth == 0 && braceDepth == 0) {
+        final header = stripped.substring(stmtStart, i);
+        _checkStaticMemberHeader(
+          filePath,
+          rawLines,
+          stripped,
+          stmtStart,
+          header,
+          isFieldOrAbstract: false,
+          lineForOffset: lineForOffset,
+          violations: violations,
+        );
+        braceDepth = 1;
+        i++;
+        while (i < bodyEnd && braceDepth > 0) {
+          if (stripped[i] == '{') braceDepth++;
+          if (stripped[i] == '}') braceDepth--;
+          i++;
+        }
+        stmtStart = i;
+        continue;
+      }
+      i++;
+    }
+  }
+  return violations;
+}
+
+void _checkStaticMemberHeader(
+  String filePath,
+  List<String> rawLines,
+  String stripped,
+  int stmtStart,
+  String header, {
+  required bool isFieldOrAbstract,
+  required int Function(int) lineForOffset,
+  required List<String> violations,
+}) {
+  final staticMatch = RegExp(r'\bstatic\b').firstMatch(header);
+  if (staticMatch == null) return;
+
+  final headerLine = lineForOffset(stmtStart + staticMatch.start);
+
+  // Check if it is a static field (no `(` before `=` or `;` and not `get`/`set`)
+  final beforeEqOrSemi = header.split(RegExp(r'[=;]')).first;
+  final hasParenInDecl = beforeEqOrSemi.contains('(');
+  final isGetterOrSetter = RegExp(r'\bstatic\s+(?:[A-Za-z0-9_<>,?\s]+\s+)?(?:get|set)\b')
+      .hasMatch(beforeEqOrSemi);
+
+  if (isFieldOrAbstract && !hasParenInDecl && !isGetterOrSetter) {
+    if (!RegExp(r'\bstatic\s+const\b').hasMatch(beforeEqOrSemi)) {
+      violations.add(
+        '$filePath:$headerLine: non-const static field: ${rawLines[headerLine - 1].trim()}',
+      );
+    }
+    return;
+  }
+
+  // Otherwise check if it's a public static function/method
+  final openParenRel = header.indexOf('(');
+  if (openParenRel == -1) return;
+  final beforeParen = header.substring(0, openParenRel).trim();
+  final fnNameMatch = RegExp(r'([A-Za-z_]\w*)$').firstMatch(beforeParen);
+  if (fnNameMatch == null) return;
+  final fnName = fnNameMatch.group(1)!;
+  if (fnName.startsWith('_')) return; // private static function
+
+  // Extract parameter list between `(` and matching `)`
+  int depth = 1;
+  int p = openParenRel + 1;
+  while (p < header.length && depth > 0) {
+    if (header[p] == '(') depth++;
+    if (header[p] == ')') depth--;
+    p++;
+  }
+  final paramsText = header.substring(openParenRel + 1, p - 1);
+  final paramsOffsetInFile = stmtStart + openParenRel + 1;
+
+  // Check for optional positional parameter `[`
+  final bracketIdx = paramsText.indexOf('[');
+  if (bracketIdx != -1) {
+    final lineNo = lineForOffset(paramsOffsetInFile + bracketIdx);
+    violations.add(
+      '$filePath:$lineNo: optional positional parameter in $fnName: ${rawLines[lineNo - 1].trim()}',
+    );
+  }
+
+  // Check for nullable parameter (`?`)
+  for (final qMatch in RegExp(r'\?').allMatches(paramsText)) {
+    final lineNo = lineForOffset(paramsOffsetInFile + qMatch.start);
+    violations.add(
+      '$filePath:$lineNo: nullable parameter in $fnName: ${rawLines[lineNo - 1].trim()}',
+    );
+  }
+}
+
 /// Finds line violations of `\.isRegistered\b` in [source].
 List<String> findIsRegisteredViolations(String filePath, String source) {
   final isRegisteredRegex = RegExp(r'\.isRegistered\b');
@@ -1013,6 +1190,77 @@ class DiceRoomService {
 
       if (violations.isNotEmpty) {
         fail('Rule 6 (collaborator field access) violations:\n${violations.join('\n')}');
+      }
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('Service Locator Bars (Rule 7: CampaignStorageMigration stateless and required non-null params)', () {
+    test('In-memory controls flag nullable parameter and non-const static field, allow required non-null parameters', () {
+      const withNullableParam = '''
+class CampaignStorageMigration {
+  static Future<void> run({StatefulHlcClock? clock}) async {}
+}
+''';
+      const withStaticField = '''
+class CampaignStorageMigration {
+  static ICampaignRepository? _repo;
+  static Future<void> run({required StatefulHlcClock clock}) async {}
+}
+''';
+      const cleanMigration = '''
+class CampaignStorageMigration {
+  static const int kVersion = 1;
+  static Future<void> run({
+    required ICampaignRepository repository,
+    required StatefulHlcClock clock,
+  }) async {}
+}
+''';
+
+      expect(
+        findCampaignStorageMigrationViolations(
+          kCampaignStorageMigrationTarget,
+          withNullableParam,
+        ),
+        isNotEmpty,
+        reason: 'Control: nullable parameter in public static function must be flagged',
+      );
+      expect(
+        findCampaignStorageMigrationViolations(
+          kCampaignStorageMigrationTarget,
+          withStaticField,
+        ),
+        isNotEmpty,
+        reason: 'Control: non-const static field must be flagged',
+      );
+      expect(
+        findCampaignStorageMigrationViolations(
+          kCampaignStorageMigrationTarget,
+          cleanMigration,
+        ),
+        isEmpty,
+        reason: 'Control: clean stateless migration with required non-null params must pass',
+      );
+    });
+
+    test('lib/infrastructure/repositories/campaign_storage_migration.dart has no non-const static fields and only non-null required parameters', () {
+      final file = File(kCampaignStorageMigrationTarget);
+      expect(
+        file.existsSync(),
+        isTrue,
+        reason: 'Missing $kCampaignStorageMigrationTarget',
+      );
+      final content = file.readAsStringSync();
+      final violations = findCampaignStorageMigrationViolations(
+        kCampaignStorageMigrationTarget,
+        content,
+      );
+
+      if (violations.isNotEmpty) {
+        fail(
+          'Rule 7 ($kCampaignStorageMigrationTarget) violations:\n${violations.join('\n')}',
+        );
       }
       expect(violations, isEmpty);
     });

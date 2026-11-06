@@ -10,8 +10,11 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/main.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 
+import 'test_doubles/fake_room_document_port.dart';
 import 'test_doubles/hive_test_harness.dart';
+import 'test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,9 +39,22 @@ void main() {
     sl.registerSingleton<StatefulHlcClock>(clock);
     sl.registerSingleton<ICampaignRepository>(campRepo);
     sl.registerSingleton<ICharacterRepository>(charRepo);
+    sl.registerSingleton<PartyRoomService>(
+      PartyRoomService(
+        replicaId: replica,
+        clock: clock,
+        roomDocumentPort: RecordingRoomDocumentPort(),
+      ),
+    );
+    configureTestServices(
+      repository: campRepo,
+      replicaId: replica,
+      clock: clock,
+    );
   });
 
   tearDown(() async {
+    resetTestServices();
     sl.reset();
     await harness.tearDown();
   });
@@ -86,9 +102,7 @@ void main() {
     final rootWidget = await completeNormalStartup(
       AppServices.instance,
       LoggingService(),
-      initServices: () async {
-        await initServiceLocator();
-      },
+      initServices: () async {},
       runMigration: () async {},
       setupFirebase: () async {},
     );

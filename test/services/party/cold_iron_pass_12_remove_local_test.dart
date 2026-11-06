@@ -15,6 +15,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart'
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
 
 import '../../test_doubles/fake_room_document_port.dart';
@@ -262,8 +264,11 @@ void main() {
     // Run startup migration with the same storage
     await CampaignStorageMigration.runStartupMigration(
       repository: ctx.campRepo,
+      databaseService: AppDatabaseService.instance,
+      characterPersistenceService: CharacterPersistenceService(),
       registryService: ctx.registry,
       clock: ctx.clock,
+      nodeId: ctx.replica.value,
     );
 
     // Verify no profile for ROOMX1 was re-created
@@ -289,8 +294,11 @@ void main() {
     // Profile is absent. Run migration:
     await CampaignStorageMigration.runStartupMigration(
       repository: ctx.campRepo,
+      databaseService: AppDatabaseService.instance,
+      characterPersistenceService: CharacterPersistenceService(),
       registryService: ctx.registry,
       clock: ctx.clock,
+      nodeId: ctx.replica.value,
     );
     final profilesAfterControl = await ctx.campRepo.loadAllProfiles();
     expect(

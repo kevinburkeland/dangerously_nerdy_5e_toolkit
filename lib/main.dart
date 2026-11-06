@@ -13,15 +13,33 @@ import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
 import 'services/app_services.dart';
 import 'services/logging_service.dart';
+import 'services/party/campaign_registry_service.dart';
 import 'services/persistence/app_database_service.dart';
+import 'services/persistence/character_persistence_service.dart';
 import 'services/persistence/homebrew_persistence_service.dart';
 import 'services/persistence/web_lifecycle.dart';
 import 'application/storage/storage_durability_coordinator.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
+import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/storage/models/engine_profile.dart';
 import 'infrastructure/storage/storage_durability_adapter.dart';
 import 'infrastructure/repositories/campaign_storage_migration.dart';
 import 'services/dice_room_service.dart';
 import 'theme/app_theme.dart';
+
+/// Runs the startup campaign storage migration using the collaborators registered in [sl]
+/// along with [CharacterPersistenceService] and [CampaignRegistryService].
+Future<void> runStartupMigrationFromServices() async {
+  await CampaignStorageMigration.runStartupMigration(
+    repository: sl<ICampaignRepository>(),
+    databaseService: sl<AppDatabaseService>(),
+    characterPersistenceService: CharacterPersistenceService(),
+    registryService: CampaignRegistryService(),
+    clock: sl<StatefulHlcClock>(),
+    nodeId: sl<ReplicaId>().value,
+  );
+}
 
 /// Restores persisted application startup state including homebrew libraries and remembered dice room session.
 Future<void> restoreApplicationStartupState({
@@ -172,7 +190,7 @@ Future<Widget> completeNormalStartup(
 }) async {
   try {
     await (initServices ?? initServiceLocator)();
-    await (runMigration ?? CampaignStorageMigration.runStartupMigration)();
+    await (runMigration ?? runStartupMigrationFromServices)();
     try {
       await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
     } catch (e, st) {

@@ -12,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/room_code_relink.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import '../../test_doubles/fake_room_document_port.dart';
 import '../../test_doubles/service_test_configurator.dart';
 
@@ -398,6 +399,7 @@ void main() {
         clock: clock,
         nodeId: rep.value,
         registryService: regService,
+        characterPersistenceService: CharacterPersistenceService(),
       );
 
       final pNamed = await repo.getProfile('campaign_JOIN3A');

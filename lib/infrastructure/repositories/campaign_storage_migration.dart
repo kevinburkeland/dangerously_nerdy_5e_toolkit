@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
-import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
@@ -29,57 +27,20 @@ import 'local_campaign_repository.dart';
 /// 3. Idempotent execution: multiple runs leave valid profiles untouched.
 /// 4. Failure resilience (F1): exceptions leave stored records unchanged without synthesizing defaults.
 class CampaignStorageMigration {
-  static final CampaignStorageMigration _instance =
-      CampaignStorageMigration._internal();
-
-  CampaignStorageMigration._internal();
-
-  ICampaignRepository? _repo;
-  StatefulHlcClock? _clock;
-  ReplicaId? _replicaId;
-  CampaignRegistryService? _registryService;
-
-  /// Binds runtime collaborators established during container bootstrap.
-  static void configure({
-    required ICampaignRepository repository,
-    required StatefulHlcClock clock,
-    required ReplicaId replicaId,
-    CampaignRegistryService? registryService,
-  }) {
-    _instance._repo = repository;
-    _instance._clock = clock;
-    _instance._replicaId = replicaId;
-    _instance._registryService = registryService;
-  }
-
-  @visibleForTesting
-  static void resetForTesting() {
-    _instance._repo = null;
-    _instance._clock = null;
-    _instance._replicaId = null;
-    _instance._registryService = null;
-  }
+  CampaignStorageMigration._();
 
   /// Runs the full startup migration sequence: legacy character extraction followed by registry adoption.
   static Future<void> runStartupMigration({
-    ICampaignRepository? repository,
-    AppDatabaseService? databaseService,
-    CharacterPersistenceService? characterPersistenceService,
-    CampaignRegistryService? registryService,
-    StatefulHlcClock? clock,
-    String? nodeId,
-    ReplicaId? replicaId,
+    required ICampaignRepository repository,
+    required AppDatabaseService databaseService,
+    required CharacterPersistenceService characterPersistenceService,
+    required CampaignRegistryService registryService,
+    required StatefulHlcClock clock,
+    required String nodeId,
   }) async {
-    final repo = repository ?? _instance._repo;
-    if (repo == null) return;
-
-    final db = databaseService ?? AppDatabaseService.instance;
-    final charService = characterPersistenceService ?? CharacterPersistenceService();
-    final regService = registryService ?? _instance._registryService ?? CampaignRegistryService();
-
     // Ensure storage records are loaded and prefs->hive copy completes
     try {
-      await repo.loadAllProfiles();
+      await repository.loadAllProfiles();
     } catch (e, st) {
       LoggingService().logNonFatal(
         e,
@@ -92,26 +53,19 @@ class CampaignStorageMigration {
 
     // Step 2: Migrate legacy embedded characters before any repository writes
     await migrateLegacyCharacters(
-      repo: repo,
-      db: db,
-      characterPersistenceService: charService,
+      repo: repository,
+      db: databaseService,
+      characterPersistenceService: characterPersistenceService,
     );
 
     // Step 3: Adopt registry memberships
-    final clk = clock ?? _instance._clock;
-    final nid = nodeId ??
-        (clk?.replicaId.value ??
-            (replicaId?.value ?? _instance._replicaId?.value));
-
-    if (clk != null && nid != null) {
-      await adoptRegistryMemberships(
-        repo,
-        clock: clk,
-        nodeId: nid,
-        registryService: regService,
-        characterPersistenceService: charService,
-      );
-    }
+    await adoptRegistryMemberships(
+      repository,
+      clock: clock,
+      nodeId: nodeId,
+      registryService: registryService,
+      characterPersistenceService: characterPersistenceService,
+    );
   }
 
   /// Extracts legacy embedded character records from raw stored JSON into [CharacterPersistenceService]
@@ -119,7 +73,7 @@ class CampaignStorageMigration {
   static Future<void> migrateLegacyCharacters({
     required ICampaignRepository repo,
     required AppDatabaseService db,
-    CharacterPersistenceService? characterPersistenceService,
+    required CharacterPersistenceService characterPersistenceService,
   }) async {
     try {
       final indexRaw = db.get(
@@ -127,8 +81,6 @@ class CampaignStorageMigration {
         LocalCampaignRepository.profileIndexKey,
       );
       if (indexRaw is! List) return;
-
-      final charService = characterPersistenceService ?? CharacterPersistenceService();
 
       for (final rawId in indexRaw) {
         final id = rawId.toString();
@@ -143,7 +95,7 @@ class CampaignStorageMigration {
           final rawMap = json.decode(rawJson) as Map<String, dynamic>;
           final legacyChars = CampaignProfileDto.extractLegacyCharacters(rawMap);
           if (legacyChars.isNotEmpty) {
-            await charService.saveCharacters(legacyChars);
+            await characterPersistenceService.saveCharacters(legacyChars);
             // Re-write the profile through the repository port to strip embedded characters
             await repo.updateProfile(id, (current) => current);
           }
@@ -172,14 +124,11 @@ class CampaignStorageMigration {
     ICampaignRepository repo, {
     required StatefulHlcClock clock,
     required String nodeId,
-    CampaignRegistryService? registryService,
-    CharacterPersistenceService? characterPersistenceService,
+    required CampaignRegistryService registryService,
+    required CharacterPersistenceService characterPersistenceService,
   }) async {
     try {
-      final registry = registryService ??
-          _instance._registryService ??
-          CampaignRegistryService();
-      final memberships = await registry.loadMemberships();
+      final memberships = await registryService.loadMemberships();
       if (memberships.isEmpty) return;
 
       final List<CampaignProfile> existingProfiles;
@@ -195,8 +144,7 @@ class CampaignStorageMigration {
         return;
       }
 
-      final charService = characterPersistenceService ?? CharacterPersistenceService();
-      final savedCharacters = await charService.loadCharacters();
+      final savedCharacters = await characterPersistenceService.loadCharacters();
 
       for (final m in memberships) {
         final alreadyExists = existingProfiles.any(

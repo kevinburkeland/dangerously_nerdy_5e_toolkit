@@ -18,6 +18,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
@@ -307,7 +308,11 @@ void main() {
       // Run startup migration to copy prefs into Hive, extract legacy characters, and sanitize profile
       await CampaignStorageMigration.runStartupMigration(
         repository: campaignRepo,
+        databaseService: AppDatabaseService.instance,
         characterPersistenceService: characterService,
+        registryService: CampaignRegistryService.newInstance(),
+        clock: sl<StatefulHlcClock>(),
+        nodeId: sl<ReplicaId>().value,
       );
 
       final loadedProfiles = await campaignService.loadAllProfiles();

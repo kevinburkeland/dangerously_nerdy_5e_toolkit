@@ -8,7 +8,6 @@ import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.da
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connection_telemetry.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
@@ -114,12 +113,6 @@ void configureTestServices({
     blobStoreProvider: effectiveBlobStoreProvider,
   );
   DmBackupService.configure(clock: effectiveClock);
-  CampaignStorageMigration.configure(
-    repository: effectiveRepo,
-    clock: effectiveClock,
-    replicaId: effectiveReplicaId,
-    registryService: effectiveRegistry,
-  );
   configureTestDiceRoomService(
     transport: transport,
     orchestrator: orchestrator,
@@ -226,5 +219,4 @@ void resetTestServices() {
   CampaignProfileService.fullResetForTesting();
   DmBackupService.resetForTesting();
   DiceRoomService.resetForTesting();
-  CampaignStorageMigration.resetForTesting();
 }

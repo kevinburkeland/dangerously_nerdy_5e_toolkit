@@ -7,8 +7,8 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_dto.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/main.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
@@ -91,8 +91,8 @@ void main() {
         lastPlayed: DateTime.now(),
       ));
 
-      // 3. Run migration with zero arguments, relying strictly on DI
-      await CampaignStorageMigration.runStartupMigration();
+      // 3. Run migration through the composition root, relying strictly on DI
+      await runStartupMigrationFromServices();
 
       // Verify character was extracted into CharacterPersistenceService
       final charService = CharacterPersistenceService();

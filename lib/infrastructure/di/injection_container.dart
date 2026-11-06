@@ -15,7 +15,6 @@ import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../../services/persistence/campaign_profile_service.dart';
 import '../../services/persistence/dm_backup_service.dart';
-import '../repositories/campaign_storage_migration.dart';
 import '../adapters/p2p/firebase_fallback_adapter.dart';
 import '../adapters/p2p/firebase_signaling_adapter.dart';
 import '../adapters/p2p/local_wifi_adapter.dart';
@@ -97,12 +96,6 @@ Future<void> initServiceLocator({
   );
 
   DmBackupService.configure(clock: hlcClock);
-
-  CampaignStorageMigration.configure(
-    repository: campRepo,
-    clock: hlcClock,
-    replicaId: resolvedReplicaId,
-  );
 
   sl.registerLazySingleton<IStorageDurabilityPort>(
     () => storageDurabilityPort ?? const StorageDurabilityAdapter(),
