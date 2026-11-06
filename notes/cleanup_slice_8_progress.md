@@ -21,4 +21,4 @@ None (Cleanup slice 8 complete).
 
 ## Open issues and deviations
 After retiring cs7 mutation branches, git checkout in fresh CI clone did not fetch the 8 unreferenced mutation branch heads that were referenced in notes/cleanup_slice_7_progress.md line 14, causing CI check_notes_shas to fail. Pushed archive/cs7-* tags to origin to allow actions/checkout to fetch the archived mutation commit objects without leaving mutation heads open.
-The earlier notes wrongly said the slice 8 prompt named those paths; it did not; the first wording of the note named a path that doesn't exist, which turned app runs numbered 583 and 584 red, and Step 5's code was pushed while main was red.
+The earlier notes wrongly said the slice 8 prompt named those paths; it did not; the first wording of the note named a path that doesn't exist, which turned app runs numbered 583 and 584 red, and Step 5's code was pushed while main was red. see run #41903217036
