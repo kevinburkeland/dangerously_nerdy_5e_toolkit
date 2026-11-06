@@ -43,6 +43,7 @@ class CampaignProfileService extends ChangeNotifier {
     BlobStorePort Function()? blobStoreProvider,
     CampaignRegistryService? registryService,
   }) {
+    final dummy = registryService ?? CampaignRegistryService();
     if (repo != null) {
       return CampaignProfileService._internal(
         replicaId: replicaId,
