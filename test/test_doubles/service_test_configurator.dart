@@ -98,7 +98,8 @@ void configureTestServices({
   final effectiveReplicaId = replicaId ?? ReplicaId('test_replica');
   final effectiveClock =
       clock ?? StatefulHlcClock(replicaId: effectiveReplicaId);
-  final effectiveRegistry = registryService ?? CampaignRegistryService();
+  final effectiveRegistry =
+      registryService ?? CampaignRegistryService.newInstance();
   final effectiveBlobStoreProvider = blobStoreProvider ??
       (() {
         final store = blobStore ?? FakeBlobStore();
@@ -139,7 +140,8 @@ void configureTestCampaignProfileService({
   final effectiveReplicaId = replicaId ?? ReplicaId('test_replica');
   final effectiveClock =
       clock ?? StatefulHlcClock(replicaId: effectiveReplicaId);
-  final effectiveRegistry = registryService ?? CampaignRegistryService();
+  final effectiveRegistry =
+      registryService ?? CampaignRegistryService.newInstance();
   final effectiveBlobStoreProvider = blobStoreProvider ??
       (() {
         final store = blobStore ?? FakeBlobStore();
