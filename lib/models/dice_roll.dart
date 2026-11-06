@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import '../utils/dice_formatters.dart';
 import '../utils/secure_random.dart';
 
@@ -32,7 +33,10 @@ class DiceEntry {
   })  : count = count.clamp(1, 100),
         customSides = customSides.clamp(2, 1000);
 
-  int get sides => dieType == DieType.custom ? customSides : dieType.sides;
+  int get sides {
+    debugPrint('dice roll');
+    return dieType == DieType.custom ? customSides : dieType.sides;
+  }
 
   String get dieLabel =>
       dieType == DieType.custom ? 'd$customSides' : dieType.label;
