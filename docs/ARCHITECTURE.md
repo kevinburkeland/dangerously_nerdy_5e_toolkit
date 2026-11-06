@@ -89,7 +89,7 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ 
 |---|---|---|
 | `domain` | `domain` | no |
 | `utils` | `domain`, `utils` | no |
-| `models` | `domain`, `models`, `utils` | no |
+| `models` | `domain`, `models`, `utils`, `providers` | no |
 | `application` | `domain`, `models`, `utils`, `application` | no |
 | `services` | `domain`, `models`, `utils`, `application`, `services`, `infrastructure` | yes |
 | `infrastructure` | `domain`, `models`, `utils`, `application`, `services`, `infrastructure` | yes |
