@@ -7,7 +7,6 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 
-import '../../infrastructure/di/injection_container.dart';
 import '../../infrastructure/repositories/campaign_storage_migration.dart';
 import '../../application/blob/blob_store_port.dart';
 import '../party/campaign_registry_service.dart';
@@ -40,12 +39,18 @@ class CampaignProfileService extends ChangeNotifier {
     ReplicaId? replicaId,
     StatefulHlcClock? clock,
     ICampaignRepository? repo,
+    BlobStorePort? blobStore,
+    BlobStorePort Function()? blobStoreProvider,
+    CampaignRegistryService? registryService,
   }) {
     if (repo != null) {
       return CampaignProfileService._internal(
         replicaId: replicaId,
         clock: clock,
         repoOverride: repo,
+        blobStore: blobStore,
+        blobStoreProvider: blobStoreProvider,
+        registryService: registryService,
       );
     }
     if (replicaId != null) {
@@ -54,6 +59,15 @@ class CampaignProfileService extends ChangeNotifier {
     if (clock != null) {
       _instance._clock = clock;
     }
+    if (blobStore != null) {
+      _instance._blobStore = blobStore;
+    }
+    if (blobStoreProvider != null) {
+      _instance._blobStoreProvider = blobStoreProvider;
+    }
+    if (registryService != null) {
+      _instance._registryService = registryService;
+    }
     return _instance;
   }
 
@@ -61,9 +75,15 @@ class CampaignProfileService extends ChangeNotifier {
     ReplicaId? replicaId,
     StatefulHlcClock? clock,
     ICampaignRepository? repoOverride,
+    BlobStorePort? blobStore,
+    BlobStorePort Function()? blobStoreProvider,
+    CampaignRegistryService? registryService,
   })  : _replicaId = replicaId,
         _clock = clock,
-        _repoOverride = repoOverride {
+        _repoOverride = repoOverride,
+        _blobStore = blobStore,
+        _blobStoreProvider = blobStoreProvider,
+        _registryService = registryService {
     CampaignProfile.defaultRulesetEdition = DmRulesEdition.v2024;
     CampaignProfile.defaultPinnedRulesFallback = const {
       'concentration',
@@ -72,30 +92,43 @@ class CampaignProfileService extends ChangeNotifier {
     _ensureSubscribed();
   }
 
-  final ICampaignRepository? _repoOverride;
+  /// Binds runtime collaborators established during container bootstrap.
+  static void configure({
+    required ICampaignRepository repository,
+    required StatefulHlcClock clock,
+    required ReplicaId replicaId,
+    BlobStorePort? blobStore,
+    BlobStorePort Function()? blobStoreProvider,
+    CampaignRegistryService? registryService,
+  }) {
+    _instance._repoOverride = repository;
+    _instance._clock = clock;
+    _instance._replicaId = replicaId;
+    _instance._blobStore = blobStore;
+    _instance._blobStoreProvider = blobStoreProvider;
+    _instance._registryService = registryService ?? CampaignRegistryService();
+    _instance._ensureSubscribed();
+  }
+
+  ICampaignRepository? _repoOverride;
   ReplicaId? _replicaId;
   StatefulHlcClock? _clock;
+  BlobStorePort? _blobStore;
+  BlobStorePort Function()? _blobStoreProvider;
+  CampaignRegistryService? _registryService;
 
   StreamSubscription<CampaignProfile?>? _activeProfileSub;
   StreamSubscription<List<CampaignProfile>>? _allProfilesSub;
 
   void _ensureSubscribed() {
     if (_allProfilesSub != null) return;
-    if (_repoOverride != null) {
-      _activeProfileSub = _repoOverride.watchActiveProfile().listen((_) {
+    final r = _repoOverride;
+    if (r != null) {
+      _allSubscribedRepo = r;
+      _activeProfileSub = r.watchActiveProfile().listen((_) {
         notifyListeners();
       });
-      _allProfilesSub = _repoOverride.watchAllProfiles().listen((_) {
-        notifyListeners();
-      });
-      return;
-    }
-    if (sl.isRegistered<ICampaignRepository>()) {
-      final repo = sl<ICampaignRepository>();
-      _activeProfileSub = repo.watchActiveProfile().listen((_) {
-        notifyListeners();
-      });
-      _allProfilesSub = repo.watchAllProfiles().listen((_) {
+      _allProfilesSub = r.watchAllProfiles().listen((_) {
         notifyListeners();
       });
     }
@@ -110,13 +143,17 @@ class CampaignProfileService extends ChangeNotifier {
     _instance._allSubscribedRepo = null;
     _instance._replicaId = null;
     _instance._clock = null;
+    _instance._repoOverride = null;
+    _instance._blobStore = null;
+    _instance._blobStoreProvider = null;
+    _instance._registryService = null;
   }
 
   ICampaignRepository? _allSubscribedRepo;
 
   void _checkRepoSubscription() {
-    if (!sl.isRegistered<ICampaignRepository>()) return;
-    final currentRepo = sl<ICampaignRepository>();
+    final currentRepo = _repoOverride;
+    if (currentRepo == null) return;
     if (_allSubscribedRepo != currentRepo) {
       _activeProfileSub?.cancel();
       _allProfilesSub?.cancel();
@@ -129,12 +166,6 @@ class CampaignProfileService extends ChangeNotifier {
   String get _effectiveNodeId {
     if (_clock != null) return _clock!.replicaId.value;
     if (_replicaId != null) return _replicaId!.value;
-    if (sl.isRegistered<StatefulHlcClock>()) {
-      return sl<StatefulHlcClock>().replicaId.value;
-    }
-    if (sl.isRegistered<ReplicaId>()) {
-      return sl<ReplicaId>().value;
-    }
     throw StateError(
       'CampaignProfileService requires an authoritative ReplicaId. '
       'Ensure initServiceLocator() has completed or inject ReplicaId explicitly.',
@@ -143,9 +174,6 @@ class CampaignProfileService extends ChangeNotifier {
 
   StatefulHlcClock get _effectiveClock {
     if (_clock != null) return _clock!;
-    if (sl.isRegistered<StatefulHlcClock>()) {
-      return sl<StatefulHlcClock>();
-    }
     throw StateError(
       'CampaignProfileService requires an authoritative StatefulHlcClock. '
       'Ensure initServiceLocator() has completed or inject StatefulHlcClock explicitly.',
@@ -153,27 +181,27 @@ class CampaignProfileService extends ChangeNotifier {
   }
 
   String? get activeProfileId {
-    if (_repoOverride != null) return _repoOverride.activeProfileId;
     _checkRepoSubscription();
-    return sl<ICampaignRepository>().activeProfileId;
+    return repo.activeProfileId;
   }
 
   CampaignProfile? get activeProfile {
-    if (_repoOverride != null) return _repoOverride.activeProfile;
     _checkRepoSubscription();
-    return sl<ICampaignRepository>().activeProfile;
+    return repo.activeProfile;
   }
 
   ICampaignRepository get repo {
-    if (_repoOverride != null) return _repoOverride;
-    _checkRepoSubscription();
-    return sl<ICampaignRepository>();
+    final r = _repoOverride;
+    if (r != null) return r;
+    throw StateError(
+      'CampaignProfileService requires an authoritative ICampaignRepository. '
+      'Ensure initServiceLocator() has completed or inject repo explicitly.',
+    );
   }
 
   List<CampaignProfile> get allProfiles {
-    if (_repoOverride != null) return _repoOverride.allProfiles;
     _checkRepoSubscription();
-    return sl<ICampaignRepository>().allProfiles;
+    return repo.allProfiles;
   }
 
   /// Loads all campaign profiles from the underlying repository,
@@ -181,9 +209,7 @@ class CampaignProfileService extends ChangeNotifier {
   Future<List<CampaignProfile>> loadAllProfiles() async {
     final activeRepo = repo;
     await activeRepo.loadAllProfiles();
-    final regService = sl.isRegistered<CampaignRegistryService>()
-        ? sl<CampaignRegistryService>()
-        : null;
+    final regService = _registryService ?? CampaignRegistryService();
     await CampaignStorageMigration.adoptRegistryMemberships(
       activeRepo,
       clock: _effectiveClock,
@@ -272,8 +298,8 @@ class CampaignProfileService extends ChangeNotifier {
   /// Clones an existing campaign profile with an isolated ID and custom title.
   Future<CampaignProfile> cloneProfile(String profileId, [String? newName]) async {
     _checkRepoSubscription();
-    final repo = sl<ICampaignRepository>();
-    CampaignProfile? source = repo.allProfiles.where((p) => p.id == profileId).firstOrNull;
+    final activeRepo = repo;
+    CampaignProfile? source = activeRepo.allProfiles.where((p) => p.id == profileId).firstOrNull;
     if (source == null) {
       final all = await loadAllProfiles();
       source = all.where((p) => p.id == profileId).firstOrNull;
@@ -300,8 +326,8 @@ class CampaignProfileService extends ChangeNotifier {
       roomState: const RoomNodeState.empty(),
     );
 
-    await repo.putProfile(cloned);
-    await repo.setActiveProfileId(cloned.id);
+    await activeRepo.putProfile(cloned);
+    await activeRepo.setActiveProfileId(cloned.id);
     return cloned;
   }
 
@@ -311,18 +337,21 @@ class CampaignProfileService extends ChangeNotifier {
   /// a fresh default profile if no campaigns remain.
   Future<void> deleteProfile(String profileId) async {
     _checkRepoSubscription();
-    final repo = sl<ICampaignRepository>();
-    await repo.deleteProfile(profileId);
-    if (repo.allProfiles.isEmpty) {
+    final activeRepo = repo;
+    await activeRepo.deleteProfile(profileId);
+    if (activeRepo.allProfiles.isEmpty) {
       final fresh = CampaignProfile.defaultProfile(
         nodeId: _effectiveNodeId,
         clock: _effectiveClock,
       );
-      await repo.putProfile(fresh);
-      await repo.setActiveProfileId(fresh.id);
+      await activeRepo.putProfile(fresh);
+      await activeRepo.setActiveProfileId(fresh.id);
     }
     try {
-      await sl<BlobStorePort>().releaseCampaign(profileId);
+      final store = _blobStore ?? _blobStoreProvider?.call();
+      if (store != null) {
+        await store.releaseCampaign(profileId);
+      }
     } catch (cause) {
       throw MapFilesNotRemovedException(profileId, cause);
     }
@@ -339,10 +368,10 @@ class CampaignProfileService extends ChangeNotifier {
     required String details,
     String? roomCode,
   }) async {
-    if (!sl.isRegistered<ICampaignRepository>()) return;
+    final activeRepo = _repoOverride;
+    if (activeRepo == null) return;
     _checkRepoSubscription();
-    final repo = sl<ICampaignRepository>();
-    final profiles = repo.allProfiles;
+    final profiles = activeRepo.allProfiles;
 
     final event = PartyEvent(
       id: 'evt_${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(9999)}',

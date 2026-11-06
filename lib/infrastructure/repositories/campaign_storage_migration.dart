@@ -15,7 +15,6 @@ import '../../models/party/campaign_membership.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../../services/persistence/character_persistence_service.dart';
-import '../di/injection_container.dart';
 import '../dtos/campaign_profile_dto.dart';
 import 'local_campaign_repository.dart';
 
@@ -29,6 +28,24 @@ import 'local_campaign_repository.dart';
 /// 3. Idempotent execution: multiple runs leave valid profiles untouched.
 /// 4. Failure resilience (F1): exceptions leave stored records unchanged without synthesizing defaults.
 class CampaignStorageMigration {
+  static ICampaignRepository? _defaultRepo;
+  static StatefulHlcClock? _defaultClock;
+  static ReplicaId? _defaultReplicaId;
+  static CampaignRegistryService? _defaultRegistryService;
+
+  /// Binds runtime collaborators established during container bootstrap.
+  static void configure({
+    required ICampaignRepository repository,
+    required StatefulHlcClock clock,
+    required ReplicaId replicaId,
+    CampaignRegistryService? registryService,
+  }) {
+    _defaultRepo = repository;
+    _defaultClock = clock;
+    _defaultReplicaId = replicaId;
+    _defaultRegistryService = registryService;
+  }
+
   /// Runs the full startup migration sequence: legacy character extraction followed by registry adoption.
   static Future<void> runStartupMigration({
     ICampaignRepository? repository,
@@ -37,13 +54,14 @@ class CampaignStorageMigration {
     CampaignRegistryService? registryService,
     StatefulHlcClock? clock,
     String? nodeId,
+    ReplicaId? replicaId,
   }) async {
-    final repo = repository ?? (sl.isRegistered<ICampaignRepository>() ? sl<ICampaignRepository>() : null);
+    final repo = repository ?? _defaultRepo;
     if (repo == null) return;
 
     final db = databaseService ?? AppDatabaseService.instance;
     final charService = characterPersistenceService ?? CharacterPersistenceService();
-    final regService = registryService ?? CampaignRegistryService();
+    final regService = registryService ?? _defaultRegistryService ?? CampaignRegistryService();
 
     // Ensure storage records are loaded and prefs->hive copy completes
     try {
@@ -66,10 +84,10 @@ class CampaignStorageMigration {
     );
 
     // Step 3: Adopt registry memberships
-    final clk = clock ?? (sl.isRegistered<StatefulHlcClock>() ? sl<StatefulHlcClock>() : null);
+    final clk = clock ?? _defaultClock;
     final nid = nodeId ??
         (clk?.replicaId.value ??
-            (sl.isRegistered<ReplicaId>() ? sl<ReplicaId>().value : null));
+            (replicaId?.value ?? _defaultReplicaId?.value));
 
     if (clk != null && nid != null) {
       await adoptRegistryMemberships(
@@ -145,9 +163,7 @@ class CampaignStorageMigration {
   }) async {
     try {
       final registry = registryService ??
-          (sl.isRegistered<CampaignRegistryService>()
-              ? sl<CampaignRegistryService>()
-              : null) ??
+          _defaultRegistryService ??
           CampaignRegistryService();
       final memberships = await registry.loadMemberships();
       if (memberships.isEmpty) return;

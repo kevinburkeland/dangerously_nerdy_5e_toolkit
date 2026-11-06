@@ -18,8 +18,8 @@ import 'campaign_profile_service.dart';
 import 'character_persistence_service.dart';
 import 'dpr_persistence_service.dart';
 import 'homebrew_persistence_service.dart';
+import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
-import '../../infrastructure/di/injection_container.dart';
 
 /// Pure helper identifying all timestamp paths in [profile] that strictly exceed
 /// [nowMs] + [maxFutureDrift]. Returns a list of offending property paths.
@@ -114,13 +114,21 @@ class DmBackupService {
   }
   DmBackupService._internal({StatefulHlcClock? clock}) : _clock = clock;
 
-  final StatefulHlcClock? _clock;
+  StatefulHlcClock? _clock;
+
+  /// Binds runtime collaborators established during container bootstrap.
+  static void configure({required StatefulHlcClock clock}) {
+    _instance._clock = clock;
+  }
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _instance._clock = null;
+  }
 
   StatefulHlcClock get _effectiveClock {
-    if (_clock != null) return _clock;
-    if (sl.isRegistered<StatefulHlcClock>()) {
-      return sl<StatefulHlcClock>();
-    }
+    final c = _clock;
+    if (c != null) return c;
     throw StateError(
       'Authoritative StatefulHlcClock is required for DmBackupService. '
       'Register StatefulHlcClock in DI or pass clock explicitly.',

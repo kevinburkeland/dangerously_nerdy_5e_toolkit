@@ -13,6 +13,8 @@ import '../../application/storage/storage_durability_coordinator.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../../services/persistence/campaign_profile_service.dart';
+import '../../services/persistence/dm_backup_service.dart';
+import '../repositories/campaign_storage_migration.dart';
 import '../adapters/p2p/firebase_fallback_adapter.dart';
 import '../adapters/p2p/firebase_signaling_adapter.dart';
 import '../adapters/p2p/local_wifi_adapter.dart';
@@ -129,13 +131,9 @@ Future<void> initServiceLocator({
 
   final hlcClock = StatefulHlcClock(
     replicaId: resolvedReplicaId,
-    timeProvider: () => sl.isRegistered<ClockSyncService>()
-        ? sl<ClockSyncService>().currentNetworkTimeMs
-        : DateTime.now().toUtc().millisecondsSinceEpoch,
+    timeProvider: () => sl<ClockSyncService>().currentNetworkTimeMs,
   );
   sl.registerSingleton<StatefulHlcClock>(hlcClock);
-
-  CampaignProfileService(replicaId: resolvedReplicaId, clock: hlcClock);
 
   final charRepo = characterRepo ?? LocalCharacterRepository(db: db);
   sl.registerSingleton<ICharacterRepository>(charRepo);
@@ -148,6 +146,21 @@ Future<void> initServiceLocator({
         clock: hlcClock,
       );
   sl.registerSingleton<ICampaignRepository>(campRepo);
+
+  CampaignProfileService.configure(
+    repository: campRepo,
+    clock: hlcClock,
+    replicaId: resolvedReplicaId,
+    blobStoreProvider: () => sl<BlobStorePort>(),
+  );
+
+  DmBackupService.configure(clock: hlcClock);
+
+  CampaignStorageMigration.configure(
+    repository: campRepo,
+    clock: hlcClock,
+    replicaId: resolvedReplicaId,
+  );
 
   sl.registerLazySingleton<IStorageDurabilityPort>(
     () => storageDurabilityPort ?? const StorageDurabilityAdapter(),
