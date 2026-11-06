@@ -26,6 +26,7 @@ import 'package:vtt_engine_core/storage/models/engine_profile.dart';
 import 'infrastructure/storage/storage_durability_adapter.dart';
 import 'infrastructure/repositories/campaign_storage_migration.dart';
 import 'services/dice_room_service.dart';
+import 'services/persistence/dm_backup_service.dart';
 import 'theme/app_theme.dart';
 
 /// Runs the startup campaign storage migration using the collaborators registered in [sl]
@@ -188,6 +189,7 @@ Future<Widget> completeNormalStartup(
   @visibleForTesting Future<void> Function()? runMigration,
   @visibleForTesting Future<void> Function()? setupFirebase,
 }) async {
+  DmBackupService.resetForTesting();
   try {
     await (initServices ?? initServiceLocator)();
     await (runMigration ?? runStartupMigrationFromServices)();
