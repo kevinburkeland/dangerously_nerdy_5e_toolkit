@@ -124,6 +124,8 @@ class CampaignProfileService extends ChangeNotifier {
     _instance._registryService = null;
   }
 
+  Future<void> touchRepository() async { _requireRepository(); }
+
   ICampaignRepository _requireRepository() {
     final r = _repository;
     if (r != null) return r;
