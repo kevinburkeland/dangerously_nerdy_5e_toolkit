@@ -8,7 +8,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -142,17 +144,33 @@ void main() {
       final repoA = _InMemoryCampaignRepo();
       final repoB = _InMemoryCampaignRepo();
 
+      final regA = CampaignRegistryService.newInstance();
+      final regB = CampaignRegistryService.newInstance();
       final serviceA = PartyRoomService(
         replicaId: repA,
         clock: clockA,
-        registry: CampaignRegistryService.newInstance(),
-        campaignProfileService: CampaignProfileService(repo: repoA, clock: clockA, replicaId: repA),
+        registry: regA,
+        diceRoomService: createBoundTestDiceRoomService(),
+        campaignProfileService: CampaignProfileService.newInstance(
+          repository: repoA,
+          clock: clockA,
+          replicaId: repA,
+          registryService: regA,
+          blobStoreProvider: () => FakeBlobStore(),
+        ),
       );
       final serviceB = PartyRoomService(
         replicaId: repB,
         clock: clockB,
-        registry: CampaignRegistryService.newInstance(),
-        campaignProfileService: CampaignProfileService(repo: repoB, clock: clockB, replicaId: repB),
+        registry: regB,
+        diceRoomService: createBoundTestDiceRoomService(),
+        campaignProfileService: CampaignProfileService.newInstance(
+          repository: repoB,
+          clock: clockB,
+          replicaId: repB,
+          registryService: regB,
+          blobStoreProvider: () => FakeBlobStore(),
+        ),
       );
 
       // DM creates campaign on Device A
@@ -244,18 +262,34 @@ void main() {
       final repoA = _InMemoryCampaignRepo();
       final repoB = _InMemoryCampaignRepo();
 
-      final profileServiceA = CampaignProfileService(repo: repoA, clock: clockA, replicaId: repA);
+      final regA = CampaignRegistryService.newInstance();
+      final regB = CampaignRegistryService.newInstance();
+      final profileServiceA = CampaignProfileService.newInstance(
+        repository: repoA,
+        clock: clockA,
+        replicaId: repA,
+        registryService: regA,
+        blobStoreProvider: () => FakeBlobStore(),
+      );
       final serviceA = PartyRoomService(
         replicaId: repA,
         clock: clockA,
-        registry: CampaignRegistryService.newInstance(),
+        registry: regA,
+        diceRoomService: createBoundTestDiceRoomService(),
         campaignProfileService: profileServiceA,
       );
       final serviceB = PartyRoomService(
         replicaId: repB,
         clock: clockB,
-        registry: CampaignRegistryService.newInstance(),
-        campaignProfileService: CampaignProfileService(repo: repoB, clock: clockB, replicaId: repB),
+        registry: regB,
+        diceRoomService: createBoundTestDiceRoomService(),
+        campaignProfileService: CampaignProfileService.newInstance(
+          repository: repoB,
+          clock: clockB,
+          replicaId: repB,
+          registryService: regB,
+          blobStoreProvider: () => FakeBlobStore(),
+        ),
       );
 
       // Create an existing profile on Device A (as from DM dashboard)
@@ -350,17 +384,33 @@ void main() {
       final repoA = _InMemoryCampaignRepo();
       final repoB = _InMemoryCampaignRepo();
 
+      final regA = CampaignRegistryService.newInstance();
+      final regB = CampaignRegistryService.newInstance();
       final serviceA = PartyRoomService(
         replicaId: repA,
         clock: clockA,
-        registry: CampaignRegistryService.newInstance(),
-        campaignProfileService: CampaignProfileService(repo: repoA, clock: clockA, replicaId: repA),
+        registry: regA,
+        diceRoomService: createBoundTestDiceRoomService(),
+        campaignProfileService: CampaignProfileService.newInstance(
+          repository: repoA,
+          clock: clockA,
+          replicaId: repA,
+          registryService: regA,
+          blobStoreProvider: () => FakeBlobStore(),
+        ),
       );
       final serviceB = PartyRoomService(
         replicaId: repB,
         clock: clockB,
-        registry: CampaignRegistryService.newInstance(),
-        campaignProfileService: CampaignProfileService(repo: repoB, clock: clockB, replicaId: repB),
+        registry: regB,
+        diceRoomService: createBoundTestDiceRoomService(),
+        campaignProfileService: CampaignProfileService.newInstance(
+          repository: repoB,
+          clock: clockB,
+          replicaId: repB,
+          registryService: regB,
+          blobStoreProvider: () => FakeBlobStore(),
+        ),
       );
 
       // Legacy room document with ledger fields and no campaignId or rulesetId

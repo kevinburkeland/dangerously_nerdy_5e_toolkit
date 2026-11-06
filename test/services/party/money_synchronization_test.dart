@@ -80,7 +80,7 @@ void main() {
       replicaId: repId,
       clock: sl<StatefulHlcClock>(),
     );
-    CampaignProfileService(replicaId: repId);
+    CampaignProfileService();
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
       clock: sl<StatefulHlcClock>(),

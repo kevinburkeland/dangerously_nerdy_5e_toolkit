@@ -69,7 +69,7 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
       await harness.setUpInMemory();
       SharedPreferences.setMockInitialValues({});
       registry = CampaignRegistryService.newInstance();
-      diceService = DiceRoomService.newInstance();
+      diceService = createBoundTestDiceRoomService();
       final replica = ReplicaId('claim_dm_passkey_replica');
       final clock = StatefulHlcClock(replicaId: replica);
       final campRepo = LocalCampaignRepository(

@@ -161,9 +161,7 @@ void main() {
         clock: clock,
       );
 
-      profileService = CampaignProfileService(
-        replicaId: testReplica,
-      );
+      profileService = CampaignProfileService();
       charPersistence = CharacterPersistenceService();
       reconciliationService = RoomStateReconciliationService();
       payloadMapper = const RoomSyncPayloadMapper();

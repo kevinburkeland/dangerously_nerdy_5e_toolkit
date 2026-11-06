@@ -21,11 +21,12 @@ Fix 2.4 done: renamed clearCacheForTesting to clearCache in lib/services/preset_
 Fix 2.5 done: added test/test_doubles/service_test_configurator.dart and updated 31 test setups to configure collaborators explicitly via public configure methods and reset services via ForTesting methods.
 
 ## Red runs on main
-None
+798af00e2be82d4fb94d9bbceebfb44bad6a80bf red run 42172773744
 
 ## Next
-Execute Step 3: record collaborator inventory for CampaignProfileService, DmBackupService, and DiceRoomService; make all configure/newInstance parameters required and non-null; add DiceRoomService.bind; enforce _require...() getters at the top of public members; add test/infrastructure/di/unbound_collaborator_law_test.dart and bar rule 6.
+Execute Step 3: record collaborator inventory for CampaignProfileService, DmBackupService, and DiceRoomService; make all configure/newInstance parameters required and non-null; add DiceRoomService.bind; enforce _require...() getters at the top of public members; add the unbound collaborator law test and bar rule 6.
 
 ## Open issues and deviations
 - In Step 2, Rule 5 ("In `lib/`, a call to a member whose name ends in `ForTesting` (pattern: `\b\w*ForTesting\s*\(` that is not its declaration) is allowed only inside the file that declares that member") also flagged two external `*ForTesting()` calls in `lib/services/app_services.dart` (`_instance.debouncedStorage.cancelAllForTesting()` and `CampaignProfileService.resetForTesting()` inside `AppServices.reset()`), which were not listed in the prompt's table of files to touch. Removed those external `*ForTesting()` calls and their two `// ignore: invalid_use_of_visible_for_testing_member` comments from `lib/services/app_services.dart`, and lowered `IGNORE_COUNT` from 51 to 49 in `scripts/check_strict_analysis.sh`.
 - Adding `lib/infrastructure/di/service_container.dart` required refreshing `.agents/rules/codebase_map.md` via `dart run tool/generate_codebase_map.dart` so `test/infrastructure/compliance/docs_truth_test.dart` (DT4) stays green.
+- The notes-only commit `798af00e2be82d4fb94d9bbceebfb44bad6a80bf` (`Cleanup slice 10: progress notes after step 2`, listed under `## Red runs on main`) failed DT2 in `test/infrastructure/compliance/docs_truth_test.dart` because the `## Next` section in `notes/cleanup_slice_10_progress.md` mentioned the future path `test/infrastructure/di/unbound_collaborator_law_test.dart` before Step 3 created that file; fixed by Step 3 commit creating `test/infrastructure/di/unbound_collaborator_law_test.dart` and removing uncreated file paths from `## Next`.

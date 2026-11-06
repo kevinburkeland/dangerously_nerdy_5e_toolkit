@@ -1,4 +1,3 @@
-import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,10 +33,7 @@ void main() {
       await harness.setUp('brew_export_');
       final replica = ReplicaId('homebrew_export_test_replica');
       await initServiceLocator(replicaId: replica);
-      CampaignProfileService(
-        replicaId: replica,
-        clock: StatefulHlcClock(replicaId: replica),
-      );
+      CampaignProfileService();
       persistence = HomebrewPersistenceService();
       SrdSpeciesLibrary.setCustomSpecies([]);
       SrdSpeciesLibrary.setCustomSubraces([]);

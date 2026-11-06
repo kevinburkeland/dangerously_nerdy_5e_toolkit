@@ -2,10 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    configureTestDiceRoomService();
+  });
+
+  tearDown(() {
+    DiceRoomService.resetForTesting();
   });
 
   group('DiceRoomService Tests', () {
@@ -109,7 +115,7 @@ void main() {
 
     test('rolls are persisted to SharedPreferences and restored upon room join',
         () async {
-      final service = DiceRoomService.newInstance();
+      final service = createBoundTestDiceRoomService();
       const roomCode = 'ROOM-PERSIST-1';
 
       final roll = RoomRoll(
@@ -135,7 +141,7 @@ void main() {
       expect(saved, contains('p-1'));
 
       // Simulate a brand new service instance (app reload)
-      final newService = DiceRoomService.newInstance();
+      final newService = createBoundTestDiceRoomService();
       expect(newService.getCachedRolls(roomCode), isEmpty);
 
       // Joining the room should restore the rolls from disk

@@ -22,6 +22,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/homebrew_entity_dto.dart';
 import '../test_doubles/hive_test_harness.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,12 @@ void main() {
       );
       sl.registerSingleton<ICampaignRepository>(campRepo);
       addTearDown(campRepo.dispose);
-      CampaignProfileService(replicaId: repId);
+      configureTestServices(
+        repository: campRepo,
+        replicaId: repId,
+        clock: sl<StatefulHlcClock>(),
+      );
+      CampaignProfileService();
     });
 
     tearDown(() async {

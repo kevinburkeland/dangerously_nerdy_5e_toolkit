@@ -126,12 +126,12 @@ class DmBackupService {
     _instance._clock = null;
   }
 
-  StatefulHlcClock get _effectiveClock {
+  StatefulHlcClock _requireClock() {
     final c = _clock;
     if (c != null) return c;
     throw StateError(
-      'Authoritative StatefulHlcClock is required for DmBackupService. '
-      'Register StatefulHlcClock in DI or pass clock explicitly.',
+      'DmBackupService has no StatefulHlcClock bound. '
+      'Call initServiceLocator() before using it, or configure it in test setup.',
     );
   }
 
@@ -367,6 +367,7 @@ class DmBackupService {
     StatefulHlcClock? clock,
     int? nowMs,
   }) async {
+    final effectiveClock = clock ?? _requireClock();
     try {
       final report = validatePayload(rawJson);
       if (!report.isValid) {
@@ -388,7 +389,6 @@ class DmBackupService {
       }
 
       final profile = CampaignProfileDto.fromMap(campaignMap).toDomain();
-      final effectiveClock = clock ?? _effectiveClock;
       final currentNow = nowMs ?? DateTime.now().toUtc().millisecondsSinceEpoch;
       final violations = futureTimestampViolations(
         profile,
@@ -443,6 +443,7 @@ class DmBackupService {
     StatefulHlcClock? clock,
     int? nowMs,
   }) async {
+    final effectiveClock = clock ?? _requireClock();
     try {
       final report = validatePayload(rawJson);
       if (!report.isValid || !report.isFullSystemSnapshot) {
@@ -452,7 +453,6 @@ class DmBackupService {
       }
 
       final decoded = json.decode(rawJson.trim()) as Map<String, dynamic>;
-      final effectiveClock = clock ?? _effectiveClock;
       final currentNow = nowMs ?? DateTime.now().toUtc().millisecondsSinceEpoch;
 
       // 1. Restore Campaigns

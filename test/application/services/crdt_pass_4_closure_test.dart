@@ -19,6 +19,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 Character _createTestHero(String slug, String name) {
   return CharacterFactory.createLevel1Character(
@@ -73,12 +74,12 @@ void main() {
       sl.registerSingleton<ICampaignRepository>(campRepo);
       addTearDown(campRepo.dispose);
       CampaignProfileService.resetForTesting();
-      CampaignProfileService.configure(
+      configureTestServices(
         repository: campRepo,
         replicaId: replicaId,
         clock: clock,
       );
-      CampaignProfileService(replicaId: replicaId, clock: clock);
+      CampaignProfileService();
     });
 
     tearDown(() async {

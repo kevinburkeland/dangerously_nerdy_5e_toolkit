@@ -311,7 +311,7 @@ void main() {
         ),
       );
 
-      final service = CampaignProfileService(replicaId: authoritativeId);
+      final service = CampaignProfileService();
       final profiles = await service.loadAllProfiles();
       final migrated = profiles.firstWhere(
         (p) => p.roomState.roomCode == 'ROOM_MIGRATION',

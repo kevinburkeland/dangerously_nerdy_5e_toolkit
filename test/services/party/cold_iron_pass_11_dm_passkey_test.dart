@@ -52,7 +52,7 @@ void main() {
         clock: clock,
         registryService: registry,
       );
-      diceService = DiceRoomService.newInstance();
+      diceService = createBoundTestDiceRoomService();
       partyService = PartyRoomService.newInstance(
         replicaId: replica,
         clock: clock,

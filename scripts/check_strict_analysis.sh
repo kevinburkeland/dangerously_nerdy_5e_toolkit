@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR"
 
-IGNORE_COUNT=49
+IGNORE_COUNT=48
 RAW_TYPE_CEILING=58
 INFERENCE_CEILING=105
 

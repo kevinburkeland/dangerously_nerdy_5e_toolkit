@@ -13,7 +13,6 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
@@ -89,7 +88,7 @@ void main() {
       blobStoreProvider: () => sl<BlobStorePort>(),
     );
 
-    final diceService = DiceRoomService.newInstance();
+    final diceService = createBoundTestDiceRoomService();
     final partyService = PartyRoomService.newInstance(
       replicaId: replica,
       clock: clock,

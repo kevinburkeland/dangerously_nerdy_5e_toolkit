@@ -354,6 +354,186 @@ bool _isDeclarationPrefix(String prefix) {
   ).hasMatch(trimmed);
 }
 
+const Map<String, Set<String>> kCollaboratorFieldsByServiceFile = {
+  'lib/services/persistence/campaign_profile_service.dart': {
+    '_repository',
+    '_replicaId',
+    '_clock',
+    '_blobStoreProvider',
+    '_registryService',
+  },
+  'lib/services/persistence/dm_backup_service.dart': {
+    '_clock',
+  },
+  'lib/services/dice_room_service.dart': {
+    '_transport',
+    '_orchestrator',
+    '_sessionStarter',
+  },
+};
+
+/// Evaluates Rule 6 against in-memory [source] of [filePath].
+/// A mention of a collaborator field in [fieldNames] outside:
+/// (a) its declaration,
+/// (b) `configure`/`bind`/`newInstance` assignments (or constructor initializer list for DmBackupService),
+/// (c) its `...ForTesting` reset, and
+/// (d) its own `_require...()` getter
+/// fails, printed as `path:line: text`.
+List<String> findCollaboratorFieldAccessViolations(
+  String filePath,
+  String source,
+  Set<String> fieldNames,
+) {
+  final stripped = stripCommentsAndStringsPreservingLines(source);
+  final rawLines = source.split('\n');
+
+  // Identify allowed line ranges (1-based) by scanning top-level class members.
+  final allowedLines = <int>{};
+
+  // Line index lookup from character offset in `stripped`.
+  final lineStarts = <int>[0];
+  for (int i = 0; i < stripped.length; i++) {
+    if (stripped[i] == '\n') {
+      lineStarts.add(i + 1);
+    }
+  }
+  int lineForOffset(int offset) {
+    int lo = 0;
+    int hi = lineStarts.length - 1;
+    while (lo <= hi) {
+      final mid = (lo + hi) >> 1;
+      if (lineStarts[mid] <= offset) {
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return hi + 1; // 1-based line number
+  }
+  void allowSpan(int startOffset, int endOffset) {
+    final startLine = lineForOffset(startOffset);
+    final endLine = lineForOffset(endOffset);
+    for (int l = startLine; l <= endLine; l++) {
+      allowedLines.add(l);
+    }
+  }
+
+  final classMatch = RegExp(r'\bclass\s+([A-Za-z_]\w*)\b').allMatches(stripped);
+  for (final cm in classMatch) {
+    final className = cm.group(1)!;
+    final openBrace = stripped.indexOf('{', cm.end);
+    if (openBrace == -1) continue;
+    int depth = 1;
+    int p = openBrace + 1;
+    while (p < stripped.length && depth > 0) {
+      if (stripped[p] == '{') depth++;
+      if (stripped[p] == '}') depth--;
+      p++;
+    }
+    final bodyStart = openBrace + 1;
+    final bodyEnd = p - 1;
+
+    int i = bodyStart;
+    int braceDepth = 0;
+    int parenDepth = 0;
+    int stmtStart = bodyStart;
+
+    while (i < bodyEnd) {
+      final ch = stripped[i];
+      if (ch == '(' && braceDepth == 0) {
+        parenDepth++;
+        i++;
+        continue;
+      }
+      if (ch == ')' && braceDepth == 0) {
+        if (parenDepth > 0) parenDepth--;
+        i++;
+        continue;
+      }
+      if (ch == ';' && braceDepth == 0 && parenDepth == 0) {
+        final stmt = stripped.substring(stmtStart, i + 1);
+        if (_isAllowedCollaboratorMemberHeader(stmt, className, fieldNames)) {
+          allowSpan(stmtStart, i);
+        }
+        stmtStart = i + 1;
+        i++;
+        continue;
+      }
+      if (ch == '{' && parenDepth == 0 && braceDepth == 0) {
+        final header = stripped.substring(stmtStart, i);
+        braceDepth = 1;
+        i++;
+        while (i < bodyEnd && braceDepth > 0) {
+          if (stripped[i] == '{') braceDepth++;
+          if (stripped[i] == '}') braceDepth--;
+          i++;
+        }
+        if (_isAllowedCollaboratorMemberHeader(header, className, fieldNames)) {
+          allowSpan(stmtStart, i - 1);
+        }
+        stmtStart = i;
+        continue;
+      }
+      i++;
+    }
+  }
+
+  final violations = <String>[];
+  final strippedLines = stripped.split('\n');
+  for (int idx = 0; idx < strippedLines.length; idx++) {
+    final lineNo = idx + 1;
+    if (allowedLines.contains(lineNo)) continue;
+    final line = strippedLines[idx];
+    for (final field in fieldNames) {
+      if (RegExp('\\b${RegExp.escape(field)}\\b').hasMatch(line)) {
+        violations.add('$filePath:$lineNo: ${rawLines[idx].trim()}');
+        break;
+      }
+    }
+  }
+  return violations;
+}
+
+bool _isAllowedCollaboratorMemberHeader(
+  String header,
+  String className,
+  Set<String> fieldNames,
+) {
+  final clean = header.trim();
+  if (clean.isEmpty) return false;
+
+  // (a) Field declaration: e.g. `ICampaignRepository? _repository;`
+  if (clean.endsWith(';') && !clean.contains('(') && !clean.contains('=>')) {
+    for (final field in fieldNames) {
+      if (RegExp('\\b${RegExp.escape(field)}\\s*;\\s*\$').hasMatch(clean)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // (b) configure / bind / newInstance / private constructor initializer
+  if (RegExp(r'\b(?:configure|bind|newInstance)\s*\(').hasMatch(clean)) {
+    return true;
+  }
+  if (RegExp('\\b${RegExp.escape(className)}\\._internal\\s*\\(').hasMatch(clean)) {
+    return true;
+  }
+
+  // (c) ...ForTesting reset method
+  if (RegExp(r'\b\w*reset\w*ForTesting\s*\(', caseSensitive: false)
+      .hasMatch(clean)) {
+    return true;
+  }
+
+  // (d) _require...() getter/method
+  if (RegExp(r'\b_require[A-Z]\w*\s*(?:\(|$)').hasMatch(clean)) {
+    return true;
+  }
+
+  return false;
+}
+
 /// Finds line violations of `\.isRegistered\b` in [source].
 List<String> findIsRegisteredViolations(String filePath, String source) {
   final isRegisteredRegex = RegExp(r'\.isRegistered\b');
@@ -749,6 +929,90 @@ class Foo {
 
       if (violations.isNotEmpty) {
         fail('Rule 5 (*ForTesting call) violations:\n${violations.join('\n')}');
+      }
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('Service Locator Bars (Rule 6: Collaborator fields read only in _require...())', () {
+    test('In-memory controls flag direct collaborator field read in broadcast() and allow _requireTransport()', () {
+      const badClass = '''
+class DiceRoomService {
+  IP2pTransportPort? _transport;
+  void bind({required IP2pTransportPort transport}) {
+    _transport = transport;
+  }
+  static void resetForTesting() {
+    _instance._transport = null;
+  }
+  IP2pTransportPort _requireTransport() {
+    final t = _transport;
+    if (t != null) return t;
+    throw StateError('unbound');
+  }
+  Future<void> broadcast() async {
+    final t = _transport;
+    if (t == null) return;
+    await t.broadcastPayload('{}');
+  }
+}
+''';
+      const goodClass = '''
+class DiceRoomService {
+  IP2pTransportPort? _transport;
+  void bind({required IP2pTransportPort transport}) {
+    _transport = transport;
+  }
+  static void resetForTesting() {
+    _instance._transport = null;
+  }
+  IP2pTransportPort _requireTransport() {
+    final t = _transport;
+    if (t != null) return t;
+    throw StateError('unbound');
+  }
+  Future<void> broadcast() async {
+    final t = _requireTransport();
+    await t.broadcastPayload('{}');
+  }
+}
+''';
+
+      final badViolations = findCollaboratorFieldAccessViolations(
+        'lib/services/dice_room_service.dart',
+        badClass,
+        {'_transport'},
+      );
+      expect(
+        badViolations,
+        equals(['lib/services/dice_room_service.dart:15: final t = _transport;']),
+      );
+
+      final goodViolations = findCollaboratorFieldAccessViolations(
+        'lib/services/dice_room_service.dart',
+        goodClass,
+        {'_transport'},
+      );
+      expect(goodViolations, isEmpty);
+    });
+
+    test('Collaborator fields in the three service files are accessed only in allowed places', () {
+      final violations = <String>[];
+      for (final entry in kCollaboratorFieldsByServiceFile.entries) {
+        final file = File(entry.key);
+        expect(file.existsSync(), isTrue, reason: 'Missing ${entry.key}');
+        final content = file.readAsStringSync();
+        violations.addAll(
+          findCollaboratorFieldAccessViolations(
+            entry.key,
+            content,
+            entry.value,
+          ),
+        );
+      }
+
+      if (violations.isNotEmpty) {
+        fail('Rule 6 (collaborator field access) violations:\n${violations.join('\n')}');
       }
       expect(violations, isEmpty);
     });

@@ -31,7 +31,7 @@ void main() {
       await harness.setUpInMemory();
       registry = CampaignRegistryService.newInstance();
       CampaignRegistryService.instance = registry;
-      diceService = DiceRoomService.newInstance();
+      diceService = createBoundTestDiceRoomService();
       final replica = ReplicaId('party_service_test_replica');
       final clock = StatefulHlcClock(replicaId: replica);
       final campRepo = LocalCampaignRepository(

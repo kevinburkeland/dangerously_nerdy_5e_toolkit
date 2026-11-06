@@ -12,6 +12,7 @@ import 'package:vtt_engine_core/models/session_graph_models.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.dart';
 import '../../test_doubles/fake_blob_store.dart';
+import '../../test_doubles/service_test_configurator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
@@ -409,8 +410,13 @@ void main() {
       sl.registerSingleton<ReplicaId>(replicaId);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(
+        repository: repo,
+        replicaId: replicaId,
+        clock: clock,
+      );
 
-      final facade = CampaignProfileService(replicaId: replicaId, clock: clock);
+      final facade = CampaignProfileService();
 
       final before = jsonEncode(mockDb.writtenData);
 
@@ -436,8 +442,13 @@ void main() {
       sl.registerSingleton<ReplicaId>(replicaId);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(
+        repository: repo,
+        replicaId: replicaId,
+        clock: clock,
+      );
 
-      final facade = CampaignProfileService(replicaId: replicaId, clock: clock);
+      final facade = CampaignProfileService();
 
       final before = jsonEncode(mockDb.writtenData);
 
@@ -464,8 +475,13 @@ void main() {
       sl.registerSingleton<ReplicaId>(replicaId);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(
+        repository: repo,
+        replicaId: replicaId,
+        clock: clock,
+      );
 
-      final facade = CampaignProfileService(replicaId: replicaId, clock: clock);
+      final facade = CampaignProfileService();
 
       final before = jsonEncode(mockDb.writtenData);
 
@@ -491,8 +507,13 @@ void main() {
       sl.registerSingleton<ReplicaId>(replicaId);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(
+        repository: repo,
+        replicaId: replicaId,
+        clock: clock,
+      );
 
-      final facade = CampaignProfileService(replicaId: replicaId, clock: clock);
+      final facade = CampaignProfileService();
 
       final before = jsonEncode(mockDb.writtenData);
 
@@ -553,7 +574,12 @@ void main() {
       sl.registerSingleton<ReplicaId>(replicaId);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
-      sl.registerSingleton<CampaignProfileService>(CampaignProfileService(replicaId: replicaId, clock: clock));
+      configureTestServices(
+        repository: repo,
+        replicaId: replicaId,
+        clock: clock,
+      );
+      sl.registerSingleton<CampaignProfileService>(CampaignProfileService());
 
       final before = jsonEncode(mockDb.writtenData);
 
@@ -602,6 +628,11 @@ void main() {
       sl.registerSingleton<ReplicaId>(replicaId);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(
+        repository: repo,
+        replicaId: replicaId,
+        clock: clock,
+      );
 
       final before = jsonEncode(mockDb.writtenData);
 
@@ -813,8 +844,15 @@ void main() {
         sl.registerSingleton<ICampaignRepository>(repo);
         sl.registerSingleton<CampaignRegistryService>(registry);
         sl.registerSingleton<BlobStorePort>(FakeBlobStore());
+        configureTestServices(
+          repository: repo,
+          replicaId: replicaId,
+          clock: clock,
+          registryService: registry,
+          blobStoreProvider: () => sl<BlobStorePort>(),
+        );
 
-        final facade = CampaignProfileService(replicaId: replicaId, clock: clock);
+        final facade = CampaignProfileService();
 
         void assertStorageInvariants(String stepDesc) {
           final box = mockDb.writtenData[AppDatabaseService.boxCampaignProfiles] ?? {};

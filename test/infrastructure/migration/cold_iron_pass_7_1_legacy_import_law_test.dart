@@ -8,6 +8,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../test_doubles/fake_blob_store.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -159,22 +161,36 @@ void main() {
         final repoA = _InMemoryCampaignRepo();
         final repoB = _InMemoryCampaignRepo();
 
-        final profileServiceA = CampaignProfileService(repo: repoA, clock: clockA, replicaId: repIdA);
-        final profileServiceB = CampaignProfileService(repo: repoB, clock: clockB, replicaId: repIdB);
-
         final regA = CampaignRegistryService.newInstance();
         final regB = CampaignRegistryService.newInstance();
+
+        final profileServiceA = CampaignProfileService.newInstance(
+          repository: repoA,
+          clock: clockA,
+          replicaId: repIdA,
+          registryService: regA,
+          blobStoreProvider: () => FakeBlobStore(),
+        );
+        final profileServiceB = CampaignProfileService.newInstance(
+          repository: repoB,
+          clock: clockB,
+          replicaId: repIdB,
+          registryService: regB,
+          blobStoreProvider: () => FakeBlobStore(),
+        );
 
         final serviceA = PartyRoomService(
           replicaId: repIdA,
           clock: clockA,
           registry: regA,
+          diceRoomService: createBoundTestDiceRoomService(),
           campaignProfileService: profileServiceA,
         );
         final serviceB = PartyRoomService(
           replicaId: repIdB,
           clock: clockB,
           registry: regB,
+          diceRoomService: createBoundTestDiceRoomService(),
           campaignProfileService: profileServiceB,
         );
 

@@ -76,9 +76,9 @@ void main() {
         clock: clock,
         registryService: registry,
       );
-      diceService = DiceRoomService.newInstance();
+      diceService = createBoundTestDiceRoomService();
       characterService = CharacterPersistenceService();
-      campaignProfileService = CampaignProfileService(replicaId: testReplica);
+      campaignProfileService = CampaignProfileService();
 
       partyService = PartyRoomService.newInstance(
         replicaId: testReplica,

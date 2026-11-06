@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/main.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _FakeHomebrewPersistenceService implements HomebrewPersistenceService {
   int syncCalls = 0;
@@ -19,7 +20,14 @@ class _FakeHomebrewPersistenceService implements HomebrewPersistenceService {
 class _TrackingDiceRoomService extends DiceRoomService {
   int restoreCalls = 0;
 
-  _TrackingDiceRoomService() : super.newInstance();
+  _TrackingDiceRoomService() : super.newInstance() {
+    final orch = NoOpRoomSyncOrchestrator();
+    bind(
+      transport: NoOpP2pTransportPort(),
+      orchestrator: orch,
+      sessionStarter: NoOpRoomSessionStarter(orch),
+    );
+  }
 
   @override
   Future<void> restorePersistedSession() async {
@@ -41,7 +49,7 @@ void main() {
       });
 
       // Construct service instance
-      final service = DiceRoomService.newInstance();
+      final service = createBoundTestDiceRoomService();
 
       // Pump frames - constructing service must start NO asynchronous work
       await tester.pump(const Duration(milliseconds: 100));

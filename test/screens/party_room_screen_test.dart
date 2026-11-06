@@ -456,7 +456,7 @@ void main() {
       );
       await registry.saveMembership(membership);
 
-      final diceService = DiceRoomService.newInstance();
+      final diceService = createBoundTestDiceRoomService();
       final roll1 = RoomRoll(
         id: 'feed-roll-1',
         roomCode: roomCode,

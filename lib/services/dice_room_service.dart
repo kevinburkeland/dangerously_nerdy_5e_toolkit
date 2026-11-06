@@ -41,15 +41,28 @@ class DiceRoomService {
   RoomSyncOrchestrator? _orchestrator;
   RoomSessionStarter? _sessionStarter;
 
+  /// Binds runtime collaborators on this instance.
+  void bind({
+    required IP2pTransportPort transport,
+    required RoomSyncOrchestrator orchestrator,
+    required RoomSessionStarter sessionStarter,
+  }) {
+    _transport = transport;
+    _orchestrator = orchestrator;
+    _sessionStarter = sessionStarter;
+  }
+
   /// Binds runtime collaborators established during container bootstrap.
   static void configure({
-    IP2pTransportPort? transport,
-    RoomSyncOrchestrator? orchestrator,
-    RoomSessionStarter? sessionStarter,
+    required IP2pTransportPort transport,
+    required RoomSyncOrchestrator orchestrator,
+    required RoomSessionStarter sessionStarter,
   }) {
-    _instance._transport = transport;
-    _instance._orchestrator = orchestrator;
-    _instance._sessionStarter = sessionStarter;
+    _instance.bind(
+      transport: transport,
+      orchestrator: orchestrator,
+      sessionStarter: sessionStarter,
+    );
   }
 
   @visibleForTesting
@@ -57,6 +70,33 @@ class DiceRoomService {
     _instance._transport = null;
     _instance._orchestrator = null;
     _instance._sessionStarter = null;
+  }
+
+  IP2pTransportPort _requireTransport() {
+    final t = _transport;
+    if (t != null) return t;
+    throw StateError(
+      'DiceRoomService has no IP2pTransportPort bound. '
+      'Call initServiceLocator() before using it, or configure it in test setup.',
+    );
+  }
+
+  RoomSyncOrchestrator _requireOrchestrator() {
+    final o = _orchestrator;
+    if (o != null) return o;
+    throw StateError(
+      'DiceRoomService has no RoomSyncOrchestrator bound. '
+      'Call initServiceLocator() before using it, or configure it in test setup.',
+    );
+  }
+
+  RoomSessionStarter _requireSessionStarter() {
+    final s = _sessionStarter;
+    if (s != null) return s;
+    throw StateError(
+      'DiceRoomService has no RoomSessionStarter bound. '
+      'Call initServiceLocator() before using it, or configure it in test setup.',
+    );
   }
 
   // Centralized active room session notifier
@@ -71,6 +111,9 @@ class DiceRoomService {
   /// Restores any previously remembered room session from persistent storage.
   /// Must be invoked explicitly during application startup, never from the constructor.
   Future<void> restorePersistedSession() async {
+    final transport = _requireTransport();
+    final orchestrator = _requireOrchestrator();
+    final starter = _requireSessionStarter();
     try {
       final prefs = await SharedPreferences.getInstance();
       final remember = prefs.getBool(_kPersistedRemember) ?? false;
@@ -93,7 +136,15 @@ class DiceRoomService {
           );
         }
         await _loadPersistedRolls(cleanRoom);
-        unawaited(_connectTransport(cleanRoom, cleanName));
+        unawaited(
+          _connectTransport(
+            cleanRoom,
+            cleanName,
+            transport: transport,
+            orchestrator: orchestrator,
+            starter: starter,
+          ),
+        );
       }
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
@@ -104,21 +155,20 @@ class DiceRoomService {
     }
   }
 
-  /// Connects the P2P mesh transport and starts room synchronization if available.
-  Future<void> _connectTransport(String roomCode, String playerName) async {
+  /// Connects the P2P mesh transport and starts room synchronization.
+  Future<void> _connectTransport(
+    String roomCode,
+    String playerName, {
+    required IP2pTransportPort transport,
+    required RoomSyncOrchestrator orchestrator,
+    required RoomSessionStarter starter,
+  }) async {
     try {
-      final transport = _transport ?? _instance._transport;
-      if (transport != null) {
-        final localNodeId =
-            '$playerName-${roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
-        await transport.initializeRoom(roomCode, localNodeId);
-      }
-      final orchestrator = _orchestrator ?? _instance._orchestrator;
-      if (orchestrator != null) {
-        if (!orchestrator.isSynchronizing) {
-          final starter = _sessionStarter ?? _instance._sessionStarter;
-          starter?.start();
-        }
+      final localNodeId =
+          '$playerName-${roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+      await transport.initializeRoom(roomCode, localNodeId);
+      if (!orchestrator.isSynchronizing) {
+        starter.start();
       }
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
@@ -131,16 +181,13 @@ class DiceRoomService {
   }
 
   /// Gracefully tears down P2P transport and synchronization when leaving a room
-  Future<void> _disconnectTransport() async {
+  Future<void> _disconnectTransport({
+    required RoomSyncOrchestrator orchestrator,
+    required IP2pTransportPort transport,
+  }) async {
     try {
-      final orchestrator = _orchestrator ?? _instance._orchestrator;
-      if (orchestrator != null) {
-        orchestrator.stopSynchronization();
-      }
-      final transport = _transport ?? _instance._transport;
-      if (transport != null) {
-        await transport.disconnect();
-      }
+      orchestrator.stopSynchronization();
+      await transport.disconnect();
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
         e,
@@ -152,6 +199,9 @@ class DiceRoomService {
 
   /// Joins a room, with optional persistent storage across app visits
   void joinRoom(String roomCode, String playerName, {bool remember = true}) {
+    final transport = _requireTransport();
+    final orchestrator = _requireOrchestrator();
+    final starter = _requireSessionStarter();
     final cleanCode = roomCode.trim().toUpperCase();
     final cleanName = playerName.trim();
     if (cleanCode.isNotEmpty && cleanName.isNotEmpty) {
@@ -166,7 +216,15 @@ class DiceRoomService {
       _loadPersistedRolls(cleanCode);
 
       // Connect P2P transport mesh & start room synchronization
-      unawaited(_connectTransport(cleanCode, cleanName));
+      unawaited(
+        _connectTransport(
+          cleanCode,
+          cleanName,
+          transport: transport,
+          orchestrator: orchestrator,
+          starter: starter,
+        ),
+      );
 
       // Immediately touch/initialize room document in Firestore so campaign features & other players connect instantly
       if (isFirebaseAvailable) {
@@ -236,6 +294,8 @@ class DiceRoomService {
 
   /// Leaves the current room session and clears any remembered room persistence
   void leaveRoom() {
+    final orchestrator = _requireOrchestrator();
+    final transport = _requireTransport();
     final currentCode = activeRoomCode;
     if (currentCode != null) {
       disposeRoomStream(currentCode);
@@ -243,7 +303,12 @@ class DiceRoomService {
     activeSessionNotifier.value = null;
 
     // Disconnect transport & stop synchronization
-    unawaited(_disconnectTransport());
+    unawaited(
+      _disconnectTransport(
+        orchestrator: orchestrator,
+        transport: transport,
+      ),
+    );
 
     // Clear persisted room storage
     _clearPersistedSession();
@@ -251,8 +316,13 @@ class DiceRoomService {
 
   /// Asynchronously leaves room and awaits transport disconnection.
   Future<void> leaveRoomAsync() async {
+    final orchestrator = _requireOrchestrator();
+    final transport = _requireTransport();
     leaveRoom();
-    await _disconnectTransport();
+    await _disconnectTransport(
+      orchestrator: orchestrator,
+      transport: transport,
+    );
   }
 
   Future<void> _clearPersistedSession() async {
@@ -484,6 +554,7 @@ class DiceRoomService {
 
   /// Broadcasts a roll to the specified room across local cache, P2P mesh, and cloud Firestore
   Future<void> broadcastRoll(RoomRoll roll) async {
+    final transport = _requireTransport();
     final cleanCode = roll.roomCode.trim().toUpperCase();
 
     // 1. Immediately cache in local room list and notify local listeners for instant 0ms latency UI
@@ -509,18 +580,15 @@ class DiceRoomService {
       _persistRolls(cleanCode);
     }
 
-    // 2. Broadcast via P2P transport mesh if available
+    // 2. Broadcast via P2P transport mesh
     try {
-      final transport = _transport ?? _instance._transport;
-      if (transport != null) {
-        final p2pPayload = jsonEncode({
-          'type': 'dice_roll',
-          'roomCode': cleanCode,
-          'payload': roll.toJsonMap(),
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-        });
-        unawaited(transport.broadcastPayload(p2pPayload));
-      }
+      final p2pPayload = jsonEncode({
+        'type': 'dice_roll',
+        'roomCode': cleanCode,
+        'payload': roll.toJsonMap(),
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      unawaited(transport.broadcastPayload(p2pPayload));
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
         e,

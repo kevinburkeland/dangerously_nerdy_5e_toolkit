@@ -586,10 +586,7 @@ void main() {
       );
 
       final characterService = CharacterPersistenceService();
-      final campaignService = CampaignProfileService(
-        replicaId: repId,
-        clock: clock,
-      );
+      final campaignService = CampaignProfileService();
 
       // 1. Clone test: cloneProfile must reset roomState (no room code)
       final sourceProfile = CampaignProfile(

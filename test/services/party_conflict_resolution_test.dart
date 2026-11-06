@@ -31,7 +31,7 @@ void main() {
     // ignore: invalid_use_of_visible_for_testing_member
     registry = CampaignRegistryService.newInstance();
     // ignore: invalid_use_of_visible_for_testing_member
-    diceService = DiceRoomService.newInstance();
+    diceService = createBoundTestDiceRoomService();
     final replica = ReplicaId('party_conflict_replica');
     final clock = StatefulHlcClock(replicaId: replica);
     final campRepo = LocalCampaignRepository(

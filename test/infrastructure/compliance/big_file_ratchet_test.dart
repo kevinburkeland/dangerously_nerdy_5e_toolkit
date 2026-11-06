@@ -22,7 +22,7 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/services/rules/arena_combat_engine.dart': 4056,
   'lib/screens/glyph_showcase_screen.dart': 3685,
   'lib/models/monster_codex/bestiary/bestiary_cr_five_to_eight.dart': 3617,
-  'lib/services/party/party_room_service.dart': 3608,
+  'lib/services/party/party_room_service.dart': 3606,
   'lib/models/monster_codex/bestiary/bestiary_cr_half_to_one.dart': 3561,
   'lib/widgets/party/campaign_dialogs.dart': 3233,
   'lib/models/magic_items/items/adventuring_gear.dart': 3227,

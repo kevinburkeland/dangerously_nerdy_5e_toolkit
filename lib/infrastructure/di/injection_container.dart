@@ -1,4 +1,5 @@
 import 'package:vtt_engine_core/vtt_engine_core.dart';
+import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../application/services/party_room_service.dart' as app_party;
 import '../../application/services/homebrew_import_orchestrator.dart';
@@ -91,6 +92,7 @@ Future<void> initServiceLocator({
     repository: campRepo,
     clock: hlcClock,
     replicaId: resolvedReplicaId,
+    registryService: CampaignRegistryService(),
     blobStoreProvider: () => sl<BlobStorePort>(),
   );
 

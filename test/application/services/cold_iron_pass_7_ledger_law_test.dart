@@ -14,11 +14,14 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_session_state.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/fake_room_document_port.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -176,23 +179,50 @@ void main() {
         final repoB = _InMemoryCampaignRepo();
         final repoC = _InMemoryCampaignRepo();
 
-        final profileServiceA = CampaignProfileService(repo: repoA, clock: clockA, replicaId: repIdA);
-        final profileServiceB = CampaignProfileService(repo: repoB, clock: clockB, replicaId: repIdB);
-        final profileServiceC = CampaignProfileService(repo: repoC, clock: clockC, replicaId: repIdC);
+        final regA = CampaignRegistryService.newInstance();
+        final regB = CampaignRegistryService.newInstance();
+        final regC = CampaignRegistryService.newInstance();
+        final profileServiceA = CampaignProfileService.newInstance(
+          repository: repoA,
+          clock: clockA,
+          replicaId: repIdA,
+          registryService: regA,
+          blobStoreProvider: () => FakeBlobStore(),
+        );
+        final profileServiceB = CampaignProfileService.newInstance(
+          repository: repoB,
+          clock: clockB,
+          replicaId: repIdB,
+          registryService: regB,
+          blobStoreProvider: () => FakeBlobStore(),
+        );
+        final profileServiceC = CampaignProfileService.newInstance(
+          repository: repoC,
+          clock: clockC,
+          replicaId: repIdC,
+          registryService: regC,
+          blobStoreProvider: () => FakeBlobStore(),
+        );
 
         final serviceA = PartyRoomService(
           replicaId: repIdA,
           clock: clockA,
+          registry: regA,
+          diceRoomService: createBoundTestDiceRoomService(),
           campaignProfileService: profileServiceA,
         );
         final serviceB = PartyRoomService(
           replicaId: repIdB,
           clock: clockB,
+          registry: regB,
+          diceRoomService: createBoundTestDiceRoomService(),
           campaignProfileService: profileServiceB,
         );
         final serviceC = PartyRoomService(
           replicaId: repIdC,
           clock: clockC,
+          registry: regC,
+          diceRoomService: createBoundTestDiceRoomService(),
           campaignProfileService: profileServiceC,
         );
 
