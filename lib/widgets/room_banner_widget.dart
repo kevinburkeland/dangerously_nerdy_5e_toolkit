@@ -78,41 +78,37 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
     final effectiveName =
         widget.playerName ?? widget.roomService.playerName ?? 'Adventurer';
     if (effectiveRoom != null && effectiveRoom.isNotEmpty) {
-      if (sl.isRegistered<IP2pTransportPort>()) {
-        final transport = sl<IP2pTransportPort>();
-        if (transport is CascadingTransportRouter) {
-          if (transport.activeAdapter == null ||
-              transport.currentState == TransportState.offline) {
-            final localNodeId =
-                '$effectiveName-${effectiveRoom.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
-            unawaited(transport.initializeRoom(effectiveRoom, localNodeId));
-          }
+      final transport = sl<IP2pTransportPort>();
+      if (transport is CascadingTransportRouter) {
+        if (transport.activeAdapter == null ||
+            transport.currentState == TransportState.offline) {
+          final localNodeId =
+              '$effectiveName-${effectiveRoom.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+          unawaited(transport.initializeRoom(effectiveRoom, localNodeId));
         }
       }
-      if (sl.isRegistered<RoomSyncOrchestrator>()) {
-        final orchestrator = sl<RoomSyncOrchestrator>();
-        if (!orchestrator.isSynchronizing) {
-          unawaited(() async {
-            try {
-              await PartyRoomService().openRoomProfile(effectiveRoom);
-              sl<RoomSessionStarter>().start();
-            } catch (e, st) {
-              LoggingService().logNonFatal(
-                e,
-                st,
-                reason: 'Failed to open room profile for $effectiveRoom in RoomBannerWidget',
+      final orchestrator = sl<RoomSyncOrchestrator>();
+      if (!orchestrator.isSynchronizing) {
+        unawaited(() async {
+          try {
+            await PartyRoomService().openRoomProfile(effectiveRoom);
+            sl<RoomSessionStarter>().start();
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to open room profile for $effectiveRoom in RoomBannerWidget',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to open room profile: $e'),
+                  backgroundColor: Colors.red,
+                ),
               );
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to open room profile: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
             }
-          }());
-        }
+          }
+        }());
       }
     }
   }
@@ -251,13 +247,9 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
                 RoomConnectionBadge(
                   compact: true,
                   telemetryStream: widget.telemetryStream ??
-                      (sl.isRegistered<RoomSyncOrchestrator>()
-                          ? sl<RoomSyncOrchestrator>().watchTelemetry()
-                          : const Stream.empty()),
+                      sl<RoomSyncOrchestrator>().watchTelemetry(),
                   initialTelemetry: widget.initialTelemetry ??
-                      (sl.isRegistered<RoomSyncOrchestrator>()
-                          ? sl<RoomSyncOrchestrator>().currentTelemetry
-                          : null),
+                      sl<RoomSyncOrchestrator>().currentTelemetry,
                 ),
                 const SizedBox(width: 4),
                 IconButton(

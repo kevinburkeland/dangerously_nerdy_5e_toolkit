@@ -50,12 +50,7 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
   void initState() {
     super.initState();
     final port = widget.customIngestorPort ?? GithubIngestorAdapter();
-    final clock = widget.customClock ??
-        (sl.isRegistered<StatefulHlcClock>()
-            ? sl<StatefulHlcClock>()
-            : throw StateError(
-                'HomebrewExpertOptionsView requires an authoritative StatefulHlcClock registered in DI or passed via customClock.',
-              ));
+    final clock = widget.customClock ?? sl<StatefulHlcClock>();
     _orchestrator = HomebrewImportOrchestrator(
       ingestorPort: port,
       persister: widget.customPersister,

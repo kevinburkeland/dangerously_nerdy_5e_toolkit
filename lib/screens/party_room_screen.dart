@@ -21,7 +21,7 @@ import 'dice_roller_screen.dart';
 import 'dm_dashboard_screen.dart';
 import '../infrastructure/dtos/character_telemetry_dto.dart';
 import '../infrastructure/di/injection_container.dart';
-import '../application/services/cascading_transport_router.dart';
+import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import '../presentation/widgets/room_connection_badge.dart';
@@ -38,7 +38,7 @@ class PartyRoomScreen extends StatefulWidget {
   final CampaignRegistryService registry;
   final DiceRoomService diceService;
   final RoomSyncOrchestrator? orchestrator;
-  final CascadingTransportRouter? router;
+  final IP2pTransportPort? router;
 
   PartyRoomScreen({
     super.key,
@@ -65,7 +65,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
   late final DiceRoomService _diceService;
 
   RoomSyncOrchestrator? _orchestrator;
-  CascadingTransportRouter? _router;
+  IP2pTransportPort? _router;
   Stream<RoomConnectionTelemetry>? _telemetryStream;
 
   late String _roomCode;
@@ -186,41 +186,37 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
       return;
     }
 
-    if (sl.isRegistered<RoomSyncOrchestrator>()) {
-      final orchestrator = sl<RoomSyncOrchestrator>();
-      _orchestrator = orchestrator;
-      _router = sl.isRegistered<CascadingTransportRouter>()
-          ? sl<CascadingTransportRouter>()
-          : null;
-      _telemetryStream = orchestrator.watchTelemetry();
+    final orchestrator = sl<RoomSyncOrchestrator>();
+    _orchestrator = orchestrator;
+    _router = widget.router ?? sl<IP2pTransportPort>();
+    _telemetryStream = orchestrator.watchTelemetry();
 
-      final localNodeId =
-          '$_playerName-${_roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
-      if (_router != null) {
-        unawaited(_router!.initializeRoom(_roomCode, localNodeId));
-      }
-      try {
-        await _partyService.openRoomProfile(_roomCode);
-        sl<RoomSessionStarter>().start();
-      } catch (e, st) {
-        LoggingService().logNonFatal(
-          e,
-          st,
-          reason: 'Failed to open room profile for $_roomCode in PartyRoomScreen',
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to open room profile: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-
-      if (mounted) setState(() {});
-      return;
+    final localNodeId =
+        '$_playerName-${_roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+    if (_router != null) {
+      unawaited(_router!.initializeRoom(_roomCode, localNodeId));
     }
+    try {
+      await _partyService.openRoomProfile(_roomCode);
+      sl<RoomSessionStarter>().start();
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to open room profile for $_roomCode in PartyRoomScreen',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to open room profile: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+
+    if (mounted) setState(() {});
+    return;
   }
 
   @override
@@ -463,13 +459,9 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
                       child: RoomConnectionBadge(
                         compact: MediaQuery.sizeOf(context).width < 600,
                         telemetryStream: _telemetryStream ??
-                            (sl.isRegistered<RoomSyncOrchestrator>()
-                                ? sl<RoomSyncOrchestrator>().watchTelemetry()
-                                : const Stream.empty()),
+                            sl<RoomSyncOrchestrator>().watchTelemetry(),
                         initialTelemetry: _orchestrator?.currentTelemetry ??
-                            (sl.isRegistered<RoomSyncOrchestrator>()
-                                ? sl<RoomSyncOrchestrator>().currentTelemetry
-                                : null),
+                            sl<RoomSyncOrchestrator>().currentTelemetry,
                       ),
                     ),
                   ),

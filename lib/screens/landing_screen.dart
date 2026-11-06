@@ -43,9 +43,7 @@ class _LandingScreenState extends State<LandingScreen> {
   void initState() {
     super.initState();
     _tools = LandingToolRegistry.defaultTools;
-    if (sl.isRegistered<PartyRoomService>()) {
-      sl<PartyRoomService>().syncAllExistingCampaignsToFirestore();
-    }
+    sl<PartyRoomService>().syncAllExistingCampaignsToFirestore();
   }
 
   @override

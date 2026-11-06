@@ -125,7 +125,7 @@ class CampaignProfileService extends ChangeNotifier {
     _instance._replicaId = replicaId;
     _instance._blobStore = blobStore;
     _instance._blobStoreProvider = blobStoreProvider;
-    _instance._registryService = registryService ?? CampaignRegistryService();
+    _instance._registryService = registryService;
     _instance._ensureSubscribed();
   }
 
@@ -249,12 +249,11 @@ class CampaignProfileService extends ChangeNotifier {
   Future<List<CampaignProfile>> loadAllProfiles() async {
     final activeRepo = repo;
     await activeRepo.loadAllProfiles();
-    final regService = _registryService ?? CampaignRegistryService();
     await CampaignStorageMigration.adoptRegistryMemberships(
       activeRepo,
       clock: _effectiveClock,
       nodeId: _effectiveNodeId,
-      registryService: regService,
+      registryService: _registryService,
     );
     if (activeRepo.allProfiles.isEmpty) {
       final defaultProfile = CampaignProfile.defaultProfile(
