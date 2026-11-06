@@ -6,6 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controlle
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 final _testReplicaId = ReplicaId('test_runner_replica');
 
@@ -71,6 +72,8 @@ void main() {
   late CharacterSheetController controller;
 
   setUp(() {
+    configureTestCampaignProfileService();
+    configureTestDiceRoomService();
     testCharacter = Character(
       id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
       name: 'Valeros',

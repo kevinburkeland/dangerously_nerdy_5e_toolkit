@@ -6,10 +6,19 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipme
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive_spell_tile.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
 
 void main() {
+  setUp(() {
+    configureTestCampaignProfileService();
+    configureTestDiceRoomService();
+  });
+
+  tearDown(() {
+    resetTestServices();
+  });
   group('Feature Grant Combat Injection & CharacterSheetController Tests', () {
     late Character warlockWithAgonizing;
     late Character warlockWithoutAgonizing;

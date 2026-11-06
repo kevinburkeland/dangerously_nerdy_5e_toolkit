@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
+import 'service_test_configurator.dart';
 
 class _InMemoryTestBox extends Fake implements Box<dynamic> {
   final String _name;
@@ -77,6 +78,9 @@ class HiveTestHarness {
     );
     AppDatabaseService.instance = db;
     await db.init();
+    configureTestCampaignProfileService();
+    configureTestDmBackupService();
+    configureTestDiceRoomService();
   }
 
   /// Initializes in-memory box doubles to safely run inside `testWidgets` / `FakeAsync` zones
@@ -98,10 +102,14 @@ class HiveTestHarness {
     );
     AppDatabaseService.instance = db;
     await db.init();
+    configureTestCampaignProfileService();
+    configureTestDmBackupService();
+    configureTestDiceRoomService();
   }
 
   /// Resets boxes, closes Hive, deletes the temp directory, and restores default singleton.
   Future<void> tearDown() async {
+    resetTestServices();
     try {
       if (AppDatabaseService.instance.isInitialized) {
         await AppDatabaseService.instance.resetForTesting();

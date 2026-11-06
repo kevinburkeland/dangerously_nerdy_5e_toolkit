@@ -79,9 +79,17 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     sl.reset();
-    sl.registerSingleton<IP2pTransportPort>(_MockDiceP2pTransport());
-    sl.registerSingleton<RoomSyncOrchestrator>(_FakeDiceRoomSyncOrchestrator());
-    sl.registerSingleton<RoomSessionStarter>(_FakeDiceRoomSessionStarter());
+    final transport = _MockDiceP2pTransport();
+    final orchestrator = _FakeDiceRoomSyncOrchestrator();
+    final starter = _FakeDiceRoomSessionStarter();
+    sl.registerSingleton<IP2pTransportPort>(transport);
+    sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
+    sl.registerSingleton<RoomSessionStarter>(starter);
+    DiceRoomService.configure(
+      transport: transport,
+      orchestrator: orchestrator,
+      sessionStarter: starter,
+    );
     PartyRoomService.setCustomInstanceForTesting(_FakeDicePartyRoomService());
   });
 

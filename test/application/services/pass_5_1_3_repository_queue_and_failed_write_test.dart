@@ -779,6 +779,7 @@ void main() {
         sl.registerSingleton<ReplicaId>(replicaId);
         sl.registerSingleton<StatefulHlcClock>(clock);
         sl.registerSingleton<ICampaignRepository>(repo);
+        DmBackupService.configure(clock: clock);
 
         final backupService = DmBackupService();
 

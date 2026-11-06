@@ -10,6 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_sheet/abilities_and_traits_tab.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
 
@@ -62,6 +63,8 @@ void main() {
   late _FakeRepo fakeRepo;
 
   setUp(() {
+    configureTestCampaignProfileService();
+    configureTestDiceRoomService();
     fakeRepo = _FakeRepo();
     baseCharacter = const Character(
       id: EntityId(slug: 'hero-caster', ruleset: RulesetVersion.v2024),

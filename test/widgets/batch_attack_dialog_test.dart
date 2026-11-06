@@ -5,8 +5,16 @@ import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/dialogs/batch_attack_dialog.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 void main() {
+  setUp(() {
+    configureTestDiceRoomService();
+  });
+
+  tearDown(() {
+    resetTestServices();
+  });
   Widget createTestableWidget(Widget child) {
     return MaterialApp(
       home: Scaffold(
@@ -147,7 +155,9 @@ void main() {
 }
 
 class _MockDiceRoomService extends DiceRoomService {
-  _MockDiceRoomService() : super.newInstance();
+  _MockDiceRoomService() : super.newInstance() {
+    bindTestDiceRoomInstance(this);
+  }
   RoomRoll? lastBroadcastedRoll;
 
   @override

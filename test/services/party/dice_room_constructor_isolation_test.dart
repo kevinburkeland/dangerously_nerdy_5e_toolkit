@@ -1,9 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    configureTestDiceRoomService();
+  });
+
+  tearDown(() {
+    resetTestServices();
+  });
 
   testWidgets(
       'Cold production factory DiceRoomService() starts no asynchronous restore; activeSessionNotifier is null until restorePersistedSession is called',

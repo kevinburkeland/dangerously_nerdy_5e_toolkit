@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_se
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
 import 'fake_blob_store.dart';
+import 'fake_campaign_repository.dart';
 
 class NoOpP2pTransportPort implements IP2pTransportPort {
   @override
@@ -83,7 +84,7 @@ class NoOpRoomSessionStarter extends Fake implements RoomSessionStarter {
 /// running [initServiceLocator]. Calls the same public `configure` and
 /// `...ForTesting` reset methods on the services.
 void configureTestServices({
-  required ICampaignRepository repository,
+  ICampaignRepository? repository,
   ReplicaId? replicaId,
   StatefulHlcClock? clock,
   CampaignRegistryService? registryService,
@@ -93,6 +94,7 @@ void configureTestServices({
   RoomSyncOrchestrator? orchestrator,
   RoomSessionStarter? sessionStarter,
 }) {
+  final effectiveRepo = repository ?? FakeCampaignRepository();
   final effectiveReplicaId = replicaId ?? ReplicaId('test_replica');
   final effectiveClock =
       clock ?? StatefulHlcClock(replicaId: effectiveReplicaId);
@@ -104,7 +106,7 @@ void configureTestServices({
       })();
 
   CampaignProfileService.configure(
-    repository: repository,
+    repository: effectiveRepo,
     clock: effectiveClock,
     replicaId: effectiveReplicaId,
     registryService: effectiveRegistry,
@@ -112,7 +114,7 @@ void configureTestServices({
   );
   DmBackupService.configure(clock: effectiveClock);
   CampaignStorageMigration.configure(
-    repository: repository,
+    repository: effectiveRepo,
     clock: effectiveClock,
     replicaId: effectiveReplicaId,
     registryService: effectiveRegistry,
@@ -121,6 +123,63 @@ void configureTestServices({
     transport: transport,
     orchestrator: orchestrator,
     sessionStarter: sessionStarter,
+  );
+}
+
+/// Configures [CampaignProfileService] singleton with its runtime collaborators.
+void configureTestCampaignProfileService({
+  ICampaignRepository? repository,
+  ReplicaId? replicaId,
+  StatefulHlcClock? clock,
+  CampaignRegistryService? registryService,
+  BlobStorePort? blobStore,
+  BlobStorePort Function()? blobStoreProvider,
+}) {
+  final effectiveRepo = repository ?? FakeCampaignRepository();
+  final effectiveReplicaId = replicaId ?? ReplicaId('test_replica');
+  final effectiveClock =
+      clock ?? StatefulHlcClock(replicaId: effectiveReplicaId);
+  final effectiveRegistry = registryService ?? CampaignRegistryService();
+  final effectiveBlobStoreProvider = blobStoreProvider ??
+      (() {
+        final store = blobStore ?? FakeBlobStore();
+        return () => store;
+      })();
+  CampaignProfileService.configure(
+    repository: effectiveRepo,
+    clock: effectiveClock,
+    replicaId: effectiveReplicaId,
+    registryService: effectiveRegistry,
+    blobStoreProvider: effectiveBlobStoreProvider,
+  );
+}
+
+/// Configures [DmBackupService] singleton with its runtime collaborator.
+void configureTestDmBackupService({
+  StatefulHlcClock? clock,
+  ReplicaId? replicaId,
+}) {
+  final effectiveReplicaId = replicaId ?? ReplicaId('test_replica');
+  final effectiveClock =
+      clock ?? StatefulHlcClock(replicaId: effectiveReplicaId);
+  DmBackupService.configure(clock: effectiveClock);
+}
+
+/// Binds an existing [DiceRoomService] instance with test collaborators.
+void bindTestDiceRoomInstance(
+  DiceRoomService instance, {
+  IP2pTransportPort? transport,
+  RoomSyncOrchestrator? orchestrator,
+  RoomSessionStarter? sessionStarter,
+}) {
+  final effectiveTransport = transport ?? NoOpP2pTransportPort();
+  final effectiveOrchestrator = orchestrator ?? NoOpRoomSyncOrchestrator();
+  final effectiveStarter =
+      sessionStarter ?? NoOpRoomSessionStarter(effectiveOrchestrator);
+  instance.bind(
+    transport: effectiveTransport,
+    orchestrator: effectiveOrchestrator,
+    sessionStarter: effectiveStarter,
   );
 }
 
