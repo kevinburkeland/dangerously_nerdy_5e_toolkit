@@ -113,6 +113,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await harness.setUpInMemory();
     sl.reset();
+    CampaignProfileService.resetForTesting();
     rep = ReplicaId('test_node_r1_r2');
     clock = StatefulHlcClock(replicaId: rep);
     repo = _InMemoryCampaignRepo();
@@ -123,7 +124,6 @@ void main() {
     sl.registerSingleton<ICampaignRepository>(repo);
     sl.registerSingleton<IRoomDocumentPort>(recordingPort);
 
-    CampaignProfileService.resetForTesting();
     service = PartyRoomService(replicaId: rep, clock: clock);
   });
 

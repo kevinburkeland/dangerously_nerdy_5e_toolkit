@@ -18,7 +18,6 @@ import 'campaign_profile_service.dart';
 import 'character_persistence_service.dart';
 import 'dpr_persistence_service.dart';
 import 'homebrew_persistence_service.dart';
-import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 
 /// Pure helper identifying all timestamp paths in [profile] that strictly exceed
@@ -121,7 +120,10 @@ class DmBackupService {
     _instance._clock = clock;
   }
 
-  @visibleForTesting
+  static void bindClock(StatefulHlcClock clock) {
+    _instance._clock = clock;
+  }
+
   static void resetForTesting() {
     _instance._clock = null;
   }

@@ -71,6 +71,25 @@ class CampaignProfileService extends ChangeNotifier {
     return _instance;
   }
 
+  /// Creates an isolated instance for multi-peer tests without mutating singleton state.
+  static CampaignProfileService newInstance({
+    ReplicaId? replicaId,
+    StatefulHlcClock? clock,
+    required ICampaignRepository repo,
+    BlobStorePort? blobStore,
+    BlobStorePort Function()? blobStoreProvider,
+    CampaignRegistryService? registryService,
+  }) {
+    return CampaignProfileService._internal(
+      replicaId: replicaId,
+      clock: clock,
+      repoOverride: repo,
+      blobStore: blobStore,
+      blobStoreProvider: blobStoreProvider,
+      registryService: registryService,
+    );
+  }
+
   CampaignProfileService._internal({
     ReplicaId? replicaId,
     StatefulHlcClock? clock,
@@ -110,6 +129,23 @@ class CampaignProfileService extends ChangeNotifier {
     _instance._ensureSubscribed();
   }
 
+  static void bindRepository(ICampaignRepository repo) {
+    _instance._repoOverride = repo;
+    _instance._ensureSubscribed();
+  }
+
+  static void bindClock(StatefulHlcClock clock) {
+    _instance._clock = clock;
+  }
+
+  static void bindReplicaId(ReplicaId replicaId) {
+    _instance._replicaId = replicaId;
+  }
+
+  static void bindBlobStore(BlobStorePort blobStore) {
+    _instance._blobStore = blobStore;
+  }
+
   ICampaignRepository? _repoOverride;
   ReplicaId? _replicaId;
   StatefulHlcClock? _clock;
@@ -143,6 +179,10 @@ class CampaignProfileService extends ChangeNotifier {
     _instance._allSubscribedRepo = null;
     _instance._replicaId = null;
     _instance._clock = null;
+  }
+
+  static void fullResetForTesting() {
+    resetForTesting();
     _instance._repoOverride = null;
     _instance._blobStore = null;
     _instance._blobStoreProvider = null;
@@ -399,6 +439,11 @@ class CampaignProfileService extends ChangeNotifier {
 
   /// Clears in-memory subscriptions for isolated testing.
   void clearCacheForTesting() {
-    resetForTesting();
+    _instance._activeProfileSub?.cancel();
+    _instance._activeProfileSub = null;
+    _instance._allProfilesSub?.cancel();
+    _instance._allProfilesSub = null;
+    _instance._allSubscribedRepo = null;
+    _instance._ensureSubscribed();
   }
 }

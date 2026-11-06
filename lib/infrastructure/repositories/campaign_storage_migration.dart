@@ -28,10 +28,15 @@ import 'local_campaign_repository.dart';
 /// 3. Idempotent execution: multiple runs leave valid profiles untouched.
 /// 4. Failure resilience (F1): exceptions leave stored records unchanged without synthesizing defaults.
 class CampaignStorageMigration {
-  static ICampaignRepository? _defaultRepo;
-  static StatefulHlcClock? _defaultClock;
-  static ReplicaId? _defaultReplicaId;
-  static CampaignRegistryService? _defaultRegistryService;
+  static final CampaignStorageMigration _instance =
+      CampaignStorageMigration._internal();
+
+  CampaignStorageMigration._internal();
+
+  ICampaignRepository? _repo;
+  StatefulHlcClock? _clock;
+  ReplicaId? _replicaId;
+  CampaignRegistryService? _registryService;
 
   /// Binds runtime collaborators established during container bootstrap.
   static void configure({
@@ -40,10 +45,29 @@ class CampaignStorageMigration {
     required ReplicaId replicaId,
     CampaignRegistryService? registryService,
   }) {
-    _defaultRepo = repository;
-    _defaultClock = clock;
-    _defaultReplicaId = replicaId;
-    _defaultRegistryService = registryService;
+    _instance._repo = repository;
+    _instance._clock = clock;
+    _instance._replicaId = replicaId;
+    _instance._registryService = registryService;
+  }
+
+  static void bindRepository(ICampaignRepository repo) {
+    _instance._repo = repo;
+  }
+
+  static void bindClock(StatefulHlcClock clock) {
+    _instance._clock = clock;
+  }
+
+  static void bindReplicaId(ReplicaId replicaId) {
+    _instance._replicaId = replicaId;
+  }
+
+  static void resetForTesting() {
+    _instance._repo = null;
+    _instance._clock = null;
+    _instance._replicaId = null;
+    _instance._registryService = null;
   }
 
   /// Runs the full startup migration sequence: legacy character extraction followed by registry adoption.
@@ -56,12 +80,12 @@ class CampaignStorageMigration {
     String? nodeId,
     ReplicaId? replicaId,
   }) async {
-    final repo = repository ?? _defaultRepo;
+    final repo = repository ?? _instance._repo;
     if (repo == null) return;
 
     final db = databaseService ?? AppDatabaseService.instance;
     final charService = characterPersistenceService ?? CharacterPersistenceService();
-    final regService = registryService ?? _defaultRegistryService ?? CampaignRegistryService();
+    final regService = registryService ?? _instance._registryService ?? CampaignRegistryService();
 
     // Ensure storage records are loaded and prefs->hive copy completes
     try {
@@ -84,10 +108,10 @@ class CampaignStorageMigration {
     );
 
     // Step 3: Adopt registry memberships
-    final clk = clock ?? _defaultClock;
+    final clk = clock ?? _instance._clock;
     final nid = nodeId ??
         (clk?.replicaId.value ??
-            (replicaId?.value ?? _defaultReplicaId?.value));
+            (replicaId?.value ?? _instance._replicaId?.value));
 
     if (clk != null && nid != null) {
       await adoptRegistryMemberships(
@@ -163,7 +187,7 @@ class CampaignStorageMigration {
   }) async {
     try {
       final registry = registryService ??
-          _defaultRegistryService ??
+          _instance._registryService ??
           CampaignRegistryService();
       final memberships = await registry.loadMemberships();
       if (memberships.isEmpty) return;

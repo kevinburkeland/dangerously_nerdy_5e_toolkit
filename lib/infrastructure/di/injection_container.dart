@@ -63,6 +63,22 @@ class InjectionContainer {
   /// Registers an existing instance as a singleton.
   void registerSingleton<T>(T instance) {
     _singletons[T] = instance;
+    if (instance is ICampaignRepository) {
+      CampaignProfileService.bindRepository(instance);
+      CampaignStorageMigration.bindRepository(instance);
+    }
+    if (instance is StatefulHlcClock) {
+      CampaignProfileService.bindClock(instance);
+      DmBackupService.bindClock(instance);
+      CampaignStorageMigration.bindClock(instance);
+    }
+    if (instance is ReplicaId) {
+      CampaignProfileService.bindReplicaId(instance);
+      CampaignStorageMigration.bindReplicaId(instance);
+    }
+    if (instance is BlobStorePort) {
+      CampaignProfileService.bindBlobStore(instance);
+    }
   }
 
   /// Registers a factory that creates a fresh instance on every resolution.
@@ -100,6 +116,9 @@ class InjectionContainer {
   void reset() {
     _factories.clear();
     _singletons.clear();
+    CampaignProfileService.fullResetForTesting();
+    DmBackupService.resetForTesting();
+    CampaignStorageMigration.resetForTesting();
   }
 }
 
