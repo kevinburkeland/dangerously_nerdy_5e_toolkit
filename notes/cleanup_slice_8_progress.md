@@ -12,10 +12,13 @@ Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 
 - [x] Step 5 Notes check verifies CI run ids: app d2a09b5e8a12293803b7fd08a387e91fd76a063b run 41967505973
 - [x] Step 6 Mutations and report
 
+## Red runs on main
+24ba806a077527be49d5c6fa79bb41e59804a753 red run 41966504591
+74b801785774b3a9dabda5598f78b8a966921c33 red run 41967067058
+
 ## Next
 None (Cleanup slice 8 complete).
 
 ## Open issues and deviations
 After retiring cs7 mutation branches, git checkout in fresh CI clone did not fetch the 8 unreferenced mutation branch heads that were referenced in notes/cleanup_slice_7_progress.md line 14, causing CI check_notes_shas to fail. Pushed archive/cs7-* tags to origin to allow actions/checkout to fetch the archived mutation commit objects without leaving mutation heads open.
-Prompt cited reachability_law_test.dart under test/domain/ (file does not exist in domain/), but actual file is test/infrastructure/compliance/reachability_law_test.dart.
-Prompt cited legacy_load_law_test.dart under test/infrastructure/compliance/ in exit check list, but actual file path is test/infrastructure/legacy/legacy_load_law_test.dart.
+The earlier notes wrongly said the slice 8 prompt named those paths; it did not; the first wording of the note named a path that doesn't exist, which turned app runs numbered 583 and 584 red, and Step 5's code was pushed while main was red.
