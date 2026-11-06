@@ -353,10 +353,6 @@ Future<void> initServiceLocator({
         clock: sl<StatefulHlcClock>(),
       ));
 
-  sl.registerLazySingleton<RoomSessionStarter>(() => RoomSessionStarter(
-        orchestrator: sl<RoomSyncOrchestrator>(),
-        maps: sl<ActiveMapController>(),
-      ));
 
   DiceRoomService.configure(
     transport: sl<IP2pTransportPort>(),
