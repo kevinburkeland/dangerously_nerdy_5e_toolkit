@@ -34,6 +34,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_
 import '../test_doubles/fake_room_document_port.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import '../test_doubles/hive_test_harness.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 
 class _MockDmSheetTransport implements IP2pTransportPort {
@@ -160,6 +161,15 @@ void main() {
     sl.registerSingleton<ActiveMapController>(mapCtrl);
     final starter = RoomSessionStarter(orchestrator: orchestrator, maps: mapCtrl);
     sl.registerSingleton<RoomSessionStarter>(starter);
+    configureTestServices(
+      repository: campRepo,
+      replicaId: repId,
+      clock: sl<StatefulHlcClock>(),
+      blobStore: fakeStore,
+      transport: mockTransport,
+      orchestrator: orchestrator,
+      sessionStarter: starter,
+    );
 
     addTearDown(campRepo.dispose);
     final partyService = PartyRoomService.newInstance(

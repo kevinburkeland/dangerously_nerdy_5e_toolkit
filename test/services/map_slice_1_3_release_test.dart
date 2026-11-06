@@ -20,6 +20,7 @@ import '../test_doubles/fake_blob_store.dart';
 import '../test_doubles/fake_map_image_intake.dart';
 import '../test_doubles/fake_room_document_port.dart';
 import '../test_doubles/hive_test_harness.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 class _ThrowingReleaseBlobStore extends FakeBlobStore {
   final Object errorToThrow;
@@ -68,6 +69,13 @@ void main() {
 
     registry = CampaignRegistryService.newInstance();
     CampaignRegistryService.instance = registry;
+    configureTestServices(
+      repository: campRepo,
+      replicaId: replica,
+      clock: clock,
+      registryService: registry,
+      blobStoreProvider: () => sl<BlobStorePort>(),
+    );
 
     partyService = PartyRoomService.newInstance(
       replicaId: replica,

@@ -13,6 +13,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.d
 import 'package:dangerously_nerdy_5e_toolkit/services/party/room_code_relink.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -109,6 +110,11 @@ void main() {
     sl.registerSingleton<StatefulHlcClock>(clock);
     sl.registerSingleton<ICampaignRepository>(repo);
     sl.registerSingleton<IRoomDocumentPort>(recordingPort);
+    configureTestServices(
+      repository: repo,
+      replicaId: rep,
+      clock: clock,
+    );
 
     service = PartyRoomService(replicaId: rep, clock: clock);
   });

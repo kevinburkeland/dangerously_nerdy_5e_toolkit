@@ -581,8 +581,8 @@ class AppBackupService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      PresetService().clearCacheForTesting();
-      MinionSessionService().clearCacheForTesting();
+      PresetService().clearCache();
+      MinionSessionService().clearCache();
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
         e,

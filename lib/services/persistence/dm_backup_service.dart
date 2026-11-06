@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:meta/meta.dart';
 import '../../models/campaign_profile.dart';
 import '../../models/custom_preset.dart';
 import '../../models/domain/core_types.dart';
@@ -120,10 +121,7 @@ class DmBackupService {
     _instance._clock = clock;
   }
 
-  static void bindClock(StatefulHlcClock clock) {
-    _instance._clock = clock;
-  }
-
+  @visibleForTesting
   static void resetForTesting() {
     _instance._clock = null;
   }

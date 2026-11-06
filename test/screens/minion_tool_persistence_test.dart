@@ -15,12 +15,12 @@ class _FakePartyRoomService extends Fake implements PartyRoomService {
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    MinionSessionService().clearCacheForTesting();
+    MinionSessionService().clearCache();
     PartyRoomService.setCustomInstanceForTesting(_FakePartyRoomService());
   });
 
   tearDown(() {
-    MinionSessionService().clearCacheForTesting();
+    MinionSessionService().clearCache();
     PartyRoomService.setCustomInstanceForTesting(null);
   });
 

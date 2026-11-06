@@ -19,7 +19,7 @@ void main() {
   setUp(() async {
     DebouncedStorageService().cancelAllForTesting();
     SharedPreferences.setMockInitialValues({});
-    PresetService().clearCacheForTesting();
+    PresetService().clearCache();
     HomebrewPersistenceService().invalidateAllCaches();
     await HomebrewPersistenceService().clearAllHomebrew();
   });
@@ -41,7 +41,7 @@ void main() {
   test('SR1: Round-trip law over seeds 0..24 through AppBackupService', () async {
     for (var seed = 0; seed <= 24; seed++) {
       SharedPreferences.setMockInitialValues({});
-      PresetService().clearCacheForTesting();
+      PresetService().clearCache();
       HomebrewPersistenceService().invalidateAllCaches();
       await HomebrewPersistenceService().clearAllHomebrew();
 

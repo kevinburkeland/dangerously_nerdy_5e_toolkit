@@ -28,8 +28,8 @@ class PresetService {
 
   List<CustomPreset>? _cachedPresets;
 
-  /// Clears in-memory cache (primarily for unit tests)
-  void clearCacheForTesting() {
+  /// Clears in-memory cache
+  void clearCache() {
     _cachedPresets = null;
   }
 

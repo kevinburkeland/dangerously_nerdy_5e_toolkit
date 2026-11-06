@@ -11,7 +11,7 @@ void main() {
   group('Minion Session Persistence Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
-      MinionSessionService().clearCacheForTesting();
+      MinionSessionService().clearCache();
     });
 
     test(
@@ -62,7 +62,7 @@ void main() {
       await service.persistAllSessions();
 
       // Clear in-memory cache to simulate fresh app restart
-      service.clearCacheForTesting();
+      service.clearCache();
 
       // Create new instance and load from persisted SharedPreferences
       final freshService = MinionSessionService();

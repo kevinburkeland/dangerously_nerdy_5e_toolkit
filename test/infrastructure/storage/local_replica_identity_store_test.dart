@@ -31,6 +31,7 @@ import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/service_test_configurator.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
@@ -230,6 +231,11 @@ void main() {
       final mockRepo = _TestMockCampaignRepo();
       sl.registerSingleton<ICampaignRepository>(mockRepo);
       sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
+      configureTestServices(
+        repository: mockRepo,
+        replicaId: authoritativeId,
+        clock: StatefulHlcClock(replicaId: authoritativeId),
+      );
 
       final partyService = PartyRoomService(
         replicaId: authoritativeId,
@@ -287,6 +293,11 @@ void main() {
         clock: clock,
       );
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(
+        repository: repo,
+        replicaId: authoritativeId,
+        clock: clock,
+      );
 
       final registry = CampaignRegistryService();
       await registry.saveMembership(
@@ -402,6 +413,11 @@ void main() {
       sl.registerSingleton<StatefulHlcClock>(sharedClock);
       final mockRepo = _TestMockCampaignRepo();
       sl.registerSingleton<ICampaignRepository>(mockRepo);
+      configureTestServices(
+        repository: mockRepo,
+        replicaId: authoritativeId,
+        clock: sharedClock,
+      );
 
       // DmDashboardController
       final dmController = DmDashboardController(

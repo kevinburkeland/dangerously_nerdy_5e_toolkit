@@ -26,6 +26,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
+import '../../test_doubles/service_test_configurator.dart';
 import 'room_sync_orchestrator_test.dart' as h;
 
 class _RandomDelayDatabaseService extends AppDatabaseService {
@@ -462,6 +463,11 @@ void main() {
         sl.registerSingleton<ReplicaId>(ReplicaId('local_dm'));
         sl.registerSingleton<StatefulHlcClock>(sharedClock);
         sl.registerSingleton<ICampaignRepository>(repo);
+        configureTestServices(
+          repository: repo,
+          replicaId: ReplicaId('local_dm'),
+          clock: sharedClock,
+        );
         final facade = CampaignProfileService();
 
         final controller = DmDashboardController(

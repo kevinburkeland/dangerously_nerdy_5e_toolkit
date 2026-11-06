@@ -73,7 +73,11 @@ void main() {
       sl.registerSingleton<ICampaignRepository>(campRepo);
       addTearDown(campRepo.dispose);
       CampaignProfileService.resetForTesting();
-      CampaignProfileService.bindRepository(campRepo);
+      CampaignProfileService.configure(
+        repository: campRepo,
+        replicaId: replicaId,
+        clock: clock,
+      );
       CampaignProfileService(replicaId: replicaId, clock: clock);
     });
 

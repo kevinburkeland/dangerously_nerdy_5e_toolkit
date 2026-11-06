@@ -29,6 +29,7 @@ import '../test_doubles/fake_room_document_port.dart';
 import '../test_doubles/hive_test_harness.dart';
 import '../test_doubles/fake_blob_network.dart';
 import '../test_doubles/fake_blob_store.dart';
+import '../test_doubles/service_test_configurator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/screens/map/map_screen.dart';
@@ -153,6 +154,16 @@ void main() {
       sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
       final starter = RoomSessionStarter(orchestrator: orchestrator, maps: mapCtrl);
       sl.registerSingleton<RoomSessionStarter>(starter);
+      configureTestServices(
+        repository: campRepo,
+        replicaId: repId,
+        clock: testClock,
+        registryService: registry,
+        blobStore: fakeStore,
+        transport: mockTransport,
+        orchestrator: orchestrator,
+        sessionStarter: starter,
+      );
 
 
       partyService = PartyRoomService.newInstance(

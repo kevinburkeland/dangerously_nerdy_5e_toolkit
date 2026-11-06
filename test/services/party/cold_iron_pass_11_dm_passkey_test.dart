@@ -18,6 +18,7 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/party/campaign_dialogs.dart
 
 import '../../test_doubles/fake_room_document_port.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,12 @@ void main() {
       sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
 
       registry = CampaignRegistryService.newInstance();
+      configureTestServices(
+        repository: campRepo,
+        replicaId: replica,
+        clock: clock,
+        registryService: registry,
+      );
       diceService = DiceRoomService.newInstance();
       partyService = PartyRoomService.newInstance(
         replicaId: replica,

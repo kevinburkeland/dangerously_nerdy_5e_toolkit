@@ -16,7 +16,7 @@ void main() {
   setUp(() async {
     DebouncedStorageService().cancelAllForTesting();
     SharedPreferences.setMockInitialValues({});
-    PresetService().clearCacheForTesting();
+    PresetService().clearCache();
     HomebrewPersistenceService().invalidateAllCaches();
     await HomebrewPersistenceService().clearAllHomebrew();
   });

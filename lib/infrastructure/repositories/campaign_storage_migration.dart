@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
@@ -51,18 +52,7 @@ class CampaignStorageMigration {
     _instance._registryService = registryService;
   }
 
-  static void bindRepository(ICampaignRepository repo) {
-    _instance._repo = repo;
-  }
-
-  static void bindClock(StatefulHlcClock clock) {
-    _instance._clock = clock;
-  }
-
-  static void bindReplicaId(ReplicaId replicaId) {
-    _instance._replicaId = replicaId;
-  }
-
+  @visibleForTesting
   static void resetForTesting() {
     _instance._repo = null;
     _instance._clock = null;

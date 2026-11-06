@@ -13,6 +13,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.dart';
 import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -44,11 +45,19 @@ void main() {
         characterRepo: charRepo,
       );
       sl.registerSingleton<ICampaignRepository>(repo);
-      sl.registerSingleton<BlobStorePort>(FakeBlobStore());
+      final fakeBlobStore = FakeBlobStore();
+      sl.registerSingleton<BlobStorePort>(fakeBlobStore);
+      configureTestServices(
+        repository: repo,
+        replicaId: replicaId,
+        clock: clock,
+        blobStore: fakeBlobStore,
+      );
     });
 
     tearDown(() async {
       repo.dispose();
+      resetTestServices();
       sl.reset();
       await harness.tearDown();
     });

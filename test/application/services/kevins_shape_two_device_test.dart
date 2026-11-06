@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/migration/party_ledger_legacy_import.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _CountingRepo implements ICampaignRepository {
   CampaignProfile? _activeProfile;
@@ -226,6 +227,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repA);
       sl.registerSingleton<ICampaignRepository>(repoA);
       sl.registerSingleton<StatefulHlcClock>(clockA);
+      configureTestServices(repository: repoA, replicaId: repA, clock: clockA);
 
       final serviceA = PartyRoomService(replicaId: repA, clock: clockA);
       var resolvedA = await serviceA.openRoomProfile(roomCode);
@@ -249,6 +251,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repB);
       sl.registerSingleton<ICampaignRepository>(repoB);
       sl.registerSingleton<StatefulHlcClock>(clockB);
+      configureTestServices(repository: repoB, replicaId: repB, clock: clockB);
 
       final serviceB = PartyRoomService(replicaId: repB, clock: clockB);
       var resolvedB = await serviceB.openRoomProfile(roomCode);
@@ -326,6 +329,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repA);
       sl.registerSingleton<ICampaignRepository>(repoA);
       sl.registerSingleton<StatefulHlcClock>(clockA);
+      configureTestServices(repository: repoA, replicaId: repA, clock: clockA);
 
       repoA.updateProfileCalls = 0;
       final thirdOpenA = await serviceA.openRoomProfile(roomCode);
@@ -339,6 +343,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repB);
       sl.registerSingleton<ICampaignRepository>(repoB);
       sl.registerSingleton<StatefulHlcClock>(clockB);
+      configureTestServices(repository: repoB, replicaId: repB, clock: clockB);
 
       repoB.updateProfileCalls = 0;
       final thirdOpenB = await serviceB.openRoomProfile(roomCode);

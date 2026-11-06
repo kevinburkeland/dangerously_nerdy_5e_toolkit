@@ -24,6 +24,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_s
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/campaign_storage_migration.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import '../test_doubles/hive_test_harness.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +51,11 @@ void main() {
         characterRepo: LocalCharacterRepository(),
       );
       sl.registerSingleton<ICampaignRepository>(campaignRepo);
+      configureTestServices(
+        repository: campaignRepo,
+        replicaId: repId,
+        clock: clock,
+      );
       campaignService = CampaignProfileService();
       characterService = CharacterPersistenceService();
       controller = DmDashboardController(

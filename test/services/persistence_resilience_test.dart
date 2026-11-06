@@ -13,7 +13,7 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       service = PresetService();
-      service.clearCacheForTesting();
+      service.clearCache();
     });
 
     test('Saving and reloading custom presets round-trips with full fidelity',
@@ -36,7 +36,7 @@ void main() {
       expect(savedList.first.modifier, equals(4));
       expect(savedList.first.rollMode, equals(RollMode.advantage));
 
-      service.clearCacheForTesting();
+      service.clearCache();
       final reloaded = await service.loadCustomPresets();
       expect(reloaded.length, equals(1));
       expect(reloaded.first.id, equals('test_preset_1'));
@@ -54,7 +54,7 @@ void main() {
         ],
       });
 
-      service.clearCacheForTesting();
+      service.clearCache();
       final loaded = await service.loadCustomPresets();
       // Should not throw and should safely return empty or recover
       expect(loaded, isA<List<CustomPreset>>());

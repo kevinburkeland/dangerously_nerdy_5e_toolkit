@@ -13,6 +13,7 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/dm_dashboard_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/party/campaign_dialogs.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _CountingCampaignRepo implements ICampaignRepository {
   CampaignProfile? _activeProfile;
@@ -207,6 +208,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<ICampaignRepository>(repo);
       sl.registerSingleton<StatefulHlcClock>(clock);
+      configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       const genesisTs = HybridLogicalClock(physicalTime: 0, logicalCounter: 0, nodeId: 'genesis');
       final genesisProfile = CampaignProfile.raw(
@@ -249,6 +251,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<ICampaignRepository>(repo);
       sl.registerSingleton<StatefulHlcClock>(clock);
+      configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(replicaId: rep, clock: clock);
 
@@ -322,6 +325,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(replicaId: rep, clock: clock);
       PartyRoomService.setCustomInstanceForTesting(partyService);
@@ -366,6 +370,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(replicaId: rep, clock: clock);
       PartyRoomService.setCustomInstanceForTesting(partyService);

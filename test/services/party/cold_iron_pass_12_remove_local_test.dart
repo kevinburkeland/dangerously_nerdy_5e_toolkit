@@ -21,6 +21,7 @@ import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
 import '../../test_doubles/fake_room_document_port.dart';
 import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_store_port.dart';
 
 class _ThrowingSharedPrefsStore extends SharedPreferencesStorePlatform {
@@ -80,6 +81,13 @@ void main() {
 
     final registry = CampaignRegistryService.newInstance();
     CampaignRegistryService.instance = registry;
+    configureTestServices(
+      repository: campRepo,
+      replicaId: replica,
+      clock: clock,
+      registryService: registry,
+      blobStoreProvider: () => sl<BlobStorePort>(),
+    );
 
     final diceService = DiceRoomService.newInstance();
     final partyService = PartyRoomService.newInstance(

@@ -22,6 +22,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_s
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import '../test_doubles/fake_blob_network.dart';
 import '../test_doubles/fake_blob_store.dart';
+import '../test_doubles/service_test_configurator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 
 class MockP2pTransport implements IP2pTransportPort {
@@ -151,16 +152,25 @@ class FakeRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator {
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    resetTestServices();
     sl.reset();
     PartyRoomService.setCustomInstanceForTesting(FakePartyRoomService());
     final mockTransport = MockP2pTransport();
+    final fakeOrch = FakeRoomSyncOrchestrator();
+    final fakeStarter = FakeRoomSessionStarter();
     sl.registerSingleton<IP2pTransportPort>(mockTransport);
-    sl.registerSingleton<RoomSyncOrchestrator>(FakeRoomSyncOrchestrator());
-    sl.registerSingleton<RoomSessionStarter>(FakeRoomSessionStarter());
+    sl.registerSingleton<RoomSyncOrchestrator>(fakeOrch);
+    sl.registerSingleton<RoomSessionStarter>(fakeStarter);
+    configureTestDiceRoomService(
+      transport: mockTransport,
+      orchestrator: fakeOrch,
+      sessionStarter: fakeStarter,
+    );
   });
 
   tearDown(() {
     PartyRoomService.setCustomInstanceForTesting(null);
+    resetTestServices();
     sl.reset();
   });
 
@@ -353,13 +363,18 @@ void main() {
       transportState: () => TransportState.webRtc,
     );
     sl.registerSingleton<ActiveMapController>(mapController);
-    sl.registerSingleton<RoomSessionStarter>(
-      RoomSessionStarter(orchestrator: orchestrator, maps: mapController),
+    final starter = RoomSessionStarter(orchestrator: orchestrator, maps: mapController);
+    sl.registerSingleton<RoomSessionStarter>(starter);
+    configureTestDiceRoomService(
+      transport: mockTransport,
+      orchestrator: orchestrator,
+      sessionStarter: starter,
     );
     addTearDown(() {
       orchestrator.stopSynchronization();
       mapController.dispose();
       transfer.dispose();
+      resetTestServices();
       sl.reset();
     });
 
@@ -443,11 +458,17 @@ void main() {
       maps: mapController,
     );
     sl.registerSingleton<RoomSessionStarter>(starter);
+    configureTestDiceRoomService(
+      transport: mockTransport,
+      orchestrator: orchestrator,
+      sessionStarter: starter,
+    );
 
     addTearDown(() {
       orchestrator.stopSynchronization();
       mapController.dispose();
       transfer.dispose();
+      resetTestServices();
       sl.reset();
     });
 

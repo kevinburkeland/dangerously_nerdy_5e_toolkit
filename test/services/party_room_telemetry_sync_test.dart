@@ -17,6 +17,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import '../test_doubles/hive_test_harness.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -224,9 +225,15 @@ void main() {
         characterRepo: LocalCharacterRepository(),
       );
       sl.registerSingleton<ICampaignRepository>(campRepo);
+      configureTestServices(
+        repository: campRepo,
+        replicaId: replica,
+        clock: clock,
+      );
       addTearDown(() async {
         campRepo.dispose();
         PartyRoomService.resetCustomInstanceForTesting();
+        resetTestServices();
         sl.reset();
         await harness.tearDown();
       });

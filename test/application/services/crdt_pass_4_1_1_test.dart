@@ -27,6 +27,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _FakeCharRepo implements ICharacterRepository<Character> {
   final Map<String, Character> _storage = {};
@@ -154,6 +155,11 @@ void main() {
         characterRepo: characterRepo,
       );
       sl.registerSingleton<ICampaignRepository>(campaignRepo);
+      configureTestServices(
+        repository: campaignRepo,
+        replicaId: testReplica,
+        clock: clock,
+      );
 
       profileService = CampaignProfileService(
         replicaId: testReplica,

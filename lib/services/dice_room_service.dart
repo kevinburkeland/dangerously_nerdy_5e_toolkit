@@ -52,19 +52,8 @@ class DiceRoomService {
     _instance._sessionStarter = sessionStarter;
   }
 
-  static void bindTransport(IP2pTransportPort transport) {
-    _instance._transport = transport;
-  }
-
-  static void bindOrchestrator(RoomSyncOrchestrator orchestrator) {
-    _instance._orchestrator = orchestrator;
-  }
-
-  static void bindSessionStarter(RoomSessionStarter sessionStarter) {
-    _instance._sessionStarter = sessionStarter;
-  }
-
-  static void resetTestingState() {
+  @visibleForTesting
+  static void resetForTesting() {
     _instance._transport = null;
     _instance._orchestrator = null;
     _instance._sessionStarter = null;

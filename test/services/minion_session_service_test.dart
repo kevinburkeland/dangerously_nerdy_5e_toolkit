@@ -7,11 +7,11 @@ void main() {
 
   setUp(() {
     service = MinionSessionService();
-    service.clearCacheForTesting();
+    service.clearCache();
   });
 
   tearDown(() {
-    service.clearCacheForTesting();
+    service.clearCache();
   });
 
   group('MinionSessionService Unit Tests', () {
@@ -92,7 +92,7 @@ void main() {
       expect(service.hasSession(AnimateObjectsSummon.preset.id), isTrue);
       expect(service.hasSession(BeastSummons.conjureAnimalsPreset.id), isTrue);
 
-      service.clearCacheForTesting();
+      service.clearCache();
 
       expect(service.hasSession(AnimateObjectsSummon.preset.id), isFalse);
       expect(service.hasSession(BeastSummons.conjureAnimalsPreset.id), isFalse);

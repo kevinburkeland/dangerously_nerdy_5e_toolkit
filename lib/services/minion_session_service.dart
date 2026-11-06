@@ -159,8 +159,8 @@ class MinionSessionService {
     }
   }
 
-  /// Clears in-memory cached sessions (primarily for unit tests).
-  void clearCacheForTesting() {
+  /// Clears in-memory cached sessions.
+  void clearCache() {
     _sessions.clear();
   }
 }

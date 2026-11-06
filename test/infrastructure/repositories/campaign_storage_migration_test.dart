@@ -17,6 +17,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -50,10 +51,16 @@ void main() {
       characterRepo: charRepo,
     );
     sl.registerSingleton<ICampaignRepository>(repo);
+    configureTestServices(
+      repository: repo,
+      replicaId: replicaId,
+      clock: clock,
+    );
   });
 
   tearDown(() async {
     repo.dispose();
+    resetTestServices();
     sl.reset();
     await harness.tearDown();
   });

@@ -25,6 +25,7 @@ import '../../test_doubles/fake_room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/migration/party_ledger_legacy_import.dart';
 import '../../test_doubles/hive_test_harness.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class IncrementMarker {
   final num value;
@@ -477,6 +478,11 @@ void main() {
         characterRepo: LocalCharacterRepository(),
       );
       sl.registerSingleton<ICampaignRepository>(campaignRepo);
+      configureTestServices(
+        repository: campaignRepo,
+        replicaId: repId,
+        clock: clock,
+      );
 
       final roomService = PartyRoomService(
         replicaId: repId,
@@ -573,6 +579,11 @@ void main() {
         characterRepo: characterRepo,
       );
       sl.registerSingleton<ICampaignRepository>(campaignRepo);
+      configureTestServices(
+        repository: campaignRepo,
+        replicaId: repId,
+        clock: clock,
+      );
 
       final characterService = CharacterPersistenceService();
       final campaignService = CampaignProfileService(

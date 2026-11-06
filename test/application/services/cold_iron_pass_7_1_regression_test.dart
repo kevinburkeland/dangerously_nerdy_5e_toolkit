@@ -13,6 +13,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profi
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   CampaignProfile? _activeProfile;
@@ -124,6 +125,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repA);
       sl.registerSingleton<StatefulHlcClock>(clockA);
       sl.registerSingleton<ICampaignRepository>(repoA);
+      configureTestServices(repository: repoA, replicaId: repA, clock: clockA);
 
       final partyServiceA = PartyRoomService(
         replicaId: repA,
@@ -217,6 +219,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repA);
       sl.registerSingleton<StatefulHlcClock>(clockA);
       sl.registerSingleton<ICampaignRepository>(repoA);
+      configureTestServices(repository: repoA, replicaId: repA, clock: clockA);
 
       final partyServiceA = PartyRoomService(
         replicaId: repA,
@@ -267,6 +270,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repB);
       sl.registerSingleton<StatefulHlcClock>(clockB);
       sl.registerSingleton<ICampaignRepository>(repoB);
+      configureTestServices(repository: repoB, replicaId: repB, clock: clockB);
 
       final partyServiceB = PartyRoomService(
         replicaId: repB,
@@ -337,6 +341,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repA);
       sl.registerSingleton<StatefulHlcClock>(clockA);
       sl.registerSingleton<ICampaignRepository>(repoA);
+      configureTestServices(repository: repoA, replicaId: repA, clock: clockA);
 
       final partyService = PartyRoomService(
         replicaId: repA,
@@ -387,6 +392,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(
         replicaId: rep,
@@ -461,6 +467,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(repB);
       sl.registerSingleton<StatefulHlcClock>(clockB);
       sl.registerSingleton<ICampaignRepository>(repoB);
+      configureTestServices(repository: repoB, replicaId: repB, clock: clockB);
 
       final partyServiceB = PartyRoomService(
         replicaId: repB,
@@ -497,6 +504,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(
         replicaId: rep,
@@ -537,6 +545,7 @@ void main() {
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(
         replicaId: rep,

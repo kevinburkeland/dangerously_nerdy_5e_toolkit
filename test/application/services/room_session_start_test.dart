@@ -26,6 +26,7 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../../test_doubles/fake_blob_network.dart';
 import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/fake_campaign_repository.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _CountingTransport implements IP2pTransportPort {
   int watchIncomingCount = 0;
@@ -199,12 +200,18 @@ void main() {
       maps: mapController,
     );
     sl.registerSingleton<RoomSessionStarter>(starter);
+    configureTestDiceRoomService(
+      transport: transport,
+      orchestrator: orchestrator,
+      sessionStarter: starter,
+    );
 
     addTearDown(() {
       orchestrator.stopSynchronization();
       mapController.dispose();
       transfer.dispose();
       transport.dispose();
+      resetTestServices();
     });
 
     expect(orchestrator.isSynchronizing, isFalse);
@@ -261,11 +268,17 @@ void main() {
       maps: mapController,
     );
     sl.registerSingleton<RoomSessionStarter>(starter);
+    configureTestDiceRoomService(
+      transport: transport,
+      orchestrator: orchestrator,
+      sessionStarter: starter,
+    );
 
     addTearDown(() {
       mapController.dispose();
       transfer.dispose();
       transport.dispose();
+      resetTestServices();
     });
 
     expect(orchestrator.isSynchronizing, isFalse);

@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
   final Map<String, CampaignProfile> profiles = {};
@@ -123,6 +124,7 @@ void main() {
     sl.registerSingleton<IRoomDocumentPort>(recordingPort);
 
     CampaignProfileService.resetForTesting();
+    configureTestServices(repository: repo, replicaId: rep, clock: clock);
     service = PartyRoomService(replicaId: rep, clock: clock);
   });
 
@@ -159,6 +161,7 @@ void main() {
       sl.registerSingleton<ICampaignRepository>(freshRepo);
       sl.registerSingleton<IRoomDocumentPort>(freshPort);
       CampaignProfileService.resetForTesting();
+      configureTestServices(repository: freshRepo, replicaId: rep, clock: clock);
       final freshService = PartyRoomService(replicaId: rep, clock: clock);
 
       await expectLater(
@@ -294,6 +297,7 @@ void main() {
         sl.registerSingleton<ICampaignRepository>(freshRepo);
         sl.registerSingleton<IRoomDocumentPort>(freshPort);
         CampaignProfileService.resetForTesting();
+        configureTestServices(repository: freshRepo, replicaId: rep, clock: clock);
         final testService = PartyRoomService(replicaId: rep, clock: clock);
 
         final roomCode = 'ROOM_$seed';

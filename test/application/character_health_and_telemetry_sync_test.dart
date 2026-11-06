@@ -20,6 +20,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import '../test_doubles/fake_room_document_port.dart';
 import '../test_doubles/hive_test_harness.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -85,6 +86,12 @@ void main() {
     );
     sl.registerSingleton<ICampaignRepository>(campRepo);
     sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
+    configureTestServices(
+      repository: campRepo,
+      replicaId: replica,
+      clock: clock,
+      registryService: registry,
+    );
     roomService = PartyRoomService.newInstance(
       replicaId: replica,
       clock: clock,
@@ -95,6 +102,7 @@ void main() {
       campRepo.dispose();
       PartyRoomService.resetCustomInstanceForTesting();
       CampaignRegistryService.resetInstanceForTesting();
+      resetTestServices();
       sl.reset();
       await harness.tearDown();
     });

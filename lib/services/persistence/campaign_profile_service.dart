@@ -129,23 +129,6 @@ class CampaignProfileService extends ChangeNotifier {
     _instance._ensureSubscribed();
   }
 
-  static void bindRepository(ICampaignRepository repo) {
-    _instance._repoOverride = repo;
-    _instance._ensureSubscribed();
-  }
-
-  static void bindClock(StatefulHlcClock clock) {
-    _instance._clock = clock;
-  }
-
-  static void bindReplicaId(ReplicaId replicaId) {
-    _instance._replicaId = replicaId;
-  }
-
-  static void bindBlobStore(BlobStorePort blobStore) {
-    _instance._blobStore = blobStore;
-  }
-
   ICampaignRepository? _repoOverride;
   ReplicaId? _replicaId;
   StatefulHlcClock? _clock;
@@ -181,6 +164,7 @@ class CampaignProfileService extends ChangeNotifier {
     _instance._clock = null;
   }
 
+  @visibleForTesting
   static void fullResetForTesting() {
     resetForTesting();
     _instance._repoOverride = null;
@@ -437,6 +421,7 @@ class CampaignProfileService extends ChangeNotifier {
   }
 
   /// Clears in-memory subscriptions for isolated testing.
+  @visibleForTesting
   void clearCacheForTesting() {
     _instance._activeProfileSub?.cancel();
     _instance._activeProfileSub = null;

@@ -125,12 +125,8 @@ class AppServices {
   /// Resets the service container to fresh default instances.
   @visibleForTesting
   static void reset() {
-    // ignore: invalid_use_of_visible_for_testing_member
-    _instance.debouncedStorage.cancelAllForTesting();
-    _instance.presetService.clearCacheForTesting();
-    _instance.minionSession.clearCacheForTesting();
-    // ignore: invalid_use_of_visible_for_testing_member
-    CampaignProfileService.resetForTesting();
+    _instance.presetService.clearCache();
+    _instance.minionSession.clearCache();
     _instance = AppServices._();
   }
 }

@@ -16,6 +16,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import '../../test_doubles/service_test_configurator.dart';
 
 class MockP2pTransport implements IP2pTransportPort {
   final List<String> broadcasted = [];
@@ -128,10 +129,13 @@ class MockNetworkTimePort implements INetworkTimePort {
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    resetTestServices();
     sl.reset();
+    configureTestDiceRoomService(transport: MockP2pTransport());
   });
 
   tearDown(() {
+    resetTestServices();
     sl.reset();
   });
 
@@ -295,6 +299,7 @@ void main() {
         () async {
       final mockTransport = MockP2pTransport();
       sl.registerSingleton<IP2pTransportPort>(mockTransport);
+      configureTestDiceRoomService(transport: mockTransport);
 
       final service = DiceRoomService();
       const roomCode = 'ROOM-MESH-3';

@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 const String kAppPackagePrefix = 'package:dangerously_nerdy_5e_toolkit/';
 const String kInjectionContainerTarget =
     'lib/infrastructure/di/injection_container.dart';
+const String kServiceContainerTarget =
+    'lib/infrastructure/di/service_container.dart';
 
 /// Allowlist of files outside `lib/infrastructure/di/` and `lib/main.dart`
 /// permitted to import `injection_container.dart`.
@@ -111,6 +113,247 @@ bool importsInjectionContainer(String filePath, String source) {
   return false;
 }
 
+/// Checks whether [source] in file [filePath] imports the service container.
+bool importsServiceContainer(String filePath, String source) {
+  final uris = extractDirectiveUris(source);
+  for (final uri in uris) {
+    final resolved = resolveUri(filePath, uri);
+    if (resolved == kServiceContainerTarget) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Strips block comments and line comments from [source], preserving line count.
+String stripCommentsPreservingLines(String source) {
+  final lines = source.split('\n');
+  final out = <String>[];
+  bool inBlock = false;
+  for (final rawLine in lines) {
+    var line = rawLine;
+    final sb = StringBuffer();
+    int i = 0;
+    while (i < line.length) {
+      if (inBlock) {
+        final endIdx = line.indexOf('*/', i);
+        if (endIdx == -1) {
+          i = line.length;
+        } else {
+          inBlock = false;
+          i = endIdx + 2;
+        }
+      } else {
+        if (line.startsWith('//', i)) {
+          break;
+        } else if (line.startsWith('/*', i)) {
+          inBlock = true;
+          i += 2;
+        } else {
+          sb.write(line[i]);
+          i++;
+        }
+      }
+    }
+    out.add(sb.toString());
+  }
+  return out.join('\n');
+}
+
+/// Strips block comments, line comments, and string literal contents (preserving `${...}` interpolation code) from [source], preserving line count.
+String stripCommentsAndStringsPreservingLines(String source) {
+  final n = source.length;
+  int i = 0;
+  final buf = StringBuffer();
+  final stack = <Map<String, dynamic>>[{'type': 'code', 'braceDepth': 0}];
+
+  while (i < n) {
+    final ctx = stack.last;
+    final type = ctx['type'] as String;
+
+    if (type == 'code') {
+      if (source.startsWith('//', i)) {
+        while (i < n && source[i] != '\n') {
+          i++;
+        }
+        continue;
+      }
+      if (source.startsWith('/*', i)) {
+        i += 2;
+        while (i < n && !source.startsWith('*/', i)) {
+          if (source[i] == '\n') buf.write('\n');
+          i++;
+        }
+        if (i < n) i += 2;
+        continue;
+      }
+      if (source[i] == 'r' &&
+          i + 1 < n &&
+          (source[i + 1] == "'" || source[i + 1] == '"')) {
+        final q = source[i + 1];
+        final isTriple =
+            i + 3 < n && source[i + 2] == q && source[i + 3] == q;
+        final delim = isTriple ? q * 3 : q;
+        buf.write("''");
+        i += 1 + delim.length;
+        while (i < n) {
+          if (source.startsWith(delim, i)) {
+            i += delim.length;
+            break;
+          } else {
+            if (source[i] == '\n') buf.write('\n');
+            i++;
+          }
+        }
+        continue;
+      }
+      if (source[i] == "'" || source[i] == '"') {
+        final q = source[i];
+        final isTriple =
+            i + 2 < n && source[i + 1] == q && source[i + 2] == q;
+        final delim = isTriple ? q * 3 : q;
+        buf.write(q);
+        i += delim.length;
+        stack.add({'type': 'string', 'delim': delim, 'quote': q});
+        continue;
+      }
+      if (source[i] == '{') {
+        ctx['braceDepth'] = (ctx['braceDepth'] as int) + 1;
+        buf.write('{');
+        i++;
+        continue;
+      }
+      if (source[i] == '}') {
+        final bd = ctx['braceDepth'] as int;
+        if (bd > 0) {
+          ctx['braceDepth'] = bd - 1;
+          buf.write('}');
+          i++;
+        } else if (stack.length > 1) {
+          stack.removeLast();
+          buf.write('}');
+          i++;
+        } else {
+          buf.write('}');
+          i++;
+        }
+        continue;
+      }
+      buf.write(source[i]);
+      i++;
+    } else if (type == 'string') {
+      final delim = ctx['delim'] as String;
+      final q = ctx['quote'] as String;
+      if (source.startsWith(delim, i)) {
+        buf.write(q);
+        i += delim.length;
+        stack.removeLast();
+        continue;
+      }
+      if (source[i] == r'\' && i + 1 < n) {
+        if (source[i + 1] == '\n') buf.write('\n');
+        i += 2;
+        continue;
+      }
+      if (source.startsWith(r'${', i)) {
+        buf.write(r'${');
+        i += 2;
+        stack.add({'type': 'code', 'braceDepth': 0});
+        continue;
+      }
+      if (source[i] == '\n') {
+        buf.write('\n');
+      }
+      i++;
+    }
+  }
+  return buf.toString();
+}
+
+/// Evaluates Rule 4 against in-memory [source] of `service_container.dart`.
+List<String> findServiceContainerViolations(String filePath, String source) {
+  final violations = <String>[];
+  final uris = extractDirectiveUris(source);
+  for (final uri in uris) {
+    if (!uri.startsWith('dart:')) {
+      violations.add('$filePath:1: non-dart directive URI: $uri');
+    }
+  }
+
+  final stripped = stripCommentsAndStringsPreservingLines(source);
+  final lines = stripped.split('\n');
+  for (int i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    if (line.contains('ForTesting')) {
+      violations.add('$filePath:${i + 1}: contains ForTesting: ${line.trim()}');
+    }
+    const forbiddenReset = 'reset' 'TestingState';
+    if (line.contains(forbiddenReset)) {
+      violations.add('$filePath:${i + 1}: contains $forbiddenReset: ${line.trim()}');
+    }
+    if (line.contains('configure(')) {
+      violations.add('$filePath:${i + 1}: contains configure(: ${line.trim()}');
+    }
+    if (line.contains('runtimeType')) {
+      violations.add('$filePath:${i + 1}: contains runtimeType: ${line.trim()}');
+    }
+    if (RegExp(r' is ').hasMatch(line)) {
+      violations.add('$filePath:${i + 1}: contains ` is ` type test: ${line.trim()}');
+    }
+  }
+  return violations;
+}
+
+/// Evaluates Rule 5 against in-memory [source] of [filePath].
+/// In `lib/`, a call to a member whose name ends in `ForTesting`
+/// (pattern: `\b\w*ForTesting\s*\(` that is not its declaration) is allowed
+/// only inside the file that declares that member.
+List<String> findForTestingCallViolations(String filePath, String source) {
+  final stripped = stripCommentsPreservingLines(source);
+  final lines = stripped.split('\n');
+  final callRegex = RegExp(r'\b(\w*ForTesting)\s*\(');
+  final declaredInFile = <String>{};
+
+  for (final line in lines) {
+    for (final match in callRegex.allMatches(line)) {
+      final name = match.group(1)!;
+      final prefix = line.substring(0, match.start);
+      if (_isDeclarationPrefix(prefix)) {
+        declaredInFile.add(name);
+      }
+    }
+  }
+
+  final violations = <String>[];
+  final rawLines = source.split('\n');
+  for (int i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    for (final match in callRegex.allMatches(line)) {
+      final name = match.group(1)!;
+      final prefix = line.substring(0, match.start);
+      if (_isDeclarationPrefix(prefix)) {
+        continue;
+      }
+      if (!declaredInFile.contains(name)) {
+        violations.add('$filePath:${i + 1}: ${rawLines[i].trim()}');
+      }
+    }
+  }
+  return violations;
+}
+
+bool _isDeclarationPrefix(String prefix) {
+  final trimmed = prefix.trimRight();
+  if (trimmed.isEmpty) return false;
+  if (trimmed.endsWith('.') || trimmed.endsWith('?.') || trimmed.endsWith('..')) {
+    return false;
+  }
+  // A declaration precedes the method/setter name with a return type or `static`/`void`/`set`/`get`/`Future<...>`/etc.
+  return RegExp(
+    r'(?:\b(?:void|static|set|get|Future|Stream|bool|int|double|String|dynamic|Object|T|[A-Z]\w*)\s*[>?]?)$',
+  ).hasMatch(trimmed);
+}
+
 /// Finds line violations of `\.isRegistered\b` in [source].
 List<String> findIsRegisteredViolations(String filePath, String source) {
   final isRegisteredRegex = RegExp(r'\.isRegistered\b');
@@ -202,6 +445,11 @@ void run() {}
       for (final file in dartFiles) {
         final path = normalizePath(file.path);
         final content = file.readAsStringSync();
+
+        if (importsServiceContainer(path, content) &&
+            !path.startsWith('lib/infrastructure/di/')) {
+          violations.add('$path:1: service container imported outside di');
+        }
 
         if (importsInjectionContainer(path, content)) {
           actualImporters.add(path);
@@ -376,6 +624,133 @@ void test() {
         lessThanOrEqualTo(kCollaboratorDefaultsCeiling),
         reason: 'Collaborator ?? defaults outside lib/infrastructure/di/ ($actualDefaults) exceeded ceiling ($kCollaboratorDefaultsCeiling)',
       );
+    });
+  });
+
+  group('Service Locator Bars (Rule 4: The container knows no services)', () {
+    test('In-memory controls flag service import and is type test, allow clean container', () {
+      const containerWithServiceImport = '''
+import '../../services/dice_room_service.dart';
+class InjectionContainer {}
+''';
+      const containerWithTypeTest = '''
+class InjectionContainer {
+  void registerSingleton<T>(T instance) {
+    if (instance is Foo) {}
+  }
+}
+''';
+      const cleanContainer = '''
+class InjectionContainer {
+  final Map<Type, dynamic> _singletons = {};
+  void registerSingleton<T>(T instance) {
+    _singletons[T] = instance;
+  }
+  void reset() {
+    _singletons.clear();
+  }
+}
+''';
+
+      expect(
+        findServiceContainerViolations(
+          kServiceContainerTarget,
+          containerWithServiceImport,
+        ),
+        isNotEmpty,
+        reason: 'Control: service import in container must be flagged',
+      );
+      expect(
+        findServiceContainerViolations(
+          kServiceContainerTarget,
+          containerWithTypeTest,
+        ),
+        isNotEmpty,
+        reason: 'Control: ` is ` type test in container must be flagged',
+      );
+      expect(
+        findServiceContainerViolations(
+          kServiceContainerTarget,
+          cleanContainer,
+        ),
+        isEmpty,
+        reason: 'Control: clean container must pass',
+      );
+    });
+
+    test('lib/infrastructure/di/service_container.dart exists and knows no services', () {
+      final file = File(kServiceContainerTarget);
+      if (!file.existsSync()) {
+        final fallbackFile = File(kInjectionContainerTarget);
+        final fallbackViolations = fallbackFile.existsSync()
+            ? findServiceContainerViolations(
+                kInjectionContainerTarget,
+                fallbackFile.readAsStringSync(),
+              )
+            : <String>[];
+        fail(
+          'Missing $kServiceContainerTarget (container is still in $kInjectionContainerTarget with ${fallbackViolations.length} violations:\n${fallbackViolations.take(10).join('\n')})',
+        );
+      }
+
+      final content = file.readAsStringSync();
+      final violations = findServiceContainerViolations(
+        kServiceContainerTarget,
+        content,
+      );
+
+      if (violations.isNotEmpty) {
+        fail('Rule 4 violations in $kServiceContainerTarget:\n${violations.join('\n')}');
+      }
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('Service Locator Bars (Rule 5: Test hooks are called only by tests)', () {
+    test('In-memory controls flag external ForTesting call and allow call in declaring file', () {
+      const externalCaller = '''
+void cleanup() {
+  Foo.resetForTesting();
+}
+''';
+      const declaringCaller = '''
+class Foo {
+  static void resetForTesting() {}
+  static void fullResetForTesting() {
+    resetForTesting();
+  }
+}
+''';
+
+      expect(
+        findForTestingCallViolations('lib/other.dart', externalCaller),
+        equals(['lib/other.dart:2: Foo.resetForTesting();']),
+      );
+      expect(
+        findForTestingCallViolations('lib/foo.dart', declaringCaller),
+        isEmpty,
+      );
+    });
+
+    test('No calls to *ForTesting( in lib/ outside the file that declares that member', () {
+      final libDir = Directory('lib');
+      final dartFiles = libDir
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'))
+          .toList();
+
+      final violations = <String>[];
+      for (final file in dartFiles) {
+        final path = normalizePath(file.path);
+        final content = file.readAsStringSync();
+        violations.addAll(findForTestingCallViolations(path, content));
+      }
+
+      if (violations.isNotEmpty) {
+        fail('Rule 5 (*ForTesting call) violations:\n${violations.join('\n')}');
+      }
+      expect(violations, isEmpty);
     });
   });
 }
