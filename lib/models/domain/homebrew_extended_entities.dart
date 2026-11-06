@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import '../dm_screen_data.dart';
 
 /// Types of class decision points encountered during character creation and progression.

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// Status classification of an imported campaign or system snapshot payload.
 enum ImportValidationStatus {

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import '../domain/character_models.dart' show AbilityType;
 
 /// Category of tool proficiency in 5e rules.

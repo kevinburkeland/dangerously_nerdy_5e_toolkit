@@ -222,29 +222,17 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
   ),
   'lib/models/arena/monster_combat_profile.dart': AllowlistEntry(
     kinds: {'models -> services'},
-    reason: 'models uses ACL parser service (Step 6)',
+    reason: 'ACL stat block boundary parsing in factory constructor',
   ),
   'lib/models/campaign_profile.dart': AllowlistEntry(
     kinds: {'models -> infrastructure'},
     reason: 'compatibility re-export (folder-layout slice)',
   ),
-  'lib/models/characters/srd_backgrounds_library.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
   'lib/models/characters/srd_classes_library.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> services'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
+    kinds: {'models -> services'},
+    reason: 'AST entry node transformation for subclass feature markdown',
   ),
   'lib/models/characters/srd_equipment_library.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/characters/srd_proficiencies_library.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/characters/srd_species_library.dart': AllowlistEntry(
     kinds: {'flutter'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
@@ -252,37 +240,8 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     kinds: {'models -> infrastructure'},
     reason: 'compatibility re-export (folder-layout slice)',
   ),
-  'lib/models/domain/action_economy_models.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/domain/character_draft.dart': AllowlistEntry(
-    kinds: {'models -> infrastructure'},
-    reason: 'compatibility re-export (folder-layout slice)',
-  ),
-  'lib/models/domain/dm_backup_models.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/domain/homebrew_bundle.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> services'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/domain/homebrew_extended_entities.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
   'lib/models/glyph_gallery_data.dart': AllowlistEntry(
     kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/landing_tool_item.dart': AllowlistEntry(
-    kinds: {
-      'flutter',
-      'models -> screens',
-      'models -> services',
-      'models -> widgets',
-    },
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/models/magic_items/magic_item_data.dart': AllowlistEntry(
@@ -311,7 +270,7 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
   ),
   'lib/models/monster_codex_data.dart': AllowlistEntry(
     kinds: {'flutter', 'models -> services'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
+    reason: 'baseline DPR calculation method on Monster domain model and UI data',
   ),
   'lib/models/party/party_purse.dart': AllowlistEntry(
     kinds: {'models -> infrastructure'},
@@ -326,7 +285,7 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     reason: 'compatibility re-export (folder-layout slice)',
   ),
   'lib/models/spellbook_data.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> services', 'models -> widgets'},
+    kinds: {'flutter', 'models -> widgets'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/models/srd_summons/magic_items/bag_of_tricks_preset.dart': AllowlistEntry(
@@ -342,7 +301,7 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/models/srd_summons/minion_stat_block.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> services', 'models -> widgets'},
+    kinds: {'flutter', 'models -> widgets'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/models/srd_summons/spells/animate_objects_preset.dart': AllowlistEntry(
@@ -363,10 +322,6 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
   ),
   'lib/models/srd_summons/spells/undead_presets.dart': AllowlistEntry(
     kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/summon_preset.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> widgets'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/models/tables/rollable_table.dart': AllowlistEntry(

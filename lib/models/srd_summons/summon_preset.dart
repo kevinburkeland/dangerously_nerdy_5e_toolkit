@@ -1,7 +1,5 @@
-import 'package:flutter/widgets.dart';
 import '../monster_codex_data.dart';
 import '../spellbook_data.dart';
-import '../../widgets/glyphs/dnd_glyph.dart';
 import 'minion_stat_block.dart';
 
 typedef BudgetCalculator = int Function(int spellLevel);
@@ -196,28 +194,4 @@ extension SummonPresetGlyphExt on SummonPreset {
     return rings;
   }
 
-  Widget buildGlyph({
-    double size = 40,
-    bool isDarkMode = true,
-    Color? glyphColor,
-  }) {
-    if (category == SummonCategory.magicItem) {
-      return DndGlyph.item(
-        category: glyphItemCategory,
-        rarity: glyphItemRarity,
-        actionRings: glyphActionRings,
-        glyphColor: glyphColor,
-        size: size,
-        isDarkMode: isDarkMode,
-      );
-    }
-    return DndGlyph.spell(
-      school: glyphSchool,
-      level: glyphSpellLevel,
-      actionRings: glyphActionRings,
-      glyphColor: glyphColor,
-      size: size,
-      isDarkMode: isDarkMode,
-    );
-  }
 }

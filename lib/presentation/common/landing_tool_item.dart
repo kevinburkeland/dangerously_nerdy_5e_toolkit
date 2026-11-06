@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import '../models/srd_summons/srd_summons_library.dart';
-import '../screens/arena_simulator_screen.dart';
-import '../screens/character_builder_screen.dart';
-import '../screens/class_catalogue_screen.dart';
-import '../screens/dice_roller_screen.dart';
-import '../screens/dm_dashboard_screen.dart';
-import '../screens/dm_reference_screen.dart';
-import '../screens/dpr_calculator_screen.dart';
-import '../screens/feats_compendium_screen.dart';
-import '../screens/glyph_showcase_screen.dart';
-import '../screens/homebrew_studio_screen.dart';
-import '../screens/item_compendium_screen.dart';
-import '../screens/minion_tool_screen.dart';
-import '../screens/monster_codex_screen.dart';
-import '../screens/party_room_screen.dart';
-import '../screens/species_codex_screen.dart';
-import '../screens/spellbook_screen.dart';
-import '../screens/table_index_screen.dart';
-import '../services/haptic_service.dart';
-import '../services/party/campaign_registry_service.dart';
-import '../widgets/party/campaign_dialogs.dart';
+import '../../models/srd_summons/srd_summons_library.dart';
+import '../../screens/arena_simulator_screen.dart';
+import '../../screens/character_builder_screen.dart';
+import '../../screens/class_catalogue_screen.dart';
+import '../../screens/dice_roller_screen.dart';
+import '../../screens/dm_dashboard_screen.dart';
+import '../../screens/dm_reference_screen.dart';
+import '../../screens/dpr_calculator_screen.dart';
+import '../../screens/feats_compendium_screen.dart';
+import '../../screens/glyph_showcase_screen.dart';
+import '../../screens/homebrew_studio_screen.dart';
+import '../../screens/item_compendium_screen.dart';
+import '../../screens/minion_tool_screen.dart';
+import '../../screens/monster_codex_screen.dart';
+import '../../screens/party_room_screen.dart';
+import '../../screens/species_codex_screen.dart';
+import '../../screens/spellbook_screen.dart';
+import '../../screens/table_index_screen.dart';
+import '../../services/haptic_service.dart';
+import '../../services/party/campaign_registry_service.dart';
+import '../../widgets/party/campaign_dialogs.dart';
 
 /// Data class representing a launcher tool or companion card on the Landing Screen.
 class LandingToolItem {

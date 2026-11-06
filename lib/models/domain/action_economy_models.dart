@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'core_types.dart';
 
 /// Categories of character combat actions
@@ -28,9 +27,9 @@ class CharacterCombatAction {
   final String? resourceCost;
   final bool isAttack;
   final bool dealsDamage;
-  final void Function(BuildContext context)? onRollAttack;
-  final void Function(BuildContext context)? onRollDamage;
-  final void Function(BuildContext context)? onExecute;
+  final void Function(dynamic context)? onRollAttack;
+  final void Function(dynamic context)? onRollDamage;
+  final void Function(dynamic context)? onExecute;
 
   const CharacterCombatAction({
     required this.id,
@@ -71,31 +70,4 @@ class CharacterCombatAction {
     }
   }
 
-  Color get actionTypeColor {
-    switch (actionType) {
-      case ActionType.action:
-        return Colors.redAccent;
-      case ActionType.bonusAction:
-        return Colors.orangeAccent;
-      case ActionType.reaction:
-        return Colors.blueAccent;
-      case ActionType.special:
-      default:
-        return Colors.purpleAccent;
-    }
-  }
-
-  IconData get actionTypeIcon {
-    switch (actionType) {
-      case ActionType.action:
-        return Icons.sports_martial_arts;
-      case ActionType.bonusAction:
-        return Icons.bolt;
-      case ActionType.reaction:
-        return Icons.flash_on;
-      case ActionType.special:
-      default:
-        return Icons.stars;
-    }
-  }
 }

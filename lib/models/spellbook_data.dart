@@ -9,7 +9,7 @@ import 'spells/level_4_spells.dart';
 import 'spells/level_5_spells.dart';
 import 'spells/high_level_spells.dart';
 
-export '../services/rules/spellcasting_rules_engine.dart';
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 export '../widgets/glyphs/glyph_tokens.dart';
 
 export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show SpellClass;

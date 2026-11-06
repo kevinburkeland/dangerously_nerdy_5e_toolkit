@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/domain/action_economy_models.dart';
+import '../../presentation/widgets/action_economy_ui_extensions.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_purse.dart';
 import '../../models/party/party_session_state.dart';
@@ -235,7 +236,6 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
             ],
           ),
         ),
-
         const SizedBox(height: 12),
 
         // 2. Category Filter Chips

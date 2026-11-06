@@ -1,4 +1,4 @@
-import '../../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'core_types.dart';
 import 'character_models.dart';
 import 'feature_grant.dart';

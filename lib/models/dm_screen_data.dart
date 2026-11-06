@@ -1,8 +1,8 @@
 import '../infrastructure/dtos/campaign_edition_codec.dart';
-import '../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'domain/character_models.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-export '../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 
 /// Canonical RulesetEdition alias for DM screen reference data and UI selectors.
 typedef DmRulesEdition = RulesetEdition;

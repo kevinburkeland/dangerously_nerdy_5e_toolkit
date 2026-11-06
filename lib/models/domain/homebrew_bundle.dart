@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
-import '../../services/fluff/entity_fluff_service.dart';
+import 'package:meta/meta.dart';
+import 'entity_fluff.dart';
 import 'core_types.dart';
 import 'homebrew_extended_entities.dart';
 import 'spell_monster_equipment.dart';

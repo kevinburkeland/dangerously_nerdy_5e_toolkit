@@ -47,8 +47,8 @@ class CharacterActionsResolver {
     final standardList = <CharacterCombatAction>[];
 
     // Helper: Dispatch dice room roll
-    void dispatchRoll(BuildContext context,
-        {required String label, required String formula}) {
+    void dispatchRoll(dynamic rawContext, {required String label, required String formula}) {
+      final context = rawContext as BuildContext;
       HapticService.lightImpact(context);
       final cleanFormula = formula.replaceAll(' ', '');
       final rollResult = SpellRollEngine.roll(formula: cleanFormula);
@@ -1293,7 +1293,7 @@ class CharacterActionsResolver {
             description:
                 'While holding this rod, you can regain one warlock spell slot as an action. You can’t use this property again until you finish a long rest.',
             resourceCost: '1/Long Rest',
-            onExecute: (ctx) {
+            onExecute: (rawCtx) { final ctx = rawCtx as BuildContext;
               HapticService.heavyImpact(ctx);
               final pool = controller.character.resources.spellSlots;
               if (pool.pactMagicMax > 0 &&
@@ -1573,7 +1573,7 @@ class CharacterActionsResolver {
     required String markdown,
     required int classLevel,
     required String sourceName,
-    required void Function(BuildContext context,
+    required void Function(dynamic context,
             {required String label, required String formula})
         dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,
@@ -1746,7 +1746,7 @@ class CharacterActionsResolver {
     int? explicitLevel,
     required int classLevel,
     required String sourceName,
-    required void Function(BuildContext context,
+    required void Function(dynamic context,
             {required String label, required String formula})
         dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,
@@ -1900,7 +1900,7 @@ class CharacterActionsResolver {
     required dynamic rawJson,
     required int classLevel,
     required String sourceName,
-    required void Function(BuildContext context,
+    required void Function(dynamic context,
             {required String label, required String formula})
         dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,

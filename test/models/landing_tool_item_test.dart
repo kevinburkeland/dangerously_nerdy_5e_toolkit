@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/landing_tool_item.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/common/landing_tool_item.dart';
 
 void main() {
   // Access the full list once — avoids re-constructing the getter repeatedly
