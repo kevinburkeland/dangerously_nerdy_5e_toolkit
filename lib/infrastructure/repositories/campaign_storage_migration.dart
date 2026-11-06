@@ -35,7 +35,7 @@ class CampaignStorageMigration {
     required AppDatabaseService databaseService,
     required CharacterPersistenceService characterPersistenceService,
     required CampaignRegistryService registryService,
-    required StatefulHlcClock clock,
+    StatefulHlcClock? clock,
     required String nodeId,
   }) async {
     // Ensure storage records are loaded and prefs->hive copy completes
@@ -59,13 +59,15 @@ class CampaignStorageMigration {
     );
 
     // Step 3: Adopt registry memberships
-    await adoptRegistryMemberships(
-      repository,
-      clock: clock,
-      nodeId: nodeId,
-      registryService: registryService,
-      characterPersistenceService: characterPersistenceService,
-    );
+    if (clock != null) {
+      await adoptRegistryMemberships(
+        repository,
+        clock: clock,
+        nodeId: nodeId,
+        registryService: registryService,
+        characterPersistenceService: characterPersistenceService,
+      );
+    }
   }
 
   /// Extracts legacy embedded character records from raw stored JSON into [CharacterPersistenceService]
