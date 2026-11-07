@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/domain/action_economy_models.dart';
+import '../../presentation/character_sheet/combat_action_runner.dart';
 import '../../presentation/widgets/action_economy_ui_extensions.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_purse.dart';
@@ -24,10 +25,7 @@ import 'skills_saves_matrix.dart';
 class CharacterSheetTabs extends StatefulWidget {
   final CharacterSheetController controller;
 
-  const CharacterSheetTabs({
-    super.key,
-    required this.controller,
-  });
+  const CharacterSheetTabs({super.key, required this.controller});
 
   @override
   State<CharacterSheetTabs> createState() => _CharacterSheetTabsState();
@@ -517,13 +515,11 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
               ],
             ),
           ],
-          if (action.onRollAttack != null ||
-              action.onRollDamage != null ||
-              action.onExecute != null) ...[
+          if (action.attackRoll != null || action.damageRoll != null || action.use != null) ...[
             const SizedBox(height: 10),
             Row(
               children: [
-                if (action.onRollAttack != null) ...[
+                if (action.attackRoll != null) ...[
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primaryContainer,
@@ -540,11 +536,12 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                       style: const TextStyle(
                           fontSize: 12, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: () => action.onRollAttack!(context),
+                    onPressed: () => runActionRoll(context, action.attackRoll!,
+                        character: widget.controller.character),
                   ),
                   const SizedBox(width: 8),
                 ],
-                if (action.onRollDamage != null) ...[
+                if (action.damageRoll != null) ...[
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
@@ -560,11 +557,12 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                       style: const TextStyle(
                           fontSize: 12, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: () => action.onRollDamage!(context),
+                    onPressed: () => runActionRoll(context, action.damageRoll!,
+                        character: widget.controller.character),
                   ),
                   const SizedBox(width: 8),
                 ],
-                if (action.onExecute != null)
+                if (action.use != null)
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple.shade800,
@@ -577,7 +575,9 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                     label: const Text('Use Action',
                         style: TextStyle(
                             fontSize: 12, fontWeight: FontWeight.bold)),
-                    onPressed: () => action.onExecute!(context),
+                    onPressed: () => runActionUse(context, action.use!,
+                        character: widget.controller.character,
+                        controller: widget.controller),
                   ),
               ],
             ),

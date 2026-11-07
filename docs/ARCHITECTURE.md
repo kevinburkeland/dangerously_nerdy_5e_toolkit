@@ -68,6 +68,7 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ 
 | `lib/infrastructure/storage/web` | Web IndexedDB blob store and snapshot download/upload adapters. |
 | `lib/models` | D&D 5e domain models and backward-compatible re-export barrels. |
 | `lib/presentation` | Tabletop user interface presentation components and feature shells. |
+| `lib/presentation/character_sheet` | Character sheet action dispatching and runner presentation logic. |
 | `lib/presentation/codex` | Reusable codex shells, search bars, mode selectors, and filter strips. |
 | `lib/presentation/common` | Common presentation widgets, status indicators, and responsive containers. |
 | `lib/presentation/screens` | Dedicated presentation screen layouts. |

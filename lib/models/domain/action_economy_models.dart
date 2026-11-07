@@ -9,6 +9,49 @@ enum CombatActionCategory {
   standard,
 }
 
+final class ActionRoll {
+  final String label;
+  final String formula;
+  const ActionRoll({required this.label, required this.formula});
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ActionRoll &&
+          runtimeType == other.runtimeType &&
+          label == other.label &&
+          formula == other.formula;
+  @override
+  int get hashCode => Object.hash(label, formula);
+}
+
+sealed class ActionUse {
+  const ActionUse();
+}
+
+final class RollOnUse extends ActionUse {
+  final ActionRoll roll;
+  const RollOnUse(this.roll);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RollOnUse &&
+          runtimeType == other.runtimeType &&
+          roll == other.roll;
+  @override
+  int get hashCode => roll.hashCode;
+}
+
+final class RestorePactSlotOnUse extends ActionUse {
+  const RestorePactSlotOnUse();
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RestorePactSlotOnUse &&
+          runtimeType == other.runtimeType;
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
 /// Rich, interactive representation of a combat action available to a character.
 class CharacterCombatAction {
   final String id;
@@ -27,9 +70,9 @@ class CharacterCombatAction {
   final String? resourceCost;
   final bool isAttack;
   final bool dealsDamage;
-  final void Function(Object? context)? onRollAttack;
-  final void Function(Object? context)? onRollDamage;
-  final void Function(Object? context)? onExecute;
+  final ActionRoll? attackRoll;
+  final ActionRoll? damageRoll;
+  final ActionUse? use;
 
   const CharacterCombatAction({
     required this.id,
@@ -48,9 +91,9 @@ class CharacterCombatAction {
     this.resourceCost,
     this.isAttack = false,
     this.dealsDamage = false,
-    this.onRollAttack,
-    this.onRollDamage,
-    this.onExecute,
+    this.attackRoll,
+    this.damageRoll,
+    this.use,
   });
 
   String get actionTypeLabel {

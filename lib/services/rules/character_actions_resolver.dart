@@ -1,13 +1,8 @@
-import 'package:flutter/material.dart';
 import '../../models/characters/srd_classes_library.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/action_economy_models.dart';
-import '../../models/room_roll.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
-import '../../services/dice_room_service.dart';
-import '../../services/haptic_service.dart';
-import '../../utils/secure_random.dart';
 
 class ResolvedCharacterActions {
   final List<CharacterCombatAction> allActions;
@@ -46,55 +41,6 @@ class CharacterActionsResolver {
     final specialList = <CharacterCombatAction>[];
     final standardList = <CharacterCombatAction>[];
 
-    // Helper: Dispatch dice room roll
-    void dispatchRoll(Object? rawContext, {required String label, required String formula}) {
-      final context = rawContext as BuildContext;
-      HapticService.lightImpact(context);
-      final cleanFormula = formula.replaceAll(' ', '');
-      final rollResult = SpellRollEngine.roll(formula: cleanFormula);
-      if (rollResult == null) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-            content: Text('Can\'t roll "$formula": not dice notation'),
-          ),
-        );
-        return;
-      }
-
-      final roomService = DiceRoomService();
-      final activeRoom = roomService.activeRoomCode;
-      if (activeRoom != null) {
-        final roomRoll = RoomRoll(
-          id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
-          roomCode: activeRoom,
-          playerName: character.name.isNotEmpty ? character.name : 'Player',
-          formulaString: formula,
-          total: rollResult.total,
-          individualRolls: rollResult.individualDice,
-          details: [label],
-          isCrit: rollResult.individualDice.contains(20),
-          isFumble: rollResult.individualDice.contains(1),
-          timestamp: DateTime.now(),
-        );
-        roomService.broadcastRoll(roomRoll);
-      }
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-          content: Text(
-            '${character.name} $label: ${rollResult.total} (${rollResult.formulaDescription})',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-      );
-    }
-
     // ==========================================
     // 1. EQUIPPED WEAPON ATTACKS (ACTIONS)
     // ==========================================
@@ -119,10 +65,14 @@ class CharacterActionsResolver {
           damageType: atk.damageType,
           isAttack: true,
           dealsDamage: true,
-          onRollAttack: (ctx) => dispatchRoll(ctx,
-              label: '${atk.weaponName} Attack', formula: '1d20$bonusStr'),
-          onRollDamage: (ctx) => dispatchRoll(ctx,
-              label: '${atk.weaponName} Damage', formula: atk.damageFormula),
+          attackRoll: ActionRoll(
+            label: '${atk.weaponName} Attack',
+            formula: '1d20$bonusStr',
+          ),
+          damageRoll: ActionRoll(
+            label: '${atk.weaponName} Damage',
+            formula: atk.damageFormula,
+          ),
         ),
       );
     }
@@ -147,10 +97,14 @@ class CharacterActionsResolver {
         damageType: DamageType.bludgeoning,
         isAttack: true,
         dealsDamage: true,
-        onRollAttack: (ctx) => dispatchRoll(ctx,
-            label: 'Unarmed Strike Attack', formula: '1d20$unarmedAtkStr'),
-        onRollDamage: (ctx) => dispatchRoll(ctx,
-            label: 'Unarmed Strike Damage', formula: '$unarmedDmg'),
+        attackRoll: ActionRoll(
+          label: 'Unarmed Strike Attack',
+          formula: '1d20$unarmedAtkStr',
+        ),
+        damageRoll: ActionRoll(
+          label: 'Unarmed Strike Damage',
+          formula: '$unarmedDmg',
+        ),
       ),
     );
 
@@ -236,14 +190,17 @@ class CharacterActionsResolver {
         damageType: dmgType,
         isAttack: hasAtk,
         dealsDamage: dealsDmg,
-        onRollAttack: hasAtk
-            ? (ctx) => dispatchRoll(ctx,
+        attackRoll: hasAtk
+            ? ActionRoll(
                 label: '${s.displayName} Spell Attack',
-                formula: '1d20$spellAtkStr')
+                formula: '1d20$spellAtkStr',
+              )
             : null,
-        onRollDamage: dealsDmg
-            ? (ctx) => dispatchRoll(ctx,
-                label: '${s.displayName} Damage', formula: dmgFormula!)
+        damageRoll: dealsDmg
+            ? ActionRoll(
+                label: '${s.displayName} Damage',
+                formula: dmgFormula,
+              )
             : null,
       );
 
@@ -279,11 +236,14 @@ class CharacterActionsResolver {
           range: 'Reach 5 ft',
           isAttack: true,
           dealsDamage: true,
-          onRollAttack: (ctx) => dispatchRoll(ctx,
-              label: 'Off-Hand Attack',
-              formula: '1d20+${stats.proficiencyBonus}'),
-          onRollDamage: (ctx) =>
-              dispatchRoll(ctx, label: 'Off-Hand Damage', formula: '1d6'),
+          attackRoll: ActionRoll(
+            label: 'Off-Hand Attack',
+            formula: '1d20+${stats.proficiencyBonus}',
+          ),
+          damageRoll: const ActionRoll(
+            label: 'Off-Hand Damage',
+            formula: '1d6',
+          ),
         ),
       );
     }
@@ -373,8 +333,10 @@ class CharacterActionsResolver {
                   'Use a bonus action to inspire one creature within 60 feet. Once within the next 10 minutes, the creature can roll $die and add it to one d20 test.',
               range: '60 ft',
               resourceCost: 'Charisma Mod / Long Rest',
-              onExecute: (ctx) => dispatchRoll(ctx,
-                  label: 'Bardic Inspiration Die', formula: die),
+              use: RollOnUse(ActionRoll(
+                label: 'Bardic Inspiration Die',
+                formula: die,
+              )),
             ),
           );
         }
@@ -473,11 +435,10 @@ class CharacterActionsResolver {
               damageFormula: '2d10+$lvl',
               damageType: DamageType.radiant,
               resourceCost: '1 Channel Divinity',
-              onExecute: (ctx) {
-                dispatchRoll(ctx,
-                    label: 'Radiance of the Dawn Damage',
-                    formula: '2d10+$lvl');
-              },
+              use: RollOnUse(ActionRoll(
+                label: 'Radiance of the Dawn Damage',
+                formula: '2d10+$lvl',
+              )),
             ),
           );
         }
@@ -508,8 +469,10 @@ class CharacterActionsResolver {
               description:
                   'Implore your deity for aid. Roll percentile dice (d100); if you roll a number equal to or lower than your cleric level ($lvl), your deity intervenes.',
               resourceCost: '1/7 Days if successful',
-              onExecute: (ctx) => dispatchRoll(ctx,
-                  label: 'Divine Intervention Check', formula: '1d100'),
+              use: const RollOnUse(ActionRoll(
+                label: 'Divine Intervention Check',
+                formula: '1d100',
+              )),
             ),
           );
         }
@@ -592,10 +555,10 @@ class CharacterActionsResolver {
                   'On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level ($lvl).',
               resourceCost: '1/Short Rest',
               dealsDamage: false,
-              onExecute: (ctx) {
-                dispatchRoll(ctx,
-                    label: 'Second Wind Healing', formula: '1d10+$lvl');
-              },
+              use: RollOnUse(ActionRoll(
+                label: 'Second Wind Healing',
+                formula: '1d10+$lvl',
+              )),
             ),
           );
         }
@@ -694,9 +657,10 @@ class CharacterActionsResolver {
               description:
                   'You can use your reaction to deflect or catch a missile when you are hit by a ranged weapon attack. Damage is reduced by 1d10 + $dexMod + $lvl. If reduced to 0, spend 1 Ki to make a ranged attack with it.',
               resourceCost: 'Reaction (1 Ki to throw)',
-              onExecute: (ctx) => dispatchRoll(ctx,
-                  label: 'Deflect Missiles Reduction',
-                  formula: '1d10+$dexMod+$lvl'),
+              use: RollOnUse(ActionRoll(
+                label: 'Deflect Missiles Reduction',
+                formula: '1d10+$dexMod+$lvl',
+              )),
             ),
           );
         }
@@ -768,8 +732,10 @@ class CharacterActionsResolver {
               damageFormula: '2d8',
               damageType: DamageType.radiant,
               dealsDamage: true,
-              onRollDamage: (ctx) => dispatchRoll(ctx,
-                  label: 'Divine Smite (1st Level Slot)', formula: '2d8'),
+              damageRoll: const ActionRoll(
+                label: 'Divine Smite (1st Level Slot)',
+                formula: '2d8',
+              ),
             ),
           );
         }
@@ -832,8 +798,10 @@ class CharacterActionsResolver {
               range: '90 ft',
               damageFormula: '1d6',
               dealsDamage: true,
-              onRollDamage: (ctx) => dispatchRoll(ctx,
-                  label: "Hunter's Mark Extra Damage", formula: '1d6'),
+              damageRoll: const ActionRoll(
+                label: "Hunter's Mark Extra Damage",
+                formula: '1d6',
+              ),
             ),
           );
         }
@@ -868,8 +836,10 @@ class CharacterActionsResolver {
                   'Once per turn, you can deal an extra ${sneakD6}d6 damage to one creature you hit with an attack if you have advantage on the attack roll, or if an ally is within 5 feet of the target.',
               damageFormula: '${sneakD6}d6',
               dealsDamage: true,
-              onRollDamage: (ctx) => dispatchRoll(ctx,
-                  label: 'Sneak Attack Damage', formula: '${sneakD6}d6'),
+              damageRoll: ActionRoll(
+                label: 'Sneak Attack Damage',
+                formula: '${sneakD6}d6',
+              ),
             ),
           );
         }
@@ -1109,9 +1079,10 @@ class CharacterActionsResolver {
           description:
               'When a creature you can see hits a target within 5 feet of you with an attack, you can use your reaction to reduce the damage by 1d10 + ${stats.proficiencyBonus}.',
           damageFormula: '1d10+${stats.proficiencyBonus}',
-          onExecute: (ctx) => dispatchRoll(ctx,
-              label: 'Interception Damage Reduction',
-              formula: '1d10+${stats.proficiencyBonus}'),
+          use: RollOnUse(ActionRoll(
+            label: 'Interception Damage Reduction',
+            formula: '1d10+${stats.proficiencyBonus}',
+          )),
         ),
       );
     }
@@ -1136,7 +1107,6 @@ class CharacterActionsResolver {
           markdown: srdClass.featuresMarkdown,
           classLevel: cls.level,
           sourceName: cls.classRef.displayName,
-          dispatchRoll: dispatchRoll,
           registerAction: registerAction,
         );
       }
@@ -1147,7 +1117,6 @@ class CharacterActionsResolver {
           rawJson: srdClass!.customProperties['rawJson'],
           classLevel: cls.level,
           sourceName: cls.classRef.displayName,
-          dispatchRoll: dispatchRoll,
           registerAction: registerAction,
         );
       }
@@ -1192,7 +1161,6 @@ class CharacterActionsResolver {
             markdown: subFeaturesMarkdown,
             classLevel: cls.level,
             sourceName: subName,
-            dispatchRoll: dispatchRoll,
             registerAction: registerAction,
           );
         }
@@ -1203,7 +1171,6 @@ class CharacterActionsResolver {
             rawJson: resolvedSubclass!.customProperties['rawJson'],
             classLevel: cls.level,
             sourceName: subName,
-            dispatchRoll: dispatchRoll,
             registerAction: registerAction,
           );
         }
@@ -1226,7 +1193,6 @@ class CharacterActionsResolver {
               markdown: '**${opt.name}.** ${opt.descriptionMarkdown}',
               classLevel: cls.level,
               sourceName: opt.name,
-              dispatchRoll: dispatchRoll,
               registerAction: registerAction,
             );
           }
@@ -1240,7 +1206,6 @@ class CharacterActionsResolver {
         rawJson: character.customProperties['rawJson'],
         classLevel: character.totalLevel,
         sourceName: 'Custom Feature',
-        dispatchRoll: dispatchRoll,
         registerAction: registerAction,
       );
     }
@@ -1258,19 +1223,17 @@ class CharacterActionsResolver {
         description:
             'You can make an opportunity attack when a hostile creature that you can see moves out of your reach. To make the opportunity attack, you use your reaction to make one melee attack against the provoking creature.',
         isAttack: true,
-        onRollAttack: stats.attackProfiles.isNotEmpty
-            ? (ctx) {
-                final atk = stats.attackProfiles.first;
-                final b = atk.attackBonus >= 0
-                    ? '+${atk.attackBonus}'
-                    : '${atk.attackBonus}';
-                dispatchRoll(ctx,
-                    label: 'Opportunity Attack (${atk.weaponName})',
-                    formula: '1d20$b');
-              }
-            : (ctx) => dispatchRoll(ctx,
+        attackRoll: stats.attackProfiles.isNotEmpty
+            ? ActionRoll(
+                label:
+                    'Opportunity Attack (${stats.attackProfiles.first.weaponName})',
+                formula:
+                    '1d20${stats.attackProfiles.first.attackBonus >= 0 ? "+${stats.attackProfiles.first.attackBonus}" : "${stats.attackProfiles.first.attackBonus}"}',
+              )
+            : ActionRoll(
                 label: 'Opportunity Attack (Unarmed)',
-                formula: '1d20$unarmedAtkStr'),
+                formula: '1d20$unarmedAtkStr',
+              ),
       ),
     );
 
@@ -1293,27 +1256,7 @@ class CharacterActionsResolver {
             description:
                 'While holding this rod, you can regain one warlock spell slot as an action. You can’t use this property again until you finish a long rest.',
             resourceCost: '1/Long Rest',
-            onExecute: (rawCtx) { final ctx = rawCtx as BuildContext;
-              HapticService.heavyImpact(ctx);
-              final pool = controller.character.resources.spellSlots;
-              if (pool.pactMagicMax > 0 &&
-                  pool.pactMagicCurrent < pool.pactMagicMax) {
-                controller.togglePactSlot(false); // restores 1 pact slot
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                        'Rod of the Pact Keeper: Restored 1 Warlock spell slot!'),
-                    backgroundColor: Colors.purple,
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text('Pact Magic slots are already full!'),
-                  ),
-                );
-              }
-            },
+            use: const RestorePactSlotOnUse(),
           ),
         );
       }
@@ -1376,14 +1319,16 @@ class CharacterActionsResolver {
         subtitle: '1 Action • Roll Stealth Check',
         description:
             'You make a Dexterity (Stealth) check in an attempt to become hidden, provided you are unseen and have cover.',
-        onExecute: (ctx) {
+        use: () {
           final stealthMod = stats.skillModifiers[SkillType.stealth] ??
               stats.abilityModifiers[AbilityType.dexterity] ??
               0;
           final strMod = stealthMod >= 0 ? '+$stealthMod' : '$stealthMod';
-          dispatchRoll(ctx,
-              label: 'Dexterity (Stealth) Check', formula: '1d20$strMod');
-        },
+          return RollOnUse(ActionRoll(
+            label: 'Dexterity (Stealth) Check',
+            formula: '1d20$strMod',
+          ));
+        }(),
       ),
       const CharacterCombatAction(
         id: 'std-ready',
@@ -1402,14 +1347,16 @@ class CharacterActionsResolver {
         subtitle: '1 Action • Roll Perception / Investigation',
         description:
             'You devote your attention to finding something. Make a Wisdom (Perception) check or an Intelligence (Investigation) check.',
-        onExecute: (ctx) {
+        use: () {
           final percMod = stats.skillModifiers[SkillType.perception] ??
               stats.abilityModifiers[AbilityType.wisdom] ??
               0;
           final strMod = percMod >= 0 ? '+$percMod' : '$percMod';
-          dispatchRoll(ctx,
-              label: 'Wisdom (Perception) Check', formula: '1d20$strMod');
-        },
+          return RollOnUse(ActionRoll(
+            label: 'Wisdom (Perception) Check',
+            formula: '1d20$strMod',
+          ));
+        }(),
       ),
       const CharacterCombatAction(
         id: 'std-use-object',
@@ -1573,9 +1520,6 @@ class CharacterActionsResolver {
     required String markdown,
     required int classLevel,
     required String sourceName,
-    required void Function(Object? context,
-            {required String label, required String formula})
-        dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,
   }) {
     if (markdown.trim().isEmpty) return;
@@ -1628,7 +1572,6 @@ class CharacterActionsResolver {
               explicitLevel: headerLevel,
               classLevel: classLevel,
               sourceName: sourceName,
-              dispatchRoll: dispatchRoll,
               registerAction: recordAction,
             );
           }
@@ -1639,7 +1582,6 @@ class CharacterActionsResolver {
             explicitLevel: headerLevel,
             classLevel: classLevel,
             sourceName: sourceName,
-            dispatchRoll: dispatchRoll,
             registerAction: recordAction,
           );
         }
@@ -1663,7 +1605,6 @@ class CharacterActionsResolver {
           explicitLevel: null,
           classLevel: classLevel,
           sourceName: sourceName,
-          dispatchRoll: dispatchRoll,
           registerAction: recordAction,
         );
       }
@@ -1686,7 +1627,6 @@ class CharacterActionsResolver {
           explicitLevel: null,
           classLevel: classLevel,
           sourceName: sourceName,
-          dispatchRoll: dispatchRoll,
           registerAction: recordAction,
         );
       }
@@ -1710,7 +1650,6 @@ class CharacterActionsResolver {
           explicitLevel: lvl,
           classLevel: classLevel,
           sourceName: sourceName,
-          dispatchRoll: dispatchRoll,
           registerAction: recordAction,
         );
       }
@@ -1733,7 +1672,6 @@ class CharacterActionsResolver {
           explicitLevel: lvl,
           classLevel: classLevel,
           sourceName: sourceName,
-          dispatchRoll: dispatchRoll,
           registerAction: recordAction,
         );
       }
@@ -1746,9 +1684,6 @@ class CharacterActionsResolver {
     int? explicitLevel,
     required int classLevel,
     required String sourceName,
-    required void Function(Object? context,
-            {required String label, required String formula})
-        dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,
   }) {
     if (rawName.isEmpty || body.isEmpty) return;
@@ -1888,9 +1823,8 @@ class CharacterActionsResolver {
         damageType: formula != null ? dmgType : null,
         dealsDamage: formula != null,
         resourceCost: resourceCost,
-        onRollDamage: formula != null
-            ? (ctx) =>
-                dispatchRoll(ctx, label: '$cleanName Damage', formula: formula)
+        damageRoll: formula != null
+            ? ActionRoll(label: '$cleanName Damage', formula: formula)
             : null,
       ),
     );
@@ -1900,9 +1834,6 @@ class CharacterActionsResolver {
     required dynamic rawJson,
     required int classLevel,
     required String sourceName,
-    required void Function(Object? context,
-            {required String label, required String formula})
-        dispatchRoll,
     required void Function(CharacterCombatAction action) registerAction,
   }) {
     if (rawJson == null) return;
@@ -1941,7 +1872,6 @@ class CharacterActionsResolver {
             explicitLevel: lvl,
             classLevel: classLevel,
             sourceName: sourceName,
-            dispatchRoll: dispatchRoll,
             registerAction: registerAction,
           );
         }
@@ -1970,7 +1900,6 @@ class CharacterActionsResolver {
             explicitLevel: level,
             classLevel: classLevel,
             sourceName: sourceName,
-            dispatchRoll: dispatchRoll,
             registerAction: registerAction,
           );
         }

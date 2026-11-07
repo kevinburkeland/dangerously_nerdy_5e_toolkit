@@ -39,7 +39,7 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/widgets/glyphs/glyph_motifs.dart': 2144,
   'lib/models/dpr/dpr_models.dart': 2040,
   'lib/models/glyph_gallery_data.dart': 2019,
-  'lib/services/rules/character_actions_resolver.dart': 1980,
+  'lib/services/rules/character_actions_resolver.dart': 1909,
   'lib/screens/homebrew_studio_screen.dart': 1912,
   'lib/models/spells/level_5_spells.dart': 1892,
   'lib/models/domain/homebrew_extended_entities.dart': 1846,
