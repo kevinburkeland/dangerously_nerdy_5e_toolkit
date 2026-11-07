@@ -240,6 +240,7 @@ void main() {
       final partyService = PartyRoomService.newInstance(
         replicaId: replica,
         clock: clock,
+        diceRoomService: createBoundTestDiceRoomService(),
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
       final draft = CharacterDraft()

@@ -78,6 +78,8 @@ def main():
     total_red_runs_checked = 0
     total_ranges_checked = 0
     total_files_checked = len(args.files)
+    total_fix_checklists_checked = 0
+    total_fix_ids_checked = 0
 
     verified_commits = {}
     failed_commits = set()
@@ -486,12 +488,83 @@ def main():
                                                 f"{file_path}: undisclosed red run {r_id} (run number {r_num}) on {h_sha} in {owner_repo}"
                                             )
 
+        # 6. Fix checklist verification
+        fix_ids_line = None
+        has_fix_checklist_section = False
+        checklist_lines = []
+        in_fix_checklist_section = False
+
+        for line_idx, line in enumerate(lines, 1):
+            stripped = line.strip()
+            if line.startswith('Fix ids:'):
+                fix_ids_line = (line_idx, line)
+            if stripped.startswith('## '):
+                if stripped == '## Fix checklist':
+                    has_fix_checklist_section = True
+                    in_fix_checklist_section = True
+                else:
+                    in_fix_checklist_section = False
+            elif in_fix_checklist_section:
+                checklist_lines.append((line_idx, line))
+
+        is_frozen = os.path.basename(file_path) in {'cleanup_slice_10_progress.md'}
+
+        if has_fix_checklist_section and not fix_ids_line and not is_frozen:
+            problems.append(f"{file_path}: '## Fix checklist' section present but no 'Fix ids:' line")
+        elif fix_ids_line:
+            total_fix_checklists_checked += 1
+            raw_ids = fix_ids_line[1][len('Fix ids:'):].strip().split()
+            expected_ids = raw_ids
+            total_fix_ids_checked += len(expected_ids)
+
+            if len(expected_ids) != len(set(expected_ids)):
+                for eid in expected_ids:
+                    if expected_ids.count(eid) > 1:
+                        problems.append(f"{file_path}:{fix_ids_line[0]}: duplicate Fix id '{eid}' in 'Fix ids:' line")
+                        break
+
+            if not has_fix_checklist_section:
+                problems.append(f"{file_path}: 'Fix ids:' line present but no '## Fix checklist' section")
+            else:
+                seen_ids = set()
+                for l_idx, raw_line in checklist_lines:
+                    s = raw_line.strip()
+                    if not s:
+                        continue
+                    m = re.match(r'^Fix\s+(\S+)\s+(done|not done):\s*(.*)$', s)
+                    if not m or not m.group(3).strip():
+                        problems.append(f"{file_path}:{l_idx}: malformed Fix checklist line '{s}'")
+                        continue
+                    fix_id = m.group(1)
+                    if fix_id not in expected_ids:
+                        problems.append(f"{file_path}:{l_idx}: Fix id '{fix_id}' in checklist is not expected")
+                    elif fix_id in seen_ids:
+                        problems.append(f"{file_path}:{l_idx}: duplicate Fix id '{fix_id}' in checklist")
+                    else:
+                        seen_ids.add(fix_id)
+
+                file_status = None
+                for line in lines:
+                    if line.startswith('Status:'):
+                        if 'IN PROGRESS' in line:
+                            file_status = 'IN PROGRESS'
+                        elif 'COMPLETE' in line:
+                            file_status = 'COMPLETE'
+                        break
+
+                if file_status == 'COMPLETE':
+                    for exp_id in expected_ids:
+                        if exp_id not in seen_ids:
+                            problems.append(f"{file_path}: missing Fix id '{exp_id}' in checklist")
+
     if problems:
         for p in problems:
             print(p, file=sys.stderr)
+        print(f"Checked {total_fix_checklists_checked} Fix checklist(s), {total_fix_ids_checked} Fix id(s).", file=sys.stderr)
         print(f"Checked {total_files_checked} file(s), {total_shas_checked} SHA(s), {total_runs_checked} run id(s) checked, {total_red_runs_checked} red run(s) checked, and {total_ranges_checked} slice range(s) checked. Found {len(problems)} problem(s).", file=sys.stderr)
         sys.exit(1)
 
+    print(f"Checked {total_fix_checklists_checked} Fix checklist(s), {total_fix_ids_checked} Fix id(s).")
     print(f"Checked {total_files_checked} file(s), {total_shas_checked} SHA(s), {total_runs_checked} run id(s) checked, {total_red_runs_checked} red run(s) checked, and {total_ranges_checked} slice range(s) checked. All SHAs are valid commits.")
     sys.exit(0)
 

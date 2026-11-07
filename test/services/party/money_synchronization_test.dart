@@ -84,6 +84,7 @@ void main() {
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
       clock: sl<StatefulHlcClock>(),
+      diceRoomService: createBoundTestDiceRoomService(),
     );
     PartyRoomService.setCustomInstanceForTesting(partyService);
     addTearDown(() async {

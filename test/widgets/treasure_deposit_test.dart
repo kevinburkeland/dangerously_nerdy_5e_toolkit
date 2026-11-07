@@ -59,6 +59,7 @@ void main() {
         replicaId: replica,
         clock: clock,
         registry: registry,
+        diceRoomService: createBoundTestDiceRoomService(),
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
       addTearDown(() async {

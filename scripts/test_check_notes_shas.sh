@@ -630,4 +630,232 @@ EOF
   [[ "$out" == *"could not verify"* ]] || { echo "FAIL: NS22 expected 'could not verify' message, got: $out"; exit 1; }
 )
 
-echo "All notes SHA check self-tests passed (NS1 - NS22)."
+# NS23: a complete, correct checklist passes.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns23.md"
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+Fix ids: 2.1 2.2
+
+## Fix checklist
+Fix 2.1 done: completed first fix
+Fix 2.2 not done: postponed to next slice
+EOF
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes")
+  if [[ "$out" != *"Checked 1 Fix checklist(s), 2 Fix id(s)."* ]]; then
+    echo "FAIL: NS23 expected checklist summary, got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS24: a missing id with Status: COMPLETE fails naming the id.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns24.md"
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+Fix ids: 2.1 2.2
+
+## Fix checklist
+Fix 2.1 done: completed first fix
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS24 expected failure on missing id with COMPLETE"; exit 1; }
+  [[ "$out" == *"missing Fix id '2.2'"* ]] || { echo "FAIL: NS24 expected 'missing Fix id '2.2'' message, got: $out"; exit 1; }
+)
+
+# NS25: the same missing id with Status: IN PROGRESS passes.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns25.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+Fix ids: 2.1 2.2
+
+## Fix checklist
+Fix 2.1 done: completed first fix
+EOF
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes")
+  if [[ "$out" != *"All SHAs are valid commits"* ]]; then
+    echo "FAIL: NS25 expected pass for missing id when IN PROGRESS, got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS26: an extra id fails naming the id.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns26.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+Fix ids: 2.1
+
+## Fix checklist
+Fix 2.1 done: completed first fix
+Fix 2.2 done: extra fix
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS26 expected failure on extra id"; exit 1; }
+  [[ "$out" == *"Fix id '2.2' in checklist is not expected"* ]] || { echo "FAIL: NS26 expected extra id message, got: $out"; exit 1; }
+)
+
+# NS27: a duplicate id fails naming the id.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns27.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+Fix ids: 2.1
+
+## Fix checklist
+Fix 2.1 done: completed first fix
+Fix 2.1 done: duplicate fix
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS27 expected failure on duplicate id"; exit 1; }
+  [[ "$out" == *"duplicate Fix id '2.1'"* ]] || { echo "FAIL: NS27 expected duplicate id message, got: $out"; exit 1; }
+)
+
+# NS28: a renumbered list (the checklist says Fix 3.5 where the header says 3.6) fails.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns28.md"
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+Fix ids: 3.6
+
+## Fix checklist
+Fix 3.5 done: renumbered fix
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS28 expected failure on renumbered list"; exit 1; }
+  [[ "$out" == *"Fix id '3.5' in checklist is not expected"* ]] || { echo "FAIL: NS28 expected not expected message, got: $out"; exit 1; }
+)
+
+# NS29: a malformed line (Fix 2.1: did it) fails.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns29.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+Fix ids: 2.1
+
+## Fix checklist
+Fix 2.1: did it
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS29 expected failure on malformed line"; exit 1; }
+  [[ "$out" == *"malformed Fix checklist line"* ]] || { echo "FAIL: NS29 expected malformed line message, got: $out"; exit 1; }
+)
+
+# NS30: a checklist with no Fix ids: line fails.
+(
+  repo="$TMP_DIR/repo_ns1"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  notes="$TMP_DIR/notes_ns30.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha
+Last pushed heads (CI green): test-repo $sha
+
+## Fix checklist
+Fix 2.1 done: fix done
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS30 expected failure for checklist without Fix ids:"; exit 1; }
+  [[ "$out" == *"no 'Fix ids:' line"* ]] || { echo "FAIL: NS30 expected 'no Fix ids: line' message, got: $out"; exit 1; }
+)
+
+# NS31: the frozen file's real text passes.
+(
+  core_repo=""
+  ruleset_repo=""
+  if [ -d "$SCRIPT_DIR/../../vtt-engine-core" ]; then
+    core_repo="$SCRIPT_DIR/../../vtt-engine-core"
+  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/core.git" ]; then
+    core_repo="$RUNNER_TEMP/core.git"
+  else
+    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-engine-core.git "$TMP_DIR/core_ns31.git" >/dev/null 2>&1
+    core_repo="$TMP_DIR/core_ns31.git"
+  fi
+
+  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e" ]; then
+    ruleset_repo="$SCRIPT_DIR/../../vtt-ruleset-dnd5e"
+  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/ruleset.git" ]; then
+    ruleset_repo="$RUNNER_TEMP/ruleset.git"
+  else
+    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns31.git" >/dev/null 2>&1
+    ruleset_repo="$TMP_DIR/ruleset_ns31.git"
+  fi
+
+  frozen_notes="$TMP_DIR/cleanup_slice_10_progress.md"
+  cp "$SCRIPT_DIR/../notes/cleanup_slice_10_progress.md" "$frozen_notes"
+
+  out=$(python3 -I "$CHECK_SCRIPT" \
+    --repo .=kevinburkeland/dangerously_nerdy_5e_toolkit \
+    --repo "$core_repo=kevinburkeland/vtt-engine-core" \
+    --repo "$ruleset_repo=kevinburkeland/vtt-ruleset-dnd5e" \
+    "$frozen_notes")
+  if [[ "$out" != *"All SHAs are valid commits"* ]]; then
+    echo "FAIL: NS31 expected frozen notes file to pass, got: $out" >&2
+    exit 1
+  fi
+)
+
+echo "All notes SHA check self-tests passed (NS1 - NS31)."

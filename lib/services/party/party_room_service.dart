@@ -216,7 +216,7 @@ class PartyRoomService {
         _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),
-        _diceRoomService = diceRoomService ?? DiceRoomService(),
+        _diceRoomService = diceRoomService ?? DiceRoomService.newInstance(),
         _characterPersistenceService =
             characterPersistenceService ?? CharacterPersistenceService(),
         _campaignProfileService =

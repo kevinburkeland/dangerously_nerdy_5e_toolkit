@@ -137,6 +137,7 @@ void main() {
       sl.registerSingleton<ActiveMapController>(mapCtrl);
       final mockTransport = _MockSyncTransport();
       sl.registerSingleton<IP2pTransportPort>(mockTransport);
+      final testDiceService = createBoundTestDiceRoomService();
       final orchestrator = RoomSyncOrchestrator(
         replicaId: repId,
         transportPort: mockTransport,
@@ -147,7 +148,7 @@ void main() {
               DateTime.now().toUtc().millisecondsSinceEpoch,
         ),
         clockSyncService: ClockSyncService(networkTimePort: _MockTimePort()),
-        diceRoomService: DiceRoomService(),
+        diceRoomService: testDiceService,
         clock: testClock,
         telemetryInterval: const Duration(milliseconds: 100),
       );
@@ -170,6 +171,7 @@ void main() {
         replicaId: repId,
         clock: testClock,
         registry: registry,
+        diceRoomService: testDiceService,
       );
       PartyRoomService.setCustomInstanceForTesting(partyService);
       addTearDown(() async {

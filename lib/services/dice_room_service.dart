@@ -34,7 +34,6 @@ class DiceRoomService {
 
   DiceRoomService._internal();
 
-  @visibleForTesting
   DiceRoomService.newInstance() : this._internal();
 
   IP2pTransportPort? _transport;

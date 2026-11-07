@@ -8,7 +8,6 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:dangerously_nerdy_5e_toolkit/application/map/active_map_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_transfer_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import '../test_doubles/fake_blob_network.dart';
 import '../test_doubles/fake_blob_store.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
@@ -127,6 +126,7 @@ void main() {
     sl.registerSingleton<ICampaignRepository>(campRepo);
     final mockTransport = _MockDmSheetTransport();
     sl.registerSingleton<IP2pTransportPort>(mockTransport);
+    final testDiceService = createBoundTestDiceRoomService();
     final orchestrator = RoomSyncOrchestrator(
       replicaId: repId,
       transportPort: mockTransport,
@@ -137,7 +137,7 @@ void main() {
             DateTime.now().toUtc().millisecondsSinceEpoch,
       ),
       clockSyncService: ClockSyncService(networkTimePort: _MockDmSheetTimePort()),
-      diceRoomService: DiceRoomService(),
+      diceRoomService: testDiceService,
       clock: sl<StatefulHlcClock>(),
       telemetryInterval: const Duration(milliseconds: 100),
     );
@@ -175,6 +175,7 @@ void main() {
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
       clock: sl<StatefulHlcClock>(),
+      diceRoomService: testDiceService,
     );
     PartyRoomService.setCustomInstanceForTesting(partyService);
     addTearDown(() async {
