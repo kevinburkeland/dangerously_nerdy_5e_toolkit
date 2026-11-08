@@ -1,7 +1,7 @@
 # Cleanup slice 10.1 progress notes
 Status: IN PROGRESS
 Start heads: core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 857ac8e271b882885e5251a53bdc09ad20aa6ede
-Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 3e04380d86e4ff14e65fb0031cb852f0759a8147
+Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 4b513a5ef6feda95c9600b9d60059be9a3439dcf
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
 Fix ids: 2.1 2.2 3.1 3.2 3.3 3.4 3.5 3.6 4.1 4.2 4.3 4.4 4.5 5.1 5.2 5.3 6.1 6.2 6.3 6.4 6.5 6.6
 
@@ -9,7 +9,7 @@ Fix ids: 2.1 2.2 3.1 3.2 3.3 3.4 3.5 3.6 4.1 4.2 4.3 4.4 4.5 5.1 5.2 5.3 6.1 6.2
 - [x] Step 1 Retire cs10: app 7df7c8787daeb9a6490202146d290c83ae941c95 run 42313342876
 - [x] Step 2 Two small fixes from the slice 10 review: app 3cf9945e7525d620bb5f0a6c7211fd138bd80da6 run 42315746680
 - [x] Step 3 Combat actions carry data, not callbacks: app 3e04380d86e4ff14e65fb0031cb852f0759a8147 run 42319428544
-- [ ] Step 4 Colour and icon values, and the glyph token split
+- [x] Step 4 Colour and icon values, and the glyph token split: app 4b513a5ef6feda95c9600b9d60059be9a3439dcf run 42517789367
 - [ ] Step 5 Creatures and summons hold plain values
 - [ ] Step 6 The rest of models hold plain values
 - [ ] Step 7 Mutations and report
@@ -23,12 +23,17 @@ Fix 3.3 done: CharacterActionsResolver converted to pure data roll expressions w
 Fix 3.4 done: Presentation combat action runner created with ARCHITECTURE.md and codebase map updated.
 Fix 3.5 done: Character sheet tabs updated to dispatch via combat action runner with line count under ceiling.
 Fix 3.6 done: Presentation boundary bars compliance test enforces Rules P1, P2, and P3 with controls.
+Fix 4.1 done: UI value snapshot characterization test and fixture pin 1801 entries across models and glyph tokens.
+Fix 4.2 done: Argb and AppIcon pure-Dart representation types in visual models with zero Flutter imports.
+Fix 4.3 done: Presentation bridge visual_ui provides ArgbUi toColor and AppIconUi iconData with exhaustive switches.
+Fix 4.4 done: Glyph tokens split into models glyph kinds and presentation glyph kinds UI restoring all original names via extensions.
+Fix 4.5 done: Architecture documentation and codebase map updated for visual models and presentation visual folders.
 
 ## Red runs on main
 None
 
 ## Next
-Land UI value snapshot characterization test and snapshot fixture, then define plain Argb and AppIcon types and split glyph tokens.
+Convert creature and summon presets and bestiary stat blocks to hold plain visual values and update layer allowlist.
 
 ## Open issues and deviations
 In DiceRoomService, removed visibleForTesting annotation from DiceRoomService.newInstance so PartyRoomService.newInstance can instantiate it without triggering analyzer warnings or requiring an ignore comment.
