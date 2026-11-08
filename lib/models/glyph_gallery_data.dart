@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show immutable;
 import 'dm_screen_data.dart';
 import 'spellbook_data.dart';
 import 'srd_summons/srd_summons_library.dart';
-
 /// Data model representing a spell entry in the Glyph Gallery.
+@immutable
 class GlyphSpellEntry implements GlyphRenderable {
   final String spellId;
   final String summary;
@@ -43,7 +43,7 @@ class GlyphSpellEntry implements GlyphRenderable {
       spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024);
 
   @override
-  IconData? get fallbackIcon => school.icon;
+  AppIcon? get fallbackIconKey => school.iconKey;
 
   @override
   Map<String, dynamic>? get metadata => {
@@ -105,7 +105,7 @@ class GlyphCreatureEntry implements GlyphRenderable {
       actionRings.isNotEmpty ? actionRings.first.damageType : null;
 
   @override
-  IconData? get fallbackIcon => Icons.pets;
+  AppIcon? get fallbackIconKey => AppIcon.pets;
 
   @override
   Map<String, dynamic>? get metadata => {
@@ -156,7 +156,7 @@ class GlyphItemEntry implements GlyphRenderable {
       (actionRings.isNotEmpty ? actionRings.first.damageType : null);
 
   @override
-  IconData? get fallbackIcon => category.icon;
+  AppIcon? get fallbackIconKey => category.iconKey;
 
   @override
   Map<String, dynamic>? get metadata => {
@@ -201,7 +201,7 @@ class GlyphClassEntry implements GlyphRenderable {
   DamageAccent? get primaryAccent => null;
 
   @override
-  IconData? get fallbackIcon => Icons.shield;
+  AppIcon? get fallbackIconKey => AppIcon.shield;
 
   @override
   Map<String, dynamic>? get metadata => {
@@ -252,7 +252,7 @@ class GlyphFeatEntry implements GlyphRenderable {
   DamageAccent? get primaryAccent => damageAccent;
 
   @override
-  IconData? get fallbackIcon => Icons.stars_outlined;
+  AppIcon? get fallbackIconKey => AppIcon.starsOutlined;
 
   @override
   Map<String, dynamic>? get metadata => {
@@ -331,7 +331,7 @@ class GlyphSpeciesEntry implements GlyphRenderable {
   DamageAccent? get primaryAccent => null;
 
   @override
-  IconData? get fallbackIcon => Icons.groups_outlined;
+  AppIcon? get fallbackIconKey => AppIcon.groupsOutlined;
 
   @override
   Map<String, dynamic>? get metadata => {
@@ -373,7 +373,7 @@ class GlyphGenericEntry implements GlyphRenderable {
   DamageAccent? get primaryAccent => null;
 
   @override
-  IconData? get fallbackIcon => Icons.widgets_outlined;
+  AppIcon? get fallbackIconKey => AppIcon.widgetsOutlined;
 
   @override
   Map<String, dynamic>? get metadata => {

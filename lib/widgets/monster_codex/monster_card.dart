@@ -5,6 +5,7 @@ import '../../models/srd_summons/minion_stat_block.dart';
 import '../../utils/dice_formatters.dart';
 import '../common/edition_diff_badge.dart';
 import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 import '../interactive/pressable_card.dart';
 
 /// Modular, interactive card presenting an individual SRD creature in the Monster Codex.

@@ -7,6 +7,7 @@ import '../../services/haptic_service.dart';
 import '../common/diff_highlight_banner.dart';
 import '../dm_reference/rules_edition_toggle.dart';
 import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Interactive modal comparing 2014 RAW monster stat blocks vs 2024 Revised rules side-by-side.
 class MonsterComparisonDialog extends StatefulWidget {

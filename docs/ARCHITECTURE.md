@@ -66,7 +66,7 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ 
 | `lib/infrastructure/storage` | Storage durability and snapshot platform adapters. |
 | `lib/infrastructure/storage/stub` | Unsupported platform stub for storage durability snapshotting. |
 | `lib/infrastructure/storage/web` | Web IndexedDB blob store and snapshot download/upload adapters. |
-| `lib/models` | D&D 5e domain models and backward-compatible re-export barrels. |
+| `lib/models` | D&D 5e domain models and backward-compatible re-export barrels. Colours and icons are held as Argb and AppIcon and turned into Flutter types only in lib/presentation/visual. |
 | `lib/presentation` | Tabletop user interface presentation components and feature shells. |
 | `lib/presentation/character_sheet` | Character sheet action dispatching and runner presentation logic. |
 | `lib/presentation/codex` | Reusable codex shells, search bars, mode selectors, and filter strips. |
@@ -74,6 +74,7 @@ Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ 
 | `lib/presentation/screens` | Dedicated presentation screen layouts. |
 | `lib/presentation/screens/homebrew` | Homebrew studio views, expert options, and creator workspaces. |
 | `lib/presentation/screens/map` | Dedicated full-screen tabletop battle map view (`MapScreen`). |
+| `lib/presentation/visual` | Presentation extensions and adapters mapping Argb and AppIcon to Flutter Color and IconData. |
 | `lib/presentation/widgets` | Modular presentation UI components and modals. |
 | `lib/presentation/widgets/map` | Battle map rendering canvas, grid overlay, token layer, and control panels. |
 | `lib/providers` | State controllers and change notifiers (`CharacterSheetController`, `SettingsProvider`). |

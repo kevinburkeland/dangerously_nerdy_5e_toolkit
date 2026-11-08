@@ -6,6 +6,7 @@ import '../../services/a11y_service.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/spellcasting_rules_engine.dart';
 import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 enum RollAdvantageMode {
   normal('Normal', Icons.crop_square),
