@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../monster_codex_data.dart';
 import '../../srd_summons/minion_stat_block.dart';
 
@@ -39,7 +38,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: -1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Pack Tactics',
@@ -88,7 +87,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -137,7 +136,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Echolocation',
@@ -191,7 +190,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -240,7 +239,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Club',
@@ -284,7 +283,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -332,7 +331,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -375,7 +374,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -425,7 +424,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 0,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -469,7 +468,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: -1,
         damageType: 'slashing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Illumination',
@@ -518,7 +517,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -573,7 +572,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -625,7 +624,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Telepathic Bond',
@@ -676,7 +675,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Pack Tactics',
@@ -727,7 +726,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: -1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -784,7 +783,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFF43F5E),
+        accentColor: Argb(0xFFF43F5E),
         traits: [
           CreatureTrait(
             name: 'Devil\'s Sight',
@@ -838,7 +837,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -881,7 +880,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Hold Breath',
@@ -945,7 +944,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Flyby',
@@ -999,7 +998,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -1049,7 +1048,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Mimicry',
@@ -1102,7 +1101,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 1,
         secondaryDamageDiceSides: 8,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Sting',
@@ -1148,7 +1147,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 1,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Spider Climb',
@@ -1207,7 +1206,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Scimitar',
@@ -1260,7 +1259,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -1316,7 +1315,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Dark Devotion',
@@ -1368,7 +1367,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Flyby',
@@ -1418,7 +1417,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -1474,7 +1473,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Spear',
@@ -1518,7 +1517,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Sunlight Sensitivity',
@@ -1582,7 +1581,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -1631,7 +1630,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Beast of Burden',
@@ -1687,7 +1686,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Rapier',
@@ -1739,7 +1738,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 2,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -1781,7 +1780,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Hooves',
@@ -1824,7 +1823,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         actions: [
           CreatureAction(
             name: 'Blood Drain',
@@ -1868,7 +1867,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Pack Tactics',
@@ -1922,7 +1921,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Spellcasting',
@@ -1972,7 +1971,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFFC084FC),
+        accentColor: Argb(0xFFC084FC),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2028,7 +2027,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Fey Ancestry',
@@ -2097,7 +2096,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Antimagic Susceptibility',
@@ -2151,7 +2150,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -2218,7 +2217,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -2261,7 +2260,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2321,7 +2320,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Nimble Escape',
@@ -2383,7 +2382,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFFCBD5E1),
+        accentColor: Argb(0xFFCBD5E1),
         actions: [
           CreatureAction(
             name: 'Shortsword',
@@ -2437,7 +2436,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2494,7 +2493,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFCBD5E1),
+        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Undead Fortitude',
@@ -2547,7 +2546,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Blood Frenzy',
@@ -2600,7 +2599,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF38BDF8),
+        accentColor: Argb(0xFF38BDF8),
         traits: [
           CreatureTrait(
             name: 'Water Breathing',
@@ -2640,7 +2639,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'none',
-        accentColor: Color(0xFF84CC16),
+        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -2687,7 +2686,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFF78716C),
+        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Keen Sight and Smell',
@@ -2743,7 +2742,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFFA16207),
+        accentColor: Argb(0xFFA16207),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2796,7 +2795,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFD4A76A),
+        accentColor: Argb(0xFFD4A76A),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -2840,7 +2839,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFEF4444),
+        accentColor: Argb(0xFFEF4444),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2889,7 +2888,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFFA16207),
+        accentColor: Argb(0xFFA16207),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2939,7 +2938,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2991,7 +2990,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Color(0xFF78716C),
+        accentColor: Argb(0xFF78716C),
         actions: [
           CreatureAction(
             name: 'Beak',
@@ -3034,7 +3033,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFF78716C),
+        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -3088,7 +3087,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -3139,7 +3138,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF78716C),
+        accentColor: Argb(0xFF78716C),
         actions: [
           CreatureAction(
             name: 'Hooves',
@@ -3186,7 +3185,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3247,7 +3246,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF78716C),
+        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -3305,7 +3304,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF6B7280),
+        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Echolocation',
@@ -3359,7 +3358,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -3403,7 +3402,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Color(0xFF6B7280),
+        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Flyby',
@@ -3461,7 +3460,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -3507,7 +3506,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 2,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFF6B7280),
+        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Spider Climb',
@@ -3569,7 +3568,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF6B7280),
+        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Blind Senses',
@@ -3629,7 +3628,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Color(0xFF1E293B),
+        accentColor: Argb(0xFF1E293B),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -3694,7 +3693,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFFA855F7),
+        accentColor: Argb(0xFFA855F7),
         traits: [
           CreatureTrait(
             name: 'Keen Senses',
@@ -3762,7 +3761,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF78716C),
+        accentColor: Argb(0xFF78716C),
         actions: [
           CreatureAction(
             name: 'Hooves',
@@ -3806,7 +3805,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'slashing',
-        accentColor: Color(0xFF34D399),
+        accentColor: Argb(0xFF34D399),
         actions: [
           CreatureAction(
             name: 'Longsword',
@@ -3872,7 +3871,7 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 1,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'fire',
-        accentColor: Color(0xFFE5E7EB),
+        accentColor: Argb(0xFFE5E7EB),
         traits: [
           CreatureTrait(
             name: 'Death Burst',
@@ -3934,7 +3933,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFF6B7280),
+        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Echolocation',
@@ -3995,7 +3994,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFF78716C),
+        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -4053,7 +4052,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFF1E293B),
+        accentColor: Argb(0xFF1E293B),
         traits: [
           CreatureTrait(
             name: 'Swarm',
@@ -4104,7 +4103,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 0,
         damageType: 'necrotic',
-        accentColor: Color(0xFFA855F7),
+        accentColor: Argb(0xFFA855F7),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -4160,7 +4159,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: -1,
         damageType: 'slashing',
-        accentColor: Color(0xFF84CC16),
+        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -4209,7 +4208,7 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',

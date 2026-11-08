@@ -3,6 +3,7 @@ import '../../models/animated_object.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/spell_session.dart';
 import '../../models/srd_summons/srd_summons_library.dart';
+import '../../presentation/visual/minion_stat_block_ui.dart';
 import '../../services/a11y_service.dart';
 import '../../theme/app_theme.dart';
 import '../dialogs/creature_stat_block_dialog.dart';

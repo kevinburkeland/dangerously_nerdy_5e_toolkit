@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
@@ -63,7 +62,7 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Slashing',
     specialTrait: 'Multiattack (Beak + Claws) & Fly 80 ft.',
-    accentColor: Color(0xFFCD7F32),
+    accentColor: Argb(0xFFCD7F32),
   );
 
   // 2. Ebony Fly
@@ -112,7 +111,7 @@ class FigurinesSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Fly 60 ft. & Blindsight 60 ft. (Mount up to 240 lbs)',
-    accentColor: Color(0xFF334155),
+    accentColor: Argb(0xFF334155),
   );
 
   // 3. Golden Lions (Lion)
@@ -186,7 +185,7 @@ class FigurinesSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Pounce (DC 13 Str or prone) & Pack Tactics',
-    accentColor: Color(0xFFF59E0B),
+    accentColor: Argb(0xFFF59E0B),
   );
 
   // 4a. Ivory Goat of Traveling
@@ -234,7 +233,7 @@ class FigurinesSummons {
     damageBonus: 3,
     damageType: 'Bludgeoning',
     specialTrait: 'Sure-Footed & Mount (24 hrs / 30 days total)',
-    accentColor: Color(0xFFFFFBEB),
+    accentColor: Argb(0xFFFFFBEB),
   );
 
   // 4b. Ivory Goat of Travail
@@ -292,7 +291,7 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Charge (+16 bludgeoning + DC 15 prone) & Multiattack',
-    accentColor: Color(0xFFFDE68A),
+    accentColor: Argb(0xFFFDE68A),
   );
 
   // 4c. Ivory Goat of Terror
@@ -346,7 +345,7 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Piercing',
     specialTrait: 'Aura of Terror (DC 15 Wis save or Frightened & Grant Adv)',
-    accentColor: Color(0xFFD97706),
+    accentColor: Argb(0xFFD97706),
   );
 
   // 5. Marble Elephant
@@ -404,7 +403,7 @@ class FigurinesSummons {
     damageBonus: 6,
     damageType: 'Bludgeoning',
     specialTrait: 'Trampling Charge & Stomp (3d10+6 bludgeoning)',
-    accentColor: Color(0xFFB0BEC5),
+    accentColor: Argb(0xFFB0BEC5),
   );
 
   // 6. Obsidian Steed (Nightmare)
@@ -464,7 +463,7 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 90 ft., Fire Resistance to Rider & Ethereal Stride',
-    accentColor: Color(0xFFDC2626),
+    accentColor: Argb(0xFFDC2626),
   );
 
   // 7. Onyx Dog
@@ -521,7 +520,7 @@ class FigurinesSummons {
     damageBonus: 1,
     damageType: 'Piercing',
     specialTrait: 'Truesight 60 ft. & Trip (DC 11 Strength save)',
-    accentColor: Color(0xFF1E293B),
+    accentColor: Argb(0xFF1E293B),
   );
 
   // 8. Serpentine Owl (Giant Owl)
@@ -580,7 +579,7 @@ class FigurinesSummons {
     damageBonus: 1,
     damageType: 'Slashing',
     specialTrait: 'Flyby, Darkvision 120 ft., & Telepathic Link (1 mile)',
-    accentColor: Color(0xFF059669),
+    accentColor: Argb(0xFF059669),
   );
 
   // 9. Silver Raven
@@ -634,7 +633,7 @@ class FigurinesSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Animal Messenger Delivery (24 hrs) & Mimicry',
-    accentColor: Color(0xFF94A3B8),
+    accentColor: Argb(0xFF94A3B8),
   );
 
   static const figurinesPreset = SummonPreset(

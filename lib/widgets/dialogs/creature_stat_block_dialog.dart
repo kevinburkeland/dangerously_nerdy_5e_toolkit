@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../../presentation/visual/minion_stat_block_ui.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/dice_formatters.dart';

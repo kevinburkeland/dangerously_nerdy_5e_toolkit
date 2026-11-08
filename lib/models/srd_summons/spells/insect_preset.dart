@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 import 'beast_presets.dart';
@@ -47,7 +46,7 @@ class InsectSummons {
     secondaryDamageType: 'Poison',
     specialTrait:
         'Bite (1d4+2 piercing + 3d6 poison, DC 11 Con save) + Blindsight 30 ft.',
-    accentColor: Color(0xFF4CAF50),
+    accentColor: Argb(0xFF4CAF50),
   );
 
   static const giantWasp = MinionStatBlock(
@@ -92,7 +91,7 @@ class InsectSummons {
     secondaryDamageType: 'Poison',
     specialTrait:
         'Sting (1d4+2 piercing + 3d6 poison, DC 11 Con save) & Fly 50 ft.',
-    accentColor: Color(0xFFFBC02D),
+    accentColor: Argb(0xFFFBC02D),
   );
 
   static const giantScorpion = MinionStatBlock(
@@ -152,7 +151,7 @@ class InsectSummons {
     secondaryDamageType: 'Poison',
     specialTrait:
         'Multiattack (2 Claws + 1 Sting with 4d10 poison, DC 12 Con save)',
-    accentColor: Color(0xFFE65100),
+    accentColor: Argb(0xFFE65100),
   );
 
   static const giantInsectPreset = SummonPreset(

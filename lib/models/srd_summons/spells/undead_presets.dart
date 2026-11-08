@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
@@ -54,7 +53,7 @@ class UndeadSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Shortbow / Shortsword',
-    accentColor: Color(0xFFB0BEC5),
+    accentColor: Argb(0xFFB0BEC5),
   );
 
   static const zombie = MinionStatBlock(
@@ -104,7 +103,7 @@ class UndeadSummons {
     damageBonus: 1,
     damageType: 'Bludgeoning',
     specialTrait: 'Undead Fortitude (DC 5+dmg Con save to stay at 1 HP)',
-    accentColor: Color(0xFF78909C),
+    accentColor: Argb(0xFF78909C),
   );
 
   static const ghoul = MinionStatBlock(
@@ -156,7 +155,7 @@ class UndeadSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Claws (DC 10 Con save or paralyzed for 1 min)',
-    accentColor: Color(0xFF546E7A),
+    accentColor: Argb(0xFF546E7A),
   );
 
   static const ghast = MinionStatBlock(
@@ -220,7 +219,7 @@ class UndeadSummons {
     damageBonus: 3,
     damageType: 'Slashing',
     specialTrait: 'Stench (DC 10 Con save or poisoned within 5 ft) + Paralyze',
-    accentColor: Color(0xFF37474F),
+    accentColor: Argb(0xFF37474F),
   );
 
   static const wight = MinionStatBlock(
@@ -296,7 +295,7 @@ class UndeadSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Multiattack / Life Drain (DC 13 Con save)',
-    accentColor: Color(0xFF263238),
+    accentColor: Argb(0xFF263238),
   );
 
   static const mummy = MinionStatBlock(
@@ -352,7 +351,7 @@ class UndeadSummons {
     secondaryDamageDiceSides: 6,
     secondaryDamageType: 'Necrotic',
     specialTrait: 'Rotting Fist (3d6 Necrotic + Mummy Rot) + Dreadful Glare',
-    accentColor: Color(0xFF8D6E63),
+    accentColor: Argb(0xFF8D6E63),
   );
 
   static const animateDeadPreset = SummonPreset(

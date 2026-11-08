@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'arena/monster_combat_profile.dart';
 import 'dm_screen_data.dart';
 import 'dpr/dpr_models.dart';
@@ -10,17 +9,18 @@ import 'monster_codex/bestiary/bestiary_cr_two_to_four.dart';
 import 'monster_codex/srd_monster_2024_diffs.dart';
 import 'monster_codex/srd_monster_cr_bands.dart';
 import 'srd_summons/srd_summons_library.dart';
+import 'visual/app_icon.dart';
 import '../services/rules/dpr_calculator_engine.dart';
 
 enum MonsterSortMode {
-  crAscending('CR: Low to High', Icons.sort),
-  crDescending('CR: High to Low', Icons.sort),
-  dprDescending('DPR: High to Low', Icons.local_fire_department_outlined),
-  nameAscending('Name: A to Z', Icons.sort_by_alpha);
+  crAscending('CR: Low to High', AppIcon.sort),
+  crDescending('CR: High to Low', AppIcon.sort),
+  dprDescending('DPR: High to Low', AppIcon.localFireDepartmentOutlined),
+  nameAscending('Name: A to Z', AppIcon.sortByAlpha);
 
   final String label;
-  final IconData icon;
-  const MonsterSortMode(this.label, this.icon);
+  final AppIcon iconKey;
+  const MonsterSortMode(this.label, this.iconKey);
 }
 
 enum MonsterCrBand {
@@ -799,28 +799,28 @@ extension MonsterHomebrewExt on Monster {
       }
     }
 
-    Color color;
+    Argb color;
     final typeLower = monsterType.toLowerCase();
     if (typeLower.contains('beast')) {
-      color = const Color(0xFF388E3C);
+      color = const Argb(0xFF388E3C);
     } else if (typeLower.contains('dragon')) {
-      color = const Color(0xFFFF8F00);
+      color = const Argb(0xFFFF8F00);
     } else if (typeLower.contains('fiend')) {
-      color = const Color(0xFFC62828);
+      color = const Argb(0xFFC62828);
     } else if (typeLower.contains('undead')) {
-      color = const Color(0xFF7B1FA2);
+      color = const Argb(0xFF7B1FA2);
     } else if (typeLower.contains('elemental')) {
-      color = const Color(0xFFE65100);
+      color = const Argb(0xFFE65100);
     } else if (typeLower.contains('fey')) {
-      color = const Color(0xFF00897B);
+      color = const Argb(0xFF00897B);
     } else if (typeLower.contains('celestial')) {
-      color = const Color(0xFF0288D1);
+      color = const Argb(0xFF0288D1);
     } else if (typeLower.contains('construct')) {
-      color = const Color(0xFF5D4037);
+      color = const Argb(0xFF5D4037);
     } else if (typeLower.contains('aberration')) {
-      color = const Color(0xFF6A1B9A);
+      color = const Argb(0xFF6A1B9A);
     } else {
-      color = const Color(0xFF8B5CF6);
+      color = const Argb(0xFF8B5CF6);
     }
 
     // If parsedActions is empty and creature has _copy in customProperties, revitalize from base monster!

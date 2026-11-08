@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
@@ -55,7 +54,7 @@ class AnimateObjectsSummon {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Color(0xFF4CAF50),
+    accentColor: Argb(0xFF4CAF50),
   );
 
   static const smallObject = MinionStatBlock(
@@ -110,7 +109,7 @@ class AnimateObjectsSummon {
     damageBonus: 2,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Color(0xFF03A9F4),
+    accentColor: Argb(0xFF03A9F4),
   );
 
   static const mediumObject = MinionStatBlock(
@@ -165,7 +164,7 @@ class AnimateObjectsSummon {
     damageBonus: 1,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Color(0xFFFF9800),
+    accentColor: Argb(0xFFFF9800),
   );
 
   static const largeObject = MinionStatBlock(
@@ -220,7 +219,7 @@ class AnimateObjectsSummon {
     damageBonus: 2,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Color(0xFFE91E63),
+    accentColor: Argb(0xFFE91E63),
   );
 
   static const hugeObject = MinionStatBlock(
@@ -275,7 +274,7 @@ class AnimateObjectsSummon {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Color(0xFF9C27B0),
+    accentColor: Argb(0xFF9C27B0),
   );
 
   static const preset = SummonPreset(

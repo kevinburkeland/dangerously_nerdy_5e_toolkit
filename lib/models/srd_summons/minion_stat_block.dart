@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../../utils/dice_formatters.dart';
@@ -6,6 +5,8 @@ import '../../widgets/glyphs/glyph_tokens.dart';
 
 import '../domain/character_models.dart';
 import 'srd_summons_library.dart';
+
+export '../visual/argb.dart';
 
 enum SummonCategory { spell, magicItem }
 
@@ -89,7 +90,7 @@ class MinionStatBlock {
   final String? secondaryDamageType;
   final bool hasPackTactics;
   final String? specialTrait;
-  final Color accentColor;
+  final Argb accentArgb;
 
   const MinionStatBlock({
     required this.id,
@@ -139,8 +140,9 @@ class MinionStatBlock {
     this.secondaryDamageType,
     this.hasPackTactics = false,
     this.specialTrait,
-    this.accentColor = const Color(0xFF673AB7),
-  });
+    Argb? accentArgb,
+    Argb? accentColor,
+  }) : accentArgb = accentArgb ?? accentColor ?? const Argb(0xFF673AB7);
 
   bool get hasLegendary =>
       legendaryActions.isNotEmpty ||

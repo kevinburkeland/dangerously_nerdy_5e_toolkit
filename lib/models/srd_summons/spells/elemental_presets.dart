@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
@@ -62,7 +61,7 @@ class ElementalSummons {
     damageBonus: 5,
     damageType: 'Bludgeoning',
     specialTrait: 'Whirlwind (DC 13 Strength save or flung)',
-    accentColor: Color(0xFF81D4FA),
+    accentColor: Argb(0xFF81D4FA),
   );
 
   static const earthElemental = MinionStatBlock(
@@ -125,7 +124,7 @@ class ElementalSummons {
     damageBonus: 5,
     damageType: 'Bludgeoning',
     specialTrait: 'Siege Monster & Earth Glide',
-    accentColor: Color(0xFFA1887F),
+    accentColor: Argb(0xFFA1887F),
   );
 
   static const fireElemental = MinionStatBlock(
@@ -191,7 +190,7 @@ class ElementalSummons {
     damageBonus: 3,
     damageType: 'Fire',
     specialTrait: 'Touch (Target catches fire for 1d10 fire per turn)',
-    accentColor: Color(0xFFFF5722),
+    accentColor: Argb(0xFFFF5722),
   );
 
   static const waterElemental = MinionStatBlock(
@@ -258,7 +257,7 @@ class ElementalSummons {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Whelm (DC 15 Strength save or grappled and drowning)',
-    accentColor: Color(0xFF0288D1),
+    accentColor: Argb(0xFF0288D1),
   );
 
   static const salamander = MinionStatBlock(
@@ -333,7 +332,7 @@ class ElementalSummons {
     secondaryDamageDiceSides: 6,
     secondaryDamageType: 'Fire',
     specialTrait: 'Spear + Tail Constrict + Heated Body (2d6 fire aura)',
-    accentColor: Color(0xFFE64A19),
+    accentColor: Argb(0xFFE64A19),
   );
 
   static const xorn = MinionStatBlock(
@@ -409,7 +408,7 @@ class ElementalSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Multiattack (3 Claws + 1 Bite) & Earth Glide',
-    accentColor: Color(0xFF795548),
+    accentColor: Argb(0xFF795548),
   );
 
   // --- CR 2 & CR 1/4 - 1/2 MINOR ELEMENTALS ---
@@ -480,7 +479,7 @@ class ElementalSummons {
     secondaryDamageDiceSides: 6,
     secondaryDamageType: 'Fire',
     specialTrait: 'Bite + Tail (1d6 fire each) + Heated Body',
-    accentColor: Color(0xFFFF7043),
+    accentColor: Argb(0xFFFF7043),
   );
 
   static const gargoyle = MinionStatBlock(
@@ -546,7 +545,7 @@ class ElementalSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Multiattack (Bite + Claws) & False Appearance',
-    accentColor: Color(0xFF616161),
+    accentColor: Argb(0xFF616161),
   );
 
   static const dustMephit = MinionStatBlock(
@@ -602,7 +601,7 @@ class ElementalSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Death Burst & Blinding Breath (DC 10 Con save)',
-    accentColor: Color(0xFFBCAAA4),
+    accentColor: Argb(0xFFBCAAA4),
   );
 
   static const iceMephit = MinionStatBlock(
@@ -666,7 +665,7 @@ class ElementalSummons {
     secondaryDamageDiceSides: 4,
     secondaryDamageType: 'Cold',
     specialTrait: 'Death Burst (1d8 cold) & Frost Breath',
-    accentColor: Color(0xFF80DEEA),
+    accentColor: Argb(0xFF80DEEA),
   );
 
   static const magmaMephit = MinionStatBlock(
@@ -730,7 +729,7 @@ class ElementalSummons {
     secondaryDamageDiceSides: 4,
     secondaryDamageType: 'Fire',
     specialTrait: 'Death Burst (2d6 fire) & Fire Breath',
-    accentColor: Color(0xFFFF8A65),
+    accentColor: Argb(0xFFFF8A65),
   );
 
   static const steamMephit = MinionStatBlock(
@@ -787,7 +786,7 @@ class ElementalSummons {
     secondaryDamageDiceSides: 4,
     secondaryDamageType: 'Fire',
     specialTrait: 'Death Burst (1d8 fire) & Steam Breath',
-    accentColor: Color(0xFFB0BEC5),
+    accentColor: Argb(0xFFB0BEC5),
   );
 
   static const conjureElementalPreset = SummonPreset(

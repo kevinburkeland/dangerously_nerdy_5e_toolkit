@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 import '../spells/beast_presets.dart';
@@ -50,7 +49,7 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Keen Hearing and Smell',
-    accentColor: Color(0xFF90A4AE),
+    accentColor: Argb(0xFF90A4AE),
   );
 
   static const giantRat = MinionStatBlock(
@@ -103,7 +102,7 @@ class BagOfTricksSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Keen Smell & Pack Tactics',
-    accentColor: Color(0xFF78909C),
+    accentColor: Argb(0xFF78909C),
   );
 
   static const badger = MinionStatBlock(
@@ -150,7 +149,7 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Keen Smell & Burrow 5 ft.',
-    accentColor: Color(0xFF607D8B),
+    accentColor: Argb(0xFF607D8B),
   );
 
   static const giantElk = MinionStatBlock(
@@ -210,7 +209,7 @@ class BagOfTricksSummons {
     damageType: 'Bludgeoning',
     specialTrait:
         'Charge (Extra 2d6 damage, DC 14 Str save or prone) & Hooves (4d8+4)',
-    accentColor: Color(0xFF263238),
+    accentColor: Argb(0xFF263238),
   );
 
   // --- RUST BAG CREATURES (d8) ---
@@ -258,7 +257,7 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Keen Smell & Darkvision',
-    accentColor: Color(0xFFA1887F),
+    accentColor: Argb(0xFFA1887F),
   );
 
   static const owl = MinionStatBlock(
@@ -311,7 +310,7 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Slashing',
     specialTrait: 'Flyby (no opportunity attacks) & Darkvision 120 ft.',
-    accentColor: Color(0xFF8D6E63),
+    accentColor: Argb(0xFF8D6E63),
   );
 
   static const mastiff = MinionStatBlock(
@@ -359,7 +358,7 @@ class BagOfTricksSummons {
     damageBonus: 1,
     damageType: 'Piercing',
     specialTrait: 'Keen Hearing/Smell & Trip (DC 11 Str save)',
-    accentColor: Color(0xFF795548),
+    accentColor: Argb(0xFF795548),
   );
 
   static const goat = MinionStatBlock(
@@ -411,7 +410,7 @@ class BagOfTricksSummons {
     damageBonus: 1,
     damageType: 'Bludgeoning',
     specialTrait: 'Charge (Extra 1d4 damage, DC 10 Str save or prone)',
-    accentColor: Color(0xFF6D4C41),
+    accentColor: Argb(0xFF6D4C41),
   );
 
   static const giantGoat = MinionStatBlock(
@@ -464,7 +463,7 @@ class BagOfTricksSummons {
     damageBonus: 3,
     damageType: 'Bludgeoning',
     specialTrait: 'Charge (Extra 2d4 damage, DC 13 Str save or prone)',
-    accentColor: Color(0xFF5D4037),
+    accentColor: Argb(0xFF5D4037),
   );
 
   // --- TAN BAG CREATURES (d8) ---
@@ -519,7 +518,7 @@ class BagOfTricksSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Pack Tactics & Keen Hearing/Smell',
-    accentColor: Color(0xFFDCE775),
+    accentColor: Argb(0xFFDCE775),
   );
 
   static const baboon = MinionStatBlock(
@@ -567,7 +566,7 @@ class BagOfTricksSummons {
     damageBonus: -1,
     damageType: 'Bludgeoning',
     specialTrait: 'Pack Tactics & Climb 30 ft.',
-    accentColor: Color(0xFFAFB42B),
+    accentColor: Argb(0xFFAFB42B),
   );
 
   static const axeBeak = MinionStatBlock(
@@ -608,7 +607,7 @@ class BagOfTricksSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Speed 50 ft.',
-    accentColor: Color(0xFFFBC02D),
+    accentColor: Argb(0xFFFBC02D),
   );
 
   static const giantWeasel = MinionStatBlock(
@@ -656,7 +655,7 @@ class BagOfTricksSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Keen Hearing and Smell & Darkvision',
-    accentColor: Color(0xFF827717),
+    accentColor: Argb(0xFF827717),
   );
 
   // --- PRESETS FOR EACH BAG VARIANT ---

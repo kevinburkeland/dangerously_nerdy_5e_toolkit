@@ -1,6 +1,7 @@
 import '../presentation/widgets/summon_preset_glyph_extension.dart';
 import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
+import '../presentation/visual/minion_stat_block_ui.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/creature_stat_block_dialog.dart';
 import 'glyphs/dnd_glyph.dart';

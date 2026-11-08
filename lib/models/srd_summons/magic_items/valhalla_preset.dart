@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
@@ -49,7 +48,7 @@ class ValhallaSummons {
     damageType: 'Slashing',
     specialTrait:
         'Reckless Attack (Advantage on attacks, grants advantage on incoming)',
-    accentColor: Color(0xFFD32F2F),
+    accentColor: Argb(0xFFD32F2F),
   );
 
   static const silverHornPreset = SummonPreset(

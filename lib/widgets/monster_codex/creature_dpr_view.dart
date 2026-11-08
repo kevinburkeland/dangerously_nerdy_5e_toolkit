@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../models/dpr/dpr_models.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../../presentation/visual/minion_stat_block_ui.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/dpr_calculator_engine.dart';
 import '../../utils/dice_formatters.dart';

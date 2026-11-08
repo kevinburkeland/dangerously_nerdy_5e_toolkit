@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../monster_codex_data.dart';
 import '../../srd_summons/minion_stat_block.dart';
 
@@ -40,7 +39,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Standing Leap',
@@ -98,7 +97,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Berserk',
@@ -168,7 +167,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -225,7 +224,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -295,7 +294,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFEAB308),
+        accentColor: Argb(0xFFEAB308),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -382,7 +381,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'necrotic',
-        accentColor: Color(0xFFCBD5E1),
+        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Incorporeal Movement',
@@ -447,7 +446,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -518,7 +517,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Poor Depth Perception',
@@ -585,7 +584,7 @@ class BestiaryCrFiveToEight {
         secondaryDamageDiceCount: 4,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Petrifying Gaze',
@@ -664,7 +663,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Stone Camouflage',
@@ -739,7 +738,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Hold Breath',
@@ -811,7 +810,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 6,
         damageType: 'slashing',
-        accentColor: Color(0xFF94A3B8),
+        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -879,7 +878,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Air Form',
@@ -941,7 +940,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Assassinate',
@@ -1020,7 +1019,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Barbed Hide',
@@ -1103,7 +1102,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFF8B5CF6),
+        accentColor: Argb(0xFF8B5CF6),
         traits: [
           CreatureTrait(
             name: 'Damage Transfer',
@@ -1188,7 +1187,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Fey Ancestry',
@@ -1287,7 +1286,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Earth Glide',
@@ -1350,7 +1349,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'fire',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Fire Form',
@@ -1414,7 +1413,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -1471,7 +1470,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Hold Breath',
@@ -1535,7 +1534,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Blood Frenzy',
@@ -1591,7 +1590,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Brave',
@@ -1669,7 +1668,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Trampling Charge',
@@ -1734,7 +1733,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -1810,7 +1809,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -1889,7 +1888,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Invisibility',
@@ -1949,7 +1948,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Spellcasting',
@@ -1999,7 +1998,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Trampling Charge',
@@ -2062,7 +2061,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Innate Spellcasting',
@@ -2154,7 +2153,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Innate Spellcasting',
@@ -2233,7 +2232,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFF8B5CF6),
+        accentColor: Argb(0xFF8B5CF6),
         traits: [
           CreatureTrait(
             name: 'Limited Telepathy',
@@ -2303,7 +2302,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -2385,7 +2384,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Heated Body',
@@ -2459,7 +2458,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF84CC16),
+        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'Lightning Absorption',
@@ -2523,7 +2522,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF64748B),
+        accentColor: Argb(0xFF64748B),
         traits: [
           CreatureTrait(
             name: 'Bound',
@@ -2597,7 +2596,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Rejuvenation',
@@ -2652,7 +2651,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Trampling Charge',
@@ -2712,7 +2711,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Color(0xFF22C55E),
+        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -2773,7 +2772,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFF9333EA),
+        accentColor: Argb(0xFF9333EA),
         traits: [
           CreatureTrait(
             name: 'Regeneration',
@@ -2852,7 +2851,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -2936,7 +2935,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Water Form',
@@ -3004,7 +3003,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Shapechanger',
@@ -3083,7 +3082,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3152,7 +3151,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Earth Glide',
@@ -3229,7 +3228,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3300,7 +3299,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3365,7 +3364,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3436,7 +3435,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3502,7 +3501,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3573,7 +3572,7 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Ice Walk',

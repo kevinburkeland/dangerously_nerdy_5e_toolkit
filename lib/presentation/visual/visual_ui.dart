@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../models/visual/app_icon.dart';
 import '../../models/visual/argb.dart';
 
+export 'minion_stat_block_ui.dart';
+export 'monster_codex_ui.dart';
+
 extension ArgbUi on Argb {
   Color toColor() => Color(value);
 }

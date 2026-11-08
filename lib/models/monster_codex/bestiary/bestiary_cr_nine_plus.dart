@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import '../../monster_codex_data.dart';
 import '../../srd_summons/minion_stat_block.dart';
 
@@ -41,7 +40,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFA855F7),
+        accentColor: Argb(0xFFA855F7),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -144,7 +143,7 @@ class BestiaryCrNinePlus {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'necrotic',
-        accentColor: Color(0xFFCBD5E1),
+        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -248,7 +247,7 @@ class BestiaryCrNinePlus {
         secondaryDamageDiceCount: 2,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'fire',
-        accentColor: Color(0xFFEF4444),
+        accentColor: Argb(0xFFEF4444),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -357,7 +356,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'cold',
-        accentColor: Color(0xFFCBD5E1),
+        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -463,7 +462,7 @@ class BestiaryCrNinePlus {
         secondaryDamageDiceCount: 4,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'fire',
-        accentColor: Color(0xFFEF4444),
+        accentColor: Argb(0xFFEF4444),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -564,7 +563,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 12,
         damageBonus: 10,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -690,7 +689,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -795,7 +794,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -896,7 +895,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -997,7 +996,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -1107,7 +1106,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -1208,7 +1207,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -1320,7 +1319,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -1425,7 +1424,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -1531,7 +1530,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Ice Walk',
@@ -1637,7 +1636,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -1742,7 +1741,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 9,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -1843,7 +1842,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -1949,7 +1948,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 9,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2059,7 +2058,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -2165,7 +2164,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 10,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2277,7 +2276,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2382,7 +2381,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 10,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Legendary Resistance (3/Day)',
@@ -2488,7 +2487,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Ice Walk',
@@ -2596,7 +2595,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'slashing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Inscrutable',
@@ -2684,7 +2683,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -2744,7 +2743,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 8,
         damageType: 'slashing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Death Throes',
@@ -2834,7 +2833,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -2907,7 +2906,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Devil\'s Sight',
@@ -2980,7 +2979,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Devil\'s Sight',
@@ -3055,7 +3054,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF64748B),
+        accentColor: Argb(0xFF64748B),
         traits: [
           CreatureTrait(
             name: 'Acid Absorption',
@@ -3135,7 +3134,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -3208,7 +3207,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFF59E0B),
+        accentColor: Argb(0xFFF59E0B),
         traits: [
           CreatureTrait(
             name: 'Angelic Weapons',
@@ -3284,7 +3283,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 5,
         damageType: 'slashing',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Elemental Demise',
@@ -3355,7 +3354,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 12,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3434,7 +3433,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 6,
         damageType: 'slashing',
-        accentColor: Color(0xFF06B6D4),
+        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Elemental Demise',
@@ -3512,7 +3511,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Hellish Weapons',
@@ -3595,7 +3594,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 7,
         damageType: 'slashing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3656,7 +3655,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Innate Spellcasting',
@@ -3733,7 +3732,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Rejuvenation',
@@ -3801,7 +3800,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Inscrutable',
@@ -3885,7 +3884,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Devil\'s Sight',
@@ -3967,7 +3966,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Devil\'s Sight',
@@ -4054,7 +4053,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 7,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF64748B),
+        accentColor: Argb(0xFF64748B),
         traits: [
           CreatureTrait(
             name: 'Fire Absorption',
@@ -4141,7 +4140,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 10,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -4245,7 +4244,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -4342,7 +4341,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF9333EA),
+        accentColor: Argb(0xFF9333EA),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -4444,7 +4443,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -4528,7 +4527,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 8,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Fear Aura',
@@ -4629,7 +4628,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 7,
         damageType: 'slashing',
-        accentColor: Color(0xFFF59E0B),
+        accentColor: Argb(0xFFF59E0B),
         traits: [
           CreatureTrait(
             name: 'Angelic Weapons',
@@ -4703,7 +4702,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 9,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Tunneler',
@@ -4772,7 +4771,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Limited Magic Immunity',
@@ -4832,7 +4831,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Heated Body',
@@ -4889,7 +4888,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 9,
         damageType: 'piercing',
-        accentColor: Color(0xFFD97706),
+        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -4959,7 +4958,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 8,
         damageType: 'slashing',
-        accentColor: Color(0xFFF59E0B),
+        accentColor: Argb(0xFFF59E0B),
         traits: [
           CreatureTrait(
             name: 'Angelic Weapons',
@@ -5067,7 +5066,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF64748B),
+        accentColor: Argb(0xFF64748B),
         traits: [
           CreatureTrait(
             name: 'Immutable Form',
@@ -5139,7 +5138,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 9,
         damageType: 'slashing',
-        accentColor: Color(0xFF3B82F6),
+        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -5213,7 +5212,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 6,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Color(0xFF84CC16),
+        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -5289,7 +5288,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -5354,7 +5353,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -5425,7 +5424,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -5490,7 +5489,7 @@ class BestiaryCrNinePlus {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Color(0xFFDC2626),
+        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',

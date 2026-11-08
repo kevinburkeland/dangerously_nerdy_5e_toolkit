@@ -248,28 +248,8 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     kinds: {'flutter', 'models -> widgets'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
-  'lib/models/monster_codex/bestiary/bestiary_cr_0_to_quarter.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/monster_codex/bestiary/bestiary_cr_five_to_eight.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/monster_codex/bestiary/bestiary_cr_half_to_one.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/monster_codex/bestiary/bestiary_cr_nine_plus.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/monster_codex/bestiary/bestiary_cr_two_to_four.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
   'lib/models/monster_codex_data.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> services'},
+    kinds: {'models -> services'},
     reason: 'baseline DPR calculation method on Monster domain model and UI data',
   ),
   'lib/models/party/party_purse.dart': AllowlistEntry(
@@ -288,40 +268,8 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     kinds: {'flutter', 'models -> widgets'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
-  'lib/models/srd_summons/magic_items/bag_of_tricks_preset.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/magic_items/figurines_preset.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/magic_items/valhalla_preset.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
   'lib/models/srd_summons/minion_stat_block.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> widgets'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/spells/animate_objects_preset.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/spells/beast_presets.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/spells/elemental_presets.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/spells/insect_preset.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/spells/undead_presets.dart': AllowlistEntry(
-    kinds: {'flutter'},
+    kinds: {'models -> widgets'},
     reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/models/tables/rollable_table.dart': AllowlistEntry(
