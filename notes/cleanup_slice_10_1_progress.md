@@ -1,5 +1,5 @@
 # Cleanup slice 10.1 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 857ac8e271b882885e5251a53bdc09ad20aa6ede
 Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 51ee3f68243e27f508e69dc051e0e91b679bff1d
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
@@ -12,7 +12,19 @@ Fix ids: 2.1 2.2 3.1 3.2 3.3 3.4 3.5 3.6 4.1 4.2 4.3 4.4 4.5 5.1 5.2 5.3 6.1 6.2
 - [x] Step 4 Colour and icon values, and the glyph token split: app 4b513a5ef6feda95c9600b9d60059be9a3439dcf run 42517789367
 - [x] Step 5 Creatures and summons hold plain values: app 0a5b62c618e3623c7cc22031f5e95ccdf07c1680 run 42519569653
 - [x] Step 6 The rest of models hold plain values: app 51ee3f68243e27f508e69dc051e0e91b679bff1d run 42731813465
-- [ ] Step 7 Mutations and report
+- [x] Step 7 Mutations and report:
+  - mutation/cs101-a1 cfd0c328f1c00de659d904a540f97287dbdb31b5
+  - mutation/cs101-a2 4b1aa4d3df3dd98b1033d22edea4de39124bbbd2
+  - mutation/cs101-r1 f86566f1d60f84ebe048ed52be3868ef872ef148
+  - mutation/cs101-r2 b66821a1c4bc4f159fc9b3d1b89c5206c9d01ea1
+  - mutation/cs101-g1 89f8fe3dd56688abb6609a9280aeb8ffd71ecd5e
+  - mutation/cs101-g2 0e3aeb27b36eca0dcface1f2d7ea7bbadc497a8c
+  - mutation/cs101-u1 e8a00e4e033ee9d3cface25aceb9b100952fc02f
+  - mutation/cs101-u2 145e73effcacd9c1fe2eb59a58282fc0427f4819
+  - mutation/cs101-m1 bdf3db41fd22fe8b6ae77dbff376a5fafe20ccc0
+  - mutation/cs101-m2 457fa3568082cba092f80b7a09e1f0df598eb425
+  - mutation/cs101-n1 0eedaa4bc670cd3fcc23f69ce4f9562d0389a988
+  - mutation/cs101-n2 dc932373fd80ee84e235a0ed62b9ff62639a79a6
 
 ## Fix checklist
 Fix 2.1 done: check_notes_shas.py verifies Fix checklist against Fix ids with NS23-NS31 self-tests in test_check_notes_shas.sh.
@@ -42,7 +54,7 @@ Fix 6.6 done: Layer import table updated with zero Flutter imports in models enf
 None
 
 ## Next
-Check out twelve mutation branches with targeted mutations against characterization and law tests, verify suite detects them, and write final report.
+None — Cleanup slice 10.1 is complete.
 
 ## Open issues and deviations
 In DiceRoomService, removed visibleForTesting annotation from DiceRoomService.newInstance so PartyRoomService.newInstance can instantiate it without triggering analyzer warnings or requiring an ignore comment.
