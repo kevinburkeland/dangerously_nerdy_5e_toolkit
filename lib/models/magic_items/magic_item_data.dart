@@ -1093,7 +1093,7 @@ enum CurrencyCoinType {
   cp('Copper', 'cp', Argb(0xFFFB923C), Argb(0xFFC2410C)),
   sp('Silver', 'sp', Argb(0xFF94A3B8), Argb(0xFF475569)),
   ep('Electrum', 'ep', Argb(0xFFFDE047), Argb(0xFF854D0E)),
-  gp('Gold', 'gp', Argb(0xFFFBBF24), Argb(0xFFB45309)),
+  gp('Gold', 'gp', Argb(0xFF123456), Argb(0xFFB45309)),
   pp('Platinum', 'pp', Argb(0xFF38BDF8), Argb(0xFF0369A1));
 
   final String displayName;
