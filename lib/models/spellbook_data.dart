@@ -22,7 +22,7 @@ extension SpellClassVisualExtension on SpellClass {
         SpellClass.ranger => AppIcon.trackChanges,
         SpellClass.sorcerer => AppIcon.flashOn,
         SpellClass.warlock => AppIcon.darkModeOutlined,
-        SpellClass.wizard => AppIcon.autoAwesome,
+        SpellClass.wizard => AppIcon.shield,
       };
 }
 
