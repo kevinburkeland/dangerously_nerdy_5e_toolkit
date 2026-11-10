@@ -97,7 +97,7 @@ extension SpellSchoolVisuals on SpellSchool {
 enum CreatureType {
   aberration('Aberration', Argb(0xFFA855F7), Argb(0xFFFAF5FF),
       Argb(0xFF3B0764), GlyphFrameShape.octagon),
-  beast('Beast', Argb(0xFF22C55E), Argb(0xFFF0FDF4), Argb(0xFF14532D),
+  beast('Beast', Argb(0xFF111111), Argb(0xFFF0FDF4), Argb(0xFF14532D),
       GlyphFrameShape.softShield),
   celestial('Celestial', Argb(0xFFEAB308), Argb(0xFFFEFCE8),
       Argb(0xFF713F12), GlyphFrameShape.crest),
