@@ -22,6 +22,7 @@ fe64d2a351625e5442a7341dfaad6799f2326d4c red run 42893701058
 03ecf86c9dedd173bb3eafeaaec8165096e8ed14 red run 42895786358
 fc10bd64e33c717a7740fab0deb410d0936ce885 red run 42898410673
 d1d79397e02738761d38d0ec4bf05cd49316c3ed red run 42901443343
+ee21eec5e34c0eccfa01f1d4e5965425b5c2e9ef red run 42906651492
 
 ## Next
 Step 6: App npm, Node, and Actions up to date, check wired in CI.
@@ -35,6 +36,7 @@ fe64d2a351625e5442a7341dfaad6799f2326d4c failed in CI on check_notes_shas.py bec
 03ecf86c9dedd173bb3eafeaaec8165096e8ed14 failed in CI on docs_truth_test.dart DT2 because the explanation text for 13cb5434 itself backticked the sibling path; fixed by unbackticking it.
 fc10bd64e33c717a7740fab0deb410d0936ce885 failed in CI on Dart 3.13.7 static analysis due to prefer_initializing_formals; fixed in a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf by renaming internal backing fields.
 d1d79397e02738761d38d0ec4bf05cd49316c3ed failed in CI on check_notes_shas.py because fc10bd64e33c717a7740fab0deb410d0936ce885 was not yet documented under Red runs on main, and unit test shards 1 and 2 failed on ratchets (big file and dynamic count) lowered by dart fix; fixed by disclosing red runs and lowering ratchets.
+ee21eec5e34c0eccfa01f1d4e5965425b5c2e9ef failed in CI on dependencies job due to E1 stale exception for @firebase/rules-unit-testing 6.0.0 which semver compares greater than dist-tag latest 5.0.2 so matched no failure; fixed by removing the stale exception.
 
 
 

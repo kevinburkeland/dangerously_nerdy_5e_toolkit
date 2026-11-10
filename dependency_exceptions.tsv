@@ -3,4 +3,3 @@ D4	collection	1.19.1	2027-02-01	Official Dart team core package, mature and stab
 D4	hive	2.2.3	2027-02-01	Core key-value box database, mature and stable, no newer release available
 D4	hive_flutter	1.1.0	2027-02-01	Flutter adapter for Hive storage, mature and stable, no newer release available
 D4	mutex	3.1.0	2027-02-01	Lightweight async Mutex primitive, mature and stable, no newer release available
-N1	@firebase/rules-unit-testing	6.0.0	2027-02-01	npm registry dist-tag latest points to 5.0.2 while 6.0.0 is newest release
