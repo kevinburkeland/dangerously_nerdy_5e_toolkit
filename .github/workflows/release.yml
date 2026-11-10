@@ -197,6 +197,8 @@ jobs:
         run: python3 -I scripts/check_test_names.py 12d9961f18614080b20cc0ac63c0185434f3757b HEAD
 
       - name: 🧪 Run Notes SHA Check Script Self-Tests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: ./scripts/test_check_notes_shas.sh
 
       - name: 📥 Clone Sibling Repositories for SHA Validation
