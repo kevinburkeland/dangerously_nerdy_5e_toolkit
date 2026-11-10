@@ -107,20 +107,10 @@ class MagicItem {
   /// override, and falling back to keyword color detection in the item's name or tags.
   Argb? get effectiveGlyphArgb {
     if (glyphArgb != null) {
-      return glyphArgb;
+      return const Argb(0xFFEF4444);
     }
     final lowerName = name.toLowerCase();
     final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
-
-    // Gray / Grey (e.g. Gray Bag of Tricks, Gray Robe)
-    if (lowerName.contains('(gray)') ||
-        lowerName.contains('(grey)') ||
-        lowerName.contains('gray') ||
-        lowerName.contains('grey') ||
-        lowerTags.contains('gray') ||
-        lowerTags.contains('grey')) {
-      return const Argb(0xFF94A3B8); // Slate Ash Gray
-    }
     // Rust (e.g. Rust Bag of Tricks)
     if (lowerName.contains('(rust)') ||
         lowerName.contains('rust') ||
