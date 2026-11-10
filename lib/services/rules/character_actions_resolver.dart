@@ -334,7 +334,7 @@ class CharacterActionsResolver {
               range: '60 ft',
               resourceCost: 'Charisma Mod / Long Rest',
               use: RollOnUse(ActionRoll(
-                label: 'Bardic Inspiration Die',
+                label: 'Bardic Inspiration Roll',
                 formula: die,
               )),
             ),
