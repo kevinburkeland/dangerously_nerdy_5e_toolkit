@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-10
+- Bonus slice 1: Update npm dependencies with zero audit vulnerabilities, Node to 26 LTS, Actions pins to newest releases, wire check_dependencies in CI, and add weekly workflow.
 - Bonus slice 1: Bring Dart packages, Flutter SDK (3.47.9), and upstream engine/ruleset pins up to date, resolve linter findings, and ratchet strict analysis ignore count to 47.
 - Bonus slice 1: Baseline test measurements across core, ruleset, app, and firestore rules emulators, and defer cs101 mutation branch retirement.
 

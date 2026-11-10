@@ -1,0 +1,51 @@
+name: Scheduled Dependency Check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-dependencies:
+    name: 📦 Check Dependency Currency & Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 💙 Set up Flutter SDK (Pinned Version)
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
+
+      - name: 🟢 Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+
+      - name: 📦 Install Pub Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: 🔍 Resolve Outdated Pub Dependencies
+        run: flutter pub outdated --json --show-all > /tmp/pub_outdated.json
+
+      - name: 📦 Install npm Dependencies
+        working-directory: firestore_rules_test
+        run: npm ci
+
+      - name: 🔍 Resolve Outdated npm Dependencies & Audit
+        working-directory: firestore_rules_test
+        run: |
+          npm outdated --json > /tmp/npm_outdated.json || true
+          npm audit --json > /tmp/npm_audit.json || true
+
+      - name: 🔒 Check Dependency Currency & Security
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -I scripts/check_dependencies.py --pub-outdated /tmp/pub_outdated.json --pubspec pubspec.yaml --workflows .github/workflows --exceptions dependency_exceptions.tsv --npm-dir firestore_rules_test --npm-outdated /tmp/npm_outdated.json --npm-audit /tmp/npm_audit.json
