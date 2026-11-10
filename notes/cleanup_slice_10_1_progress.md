@@ -1,7 +1,7 @@
 # Cleanup slice 10.1 progress notes
 Status: IN PROGRESS
 Start heads: core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 857ac8e271b882885e5251a53bdc09ad20aa6ede
-Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 0a5b62c618e3623c7cc22031f5e95ccdf07c1680
+Last pushed heads (CI green): core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 51ee3f68243e27f508e69dc051e0e91b679bff1d
 Pins now: ruleset -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a; app -> core 59d7178dea6527a18a2cac3b7fe0f110fb93717a, ruleset 8174dfcd51706f7998dd4907b19cb3ce950581a4
 Fix ids: 2.1 2.2 3.1 3.2 3.3 3.4 3.5 3.6 4.1 4.2 4.3 4.4 4.5 5.1 5.2 5.3 6.1 6.2 6.3 6.4 6.5 6.6
 
@@ -11,7 +11,7 @@ Fix ids: 2.1 2.2 3.1 3.2 3.3 3.4 3.5 3.6 4.1 4.2 4.3 4.4 4.5 5.1 5.2 5.3 6.1 6.2
 - [x] Step 3 Combat actions carry data, not callbacks: app 3e04380d86e4ff14e65fb0031cb852f0759a8147 run 42319428544
 - [x] Step 4 Colour and icon values, and the glyph token split: app 4b513a5ef6feda95c9600b9d60059be9a3439dcf run 42517789367
 - [x] Step 5 Creatures and summons hold plain values: app 0a5b62c618e3623c7cc22031f5e95ccdf07c1680 run 42519569653
-- [ ] Step 6 The rest of models hold plain values
+- [x] Step 6 The rest of models hold plain values: app 51ee3f68243e27f508e69dc051e0e91b679bff1d run 42731813465
 - [ ] Step 7 Mutations and report
 
 ## Fix checklist
@@ -31,12 +31,18 @@ Fix 4.5 done: Architecture documentation and codebase map updated for visual mod
 Fix 5.1 done: Summons presets and minion stat block converted to Argb with Flutter imports removed.
 Fix 5.2 done: Bestiary files and monster codex data converted to Argb and AppIcon with Flutter imports removed.
 Fix 5.3 done: Layer import table allowlist updated removing flutter kind from all 15 files dropping allowlist to 27 files.
+Fix 6.1 done: AppSettings converted to pure-Dart ThemeMode and Argb with Flutter imports removed and presentation UI extension created.
+Fix 6.2 done: ArenaEnvironment colour and icon fields converted to Argb and AppIcon with presentation UI extension created.
+Fix 6.3 done: SrdEquipmentPackage converted to AppIcon iconKey with presentation UI extension created.
+Fix 6.4 done: TableCategory converted to Argb and AppIcon, SpellClass iconKey converted to AppIcon, and Flutter imports removed.
+Fix 6.5 done: Glyph gallery and magic item models converted to Argb and AppIcon with Flutter imports removed.
+Fix 6.6 done: Layer import table updated with zero Flutter imports in models enforced by dedicated test with control, allowlist reduced to 19 files.
 
 ## Red runs on main
 None
 
 ## Next
-Convert remaining models to plain values, enforce package rule, and clear remaining flutter entries from layer allowlist.
+Check out twelve mutation branches with targeted mutations against characterization and law tests, verify suite detects them, and write final report.
 
 ## Open issues and deviations
 In DiceRoomService, removed visibleForTesting annotation from DiceRoomService.newInstance so PartyRoomService.newInstance can instantiate it without triggering analyzer warnings or requiring an ignore comment.
