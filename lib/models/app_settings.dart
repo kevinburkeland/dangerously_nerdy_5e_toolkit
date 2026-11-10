@@ -11,7 +11,7 @@ enum ThemeMode {
 
 /// Available fantasy accent palettes with distinct primary and secondary luminescence
 enum FantasyAccent {
-  paladinGold('Paladin Gold', Argb(0xFFFFC107), Argb(0xFFFFD54F),
+  paladinGold('Paladin Gold', Argb(0xFF112233), Argb(0xFFFFD54F),
       lightPrimary: Argb(0xFF92400E), lightAccent: Argb(0xFFB45309)),
   eldritchPurple('Eldritch Purple', Argb(0xFF9C27B0), Argb(0xFFBA68C8),
       lightPrimary: Argb(0xFF7E22CE), lightAccent: Argb(0xFFA855F7)),
