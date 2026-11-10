@@ -1,7 +1,7 @@
 # Bonus slice 1 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 7d75f4d47e3b33f956d4e16e32e75f470ce3ae5c
-Last pushed heads (CI green): core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf, ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5, app 3e676318dd9487305b555e00b2db66587758e59a
+Last pushed heads (CI green): core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf, ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5, app f78840ef0b018c830d8fc87dd34c76027c188578
 Pins now: ruleset -> core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf; app -> core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf, ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5
 
 ## Steps
@@ -11,7 +11,7 @@ Pins now: ruleset -> core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf; app -> core 
 - [x] Step 4 Ruleset up to date, pins new core, check wired: ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5 run 42900115722
 - [x] Step 5 App Dart side up to date, pins new core and ruleset: app 691bcc17e58de52df512c619fac7907030b727f3 run 42903111444
 - [x] Step 6 App npm, Node and Actions up to date, check wired: app 3e676318dd9487305b555e00b2db66587758e59a run 42908047390
-- [ ] Step 7 Mutations and report
+- [x] Step 7 Mutations and report
 
 ## Red runs on main
 0056d57830c631fd773749387d7a8712a49c1063 red run 42892540687
@@ -25,7 +25,7 @@ d1d79397e02738761d38d0ec4bf05cd49316c3ed red run 42901443343
 ee21eec5e34c0eccfa01f1d4e5965425b5c2e9ef red run 42906651492
 
 ## Next
-Step 7: Mutations and report.
+None: Bonus slice 1 complete.
 
 ## Open issues and deviations
 cs101 not retired, script refused the commit subjects, deferred by the prompt.
