@@ -15,6 +15,7 @@ void runActionRoll(
   ActionRoll roll, {
   required Character character,
 }) {
+  final _ = context as BuildContext;
   HapticService.lightImpact(context);
   final cleanFormula = roll.formula.replaceAll(' ', '');
   final rollResult = SpellRollEngine.roll(formula: cleanFormula);
