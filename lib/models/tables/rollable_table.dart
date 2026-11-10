@@ -5,7 +5,7 @@ import '../visual/argb.dart';
 
 /// Categories of rollable SRD tables in the Table Index.
 enum TableCategory {
-  loot('Loot & Treasure', AppIcon.monetizationOnOutlined, Argb(0xFFF59E0B)),
+  loot('Loot & Treasure', AppIcon.monetizationOnOutlined, Argb(0xFF999999)),
   magic('Magic & Chaos', AppIcon.autoAwesome, Argb(0xFFC084FC)),
   dmGameplay('DM & Hazards', AppIcon.shieldOutlined, Argb(0xFFEF4444)),
   characterLore('NPC & Story', AppIcon.psychologyOutlined, Argb(0xFF38BDF8)),
