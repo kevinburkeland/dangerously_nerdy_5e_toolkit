@@ -73,6 +73,7 @@ class CharacterCombatAction {
   final ActionRoll? attackRoll;
   final ActionRoll? damageRoll;
   final ActionUse? use;
+  final void Function()? onAction;
 
   const CharacterCombatAction({
     required this.id,
