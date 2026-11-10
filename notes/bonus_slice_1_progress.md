@@ -1,7 +1,7 @@
 # Bonus slice 1 progress notes
 Status: IN PROGRESS
 Start heads: core b82634e38ae7fc57c9d8a57e0b4bcb96c724a21a, ruleset 08d7d7c0cf860055a8c387a3ca61829d200f253e, app 7d75f4d47e3b33f956d4e16e32e75f470ce3ae5c
-Last pushed heads (CI green): core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf, ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5, app 31621fd6eb698289915c272ca6c786824d85c9c5
+Last pushed heads (CI green): core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf, ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5, app 691bcc17e58de52df512c619fac7907030b727f3
 Pins now: ruleset -> core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf; app -> core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf, ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5
 
 ## Steps
@@ -9,7 +9,7 @@ Pins now: ruleset -> core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf; app -> core 
 - [x] Step 2 Dependency check script and self-tests: core 4a200b7a027c36fc02160a7eeaf499ccffaad7f8 run 42892822190, ruleset 8711fd8d63dd98b416c903670602d096ed70111f run 42892827166, app 240776ab616a0a8c7f8e4cd704f1c40d3524fd32 run 42896977684
 - [x] Step 3 Core up to date, check wired: core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf run 42899091099
 - [x] Step 4 Ruleset up to date, pins new core, check wired: ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5 run 42900115722
-- [ ] Step 5 App Dart side up to date, pins new core and ruleset
+- [x] Step 5 App Dart side up to date, pins new core and ruleset: app 691bcc17e58de52df512c619fac7907030b727f3 run 42903111444
 - [ ] Step 6 App npm, Node and Actions up to date, check wired
 - [ ] Step 7 Mutations and report
 
@@ -24,7 +24,7 @@ fc10bd64e33c717a7740fab0deb410d0936ce885 red run 42898410673
 d1d79397e02738761d38d0ec4bf05cd49316c3ed red run 42901443343
 
 ## Next
-Step 5: Verify App Dart side CI turns green, then proceed to Step 6 (App npm, Node, and Actions up to date, check wired in CI).
+Step 6: App npm, Node, and Actions up to date, check wired in CI.
 
 ## Open issues and deviations
 cs101 not retired, script refused the commit subjects, deferred by the prompt.
