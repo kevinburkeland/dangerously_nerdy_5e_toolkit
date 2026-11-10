@@ -12,7 +12,7 @@ const int kMaxFileLineLimit = 1500;
 /// Any listed file that shrinks fails until its ceiling is lowered.
 /// Any listed file that drops to 1,500 or below must be removed from this list.
 const Map<String, int> kBigFileAllowlist = {
-  'lib/screens/character_builder_screen.dart': 6242,
+  'lib/screens/character_builder_screen.dart': 6241,
   'lib/models/monster_codex/bestiary/bestiary_cr_nine_plus.dart': 5526,
   'lib/models/magic_items/items/wondrous_items.dart': 5117,
   'lib/models/monster_codex/bestiary/bestiary_cr_two_to_four.dart': 4711,
@@ -22,7 +22,7 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/services/rules/arena_combat_engine.dart': 4056,
   'lib/screens/glyph_showcase_screen.dart': 3685,
   'lib/models/monster_codex/bestiary/bestiary_cr_five_to_eight.dart': 3616,
-  'lib/services/party/party_room_service.dart': 3606,
+  'lib/services/party/party_room_service.dart': 3605,
   'lib/models/monster_codex/bestiary/bestiary_cr_half_to_one.dart': 3560,
   'lib/widgets/party/campaign_dialogs.dart': 3233,
   'lib/models/magic_items/items/adventuring_gear.dart': 3227,
@@ -43,7 +43,7 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/screens/homebrew_studio_screen.dart': 1912,
   'lib/models/spells/level_5_spells.dart': 1892,
   'lib/models/domain/homebrew_extended_entities.dart': 1846,
-  'lib/providers/character_sheet_controller.dart': 1817,
+  'lib/providers/character_sheet_controller.dart': 1814,
   'lib/models/characters/srd_classes_library.dart': 1794,
   'lib/models/magic_items/items/armor_and_shields.dart': 1698,
   'lib/infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart': 1667,
