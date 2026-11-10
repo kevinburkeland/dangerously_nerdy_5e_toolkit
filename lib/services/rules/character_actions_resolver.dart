@@ -557,7 +557,7 @@ class CharacterActionsResolver {
               dealsDamage: false,
               use: RollOnUse(ActionRoll(
                 label: 'Second Wind Healing',
-                formula: '1d10+$lvl',
+                formula: '1d12+$lvl',
               )),
             ),
           );
