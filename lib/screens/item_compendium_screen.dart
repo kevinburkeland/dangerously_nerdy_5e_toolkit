@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/magic_items/magic_item_library.dart';
 import '../presentation/codex/codex.dart';
+import '../presentation/visual/visual_ui.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';

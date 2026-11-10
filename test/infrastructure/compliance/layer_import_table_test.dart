@@ -212,14 +212,6 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     kinds: {'models -> infrastructure'},
     reason: 'compatibility re-export (folder-layout slice)',
   ),
-  'lib/models/app_settings.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/arena/arena_simulation_models.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
   'lib/models/arena/monster_combat_profile.dart': AllowlistEntry(
     kinds: {'models -> services'},
     reason: 'ACL stat block boundary parsing in factory constructor',
@@ -232,21 +224,9 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
     kinds: {'models -> services'},
     reason: 'AST entry node transformation for subclass feature markdown',
   ),
-  'lib/models/characters/srd_equipment_library.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
   'lib/models/dm_screen_data.dart': AllowlistEntry(
     kinds: {'models -> infrastructure'},
     reason: 'compatibility re-export (folder-layout slice)',
-  ),
-  'lib/models/glyph_gallery_data.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/magic_items/magic_item_data.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> widgets'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/models/monster_codex_data.dart': AllowlistEntry(
     kinds: {'models -> services'},
@@ -263,18 +243,6 @@ const Map<String, AllowlistEntry> kLayerViolationAllowlist = {
   'lib/models/party/party_session_state.dart': AllowlistEntry(
     kinds: {'models -> infrastructure'},
     reason: 'compatibility re-export (folder-layout slice)',
-  ),
-  'lib/models/spellbook_data.dart': AllowlistEntry(
-    kinds: {'flutter', 'models -> widgets'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/srd_summons/minion_stat_block.dart': AllowlistEntry(
-    kinds: {'models -> widgets'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
-  ),
-  'lib/models/tables/rollable_table.dart': AllowlistEntry(
-    kinds: {'flutter'},
-    reason: 'UI data in models (Cleanup slice 10.1)',
   ),
   'lib/services/haptic_service.dart': AllowlistEntry(
     kinds: {'services -> providers'},
@@ -759,6 +727,67 @@ void main() {
         fail('Layer import table violations:\n${problems.join('\n')}');
       }
       expect(problems, isEmpty);
+    });
+
+    test('lib/models has zero Flutter imports with zero allowlist', () {
+      final modelsDir = Directory('lib/models');
+      expect(modelsDir.existsSync(), isTrue, reason: 'lib/models directory must exist');
+
+      final dartFiles = modelsDir
+          .listSync(recursive: true, followLinks: false)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
+
+      expect(dartFiles, isNotEmpty, reason: 'No .dart files found under lib/models');
+
+      final flutterImports = <String>[];
+      for (final file in dartFiles) {
+        final path = normalizePath(file.path);
+        final lines = file.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          final line = lines[i];
+          final trimmed = line.trim();
+          if (trimmed.startsWith('import ') || trimmed.startsWith('export ')) {
+            for (final prefix in kFlutterUriPrefixes) {
+              if (line.contains("'$prefix") || line.contains('"$prefix')) {
+                flutterImports.add('$path:${i + 1}: $line');
+              }
+            }
+          }
+        }
+      }
+
+      // Control: synthetic file importing Flutter must be detected
+      final syntheticLines = [
+        "import 'package:flutter/material.dart';",
+        "class Foo {}",
+      ];
+      final controlDetections = <String>[];
+      for (var i = 0; i < syntheticLines.length; i++) {
+        final line = syntheticLines[i];
+        if (line.startsWith('import ') || line.startsWith('export ')) {
+          for (final prefix in kFlutterUriPrefixes) {
+            if (line.contains("'$prefix") || line.contains('"$prefix')) {
+              controlDetections.add('lib/models/synthetic.dart:${i + 1}: $line');
+            }
+          }
+        }
+      }
+      expect(
+        controlDetections,
+        isNotEmpty,
+        reason: 'Control: synthetic Flutter import in lib/models must be detected',
+      );
+
+      if (flutterImports.isNotEmpty) {
+        fail(
+          'Found Flutter imports in lib/models (zero allowlist permitted):\n'
+          '${flutterImports.join('\n')}',
+        );
+      }
+      expect(flutterImports, isEmpty);
     });
   });
 }

@@ -1010,7 +1010,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFEF4444),
+      glyphColor: Argb(0xFFEF4444),
       damageAccent: DamageAccent.fire,
       actionRings: [
         ActionTraitRing(
@@ -1051,7 +1051,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       damageAccent: DamageAccent.lightning,
       actionRings: [
         ActionTraitRing(
@@ -1092,7 +1092,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       damageAccent: DamageAccent.poison,
       actionRings: [
         ActionTraitRing(
@@ -1133,7 +1133,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFF1F5F9),
+      glyphColor: Argb(0xFFF1F5F9),
       damageAccent: DamageAccent.cold,
       actionRings: [
         ActionTraitRing(
@@ -1174,7 +1174,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF475569),
+      glyphColor: Argb(0xFF475569),
       damageAccent: DamageAccent.acid,
       actionRings: [
         ActionTraitRing(
@@ -1215,7 +1215,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFF59E0B),
+      glyphColor: Argb(0xFFF59E0B),
       damageAccent: DamageAccent.fire,
       actionRings: [
         ActionTraitRing(
@@ -1256,7 +1256,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFCBD5E1),
+      glyphColor: Argb(0xFFCBD5E1),
       damageAccent: DamageAccent.cold,
       actionRings: [
         ActionTraitRing(
@@ -1297,7 +1297,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFCD7F32),
+      glyphColor: Argb(0xFFCD7F32),
       damageAccent: DamageAccent.lightning,
       actionRings: [
         ActionTraitRing(
@@ -1338,7 +1338,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFD97706),
+      glyphColor: Argb(0xFFD97706),
       damageAccent: DamageAccent.fire,
       actionRings: [
         ActionTraitRing(
@@ -1379,7 +1379,7 @@ class SrdArmorAndShields {
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFB87333),
+      glyphColor: Argb(0xFFB87333),
       damageAccent: DamageAccent.acid,
       actionRings: [
         ActionTraitRing(

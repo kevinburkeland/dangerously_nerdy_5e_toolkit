@@ -743,7 +743,7 @@ class SrdWondrousItems {
       rarity: ItemRarity.legendary,
       requiresAttunement: true,
       attunementRequirement: 'by a Good Sorcerer, Warlock, or Wizard',
-      glyphColor: Color(0xFFF8FAFC),
+      glyphColor: Argb(0xFFF8FAFC),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.reaction,
@@ -788,7 +788,7 @@ class SrdWondrousItems {
       rarity: ItemRarity.legendary,
       requiresAttunement: true,
       attunementRequirement: 'by a Neutral Sorcerer, Warlock, or Wizard',
-      glyphColor: Color(0xFF94A3B8),
+      glyphColor: Argb(0xFF94A3B8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.reaction,
@@ -834,7 +834,7 @@ class SrdWondrousItems {
       rarity: ItemRarity.legendary,
       requiresAttunement: true,
       attunementRequirement: 'by an Evil Sorcerer, Warlock, or Wizard',
-      glyphColor: Color(0xFF334155),
+      glyphColor: Argb(0xFF334155),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.reaction,
@@ -877,7 +877,7 @@ class SrdWondrousItems {
       name: 'Bag of Tricks (Gray)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF94A3B8),
+      glyphColor: Argb(0xFF94A3B8),
       actionRings: [
         ActionTraitRing(
           ringType: ActionRingType.sustain,
@@ -918,7 +918,7 @@ class SrdWondrousItems {
       name: 'Bag of Tricks (Rust)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFFC2410C),
+      glyphColor: Argb(0xFFC2410C),
       actionRings: [
         ActionTraitRing(
           ringType: ActionRingType.sustain,
@@ -950,7 +950,7 @@ class SrdWondrousItems {
       name: 'Bag of Tricks (Tan)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFFD4A373),
+      glyphColor: Argb(0xFFD4A373),
       actionRings: [
         ActionTraitRing(
           ringType: ActionRingType.sustain,
@@ -983,7 +983,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFEF4444),
+      glyphColor: Argb(0xFFEF4444),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1013,7 +1013,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1049,7 +1049,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.reaction,
@@ -1087,7 +1087,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFFB7185),
+      glyphColor: Argb(0xFFFB7185),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.reaction,
@@ -1124,7 +1124,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFFF1F5F9),
+      glyphColor: Argb(0xFFF1F5F9),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1155,7 +1155,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFA855F7),
+      glyphColor: Argb(0xFFA855F7),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.recharge,
@@ -1326,7 +1326,7 @@ class SrdWondrousItems {
       name: 'Silver Horn of Valhalla',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFCBD5E1),
+      glyphColor: Argb(0xFFCBD5E1),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.melee,
@@ -1356,7 +1356,7 @@ class SrdWondrousItems {
       name: 'Iron Horn of Valhalla',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
-      glyphColor: Color(0xFF475569),
+      glyphColor: Argb(0xFF475569),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.melee,
@@ -1394,7 +1394,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Bronze Griffon)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFCD7F32),
+      glyphColor: Argb(0xFFCD7F32),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1424,7 +1424,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Ebony Fly)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF334155),
+      glyphColor: Argb(0xFF334155),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1452,7 +1452,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Marble Elephant)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFF1F5F9),
+      glyphColor: Argb(0xFFF1F5F9),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1490,7 +1490,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Golden Lions)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFF59E0B),
+      glyphColor: Argb(0xFFF59E0B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1519,7 +1519,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Ivory Goats)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFFFFBEB),
+      glyphColor: Argb(0xFFFFFBEB),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1557,7 +1557,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Obsidian Steed)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFFDC2626),
+      glyphColor: Argb(0xFFDC2626),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1598,7 +1598,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Onyx Dog)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF1E293B),
+      glyphColor: Argb(0xFF1E293B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1638,7 +1638,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Serpentine Owl)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF059669),
+      glyphColor: Argb(0xFF059669),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1677,7 +1677,7 @@ class SrdWondrousItems {
       name: 'Figurine of Wondrous Power (Silver Raven)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF94A3B8),
+      glyphColor: Argb(0xFF94A3B8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -1716,7 +1716,7 @@ class SrdWondrousItems {
       name: 'Elemental Gem (Blue Sapphire)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       damageAccent: DamageAccent.lightning,
       actionRings: [
         ActionTraitRing(
@@ -1745,7 +1745,7 @@ class SrdWondrousItems {
       name: 'Elemental Gem (Red Corundum)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFFEF4444),
+      glyphColor: Argb(0xFFEF4444),
       damageAccent: DamageAccent.fire,
       actionRings: [
         ActionTraitRing(
@@ -1775,7 +1775,7 @@ class SrdWondrousItems {
       name: 'Elemental Gem (Yellow Diamond)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFFF59E0B),
+      glyphColor: Argb(0xFFF59E0B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.recharge,
@@ -1811,7 +1811,7 @@ class SrdWondrousItems {
       name: 'Elemental Gem (Emerald)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       damageAccent: DamageAccent.cold,
       actionRings: [
         ActionTraitRing(
@@ -1841,7 +1841,7 @@ class SrdWondrousItems {
       name: 'Decanter of Endless Water',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.ranged,
@@ -2717,7 +2717,7 @@ class SrdWondrousItems {
       name: 'Manual of Bodily Health',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -2756,7 +2756,7 @@ class SrdWondrousItems {
       name: 'Manual of Gainful Exercise',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFFEF4444),
+      glyphColor: Argb(0xFFEF4444),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -2795,7 +2795,7 @@ class SrdWondrousItems {
       name: 'Manual of Quickness of Action',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -2834,7 +2834,7 @@ class SrdWondrousItems {
       name: 'Manual of Golems (Clay)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFFD97706),
+      glyphColor: Argb(0xFFD97706),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -2872,7 +2872,7 @@ class SrdWondrousItems {
       name: 'Manual of Golems (Flesh)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFFDC2626),
+      glyphColor: Argb(0xFFDC2626),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -2910,7 +2910,7 @@ class SrdWondrousItems {
       name: 'Manual of Golems (Iron)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF64748B),
+      glyphColor: Argb(0xFF64748B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -2948,7 +2948,7 @@ class SrdWondrousItems {
       name: 'Manual of Golems (Stone)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF94A3B8),
+      glyphColor: Argb(0xFF94A3B8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -2986,7 +2986,7 @@ class SrdWondrousItems {
       name: 'Tome of Clear Thought',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF6366F1),
+      glyphColor: Argb(0xFF6366F1),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3024,7 +3024,7 @@ class SrdWondrousItems {
       name: 'Tome of Leadership and Influence',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFFEC4899),
+      glyphColor: Argb(0xFFEC4899),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3063,7 +3063,7 @@ class SrdWondrousItems {
       name: 'Tome of Understanding',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFFFBBF24),
+      glyphColor: Argb(0xFFFBBF24),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3107,7 +3107,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF8B5CF6),
+      glyphColor: Argb(0xFF8B5CF6),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3146,7 +3146,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF6366F1),
+      glyphColor: Argb(0xFF6366F1),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3183,7 +3183,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF06B6D4),
+      glyphColor: Argb(0xFF06B6D4),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3222,7 +3222,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFC084FC),
+      glyphColor: Argb(0xFFC084FC),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3264,7 +3264,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF1E1B4B),
+      glyphColor: Argb(0xFF1E1B4B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3306,7 +3306,7 @@ class SrdWondrousItems {
       name: 'Cap of Water Breathing',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF0284C7),
+      glyphColor: Argb(0xFF0284C7),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3338,7 +3338,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFFD946EF),
+      glyphColor: Argb(0xFFD946EF),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3373,7 +3373,7 @@ class SrdWondrousItems {
       name: 'Eyes of Minute Seeing',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF0EA5E9),
+      glyphColor: Argb(0xFF0EA5E9),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3412,7 +3412,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFFBBF24),
+      glyphColor: Argb(0xFFFBBF24),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3453,7 +3453,7 @@ class SrdWondrousItems {
       name: 'Helm of Comprehending Languages',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF64748B),
+      glyphColor: Argb(0xFF64748B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3490,7 +3490,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFF8B5CF6),
+      glyphColor: Argb(0xFF8B5CF6),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3531,7 +3531,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFFA855F7),
+      glyphColor: Argb(0xFFA855F7),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3576,7 +3576,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFF64748B),
+      glyphColor: Argb(0xFF64748B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3614,7 +3614,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3653,7 +3653,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFFBBF24),
+      glyphColor: Argb(0xFFFBBF24),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3692,7 +3692,7 @@ class SrdWondrousItems {
       name: 'Periapt of Health',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3723,7 +3723,7 @@ class SrdWondrousItems {
       name: 'Periapt of Proof against Poison',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF22C55E),
+      glyphColor: Argb(0xFF22C55E),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3762,7 +3762,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
       requiresAttunement: true,
-      glyphColor: Color(0xFFFDE047),
+      glyphColor: Argb(0xFFFDE047),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3806,7 +3806,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF0F172A),
+      glyphColor: Argb(0xFF0F172A),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3844,7 +3844,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
       requiresAttunement: true,
-      glyphColor: Color(0xFF7F1D1D),
+      glyphColor: Argb(0xFF7F1D1D),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3891,7 +3891,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Color(0xFFB45309),
+      glyphColor: Argb(0xFFB45309),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3931,7 +3931,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -3971,7 +3971,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4009,7 +4009,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFF0D9488),
+      glyphColor: Argb(0xFF0D9488),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4047,7 +4047,7 @@ class SrdWondrousItems {
       name: 'Horseshoes of a Zephyr',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF93C5FD),
+      glyphColor: Argb(0xFF93C5FD),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4086,7 +4086,7 @@ class SrdWondrousItems {
       name: 'Horseshoes of Speed',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFF97316),
+      glyphColor: Argb(0xFFF97316),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4118,7 +4118,7 @@ class SrdWondrousItems {
       name: 'Bag of Beans',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF16A34A),
+      glyphColor: Argb(0xFF16A34A),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4157,7 +4157,7 @@ class SrdWondrousItems {
       name: 'Bag of Devouring',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF4C0519),
+      glyphColor: Argb(0xFF4C0519),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4198,7 +4198,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Color(0xFF06B6D4),
+      glyphColor: Argb(0xFF06B6D4),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4234,7 +4234,7 @@ class SrdWondrousItems {
       name: 'Cubic Gate',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
-      glyphColor: Color(0xFF818CF8),
+      glyphColor: Argb(0xFF818CF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4274,7 +4274,7 @@ class SrdWondrousItems {
       name: 'Deck of Illusions',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFFA855F7),
+      glyphColor: Argb(0xFFA855F7),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4313,7 +4313,7 @@ class SrdWondrousItems {
       name: 'Dimensional Shackles',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF64748B),
+      glyphColor: Argb(0xFF64748B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4350,7 +4350,7 @@ class SrdWondrousItems {
       name: 'Iron Bands of Binding',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF475569),
+      glyphColor: Argb(0xFF475569),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.recharge,
@@ -4387,7 +4387,7 @@ class SrdWondrousItems {
       name: 'Iron Flask',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
-      glyphColor: Color(0xFF334155),
+      glyphColor: Argb(0xFF334155),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4427,7 +4427,7 @@ class SrdWondrousItems {
       name: 'Mirror of Life Trapping',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.veryRare,
-      glyphColor: Color(0xFF67E8F9),
+      glyphColor: Argb(0xFF67E8F9),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4467,7 +4467,7 @@ class SrdWondrousItems {
       name: 'Well of Many Worlds',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
-      glyphColor: Color(0xFF312E81),
+      glyphColor: Argb(0xFF312E81),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4509,7 +4509,7 @@ class SrdWondrousItems {
       name: 'Bowl of Commanding Water Elementals',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF0284C7),
+      glyphColor: Argb(0xFF0284C7),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4546,7 +4546,7 @@ class SrdWondrousItems {
       name: 'Brazier of Commanding Fire Elementals',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFEA580C),
+      glyphColor: Argb(0xFFEA580C),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4582,7 +4582,7 @@ class SrdWondrousItems {
       name: 'Censer of Controlling Air Elementals',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4618,7 +4618,7 @@ class SrdWondrousItems {
       name: 'Stone of Controlling Earth Elementals',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF78716C),
+      glyphColor: Argb(0xFF78716C),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4655,7 +4655,7 @@ class SrdWondrousItems {
       name: 'Horn of Blasting',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFFF59E0B),
+      glyphColor: Argb(0xFFF59E0B),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.recharge,
@@ -4688,7 +4688,7 @@ class SrdWondrousItems {
       name: 'Pipes of Haunting',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF6B7280),
+      glyphColor: Argb(0xFF6B7280),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4732,7 +4732,7 @@ class SrdWondrousItems {
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFF78716C),
+      glyphColor: Argb(0xFF78716C),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4771,7 +4771,7 @@ class SrdWondrousItems {
       name: 'Wind Fan',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF38BDF8),
+      glyphColor: Argb(0xFF38BDF8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4815,7 +4815,7 @@ class SrdWondrousItems {
       name: 'Bead of Force',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF6366F1),
+      glyphColor: Argb(0xFF6366F1),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.recharge,
@@ -4856,7 +4856,7 @@ class SrdWondrousItems {
       name: 'Dust of Disappearance',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF94A3B8),
+      glyphColor: Argb(0xFF94A3B8),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4893,7 +4893,7 @@ class SrdWondrousItems {
       name: 'Dust of Dryness',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFFFBBF24),
+      glyphColor: Argb(0xFFFBBF24),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4925,7 +4925,7 @@ class SrdWondrousItems {
       name: 'Dust of Sneezing and Choking',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF78716C),
+      glyphColor: Argb(0xFF78716C),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -4967,7 +4967,7 @@ class SrdWondrousItems {
       name: 'Incense of Obsession',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF6B7280),
+      glyphColor: Argb(0xFF6B7280),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -5006,7 +5006,7 @@ class SrdWondrousItems {
       name: 'Restorative Ointment',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -5044,7 +5044,7 @@ class SrdWondrousItems {
       name: 'Sovereign Glue',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
-      glyphColor: Color(0xFFFBBF24),
+      glyphColor: Argb(0xFFFBBF24),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,
@@ -5082,7 +5082,7 @@ class SrdWondrousItems {
       name: 'Universal Solvent',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
-      glyphColor: Color(0xFF06B6D4),
+      glyphColor: Argb(0xFF06B6D4),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.sustain,

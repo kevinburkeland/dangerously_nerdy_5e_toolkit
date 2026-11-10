@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/tables/rollable_table.dart';
 import '../models/tables/srd_tables_library.dart';
+import '../presentation/visual/visual_ui.dart';
 import '../services/haptic_service.dart';
 import '../widgets/room_banner_widget.dart';
 import '../widgets/tables/quick_roller_card.dart';

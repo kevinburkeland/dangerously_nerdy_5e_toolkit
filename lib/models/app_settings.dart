@@ -1,45 +1,54 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:meta/meta.dart';
 import 'dm_screen_data.dart';
+import 'visual/argb.dart';
+
+/// System theme appearance preference mode.
+enum ThemeMode {
+  system,
+  light,
+  dark,
+}
 
 /// Available fantasy accent palettes with distinct primary and secondary luminescence
 enum FantasyAccent {
-  paladinGold('Paladin Gold', Color(0xFFFFC107), Color(0xFFFFD54F),
-      lightPrimary: Color(0xFF92400E), lightAccent: Color(0xFFB45309)),
-  eldritchPurple('Eldritch Purple', Color(0xFF9C27B0), Color(0xFFBA68C8),
-      lightPrimary: Color(0xFF7E22CE), lightAccent: Color(0xFFA855F7)),
-  rangerEmerald('Ranger Emerald', Color(0xFF00E676), Color(0xFF69F0AE),
-      lightPrimary: Color(0xFF047857), lightAccent: Color(0xFF059669)),
-  necroticSlate('Necrotic Slate', Color(0xFF78909C), Color(0xFF90A4AE),
-      lightPrimary: Color(0xFF475569), lightAccent: Color(0xFF64748B)),
-  dragonfireCrimson('Dragonfire Crimson', Color(0xFFFF3D00), Color(0xFFFF6E40),
-      lightPrimary: Color(0xFFC2410C), lightAccent: Color(0xFFEA580C)),
-  arcaneSapphire('Arcane Sapphire', Color(0xFF2979FF), Color(0xFF82B1FF),
-      lightPrimary: Color(0xFF1D4ED8), lightAccent: Color(0xFF2563EB)),
-  bardicRose('Bardic Rose', Color(0xFFE91E63), Color(0xFFFF4081),
-      lightPrimary: Color(0xFFBE123C), lightAccent: Color(0xFFE11D48)),
-  abyssalTeal('Abyssal Teal', Color(0xFF00BFA5), Color(0xFF64FFDA),
-      lightPrimary: Color(0xFF0F766E), lightAccent: Color(0xFF0D9488)),
-  celestialAmber('Celestial Amber', Color(0xFFFF9100), Color(0xFFFFD180),
-      lightPrimary: Color(0xFF92400E), lightAccent: Color(0xFFB45309));
+  paladinGold('Paladin Gold', Argb(0xFFFFC107), Argb(0xFFFFD54F),
+      lightPrimary: Argb(0xFF92400E), lightAccent: Argb(0xFFB45309)),
+  eldritchPurple('Eldritch Purple', Argb(0xFF9C27B0), Argb(0xFFBA68C8),
+      lightPrimary: Argb(0xFF7E22CE), lightAccent: Argb(0xFFA855F7)),
+  rangerEmerald('Ranger Emerald', Argb(0xFF00E676), Argb(0xFF69F0AE),
+      lightPrimary: Argb(0xFF047857), lightAccent: Argb(0xFF059669)),
+  necroticSlate('Necrotic Slate', Argb(0xFF78909C), Argb(0xFF90A4AE),
+      lightPrimary: Argb(0xFF475569), lightAccent: Argb(0xFF64748B)),
+  dragonfireCrimson('Dragonfire Crimson', Argb(0xFFFF3D00), Argb(0xFFFF6E40),
+      lightPrimary: Argb(0xFFC2410C), lightAccent: Argb(0xFFEA580C)),
+  arcaneSapphire('Arcane Sapphire', Argb(0xFF2979FF), Argb(0xFF82B1FF),
+      lightPrimary: Argb(0xFF1D4ED8), lightAccent: Argb(0xFF2563EB)),
+  bardicRose('Bardic Rose', Argb(0xFFE91E63), Argb(0xFFFF4081),
+      lightPrimary: Argb(0xFFBE123C), lightAccent: Argb(0xFFE11D48)),
+  abyssalTeal('Abyssal Teal', Argb(0xFF00BFA5), Argb(0xFF64FFDA),
+      lightPrimary: Argb(0xFF0F766E), lightAccent: Argb(0xFF0D9488)),
+  celestialAmber('Celestial Amber', Argb(0xFFFF9100), Argb(0xFFFFD180),
+      lightPrimary: Argb(0xFF92400E), lightAccent: Argb(0xFFB45309));
 
   final String label;
-  final Color primary;
-  final Color accent;
-  final Color lightPrimary;
-  final Color lightAccent;
+  final Argb primaryArgb;
+  final Argb accentArgb;
+  final Argb lightPrimaryArgb;
+  final Argb lightAccentArgb;
 
   const FantasyAccent(
     this.label,
-    this.primary,
-    this.accent, {
-    Color? lightPrimary,
-    Color? lightAccent,
-  })  : lightPrimary = lightPrimary ?? primary,
-        lightAccent = lightAccent ?? accent;
+    this.primaryArgb,
+    this.accentArgb, {
+    Argb? lightPrimary,
+    Argb? lightAccent,
+  })  : lightPrimaryArgb = lightPrimary ?? primaryArgb,
+        lightAccentArgb = lightAccent ?? accentArgb;
 
-  Color getPrimary(bool isDarkMode) => isDarkMode ? primary : lightPrimary;
-  Color getAccent(bool isDarkMode) => isDarkMode ? accent : lightAccent;
+  Argb getPrimaryArgb(bool isDarkMode) =>
+      isDarkMode ? primaryArgb : lightPrimaryArgb;
+  Argb getAccentArgb(bool isDarkMode) =>
+      isDarkMode ? accentArgb : lightAccentArgb;
 }
 
 /// Haptic tactile feedback strength levels
@@ -179,14 +188,21 @@ class AppSettings {
           enableGlyphAnimations == other.enableGlyphAnimations &&
           performanceMode == other.performanceMode &&
           rulesEdition == other.rulesEdition &&
-          setEquals(pinnedRuleIds, other.pinnedRuleIds) &&
-          setEquals(pinnedSpellIds, other.pinnedSpellIds) &&
-          setEquals(pinnedMonsterIds, other.pinnedMonsterIds) &&
-          setEquals(pinnedItemIds, other.pinnedItemIds) &&
-          setEquals(pinnedFeatIds, other.pinnedFeatIds) &&
-          setEquals(pinnedClassIds, other.pinnedClassIds) &&
-          setEquals(pinnedRaceIds, other.pinnedRaceIds) &&
-          setEquals(bypassedHomebrewSlugs, other.bypassedHomebrewSlugs);
+          _setEquals(pinnedRuleIds, other.pinnedRuleIds) &&
+          _setEquals(pinnedSpellIds, other.pinnedSpellIds) &&
+          _setEquals(pinnedMonsterIds, other.pinnedMonsterIds) &&
+          _setEquals(pinnedItemIds, other.pinnedItemIds) &&
+          _setEquals(pinnedFeatIds, other.pinnedFeatIds) &&
+          _setEquals(pinnedClassIds, other.pinnedClassIds) &&
+          _setEquals(pinnedRaceIds, other.pinnedRaceIds) &&
+          _setEquals(bypassedHomebrewSlugs, other.bypassedHomebrewSlugs);
+
+  static bool _setEquals<T>(Set<T>? a, Set<T>? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    return a.containsAll(b);
+  }
 
   @override
   int get hashCode => Object.hash(

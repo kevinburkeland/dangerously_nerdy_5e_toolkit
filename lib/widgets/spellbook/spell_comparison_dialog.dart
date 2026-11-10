@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';

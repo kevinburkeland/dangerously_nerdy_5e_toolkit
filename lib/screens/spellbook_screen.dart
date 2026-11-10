@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/dm_screen_data.dart';
 import '../models/spellbook_data.dart';
 import '../presentation/codex/codex.dart';
+import '../presentation/visual/visual_ui.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';

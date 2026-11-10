@@ -8,7 +8,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'infrastructure/di/injection_container.dart';
-import 'models/app_settings.dart';
+import 'models/app_settings.dart' hide ThemeMode;
+import 'presentation/visual/visual_ui.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
 import 'services/app_services.dart';
@@ -581,7 +582,7 @@ class _DangerouslyNerdy5eToolkitAppState
     return MaterialApp(
       title: 'DangerouslyNerdy 5e Toolkit',
       debugShowCheckedModeBanner: false,
-      themeMode: s.themeMode,
+      themeMode: s.themeMode.toFlutter(),
       theme: AppTheme.buildTheme(
         brightness: Brightness.light,
         accent: s.fantasyAccent,

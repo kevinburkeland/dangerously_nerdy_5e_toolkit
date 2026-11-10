@@ -1,20 +1,22 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+
+import '../visual/app_icon.dart';
+import '../visual/argb.dart';
 
 /// Categories of rollable SRD tables in the Table Index.
 enum TableCategory {
-  loot('Loot & Treasure', Icons.monetization_on_outlined, Color(0xFFF59E0B)),
-  magic('Magic & Chaos', Icons.auto_awesome, Color(0xFFC084FC)),
-  dmGameplay('DM & Hazards', Icons.shield_outlined, Color(0xFFEF4444)),
-  characterLore('NPC & Story', Icons.psychology_outlined, Color(0xFF38BDF8)),
-  trinkets('Trinkets & Curios', Icons.stars_outlined, Color(0xFF10B981)),
-  custom('Homebrew & Codex', Icons.category_outlined, Color(0xFF06B6D4));
+  loot('Loot & Treasure', AppIcon.monetizationOnOutlined, Argb(0xFFF59E0B)),
+  magic('Magic & Chaos', AppIcon.autoAwesome, Argb(0xFFC084FC)),
+  dmGameplay('DM & Hazards', AppIcon.shieldOutlined, Argb(0xFFEF4444)),
+  characterLore('NPC & Story', AppIcon.psychologyOutlined, Argb(0xFF38BDF8)),
+  trinkets('Trinkets & Curios', AppIcon.starsOutlined, Argb(0xFF10B981)),
+  custom('Homebrew & Codex', AppIcon.categoryOutlined, Argb(0xFF06B6D4));
 
   final String label;
-  final IconData icon;
-  final Color accentColor;
+  final AppIcon iconKey;
+  final Argb accentArgb;
 
-  const TableCategory(this.label, this.icon, this.accentColor);
+  const TableCategory(this.label, this.iconKey, this.accentArgb);
 }
 
 /// A single row / outcome in a rollable table.

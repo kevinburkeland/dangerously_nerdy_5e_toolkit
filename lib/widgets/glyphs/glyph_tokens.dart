@@ -4,9 +4,15 @@ import '../../presentation/visual/glyph_kinds_ui.dart';
 
 export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show SpellSchool;
 export '../../models/visual/glyph_kinds.dart';
+export '../../presentation/visual/app_settings_ui.dart';
+export '../../presentation/visual/arena_simulation_ui.dart';
 export '../../presentation/visual/glyph_kinds_ui.dart';
+export '../../presentation/visual/magic_item_ui.dart';
 export '../../presentation/visual/minion_stat_block_ui.dart';
 export '../../presentation/visual/monster_codex_ui.dart';
+export '../../presentation/visual/rollable_table_ui.dart';
+export '../../presentation/visual/spellbook_ui.dart';
+export '../../presentation/visual/srd_equipment_ui.dart';
 export '../../presentation/visual/visual_ui.dart';
 
 /// Theme Tokens per Glyph Container.

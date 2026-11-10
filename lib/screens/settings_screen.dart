@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ThemeMode;
 import '../models/app_settings.dart';
+import '../presentation/visual/visual_ui.dart';
 import '../providers/settings_provider.dart';
 import '../screens/homebrew_studio_screen.dart';
 import '../services/haptic_service.dart';

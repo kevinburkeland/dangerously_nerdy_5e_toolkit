@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/spellbook_data.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../../services/haptic_service.dart';
 
 import '../common/filter_bottom_sheet_frame.dart';

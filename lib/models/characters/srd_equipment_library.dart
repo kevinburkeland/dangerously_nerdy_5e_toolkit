@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:meta/meta.dart';
 import '../domain/core_types.dart';
 import '../domain/character_models.dart';
 import '../domain/spell_monster_equipment.dart';
@@ -11,7 +11,7 @@ class SrdEquipmentPackage {
   final String classSlug;
   final String name;
   final String subtitle;
-  final IconData icon;
+  final AppIcon iconKey;
   final List<StartingEquipmentItemRequest> items;
   final int startingGold;
 
@@ -20,7 +20,7 @@ class SrdEquipmentPackage {
     required this.classSlug,
     required this.name,
     required this.subtitle,
-    required this.icon,
+    required this.iconKey,
     required this.items,
     this.startingGold = 10,
   });
@@ -41,7 +41,7 @@ class SrdEquipmentLibrary {
       name: 'Greataxe & Javelins Loadout',
       subtitle:
           'Greataxe (2-Handed 1d12) + 2 Handaxes (1d6 light) + 4 Javelins + Explorer\'s Pack + 10 GP',
-      icon: Icons.sports_kabaddi,
+      iconKey: AppIcon.sportsKabaddi,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -82,7 +82,7 @@ class SrdEquipmentLibrary {
       name: 'Dual Martial Weapons Loadout',
       subtitle:
           'Warhammer (1d8) + Longsword (1d8) + 2 Handaxes + 4 Javelins + Explorer\'s Pack + 10 GP',
-      icon: Icons.fitness_center,
+      iconKey: AppIcon.fitnessCenter,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -136,7 +136,7 @@ class SrdEquipmentLibrary {
       name: 'Entertainer Rapier Loadout',
       subtitle:
           'Rapier (1d8 finesse) + Leather Armor (AC 11+Dex) + Lute + Entertainer\'s Pack + Dagger + 15 GP',
-      icon: Icons.music_note,
+      iconKey: AppIcon.musicNote,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -184,7 +184,7 @@ class SrdEquipmentLibrary {
       name: 'Diplomat Longsword Loadout',
       subtitle:
           'Longsword (1d8) + Leather Armor (AC 11+Dex) + Lute + Diplomat\'s Pack + Dagger + 15 GP',
-      icon: Icons.auto_stories,
+      iconKey: AppIcon.autoStories,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -236,7 +236,7 @@ class SrdEquipmentLibrary {
       name: 'War Cleric: Scale Mail, Warhammer & Shield',
       subtitle:
           'Scale Mail (AC 14+Dex max 2) + Warhammer (1d8) + Shield (+2 AC) + Holy Symbol + Priest\'s Pack + 15 GP',
-      icon: Icons.shield,
+      iconKey: AppIcon.shield,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -288,7 +288,7 @@ class SrdEquipmentLibrary {
       name: 'Life Cleric: Chain Mail, Mace & Shield',
       subtitle:
           'Chain Mail (AC 16) + Mace (1d6) + Shield (+2 AC) + Light Crossbow (20 bolts) + Priest\'s Pack + 15 GP',
-      icon: Icons.healing,
+      iconKey: AppIcon.healing,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -356,7 +356,7 @@ class SrdEquipmentLibrary {
       name: 'Warden: Scimitar, Wooden Shield & Focus',
       subtitle:
           'Leather Armor (AC 11+Dex) + Scimitar (1d6 finesse) + Wooden Shield (+2 AC) + Druidic Focus + Explorer\'s Pack + 10 GP',
-      icon: Icons.park,
+      iconKey: AppIcon.park,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -419,7 +419,7 @@ class SrdEquipmentLibrary {
       name: 'Heavy Knight: Chain Mail & Longsword + Shield',
       subtitle:
           'Chain Mail (AC 16) + Versatile Longsword (1d8) + Shield (+2 AC) + Light Crossbow (20 bolts) + Dungeoneer\'s Pack + 15 GP',
-      icon: Icons.shield,
+      iconKey: AppIcon.shield,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -478,7 +478,7 @@ class SrdEquipmentLibrary {
       name: 'Great Weapon Fighter: Chain Mail & Greatsword',
       subtitle:
           'Chain Mail (AC 16) + Greatsword (2d6 heavy) + 2 Handaxes + Explorer\'s Pack + 15 GP',
-      icon: Icons.sports_kabaddi,
+      iconKey: AppIcon.sportsKabaddi,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -521,7 +521,7 @@ class SrdEquipmentLibrary {
       name: 'Archer Scout: Leather Armor, Longbow & Shortswords',
       subtitle:
           'Leather Armor (AC 11+Dex) + Longbow (1d8 150/600 ft) + 20 Arrows + 2 Shortswords (1d6 finesse) + Dungeoneer\'s Pack + 15 GP',
-      icon: Icons.track_changes,
+      iconKey: AppIcon.trackChanges,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -575,7 +575,7 @@ class SrdEquipmentLibrary {
       name: 'Monastic Martial: Shortsword & 10 Darts',
       subtitle:
           'Shortsword (1d6 finesse monk weapon) + 10 Darts (1d4 thrown) + Dungeoneer\'s Pack + 10 GP',
-      icon: Icons.sports_mma,
+      iconKey: AppIcon.sportsMma,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -607,7 +607,7 @@ class SrdEquipmentLibrary {
       name: 'Wanderer: Spear & 10 Darts',
       subtitle:
           'Spear (1d6/1d8 versatile) + 10 Darts + Explorer\'s Pack + 10 GP',
-      icon: Icons.directions_walk,
+      iconKey: AppIcon.directionsWalk,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -643,7 +643,7 @@ class SrdEquipmentLibrary {
       name: 'Holy Crusader: Chain Mail, Longsword & Shield',
       subtitle:
           'Chain Mail (AC 16) + Longsword (1d8) + Shield (+2 AC) + 5 Javelins + Holy Symbol + Priest\'s Pack + 15 GP',
-      icon: Icons.shield,
+      iconKey: AppIcon.shield,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -706,7 +706,7 @@ class SrdEquipmentLibrary {
       name: 'Wilderness Hunter: Scale Mail, Shortswords & Longbow',
       subtitle:
           'Scale Mail (AC 14+Dex max 2) + 2 Shortswords (1d6) + Longbow (1d8) + 20 Arrows + Dungeoneer\'s Pack + 15 GP',
-      icon: Icons.explore,
+      iconKey: AppIcon.explore,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -760,7 +760,7 @@ class SrdEquipmentLibrary {
       name: 'Infiltrator: Leather Armor, Rapier & Shortbow',
       subtitle:
           'Leather Armor (AC 11+Dex) + Rapier (1d8 finesse) + Shortbow (1d6) + 20 Arrows + 2 Daggers + Thieves\' Tools + Burglar\'s Pack + 15 GP',
-      icon: Icons.visibility_off,
+      iconKey: AppIcon.visibilityOff,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -828,7 +828,7 @@ class SrdEquipmentLibrary {
       name: 'Arcane Adept: Light Crossbow, Arcane Focus & Daggers',
       subtitle:
           'Light Crossbow (1d8) + 20 Bolts + Arcane Focus + 2 Daggers + Dungeoneer\'s Pack + 15 GP',
-      icon: Icons.flash_on,
+      iconKey: AppIcon.flashOn,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -880,7 +880,7 @@ class SrdEquipmentLibrary {
       name: 'Eldritch Initiate: Leather Armor, Crossbow & Focus',
       subtitle:
           'Leather Armor (AC 11+Dex) + Light Crossbow (20 bolts) + Arcane Focus + 2 Daggers + Scholar\'s Pack + 15 GP',
-      icon: Icons.auto_awesome,
+      iconKey: AppIcon.autoAwesome,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -941,7 +941,7 @@ class SrdEquipmentLibrary {
       name: 'Spellweaver: Quarterstaff, Arcane Focus & Spellbook',
       subtitle:
           'Quarterstaff (1d6) + Arcane Focus (Crystal) + Spellbook + Scholar\'s Pack + 15 GP',
-      icon: Icons.menu_book,
+      iconKey: AppIcon.menuBook,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -982,7 +982,7 @@ class SrdEquipmentLibrary {
       name: 'Arcane Explorer: Dagger, Component Pouch & Spellbook',
       subtitle:
           'Dagger (1d4 finesse) + Component Pouch + Spellbook + Explorer\'s Pack + Potion of Healing + 15 GP',
-      icon: Icons.explore,
+      iconKey: AppIcon.explore,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -1034,7 +1034,7 @@ class SrdEquipmentLibrary {
       name: 'Heavy Knight: Chain Mail & Longsword + Shield',
       subtitle:
           'Heavy armor (AC 16) + Versatile longsword (1d8) + Shield (+2 AC) + 15 GP',
-      icon: Icons.shield,
+      iconKey: AppIcon.shield,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -1072,7 +1072,7 @@ class SrdEquipmentLibrary {
       name: 'Medium Skirmisher: Breastplate & Greatsword + Potion',
       subtitle:
           'Medium armor (AC 14+Dex max 2) + Heavy greatsword (2d6) + Potion of Healing + 15 GP',
-      icon: Icons.sports_kabaddi,
+      iconKey: AppIcon.sportsKabaddi,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -1108,7 +1108,7 @@ class SrdEquipmentLibrary {
       name: 'Light Scout: Leather Armor & Shortsword + Longbow',
       subtitle:
           'Light armor (AC 11+Dex) + Finesse shortsword (1d6) + Longbow (1d8) + 15 GP',
-      icon: Icons.track_changes,
+      iconKey: AppIcon.trackChanges,
       items: [
         StartingEquipmentItemRequest(
           itemRef: EntityReference.empty(
@@ -1170,7 +1170,7 @@ class SrdEquipmentLibrary {
       name: 'Starting Wealth (Gold Only Option)',
       subtitle:
           'Start with $goldAmount GP in your party purse to purchase custom equipment in-game (SRD 5e RAW Chapter 5).',
-      icon: Icons.monetization_on,
+      iconKey: AppIcon.monetizationOn,
       items: const [],
       startingGold: goldAmount,
     );

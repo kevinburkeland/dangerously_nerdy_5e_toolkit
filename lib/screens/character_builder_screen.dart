@@ -38,7 +38,7 @@ import '../widgets/character_sheet/character_vitals_hud.dart';
 import '../widgets/character_sheet/ability_scores_ribbon.dart';
 import '../widgets/character_sheet/character_sheet_tabs.dart';
 import '../widgets/character_sheet/missing_homebrew_warning_widget.dart';
-
+import '../presentation/visual/visual_ui.dart';
 /// Interactive Character Generator, Live State Sheet, and Multiclassing Studio
 class CharacterBuilderScreen extends StatefulWidget {
   const CharacterBuilderScreen({super.key});

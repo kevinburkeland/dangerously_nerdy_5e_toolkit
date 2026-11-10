@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import '../widgets/glyphs/glyph_tokens.dart';
 import 'dm_screen_data.dart';
 import 'spells/cantrips.dart';
 import 'spells/level_1_spells.dart';
@@ -8,22 +6,23 @@ import 'spells/level_3_spells.dart';
 import 'spells/level_4_spells.dart';
 import 'spells/level_5_spells.dart';
 import 'spells/high_level_spells.dart';
+import 'visual/glyph_kinds.dart';
 
 export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
-export '../widgets/glyphs/glyph_tokens.dart';
-
 export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show SpellClass;
+export 'visual/app_icon.dart';
+export 'visual/glyph_kinds.dart';
 
-extension SpellClassUiExtension on SpellClass {
-  IconData get icon => switch (this) {
-        SpellClass.bard => Icons.music_note,
-        SpellClass.cleric => Icons.health_and_safety_outlined,
-        SpellClass.druid => Icons.eco_outlined,
-        SpellClass.paladin => Icons.shield,
-        SpellClass.ranger => Icons.track_changes,
-        SpellClass.sorcerer => Icons.flash_on,
-        SpellClass.warlock => Icons.dark_mode_outlined,
-        SpellClass.wizard => Icons.auto_awesome,
+extension SpellClassVisualExtension on SpellClass {
+  AppIcon get iconKey => switch (this) {
+        SpellClass.bard => AppIcon.musicNote,
+        SpellClass.cleric => AppIcon.healthAndSafetyOutlined,
+        SpellClass.druid => AppIcon.ecoOutlined,
+        SpellClass.paladin => AppIcon.shield,
+        SpellClass.ranger => AppIcon.trackChanges,
+        SpellClass.sorcerer => AppIcon.flashOn,
+        SpellClass.warlock => AppIcon.darkModeOutlined,
+        SpellClass.wizard => AppIcon.autoAwesome,
       };
 }
 

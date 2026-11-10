@@ -11,12 +11,12 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart'
     show DmRulesEdition;
 import 'package:dangerously_nerdy_5e_toolkit/models/glyph_gallery_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_data.dart'
-    show CurrencyCoinType, getCurrencyColor;
+    show CurrencyCoinType;
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart'
     show MagicItemLibrary;
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart'
-    show SpellClass, SpellClassUiExtension;
+    show SpellClass;
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/tables/rollable_table.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_tokens.dart';

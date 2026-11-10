@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/magic_items/magic_item_data.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../common/edition_diff_badge.dart';
 import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';

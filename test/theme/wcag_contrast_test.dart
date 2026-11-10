@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/visual/visual_ui.dart';
 
 /// Standard WCAG 2.1 relative luminance calculation
 double calculateRelativeLuminance(Color color) {

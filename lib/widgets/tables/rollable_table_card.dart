@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/tables/rollable_table.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../../services/haptic_service.dart';
 
 /// Interactive card component representing a rollable SRD table with dice rolls,

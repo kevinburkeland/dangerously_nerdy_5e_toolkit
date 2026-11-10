@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../common/edition_diff_badge.dart';
 import '../common/formatted_markdown_text.dart';

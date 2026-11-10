@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../../models/visual/glyph_kinds.dart';
 import 'visual_ui.dart';
 
 export '../../models/visual/glyph_kinds.dart';

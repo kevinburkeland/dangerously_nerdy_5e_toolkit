@@ -452,7 +452,7 @@ class SrdMagicRings {
       category: ItemCategory.ring,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Color(0xFFEF4444),
+      glyphColor: Argb(0xFFEF4444),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.reaction,
@@ -483,7 +483,7 @@ class SrdMagicRings {
       name: 'Ring of Animal Influence',
       category: ItemCategory.ring,
       rarity: ItemRarity.rare,
-      glyphColor: Color(0xFF10B981),
+      glyphColor: Argb(0xFF10B981),
       actionRings: [
         ActionTraitRing(
             ringType: ActionRingType.recharge,

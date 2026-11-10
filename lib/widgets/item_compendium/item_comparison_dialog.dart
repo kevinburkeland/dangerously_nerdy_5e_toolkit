@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/magic_items/magic_item_data.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 import '../common/diff_highlight_banner.dart';

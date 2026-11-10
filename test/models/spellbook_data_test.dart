@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/visual/visual_ui.dart';
 
 void main() {
   group('SpellbookLibrary & SpellItem Data Model Tests', () {

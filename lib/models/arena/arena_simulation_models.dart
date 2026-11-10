@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import '../visual/app_icon.dart';
+import '../visual/argb.dart';
 import 'arena_action_result.dart';
 import 'arena_combatant.dart';
 
@@ -7,8 +8,8 @@ enum ArenaEnvironment {
   colosseum(
     'Open Colosseum',
     'Open-air arena with standard ground and unobstructed airspace.',
-    Icons.stadium_outlined,
-    Color(0xFFC084FC),
+    AppIcon.stadiumOutlined,
+    Argb(0xFFC084FC),
     [
       '☀️ Open Airspace',
       '🦅 Full Flight Mobility',
@@ -18,8 +19,8 @@ enum ArenaEnvironment {
   cageMatch(
     'Iron Cage Match',
     'Enclosed iron cage with a 10-ft ceiling. Flight is grounded, close-quarters melee is prioritized, and ranged attacks suffer disadvantage.',
-    Icons.grid_4x4,
-    Color(0xFF94A3B8),
+    AppIcon.grid4x4,
+    Argb(0xFF94A3B8),
     [
       '🚫 Flight Grounded',
       '⚔️ Close-Quarters Melee Focused',
@@ -29,8 +30,8 @@ enum ArenaEnvironment {
   floodedAbyss(
     'Flooded Abyss (Water Match)',
     'Submerged aquatic arena. Creatures with Swim speed gain Advantage; non-swimmers suffer Disadvantage and fire damage is halved.',
-    Icons.water,
-    Color(0xFF38BDF8),
+    AppIcon.water,
+    Argb(0xFF38BDF8),
     [
       '🏊 Swim Speed Advantage',
       '⚠️ Non-Swimmer Disadvantage',
@@ -40,8 +41,8 @@ enum ArenaEnvironment {
   volcanicPit(
     'Volcanic Caldera',
     'Lava-surrounded pit. Extreme elemental heat favors fire-resistant and immune combatants.',
-    Icons.local_fire_department,
-    Color(0xFFF97316),
+    AppIcon.localFireDepartment,
+    Argb(0xFFF97316),
     [
       '🌋 Magma Pit Hazard',
       '🔥 Elemental Fire Aura',
@@ -50,15 +51,15 @@ enum ArenaEnvironment {
 
   final String label;
   final String description;
-  final IconData icon;
-  final Color themeColor;
+  final AppIcon iconKey;
+  final Argb themeArgb;
   final List<String> mechanicTags;
 
   const ArenaEnvironment(
     this.label,
     this.description,
-    this.icon,
-    this.themeColor,
+    this.iconKey,
+    this.themeArgb,
     this.mechanicTags,
   );
 }

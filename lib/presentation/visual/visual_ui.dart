@@ -3,8 +3,15 @@ import 'package:flutter/material.dart';
 import '../../models/visual/app_icon.dart';
 import '../../models/visual/argb.dart';
 
+export 'app_settings_ui.dart';
+export 'arena_simulation_ui.dart';
+export 'glyph_kinds_ui.dart';
+export 'magic_item_ui.dart';
 export 'minion_stat_block_ui.dart';
 export 'monster_codex_ui.dart';
+export 'rollable_table_ui.dart';
+export 'spellbook_ui.dart';
+export 'srd_equipment_ui.dart';
 
 extension ArgbUi on Argb {
   Color toColor() => Color(value);

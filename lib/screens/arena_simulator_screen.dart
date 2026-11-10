@@ -5,6 +5,7 @@ import '../models/arena/arena_action_result.dart';
 import '../models/arena/arena_combatant.dart';
 import '../models/arena/arena_preset_matchups.dart';
 import '../models/arena/arena_simulation_models.dart';
+import '../presentation/visual/visual_ui.dart';
 import '../models/dm_screen_data.dart';
 import '../models/monster_codex_data.dart';
 import '../providers/settings_provider.dart';

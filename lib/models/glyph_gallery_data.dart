@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show immutable;
+import 'package:meta/meta.dart';
 import 'dm_screen_data.dart';
 import 'spellbook_data.dart';
 import 'srd_summons/srd_summons_library.dart';

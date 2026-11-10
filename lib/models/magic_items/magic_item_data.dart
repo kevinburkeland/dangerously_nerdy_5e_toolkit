@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import '../dm_screen_data.dart';
-import '../../widgets/glyphs/glyph_tokens.dart';
+import '../visual/glyph_kinds.dart';
 
-export 'package:flutter/material.dart' show Color;
 export '../dm_screen_data.dart' show DmRulesEdition;
-export '../../widgets/glyphs/glyph_tokens.dart';
+export '../visual/argb.dart';
+export '../visual/glyph_kinds.dart';
 
 /// Detailed rules information for a specific rules edition of a magic item.
 class ItemEditionDetails {
@@ -48,7 +47,7 @@ class MagicItem {
   final bool isChangedIn2024;
   final String? diffSummary;
   final List<String> diffHighlights;
-  final Color? glyphColor;
+  final Argb? glyphArgb;
   final List<String> tags;
 
   const MagicItem({
@@ -70,9 +69,10 @@ class MagicItem {
     this.isChangedIn2024 = false,
     this.diffSummary,
     this.diffHighlights = const [],
-    this.glyphColor,
+    Argb? glyphColor,
+    Argb? glyphArgb,
     this.tags = const [],
-  });
+  }) : glyphArgb = glyphColor ?? glyphArgb;
 
   /// True if this item is a consumable (potion, scroll, oil, ammunition, single-use token).
   bool get isConsumable {
@@ -103,11 +103,11 @@ class MagicItem {
         lowerName.contains('spell scroll');
   }
 
-  /// Automatically resolves an item's glyph color, prioritizing an explicit [glyphColor]
+  /// Automatically resolves an item's glyph color, prioritizing an explicit [glyphArgb]
   /// override, and falling back to keyword color detection in the item's name or tags.
-  Color? get effectiveGlyphColor {
-    if (glyphColor != null) {
-      return glyphColor;
+  Argb? get effectiveGlyphArgb {
+    if (glyphArgb != null) {
+      return glyphArgb;
     }
     final lowerName = name.toLowerCase();
     final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
@@ -119,19 +119,19 @@ class MagicItem {
         lowerName.contains('grey') ||
         lowerTags.contains('gray') ||
         lowerTags.contains('grey')) {
-      return const Color(0xFF94A3B8); // Slate Ash Gray
+      return const Argb(0xFF94A3B8); // Slate Ash Gray
     }
     // Rust (e.g. Rust Bag of Tricks)
     if (lowerName.contains('(rust)') ||
         lowerName.contains('rust') ||
         lowerTags.contains('rust')) {
-      return const Color(0xFFC2410C); // Terracotta Burnt Orange Rust
+      return const Argb(0xFFC2410C); // Terracotta Burnt Orange Rust
     }
     // Tan (e.g. Tan Bag of Tricks)
     if (lowerName.contains('(tan)') ||
         lowerName.contains('tan') ||
         lowerTags.contains('tan')) {
-      return const Color(0xFFD4A373); // Warm Sandstone Amber Tan
+      return const Argb(0xFFD4A373); // Warm Sandstone Amber Tan
     }
     // Deep Red / Ruby / Crimson / Flame / Fire
     if (lowerName.contains('deep red') ||
@@ -140,7 +140,7 @@ class MagicItem {
         lowerName.contains('red dragon') ||
         lowerName.contains('flame tongue') ||
         lowerTags.contains('ruby')) {
-      return const Color(0xFFEF4444); // Crimson Red
+      return const Argb(0xFFEF4444); // Crimson Red
     }
     // Incandescent Blue / Sapphire / Azure / Frost
     if (lowerName.contains('incandescent blue') ||
@@ -149,7 +149,7 @@ class MagicItem {
         lowerName.contains('frost brand') ||
         lowerName.contains('azure') ||
         lowerTags.contains('sapphire')) {
-      return const Color(0xFF38BDF8); // Electric Sky Azure
+      return const Argb(0xFF38BDF8); // Electric Sky Azure
     }
     // Pale Green / Emerald / Jade / Poison
     if (lowerName.contains('pale green') ||
@@ -157,13 +157,13 @@ class MagicItem {
         lowerName.contains('green dragon') ||
         lowerName.contains('jade') ||
         lowerTags.contains('emerald')) {
-      return const Color(0xFF10B981); // Radiant Emerald Green
+      return const Argb(0xFF10B981); // Radiant Emerald Green
     }
     // Dusty Rose / Pink
     if (lowerName.contains('dusty rose') ||
         lowerName.contains('pink') ||
         lowerName.contains('rose')) {
-      return const Color(0xFFFB7185); // Dusty Rose Coral
+      return const Argb(0xFFFB7185); // Dusty Rose Coral
     }
     // Clear Spindle / Pearl / White / Ivory / Diamond
     if (lowerName.contains('clear spindle') ||
@@ -173,46 +173,46 @@ class MagicItem {
         lowerName.contains('ivory') ||
         lowerName.contains('diamond') ||
         lowerTags.contains('pearl')) {
-      return const Color(0xFFF1F5F9); // Luminous Pearl White
+      return const Argb(0xFFF1F5F9); // Luminous Pearl White
     }
     // Black / Obsidian / Ebony
     if (lowerName.contains('black dragon') ||
         lowerName.contains('(black)') ||
         lowerName.contains('obsidian') ||
         lowerName.contains('ebony')) {
-      return const Color(0xFF475569); // Dark Obsidian Slate
+      return const Argb(0xFF475569); // Dark Obsidian Slate
     }
     // Gold / Solar / Radiant / Sun
     if (lowerName.contains('gold dragon') ||
         lowerName.contains('golden') ||
         lowerName.contains('sun blade') ||
         lowerName.contains('radiant')) {
-      return const Color(0xFFF59E0B); // Solar Radiant Gold
+      return const Argb(0xFFF59E0B); // Solar Radiant Gold
     }
     // Silver / Lunar / Moon
     if (lowerName.contains('silver dragon') ||
         lowerName.contains('silver') ||
         lowerName.contains('moon sickle') ||
         lowerName.contains('mithral')) {
-      return const Color(0xFFCBD5E1); // Polished Silver
+      return const Argb(0xFFCBD5E1); // Polished Silver
     }
     // Bronze
     if (lowerName.contains('bronze dragon') || lowerName.contains('bronze')) {
-      return const Color(0xFFCD7F32); // Patina Bronze
+      return const Argb(0xFFCD7F32); // Patina Bronze
     }
     // Brass
     if (lowerName.contains('brass dragon') || lowerName.contains('brass')) {
-      return const Color(0xFFD97706); // Polished Brass
+      return const Argb(0xFFD97706); // Polished Brass
     }
     // Copper
     if (lowerName.contains('copper dragon') || lowerName.contains('copper')) {
-      return const Color(0xFFB87333); // Burnished Copper
+      return const Argb(0xFFB87333); // Burnished Copper
     }
     // Purple / Violet / Amethyst
     if (lowerName.contains('purple') ||
         lowerName.contains('violet') ||
         lowerName.contains('amethyst')) {
-      return const Color(0xFFA855F7); // Mystic Amethyst Violet
+      return const Argb(0xFFA855F7); // Mystic Amethyst Violet
     }
 
     return null;
@@ -1090,21 +1090,21 @@ class ItemCraftingDetails {
 
 /// Standard 5e D&D Currency types (cp, sp, ep, gp, pp) with distinct color coding.
 enum CurrencyCoinType {
-  cp('Copper', 'cp', Color(0xFFFB923C), Color(0xFFC2410C)),
-  sp('Silver', 'sp', Color(0xFF94A3B8), Color(0xFF475569)),
-  ep('Electrum', 'ep', Color(0xFFFDE047), Color(0xFF854D0E)),
-  gp('Gold', 'gp', Color(0xFFFBBF24), Color(0xFFB45309)),
-  pp('Platinum', 'pp', Color(0xFF38BDF8), Color(0xFF0369A1));
+  cp('Copper', 'cp', Argb(0xFFFB923C), Argb(0xFFC2410C)),
+  sp('Silver', 'sp', Argb(0xFF94A3B8), Argb(0xFF475569)),
+  ep('Electrum', 'ep', Argb(0xFFFDE047), Argb(0xFF854D0E)),
+  gp('Gold', 'gp', Argb(0xFFFBBF24), Argb(0xFFB45309)),
+  pp('Platinum', 'pp', Argb(0xFF38BDF8), Argb(0xFF0369A1));
 
   final String displayName;
   final String suffix;
-  final Color darkColor;
-  final Color lightColor;
+  final Argb darkArgb;
+  final Argb lightArgb;
 
   const CurrencyCoinType(
-      this.displayName, this.suffix, this.darkColor, this.lightColor);
+      this.displayName, this.suffix, this.darkArgb, this.lightArgb);
 
-  Color getLegibleColor(bool isDarkMode) => isDarkMode ? darkColor : lightColor;
+  Argb getLegibleArgb(bool isDarkMode) => isDarkMode ? darkArgb : lightArgb;
 
   /// Resolves the currency coin type from a price string (e.g. "1 sp", "50 cp", "100 gp", "10 pp").
   static CurrencyCoinType resolve(String text) {
@@ -1135,6 +1135,6 @@ enum CurrencyCoinType {
 }
 
 /// Resolves the theme-aware accent color for a currency or price string (cp, sp, ep, gp, pp).
-Color getCurrencyColor(String priceText, bool isDarkMode) {
-  return CurrencyCoinType.resolve(priceText).getLegibleColor(isDarkMode);
+Argb getCurrencyArgb(String priceText, bool isDarkMode) {
+  return CurrencyCoinType.resolve(priceText).getLegibleArgb(isDarkMode);
 }

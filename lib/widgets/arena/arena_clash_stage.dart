@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/arena/arena_action_result.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../../models/dm_screen_data.dart';
 import '../dialogs/creature_stat_block_dialog.dart';
 import 'arena_combatant_token.dart';
