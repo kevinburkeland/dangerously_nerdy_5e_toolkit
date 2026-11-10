@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-10
+- Bonus slice 1: Baseline test measurements across core, ruleset, app, and firestore rules emulators, and defer cs101 mutation branch retirement.
+
 ## 2026-11-06
 - Cleanup slice 10.1: Retire cs10 mutation branches; check_notes_shas verifies Fix checklist against Fix ids with NS23-NS31 self-tests; PartyRoomService.newInstance restores isolated DiceRoomService.newInstance default, with party room dice isolation test and test setups updated; combat actions carry data instead of callbacks via ActionRoll and ActionUse, presentation runner combat_action_runner.dart, presentation boundary bars test rules P1-P3, and resolver line ceiling reduced to 1909; Argb and AppIcon pure-Dart visual types with presentation bridge, glyph_tokens split into models-facing glyph_kinds and presentation glyph_kinds_ui, pinned with 1801-entry UI value snapshot characterization test; 15 creatures and summons models hold plain Argb and AppIcon values with zero Flutter imports and presentation visual extensions, reducing layer allowlist to 27 files; convert remaining models (app settings, arena simulation, srd equipment, rollable tables, spellbook data, glyph gallery, magic item data) to plain Argb and AppIcon values with Flutter imports eliminated, enforcing zero Flutter imports in lib/models/ with zero allowlist, and clearing all remaining flutter entries from layer allowlist down to 19 entries.
 
