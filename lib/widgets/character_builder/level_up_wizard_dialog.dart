@@ -489,7 +489,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
             ...widget.character.skillProficiencies.entries
                 .where((e) => e.value != SkillProficiencyLevel.none)
                 .map((e) => e.key),
-            if (_selectedFeatSkill != null) _selectedFeatSkill!,
+            ?_selectedFeatSkill,
           };
           final finalExp = eligible.contains(_selectedFeatExpertise)
               ? _selectedFeatExpertise
@@ -1543,7 +1543,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
           ...widget.character.skillProficiencies.entries
               .where((e) => e.value != SkillProficiencyLevel.none)
               .map((e) => e.key),
-          if (_selectedFeatSkill != null) _selectedFeatSkill!,
+          ?_selectedFeatSkill,
         };
         if (eligible.isEmpty) eligible.addAll(SkillType.values);
         if (_selectedFeatExpertise == null ||
@@ -2004,7 +2004,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
                       ...widget.character.skillProficiencies.entries
                           .where((e) => e.value != SkillProficiencyLevel.none)
                           .map((e) => e.key),
-                      if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                      ?_selectedFeatSkill,
                     };
                     if (eligible.isEmpty) eligible.addAll(SkillType.values);
                     final effectiveVal =

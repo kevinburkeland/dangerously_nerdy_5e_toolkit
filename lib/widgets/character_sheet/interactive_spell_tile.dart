@@ -452,8 +452,8 @@ class InteractiveSpellTile extends StatelessWidget {
     }
 
     final tags = <String>[
-      if (attackStr != null) attackStr,
-      if (damageStr != null) damageStr,
+      ?attackStr,
+      ?damageStr,
       spell.range,
     ].join(' • ');
 
@@ -576,7 +576,7 @@ class InteractiveSpellTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (trailingExtra != null) trailingExtra!,
+                ?trailingExtra,
               ],
             ),
           ),

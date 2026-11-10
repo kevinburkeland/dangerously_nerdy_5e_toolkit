@@ -24,12 +24,11 @@ class IngestionWorkbenchService {
   final Uuid _uuid;
 
   IngestionWorkbenchService({
-    required RulesetIngestionCapability capability,
+    required this._capability,
     SourceBlockParser? blockParser,
     DocumentStructureParser? structureParser,
     Uuid? uuid,
-  })  : _capability = capability,
-        _blockParser = blockParser ?? const SourceBlockParser(),
+  })  : _blockParser = blockParser ?? const SourceBlockParser(),
         _structureParser = structureParser ?? const DocumentStructureParser(),
         _uuid = uuid ?? const Uuid();
 

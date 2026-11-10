@@ -1885,7 +1885,7 @@ class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: _roster.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, idx) {
                     final name = _roster[idx];
                     final isCurrent = name == widget.currentName;

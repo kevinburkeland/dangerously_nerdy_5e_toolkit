@@ -47,10 +47,9 @@ class LocalCampaignRepository implements ICampaignRepository {
     AppDatabaseService? db,
     ICharacterRepository? characterRepo,
     required ReplicaId replicaId,
-    required StatefulHlcClock clock,
+    required this._clock,
   })  : _db = db ?? AppDatabaseService.instance,
-        _replicaId = replicaId,
-        _clock = clock {
+        _replicaId = replicaId {
     if (_clock.replicaId != replicaId) {
       throw ArgumentError(
         'LocalCampaignRepository writer identity mismatch: '

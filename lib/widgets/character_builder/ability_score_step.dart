@@ -588,7 +588,7 @@ class AbilityScoreStep extends StatelessWidget {
     // Dynamic dropdown items: all unique available scores PLUS currently assigned score
     final dropdownValues = <int>{
       ...controller.availableScores,
-      if (assignedScore != null) assignedScore,
+      ?assignedScore,
     }.toList()
       ..sort((a, b) => b.compareTo(a));
 

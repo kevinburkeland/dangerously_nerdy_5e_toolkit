@@ -48,7 +48,7 @@ class CharacterDraft {
 
   CharacterDraft({
     this.characterName,
-    RulesetEdition rulesEdition = RulesetEdition.v2024,
+    this._rulesEdition = RulesetEdition.v2024,
     this.speciesRef,
     this.subraceRef,
     this.backgroundRef,
@@ -73,8 +73,7 @@ class CharacterDraft {
     Map<String, List<String>>? selectedFeatureOptions,
     this.baseSpeedFeet = 30,
     List<AbilityType>? pendingFlexibleAbilityChoices,
-  })  : _rulesEdition = rulesEdition,
-        selectedSkills = selectedSkills != null ? Map.from(selectedSkills) : {},
+  })  : selectedSkills = selectedSkills != null ? Map.from(selectedSkills) : {},
         savingThrowProficiencies = savingThrowProficiencies != null
             ? Set.from(savingThrowProficiencies)
             : {},

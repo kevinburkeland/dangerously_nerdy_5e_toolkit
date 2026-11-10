@@ -235,7 +235,7 @@ class MagicItem {
       rules.masteryProperties ?? '',
       rules.savingThrowDc ?? '',
       ...rules.properties,
-      if (diffSummary != null) diffSummary!,
+      ?diffSummary,
       ...diffHighlights,
     ].map((value) => value.toLowerCase()).join(' ');
 
@@ -465,7 +465,7 @@ class MagicItem {
       rules.description,
       rules.masteryProperties ?? '',
       ...rules.properties,
-      if (diffSummary != null) diffSummary!,
+      ?diffSummary,
       ...diffHighlights,
     ].map((value) => value.toLowerCase()).join(' ');
 

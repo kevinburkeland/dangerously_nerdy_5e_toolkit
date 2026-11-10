@@ -171,14 +171,13 @@ class PartyRoomService {
 
   PartyRoomService._internal({
     required this.replicaId,
-    required StatefulHlcClock clock,
+    required this._clock,
     required IRoomDocumentPort roomDocumentPort,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : _clock = clock,
-        _roomDocPort = roomDocumentPort,
+  })  : _roomDocPort = roomDocumentPort,
         _registry = registry ?? CampaignRegistryService(),
         _diceRoomService = diceRoomService ?? DiceRoomService(),
         _characterPersistenceService =

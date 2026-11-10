@@ -84,7 +84,7 @@ class CodexPageShell extends StatelessWidget {
         AppBar(
           title: CodexAppBarTitle(config: headerConfig),
           actions: [
-            if (headerControl != null) headerControl!,
+            ?headerControl,
             if (headerConfig.actions != null) ...headerConfig.actions!,
             const SizedBox(width: 8),
           ],
@@ -103,20 +103,20 @@ class CodexPageShell extends StatelessWidget {
               ),
 
             // Optional Custom Banner
-            if (customBanner != null) customBanner!,
+            ?customBanner,
 
             // Search Header
             searchHeader,
 
             // View Mode Selector
-            if (modeSelector != null) modeSelector!,
+            ?modeSelector,
 
             // Filter Areas
-            if (filterArea != null) filterArea!,
-            if (secondaryFilterArea != null) secondaryFilterArea!,
+            ?filterArea,
+            ?secondaryFilterArea,
 
             // Status or Attribution Header
-            if (statusHeader != null) statusHeader!,
+            ?statusHeader,
 
             if (contentSpacing > 0) SizedBox(height: contentSpacing),
 

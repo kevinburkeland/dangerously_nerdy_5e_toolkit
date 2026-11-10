@@ -591,7 +591,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
 
     return ListView.separated(
       itemCount: subclasses.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, idx) {
         final sub = subclasses[idx];
         return Container(
@@ -1070,7 +1070,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
                 )
               : ListView.separated(
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 6),
+                  separatorBuilder: (_, _) => const SizedBox(height: 6),
                   itemBuilder: (context, idx) {
                     final spell = filtered[idx];
                     final subName = _spellToSubclassMap[spell.id.toLowerCase()];

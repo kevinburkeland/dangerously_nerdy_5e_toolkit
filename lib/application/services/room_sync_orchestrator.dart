@@ -105,13 +105,12 @@ class RoomSyncOrchestrator {
     this.milestoneInterval = const Duration(minutes: 5),
     this.antiEntropyInterval = const Duration(seconds: 30),
     Duration? heartbeatTtl,
-    required StatefulHlcClock clock,
+    required this._clock,
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         _localTimeProvider =
             localTimeProvider ?? (() => clockSyncService.currentNetworkTimeMs),
         heartbeatTtl = heartbeatTtl ?? (transportPort ?? router)!.heartbeatTtl,
-        _clock = clock,
         assert(
           transportPort != null || router != null,
           'Must provide either transportPort or router',

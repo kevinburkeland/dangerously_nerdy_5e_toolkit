@@ -1001,7 +1001,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: characters.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (ctx, index) {
                     final char = characters[index];
                     final classSummary = char.progression.classes

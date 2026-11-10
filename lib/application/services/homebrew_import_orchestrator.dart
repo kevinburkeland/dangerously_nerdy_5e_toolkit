@@ -121,22 +121,16 @@ class HomebrewImportOrchestrator {
         );
 
   HomebrewImportOrchestrator._internal({
-    required IGithubIngestorPort ingestorPort,
+    required this._ingestorPort,
     required String nodeId,
-    EntityPersister? persister,
-    EntityBatchPersister? batchPersister,
-    int batchSize = defaultBatchSize,
+    this._persister,
+    this._batchPersister,
+    this._batchSize = defaultBatchSize,
     CrdtOrSet<HomebrewEntity>? initialLedger,
-    bool retainLedger = true,
-    required StatefulHlcClock clock,
-  })  : _ingestorPort = ingestorPort,
-        _nodeId = nodeId,
-        _persister = persister,
-        _batchPersister = batchPersister,
-        _batchSize = batchSize,
-        _retainLedger = retainLedger,
-        _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>.empty(),
-        _clock = clock {
+    this._retainLedger = true,
+    required this._clock,
+  })  : _nodeId = nodeId,
+        _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>.empty() {
     if (_clock.replicaId.value != nodeId) {
       throw ArgumentError(
         'HomebrewImportOrchestrator writer identity mismatch: '

@@ -373,7 +373,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
 
     return ValueListenableBuilder<List<CampaignMembership>>(
       valueListenable: _registry.membershipsNotifier,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         return StreamBuilder<PartySessionState?>(
           stream: _partyService.streamSession(_roomCode),
           builder: (context, sessionSnap) {

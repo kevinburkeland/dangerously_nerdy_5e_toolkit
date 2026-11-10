@@ -144,7 +144,7 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: p.statBlocks.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (ctx, i) => _buildCreatureProfileCard(p.statBlocks[i]),
           ),
           const SizedBox(height: 20),

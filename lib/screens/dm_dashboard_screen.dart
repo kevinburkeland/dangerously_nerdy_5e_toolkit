@@ -186,7 +186,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: _allProfiles.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, i) {
                         final prof = _allProfiles[i];
                         final isCurrent = prof.id == _activeProfile?.id;
@@ -1630,7 +1630,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: participants.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final p = participants[i];
                   return _buildParticipantTile(p);
@@ -1918,7 +1918,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: roster.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, i) {
                           final char = roster[i];
                           return _buildCharacterVitalityTile(char);
@@ -2197,7 +2197,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: minions.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final m = minions[i];
                   return _buildMinionTile(m);

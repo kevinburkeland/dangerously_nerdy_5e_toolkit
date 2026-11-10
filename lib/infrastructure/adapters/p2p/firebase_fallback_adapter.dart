@@ -46,11 +46,9 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
   int? _lastQueryThreshold;
 
   FirebaseFallbackAdapter({
-    FirebaseFirestore? firestore,
-    Future<void> Function(String path, Map<String, dynamic> data)?
-        onWriteMessage,
-  })  : _firestore = firestore,
-        _onWriteMessage = onWriteMessage;
+    this._firestore,
+    this._onWriteMessage,
+  });
 
   bool get isFirebaseAvailable =>
       _firestore != null || Firebase.apps.isNotEmpty;

@@ -12,8 +12,8 @@ class PartyRoomService {
 
   PartyRoomService({
     required this.replicaId,
-    required StatefulHlcClock clock,
-  }) : _clock = clock {
+    required this._clock,
+  }) {
     if (_clock.replicaId != replicaId) {
       throw ArgumentError(
         'PartyRoomService writer identity mismatch: '

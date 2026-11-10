@@ -599,7 +599,7 @@ class CompendiumClassParser {
                   );
                   expandedList.add({
                     'name': childName,
-                    if (childEntries != null) 'entries': childEntries,
+                    'entries': ?childEntries,
                   });
                   continue;
                 }

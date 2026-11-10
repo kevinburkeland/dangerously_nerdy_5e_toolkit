@@ -56,13 +56,11 @@ class WebRtcMeshAdapter implements IP2pTransportPort, BlobChannelPort {
   Timer? _heartbeatTimer;
 
   WebRtcMeshAdapter({
-    FirebaseSignalingAdapter? signalingAdapter,
-    IRtcPeerConnectionFactory connectionFactory =
+    this._signalingAdapter,
+    this._connectionFactory =
         const DefaultRtcPeerConnectionFactory(),
     Map<String, dynamic>? rtcConfiguration,
-  })  : _signalingAdapter = signalingAdapter,
-        _connectionFactory = connectionFactory,
-        _rtcConfiguration = rtcConfiguration ??
+  })  : _rtcConfiguration = rtcConfiguration ??
             {
               'iceServers': [
                 {'urls': 'stun:stun.l.google.com:19302'},

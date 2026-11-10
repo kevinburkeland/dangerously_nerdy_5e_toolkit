@@ -26,12 +26,10 @@ class MapTokenService {
   /// Creates a [MapTokenService].
   /// newTokenId: generates a unique token id.
   MapTokenService({
-    required ICampaignRepository campaignRepo,
-    required StatefulHlcClock clock,
-    required String Function() newTokenId,
-  })  : _campaignRepo = campaignRepo,
-        _clock = clock,
-        _newTokenId = newTokenId;
+    required this._campaignRepo,
+    required this._clock,
+    required this._newTokenId,
+  });
 
   Future<MapTokenWriteResult> placeToken(
     String campaignId,

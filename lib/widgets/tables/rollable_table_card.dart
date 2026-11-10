@@ -209,7 +209,7 @@ class _RollableTableCardState extends State<RollableTableCard> {
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               itemCount: table.entries.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, idx) {
                 final entry = table.entries[idx];
                 final isLanded = _lastResult != null &&

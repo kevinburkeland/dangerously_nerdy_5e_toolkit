@@ -38,11 +38,10 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
 
   GithubIngestorAdapter({
     HttpFetchClient? client,
-    bool useIsolate = true,
+    this._useIsolate = true,
     this.streamChunkSize = defaultStreamChunkSize,
     int maxConcurrentDownloads = defaultMaxConcurrentDownloads,
   })  : _client = client ?? HttpFetchClient(),
-        _useIsolate = useIsolate,
         concurrentDownloads = maxConcurrentDownloads;
 
   @override

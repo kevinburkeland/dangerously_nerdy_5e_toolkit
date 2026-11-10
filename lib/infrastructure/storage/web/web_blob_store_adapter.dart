@@ -53,13 +53,6 @@ class BlobStoreAdapter implements BlobStorePort {
   static Future<web.IDBDatabase> _defaultOpener(String dbName) {
     final completer = Completer<web.IDBDatabase>();
     final idb = web.window.indexedDB;
-    // ignore: unnecessary_null_comparison
-    if (idb == null) {
-      completer.completeError(
-        const BlobStoreUnavailableException('IndexedDB not supported'),
-      );
-      return completer.future;
-    }
 
     final req = idb.open(dbName, 1);
 

@@ -35,11 +35,10 @@ class FirebaseSignalingAdapter {
   int? _lastPruningThreshold;
 
   FirebaseSignalingAdapter({
-    FirebaseFirestore? firestore,
-    Future<void> Function(String path)? onDeleteDocument,
+    this._firestore,
+    this._onDeleteDocument,
     this.slidingTtlMs = 60000,
-  })  : _firestore = firestore,
-        _onDeleteDocument = onDeleteDocument;
+  });
 
   bool get isFirebaseAvailable =>
       _firestore != null || Firebase.apps.isNotEmpty;

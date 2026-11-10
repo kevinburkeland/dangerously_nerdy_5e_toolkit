@@ -83,7 +83,7 @@ class UnrecognizedSourceView extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: blocks.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              separatorBuilder: (_, _) => const SizedBox(height: 6),
               itemBuilder: (context, index) {
                 final block = blocks[index];
                 final isIgnored = ignoredBlockIds.contains(block.id);

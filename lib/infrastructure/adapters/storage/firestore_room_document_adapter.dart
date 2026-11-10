@@ -19,8 +19,7 @@ Map<String, dynamic> buildHostProofPayload(String hostKey) {
 class FirestoreRoomDocumentAdapter implements IRoomDocumentPort {
   final FirebaseFirestore? _firestore;
 
-  const FirestoreRoomDocumentAdapter({FirebaseFirestore? firestore})
-      : _firestore = firestore;
+  const FirestoreRoomDocumentAdapter({this._firestore});
 
   FirebaseFirestore get _effectiveFirestore =>
       _firestore ?? FirebaseFirestore.instance;

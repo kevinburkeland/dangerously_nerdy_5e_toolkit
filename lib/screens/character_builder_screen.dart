@@ -3771,7 +3771,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                         ..._wizardSelectedSkills,
                         ..._speciesBonusSkillPicks,
                         ..._compensatorySkillPicks,
-                        if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                        ?_selectedFeatSkill,
                       };
                       if (eligible.isEmpty) eligible.addAll(SkillType.values);
                       if (_selectedFeatExpertise == null ||
@@ -3980,8 +3980,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                   ..._wizardSelectedSkills,
                                   ..._speciesBonusSkillPicks,
                                   ..._compensatorySkillPicks,
-                                  if (_selectedFeatSkill != null)
-                                    _selectedFeatSkill!,
+                                  ?_selectedFeatSkill,
                                 };
                                 if (eligible.isEmpty)
                                   eligible.addAll(SkillType.values);
@@ -5513,7 +5512,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             ..._wizardSelectedSkills,
             ..._speciesBonusSkillPicks,
             ..._compensatorySkillPicks,
-            if (_selectedFeatSkill != null) _selectedFeatSkill!,
+            ?_selectedFeatSkill,
           };
           final finalExp = eligible.contains(_selectedFeatExpertise)
               ? _selectedFeatExpertise

@@ -37,16 +37,13 @@ class CharacterSheetController extends ChangeNotifier {
   bool _isSaving = false;
 
   CharacterSheetController({
-    required Character character,
-    required ReplicaId replicaId,
+    required this._character,
+    required this._replicaId,
     ICharacterRepository? persistenceService,
     DebouncedStorageService? debouncedStorage,
-    ReferenceResolver? resolver,
-  })  : _character = character,
-        _replicaId = replicaId,
-        _persistenceService = persistenceService ?? LocalCharacterRepository(),
-        _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
-        _resolver = resolver {
+    this._resolver,
+  })  : _persistenceService = persistenceService ?? LocalCharacterRepository(),
+        _debouncedStorage = debouncedStorage ?? DebouncedStorageService() {
     _recalculateStats();
   }
 

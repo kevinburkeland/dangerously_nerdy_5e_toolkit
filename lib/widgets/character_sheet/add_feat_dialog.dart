@@ -603,7 +603,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
               : ListView.separated(
                   padding: const EdgeInsets.all(4),
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (_, _) =>
                       const Divider(height: 1, indent: 8, endIndent: 8),
                   itemBuilder: (context, idx) {
                     final f = filtered[idx];

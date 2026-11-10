@@ -112,7 +112,7 @@ class DmBackupService {
     }
     return _instance;
   }
-  DmBackupService._internal({StatefulHlcClock? clock}) : _clock = clock;
+  DmBackupService._internal({this._clock});
 
   StatefulHlcClock? _clock;
 

@@ -32,10 +32,9 @@ class CombatEncounterService {
     required this.replicaId,
     required this.combatResolver,
     int Function()? networkTimeProvider,
-    required StatefulHlcClock clock,
+    required this._clock,
   })  : _networkTimeProvider = networkTimeProvider ??
-            (() => DateTime.now().toUtc().millisecondsSinceEpoch),
-        _clock = clock {
+            (() => DateTime.now().toUtc().millisecondsSinceEpoch) {
     if (_clock.replicaId != replicaId) {
       throw ArgumentError(
         'CombatEncounterService writer identity mismatch: '

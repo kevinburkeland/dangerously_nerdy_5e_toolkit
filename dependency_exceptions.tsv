@@ -1,0 +1,5 @@
+# rule_id	name	held_at	review_by	reason
+D4	collection	1.19.1	2027-02-01	Official Dart team core package, mature and stable, no newer release available
+D4	hive	2.2.3	2027-02-01	Core key-value box database, mature and stable, no newer release available
+D4	hive_flutter	1.1.0	2027-02-01	Flutter adapter for Hive storage, mature and stable, no newer release available
+D4	mutex	3.1.0	2027-02-01	Lightweight async Mutex primitive, mature and stable, no newer release available

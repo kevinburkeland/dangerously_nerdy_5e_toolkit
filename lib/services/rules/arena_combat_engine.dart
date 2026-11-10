@@ -456,7 +456,7 @@ class ArenaCombatEngine {
       if (controlResult != null) {
         events.addAll(controlResult.events);
         final summary = [
-          if (bonusSummary != null) bonusSummary,
+          ?bonusSummary,
           if (controlResult.summary != null) controlResult.summary,
         ].join('\n');
         return (

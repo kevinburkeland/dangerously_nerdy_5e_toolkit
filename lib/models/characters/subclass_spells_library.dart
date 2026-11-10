@@ -339,7 +339,7 @@ class SubclassSpellsLibrary {
       classSlug: classSlug,
     );
     final matchedSubs = <Subclass>[
-      if (matchedSub != null) matchedSub,
+      ?matchedSub,
       ...SrdClassesLibrary.allSubclasses.where((s) {
         final sSlug = s.id.slug.toLowerCase().trim();
         final sName = s.name.toLowerCase().trim();

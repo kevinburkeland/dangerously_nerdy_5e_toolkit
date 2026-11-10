@@ -67,9 +67,9 @@ class ArenaAttackEvent {
     this.isKillShot = false,
     required this.defenderRemainingHp,
     required this.defenderMaxHp,
-    required String summaryText,
+    required this._summaryText,
     this.appliedRiderLogs = const [],
-  }) : _summaryText = summaryText;
+  });
 }
 
 /// Represents a single turn taken by a combatant, which may contain multiple attacks or recharge events.
