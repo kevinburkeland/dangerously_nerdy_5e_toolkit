@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-11
+- Bonus slice 1.1: Fix workflow parsing in check_dependencies to follow jobs layout, check exact min-sdk job id, require single min-sdk job with single setup-dart step in pure Dart packages, print setup-dart summary, and add DC36-DC41 self-tests.
+
 ## 2026-11-10
 - Bonus slice 1: Update npm dependencies with zero audit vulnerabilities, Node to 26 LTS, Actions pins to newest releases, wire check_dependencies in CI, and add weekly workflow.
 - Bonus slice 1: Bring Dart packages, Flutter SDK (3.47.9), and upstream engine/ruleset pins up to date, resolve linter findings, and ratchet strict analysis ignore count to 47.
