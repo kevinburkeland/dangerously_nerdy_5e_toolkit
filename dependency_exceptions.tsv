@@ -1,5 +1,5 @@
 # rule_id	name	held_at	review_by	reason
-D4	collection	1.19.1	2027-02-01	Official Dart team core package, mature and stable, no newer release available
-D4	hive	2.2.3	2027-02-01	Core key-value box database, mature and stable, no newer release available
-D4	hive_flutter	1.1.0	2027-02-01	Flutter adapter for Hive storage, mature and stable, no newer release available
-D4	mutex	3.1.0	2027-02-01	Lightweight async Mutex primitive, mature and stable, no newer release available
+D4	collection	1.19.1	2027-02-01	Published by dart.dev with newest release 1.19.1 on 2024-10-21; maintained by the Dart team as a mature utility library without need for feature churn, ending when a new release is published or the SDK subsumes its utilities.
+D4	hive	2.2.3	2027-02-01	Published by isar.dev with newest release 2.2.3 on 2022-06-30; unmaintained storage dependency whose replacement changes campaign persistence and is slated for a dedicated storage migration slice under the legacy load law.
+D4	hive_flutter	1.1.0	2027-02-01	Published by hivedb.dev with newest release 1.1.0 on 2021-06-20; unmaintained Flutter adapter whose replacement will land alongside hive in the dedicated storage migration slice under the legacy load law.
+D4	mutex	3.1.0	2027-02-01	Published by hoylen.com with newest release 3.1.0 on 2023-10-09; compact async mutex primitive ending when an engine-core mutual exclusion primitive replaces it.
