@@ -1,7 +1,7 @@
 # Bonus slice 1.1 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core a2b85747cd5b3d0157a41a7a48a1833fa9e01fcf, ruleset 1ea8a09339690bb21a4c9e2b454aeb3dea9e94b5, app 0062df46a6c092a09762110642226f01727f9a73
-Last pushed heads (CI green): core 64508bdcc7edfdc2f2d506d4c4ef34dcc359f1c5, ruleset f237cd54284f0cf51b7438fe76af5e995224d43e, app f377cf61d274bee3ca12c63e6c9be40e785dc111
+Last pushed heads (CI green): core 3273f19428d5baf1e82cbb6d590546562a5edf41, ruleset e7912d0012f3d224321193d6add918ee386b34e5, app 4b45b7ef630ebbcfd3e06e2aa4791e8c5812895d
 Pins now: ruleset -> core a570912f39a03889a1c76b03482ed9c680e2df3a; app -> core a570912f39a03889a1c76b03482ed9c680e2df3a, ruleset d34b11dcad7678563d2990ece6f969f4455bd50e
 
 Fix ids: 1.1 1.2 1.3 2.1 2.2 2.3 2.4 3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1 5.2 5.3 5.4 5.5
@@ -12,7 +12,7 @@ Fix ids: 1.1 1.2 1.3 2.1 2.2 2.3 2.4 3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1 5.2 5.3
 - [x] Step 3 Wait counts from first newer release; version floors current; re-pin (Fixes 3.1, 3.2, 3.3, 3.4, 3.5): core a570912f39a03889a1c76b03482ed9c680e2df3a run 43137302736, ruleset d34b11dcad7678563d2990ece6f969f4455bd50e run 43137581838, app 988468957a16c45ca4f38e2b97214406a497e7dc run 43139025199
 - [x] Step 4 npm overrides and advisories declared (Fixes 4.1, 4.2, 4.3): core 64508bdcc7edfdc2f2d506d4c4ef34dcc359f1c5 run 43141274600, ruleset f237cd54284f0cf51b7438fe76af5e995224d43e run 43141285787, app f377cf61d274bee3ca12c63e6c9be40e785dc111 run 43141298535
 - [x] Step 5 Mutation subjects and branch limit (Fixes 5.1, 5.2, 5.3, 5.4, 5.5): core 35537dd7b69080a2ead1907d2f545952cbf5671c run 43143814705, ruleset 46568f466965283e4f726ef75ae44473a10c85bf run 43143825419, app e85e60aca537a24273085d6cec7aa05df81d8334 run 43143857795
-- [ ] Step 6 Thirteen mutation tests and report
+- [x] Step 6 Thirteen mutation tests and report: core 3273f19428d5baf1e82cbb6d590546562a5edf41 run 43147544630, ruleset e7912d0012f3d224321193d6add918ee386b34e5 run 43147547962, app 4b45b7ef630ebbcfd3e06e2aa4791e8c5812895d run 43147550602
 
 ## Fix checklist
 Fix 1.1 done: Line-based workflow parser ignores step names, matches job id min-sdk, validates setup-dart sdk format
@@ -49,6 +49,7 @@ mutation/bs11-s2 77e9f36050eab61444ba48ed823bd7024e8bf07f
 mutation/bs11-p1 4606e1acb3c9f9d45fd651c97e3b96c657518fa7
 mutation/bs11-o1 6a012de5dcff28b31260b1554a2f1510d1392f3f
 mutation/bs11-o2 144798489c1b30df58f670e4a74f77ddebb18ee9
+mutation/bs11-n1 f0d869e95ded1b17c60d423220f2feb5939b0510
 
 ## Red runs on main
 f651bb6a38f78e09066dc5e7f741da52d3a87dad red run 42933658992
@@ -59,7 +60,9 @@ f651bb6a38f78e09066dc5e7f741da52d3a87dad red run 42933658992
 be7151a5c85708e039dbbb6687c6066a2deaace6 red run 43144477624
 
 ## Next
-Step 6: Thirteen mutation tests and report
+None. All six steps and thirteen mutations complete.
 
 ## Open issues and deviations
-None
+- Flutter 3.50.0 / Dart 3.14.0 released on 2026-11-11, activating the 14-day grace window. `check_dependencies.py` was updated on `main` across all three repos to ensure that during a grace period, obsolete SDK versions below the previous floor (3.13.0) or target Dart (3.13.7) fail instead of being granted a pending grace window.
+- In Step 5, retiring legacy `bs1` branches deleted remote branches before removing corresponding entries from `mutation_subject_exceptions.tsv`, producing expected red runs. These were resolved on the subsequent commits `ea7d2b6`, `d148e48`, and `f3aa2acf` by cleaning up the exceptions file, with all runs documented under `## Red runs on main`.
+- In Step 6, Fix 2.2 self-test (DC70) was added to `test_check_dependencies.sh` across all three repos to verify failing closed when the Flutter releases JSON contains no stable releases. DC51 in `test_check_dependencies.sh` was updated to explicitly write `releases/latest.json` with a 2-day-old release so the test verifies that actions older than intermediate releases fail even when the latest release is fresh.
