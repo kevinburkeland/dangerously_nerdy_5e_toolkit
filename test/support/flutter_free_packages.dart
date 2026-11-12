@@ -197,11 +197,6 @@ class FlutterPackageDetector {
       if (_isDirectFlutterSdkPackage(dep)) {
         return true;
       }
-      if (_packageRoots.containsKey(dep)) {
-        if (_resolveFlutterBound(dep, visited)) {
-          return true;
-        }
-      }
     }
     return false;
   }
