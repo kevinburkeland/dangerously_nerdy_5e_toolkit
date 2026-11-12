@@ -1,0 +1,26 @@
+From 092a332433fe5c59b40ffdb2c9d44a1a5a9574f3 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 10 Nov 2026 14:16:11 -0800
+Subject: [PATCH] Bonus slice 1: mutation bs1-p3: P3 catch
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .github/workflows/release.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 1f381154..afeec3fb 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -35,7 +35,7 @@ jobs:
+ 
+     steps:
+       - name: 📥 Checkout Repository
+-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
++        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+ 
+       - name: 💙 Set up Flutter SDK (Pinned Version)
+         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+-- 
+2.55.0
+

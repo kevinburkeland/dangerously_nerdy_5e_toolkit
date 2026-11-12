@@ -1,0 +1,24 @@
+From 500fe0fb86a3e3c260d8cf3daa1283355cc9adae Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 10 Nov 2026 14:19:06 -0800
+Subject: [PATCH] Bonus slice 1: mutation bs1-e1: E1 catch
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ dependency_exceptions.tsv | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dependency_exceptions.tsv b/dependency_exceptions.tsv
+index 074666a0..16a979ab 100644
+--- a/dependency_exceptions.tsv
++++ b/dependency_exceptions.tsv
+@@ -1,5 +1,5 @@
+ # rule_id	name	held_at	review_by	reason
+ D4	collection	1.19.1	2027-02-01	Official Dart team core package, mature and stable, no newer release available
+-D4	hive	2.2.3	2027-02-01	Core key-value box database, mature and stable, no newer release available
++D4	hive	2.2.3	2026-11-09	Core key-value box database, mature and stable, no newer release available
+ D4	hive_flutter	1.1.0	2027-02-01	Flutter adapter for Hive storage, mature and stable, no newer release available
+ D4	mutex	3.1.0	2027-02-01	Lightweight async Mutex primitive, mature and stable, no newer release available
+-- 
+2.55.0
+

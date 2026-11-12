@@ -1,0 +1,23 @@
+From d152ce43aa8d3788fbadf167a430f453f1aa7034 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 10 Nov 2026 14:19:29 -0800
+Subject: [PATCH] Bonus slice 1: mutation bs1-w1: W1 catch
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .github/workflows/dependencies.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.github/workflows/dependencies.yml b/.github/workflows/dependencies.yml
+index 72c00762..6bd3fc6e 100644
+--- a/.github/workflows/dependencies.yml
++++ b/.github/workflows/dependencies.yml
+@@ -48,4 +48,4 @@ jobs:
+       - name: 🔒 Check Dependency Currency & Security
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+-        run: python3 -I scripts/check_dependencies.py --pub-outdated /tmp/pub_outdated.json --pubspec pubspec.yaml --workflows .github/workflows --exceptions dependency_exceptions.tsv --npm-dir firestore_rules_test --npm-outdated /tmp/npm_outdated.json --npm-audit /tmp/npm_audit.json
++        run: python3 -I scripts/check_dependencies.py --pub-outdated /tmp/pub_outdated.json --pubspec pubspec.yaml --workflows .github/workflows --exceptions dependency_exceptions.tsv --npm-dir firestore_rules_test --npm-outdated /tmp/npm_outdated.json --npm-audit /tmp/npm_audit.json --today 2026-01-01
+-- 
+2.55.0
+

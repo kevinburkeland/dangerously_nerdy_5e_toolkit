@@ -1,0 +1,44 @@
+From bacba19bb97cfae11a233747a4ce486ca92a7b11 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 10 Nov 2026 14:14:19 -0800
+Subject: [PATCH] Bonus slice 1: mutation bs1-p2: P2 catch
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ pubspec.lock | 4 ++--
+ pubspec.yaml | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/pubspec.lock b/pubspec.lock
+index 0816de8d..9975af6f 100644
+--- a/pubspec.lock
++++ b/pubspec.lock
+@@ -787,10 +787,10 @@ packages:
+     dependency: "direct main"
+     description:
+       name: web
+-      sha256: e119e82ac4795c7925103b7cf3768191f33941b99e7ccffbd6c645201d9f606b
++      sha256: "868d88a33d8a87b18ffc05f9f030ba328ffefba92d6c127917a2ba740f9cfe4a"
+       url: "https://pub.dev"
+     source: hosted
+-    version: "1.1.2"
++    version: "1.1.1"
+   webrtc_interface:
+     dependency: transitive
+     description:
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 85069135..d8b3a2bb 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -33,7 +33,7 @@ dependencies:
+   fast_immutable_collections: ^12.0.0
+   collection: ^1.19.1
+   mutex: ^3.1.0
+-  web: ^1.1.2
++  web: ^1.1.1
+   crypto: ^3.0.8
+ 
+ dev_dependencies:
+-- 
+2.55.0
+
