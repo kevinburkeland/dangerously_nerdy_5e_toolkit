@@ -7,4 +7,4 @@ N4	@grpc/grpc-js	1.14.7	2026-12-10	Removes GHSA-m9gg-hp2v-232j and GHSA-f596-whh
 N4	@opentelemetry/core	2.12.1	2026-12-10	Removes GHSA-8988-4f7v-96qf pulled in by firebase and firebase-tools
 N4	glob	14.0.5	2026-12-10	Removes GHSA-3g3m-2fjr-6pw4 pulled in by firebase-tools
 N4	minimatch	11.0.8	2026-12-10	Removes GHSA-g3hv-75wg-m249 pulled in by firebase-tools
-N4	uuid	11.1.1	2026-12-10	Removes GHSA-w5hq-g745-h8pq pulled in by firebase-tools
+N4	uuid	11.1.1	2026-12-13	Removes GHSA-w5hq-g745-h8pq pulled in by firebase-tools
