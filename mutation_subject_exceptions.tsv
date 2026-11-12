@@ -1,9 +1,4 @@
 # branch	sha	review_by	reason
-mutation/bs1-e1	500fe0fb86a3e3c260d8cf3daa1283355cc9adae	2027-02-01	Subject does not match required MUTATION format; pushed by Bonus slice 1; to be retired by Bonus slice 1.1
-mutation/bs1-p2	bacba19bb97cfae11a233747a4ce486ca92a7b11	2027-02-01	Subject does not match required MUTATION format; pushed by Bonus slice 1; to be retired by Bonus slice 1.1
-mutation/bs1-p3	092a332433fe5c59b40ffdb2c9d44a1a5a9574f3	2027-02-01	Subject does not match required MUTATION format; pushed by Bonus slice 1; to be retired by Bonus slice 1.1
-mutation/bs1-p4	4e7aa211d9f9ae981c6ffacd6c10a86c9e0d9db8	2027-02-01	Subject does not match required MUTATION format; pushed by Bonus slice 1; to be retired by Bonus slice 1.1
-mutation/bs1-w1	d152ce43aa8d3788fbadf167a430f453f1aa7034	2027-02-01	Subject does not match required MUTATION format; pushed by Bonus slice 1; to be retired by Bonus slice 1.1
 mutation/cs101-a1	cfd0c328f1c00de659d904a540f97287dbdb31b5	2027-02-01	Subject does not match required MUTATION format; pushed by Cleanup slice 10.1; to be retired by Cleanup slice 11
 mutation/cs101-a2	4b1aa4d3df3dd98b1033d22edea4de39124bbbd2	2027-02-01	Subject does not match required MUTATION format; pushed by Cleanup slice 10.1; to be retired by Cleanup slice 11
 mutation/cs101-g1	89f8fe3dd56688abb6609a9280aeb8ffd71ecd5e	2027-02-01	Subject does not match required MUTATION format; pushed by Cleanup slice 10.1; to be retired by Cleanup slice 11

@@ -11,7 +11,7 @@ Fix ids: 1.1 1.2 1.3 2.1 2.2 2.3 2.4 3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1 5.2 5.3
 - [x] Step 2 Every input fails closed (Fixes 2.1, 2.2, 2.3, 2.4): core 1a3f4aa4c08b97f9c6dd7c24153bb7640111d6a2 run 42936996351, ruleset 213a46523fccaaee524d704abb48a24f0e215cc6 run 42937011505, app 4fd8711db7177fb7dbea7c77c8d51ba69070834b run 42937023408
 - [x] Step 3 Wait counts from first newer release; version floors current; re-pin (Fixes 3.1, 3.2, 3.3, 3.4, 3.5): core a570912f39a03889a1c76b03482ed9c680e2df3a run 43137302736, ruleset d34b11dcad7678563d2990ece6f969f4455bd50e run 43137581838, app 988468957a16c45ca4f38e2b97214406a497e7dc run 43139025199
 - [x] Step 4 npm overrides and advisories declared (Fixes 4.1, 4.2, 4.3): core 64508bdcc7edfdc2f2d506d4c4ef34dcc359f1c5 run 43141274600, ruleset f237cd54284f0cf51b7438fe76af5e995224d43e run 43141285787, app f377cf61d274bee3ca12c63e6c9be40e785dc111 run 43141298535
-- [ ] Step 5 Mutation subjects and branch limit (Fixes 5.1, 5.2, 5.3, 5.4, 5.5)
+- [x] Step 5 Mutation subjects and branch limit (Fixes 5.1, 5.2, 5.3, 5.4, 5.5): core 35537dd7b69080a2ead1907d2f545952cbf5671c run 43143814705, ruleset 46568f466965283e4f726ef75ae44473a10c85bf run 43143825419, app e85e60aca537a24273085d6cec7aa05df81d8334 run 43143857795
 - [ ] Step 6 Thirteen mutation tests and report
 
 ## Fix checklist
@@ -33,7 +33,7 @@ Fix 4.3 done: Enforce per-advisory vulnerability reporting and GHSA verification
 Fix 5.1 done: Mutation commit subject enforced (MUTATION — do not merge: <id>)
 Fix 5.2 done: check_mutation_branches.sh verifies commit subjects across origin branches
 Fix 5.3 done: Dated exact-SHA mutation subject exceptions supported and verified
-Fix 5.4 not done: Retire bs1 branches in each repo
+Fix 5.4 done: Retire bs1 branches in each repo
 Fix 5.5 done: Notes check verifies Mutation branches section format and commit subjects
 
 ## Mutation branches
@@ -43,9 +43,12 @@ None
 f651bb6a38f78e09066dc5e7f741da52d3a87dad red run 42933658992
 348048672c2de49c750d98cfea929680a6296140 red run 43136058234
 0749e641c21b623ee7d2bec1ba24bb5cc680f54a red run 43138329996
+962b4c9251cb7ac1b9ce73f28427048f9f67b68e red run 43144363290
+29b9e9f2d92890013caee751fba119337e346059 red run 43144413900
+be7151a5c85708e039dbbb6687c6066a2deaace6 red run 43144477624
 
 ## Next
-Step 5: Retire bs1 branches in all three repos (Fix 5.4)
+Step 6: Thirteen mutation tests and report
 
 ## Open issues and deviations
 None
