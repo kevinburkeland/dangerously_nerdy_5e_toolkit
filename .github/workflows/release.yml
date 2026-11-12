@@ -86,13 +86,17 @@ jobs:
       - name: 🔍 Resolve Outdated npm Dependencies & Audit
         working-directory: firestore_rules_test
         run: |
-          npm outdated --json > /tmp/npm_outdated.json || true
-          npm audit --json > /tmp/npm_audit.json || true
+          (npm outdated --json > /tmp/npm_outdated.json 2> /tmp/npm_outdated.stderr && echo 0 > /tmp/npm_outdated.status || echo $? > /tmp/npm_outdated.status)
+          echo "npm outdated exit code: $(cat /tmp/npm_outdated.status)"
+          cat /tmp/npm_outdated.stderr
+          (npm audit --json > /tmp/npm_audit.json 2> /tmp/npm_audit.stderr && echo 0 > /tmp/npm_audit.status || echo $? > /tmp/npm_audit.status)
+          echo "npm audit exit code: $(cat /tmp/npm_audit.status)"
+          cat /tmp/npm_audit.stderr
 
       - name: 🔒 Check Dependency Currency & Security
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 -I scripts/check_dependencies.py --pub-outdated /tmp/pub_outdated.json --pubspec pubspec.yaml --workflows .github/workflows --exceptions dependency_exceptions.tsv --npm-dir firestore_rules_test --npm-outdated /tmp/npm_outdated.json --npm-audit /tmp/npm_audit.json
+        run: python3 -I scripts/check_dependencies.py --pub-outdated /tmp/pub_outdated.json --pubspec pubspec.yaml --workflows .github/workflows --exceptions dependency_exceptions.tsv --npm-dir firestore_rules_test --npm-outdated /tmp/npm_outdated.json --npm-audit /tmp/npm_audit.json --npm-outdated-status /tmp/npm_outdated.status --npm-audit-status /tmp/npm_audit.status
 
   test:
     name: 🧪 Unit & Widget Test Suite (Shard ${{ matrix.shard }})
