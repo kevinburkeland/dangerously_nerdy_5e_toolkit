@@ -6,7 +6,7 @@ Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 4.4
 
 ## Fix titles
-Fix 1.1: Retire bs11
+Fix 1.1: Retire bs11 mutation branches
 Fix 1.2: Fix titles are fixed and checked
 Fix 1.3: Every red or cancelled run is explained
 Fix 1.4: Explain Bonus slice 1.1's red and cancelled runs
@@ -29,7 +29,7 @@ Fix 4.4: N2 exceptions name one exact version
 - [ ] Step 5 Mutations and report
 
 ## Fix checklist
-Fix 1.1 done: [Retire bs11] Retired 9 branches in core, 1 in ruleset, and 3 in app with 13 archive tags
+Fix 1.1 done: [Retire bs11 mutation branches] Retired 9 branches in core, 1 in ruleset, and 3 in app with 13 archive tags
 Fix 1.2 done: [Fix titles are fixed and checked] check_notes_shas enforces Fix titles section, checklist brackets, and byte-identity
 Fix 1.3 done: [Every red or cancelled run is explained] check_notes_shas validates cancelled runs and requires deviation cause lines
 Fix 1.4 done: [Explain Bonus slice 1.1's red and cancelled runs] Documented causes and fixing commits for all five 1.1 red and cancelled runs
