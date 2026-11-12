@@ -1,3 +1,4 @@
+import 'package:material_ui/material_ui.dart';
 // Compatibility re-export bridging domain entity and infrastructure DTO.
 import 'domain/minion_instance.dart';
 
