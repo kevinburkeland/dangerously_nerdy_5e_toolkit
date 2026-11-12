@@ -38,12 +38,13 @@ Fix 1.4 done: [Explain Bonus slice 1.1's red and cancelled runs] Documented caus
 None
 
 ## Red runs on main
-None
+471aeb57d66affa5492605114cc3096e30edd980 red run 43160530143
 
 ## Next
 Start Step 2 by moving core to Dart 3.14.0, updating DC36, and pinning ruleset to the new core.
 
 ## Open issues and deviations
+Run 43160530143 cause: Shard 1 failed in docs_truth_test DT2 because core workflow path in deviations section was parsed as a missing app repo path; fixed by 6242a466fe7576e20b5605c18374518e59c9e5b2
 Prior to starting Step 1, uncommitted changes were detected in vtt-engine-core and dangerously_nerdy_5e_toolkit. In core, the hunks in core/.github/workflows/ci.yml, pubspec.yaml, and scripts/retire_mutation_branches.sh matched origin/mutation/bs11-t2, origin/mutation/bs11-d6, and origin/mutation/bs11-s2 respectively. In the app, firestore_rules_test/package.json and scripts/check_dependencies.py matched origin/mutation/bs11-o1 and core's origin/mutation/bs11-f2. All hunks were verified to be leftover Bonus slice 1.1 mutation edits and restored via git restore . to achieve clean working trees at starting heads.
 Bonus slice 1.1 run 42933658992 cause: DCO job failed in dependency check self-test DC36 due to missing environment mock in test fixture; fixed by 0e6e26776b43d26af942fa1d17c70b130d6599bd
 Bonus slice 1.1 run 43136058234 cause: dependencies job failed on setup-dart target check due to unhandled grace window on min-sdk; fixed by a570912f39a03889a1c76b03482ed9c680e2df3a
