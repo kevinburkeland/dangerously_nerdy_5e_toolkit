@@ -3,3 +3,8 @@ D4	collection	1.19.1	2027-02-01	Published by dart.dev with newest release 1.19.1
 D4	hive	2.2.3	2027-02-01	Published by isar.dev with newest release 2.2.3 on 2022-06-30; unmaintained storage dependency whose replacement changes campaign persistence and is slated for a dedicated storage migration slice under the legacy load law.
 D4	hive_flutter	1.1.0	2027-02-01	Published by hivedb.dev with newest release 1.1.0 on 2021-06-20; unmaintained Flutter adapter whose replacement will land alongside hive in the dedicated storage migration slice under the legacy load law.
 D4	mutex	3.1.0	2027-02-01	Published by hoylen.com with newest release 3.1.0 on 2023-10-09; compact async mutex primitive ending when an engine-core mutual exclusion primitive replaces it.
+N4	@grpc/grpc-js	1.14.7	2026-12-10	Removes GHSA-m9gg-hp2v-232j and GHSA-f596-whhp-79r4 pulled in by firebase and firebase-tools
+N4	@opentelemetry/core	2.12.1	2026-12-10	Removes GHSA-8988-4f7v-96qf pulled in by firebase and firebase-tools
+N4	glob	14.0.5	2026-12-10	Removes GHSA-3g3m-2fjr-6pw4 pulled in by firebase-tools
+N4	minimatch	11.0.8	2026-12-10	Removes GHSA-g3hv-75wg-m249 pulled in by firebase-tools
+N4	uuid	11.1.1	2026-12-10	Removes GHSA-w5hq-g745-h8pq pulled in by firebase-tools

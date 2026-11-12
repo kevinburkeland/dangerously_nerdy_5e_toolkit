@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-11
+- Bonus slice 1.1: Declare npm overrides in dependency_exceptions.tsv as dated exceptions with 30-day review dates, which existed since Bonus slice 1 without being declared (removing GHSA-m9gg-hp2v-232j, GHSA-f596-whhp-79r4, GHSA-8988-4f7v-96qf, GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249, and GHSA-w5hq-g745-h8pq across firebase and firebase-tools), move @opentelemetry/core, glob, and minimatch to newest in major, enforce override declaration rule N4 and per-advisory rule N2, and add DC60-DC69 self-tests.
 - Bonus slice 1.1: Calculate wait counts from first newer release date, enforce declared floor currency (rule D6), tighten direct dependency floors, refine D4 exception reasons, update actions/setup-java pin, pin core to a570912f39a03889a1c76b03482ed9c680e2df3a and ruleset to d34b11dcad7678563d2990ece6f969f4455bd50e, and add DC50-DC59 self-tests.
 - Bonus slice 1.1: Enforce fail-closed validation for missing or unreadable inputs, validate pub and npm JSON shapes, fail on npm audit/outdated error objects, and add DC42-DC49 self-tests.
 - Bonus slice 1.1: Fix workflow parsing in check_dependencies to follow jobs layout, check exact min-sdk job id, require single min-sdk job with single setup-dart step in pure Dart packages, print setup-dart summary, and add DC36-DC41 self-tests.

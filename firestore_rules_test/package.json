@@ -14,9 +14,9 @@
   },
   "overrides": {
     "@grpc/grpc-js": "1.14.7",
-    "@opentelemetry/core": "2.10.0",
-    "glob": "14.0.4",
-    "minimatch": "11.0.6",
+    "@opentelemetry/core": "2.12.1",
+    "glob": "14.0.5",
+    "minimatch": "11.0.8",
     "uuid": "11.1.1"
   }
 }
