@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/domain/character_models.dart';
 import '../../services/rules/character_homebrew_validator.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../presentation/visual/minion_stat_block_ui.dart';
 import '../../services/fluff/entity_fluff_service.dart';

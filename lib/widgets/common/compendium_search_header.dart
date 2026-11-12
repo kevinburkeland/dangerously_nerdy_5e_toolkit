@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Reusable search bar and filter button header designed for compendium browser screens.
 class CompendiumSearchHeader extends StatelessWidget {

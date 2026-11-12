@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../../models/party/campaign_membership.dart';

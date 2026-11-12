@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Modal bottom sheet shell for compendium filters with drag handle, title, Reset All action,
 /// scrollable content, and sticky Apply Filters button.

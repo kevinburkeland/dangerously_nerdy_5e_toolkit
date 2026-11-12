@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Calculates the standard adaptive column count for 5e compendium cards.
 int calculateCompendiumCrossAxisCount(double width) {

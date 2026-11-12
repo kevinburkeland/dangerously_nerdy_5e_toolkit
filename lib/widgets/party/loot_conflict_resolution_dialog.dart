@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/party/party_loot_item.dart';
 import '../../services/haptic_service.dart';
 import '../../services/party/party_room_service.dart';

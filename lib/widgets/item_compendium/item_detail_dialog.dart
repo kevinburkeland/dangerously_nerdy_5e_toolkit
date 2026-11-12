@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../infrastructure/repositories/local_character_repository.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/core_types.dart';

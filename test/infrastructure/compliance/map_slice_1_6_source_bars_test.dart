@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/flutter_free_packages.dart';
+
 void main() {
   group('Map Slice 1.6 Source Bars Compliance', () {
     ({List<({String name, String content})> files, List<String> problems}) readFolders(List<String> folderPaths) {
@@ -85,13 +87,14 @@ void main() {
     });
 
     test('SB30: map_token_mover.dart and map_token_candidates.dart import nothing from package:flutter', () {
-      const flutterPkg = 'package:' 'flutter';
-
       List<String> scanForFlutter(List<({String name, String content})> files) {
         final violations = <String>[];
         for (final f in files) {
-          if (f.content.contains(flutterPkg)) {
-            violations.add('${f.name} imports $flutterPkg');
+          final uris = extractImportExportUris(f.content);
+          for (final uri in uris) {
+            if (isFlutterBoundUri(uri)) {
+              violations.add('${f.name} imports $uri');
+            }
           }
         }
         return violations;
@@ -109,8 +112,11 @@ void main() {
       expect(violations, isEmpty, reason: 'SB30 violations: $violations');
 
       // Control
-      final badFiles = [(name: 'lib/application/map/bad.dart', content: "import '$flutterPkg/material.dart';")];
+      final badFiles = [(name: 'lib/application/map/bad.dart', content: "import 'package:flutter/material.dart';")];
       expect(scanForFlutter(badFiles), hasLength(1));
+
+      final badMaterialUiFiles = [(name: 'lib/application/map/bad.dart', content: "import 'package:material_ui/material_ui.dart';")];
+      expect(scanForFlutter(badMaterialUiFiles), hasLength(1));
     });
 
     test('SB31: Under lib/presentation/widgets/map/, activeProfile appears only in map_token_picker.dart', () {

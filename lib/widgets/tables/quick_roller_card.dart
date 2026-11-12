@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/tables/rollable_table.dart';
 import '../../models/tables/srd_dm_tables.dart';
 import '../../models/tables/srd_loot_tables.dart';

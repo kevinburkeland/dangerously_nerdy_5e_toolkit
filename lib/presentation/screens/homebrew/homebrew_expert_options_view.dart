@@ -1,6 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../application/services/homebrew_import_orchestrator.dart';
 import 'package:vtt_engine_core/homebrew/ports/i_github_ingestor_port.dart';

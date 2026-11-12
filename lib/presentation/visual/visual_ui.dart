@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../models/visual/app_icon.dart';
 import '../../models/visual/argb.dart';

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart' hide ThemeMode;
+import 'package:material_ui/material_ui.dart' hide ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';

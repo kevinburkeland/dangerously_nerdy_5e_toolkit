@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 3D Vector with essential vector arithmetic and 3D Euler/axis rotation methods.
 class Vec3 {

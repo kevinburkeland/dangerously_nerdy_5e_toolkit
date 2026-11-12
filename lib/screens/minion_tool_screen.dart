@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';

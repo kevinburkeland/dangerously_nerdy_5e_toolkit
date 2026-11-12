@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/dpr/dpr_models.dart';
 
 /// Card component displaying combat stats HUD, giant DPR number, hit/crit chances, and tactical recommendation.

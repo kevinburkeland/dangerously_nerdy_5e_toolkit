@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../../domain/ingestion/capability/ruleset_ingestion_capability.dart';
 import '../../../domain/ingestion/models/ingestion_candidate.dart';
 import '../../../domain/ingestion/models/ingestion_document_result.dart';

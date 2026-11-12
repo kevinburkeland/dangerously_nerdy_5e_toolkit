@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../models/app_settings.dart';
 import '../presentation/visual/visual_ui.dart';
 export 'domain_ui_extensions.dart';

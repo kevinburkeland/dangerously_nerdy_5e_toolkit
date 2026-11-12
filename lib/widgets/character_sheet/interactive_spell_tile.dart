@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/a11y_service.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../services/haptic_service.dart';
 
 /// Reusable amber '2024 Diff' chip badge used across cards to indicate revised 5.2 mechanics.

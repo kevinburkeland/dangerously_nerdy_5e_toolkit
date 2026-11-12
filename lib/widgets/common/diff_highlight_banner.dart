@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Reusable, theme-reactive banner highlighting 2024 Revised rule changes and key bullet points.
 class DiffHighlightBanner extends StatelessWidget {

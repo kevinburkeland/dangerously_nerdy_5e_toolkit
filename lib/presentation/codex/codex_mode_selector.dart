@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'codex_view_mode.dart';
 
 /// Visual presentation style for [CodexModeSelector].

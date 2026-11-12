@@ -1,5 +1,5 @@
 import 'package:dangerously_nerdy_5e_toolkit/theme/domain_ui_extensions.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../models/dm_screen_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';

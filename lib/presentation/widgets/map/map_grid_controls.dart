@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:vtt_engine_core/models/value_objects/map_grid.dart';
 
 /// Compact controls panel for configuring grid size, alignment, and scale.

@@ -113,7 +113,7 @@ The following components reside in `../vtt-ruleset-dnd5e` and are consumed via `
   Presentation (lib/presentation/, lib/screens/, lib/widgets/)
   ```
 - **Hexagonal Purity:**
-  - Files in `lib/domain/` and `lib/infrastructure/dtos/` MUST NOT import `package:flutter/...`. Use pure Dart (`package:meta/meta.dart`). Verified by `test/domain/domain_purity_test.dart` and `test/infrastructure/dtos/dto_purity_test.dart`.
+  - Files in pure Dart folders (`lib/domain/`, `lib/application/`, `lib/infrastructure/dtos/`) MUST NOT import Flutter-bound packages (decided from the package graph by `test/support/flutter_free_packages.dart`) or `dart:ui`/`dart:ui_web`. Use pure Dart (`package:meta/meta.dart`). Verified by `test/domain/domain_purity_test.dart`, `test/infrastructure/dtos/dto_purity_test.dart`, and `test/infrastructure/compliance/layer_import_table_test.dart`.
   - Application services orchestrate domain logic through abstract ports; they must never import concrete infrastructure adapters or DTOs directly.
   - Immutability: Domain entities and value objects must have `const` constructors and `copyWith()` mutators. In-place mutating methods are forbidden; use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`).
   - Compatibility barrels in `lib/models/domain/` exist solely to preserve legacy import paths; do not treat them as canonical domain definitions.

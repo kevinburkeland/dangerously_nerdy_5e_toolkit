@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/flutter_free_packages.dart';
+
 void main() {
   group('Map Slice 1.4 Source Bars Compliance', () {
     test('SB16: Under lib/, .startSynchronization( appears only in room_session_starter.dart, exactly once', () {
@@ -140,21 +142,26 @@ void main() {
         File('lib/application/map/map_grid_editor.dart'),
       ];
 
-      const flutterPkg = 'package:' 'flutter';
+      bool hasFlutterImports(String content) {
+        final uris = extractImportExportUris(content);
+        return uris.any(isFlutterBoundUri);
+      }
 
       for (final file in files) {
         expect(file.existsSync(), isTrue, reason: '${file.path} must exist');
         final content = file.readAsStringSync();
         expect(
-          content.contains(flutterPkg),
+          hasFlutterImports(content),
           isFalse,
-          reason: '${file.path} must not import package:flutter',
+          reason: '${file.path} must not import Flutter-bound packages',
         );
       }
 
       // Control: in-memory bad string
       const badContent = "import 'package:" "flutter/material.dart';";
-      expect(badContent.contains(flutterPkg), isTrue);
+      expect(hasFlutterImports(badContent), isTrue);
+      const badMaterialUi = "import 'package:material_ui/material_ui.dart';";
+      expect(hasFlutterImports(badMaterialUi), isTrue);
     });
 
     test('SB20: Under lib/, withMapGrid( appears only in map_grid_service.dart, and MapGrid( only in map_grid_service.dart and grid_geometry.dart', () {

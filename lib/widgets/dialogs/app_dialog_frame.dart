@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Design-token-aligned modal dialog shell providing consistent
 /// title styling, typography, padding, rounded geometries, and action layouts.

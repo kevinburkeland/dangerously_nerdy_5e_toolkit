@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.13.0 <4.0.0'
-  flutter: 3.47.9
+  sdk: '>=3.14.0 <4.0.0'
+  flutter: 3.50.0
 
 dependencies:
   flutter:
@@ -22,11 +22,11 @@ dependencies:
   vtt_engine_core:
     git:
       url: https://github.com/kevinburkeland/vtt-engine-core.git
-      ref: a570912f39a03889a1c76b03482ed9c680e2df3a
+      ref: 0617617e954e0add7898a00cf5f9b4ec3334525e
   vtt_ruleset_dnd5e:
     git:
       url: https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git
-      ref: d34b11dcad7678563d2990ece6f969f4455bd50e
+      ref: a19c4acd1a35b1f29420ca3824a214766c694f91
   meta: ^1.19.0
   uuid: ^4.6.0
   flutter_webrtc: ^1.6.3
@@ -35,6 +35,7 @@ dependencies:
   mutex: ^3.1.0
   web: ^1.1.2
   crypto: ^3.0.8
+  material_ui: ^1.11.0
 
 dev_dependencies:
   flutter_test:

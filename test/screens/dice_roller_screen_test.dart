@@ -7,7 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connectio
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';

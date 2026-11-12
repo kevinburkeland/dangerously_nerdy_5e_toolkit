@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/flutter_free_packages.dart';
+
 const String kAppPackagePrefix = 'package:dangerously_nerdy_5e_toolkit/';
 const String kLayerTableStartMarker = '<!-- layer-table:start -->';
 const String kLayerTableEndMarker = '<!-- layer-table:end -->';
@@ -10,13 +12,6 @@ const Set<String> kExemptTopLevelLibFiles = {
   'lib/main.dart',
   'lib/firebase_options.dart',
 };
-
-const List<String> kFlutterUriPrefixes = [
-  'package:flutter/',
-  'package:flutter_webrtc/',
-  'package:hive_flutter/',
-  'dart:ui',
-];
 
 class LayerRule {
   final Set<String> allowedAppFolders;
@@ -290,12 +285,7 @@ String? resolveAppUri(String fromPath, String uri) {
 }
 
 bool isFlutterUri(String uri) {
-  for (final prefix in kFlutterUriPrefixes) {
-    if (uri == prefix || uri.startsWith(prefix)) {
-      return true;
-    }
-  }
-  return false;
+  return isFlutterBoundUri(uri);
 }
 
 String stripCommentsPreservingNewlines(String source) {
@@ -603,6 +593,16 @@ void main() {
         equals(['lib/models/x.dart:1: flutter (package:flutter/foundation.dart)']),
       );
 
+      // 3b. lib/models/y.dart importing package:material_ui/material_ui.dart -> flutter
+      final v3b = evaluateFileLayerImports(
+        'lib/models/y.dart',
+        "import 'package:material_ui/material_ui.dart';\n",
+      );
+      expect(
+        v3b.map((v) => v.formatted),
+        equals(['lib/models/y.dart:1: flutter (package:material_ui/material_ui.dart)']),
+      );
+
       // 4. Conditional import whose second branch reaches screens -> flagged
       final v4 = evaluateFileLayerImports(
         'lib/models/x.dart',
@@ -748,12 +748,9 @@ void main() {
         final lines = file.readAsLinesSync();
         for (var i = 0; i < lines.length; i++) {
           final line = lines[i];
-          final trimmed = line.trim();
-          if (trimmed.startsWith('import ') || trimmed.startsWith('export ')) {
-            for (final prefix in kFlutterUriPrefixes) {
-              if (line.contains("'$prefix") || line.contains('"$prefix')) {
-                flutterImports.add('$path:${i + 1}: $line');
-              }
+          for (final uri in extractImportExportUris(line)) {
+            if (isFlutterBoundUri(uri)) {
+              flutterImports.add('$path:${i + 1}: $line');
             }
           }
         }
@@ -762,19 +759,23 @@ void main() {
       // Control: synthetic file importing Flutter must be detected
       final syntheticLines = [
         "import 'package:flutter/material.dart';",
+        "import 'package:material_ui/material_ui.dart';",
         "class Foo {}",
       ];
       final controlDetections = <String>[];
       for (var i = 0; i < syntheticLines.length; i++) {
         final line = syntheticLines[i];
-        if (line.startsWith('import ') || line.startsWith('export ')) {
-          for (final prefix in kFlutterUriPrefixes) {
-            if (line.contains("'$prefix") || line.contains('"$prefix')) {
-              controlDetections.add('lib/models/synthetic.dart:${i + 1}: $line');
-            }
+        for (final uri in extractImportExportUris(line)) {
+          if (isFlutterBoundUri(uri)) {
+            controlDetections.add('lib/models/synthetic.dart:${i + 1}: $line');
           }
         }
       }
+      expect(
+        controlDetections.where((d) => d.contains('material_ui')),
+        isNotEmpty,
+        reason: 'Control: synthetic material_ui import in lib/models must be detected',
+      );
       expect(
         controlDetections,
         isNotEmpty,

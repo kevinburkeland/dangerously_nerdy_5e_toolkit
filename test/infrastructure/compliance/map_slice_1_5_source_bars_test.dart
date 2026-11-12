@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/flutter_free_packages.dart';
+
 void main() {
   group('Map Slice 1.5 Source Bars Compliance', () {
     List<({String name, String content})> readLibDartFiles() {
@@ -92,16 +94,17 @@ void main() {
     });
 
     test('SB26: map_token_rules.dart and map_token_service.dart import nothing from package:flutter', () {
-      const flutterImport = 'package:flutter' '/';
-
       List<String> scanSb26(List<({String name, String content})> files) {
         final violations = <String>[];
         for (final f in files) {
           if (f.name.endsWith('map_token_rules.dart') || f.name.endsWith('map_token_service.dart')) {
             final lines = f.content.split('\n');
             for (var i = 0; i < lines.length; i++) {
-              if (lines[i].contains(flutterImport)) {
-                violations.add('${f.name}:${i + 1}: imports flutter');
+              final uris = extractImportExportUris(lines[i]);
+              for (final uri in uris) {
+                if (isFlutterBoundUri(uri)) {
+                  violations.add('${f.name}:${i + 1}: imports flutter');
+                }
               }
             }
           }
@@ -118,6 +121,11 @@ void main() {
       final controlHits = scanSb26([(name: 'lib/application/map/map_token_rules.dart', content: badContent)]);
       expect(controlHits.length, equals(1));
       expect(controlHits.first, contains('map_token_rules.dart'));
+
+      const badMaterialUi = "import 'package:material_ui/material_ui.dart';";
+      final controlMaterialUiHits = scanSb26([(name: 'lib/application/map/map_token_rules.dart', content: badMaterialUi)]);
+      expect(controlMaterialUiHits.length, equals(1));
+      expect(controlMaterialUiHits.first, contains('map_token_rules.dart'));
     });
 
     test('SB27: map_token_service.dart contains updateProfile( and does not contain activeProfile', () {

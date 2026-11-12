@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/dm_screen_data.dart';
 import '../../services/a11y_service.dart';
 import '../../services/haptic_service.dart';

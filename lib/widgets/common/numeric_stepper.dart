@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Reusable numeric stepper component for parameter adjustments (+/-).
 class NumericStepper extends StatelessWidget {

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/resolvers/character_telemetry_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/party/party_vitality_hud.dart';

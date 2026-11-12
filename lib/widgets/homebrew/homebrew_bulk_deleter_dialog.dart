@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_other_category.dart';
 import '../../services/haptic_service.dart';

@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../../../domain/ingestion/models/source_block.dart';
 
 /// Component presenting unrecognized or unassigned source text with ignore controls.

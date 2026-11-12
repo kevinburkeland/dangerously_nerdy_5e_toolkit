@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import '../../screens/character_sheet_view.dart';
 import '../../models/party/campaign_membership.dart';

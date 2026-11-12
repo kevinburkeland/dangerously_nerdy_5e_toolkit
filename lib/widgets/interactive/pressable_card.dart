@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../services/haptic_service.dart';
 
 /// Interactive card wrapper providing smooth 60/120fps spring scaling on press and haptic feedback

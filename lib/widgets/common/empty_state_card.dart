@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Standard empty-state placeholder card with icon, title, description, and optional action button.
 class EmptyStateCard extends StatelessWidget {

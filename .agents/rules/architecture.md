@@ -38,7 +38,7 @@
 - **Reusable Ruleset Module (`vtt_ruleset_dnd5e`):** Canonical D&D 5e dual-ruleset implementation, progression engines, spellcasting rules, combat arbitration, and canonical 5e domain models reside in `vtt_ruleset_dnd5e`.
 
 ### 1.2. Domain Layer (`lib/domain/`, `lib/models/`, `lib/services/rules/`)
-- **Zero Flutter Engine Runtime:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use pure Dart (`package:meta/meta.dart`). Enforced by `test/domain/domain_purity_test.dart`.
+- **Zero Flutter Engine Runtime:** Files in pure Dart folders (`lib/domain/`, `lib/application/`, `lib/infrastructure/dtos/`) MUST NOT import Flutter-bound packages (decided from the package graph by `test/support/flutter_free_packages.dart`) or `dart:ui`/`dart:ui_web`. Use pure Dart (`package:meta/meta.dart`). Enforced by `test/domain/domain_purity_test.dart`, `test/infrastructure/dtos/dto_purity_test.dart`, and `test/infrastructure/compliance/layer_import_table_test.dart`.
 - **Domain Ingestion Engine (`lib/domain/ingestion/`):** Pure Dart document structure parser, candidate detector, and field extraction ASTs.
 - **D&D 5e Domain Models (`lib/models/`):** Strongly typed 5e entities (`characters/`, `spells/`, `monster_codex/`, `magic_items/`, `animated_object.dart`).
 - **Compatibility Re-export Barrels (`lib/models/domain/`):** Provide backward-compatible re-exports for historical import paths. These barrels must not be confused with canonical ownership.

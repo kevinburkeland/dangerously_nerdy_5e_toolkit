@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/animated_object.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/spell_session.dart';

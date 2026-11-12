@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'glyph_tokens.dart';
 
 /// Normalized 24x24 Vector Grid Geometry Builders for Glyph Frames & Tier Badging.

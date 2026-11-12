@@ -1,5 +1,5 @@
 import 'package:dangerously_nerdy_5e_toolkit/theme/domain_ui_extensions.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/arena/arena_condition.dart';
 
 /// Interactive micro-chip for an [ActiveCondition] on fighter tokens and combatant cards.

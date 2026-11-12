@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 
 import '../../../application/blob/blob_store_port.dart';

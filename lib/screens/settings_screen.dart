@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide ThemeMode;
+import 'package:material_ui/material_ui.dart' hide ThemeMode;
 import '../models/app_settings.dart';
 import '../presentation/visual/visual_ui.dart';
 import '../providers/settings_provider.dart';

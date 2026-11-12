@@ -1,6 +1,6 @@
 import 'package:dangerously_nerdy_5e_toolkit/theme/domain_ui_extensions.dart';
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../models/arena/arena_action_result.dart';
 import '../models/arena/arena_combatant.dart';
 import '../models/arena/arena_preset_matchups.dart';

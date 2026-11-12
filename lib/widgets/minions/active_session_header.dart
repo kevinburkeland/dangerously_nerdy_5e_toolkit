@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/spell_session.dart';
 import '../../theme/app_theme.dart';
 import '../meters/animated_resource_meter.dart';

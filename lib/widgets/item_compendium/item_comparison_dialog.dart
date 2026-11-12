@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../models/magic_items/magic_item_data.dart';
 import '../../presentation/visual/visual_ui.dart';
 import '../../providers/settings_provider.dart';

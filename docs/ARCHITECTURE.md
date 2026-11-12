@@ -29,6 +29,7 @@ Decision records are indexed in [docs/decisions/README.md](decisions/README.md).
 The complete component index is maintained in [.agents/rules/codebase_map.md](../.agents/rules/codebase_map.md).
 
 Pure Dart folders (checked by test/domain/domain_purity_test.dart): lib/domain/ lib/application/ lib/infrastructure/dtos/
+Files in pure Dart folders MUST NOT import Flutter-bound packages (decided from the package graph by `test/support/flutter_free_packages.dart`) or `dart:ui`/`dart:ui_web`. Verified by `test/domain/domain_purity_test.dart`, `test/infrastructure/dtos/dto_purity_test.dart`, and `test/infrastructure/compliance/layer_import_table_test.dart`.
 
 ## Directory Structure & Layer Responsibilities
 

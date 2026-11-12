@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' as flutter;
-import 'package:flutter/material.dart' show Color;
+import 'package:material_ui/material_ui.dart' as flutter;
+import 'package:material_ui/material_ui.dart' show Color;
 
 import '../../models/app_settings.dart';
 import 'visual_ui.dart';

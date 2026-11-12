@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
 
 /// A lightweight, robust, native Flutter widget for rendering markdown-formatted

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../infrastructure/resolvers/character_telemetry_resolver.dart';
 

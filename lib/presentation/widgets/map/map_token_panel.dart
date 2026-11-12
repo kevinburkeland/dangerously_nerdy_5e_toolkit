@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 
 import '../../../application/map/active_map_controller.dart';
