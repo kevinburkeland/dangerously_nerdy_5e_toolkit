@@ -29,7 +29,7 @@ Fix 4.4: N2 exceptions name one exact version
 - [ ] Step 5 Mutations and report
 
 ## Fix checklist
-Fix 1.1 done: [Retire bs11] Retired 9 branches in core, 1 in ruleset, and 3 in app with 13 archive tags
+Fix 1.1 done: [Retire bs11 branches] Retired 9 branches in core, 1 in ruleset, and 3 in app with 13 archive tags
 Fix 1.2 done: [Fix titles are fixed and checked] check_notes_shas enforces Fix titles section, checklist brackets, and byte-identity
 Fix 1.3 done: [Every red or cancelled run is explained] check_notes_shas validates cancelled runs and requires deviation cause lines
 Fix 1.4 done: [Explain Bonus slice 1.1's red and cancelled runs] Documented causes and fixing commits for all five 1.1 red and cancelled runs
