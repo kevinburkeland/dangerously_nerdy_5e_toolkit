@@ -55,7 +55,6 @@ None
 Start Step 5: Implement 13 mutation branches (bs2), push to origin, verify with check_mutation_branches.sh, and write summary report.
 
 ## Open issues and deviations
-Run 43167797113 cause: DCO job failed in check_test_names.py because test description was renamed in dto_purity_test.dart; fixed by b31520c10d8e051561dfba47795871b1243162a2
 Updated firebase (to 13.3.0) and firebase-tools (to 15.36.0) in firestore_rules_test/package.json so that dependency check with future date --today 2026-11-26 passes without exception.
 When testing check_dependencies with --today 2026-11-26 in core, dart-lang/setup-dart v1.8.2 (released 2026-11-11 17:59 UTC) exceeds the 14-day grace window, whereas on today (2026-11-12) it is pending (1 day old) and exits 0 as expected across all three repos.
 Run 43160530143 cause: Shard 1 failed in docs_truth_test DT2 because core workflow path in deviations section was parsed as a missing app repo path; fixed by 6242a466fe7576e20b5605c18374518e59c9e5b2
