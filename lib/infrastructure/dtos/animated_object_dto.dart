@@ -1,3 +1,4 @@
+import 'package:material_ui/material_ui.dart';
 import 'minion_instance_dto.dart';
 
 export 'minion_instance_dto.dart';
