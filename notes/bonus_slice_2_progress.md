@@ -1,7 +1,7 @@
 # Bonus slice 2 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 3273f19428d5baf1e82cbb6d590546562a5edf41, ruleset e7912d0012f3d224321193d6add918ee386b34e5, app 940cee3278338d690958548695ee1f856b870300
-Last pushed heads (CI green): core 1c0b56915510190dc7d90969a61783a8efa8c954, ruleset 15601eb351278d66668e0b664d1e531099ba9e85, app 38f1fd1ec538c0068930d3ad38cb1a2aad19eab0
+Last pushed heads (CI green): core 8d9b3ea509bca5e78c21298924d06963c938321f, ruleset 016a09556cd3e522593248a83aa22f982fcb6adc, app 4b0eecbf5c6f1ac45d89b5c30edc8f4fe6d9d4d3
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 4.4
 
@@ -26,7 +26,7 @@ Fix 4.4: N2 exceptions name one exact version
 - [x] Step 2 Core and ruleset on Dart 3.14: core 0617617e954e0add7898a00cf5f9b4ec3334525e run 43163267063, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91 run 43163862271
 - [x] Step 3 App on Flutter 3.50: app 4b8a3f3dd2ee0180de71dd7b4a1592d57aaeb148 run 43168741616
 - [x] Step 4 Every input fails closed: core 1c0b56915510190dc7d90969a61783a8efa8c954 run 43204445690, ruleset 15601eb351278d66668e0b664d1e531099ba9e85 run 43204456819, app 38f1fd1ec538c0068930d3ad38cb1a2aad19eab0 run 43204469535
-- [ ] Step 5 Mutations and report
+- [x] Step 5 Mutations and report: core 8d9b3ea509bca5e78c21298924d06963c938321f run 43206498137, ruleset 016a09556cd3e522593248a83aa22f982fcb6adc run 43206503234, app 4b0eecbf5c6f1ac45d89b5c30edc8f4fe6d9d4d3 run 43206520372
 
 ## Fix checklist
 Fix 1.1 done: [Retire bs11] Retired 9 branches in core, 1 in ruleset, and 3 in app with 13 archive tags
@@ -45,14 +45,26 @@ Fix 4.3 done: [Refused-registry proof] Verified npm status 1 and check_dependenc
 Fix 4.4 done: [N2 exceptions name one exact version] Enforced ^\d+\.\d+\.\d+$ regex for N2 held_at and require explicit package-lock version resolution
 
 ## Mutation branches
-None
+mutation/bs2-u1 7b7ff40a1317c14a218527e0b581996f1c69e49d
+mutation/bs2-l1 d5cc04084743a48d1fd64719b300bc770903a739
+mutation/bs2-l2 7231effd54c0855212de61dd3bd682d441eb76f9
+mutation/bs2-w1 f3e9b83be6eb044b1c611e8bac0b520522d1cfe5
+mutation/bs2-r1 60902658258d7bf945f58a568164582bc488eb8c
+mutation/bs2-y1 57c6a2b066e359c5872541472bf733236f74d309
+mutation/bs2-p1 963d7889396db98374717b9706051346db74a12b
+mutation/bs2-p2 3694a3343c1ede7703030f378374c58db8dcb6c9
+mutation/bs2-p3 2b9f53ef0ff2260d35ef8a801750d860ed1fa5b1
+mutation/bs2-s1 27a0cbd22d84f15fc91d966c3cb9bee861598f3f
+mutation/bs2-n1 6a0b4d9c8e90161d8fc58a3d3f502927e85eece8
+mutation/bs2-n2 17c12a608e11968f22ad36bdc49ae71fc09b6519
+mutation/bs2-n3 020e7a50268c7aa9bd134f3a54f5a81ae4277e9c
 
 ## Red runs on main
 32a86674076e655ec6ed5da862df3383171e24e6 red run 43167797113
 471aeb57d66affa5492605114cc3096e30edd980 red run 43160530143
 
 ## Next
-Start Step 5: Implement 13 mutation branches (bs2), push to origin, verify with check_mutation_branches.sh, and write summary report.
+None
 
 ## Open issues and deviations
 Run 43167797113 cause: DCO job failed in check_test_names.py because test description was renamed in dto_purity_test.dart; fixed by b31520c10d8e051561dfba47795871b1243162a2
