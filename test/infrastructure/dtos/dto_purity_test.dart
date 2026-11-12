@@ -31,7 +31,7 @@ List<String> scanFolderForDtoViolations(String folderPath) {
 void main() {
   group('Infrastructure DTO Architecture Purity Tests', () {
     test(
-        'Ensures no files in lib/infrastructure/dtos/ import Flutter-bound packages',
+        'Ensures no files in lib/infrastructure/dtos/ import package:flutter/...',
         () {
       final dtosDir = Directory('lib/infrastructure/dtos');
       expect(dtosDir.existsSync(), isTrue,
