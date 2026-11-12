@@ -1,0 +1,29 @@
+From f0d869e95ded1b17c60d423220f2feb5939b0510 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 11 Nov 2026 19:29:53 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20N1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ notes/bonus_slice_1_1_progress.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/notes/bonus_slice_1_1_progress.md b/notes/bonus_slice_1_1_progress.md
+index 8ca9323b..bf721199 100644
+--- a/notes/bonus_slice_1_1_progress.md
++++ b/notes/bonus_slice_1_1_progress.md
+@@ -48,7 +48,7 @@ mutation/bs11-s1 38b3af270a28253c05b6e2737533c48faf08735c
+ mutation/bs11-s2 77e9f36050eab61444ba48ed823bd7024e8bf07f
+ mutation/bs11-p1 4606e1acb3c9f9d45fd651c97e3b96c657518fa7
+ mutation/bs11-o1 6a012de5dcff28b31260b1554a2f1510d1392f3f
+-mutation/bs11-o2 144798489c1b30df58f670e4a74f77ddebb18ee9
++mutation/bs11-o2 4b45b7ef630ebbcfd3e06e2aa4791e8c5812895d
+ 
+ ## Red runs on main
+ f651bb6a38f78e09066dc5e7f741da52d3a87dad red run 42933658992
+-- 
+2.55.0
+
