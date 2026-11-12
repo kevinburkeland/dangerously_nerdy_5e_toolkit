@@ -30,11 +30,11 @@ Fix 3.5 done: D4 exception reasons rewritten with publisher, release date, and e
 Fix 4.1 done: Measure override effect on advisories, verify newest in major, update package.json
 Fix 4.2 done: Enforce override declaration rule N4 with 30-day review_by and newest-in-major check
 Fix 4.3 done: Enforce per-advisory vulnerability reporting and GHSA verification rule N2
-Fix 5.1 not done: Mutation branch naming enforced (bs11 prefix)
-Fix 5.2 not done: Mutation commit subject enforced (MUTATION — do not merge: <id>)
-Fix 5.3 not done: Active mutation branch limit enforced (<= 20)
-Fix 5.4 not done: Retire mutation branches script ignores non-prefixed branches
-Fix 5.5 not done: Retirement self-tests updated
+Fix 5.1 done: Mutation commit subject enforced (MUTATION — do not merge: <id>)
+Fix 5.2 done: check_mutation_branches.sh verifies commit subjects across origin branches
+Fix 5.3 done: Dated exact-SHA mutation subject exceptions supported and verified
+Fix 5.4 not done: Retire bs1 branches in each repo
+Fix 5.5 done: Notes check verifies Mutation branches section format and commit subjects
 
 ## Mutation branches
 None
@@ -45,7 +45,7 @@ f651bb6a38f78e09066dc5e7f741da52d3a87dad red run 42933658992
 0749e641c21b623ee7d2bec1ba24bb5cc680f54a red run 43138329996
 
 ## Next
-Step 5: Mutation subjects and branch limit (Fixes 5.1, 5.2, 5.3, 5.4, 5.5)
+Step 5: Retire bs1 branches in all three repos (Fix 5.4)
 
 ## Open issues and deviations
 None

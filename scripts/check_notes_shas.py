@@ -557,6 +557,65 @@ def main():
                         if exp_id not in seen_ids:
                             problems.append(f"{file_path}: missing Fix id '{exp_id}' in checklist")
 
+        file_status = None
+        for line in lines:
+            if line.startswith('Status:'):
+                if 'IN PROGRESS' in line:
+                    file_status = 'IN PROGRESS'
+                elif 'COMPLETE' in line:
+                    file_status = 'COMPLETE'
+                break
+
+        # 7. Mutation branches verification (Fix 5.5)
+        has_mutation_section = False
+        in_mutation_section = False
+        mutation_lines = []
+
+        for line_idx, line in enumerate(lines, 1):
+            stripped = line.strip()
+            if stripped.startswith('## '):
+                if stripped == '## Mutation branches':
+                    has_mutation_section = True
+                    in_mutation_section = True
+                else:
+                    in_mutation_section = False
+            elif in_mutation_section:
+                mutation_lines.append((line_idx, line))
+
+        is_frozen_mutation = os.path.basename(file_path) in {'cleanup_slice_10_progress.md', 'cleanup_slice_10_1_progress.md'}
+        if file_status == 'COMPLETE' and fix_ids_line and not is_frozen_mutation and not has_mutation_section:
+            problems.append(f"{file_path}: 'Status: COMPLETE' with 'Fix ids:' line requires '## Mutation branches' section")
+
+        if has_mutation_section:
+            for l_idx, raw_line in mutation_lines:
+                s = raw_line.strip()
+                if not s:
+                    continue
+                if s == 'None':
+                    continue
+                m = re.match(r'^(mutation/([a-z0-9]+)-([a-z0-9]+))\s+([0-9a-fA-F]{40})$', s)
+                if not m:
+                    problems.append(f"{file_path}:{l_idx}: malformed mutation branch line '{s}'")
+                    continue
+                branch_name = m.group(1)
+                prefix = m.group(2)
+                branch_id = m.group(3)
+                sha = m.group(4).lower()
+
+                repo = find_repo_for_sha(sha)
+                if not repo:
+                    problems.append(f"{file_path}:{l_idx}: mutation commit {sha} is not in any given repo")
+                else:
+                    res = subprocess.run(['git', '-C', repo['path'], 'log', '-1', '--format=%s', sha],
+                                         capture_output=True, text=True)
+                    if res.returncode != 0 or not res.stdout.strip():
+                        problems.append(f"{file_path}:{l_idx}: could not read commit subject for {sha}")
+                    else:
+                        subject = res.stdout.strip()
+                        expected_prefix = f"MUTATION — do not merge: {branch_id}".lower()
+                        if not subject.lower().startswith(expected_prefix):
+                            problems.append(f"{file_path}:{l_idx}: mutation branch '{branch_name}' commit {sha} subject '{subject}' does not start with 'MUTATION — do not merge: {branch_id.upper()}'")
+
     if problems:
         for p in problems:
             print(p, file=sys.stderr)

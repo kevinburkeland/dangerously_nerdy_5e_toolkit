@@ -642,6 +642,9 @@ Start heads: test-repo $sha
 Last pushed heads (CI green): test-repo $sha
 Fix ids: 2.1 2.2
 
+## Mutation branches
+None
+
 ## Fix checklist
 Fix 2.1 done: completed first fix
 Fix 2.2 not done: postponed to next slice
@@ -665,6 +668,9 @@ Status: COMPLETE
 Start heads: test-repo $sha
 Last pushed heads (CI green): test-repo $sha
 Fix ids: 2.1 2.2
+
+## Mutation branches
+None
 
 ## Fix checklist
 Fix 2.1 done: completed first fix
@@ -763,6 +769,9 @@ Start heads: test-repo $sha
 Last pushed heads (CI green): test-repo $sha
 Fix ids: 3.6
 
+## Mutation branches
+None
+
 ## Fix checklist
 Fix 3.5 done: renumbered fix
 EOF
@@ -858,4 +867,169 @@ EOF
   fi
 )
 
-echo "All notes SHA check self-tests passed (NS1 - NS31)."
+# NS32: a correct mutation branch line passes
+(
+  repo="$TMP_DIR/repo_ns32"
+  setup_repo "$repo"
+  sha_A=$(git -C "$repo" rev-parse HEAD)
+  echo "mut1" > "$repo/mut1.txt" && git -C "$repo" add mut1.txt && git -C "$repo" commit -s -m "MUTATION — do not merge: T1" >/dev/null
+  sha_mut=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$TMP_DIR/notes_ns32.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_A
+
+## Mutation branches
+mutation/bs11-t1 $sha_mut
+EOF
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS32 expected pass, got: $out"; exit 1; }
+)
+
+# NS33: a wrong subject fails
+(
+  repo="$TMP_DIR/repo_ns33"
+  setup_repo "$repo"
+  sha_A=$(git -C "$repo" rev-parse HEAD)
+  echo "mut2" > "$repo/mut2.txt" && git -C "$repo" add mut2.txt && git -C "$repo" commit -s -m "Wrong subject commit" >/dev/null
+  sha_mut=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$TMP_DIR/notes_ns33.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_A
+
+## Mutation branches
+mutation/bs11-t1 $sha_mut
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS33 expected failure for wrong subject"; exit 1; }
+  [[ "$out" == *"does not start with 'MUTATION — do not merge: T1'"* ]] || { echo "FAIL: NS33 output: $out"; exit 1; }
+)
+
+# NS34: a malformed line fails
+(
+  repo="$TMP_DIR/repo_ns34"
+  setup_repo "$repo"
+  sha_A=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$TMP_DIR/notes_ns34.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_A
+
+## Mutation branches
+not-a-valid-mutation-line
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS34 expected failure for malformed line"; exit 1; }
+  [[ "$out" == *"malformed mutation branch line"* ]] || { echo "FAIL: NS34 output: $out"; exit 1; }
+)
+
+# NS35: a SHA that exists nowhere fails
+(
+  repo="$TMP_DIR/repo_ns35"
+  setup_repo "$repo"
+  sha_A=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$TMP_DIR/notes_ns35.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_A
+
+## Mutation branches
+mutation/bs11-t1 0123456789abcdef0123456789abcdef01234567
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS35 expected failure for non-existent commit"; exit 1; }
+  [[ "$out" == *"mutation commit 0123456789abcdef0123456789abcdef01234567 is not in any given repo"* ]] || { echo "FAIL: NS35 output: $out"; exit 1; }
+)
+
+# NS36: COMPLETE without the section fails
+(
+  repo="$TMP_DIR/repo_ns36"
+  setup_repo "$repo"
+  sha_A=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$TMP_DIR/notes_ns36.md"
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha_A
+Last pushed heads: test-repo $sha_A
+Fix ids: 1.1
+
+## Steps
+- [x] Step 1: test-repo $sha_A run 101
+
+## Fix checklist
+Fix 1.1 done: something
+EOF
+  echo '{"head_sha": "'"$sha_A"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/101"
+  cat << EOF > "$SERVER_DIR/repos/test-org/test-repo/actions/runs.list.json"
+{"workflow_runs": [
+  {"id": 101, "head_sha": "$sha_A", "status": "completed", "conclusion": "success", "run_number": 101}
+]}
+EOF
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS36 expected failure for COMPLETE without Mutation branches section"; exit 1; }
+  [[ "$out" == *"requires '## Mutation branches' section"* ]] || { echo "FAIL: NS36 output: $out"; exit 1; }
+)
+
+# NS37: the real Cleanup slice 10.1 and Bonus slice 1 notes still pass.
+(
+  core_repo=""
+  ruleset_repo=""
+  if [ -d "$SCRIPT_DIR/../../vtt-engine-core" ]; then
+    core_repo="$SCRIPT_DIR/../../vtt-engine-core"
+  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/core.git" ]; then
+    core_repo="$RUNNER_TEMP/core.git"
+  else
+    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-engine-core.git "$TMP_DIR/core_ns37.git" >/dev/null 2>&1
+    core_repo="$TMP_DIR/core_ns37.git"
+  fi
+
+  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e" ]; then
+    ruleset_repo="$SCRIPT_DIR/../../vtt-ruleset-dnd5e"
+  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/ruleset.git" ]; then
+    ruleset_repo="$RUNNER_TEMP/ruleset.git"
+  else
+    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns37.git" >/dev/null 2>&1
+    ruleset_repo="$TMP_DIR/ruleset_ns37.git"
+  fi
+
+  out=$(python3 -I "$CHECK_SCRIPT" \
+    --repo .=kevinburkeland/dangerously_nerdy_5e_toolkit \
+    --repo "$core_repo=kevinburkeland/vtt-engine-core" \
+    --repo "$ruleset_repo=kevinburkeland/vtt-ruleset-dnd5e" \
+    "$SCRIPT_DIR/../notes/cleanup_slice_10_1_progress.md" \
+    "$SCRIPT_DIR/../notes/bonus_slice_1_progress.md")
+  if [[ "$out" != *"All SHAs are valid commits"* ]]; then
+    echo "FAIL: NS37 expected real notes to pass, got: $out" >&2
+    exit 1
+  fi
+)
+
+echo "All notes SHA check self-tests passed (NS1 - NS37)."
