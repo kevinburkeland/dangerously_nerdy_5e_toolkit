@@ -37,6 +37,25 @@ def get_commit_date(repo, sha):
 
 RED_CONCLUSIONS = {'failure', 'timed_out', 'startup_failure', 'action_required'}
 
+# Frozen notes written before Fix 1.2 required ## Fix titles section and byte-identity
+FROZEN_FIX_TITLES_NOTES = {
+    'bonus_slice_1_1_progress.md',
+    'cleanup_slice_10_1_progress.md',
+}
+
+# Frozen notes that existed at start heads of Bonus slice 2 (exempt from Fix 1.3 cause lines and cancelled runs)
+FROZEN_RED_RUNS_NOTES = {
+    'bonus_slice_1_1_progress.md',
+    'bonus_slice_1_progress.md',
+    'cleanup_slice_10_1_progress.md',
+    'cleanup_slice_10_progress.md',
+    'cleanup_slice_5_progress.md',
+    'cleanup_slice_6_progress.md',
+    'cleanup_slice_7_progress.md',
+    'cleanup_slice_8_progress.md',
+    'cleanup_slice_9_progress.md',
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Check commit SHAs and CI run IDs in notes files.')
@@ -68,6 +87,7 @@ def main():
     hex_pattern = re.compile(r'(?<![0-9a-zA-Z])([0-9a-fA-F]+)(?![0-9a-zA-Z])')
     claim_pattern = re.compile(r'(?<![0-9a-fA-F])([0-9a-fA-F]{40}) run ([0-9]+)(?![0-9])')
     red_claim_pattern = re.compile(r'(?<![0-9a-fA-F])([0-9a-fA-F]{40}) red run ([0-9]+)(?![0-9])')
+    cancelled_claim_pattern = re.compile(r'(?<![0-9a-fA-F])([0-9a-fA-F]{40}) cancelled run ([0-9]+)(?![0-9])')
 
     mention_pattern = re.compile(r'(?i)(?<![a-zA-Z])runs?[^a-zA-Z0-9\n]{1,3}([0-9]{6,})(?![0-9])')
     sha_mention_pattern = re.compile(r'(?i)(?<![0-9a-fA-F])([0-9a-fA-F]{40})[^a-zA-Z0-9\n]+runs?[^a-zA-Z0-9\n]{1,3}([0-9]+)(?![0-9])')
@@ -233,8 +253,11 @@ def main():
                     problems.append(f"could not verify run list for {r['github_name']} ({err_msg})")
 
     for file_path, lines in files_data.items():
+        base_name = os.path.basename(file_path)
         in_red_runs_section = False
-        red_run_claims_in_file = set()
+        in_deviations_section = False
+        red_run_claims_in_file = {}
+        cancelled_run_claims_in_file = {}
         file_content = ''.join(lines)
         has_slice_metadata = ('Status:' in file_content or 'Start heads:' in file_content)
 
@@ -243,6 +266,7 @@ def main():
 
             if stripped.startswith('## '):
                 in_red_runs_section = (stripped == '## Red runs on main')
+                in_deviations_section = (stripped == '## Open issues and deviations')
 
             # 1. SHA verification
             for match in hex_pattern.finditer(line):
@@ -277,6 +301,11 @@ def main():
                     valid_claim_spans.add(m.span())
                 if in_red_runs_section:
                     for m in red_claim_pattern.finditer(line):
+                        valid_claim_spans.add(m.span())
+                    for m in cancelled_claim_pattern.finditer(line):
+                        valid_claim_spans.add(m.span())
+                if in_deviations_section:
+                    for m in re.finditer(r'(?i)\bruns?\s+[0-9]+\s+cause:', line):
                         valid_claim_spans.add(m.span())
 
                 mentions_in_line = []
@@ -337,12 +366,12 @@ def main():
                     err_msg = f"HTTP {status_code}" if status_code else str(data_or_err)
                     problems.append(f"{file_path}:{line_idx}: run {run_id}: could not verify run {run_id} ({err_msg})")
 
-            # 4. Red run claims in ## Red runs on main
+            # 4. Red and cancelled run claims in ## Red runs on main
             if in_red_runs_section:
                 for match in red_claim_pattern.finditer(line):
                     sha = match.group(1).lower()
                     run_id = match.group(2)
-                    red_run_claims_in_file.add(str(run_id))
+                    red_run_claims_in_file[str(run_id)] = (sha, line_idx)
                     total_red_runs_checked += 1
 
                     repo = find_repo_for_sha(sha)
@@ -365,6 +394,36 @@ def main():
                             problems.append(f"{file_path}:{line_idx}: run {run_id}: head_sha is {head_sha}")
                         elif conclusion not in RED_CONCLUSIONS:
                             problems.append(f"{file_path}:{line_idx}: run {run_id}: is not red (conclusion {conclusion})")
+                    else:
+                        err_msg = f"HTTP {status_code}" if status_code else str(data_or_err)
+                        problems.append(f"{file_path}:{line_idx}: run {run_id}: could not verify run {run_id} ({err_msg})")
+
+                for match in cancelled_claim_pattern.finditer(line):
+                    sha = match.group(1).lower()
+                    run_id = match.group(2)
+                    cancelled_run_claims_in_file[str(run_id)] = (sha, line_idx)
+                    total_red_runs_checked += 1
+
+                    repo = find_repo_for_sha(sha)
+                    if not repo:
+                        continue
+
+                    if not repo['github_name']:
+                        problems.append(f"{file_path}:{line_idx}: no GitHub name for repo {repo['path']}")
+                        continue
+
+                    owner_repo = repo['github_name']
+                    status_code, data_or_err = fetch_run(owner_repo, run_id)
+
+                    if status_code == 404:
+                        problems.append(f"{file_path}:{line_idx}: run {run_id}: not found")
+                    elif status_code == 200 and isinstance(data_or_err, dict):
+                        head_sha = str(data_or_err.get('head_sha', '')).lower()
+                        conclusion = data_or_err.get('conclusion')
+                        if head_sha != sha:
+                            problems.append(f"{file_path}:{line_idx}: run {run_id}: head_sha is {head_sha}")
+                        elif conclusion != 'cancelled':
+                            problems.append(f"{file_path}:{line_idx}: run {run_id}: is not cancelled (conclusion {conclusion})")
                     else:
                         err_msg = f"HTTP {status_code}" if status_code else str(data_or_err)
                         problems.append(f"{file_path}:{line_idx}: run {run_id}: could not verify run {run_id} ({err_msg})")
@@ -480,34 +539,58 @@ def main():
                                 if h_sha in slice_commits:
                                     status = run.get('status')
                                     conc = run.get('conclusion')
-                                    if status == 'completed' and conc in RED_CONCLUSIONS:
-                                        r_id = str(run.get('id', ''))
-                                        if r_id not in red_run_claims_in_file:
-                                            r_num = run.get('run_number', '?')
-                                            problems.append(
-                                                f"{file_path}: undisclosed red run {r_id} (run number {r_num}) on {h_sha} in {owner_repo}"
-                                            )
+                                    r_id = str(run.get('id', ''))
+                                    r_num = run.get('run_number', '?')
+                                    if status == 'completed':
+                                        if conc in RED_CONCLUSIONS:
+                                            if r_id not in red_run_claims_in_file:
+                                                problems.append(
+                                                    f"{file_path}: undisclosed red run {r_id} (run number {r_num}) on {h_sha} in {owner_repo}"
+                                                )
+                                        elif conc == 'cancelled' and base_name not in FROZEN_RED_RUNS_NOTES:
+                                            if r_id not in cancelled_run_claims_in_file:
+                                                problems.append(
+                                                    f"{file_path}: undisclosed cancelled run {r_id} (run number {r_num}) on {h_sha} in {owner_repo}"
+                                                )
 
-        # 6. Fix checklist verification
+        # 6. Fix checklist & Fix titles verification (Fix 1.2)
+        base_name = os.path.basename(file_path)
         fix_ids_line = None
         has_fix_checklist_section = False
         checklist_lines = []
         in_fix_checklist_section = False
+
+        has_fix_titles_section = False
+        titles_lines = []
+        in_fix_titles_section = False
+
+        has_deviations_section = False
+        in_deviations_section = False
+        deviation_lines = []
 
         for line_idx, line in enumerate(lines, 1):
             stripped = line.strip()
             if line.startswith('Fix ids:'):
                 fix_ids_line = (line_idx, line)
             if stripped.startswith('## '):
-                if stripped == '## Fix checklist':
+                in_fix_checklist_section = (stripped == '## Fix checklist')
+                in_fix_titles_section = (stripped == '## Fix titles')
+                in_deviations_section = (stripped == '## Open issues and deviations')
+                if in_fix_checklist_section:
                     has_fix_checklist_section = True
-                    in_fix_checklist_section = True
-                else:
-                    in_fix_checklist_section = False
+                if in_fix_titles_section:
+                    has_fix_titles_section = True
+                if in_deviations_section:
+                    has_deviations_section = True
             elif in_fix_checklist_section:
                 checklist_lines.append((line_idx, line))
+            elif in_fix_titles_section:
+                titles_lines.append((line_idx, line))
+            elif in_deviations_section:
+                deviation_lines.append((line_idx, line))
 
-        is_frozen = os.path.basename(file_path) in {'cleanup_slice_10_progress.md'}
+        is_frozen_fix_titles = base_name in FROZEN_FIX_TITLES_NOTES
+        is_frozen = base_name in {'cleanup_slice_10_progress.md'}
 
         if has_fix_checklist_section and not fix_ids_line and not is_frozen:
             problems.append(f"{file_path}: '## Fix checklist' section present but no 'Fix ids:' line")
@@ -525,37 +608,167 @@ def main():
 
             if not has_fix_checklist_section:
                 problems.append(f"{file_path}: 'Fix ids:' line present but no '## Fix checklist' section")
-            else:
-                seen_ids = set()
-                for l_idx, raw_line in checklist_lines:
-                    s = raw_line.strip()
-                    if not s:
-                        continue
+
+            fix_title_map = {}
+            if not is_frozen_fix_titles:
+                if not has_fix_titles_section:
+                    problems.append(f"{file_path}: 'Fix ids:' line present but no '## Fix titles' section")
+                else:
+                    parsed_titles = []
+                    for l_idx, raw_line in titles_lines:
+                        s = raw_line.strip()
+                        if not s:
+                            continue
+                        m = re.match(r'^Fix\s+(\S+):\s*(.*)$', s)
+                        if not m or not m.group(2).strip():
+                            problems.append(f"{file_path}:{l_idx}: malformed Fix title line '{s}'")
+                        else:
+                            parsed_titles.append((l_idx, m.group(1), m.group(2).strip()))
+
+                    if len(parsed_titles) != len(expected_ids):
+                        problems.append(f"{file_path}: '## Fix titles' has {len(parsed_titles)} title(s), expected {len(expected_ids)}")
+                    else:
+                        for (l_idx, tid, title), exp_id in zip(parsed_titles, expected_ids):
+                            if tid != exp_id:
+                                problems.append(f"{file_path}:{l_idx}: Fix title id '{tid}' is out of order or does not match expected id '{exp_id}'")
+                            else:
+                                fix_title_map[tid] = title
+
+                # Byte-identity check against commit that first added notes file
+                file_repo = None
+                abs_fp = os.path.abspath(file_path)
+                for r in repo_entries:
+                    abs_rp = os.path.abspath(r['path'])
+                    if abs_fp == abs_rp or abs_fp.startswith(abs_rp + os.sep):
+                        file_repo = r
+                        break
+
+                if file_repo:
+                    sh_res = subprocess.run(['git', '-C', file_repo['path'], 'rev-parse', '--is-shallow-repository'],
+                                            capture_output=True, text=True)
+                    if sh_res.returncode == 0 and sh_res.stdout.strip() == 'true':
+                        problems.append(f"{file_path}: repository '{file_repo['path']}' is a shallow clone; cannot verify commit history")
+                    else:
+                        rel_path = os.path.relpath(file_path, file_repo['path'])
+                        res = subprocess.run(['git', '-C', file_repo['path'], 'log', '--diff-filter=A', '--format=%H', '--', rel_path],
+                                             capture_output=True, text=True)
+                        commits = [c.strip() for c in res.stdout.splitlines() if c.strip()]
+                        if commits:
+                            first_sha = commits[-1]
+                            show_res = subprocess.run(['git', '-C', file_repo['path'], 'show', f'{first_sha}:{rel_path}'],
+                                                      capture_output=True, text=True)
+                            if show_res.returncode != 0:
+                                problems.append(f"{file_path}: could not read {file_path} from commit {first_sha}")
+                            else:
+                                orig_lines = show_res.stdout.splitlines(keepends=True)
+                                def extract_sections(raw_l):
+                                    f_id = None
+                                    t_sec = []
+                                    in_t = False
+                                    for line in raw_l:
+                                        if line.startswith('Fix ids:'):
+                                            f_id = line
+                                        elif line.strip().startswith('## '):
+                                            if line.strip() == '## Fix titles':
+                                                in_t = True
+                                                t_sec.append(line)
+                                            else:
+                                                in_t = False
+                                        elif in_t:
+                                            t_sec.append(line)
+                                    return f_id, t_sec
+
+                                cur_id_line, cur_t_sec = extract_sections(lines)
+                                orig_id_line, orig_t_sec = extract_sections(orig_lines)
+                                if cur_id_line != orig_id_line:
+                                    problems.append(f"{file_path}: 'Fix ids:' line differs from the commit that first added this file ({first_sha})")
+                                if cur_t_sec != orig_t_sec:
+                                    problems.append(f"{file_path}: '## Fix titles' section differs from the commit that first added this file ({first_sha})")
+
+            # Check checklist lines
+            seen_ids = set()
+            for l_idx, raw_line in checklist_lines:
+                s = raw_line.strip()
+                if not s:
+                    continue
+                if is_frozen_fix_titles:
                     m = re.match(r'^Fix\s+(\S+)\s+(done|not done):\s*(.*)$', s)
                     if not m or not m.group(3).strip():
                         problems.append(f"{file_path}:{l_idx}: malformed Fix checklist line '{s}'")
                         continue
                     fix_id = m.group(1)
-                    if fix_id not in expected_ids:
-                        problems.append(f"{file_path}:{l_idx}: Fix id '{fix_id}' in checklist is not expected")
-                    elif fix_id in seen_ids:
-                        problems.append(f"{file_path}:{l_idx}: duplicate Fix id '{fix_id}' in checklist")
-                    else:
-                        seen_ids.add(fix_id)
+                else:
+                    m = re.match(r'^Fix\s+(\S+)\s+(done|not done):\s*(\[([^\]]*)\])?\s*(.*)$', s)
+                    if not m:
+                        problems.append(f"{file_path}:{l_idx}: malformed Fix checklist line '{s}'")
+                        continue
+                    fix_id = m.group(1)
+                    has_bracket = bool(m.group(3))
+                    bracket_title = m.group(4) if has_bracket else ''
+                    text = m.group(5).strip()
+                    if not has_bracket:
+                        problems.append(f"{file_path}:{l_idx}: Fix checklist line '{s}' has no bracket '[<title>]'")
+                    elif fix_id in fix_title_map and bracket_title != fix_title_map[fix_id]:
+                        problems.append(f"{file_path}:{l_idx}: Fix checklist line bracket '[{bracket_title}]' does not match Fix title '[{fix_title_map[fix_id]}]'")
+                    if not text:
+                        problems.append(f"{file_path}:{l_idx}: Fix checklist line '{s}' has empty text")
 
-                file_status = None
-                for line in lines:
-                    if line.startswith('Status:'):
-                        if 'IN PROGRESS' in line:
-                            file_status = 'IN PROGRESS'
-                        elif 'COMPLETE' in line:
-                            file_status = 'COMPLETE'
-                        break
+                if fix_id not in expected_ids:
+                    problems.append(f"{file_path}:{l_idx}: Fix id '{fix_id}' in checklist is not expected")
+                elif fix_id in seen_ids:
+                    problems.append(f"{file_path}:{l_idx}: duplicate Fix id '{fix_id}' in checklist")
+                else:
+                    seen_ids.add(fix_id)
 
-                if file_status == 'COMPLETE':
-                    for exp_id in expected_ids:
-                        if exp_id not in seen_ids:
-                            problems.append(f"{file_path}: missing Fix id '{exp_id}' in checklist")
+            file_status = None
+            for line in lines:
+                if line.startswith('Status:'):
+                    if 'IN PROGRESS' in line:
+                        file_status = 'IN PROGRESS'
+                    elif 'COMPLETE' in line:
+                        file_status = 'COMPLETE'
+                    break
+
+            if file_status == 'COMPLETE':
+                for exp_id in expected_ids:
+                    if exp_id not in seen_ids:
+                        problems.append(f"{file_path}: missing Fix id '{exp_id}' in checklist")
+
+        # 6.5. Fix 1.3 cause line verification
+        if base_name not in FROZEN_RED_RUNS_NOTES:
+            cause_lines = {}
+            for l_idx, raw_line in deviation_lines:
+                s = raw_line.strip()
+                m = re.match(r'^Run\s+([0-9]+)\s+cause:\s*(.+?);\s*fixed by\s+([0-9a-fA-F]{40})$', s)
+                if m:
+                    c_run_id = m.group(1)
+                    c_text = m.group(2).strip()
+                    c_sha = m.group(3).lower()
+                    cause_lines[c_run_id] = (l_idx, c_text, c_sha)
+
+            for r_id, (head_sha, l_idx) in red_run_claims_in_file.items():
+                if r_id not in cause_lines:
+                    problems.append(f"{file_path}: run {r_id} (red) has no 'Run {r_id} cause: <text>; fixed by <sha>' line under '## Open issues and deviations'")
+                else:
+                    c_l_idx, c_text, c_sha = cause_lines[r_id]
+                    if not c_text:
+                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause has empty text")
+                    if c_sha == head_sha.lower():
+                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} cannot be the red run's own head SHA")
+                    elif not find_repo_for_sha(c_sha):
+                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} is not in any given repo")
+
+            for r_id, (head_sha, l_idx) in cancelled_run_claims_in_file.items():
+                if r_id not in cause_lines:
+                    problems.append(f"{file_path}: run {r_id} (cancelled) has no 'Run {r_id} cause: <text>; fixed by <sha>' line under '## Open issues and deviations'")
+                else:
+                    c_l_idx, c_text, c_sha = cause_lines[r_id]
+                    if not c_text:
+                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause has empty text")
+                    if c_sha == head_sha.lower():
+                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} cannot be the red run's own head SHA")
+                    elif not find_repo_for_sha(c_sha):
+                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} is not in any given repo")
 
         file_status = None
         for line in lines:

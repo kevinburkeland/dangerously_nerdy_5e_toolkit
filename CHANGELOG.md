@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-12
+- Bonus slice 2: Retire bs11 mutation branches, enforce Fix titles section, checklist brackets, and byte-identity in check_notes_shas, validate cancelled runs and deviation cause lines, document Bonus slice 1.1 runs, and add self-tests NS38-NS53.
+
 ## 2026-11-11
 - Bonus slice 1.1: Enforce mutation branch commit rules (single commit, Signed-off-by trailer, and MUTATION subject format with matching id), validate remote branch subjects and active branch limit in check_mutation_branches.sh, support dated exact-SHA exceptions in mutation_subject_exceptions.tsv, verify notes Mutation branches section and commit subjects in check_notes_shas.py, and add MB1-MB17, RM1-RM20, and NS32-NS37 self-tests.
 - Bonus slice 1.1: Declare npm overrides in dependency_exceptions.tsv as dated exceptions with 30-day review dates, which existed since Bonus slice 1 without being declared (removing GHSA-m9gg-hp2v-232j, GHSA-f596-whhp-79r4, GHSA-8988-4f7v-96qf, GHSA-3g3m-2fjr-6pw4, GHSA-g3hv-75wg-m249, and GHSA-w5hq-g745-h8pq across firebase and firebase-tools), move @opentelemetry/core, glob, and minimatch to newest in major, enforce override declaration rule N4 and per-advisory rule N2, and add DC60-DC69 self-tests.
