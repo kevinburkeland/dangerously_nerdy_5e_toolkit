@@ -37,7 +37,18 @@ Fix 5.4 done: Retire bs1 branches in each repo
 Fix 5.5 done: Notes check verifies Mutation branches section format and commit subjects
 
 ## Mutation branches
-None
+mutation/bs11-t1 21cb9d30310c29be629a06b0f4630b1f37fb94b2
+mutation/bs11-t2 a83f50f76fd15665d3e8444d8c5864a9377280d0
+mutation/bs11-f1 3e71b234bb6c3a8c88b721004e336f6025962a6f
+mutation/bs11-f2 8ea0e128a5f29e96ad41eac92a64021fb2e5ee8a
+mutation/bs11-g1 83f8c17a5446fd3112fc62a363c4c7c4da3a1461
+mutation/bs11-v1 caa15d18f1873d316372b763905a438f354b150f
+mutation/bs11-d6 94d7d21c8fd3c52d1b32f9447e415142cb4029ad
+mutation/bs11-s1 38b3af270a28253c05b6e2737533c48faf08735c
+mutation/bs11-s2 77e9f36050eab61444ba48ed823bd7024e8bf07f
+mutation/bs11-p1 4606e1acb3c9f9d45fd651c97e3b96c657518fa7
+mutation/bs11-o1 6a012de5dcff28b31260b1554a2f1510d1392f3f
+mutation/bs11-o2 144798489c1b30df58f670e4a74f77ddebb18ee9
 
 ## Red runs on main
 f651bb6a38f78e09066dc5e7f741da52d3a87dad red run 42933658992
