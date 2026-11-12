@@ -1,7 +1,7 @@
 # Bonus slice 2 progress notes
 Status: IN PROGRESS
 Start heads: core 3273f19428d5baf1e82cbb6d590546562a5edf41, ruleset e7912d0012f3d224321193d6add918ee386b34e5, app 940cee3278338d690958548695ee1f856b870300
-Last pushed heads (CI green): core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91, app 4adeb1d5a07a3662b75554e964c6685b2e217bff
+Last pushed heads (CI green): core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91, app 4b8a3f3dd2ee0180de71dd7b4a1592d57aaeb148
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 4.4
 
@@ -24,7 +24,7 @@ Fix 4.4: N2 exceptions name one exact version
 ## Steps
 - [x] Step 1 Notes rules and bs11 retired: core 976abfb84447af79141ce86fb22281ade4e854f9 run 43157388887, ruleset 42d4012c2a456c26189ed86da7f378706ac0ed88 run 43157564436, app 026539d83ddf2f0bb196ca642f377dd5a40fb050 run 43157646748
 - [x] Step 2 Core and ruleset on Dart 3.14: core 0617617e954e0add7898a00cf5f9b4ec3334525e run 43163267063, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91 run 43163862271
-- [x] Step 3 App on Flutter 3.50
+- [x] Step 3 App on Flutter 3.50: app 4b8a3f3dd2ee0180de71dd7b4a1592d57aaeb148 run 43168741616
 - [ ] Step 4 Every input fails closed
 - [ ] Step 5 Mutations and report
 
