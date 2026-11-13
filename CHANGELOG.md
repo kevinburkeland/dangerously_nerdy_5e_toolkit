@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-13
+- Cleanup slice 11: Update glob npm override to 14.0.6 in firestore_rules_test and dependency_exceptions.tsv, and update transitive android_file_picker lockfile entry to 2.1.6.
+
 ## 2026-11-12
 - Bonus slice 3: Plain dice rooms no longer show a red "no campaign" error or create fake campaigns and switch the active campaign, the dice roller Join dialog offers a "Your campaigns" dropdown sorted by newest lastPlayed to fill a joined campaign's room code, and a legacy campaign room (no campaignId on the server) opened from the banner on a device where no local profile claims its code is now treated as a dice room while still opening as a campaign through the Party Room screen and the join/rehydrate campaign paths.
 - Bonus slice 2: Flutter 3.50 deprecates package:flutter/material.dart, every Material import moved to material_ui (1.11.0), and the Flutter-free checks now decide from the package graph because the old name list missed material_ui.
