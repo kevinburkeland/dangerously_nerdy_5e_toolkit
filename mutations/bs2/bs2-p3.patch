@@ -1,0 +1,32 @@
+From 2b9f53ef0ff2260d35ef8a801750d860ed1fa5b1 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 12 Nov 2026 03:11:36 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/support/flutter_free_packages.dart | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/test/support/flutter_free_packages.dart b/test/support/flutter_free_packages.dart
+index 2a641d32..857c3130 100644
+--- a/test/support/flutter_free_packages.dart
++++ b/test/support/flutter_free_packages.dart
+@@ -197,11 +197,6 @@ class FlutterPackageDetector {
+       if (_isDirectFlutterSdkPackage(dep)) {
+         return true;
+       }
+-      if (_packageRoots.containsKey(dep)) {
+-        if (_resolveFlutterBound(dep, visited)) {
+-          return true;
+-        }
+-      }
+     }
+     return false;
+   }
+-- 
+2.55.0
+

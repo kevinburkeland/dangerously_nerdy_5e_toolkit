@@ -1,0 +1,29 @@
+From 27a0cbd22d84f15fc91d966c3cb9bee861598f3f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 12 Nov 2026 03:12:14 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20S1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .github/workflows/release.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 836df0d4..b5118591 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -96,7 +96,7 @@ jobs:
+       - name: 🔒 Check Dependency Currency & Security
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+-        run: python3 -I scripts/check_dependencies.py --pub-outdated /tmp/pub_outdated.json --pubspec pubspec.yaml --workflows .github/workflows --exceptions dependency_exceptions.tsv --npm-dir firestore_rules_test --npm-outdated /tmp/npm_outdated.json --npm-audit /tmp/npm_audit.json --npm-outdated-status /tmp/npm_outdated.status --npm-audit-status /tmp/npm_audit.status
++        run: python3 -I scripts/check_dependencies.py --pub-outdated /tmp/pub_outdated.json --pubspec pubspec.yaml --workflows .github/workflows --exceptions dependency_exceptions.tsv --npm-dir firestore_rules_test --npm-outdated /tmp/npm_outdated.json --npm-audit /tmp/npm_audit.json --npm-outdated-status /tmp/npm_outdated.status
+ 
+   test:
+     name: 🧪 Unit & Widget Test Suite (Shard ${{ matrix.shard }})
+-- 
+2.55.0
+
