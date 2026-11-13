@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -503,12 +504,14 @@ void main() {
             );
           }
         } catch (e) {
-          print('SharedRoomCampaignOpener law failed on $caseDescription: $e');
+          stdout.writeln(
+            'SharedRoomCampaignOpener law failed on $caseDescription: $e',
+          );
           rethrow;
         }
       }
 
-      print(
+      stdout.writeln(
         'SharedRoomCampaignOpener law passed: seed=$seed, cases=$caseCount',
       );
     });
