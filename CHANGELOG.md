@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-12
+- Bonus slice 3: Plain dice rooms no longer show a red "no campaign" error or create fake campaigns and switch the active campaign, the dice roller Join dialog offers a "Your campaigns" dropdown sorted by newest lastPlayed to fill a joined campaign's room code, and a legacy campaign room (no campaignId on the server) opened from the banner on a device where no local profile claims its code is now treated as a dice room while still opening as a campaign through the Party Room screen and the join/rehydrate campaign paths.
 - Bonus slice 2: Flutter 3.50 deprecates package:flutter/material.dart, every Material import moved to material_ui (1.11.0), and the Flutter-free checks now decide from the package graph because the old name list missed material_ui.
 - Bonus slice 2: Update DC36 in test_check_dependencies.sh to dynamically read repo target SDK.
 - Bonus slice 2: Retire bs11 mutation branches, enforce Fix titles section, checklist brackets, and byte-identity in check_notes_shas, validate cancelled runs and deviation cause lines, document Bonus slice 1.1 runs, and add self-tests NS38-NS53.

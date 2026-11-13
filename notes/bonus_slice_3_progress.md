@@ -1,0 +1,33 @@
+# Bonus slice 3 progress notes
+Status: IN PROGRESS
+Start heads: app 642001203fcd3331b242fe885daf146014657ad4
+Last pushed heads (CI green): app 642001203fcd3331b242fe885daf146014657ad4
+Fix ids: 1.1 1.2 1.3 1.4
+
+## Fix titles
+Fix 1.1: Only a campaign room opens a campaign
+Fix 1.2: The banner test runs the real campaign rules
+Fix 1.3: Only campaign entry paths call openRoomProfile
+Fix 1.4: The Join dialog lists your campaigns
+
+## Steps
+- [x] Step 1 Dice rooms stay dice rooms, and the campaign dropdown
+- [ ] Step 2 Mutations and report
+
+## Fix checklist
+Fix 1.1 done: [Only a campaign room opens a campaign] Added SharedRoomCampaignOpener in lib/services/party/shared_room_campaign_opener.dart, wired RoomBannerWidget in lib/widgets/room_banner_widget.dart, and added examples and 500-case law in test/services/party/shared_room_campaign_opener_test.dart
+Fix 1.2 done: [The banner test runs the real campaign rules] Added real PartyRoomService and opener widget tests in test/widgets/room_banner_campaign_rules_test.dart and updated test doubles in test/widgets/room_banner_widget_test.dart
+Fix 1.3 done: [Only campaign entry paths call openRoomProfile] Added exact allowlist source bar test and in-memory controls in test/infrastructure/compliance/open_room_profile_source_bar_test.dart
+Fix 1.4 done: [The Join dialog lists your campaigns] Added sorted "Your campaigns" dropdown to JoinCreateRoomDialog in lib/widgets/dialogs/join_create_room_dialog.dart, passed memberships from lib/widgets/room_banner_widget.dart, and added dialog and end-to-end tests in test/widgets/dialogs/join_create_room_dialog_test.dart
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Run Step 2 local mutations M1-M6, run exit checks, mark notes COMPLETE, and push final commit.
+
+## Open issues and deviations
+Updated test doubles in test/screens/dice_roller_screen_test.dart and test/screens/screens_characterization_test.dart so fake PartyRoomService instances used by screens mounting RoomBannerWidget expose roomDocPort and getCachedLobby. Regenerated .agents/rules/codebase_map.md via tool/generate_codebase_map.dart for the new file in lib/services/party/ to satisfy docs_truth_test DT4.

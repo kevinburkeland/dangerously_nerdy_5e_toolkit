@@ -1,17 +1,22 @@
 import 'package:vtt_engine_core/models/campaign_profile.dart';
+import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connection_telemetry.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_starter.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import '../test_doubles/fake_room_document_port.dart';
+import '../test_doubles/service_test_configurator.dart';
 
 
 class _MockDiceP2pTransport implements IP2pTransportPort {
@@ -53,7 +58,43 @@ class _FakeDiceRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator
   void stopSynchronization() {}
 }
 
+class _MockDiceCampaignRepo implements ICampaignRepository {
+  @override
+  CampaignProfile? get activeProfile => null;
+  @override
+  String? get activeProfileId => null;
+  @override
+  List<CampaignProfile> get allProfiles => [];
+  @override
+  Future<void> deleteProfile(String id) async {}
+  @override
+  Future<CampaignProfile?> getActiveProfile() async => null;
+  @override
+  Future<CampaignProfile?> getProfile(String id) async => null;
+  @override
+  Future<List<CampaignProfile>> loadAllProfiles() async => [];
+  @override
+  Future<CampaignProfile> updateProfile(
+    String id,
+    CampaignProfile Function(CampaignProfile current) transform,
+  ) async => throw UnimplementedError();
+  @override
+  Future<void> putProfile(CampaignProfile profile) async {}
+  @override
+  Future<void> setActiveProfileId(String id) async {}
+  @override
+  Stream<CampaignProfile?> watchActiveProfile() => const Stream.empty();
+  @override
+  Stream<List<CampaignProfile>> watchAllProfiles() => const Stream.empty();
+}
+
 class _FakeDicePartyRoomService extends Fake implements PartyRoomService {
+  @override
+  final IRoomDocumentPort roomDocPort = RecordingRoomDocumentPort();
+
+  @override
+  PartyRoomLobby? getCachedLobby(String roomCode) => null;
+
   @override
   Future<void> syncAllExistingCampaignsToFirestore() async {}
 
@@ -78,6 +119,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    resetTestServices();
     sl.reset();
     final transport = _MockDiceP2pTransport();
     final orchestrator = _FakeDiceRoomSyncOrchestrator();
@@ -85,6 +127,7 @@ void main() {
     sl.registerSingleton<IP2pTransportPort>(transport);
     sl.registerSingleton<RoomSyncOrchestrator>(orchestrator);
     sl.registerSingleton<RoomSessionStarter>(starter);
+    configureTestCampaignProfileService(repository: _MockDiceCampaignRepo());
     DiceRoomService.configure(
       transport: transport,
       orchestrator: orchestrator,
@@ -96,6 +139,7 @@ void main() {
   tearDown(() {
     DiceRoomService().leaveRoom();
     PartyRoomService.setCustomInstanceForTesting(null);
+    resetTestServices();
     sl.reset();
   });
 

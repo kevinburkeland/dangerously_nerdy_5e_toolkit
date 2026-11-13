@@ -9,7 +9,10 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../services/dice_room_service.dart';
+import '../services/party/campaign_registry_service.dart';
 import '../services/party/party_room_service.dart';
+import '../services/party/shared_room_campaign_opener.dart';
+import '../services/persistence/campaign_profile_service.dart';
 import '../services/logging_service.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/join_create_room_dialog.dart';
@@ -91,7 +94,12 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
       if (!orchestrator.isSynchronizing) {
         unawaited(() async {
           try {
-            await PartyRoomService().openRoomProfile(effectiveRoom);
+            final party = PartyRoomService();
+            await SharedRoomCampaignOpener(
+              party: party,
+              campaignRepo: CampaignProfileService().repo,
+              roomDocPort: party.roomDocPort,
+            ).openIfCampaign(effectiveRoom);
             sl<RoomSessionStarter>().start();
           } catch (e, st) {
             LoggingService().logNonFatal(
@@ -117,6 +125,7 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
       BuildContext context, String? currentName, String? currentRoom) {
     JoinCreateRoomDialog.show(
       context,
+      campaigns: CampaignRegistryService().memberships,
       initialPlayerName: currentName,
       initialRoomCode: currentRoom,
       onJoinRoom: (code, name) {

@@ -9,10 +9,12 @@ import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_channel_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_event.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_loot_item.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_session_state.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/screens/homebrew/homebrew_expert_options_view.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
@@ -36,6 +38,12 @@ class SpyingPartyRoomService extends Fake implements PartyRoomService {
 class FakePartyRoomService extends Fake implements PartyRoomService {
   @override
   final ReplicaId replicaId = ReplicaId('test_screen_replica');
+
+  @override
+  final IRoomDocumentPort roomDocPort = RecordingRoomDocumentPort();
+
+  @override
+  PartyRoomLobby? getCachedLobby(String roomCode) => null;
 
   @override
   Future<void> flushOutbox(String roomCode) async {}

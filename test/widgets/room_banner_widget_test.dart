@@ -22,7 +22,10 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_s
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import '../test_doubles/fake_blob_network.dart';
 import '../test_doubles/fake_blob_store.dart';
+import '../test_doubles/fake_room_document_port.dart';
 import '../test_doubles/service_test_configurator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 
 class MockP2pTransport implements IP2pTransportPort {
@@ -112,6 +115,12 @@ class MockNetworkTimePort implements INetworkTimePort {
 
 class FakePartyRoomService extends Fake implements PartyRoomService {
   @override
+  final IRoomDocumentPort roomDocPort = RecordingRoomDocumentPort();
+
+  @override
+  PartyRoomLobby? getCachedLobby(String roomCode) => null;
+
+  @override
   Future<CampaignProfile> openRoomProfile(
     String roomCode, [
     String? lobbyCampaignId,
@@ -161,6 +170,7 @@ void main() {
     sl.registerSingleton<IP2pTransportPort>(mockTransport);
     sl.registerSingleton<RoomSyncOrchestrator>(fakeOrch);
     sl.registerSingleton<RoomSessionStarter>(fakeStarter);
+    configureTestCampaignProfileService(repository: MockCampaignRepo());
     configureTestDiceRoomService(
       transport: mockTransport,
       orchestrator: fakeOrch,

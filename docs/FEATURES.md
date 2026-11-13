@@ -153,6 +153,7 @@
 * **6-Character Room Codes**: Simple 6-character alphanumeric room codes (`ROOM-XXXXXX`) with input sanitization and random code generation.
 * **Live Connection Status**: Visual status banner indicating active room connection, participant display names, and real-time roll event feeds.
 * **Ephemeral Architecture**: Stream-only roll broadcasts designed for privacy and minimal latency without permanent data harvesting.
+* **Campaign Dropdown & Plain Dice Room Isolation**: The Join dialog lists your joined campaigns in a **"Your campaigns"** dropdown sorted by most recently played to fill a campaign's room code in one tap, while plain dice rooms stay isolated from campaign profiles unless claimed locally or backed by a campaign lobby.
 
 ---
 

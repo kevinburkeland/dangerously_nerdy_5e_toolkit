@@ -1,14 +1,17 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import '../../models/party/campaign_membership.dart';
 import '../../services/dice_room_service.dart';
 
 class JoinCreateRoomDialog extends StatefulWidget {
+  final List<CampaignMembership> campaigns;
   final String? initialPlayerName;
   final String? initialRoomCode;
   final Function(String roomCode, String playerName)? onJoinRoom;
 
   const JoinCreateRoomDialog({
     super.key,
+    required this.campaigns,
     this.initialPlayerName,
     this.initialRoomCode,
     this.onJoinRoom,
@@ -16,6 +19,7 @@ class JoinCreateRoomDialog extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
+    required List<CampaignMembership> campaigns,
     String? initialPlayerName,
     String? initialRoomCode,
     Function(String roomCode, String playerName)? onJoinRoom,
@@ -23,6 +27,7 @@ class JoinCreateRoomDialog extends StatefulWidget {
     return showDialog<void>(
       context: context,
       builder: (ctx) => JoinCreateRoomDialog(
+        campaigns: campaigns,
         initialPlayerName: initialPlayerName,
         initialRoomCode: initialRoomCode,
         onJoinRoom: onJoinRoom,
@@ -81,6 +86,8 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final sortedCampaigns = List<CampaignMembership>.from(widget.campaigns)
+      ..sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -134,6 +141,36 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
               ),
             ),
             const SizedBox(height: 14),
+
+            // Your campaigns Dropdown (when non-empty)
+            if (sortedCampaigns.isNotEmpty) ...[
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: 'Your campaigns',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                items: [
+                  for (final campaign in sortedCampaigns)
+                    DropdownMenuItem<String>(
+                      value: campaign.roomCode,
+                      child: Text(
+                        '${campaign.campaignName} (${campaign.roomCode})',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: (selectedCode) {
+                  if (selectedCode != null) {
+                    setState(() {
+                      _roomController.text = selectedCode.trim().toUpperCase();
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 14),
+            ],
 
             // Room Code Input with Generator
             Row(
