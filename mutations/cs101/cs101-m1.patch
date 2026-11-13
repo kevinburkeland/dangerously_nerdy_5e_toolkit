@@ -1,0 +1,40 @@
+From bdf3db41fd22fe8b6ae77dbff376a5fafe20ccc0 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 9 Nov 2026 17:12:00 -0800
+Subject: [PATCH] Mutation cs101-m1: mutate effectiveGlyphArgb for explicit
+ glyphArgb items
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/magic_items/magic_item_data.dart | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/lib/models/magic_items/magic_item_data.dart b/lib/models/magic_items/magic_item_data.dart
+index 78dcb33e..3033097a 100644
+--- a/lib/models/magic_items/magic_item_data.dart
++++ b/lib/models/magic_items/magic_item_data.dart
+@@ -107,20 +107,10 @@ class MagicItem {
+   /// override, and falling back to keyword color detection in the item's name or tags.
+   Argb? get effectiveGlyphArgb {
+     if (glyphArgb != null) {
+-      return glyphArgb;
++      return const Argb(0xFFEF4444);
+     }
+     final lowerName = name.toLowerCase();
+     final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
+-
+-    // Gray / Grey (e.g. Gray Bag of Tricks, Gray Robe)
+-    if (lowerName.contains('(gray)') ||
+-        lowerName.contains('(grey)') ||
+-        lowerName.contains('gray') ||
+-        lowerName.contains('grey') ||
+-        lowerTags.contains('gray') ||
+-        lowerTags.contains('grey')) {
+-      return const Argb(0xFF94A3B8); // Slate Ash Gray
+-    }
+     // Rust (e.g. Rust Bag of Tricks)
+     if (lowerName.contains('(rust)') ||
+         lowerName.contains('rust') ||
+-- 
+2.55.0
+

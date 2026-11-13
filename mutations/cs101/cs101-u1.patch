@@ -1,0 +1,26 @@
+From e8a00e4e033ee9d3cface25aceb9b100952fc02f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 9 Nov 2026 17:09:36 -0800
+Subject: [PATCH] Mutation cs101-u1: mutate paladinGold primary argb
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/app_settings.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/models/app_settings.dart b/lib/models/app_settings.dart
+index e4499798..6a453d73 100644
+--- a/lib/models/app_settings.dart
++++ b/lib/models/app_settings.dart
+@@ -11,7 +11,7 @@ enum ThemeMode {
+ 
+ /// Available fantasy accent palettes with distinct primary and secondary luminescence
+ enum FantasyAccent {
+-  paladinGold('Paladin Gold', Argb(0xFFFFC107), Argb(0xFFFFD54F),
++  paladinGold('Paladin Gold', Argb(0xFF112233), Argb(0xFFFFD54F),
+       lightPrimary: Argb(0xFF92400E), lightAccent: Argb(0xFFB45309)),
+   eldritchPurple('Eldritch Purple', Argb(0xFF9C27B0), Argb(0xFFBA68C8),
+       lightPrimary: Argb(0xFF7E22CE), lightAccent: Argb(0xFFA855F7)),
+-- 
+2.55.0
+

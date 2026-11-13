@@ -1,0 +1,26 @@
+From dc932373fd80ee84e235a0ed62b9ff62639a79a6 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 9 Nov 2026 17:13:39 -0800
+Subject: [PATCH] Mutation cs101-n2: re-introduce models to widgets import in
+ minion_stat_block
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/srd_summons/minion_stat_block.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/models/srd_summons/minion_stat_block.dart b/lib/models/srd_summons/minion_stat_block.dart
+index 756ed89a..8a149c8c 100644
+--- a/lib/models/srd_summons/minion_stat_block.dart
++++ b/lib/models/srd_summons/minion_stat_block.dart
+@@ -2,6 +2,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
+ import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
+ import '../../utils/dice_formatters.dart';
+ import '../visual/glyph_kinds.dart';
++import '../../widgets/glyphs/glyph_tokens.dart';
+ 
+ import '../domain/character_models.dart';
+ import 'srd_summons_library.dart';
+-- 
+2.55.0
+

@@ -1,0 +1,26 @@
+From 89f8fe3dd56688abb6609a9280aeb8ffd71ecd5e Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 9 Nov 2026 17:08:23 -0800
+Subject: [PATCH] Mutation cs101-g1: mutate beast primary argb
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/visual/glyph_kinds.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/models/visual/glyph_kinds.dart b/lib/models/visual/glyph_kinds.dart
+index 5aade384..956e4316 100644
+--- a/lib/models/visual/glyph_kinds.dart
++++ b/lib/models/visual/glyph_kinds.dart
+@@ -97,7 +97,7 @@ extension SpellSchoolVisuals on SpellSchool {
+ enum CreatureType {
+   aberration('Aberration', Argb(0xFFA855F7), Argb(0xFFFAF5FF),
+       Argb(0xFF3B0764), GlyphFrameShape.octagon),
+-  beast('Beast', Argb(0xFF22C55E), Argb(0xFFF0FDF4), Argb(0xFF14532D),
++  beast('Beast', Argb(0xFF111111), Argb(0xFFF0FDF4), Argb(0xFF14532D),
+       GlyphFrameShape.softShield),
+   celestial('Celestial', Argb(0xFFEAB308), Argb(0xFFFEFCE8),
+       Argb(0xFF713F12), GlyphFrameShape.crest),
+-- 
+2.55.0
+

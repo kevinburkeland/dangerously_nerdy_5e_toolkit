@@ -1,0 +1,26 @@
+From 4b1aa4d3df3dd98b1033d22edea4de39124bbbd2 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 9 Nov 2026 17:06:17 -0800
+Subject: [PATCH] Mutation cs101-a2: mutate bardic inspiration roll label
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/rules/character_actions_resolver.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/rules/character_actions_resolver.dart b/lib/services/rules/character_actions_resolver.dart
+index c24f47ba..e8f520b8 100644
+--- a/lib/services/rules/character_actions_resolver.dart
++++ b/lib/services/rules/character_actions_resolver.dart
+@@ -334,7 +334,7 @@ class CharacterActionsResolver {
+               range: '60 ft',
+               resourceCost: 'Charisma Mod / Long Rest',
+               use: RollOnUse(ActionRoll(
+-                label: 'Bardic Inspiration Die',
++                label: 'Bardic Inspiration Roll',
+                 formula: die,
+               )),
+             ),
+-- 
+2.55.0
+

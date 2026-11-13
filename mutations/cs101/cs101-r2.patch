@@ -1,0 +1,26 @@
+From b66821a1c4bc4f159fc9b3d1b89c5206c9d01ea1 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 9 Nov 2026 17:07:52 -0800
+Subject: [PATCH] Mutation cs101-r2: add as BuildContext in combat action
+ runner
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/presentation/character_sheet/combat_action_runner.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/presentation/character_sheet/combat_action_runner.dart b/lib/presentation/character_sheet/combat_action_runner.dart
+index 932ce513..ba4f936f 100644
+--- a/lib/presentation/character_sheet/combat_action_runner.dart
++++ b/lib/presentation/character_sheet/combat_action_runner.dart
+@@ -15,6 +15,7 @@ void runActionRoll(
+   ActionRoll roll, {
+   required Character character,
+ }) {
++  final _ = context as BuildContext;
+   HapticService.lightImpact(context);
+   final cleanFormula = roll.formula.replaceAll(' ', '');
+   final rollResult = SpellRollEngine.roll(formula: cleanFormula);
+-- 
+2.55.0
+

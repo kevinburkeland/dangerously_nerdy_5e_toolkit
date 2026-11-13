@@ -1,0 +1,26 @@
+From f86566f1d60f84ebe048ed52be3868ef872ef148 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 9 Nov 2026 17:07:08 -0800
+Subject: [PATCH] Mutation cs101-r1: re-introduce function field on
+ CharacterCombatAction
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/domain/action_economy_models.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/models/domain/action_economy_models.dart b/lib/models/domain/action_economy_models.dart
+index 2c0d2a32..17eb1176 100644
+--- a/lib/models/domain/action_economy_models.dart
++++ b/lib/models/domain/action_economy_models.dart
+@@ -73,6 +73,7 @@ class CharacterCombatAction {
+   final ActionRoll? attackRoll;
+   final ActionRoll? damageRoll;
+   final ActionUse? use;
++  final void Function()? onAction;
+ 
+   const CharacterCombatAction({
+     required this.id,
+-- 
+2.55.0
+
