@@ -41,5 +41,4 @@ renders empty state when roster is empty | exercised only lib/widgets/dm_dashboa
 renders party member vitals and AC | exercised only lib/widgets/dm_dashboard/dm_dashboard_party_hud.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 renders without overflow under 2.0x dynamic type scaling | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 respects disableAnimations for reduced motion preferences | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
-Ensures no files in lib/infrastructure/dtos/ import package:flutter/... | Purity check updated to use FlutterPackageDetector in Bonus slice 2
 Ensures no files in lib/infrastructure/dtos/ import Flutter-bound packages | Restored original test name in Bonus slice 2

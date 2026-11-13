@@ -56,6 +56,22 @@ FROZEN_RED_RUNS_NOTES = {
     'cleanup_slice_9_progress.md',
 }
 
+# Frozen notes that existed at start heads of Cleanup slice 11 (exempt from Fix 2.4 ancestor and same-repo rule)
+# Bonus slice 2 notes name 9dceefe2... for 1.1 run 42936489472, which Fix 2.4 would reject.
+FROZEN_FIX_COMMIT_ANCESTOR_NOTES = {
+    'bonus_slice_1_1_progress.md',
+    'bonus_slice_1_progress.md',
+    'bonus_slice_2_progress.md',
+    'bonus_slice_3_progress.md',
+    'cleanup_slice_10_1_progress.md',
+    'cleanup_slice_10_progress.md',
+    'cleanup_slice_5_progress.md',
+    'cleanup_slice_6_progress.md',
+    'cleanup_slice_7_progress.md',
+    'cleanup_slice_8_progress.md',
+    'cleanup_slice_9_progress.md',
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Check commit SHAs and CI run IDs in notes files.')
@@ -305,7 +321,7 @@ def main():
                     for m in cancelled_claim_pattern.finditer(line):
                         valid_claim_spans.add(m.span())
                 if in_deviations_section:
-                    for m in re.finditer(r'(?i)\bruns?\s+[0-9]+\s+cause:', line):
+                    for m in re.finditer(r'(?i)\bruns?\s+[0-9]+\s+cause(\s+correction)?:', line):
                         valid_claim_spans.add(m.span())
 
                 mentions_in_line = []
@@ -556,6 +572,7 @@ def main():
         # 6. Fix checklist & Fix titles verification (Fix 1.2)
         base_name = os.path.basename(file_path)
         fix_ids_line = None
+        mutation_ids_line = None
         has_fix_checklist_section = False
         checklist_lines = []
         in_fix_checklist_section = False
@@ -572,6 +589,8 @@ def main():
             stripped = line.strip()
             if line.startswith('Fix ids:'):
                 fix_ids_line = (line_idx, line)
+            elif line.startswith('Mutation ids:'):
+                mutation_ids_line = (line_idx, line)
             if stripped.startswith('## '):
                 in_fix_checklist_section = (stripped == '## Fix checklist')
                 in_fix_titles_section = (stripped == '## Fix titles')
@@ -663,11 +682,14 @@ def main():
                                 orig_lines = show_res.stdout.splitlines(keepends=True)
                                 def extract_sections(raw_l):
                                     f_id = None
+                                    m_id = None
                                     t_sec = []
                                     in_t = False
                                     for line in raw_l:
                                         if line.startswith('Fix ids:'):
                                             f_id = line
+                                        elif line.startswith('Mutation ids:'):
+                                            m_id = line
                                         elif line.strip().startswith('## '):
                                             if line.strip() == '## Fix titles':
                                                 in_t = True
@@ -676,14 +698,30 @@ def main():
                                                 in_t = False
                                         elif in_t:
                                             t_sec.append(line)
-                                    return f_id, t_sec
+                                    return f_id, m_id, t_sec
 
-                                cur_id_line, cur_t_sec = extract_sections(lines)
-                                orig_id_line, orig_t_sec = extract_sections(orig_lines)
+                                cur_id_line, cur_m_id_line, cur_t_sec = extract_sections(lines)
+                                orig_id_line, orig_m_id_line, orig_t_sec = extract_sections(orig_lines)
                                 if cur_id_line != orig_id_line:
                                     problems.append(f"{file_path}: 'Fix ids:' line differs from the commit that first added this file ({first_sha})")
+                                if cur_m_id_line != orig_m_id_line:
+                                    problems.append(f"{file_path}: 'Mutation ids:' line differs from the commit that first added this file ({first_sha})")
                                 if cur_t_sec != orig_t_sec:
                                     problems.append(f"{file_path}: '## Fix titles' section differs from the commit that first added this file ({first_sha})")
+
+            # Check mutation ids line
+            expected_m_ids = []
+            if mutation_ids_line:
+                raw_m_ids = mutation_ids_line[1][len('Mutation ids:'):].strip().split()
+                expected_m_ids = raw_m_ids
+                if len(expected_m_ids) != len(set(expected_m_ids)):
+                    for mid in expected_m_ids:
+                        if expected_m_ids.count(mid) > 1:
+                            problems.append(f"{file_path}:{mutation_ids_line[0]}: duplicate Mutation id '{mid}' in 'Mutation ids:' line")
+                            break
+                for mid in expected_m_ids:
+                    if not re.match(r'^[A-Z0-9]+$', mid):
+                        problems.append(f"{file_path}:{mutation_ids_line[0]}: invalid Mutation id '{mid}' in 'Mutation ids:' line (must be upper-case letters and digits)")
 
             # Check checklist lines
             seen_ids = set()
@@ -746,29 +784,38 @@ def main():
                     c_sha = m.group(3).lower()
                     cause_lines[c_run_id] = (l_idx, c_text, c_sha)
 
-            for r_id, (head_sha, l_idx) in red_run_claims_in_file.items():
+            is_frozen_ancestor = base_name in FROZEN_FIX_COMMIT_ANCESTOR_NOTES
+
+            def verify_cause(r_id, head_sha, l_idx, run_type):
                 if r_id not in cause_lines:
-                    problems.append(f"{file_path}: run {r_id} (red) has no 'Run {r_id} cause: <text>; fixed by <sha>' line under '## Open issues and deviations'")
+                    problems.append(f"{file_path}: run {r_id} ({run_type}) has no 'Run {r_id} cause: <text>; fixed by <sha>' line under '## Open issues and deviations'")
                 else:
                     c_l_idx, c_text, c_sha = cause_lines[r_id]
                     if not c_text:
                         problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause has empty text")
                     if c_sha == head_sha.lower():
-                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} cannot be the red run's own head SHA")
-                    elif not find_repo_for_sha(c_sha):
-                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} is not in any given repo")
+                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} cannot be the {run_type} run's own head SHA")
+                    else:
+                        c_repo = find_repo_for_sha(c_sha)
+                        if not c_repo:
+                            problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} is not in any given repo")
+                        elif not is_frozen_ancestor:
+                            r_repo = find_repo_for_sha(head_sha)
+                            if r_repo and c_repo['path'] != r_repo['path']:
+                                problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} in '{c_repo['path']}' is not in the same repo as the {run_type} run's head SHA '{r_repo['path']}'")
+                            elif r_repo:
+                                anc_res = subprocess.run(
+                                    ['git', '-C', r_repo['path'], 'merge-base', '--is-ancestor', head_sha, c_sha],
+                                    capture_output=True, text=True
+                                )
+                                if anc_res.returncode != 0:
+                                    problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} is not a descendant of {run_type} run head {head_sha}")
+
+            for r_id, (head_sha, l_idx) in red_run_claims_in_file.items():
+                verify_cause(r_id, head_sha, l_idx, 'red')
 
             for r_id, (head_sha, l_idx) in cancelled_run_claims_in_file.items():
-                if r_id not in cause_lines:
-                    problems.append(f"{file_path}: run {r_id} (cancelled) has no 'Run {r_id} cause: <text>; fixed by <sha>' line under '## Open issues and deviations'")
-                else:
-                    c_l_idx, c_text, c_sha = cause_lines[r_id]
-                    if not c_text:
-                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause has empty text")
-                    if c_sha == head_sha.lower():
-                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} cannot be the red run's own head SHA")
-                    elif not find_repo_for_sha(c_sha):
-                        problems.append(f"{file_path}:{c_l_idx}: Run {r_id} cause fixed by commit {c_sha} is not in any given repo")
+                verify_cause(r_id, head_sha, l_idx, 'cancelled')
 
         file_status = None
         for line in lines:
@@ -779,7 +826,7 @@ def main():
                     file_status = 'COMPLETE'
                 break
 
-        # 7. Mutation branches verification (Fix 5.5)
+        # 7. Mutation branches verification (Fix 5.5, Fix 2.3)
         has_mutation_section = False
         in_mutation_section = False
         mutation_lines = []
@@ -800,6 +847,8 @@ def main():
             problems.append(f"{file_path}: 'Status: COMPLETE' with 'Fix ids:' line requires '## Mutation branches' section")
 
         if has_mutation_section:
+            parsed_branches = []
+            prefixes = set()
             for l_idx, raw_line in mutation_lines:
                 s = raw_line.strip()
                 if not s:
@@ -814,6 +863,8 @@ def main():
                 prefix = m.group(2)
                 branch_id = m.group(3)
                 sha = m.group(4).lower()
+                parsed_branches.append((l_idx, branch_name, prefix, branch_id, sha))
+                prefixes.add(prefix)
 
                 repo = find_repo_for_sha(sha)
                 if not repo:
@@ -828,6 +879,27 @@ def main():
                         expected_prefix = f"MUTATION — do not merge: {branch_id}".lower()
                         if not subject.lower().startswith(expected_prefix):
                             problems.append(f"{file_path}:{l_idx}: mutation branch '{branch_name}' commit {sha} subject '{subject}' does not start with 'MUTATION — do not merge: {branch_id.upper()}'")
+
+            if mutation_ids_line:
+                if len(prefixes) > 1:
+                    problems.append(f"{file_path}: mutation branches have multiple prefixes: {sorted(list(prefixes))}")
+
+                expected_m_ids_lower = [mid.lower() for mid in expected_m_ids]
+                seen_branch_ids = [b_id.lower() for (_, _, _, b_id, _) in parsed_branches]
+
+                if file_status == 'COMPLETE':
+                    for mid in expected_m_ids:
+                        if mid.lower() not in seen_branch_ids:
+                            problems.append(f"{file_path}: missing mutation branch for id '{mid}'")
+                    for l_idx, branch_name, prefix, b_id, sha in parsed_branches:
+                        if b_id.lower() not in expected_m_ids_lower:
+                            problems.append(f"{file_path}:{l_idx}: unexpected mutation branch '{branch_name}' (id '{b_id.upper()}' not in 'Mutation ids:')")
+                    if not parsed_branches and expected_m_ids:
+                        problems.append(f"{file_path}: 'Status: COMPLETE' requires mutation branches for all Mutation ids")
+                elif file_status == 'IN PROGRESS':
+                    for l_idx, branch_name, prefix, b_id, sha in parsed_branches:
+                        if b_id.lower() not in expected_m_ids_lower:
+                            problems.append(f"{file_path}:{l_idx}: unexpected mutation branch '{branch_name}' (id '{b_id.upper()}' not in 'Mutation ids:')")
 
     if problems:
         for p in problems:

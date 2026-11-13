@@ -1601,7 +1601,467 @@ EOF
   [[ "$out" == *"is not cancelled"* ]] || { echo "FAIL: NS52 expected is not cancelled message, got: $out"; exit 1; }
 )
 
-# NS53: every existing notes file still passes.
+# NS54: Fix 2.3: a complete file passes with matching Mutation ids and mutation branches.
+(
+  repo="$TMP_DIR/repo_ns54"
+  setup_repo "$repo"
+  sha_A=$(git -C "$repo" rev-parse HEAD)
+
+  echo "m1" > "$repo/m1.txt" && git -C "$repo" add m1.txt && git -C "$repo" commit -m "MUTATION — do not merge: A1" >/dev/null
+  sha_m1=$(git -C "$repo" rev-parse HEAD)
+  echo "m2" > "$repo/m2.txt" && git -C "$repo" add m2.txt && git -C "$repo" commit -m "MUTATION — do not merge: B2" >/dev/null
+  sha_m2=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/test_progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha_A
+Last pushed heads: test-repo $sha_A
+Fix ids: 1.1
+Mutation ids: A1 B2
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1: test-repo $sha_A run 999001
+
+## Fix checklist
+Fix 1.1 done: [Test fix] test
+
+## Mutation branches
+mutation/cs11-a1 $sha_m1
+mutation/cs11-b2 $sha_m2
+
+## Red runs on main
+None
+
+## Next
+None
+
+## Open issues and deviations
+None
+EOF
+  git -C "$repo" add "$notes"
+  git -C "$repo" commit -m "Add completed notes with mutations" >/dev/null
+
+  echo '{"head_sha": "'"$sha_A"'", "status": "completed", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/999001"
+  cat << EOF > "$SERVER_DIR/repos/test-org/test-repo/actions/runs.list.json"
+{"workflow_runs": [
+  {"id": 999001, "head_sha": "$sha_A", "status": "completed", "conclusion": "success", "run_number": 999001}
+]}
+EOF
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS54 expected pass, got: $out"; exit 1; }
+)
+
+# NS55: Fix 2.3: a missing branch at COMPLETE fails naming the id.
+(
+  repo="$TMP_DIR/repo_ns54"
+  notes="$repo/test_progress_ns55.md"
+  sha_A=$(git -C "$repo" rev-parse HEAD~3)
+  sha_m1=$(git -C "$repo" rev-parse HEAD~2)
+
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha_A
+Last pushed heads: test-repo $sha_A
+Fix ids: 1.1
+Mutation ids: A1 B2
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1: test-repo $sha_A run 999001
+
+## Fix checklist
+Fix 1.1 done: [Test fix] test
+
+## Mutation branches
+mutation/cs11-a1 $sha_m1
+
+## Red runs on main
+None
+
+## Next
+None
+
+## Open issues and deviations
+None
+EOF
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS55 expected failure for missing mutation branch"; exit 1; }
+  [[ "$out" == *"missing mutation branch for id 'B2'"* ]] || { echo "FAIL: NS55 expected missing branch for B2, got: $out"; exit 1; }
+)
+
+# NS56: Fix 2.3: an extra branch fails.
+(
+  repo="$TMP_DIR/repo_ns54"
+  notes="$repo/test_progress_ns56.md"
+  sha_A=$(git -C "$repo" rev-parse HEAD~3)
+  sha_m1=$(git -C "$repo" rev-parse HEAD~2)
+  sha_m2=$(git -C "$repo" rev-parse HEAD~1)
+
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha_A
+Last pushed heads: test-repo $sha_A
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1: test-repo $sha_A run 999001
+
+## Fix checklist
+Fix 1.1 done: [Test fix] test
+
+## Mutation branches
+mutation/cs11-a1 $sha_m1
+mutation/cs11-b2 $sha_m2
+
+## Red runs on main
+None
+
+## Next
+None
+
+## Open issues and deviations
+None
+EOF
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS56 expected failure for extra mutation branch"; exit 1; }
+  [[ "$out" == *"unexpected mutation branch"* ]] || { echo "FAIL: NS56 expected unexpected branch error, got: $out"; exit 1; }
+)
+
+# NS57: Fix 2.3: a branch of another prefix fails.
+(
+  repo="$TMP_DIR/repo_ns54"
+  notes="$repo/test_progress_ns57.md"
+  sha_A=$(git -C "$repo" rev-parse HEAD~3)
+  sha_m1=$(git -C "$repo" rev-parse HEAD~2)
+  sha_m2=$(git -C "$repo" rev-parse HEAD~1)
+
+  cat << EOF > "$notes"
+# Progress
+Status: COMPLETE
+Start heads: test-repo $sha_A
+Last pushed heads: test-repo $sha_A
+Fix ids: 1.1
+Mutation ids: A1 B2
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1: test-repo $sha_A run 999001
+
+## Fix checklist
+Fix 1.1 done: [Test fix] test
+
+## Mutation branches
+mutation/cs11-a1 $sha_m1
+mutation/other-b2 $sha_m2
+
+## Red runs on main
+None
+
+## Next
+None
+
+## Open issues and deviations
+None
+EOF
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS57 expected failure for multiple prefixes"; exit 1; }
+  [[ "$out" == *"mutation branches have multiple prefixes"* ]] || { echo "FAIL: NS57 expected multiple prefixes error, got: $out"; exit 1; }
+)
+
+# NS58: Fix 2.3: a changed Mutation ids: line after the first commit fails.
+(
+  repo="$TMP_DIR/repo_ns54"
+  notes="$repo/test_progress.md"
+  # Change Mutation ids line in repo_ns54 test_progress.md
+  sed -i 's/Mutation ids: A1 B2/Mutation ids: A1 B2 C3/' "$notes"
+  git -C "$repo" add "$notes"
+  git -C "$repo" commit -m "Change mutation ids line" >/dev/null
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS58 expected failure for modified Mutation ids line"; exit 1; }
+  [[ "$out" == *"'Mutation ids:' line differs"* ]] || { echo "FAIL: NS58 expected Mutation ids line differs error, got: $out"; exit 1; }
+)
+
+# NS59: Fix 2.3: a duplicate id fails.
+(
+  repo="$TMP_DIR/repo_ns54"
+  notes="$repo/test_progress_ns59.md"
+  sha_A=$(git -C "$repo" rev-parse HEAD~4)
+
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_A
+Fix ids: 1.1
+Mutation ids: A1 A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] test
+EOF
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS59 expected failure for duplicate Mutation id"; exit 1; }
+  [[ "$out" == *"duplicate Mutation id 'A1'"* ]] || { echo "FAIL: NS59 expected duplicate Mutation id error, got: $out"; exit 1; }
+)
+
+# NS60: Fix 2.3: an older notes file without the line still passes.
+(
+  repo="$TMP_DIR/repo_ns54"
+  notes="$repo/test_progress_ns60.md"
+  sha_A=$(git -C "$repo" rev-parse HEAD~4)
+
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_A
+Fix ids: 1.1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] test
+EOF
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS60 expected pass for notes without Mutation ids, got: $out"; exit 1; }
+)
+
+# NS61: Fix 2.4: a fix commit in another repo fails.
+(
+  repo1="$TMP_DIR/repo_ns61_1"
+  repo2="$TMP_DIR/repo_ns61_2"
+  setup_repo "$repo1"
+  setup_repo "$repo2"
+
+  sha_A1=$(git -C "$repo1" rev-parse HEAD)
+  echo "err" > "$repo1/err.txt" && git -C "$repo1" add err.txt && git -C "$repo1" commit -m "err commit" >/dev/null
+  sha_red=$(git -C "$repo1" rev-parse HEAD)
+
+  echo "fix" > "$repo2/fix.txt" && git -C "$repo2" add fix.txt && git -C "$repo2" commit -m "fix commit in repo2" >/dev/null
+  sha_fix2=$(git -C "$repo2" rev-parse HEAD)
+
+  notes="$repo1/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: repo1 $sha_A1
+Fix ids: 1.1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Red runs on main
+$sha_red red run 800001
+
+## Open issues and deviations
+Run 800001 cause: broke; fixed by $sha_fix2
+EOF
+  mkdir -p "$SERVER_DIR/repos/test-org/repo1/actions/runs"
+  echo '{"head_sha": "'"$sha_red"'", "conclusion": "failure"}' > "$SERVER_DIR/repos/test-org/repo1/actions/runs/800001"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo1=test-org/repo1" --repo "$repo2=test-org/repo2" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS61 expected failure when fix commit is in wrong repo"; exit 1; }
+  [[ "$out" == *"not in the same repo"* ]] || { echo "FAIL: NS61 expected not in the same repo error, got: $out"; exit 1; }
+)
+
+# NS62: Fix 2.4: a fix commit that is an ancestor of the red head fails.
+(
+  repo="$TMP_DIR/repo_ns62"
+  setup_repo "$repo"
+  sha_anc=$(git -C "$repo" rev-parse HEAD)
+
+  echo "err" > "$repo/err.txt" && git -C "$repo" add err.txt && git -C "$repo" commit -m "red head" >/dev/null
+  sha_red=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_anc
+Fix ids: 1.1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Red runs on main
+$sha_red red run 800002
+
+## Open issues and deviations
+Run 800002 cause: broke; fixed by $sha_anc
+EOF
+  echo '{"head_sha": "'"$sha_red"'", "conclusion": "failure"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800002"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS62 expected failure when fix commit is ancestor of red head"; exit 1; }
+  [[ "$out" == *"is not a descendant"* ]] || { echo "FAIL: NS62 expected is not a descendant error, got: $out"; exit 1; }
+)
+
+# NS63: Fix 2.4: a fix commit on an unrelated branch fails.
+(
+  repo="$TMP_DIR/repo_ns63"
+  setup_repo "$repo"
+  sha_base=$(git -C "$repo" rev-parse HEAD)
+
+  git -C "$repo" checkout -b other-branch >/dev/null 2>&1
+  echo "unrelated" > "$repo/unrelated.txt" && git -C "$repo" add unrelated.txt && git -C "$repo" commit -m "unrelated commit" >/dev/null
+  sha_unrelated=$(git -C "$repo" rev-parse HEAD)
+
+  git -C "$repo" checkout main >/dev/null 2>&1
+  echo "err" > "$repo/err.txt" && git -C "$repo" add err.txt && git -C "$repo" commit -m "red commit" >/dev/null
+  sha_red=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_base
+Fix ids: 1.1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Red runs on main
+$sha_red red run 800003
+
+## Open issues and deviations
+Run 800003 cause: broke; fixed by $sha_unrelated
+EOF
+  echo '{"head_sha": "'"$sha_red"'", "conclusion": "failure"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800003"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS63 expected failure when fix commit is on unrelated branch"; exit 1; }
+  [[ "$out" == *"is not a descendant"* ]] || { echo "FAIL: NS63 expected is not a descendant error, got: $out"; exit 1; }
+)
+
+# NS64: Fix 2.4: a descendant in the same repo passes.
+(
+  repo="$TMP_DIR/repo_ns64"
+  setup_repo "$repo"
+  sha_base=$(git -C "$repo" rev-parse HEAD)
+
+  echo "err" > "$repo/err.txt" && git -C "$repo" add err.txt && git -C "$repo" commit -m "red commit" >/dev/null
+  sha_red=$(git -C "$repo" rev-parse HEAD)
+
+  echo "fix" > "$repo/fix.txt" && git -C "$repo" add fix.txt && git -C "$repo" commit -m "descendant fix commit" >/dev/null
+  sha_fix=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_base
+Fix ids: 1.1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Red runs on main
+$sha_red red run 800004
+
+## Open issues and deviations
+Run 800004 cause: broke; fixed by $sha_fix
+EOF
+  echo '{"head_sha": "'"$sha_red"'", "conclusion": "failure"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800004"
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS64 expected pass for descendant fix commit in same repo, got: $out"; exit 1; }
+)
+
+# NS65: Fix 2.4: the frozen files still pass.
+(
+  repo1="$TMP_DIR/repo_ns65_1"
+  repo2="$TMP_DIR/repo_ns65_2"
+  setup_repo "$repo1"
+  setup_repo "$repo2"
+
+  sha_A1=$(git -C "$repo1" rev-parse HEAD)
+  echo "err" > "$repo1/err.txt" && git -C "$repo1" add err.txt && git -C "$repo1" commit -m "err commit" >/dev/null
+  sha_red=$(git -C "$repo1" rev-parse HEAD)
+
+  echo "fix" > "$repo2/fix.txt" && git -C "$repo2" add fix.txt && git -C "$repo2" commit -m "fix in repo 2" >/dev/null
+  sha_fix2=$(git -C "$repo2" rev-parse HEAD)
+
+  notes="$repo1/bonus_slice_2_progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: repo1 $sha_A1
+Fix ids: 1.1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Red runs on main
+$sha_red red run 800005
+
+## Open issues and deviations
+Run 800005 cause: broke; fixed by $sha_fix2
+EOF
+  mkdir -p "$SERVER_DIR/repos/test-org/repo1/actions/runs"
+  echo '{"head_sha": "'"$sha_red"'", "conclusion": "failure"}' > "$SERVER_DIR/repos/test-org/repo1/actions/runs/800005"
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo1=test-org/repo1" --repo "$repo2=test-org/repo2" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS65 expected pass for frozen file with cross-repo fix, got: $out"; exit 1; }
+)
+
+# NS66: every existing notes file still passes.
 (
   core_repo=""
   ruleset_repo=""
@@ -1623,12 +2083,16 @@ EOF
     ruleset_repo="$TMP_DIR/ruleset_ns53.git"
   fi
 
-  out=$(python3 -I "$CHECK_SCRIPT"     --repo .=kevinburkeland/dangerously_nerdy_5e_toolkit     --repo "$core_repo=kevinburkeland/vtt-engine-core"     --repo "$ruleset_repo=kevinburkeland/vtt-ruleset-dnd5e"     "$SCRIPT_DIR/../notes"/*.md)
+  out=$(python3 -I "$CHECK_SCRIPT" \
+    --repo .=kevinburkeland/dangerously_nerdy_5e_toolkit \
+    --repo "$core_repo=kevinburkeland/vtt-engine-core" \
+    --repo "$ruleset_repo=kevinburkeland/vtt-ruleset-dnd5e" \
+    "$SCRIPT_DIR/../notes"/*.md)
   if [[ "$out" != *"All SHAs are valid commits"* ]]; then
-    echo "FAIL: NS53 expected all existing notes to pass, got: $out" >&2
+    echo "FAIL: NS66 expected all existing notes to pass, got: $out" >&2
     exit 1
   fi
 )
 
-echo "All notes SHA check self-tests passed (NS1 - NS53)."
+echo "All notes SHA check self-tests passed (NS1 - NS66)."
 
