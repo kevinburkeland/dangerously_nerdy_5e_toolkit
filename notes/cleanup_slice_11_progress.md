@@ -33,7 +33,7 @@ Fix 7.3: No hand-written dice reading in app lib
 
 ## Steps
 - [x] Step 1 setup-dart and glob before the deadline: core bbd4956fdd2d5dfe6d74c544d63dd3966f33d4bb run 43506779610, ruleset a894bc85d584525fa4111660e73ed075460d22e1 run 43507045209, app 5889a4d16927984a006a166791614836270b437b run 43343566938
-- [ ] Step 2 Retire, and the notes and ratchet rules
+- [x] Step 2 Retire, and the notes and ratchet rules: core 4c32fe77c8812b9098f2a84391d85ba18eea8844 run 43510633135, ruleset b03b93608a5f63f64df2edb66cdccfcc19f5ed9d run 43510658360, app ad074573be125e834ce6db821b1eeb728d923e36 run 43515303929
 - [ ] Step 3 The dependency check fails closed by schema
 - [ ] Step 4 One import reader, the package rule, and P2
 - [ ] Step 5 SRD names out, and massive damage
