@@ -1,7 +1,7 @@
 # Bonus slice 3 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: app 642001203fcd3331b242fe885daf146014657ad4
-Last pushed heads (CI green): app 642001203fcd3331b242fe885daf146014657ad4
+Last pushed heads (CI green): app 03e1d383f30345e313107ed2b2469f27e4e793f5
 Fix ids: 1.1 1.2 1.3 1.4
 
 ## Fix titles
@@ -11,8 +11,8 @@ Fix 1.3: Only campaign entry paths call openRoomProfile
 Fix 1.4: The Join dialog lists your campaigns
 
 ## Steps
-- [x] Step 1 Dice rooms stay dice rooms, and the campaign dropdown
-- [ ] Step 2 Mutations and report
+- [x] Step 1 Dice rooms stay dice rooms, and the campaign dropdown: app 03e1d383f30345e313107ed2b2469f27e4e793f5 run 43342862173
+- [x] Step 2 Mutations and report
 
 ## Fix checklist
 Fix 1.1 done: [Only a campaign room opens a campaign] Added SharedRoomCampaignOpener in lib/services/party/shared_room_campaign_opener.dart, wired RoomBannerWidget in lib/widgets/room_banner_widget.dart, and added examples and 500-case law in test/services/party/shared_room_campaign_opener_test.dart
@@ -27,7 +27,7 @@ None
 951b228e663f641194d67bfcb219787b553b73f9 red run 43341534683
 
 ## Next
-Run Step 2 local mutations M1-M6, run exit checks, mark notes COMPLETE, and push final commit.
+None
 
 ## Open issues and deviations
 Run 43341534683 cause: analyze job failed with avoid_print info on print calls in test/services/party/shared_room_campaign_opener_test.dart; fixed by a1c5636fe99eb272c0835821ef1c39669c2ced42
