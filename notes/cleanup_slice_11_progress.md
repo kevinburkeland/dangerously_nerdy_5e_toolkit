@@ -44,16 +44,25 @@ Fix 7.3: No hand-written dice reading in app lib
 ## Fix checklist
 Fix 1.1 done: [setup-dart v1.8.2 in core and ruleset] Updated dart-lang/setup-dart pins to v1.8.2 in core and ruleset ci.yml and dependencies.yml
 Fix 1.2 done: [glob 14.0.6 in the app's npm overrides] Updated glob override to 14.0.6 in package.json, package-lock.json, and dependency_exceptions.tsv
+Fix 2.1 done: [Retire bs2] Retired bs2 branches across core (4), ruleset (2), and app (7) with archive tags
+Fix 2.2 done: [Retire cs101 and its exception rows] Taught retire script to drop matching prefix rows in mutation_subject_exceptions.tsv, retired 12 cs101 branches, and deleted all 12 rows
+Fix 2.3 done: [Mutation ids are fixed and checked] check_notes_shas validates Mutation ids line byte-identity, token uniqueness, and matching branches at COMPLETE and IN PROGRESS
+Fix 2.4 done: [A fix commit is in the same repo and after the red run] check_notes_shas validates cause lines point to descendant commits in the same repo
+Fix 2.5 done: [The test-name ratchet refuses live and invented names] check_test_names refuses rows for live tests and names that never existed, removed live DTO purity row
 
 ## Mutation branches
 None
 
 ## Red runs on main
-None
+0447ece03df8722a19a0937f86dbc374457790de cancelled run 43510726706
+06e8ad23c8199366971b8658a89488158fa85d09 red run 43510818731
 
 ## Next
-Begin Step 2 by teaching the retire script to remove matching prefix rows from the mutation subject exceptions table, then retire bs2 and cs101 and implement the notes and ratchet checks.
+Start Step 3: Implement dynamic schema-driven fail-closed law in check_dependencies.py and verify closure.
 
 ## Open issues and deviations
+Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
+Run 43510818731 cause: DCO job failed in check_notes_shas.py with undisclosed cancelled run on 0447ece03df8722a19a0937f86dbc374457790de; fixed by bd330f5dc22f5010a3b6cc27c2e6eba4c1e878d4
+Bonus slice 2 notes run 42936489472 cause correction: cancelled by the push of 4fd8711db7177fb7dbea7c77c8d51ba69070834b
 When running the app dependency check with --today 2026-12-11, all five N4 rows in dependency_exceptions.tsv fail rule E1 because their review_by date 2026-12-10 is in the past on 2026-12-11; recorded as a known review date for Kevin without changing those rows.
 When running the app dependency check with --today 2026-11-26, transitive dependency android_file_picker 2.1.5 (resolvable 2.1.6 published 2026-11-12) also exceeded the 14-day grace window, so pubspec.lock was updated to 2.1.6 alongside glob 14.0.6.
