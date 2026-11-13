@@ -24,10 +24,11 @@ Fix 1.4 done: [The Join dialog lists your campaigns] Added sorted "Your campaign
 None
 
 ## Red runs on main
-None
+951b228e663f641194d67bfcb219787b553b73f9 red run 43341534683
 
 ## Next
 Run Step 2 local mutations M1-M6, run exit checks, mark notes COMPLETE, and push final commit.
 
 ## Open issues and deviations
+Run 43341534683 cause: analyze job failed with avoid_print info on print calls in test/services/party/shared_room_campaign_opener_test.dart; fixed by a1c5636fe99eb272c0835821ef1c39669c2ced42
 Updated test doubles in test/screens/dice_roller_screen_test.dart and test/screens/screens_characterization_test.dart so fake PartyRoomService instances used by screens mounting RoomBannerWidget expose roomDocPort and getCachedLobby. Regenerated .agents/rules/codebase_map.md via tool/generate_codebase_map.dart for the new file in lib/services/party/ to satisfy docs_truth_test DT4.
