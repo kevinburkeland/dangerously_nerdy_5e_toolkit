@@ -1,7 +1,7 @@
 # Cleanup slice 11 progress notes
 Status: IN PROGRESS
 Start heads: core 8d9b3ea509bca5e78c21298924d06963c938321f, ruleset 016a09556cd3e522593248a83aa22f982fcb6adc, app 5889a4d16927984a006a166791614836270b437b
-Last pushed heads (CI green): core bbd4956fdd2d5dfe6d74c544d63dd3966f33d4bb, ruleset a894bc85d584525fa4111660e73ed075460d22e1, app 5889a4d16927984a006a166791614836270b437b
+Last pushed heads (CI green): core bbd4956fdd2d5dfe6d74c544d63dd3966f33d4bb, ruleset a894bc85d584525fa4111660e73ed075460d22e1, app 816a30b0de9a34af7496b4919cc346633b9dee02
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91
 Fix ids: 1.1 1.2 2.1 2.2 2.3 2.4 2.5 3.1 3.2 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 6.4 7.1 7.2 7.3
 Mutation ids: D1 F1 F2 S2 M1 X1 N1 C1 T1 I1 I2 K1 K2 S1 Y1 R1 P1 L1 X2
@@ -35,7 +35,7 @@ Fix 7.3: No hand-written dice reading in app lib
 - [x] Step 1 setup-dart and glob before the deadline: core bbd4956fdd2d5dfe6d74c544d63dd3966f33d4bb run 43506779610, ruleset a894bc85d584525fa4111660e73ed075460d22e1 run 43507045209, app 5889a4d16927984a006a166791614836270b437b run 43343566938
 - [x] Step 2 Retire, and the notes and ratchet rules: core 4c32fe77c8812b9098f2a84391d85ba18eea8844 run 43510633135, ruleset b03b93608a5f63f64df2edb66cdccfcc19f5ed9d run 43510658360, app ad074573be125e834ce6db821b1eeb728d923e36 run 43515303929
 - [x] Step 3 The dependency check fails closed by schema: core 5d8ff3ee38c8bad7c08a41f52f882c74856ddc4d run 43650302385, ruleset ac46b6b38dcfc53ed4b5cdd98ad087d994810caf run 43650304011, app b8e85809033a13128077f81bfe22a9c3104ba77f run 43650309256
-- [ ] Step 4 One import reader, the package rule, and P2
+- [x] Step 4 One import reader, the package rule, and P2: app 816a30b0de9a34af7496b4919cc346633b9dee02 run 43652468422
 - [ ] Step 5 SRD names out, and massive damage
 - [ ] Step 6 Sync deltas, room creation, and the privacy policy
 - [ ] Step 7 One dice reader
@@ -51,6 +51,9 @@ Fix 2.4 done: [A fix commit is in the same repo and after the red run] check_not
 Fix 2.5 done: [The test-name ratchet refuses live and invented names] check_test_names refuses rows for live tests and names that never existed, removed live DTO purity row
 Fix 3.1 done: [Damage rows come from the fields the script reads] check_dependencies.py defines SCHEMA table for all 16 JSON/YAML inputs and accesses all fields strictly via need()
 Fix 3.2 done: [Every needed field that is missing fails] Dynamic table-driven test_check_dependencies.sh generates damage tests for all schema fields and verifies 316 fail closed and 6 valid pass
+Fix 4.1 done: [One import reader for every import check] Created test/support/dart_directive_reader.dart and migrated 11 test files to shared directive reader
+Fix 4.2 done: [Pure folders import only listed packages] Enforced pure-folder package allowlist in layer_import_table_test.dart and documented in docs/ARCHITECTURE.md
+Fix 4.3 done: [No function-typed fields in models, however written] Rule P2 in presentation_boundary_bars_test flags direct function types, initializers, and function-typed typedefs in lib/models
 
 ## Mutation branches
 None
@@ -60,7 +63,7 @@ None
 06e8ad23c8199366971b8658a89488158fa85d09 red run 43510818731
 
 ## Next
-Step 4: One import reader, the package rule, and P2
+Step 5: SRD names out, and massive damage
 
 ## Open issues and deviations
 Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
