@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-13
+- Cleanup slice 11: Enforce fail-closed input validation by schema table in check_dependencies.py (Fix 3.1) and generate dynamic table-driven damage and valid tests in test_check_dependencies.sh (Fix 3.2).
 - Cleanup slice 11: Retire bs2 and cs101 mutation branches, clean up mutation subject exception rows in retirement, enforce Mutation ids line and branch checks (Fix 2.3), enforce same-repo descendant fix commits in notes cause lines (Fix 2.4), and refuse live and invented test names in test-name ratchet (Fix 2.5).
 - Cleanup slice 11: Update glob npm override to 14.0.6 in firestore_rules_test and dependency_exceptions.tsv, and update transitive android_file_picker lockfile entry to 2.1.6.
 
