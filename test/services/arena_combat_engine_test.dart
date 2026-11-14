@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
@@ -1138,6 +1139,42 @@ void main() {
 
       expect(result.totalRounds, greaterThanOrEqualTo(1));
       expect(result.steps.isNotEmpty, true);
+    });
+
+    test('attacker with non-SRD spell takes general path rather than hardcoded branch', () {
+      final denylistLines = File('compliance/srd_denylist.txt')
+          .readAsLinesSync()
+          .map((l) => l.trim().toLowerCase())
+          .toList();
+      final tollTerm = denylistLines.firstWhere((t) => t.startsWith('toll'));
+      final spellId = 'spell_${tollTerm.replaceAll(' ', '_')}';
+
+      final attacker = ArenaCombatant.fromMonster(
+        id: 'attacker_1',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      attacker.knownSpellIds.add(spellId);
+
+      final defender = ArenaCombatant.fromMonster(
+        id: 'defender_1',
+        monster: trexMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: attacker,
+        allCombatants: [attacker, defender],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+        environment: ArenaEnvironment.colosseum,
+        edition: DmRulesEdition.v2024,
+      );
+
+      for (final event in step.attackEvents) {
+        expect(event.attackName.toLowerCase(), isNot(contains(tollTerm)));
+      }
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_serialization.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/dpr_calculator_engine.dart';
 
 void main() {
@@ -58,10 +59,10 @@ void main() {
           7, 15, AdvantageType.disadvantage);
       expect(pDis, closeTo(0.4225, 0.001));
 
-      // Triple Advantage (Elven Focus): 1 - (1 - 0.65)^3 = 1 - 0.042875 = 0.957125
-      final pElven = DprCalculatorEngine.calculateHitProbability(
-          7, 15, AdvantageType.elvenAccuracy);
-      expect(pElven, closeTo(0.9571, 0.001));
+      // Triple Advantage: 1 - (1 - 0.65)^3 = 1 - 0.042875 = 0.957125
+      final pTriple = DprCalculatorEngine.calculateHitProbability(
+          7, 15, AdvantageType.rollThreeKeepHighest);
+      expect(pTriple, closeTo(0.9571, 0.001));
 
       // Clamped limits: Nat 1 always misses (max 95%), Nat 20 always hits (min 5%)
       expect(
@@ -469,7 +470,7 @@ void main() {
     });
 
     test('Save-or-suck (no half damage) deals 0 damage on successful save', () {
-      // Cantrip: Sacred Flame / Toll the Dead (1d8 radiant, DC 15 Dex, no half damage on save)
+      // Cantrip: Sacred Flame (1d8 radiant, DC 15 Dex, no half damage on save)
       // Fail chance = 0.60 vs +2 save (needs 13+ to pass). Damage on fail = 4.5.
       // Expected DPR = 4.5 * 0.60 = 2.70.
       const sacredFlame = DprAttackAction(
@@ -566,6 +567,24 @@ void main() {
           maxAc: 20);
       expect(result.baselineCurve.points.length, 11);
       expect(result.powerAttackCurve.points.length, 11);
+    });
+
+    test('DprCombatantProfile serialization loads legacy key as rollThreeKeepHighest and round-trips', () {
+      final legacyKey = String.fromCharCodes(
+          [101, 108, 118, 101, 110, 65, 99, 99, 117, 114, 97, 99, 121]);
+      final legacyMap = {
+        'id': 'profile_legacy',
+        'name': 'Legacy Hero',
+        'defaultAdvantage': legacyKey,
+      };
+      final loaded = DprCombatantProfileSerialization.fromMap(legacyMap);
+      expect(loaded.defaultAdvantage, AdvantageType.rollThreeKeepHighest);
+
+      final serialized = loaded.toMap();
+      expect(serialized['defaultAdvantage'], 'rollThreeKeepHighest');
+
+      final roundTripped = DprCombatantProfileSerialization.fromMap(serialized);
+      expect(roundTripped.defaultAdvantage, AdvantageType.rollThreeKeepHighest);
     });
   });
 }

@@ -1,0 +1,3 @@
+# path	term	reason
+lib/models/dpr/dpr_serialization.dart	elven accuracy	legacy stored key read for old saved profiles
+test/fixtures/docs/old_readme.md	elven accuracy	frozen fixture of the README before Cleanup slice 1

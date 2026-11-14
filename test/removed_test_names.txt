@@ -42,3 +42,6 @@ renders party member vitals and AC | exercised only lib/widgets/dm_dashboard/dm_
 renders without overflow under 2.0x dynamic type scaling | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 respects disableAnimations for reduced motion preferences | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 Ensures no files in lib/infrastructure/dtos/ import Flutter-bound packages | Restored original test name in Bonus slice 2
+11. Booming Blade is absent from bundled DPR presets | renamed to "11. Non-SRD cantrip 1 is absent from bundled DPR presets" in Cleanup slice 11
+12. Green-Flame Blade is absent from bundled DPR presets | renamed to "12. Non-SRD cantrip 2 is absent from bundled DPR presets" in Cleanup slice 11
+14. User-imported Booming Blade and Green-Flame Blade remain supported | renamed to "14. User-imported custom cantrips remain supported" in Cleanup slice 11

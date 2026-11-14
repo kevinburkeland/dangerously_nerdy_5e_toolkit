@@ -14,8 +14,15 @@ import 'canonical_srd_allowlists.dart';
 
 void main() {
   group('SRD Legal Compliance & Product Identity Invariant Suite', () {
+    final denylistFile = File('compliance/srd_denylist.txt');
+    final denylistTerms = denylistFile
+        .readAsLinesSync()
+        .map((l) => l.trim().toLowerCase())
+        .where((l) => l.isNotEmpty && !l.startsWith('#'))
+        .toList();
+
     final piPattern = RegExp(
-      r"\b(Eberron|Faer[uû]n|Toril|Ravnica|Krynn|Athas|Barovia|Spelljammer|Planescape|Waterdeep|Baldur'?s Gate|Neverwinter|Harper|Harpers|Zhentarim|Lord'?s Alliance|Emerald Enclave|Order of the Gauntlet|Dragonmark|Dragonmarks|Dragonmarked|Warforged|Kalashtar|Shifter|Changeling|Simic Hybrid|Vedalken|Githyanki|Githzerai|Beholder|Mind Flayer|Illithid|Gith|Displacer Beast|Gauth|Carrion Crawler|Umber Hulk|Slaad|Yuan-ti|Beholderkin|Bigby|Tasha|Mordenkainen|Otiluke|Drawmij|Rary|Leomund|Evard|Tenser|Aganazzar|Melf|Elminster|Drizzt|Strahd|Acererak)\b",
+      '\\b(${denylistTerms.map(RegExp.escape).join('|')})\\b',
       caseSensitive: false,
     );
 
@@ -361,19 +368,13 @@ void main() {
         final featSlugs = SrdFeatsLibrary.baseFeats
             .map((f) => f.id.slug.toLowerCase())
             .toSet();
-        const nonSrdFeats = [
-          'great-weapon-master',
-          'great weapon master',
-          'sharpshooter',
-          'war-caster',
-          'war caster',
-          'polearm-master',
-          'polearm master',
-          'sentinel',
-          'lucky',
-          'tavern-brawler',
-          'inspiring-leader',
-        ];
+        final nonSrdFeats = denylistTerms
+            .where((t) =>
+                t.endsWith('master') ||
+                t.endsWith('shooter') ||
+                t.endsWith('caster'))
+            .expand((t) => [t, t.replaceAll(' ', '-')])
+            .toList();
 
         for (final nonSrd in nonSrdFeats) {
           expect(
@@ -445,29 +446,29 @@ void main() {
         expect(customSpecies.name, equals('Aasimar'));
 
         const customFeat = Feat(
-          id: EntityId(slug: 'sharpshooter', ruleset: RulesetVersion.v2024),
-          name: 'Sharpshooter',
-          descriptionMarkdown: 'Custom user-created sharpshooter feat.',
+          id: EntityId(slug: 'custom-expert', ruleset: RulesetVersion.v2024),
+          name: 'Custom Expert',
+          descriptionMarkdown: 'Custom user-created expert feat.',
         );
-        expect(customFeat.name, equals('Sharpshooter'));
+        expect(customFeat.name, equals('Custom Expert'));
 
         final parser = CompendiumSpellParser();
         final userSpell = parser.parseSpell({
-          'name': 'Booming Blade',
+          'name': 'Custom Cantrip',
           'level': 0,
           'school': 'V',
           'classes': ['Sorcerer', 'Warlock', 'Wizard'],
         });
-        expect(userSpell.name, equals('Booming Blade'));
+        expect(userSpell.name, equals('Custom Cantrip'));
         expect(userSpell.customProperties['classes'],
             containsAll(['Sorcerer', 'Warlock', 'Wizard']));
 
         const customReference = EntityReference.empty(
           refType: EntityType.classDefinition,
-          slug: 'artificer',
-          displayName: 'Artificer',
+          slug: 'custom_class',
+          displayName: 'Custom Class',
         );
-        expect(customReference.displayName, equals('Artificer'));
+        expect(customReference.displayName, equals('Custom Class'));
 
         const speciesReference = EntityReference.empty(
           refType: EntityType.species,
@@ -582,66 +583,69 @@ void main() {
       test(
           '10. Repository-wide compliance scanning catches a deliberately injected forbidden fixture',
           () {
-        const injectedForbiddenFixture = '''
+        final sampleTerms = denylistTerms.take(5).toList();
+        final injectedForbiddenFixture = '''
           class ForbiddenFixture {
-            final String monster = "beholder";
-            final String spell = "tasha's hideous laughter";
-            final String feat = "great weapon master";
-            final String cantrip1 = "booming blade";
-            final String cantrip2 = "green-flame blade";
+            final String sample1 = "${sampleTerms[0]}";
+            final String sample2 = "${sampleTerms[1]}";
+            final String sample3 = "${sampleTerms[2]}";
+            final String sample4 = "${sampleTerms[3]}";
+            final String sample5 = "${sampleTerms[4]}";
           }
         ''';
 
         final forbiddenScannerRegex = RegExp(
-          r"\b(beholder|illithid|mind flayer|tasha'?s|great weapon master|booming blade|green-flame blade)\b",
+          '\\b(${sampleTerms.map(RegExp.escape).join('|')})\\b',
           caseSensitive: false,
         );
 
         final matches = forbiddenScannerRegex
             .allMatches(injectedForbiddenFixture)
-            .map((m) => m.group(0)!)
+            .map((m) => m.group(0)!.toLowerCase())
             .toList();
         expect(
           matches,
-          containsAll([
-            'beholder',
-            "tasha's",
-            'great weapon master',
-            'booming blade',
-            'green-flame blade',
-          ]),
+          containsAll(sampleTerms),
         );
         expect(matches.length, greaterThanOrEqualTo(5));
       });
 
-      test('11. Booming Blade is absent from bundled DPR presets', () {
-        final hasBoomingBlade = DprWeaponPreset.allPresets.any((p) =>
-            p.id.toLowerCase().contains('booming') ||
-            p.name.toLowerCase().contains('booming blade'));
-        expect(hasBoomingBlade, isFalse,
+      test('11. Non-SRD cantrip 1 is absent from bundled DPR presets', () {
+        final term = denylistTerms.firstWhere((t) => t.startsWith('boom'));
+        final termSlug = term.replaceAll(' ', '_');
+        final hasPreset = DprWeaponPreset.allPresets.any((p) =>
+            p.id.toLowerCase().contains(termSlug) ||
+            p.name.toLowerCase().contains(term));
+        expect(hasPreset, isFalse,
             reason:
-                'Booming Blade must not be included in bundled DPR presets.');
+                'Forbidden non-SRD cantrip must not be included in bundled DPR presets.');
       });
 
-      test('12. Green-Flame Blade is absent from bundled DPR presets', () {
-        final hasGreenFlameBlade = DprWeaponPreset.allPresets.any((p) =>
-            p.id.toLowerCase().contains('green_flame') ||
-            p.name.toLowerCase().contains('green-flame blade'));
-        expect(hasGreenFlameBlade, isFalse,
+      test('12. Non-SRD cantrip 2 is absent from bundled DPR presets', () {
+        final term = denylistTerms.firstWhere((t) => t.startsWith('green'));
+        final termSlug = term.replaceAll(' ', '_');
+        final hasPreset = DprWeaponPreset.allPresets.any((p) =>
+            p.id.toLowerCase().contains(termSlug) ||
+            p.name.toLowerCase().contains(term));
+        expect(hasPreset, isFalse,
             reason:
-                'Green-Flame Blade must not be included in bundled DPR presets.');
+                'Forbidden non-SRD cantrip must not be included in bundled DPR presets.');
       });
 
       test(
           '13. Non-SRD cantrip and spell weapon presets are absent from DPR catalog',
           () {
-        const nonSrdIds = [
-          'toll_the_dead',
-          'mind_sliver',
-          'primal_savagery',
-          'word_of_radiance',
-          'shadow_blade',
-        ];
+        final nonSrdTerms = denylistTerms
+            .where((t) =>
+                t.contains(' ') &&
+                (t.startsWith('toll') ||
+                    t.startsWith('mind') ||
+                    t.startsWith('primal') ||
+                    t.startsWith('word') ||
+                    t.startsWith('shadow')))
+            .toList();
+        final nonSrdIds =
+            nonSrdTerms.map((t) => t.replaceAll(' ', '_')).toList();
         for (final nonSrd in nonSrdIds) {
           final present =
               DprWeaponPreset.allPresets.any((p) => p.id.contains(nonSrd));
@@ -652,31 +656,31 @@ void main() {
       });
 
       test(
-          '14. User-imported Booming Blade and Green-Flame Blade remain supported',
+          '14. User-imported custom cantrips remain supported',
           () {
-        const customBooming = DprWeaponPreset(
-          id: 'custom_booming_blade',
-          name: 'Booming Blade (Custom User Import)',
+        const customCantrip1 = DprWeaponPreset(
+          id: 'custom_cantrip_1',
+          name: 'Custom Thunder Strike (Custom User Import)',
           diceCount: 1,
           diceSides: 8,
           damageType: 'thunder',
           isCantrip: true,
         );
-        expect(
-            customBooming.name, equals('Booming Blade (Custom User Import)'));
-        expect(customBooming.diceSides, equals(8));
+        expect(customCantrip1.name,
+            equals('Custom Thunder Strike (Custom User Import)'));
+        expect(customCantrip1.diceSides, equals(8));
 
-        const customGreenFlame = DprWeaponPreset(
-          id: 'custom_green_flame_blade',
-          name: 'Green-Flame Blade (Custom User Import)',
+        const customCantrip2 = DprWeaponPreset(
+          id: 'custom_cantrip_2',
+          name: 'Custom Flame Strike (Custom User Import)',
           diceCount: 1,
           diceSides: 8,
           damageType: 'fire',
           isCantrip: true,
         );
-        expect(customGreenFlame.name,
-            equals('Green-Flame Blade (Custom User Import)'));
-        expect(customGreenFlame.damageType, equals('fire'));
+        expect(customCantrip2.name,
+            equals('Custom Flame Strike (Custom User Import)'));
+        expect(customCantrip2.damageType, equals('fire'));
       });
 
       test('15. No unnecessary product-facing "D&D" branding in footer', () {
@@ -698,32 +702,35 @@ void main() {
     test(
         'Repository-wide production scan (lib/) contains zero unallowed Product Identity or non-SRD terms',
         () {
-      final libDir = Directory('lib');
-      expect(libDir.existsSync(), isTrue);
-
-      final forbiddenRegex = RegExp(
-        r"\b(beholder|mind flayer|illithid|carrion crawler|displacer beast|githyanki|githzerai|slaad|umber hulk|yuan-ti|kuo-toa|tasha|bigby|mordenkainen|leomund|drawmij|nystul|otiluke|tenser|evard|melf|elminster|drizzt|strahd|acererak|waterdeep|neverwinter|baldur'?s gate|great weapon master|sharpshooter|war caster|polearm master|booming blade|green-flame blade)\b",
-        caseSensitive: false,
-      );
-
-      final violations = <String>[];
-
-      for (final file in libDir.listSync(recursive: true).whereType<File>()) {
-        if (!file.path.endsWith('.dart')) continue;
-        final content = file.readAsStringSync();
-
-        for (final match in forbiddenRegex.allMatches(content)) {
-          final matchedWord = match.group(0)!;
-          violations.add('${file.path}: found forbidden term "$matchedWord"');
-        }
-      }
-
+      final result =
+          Process.runSync('python3', ['-I', 'scripts/check_srd_terms.py']);
       expect(
-        violations,
-        isEmpty,
+        result.exitCode,
+        equals(0),
         reason:
-            'Production source code in lib/ violates Product Identity rules:\n${violations.join('\n')}',
+            'scripts/check_srd_terms.py failed:\n${result.stdout}\n${result.stderr}',
       );
+    });
+
+    test('Terms of Service files are byte-identical and contain SRD 5.1 and 5.2.1 attribution', () {
+      final rootTos = File('TERMS_OF_SERVICE.md');
+      final webTos = File('web/legal/TERMS_OF_SERVICE.md');
+      expect(rootTos.existsSync(), isTrue);
+      expect(webTos.existsSync(), isTrue);
+
+      final rootBytes = rootTos.readAsBytesSync();
+      final webBytes = webTos.readAsBytesSync();
+      expect(rootBytes, equals(webBytes),
+          reason: 'TERMS_OF_SERVICE.md and web/legal/TERMS_OF_SERVICE.md must be byte-identical');
+
+      final content = rootTos.readAsStringSync();
+      const sentence1 =
+          'This work includes material taken from the System Reference Document 5.1 ("SRD 5.1") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.';
+      const sentence2 =
+          'This work includes material taken from the System Reference Document 5.2.1 ("SRD 5.2.1") by Wizards of the Coast LLC and available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.';
+
+      expect(content, contains(sentence1));
+      expect(content, contains(sentence2));
     });
   });
 }

@@ -56,7 +56,7 @@ class DprCalculatorEngine {
       AdvantageType.advantage =>
         1.0 - math.pow(1.0 - clampedBase, 2).toDouble(),
       AdvantageType.disadvantage => math.pow(clampedBase, 2).toDouble(),
-      AdvantageType.elvenAccuracy =>
+      AdvantageType.rollThreeKeepHighest =>
         1.0 - math.pow(1.0 - clampedBase, 3).toDouble(),
     };
   }
@@ -78,7 +78,7 @@ class DprCalculatorEngine {
       AdvantageType.normal => baseCritP,
       AdvantageType.advantage => 1.0 - math.pow(1.0 - baseCritP, 2).toDouble(),
       AdvantageType.disadvantage => math.pow(baseCritP, 2).toDouble(),
-      AdvantageType.elvenAccuracy =>
+      AdvantageType.rollThreeKeepHighest =>
         1.0 - math.pow(1.0 - baseCritP, 3).toDouble(),
     };
   }
@@ -144,7 +144,7 @@ class DprCalculatorEngine {
 
       final targetHasAdv = advantage == AdvantageType.disadvantage;
       final targetHasDisadv = advantage == AdvantageType.advantage ||
-          advantage == AdvantageType.elvenAccuracy;
+          advantage == AdvantageType.rollThreeKeepHighest;
 
       final failChance = calculateSaveFailureProbability(
         saveDc: saveDc,

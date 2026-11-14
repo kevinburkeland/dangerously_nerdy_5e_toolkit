@@ -9,7 +9,7 @@ enum AdvantageType {
   normal('Normal (1d20)'),
   advantage('Advantage (Roll 2, Highest)'),
   disadvantage('Disadvantage (Roll 2, Lowest)'),
-  elvenAccuracy('Elven Accuracy (Roll 3, Highest)');
+  rollThreeKeepHighest('Roll 3, keep highest');
 
   final String label;
   const AdvantageType(this.label);

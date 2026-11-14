@@ -183,7 +183,7 @@ They sleep on piles of coin and dream of conquest.
 
     test('custom and homebrew terminology does not break parsing', () {
       const source = '''
-### Psionic Mind-Flayer (Homebrew Variant)
+### Psionic Thought-Ravager (Homebrew Variant)
 Medium aberration (psionic-mutant), neutral evil
 Armor Class 15 (mind barrier)
 Hit Points 71 (13d8 + 13)
@@ -196,7 +196,7 @@ Tentacles. Melee Weapon Attack: +7 to hit, reach 5 ft., one creature.
       expect(result.candidates.length, equals(1));
       final candidate = result.candidates.first;
 
-      expect(candidate.displayName, contains('Psionic Mind-Flayer'));
+      expect(candidate.displayName, contains('Psionic Thought-Ravager'));
       expect(candidate.fields['monsterType']?.value, contains('aberration'));
       expect(candidate.fields['armorClass']?.value, equals(15));
       expect(candidate.fields['hitPoints']?.value, equals(71));

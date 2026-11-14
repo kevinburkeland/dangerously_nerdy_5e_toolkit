@@ -168,8 +168,8 @@ void main() {
 
       const existingSpell = Spell(
         id: EntityId(
-            slug: 'shadow-blade-custom', ruleset: RulesetVersion.homebrew),
-        name: 'Shadow Blade Custom',
+            slug: 'cinder-edge-custom', ruleset: RulesetVersion.homebrew),
+        name: 'Cinder Edge Custom',
         level: 2,
         school: 'Illusion',
         castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
@@ -183,8 +183,8 @@ void main() {
 
       const incomingSpell = Spell(
         id: EntityId(
-            slug: 'shadow-blade-custom', ruleset: RulesetVersion.homebrew),
-        name: 'Shadow Blade Custom',
+            slug: 'cinder-edge-custom', ruleset: RulesetVersion.homebrew),
+        name: 'Cinder Edge Custom',
         level: 3,
         school: 'Illusion',
         castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
@@ -214,11 +214,11 @@ void main() {
       expect(allSpells.length, equals(2));
       expect(
           allSpells
-              .any((s) => s.id.slug == 'shadow-blade-custom' && s.level == 2),
+              .any((s) => s.id.slug == 'cinder-edge-custom' && s.level == 2),
           isTrue);
       expect(
           allSpells.any(
-              (s) => s.id.slug == 'shadow-blade-custom-copy' && s.level == 3),
+              (s) => s.id.slug == 'cinder-edge-custom-copy' && s.level == 3),
           isTrue);
     });
 

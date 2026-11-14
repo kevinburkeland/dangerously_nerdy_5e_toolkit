@@ -94,7 +94,7 @@ Wondrous Item
     group('Feat Ingestion', () {
       test('representative valid feat is identified and converts to Feat entity', () {
         const source = '''
-### War Caster
+### Combat Caster
 General Feat
 Prerequisite: The ability to cast at least one spell
 
@@ -107,7 +107,7 @@ You have practiced casting spells in the midst of combat, learning techniques th
         final candidate = result.candidates.first;
 
         expect(candidate.targetTypeKey, equals('feat'));
-        expect(candidate.fields['name']?.value, equals('War Caster'));
+        expect(candidate.fields['name']?.value, equals('Combat Caster'));
         expect(candidate.fields['category']?.value, equals('General'));
         expect(candidate.fields['prerequisite']?.value,
             equals('The ability to cast at least one spell'));
@@ -120,7 +120,7 @@ You have practiced casting spells in the midst of combat, learning techniques th
         expect(conversion.entity, isA<Feat>());
 
         final feat = conversion.entity as Feat;
-        expect(feat.name, equals('War Caster'));
+        expect(feat.name, equals('Combat Caster'));
         expect(feat.category, equals('General'));
         expect(feat.prerequisite, contains('cast at least one spell'));
         expect(feat.descriptionMarkdown, contains('advantage on Constitution'));

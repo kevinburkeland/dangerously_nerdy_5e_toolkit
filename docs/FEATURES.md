@@ -227,7 +227,7 @@
 * **Multi-Curve Situational Triangle**:
   - Baseline Strike (Cyan)
   - Power Attack (-5/+10) (Amber)
-  - Advantage & Elven Accuracy (Emerald Green)
+  - Advantage & Triple Advantage (Roll 3, Keep Highest) (Emerald Green)
   - Disadvantage Curve (Coral Crimson)
 * **3 Interactive Graph View Modes**:
   1. **DPR vs AC**: Primary damage output comparison across enemy armor tiers.

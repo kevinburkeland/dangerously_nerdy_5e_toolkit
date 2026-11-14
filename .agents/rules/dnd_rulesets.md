@@ -56,6 +56,6 @@ Located at `vtt-engine-core/lib/models/value_objects/hit_points.dart` (consumed 
 ---
 
 ## 5. Legal & SRD Compliance Invariant
-- **Strict CC-BY-4.0 SRD 5.1 & 5.2.1 Content:** Bundled compendiums, fixtures, and code must contain ZERO Wizards of the Coast Product Identity terms.
-- **Prohibited Tokens:** Beholder, Gauth, Carrion Crawler, Displacer Beast, Githyanki, Githzerai, Kuotoa, Mind Flayer, Illithid, Slaad, Umber Hulk, Yuan-ti, Strahd, Elminster, Drizzt, Acererak, Faerûn, Toril, Eberron, Ravnica, Krynn, Athas, Barovia, Spelljammer, Planescape, Waterdeep, Baldur's Gate, Neverwinter, Harpers, Zhentarim, Dragonmark, Warforged, Hexblade, Artificer.
-- **Permitted Equivalents:** SRD monsters, open-content subclasses, generic variant lineages (`Human (Lineage of the Forge)`, `CUSTOM_LINEAGE`), and original homebrew names. Enforced by `test/infrastructure/compliance/srd_legal_compliance_test.dart`.
+- **Strict CC-BY-4.0 SRD 5.1 & 5.2.1 Content:** Bundled compendiums, fixtures, and code must contain ZERO Wizards of the Coast Product Identity or non-SRD terms.
+- **Prohibited Terms:** The canonical list of forbidden terms is maintained in `compliance/srd_denylist.txt`.
+- **Permitted Equivalents:** SRD monsters, open-content subclasses, generic variant lineages, and original homebrew names. Enforced by `scripts/check_srd_terms.py` and `test/infrastructure/compliance/srd_legal_compliance_test.dart`.

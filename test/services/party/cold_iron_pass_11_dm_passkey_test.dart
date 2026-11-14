@@ -127,7 +127,7 @@ void main() {
 
     test('K3 (controls): raw host key accepted, wrong raw key rejected, full old copied block accepted', () async {
       final session = await partyService.createCampaign(
-        campaignName: 'Curse of Strahd',
+        campaignName: 'Curse of the Shadow Duke',
         playerName: 'DM Alice',
       );
       final roomCode = session.roomCode;

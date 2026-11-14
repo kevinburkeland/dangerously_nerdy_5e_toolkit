@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_backgrounds_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
@@ -14,48 +15,12 @@ import 'package:dangerously_nerdy_5e_toolkit/models/tables/srd_loot_tables.dart'
 
 void main() {
   group('SRD & Open Gaming License / CC-BY-4.0 Legality Audit', () {
-    // List of known trademarked / Product Identity terms that are NOT in SRD 5.1/5.2
-    const forbiddenProductIdentity = [
-      'beholder',
-      'mind flayer',
-      'illithid',
-      'carrion crawler',
-      'displacer beast',
-      'githyanki',
-      'githzerai',
-      'slaad',
-      'umber hulk',
-      'yuan-ti',
-      'kuo-toa',
-      'tasha\'s',
-      'bigby\'s',
-      'mordenkainen\'s',
-      'leomund\'s',
-      'drawmij\'s',
-      'nystul\'s',
-      'otiluke\'s',
-      'otto\'s',
-      'rary\'s',
-      'tenser\'s',
-      'evard\'s',
-      'melf\'s',
-      'hexblade',
-      'fathomless',
-      'genie',
-      'undead patron',
-      'undying',
-      'pact of the talisman',
-      'custom lineage',
-      'battle master',
-      'circle of the moon',
-      'light domain',
-      'wild magic sorcery',
-      'archfey patron',
-      'sharpshooter',
-      'great weapon master',
-      'war caster',
-      'polearm master',
-    ];
+    // Read from canonical denylist
+    final forbiddenProductIdentity = File('compliance/srd_denylist.txt')
+        .readAsLinesSync()
+        .map((l) => l.trim().toLowerCase())
+        .where((l) => l.isNotEmpty && !l.startsWith('#'))
+        .toList();
 
     test(
         'SRD summons library contains no WotC Product Identity terms in names or descriptions',

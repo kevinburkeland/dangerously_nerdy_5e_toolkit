@@ -166,7 +166,12 @@ extension DprCombatantProfileSerialization on DprCombatantProfile {
       proficiencyBonus: profBonus,
       defaultAdvantage: AdvantageType.values.firstWhere(
         (e) => e.name == map['defaultAdvantage'],
-        orElse: () => AdvantageType.normal,
+        orElse: () {
+          if (map['defaultAdvantage'] == 'elvenAccuracy') {
+            return AdvantageType.rollThreeKeepHighest;
+          }
+          return AdvantageType.normal;
+        },
       ),
       sneakAttackDiceCount: sneakCount,
       sneakAttackDiceSides: sneakSides,
