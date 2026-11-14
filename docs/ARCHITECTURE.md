@@ -100,6 +100,20 @@ Files in pure Dart folders MUST NOT import Flutter-bound packages (decided from 
 | `presentation`, `screens`, `widgets`, `theme` | everything above, and `presentation`, `screens`, `widgets`, `theme` | yes |
 <!-- layer-table:end -->
 
+### Pure Folder Package Allowlist
+Files in `domain`, `utils`, `models`, and `application` are strictly bounded to pure Dart dependencies. They may import or export only these packages:
+- `meta`
+- `uuid`
+- `collection`
+- `fast_immutable_collections`
+- `vtt_engine_core`
+- `vtt_ruleset_dnd5e`
+- `crypto`
+- `mutex`
+- `dangerously_nerdy_5e_toolkit` (the app's own package)
+
+All other third-party packages, plugins, and Flutter-bound libraries are forbidden in these folders (enforced by `test/infrastructure/compliance/layer_import_table_test.dart`).
+
 ## The Battle Map
 
 The battle map subsystem provides tactical grid maps and token movement for shared multiplayer sessions.

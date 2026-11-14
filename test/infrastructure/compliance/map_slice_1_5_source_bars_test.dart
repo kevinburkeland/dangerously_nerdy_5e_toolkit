@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/dart_directive_reader.dart';
 import '../../support/flutter_free_packages.dart';
 
 void main() {
@@ -98,12 +99,11 @@ void main() {
         final violations = <String>[];
         for (final f in files) {
           if (f.name.endsWith('map_token_rules.dart') || f.name.endsWith('map_token_service.dart')) {
-            final lines = f.content.split('\n');
-            for (var i = 0; i < lines.length; i++) {
-              final uris = extractImportExportUris(lines[i]);
-              for (final uri in uris) {
+            final directives = parseDartDirectives(f.content);
+            for (final d in directives) {
+              for (final uri in d.uris) {
                 if (isFlutterBoundUri(uri)) {
-                  violations.add('${f.name}:${i + 1}: imports flutter');
+                  violations.add('${f.name}:${d.lineNumber}: imports flutter');
                 }
               }
             }

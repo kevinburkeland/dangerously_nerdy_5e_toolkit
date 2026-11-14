@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/dart_directive_reader.dart';
 import '../../support/flutter_free_packages.dart';
 
 List<String> scanFolderForDtoViolations(String folderPath) {
@@ -15,12 +16,11 @@ List<String> scanFolderForDtoViolations(String folderPath) {
       .toList();
   final violations = <String>[];
   for (final file in dartFiles) {
-    final lines = file.readAsLinesSync();
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      for (final uri in extractImportExportUris(line)) {
+    final directives = parseDartDirectivesFromFile(file);
+    for (final directive in directives) {
+      for (final uri in directive.uris) {
         if (isFlutterBoundUri(uri)) {
-          violations.add('${file.path}:${i + 1} -> $line');
+          violations.add('${file.path}:${directive.lineNumber} -> ${directive.statement}');
         }
       }
     }
@@ -75,6 +75,38 @@ void main() {
       final violations = scanFolderForDtoViolations(tempDir.path);
       expect(violations, isNotEmpty);
       expect(violations.first, contains('material_ui'));
+    });
+
+    test('negative case: multiline Flutter import in DTO is caught', () {
+      final tempDir = Directory.systemTemp.createTempSync('dto_multiline_negative_test_');
+      addTearDown(() {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      });
+      final violatingFile = File('${tempDir.path}/violating_multiline_dto.dart');
+      violatingFile.writeAsStringSync("import\n    'package:material_ui/material_ui.dart';\nclass C {}\n");
+
+      final violations = scanFolderForDtoViolations(tempDir.path);
+      expect(violations, isNotEmpty);
+      expect(violations.first, contains('material_ui'));
+      expect(violations.first, contains('violating_multiline_dto.dart'));
+    });
+
+    test('negative case: conditional Flutter import in DTO is caught', () {
+      final tempDir = Directory.systemTemp.createTempSync('dto_conditional_negative_test_');
+      addTearDown(() {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      });
+      final violatingFile = File('${tempDir.path}/violating_conditional_dto.dart');
+      violatingFile.writeAsStringSync("import 'dart:core' if (dart.library.ui) 'package:material_ui/material_ui.dart';\nclass D {}\n");
+
+      final violations = scanFolderForDtoViolations(tempDir.path);
+      expect(violations, isNotEmpty);
+      expect(violations.first, contains('material_ui'));
+      expect(violations.first, contains('violating_conditional_dto.dart'));
     });
   });
 }

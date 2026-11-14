@@ -2,90 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-String stripCommentsOutsideStrings(String source) {
-  final buf = StringBuffer();
-  final n = source.length;
-  int i = 0;
-  while (i < n) {
-    if (source[i] == 'r' && i + 1 < n && (source[i + 1] == "'" || source[i + 1] == '"')) {
-      final q = source[i + 1];
-      final isTriple = i + 3 < n && source[i + 2] == q && source[i + 3] == q;
-      final delim = isTriple ? q * 3 : q;
-      buf.write(source.substring(i, i + 1 + delim.length));
-      i += 1 + delim.length;
-      while (i < n) {
-        if (source.startsWith(delim, i)) {
-          buf.write(delim);
-          i += delim.length;
-          break;
-        } else {
-          buf.write(source[i]);
-          i++;
-        }
-      }
-      continue;
-    }
-
-    if (source[i] == "'" || source[i] == '"') {
-      final q = source[i];
-      final isTriple = i + 2 < n && source[i + 1] == q && source[i + 2] == q;
-      final delim = isTriple ? q * 3 : q;
-      buf.write(delim);
-      i += delim.length;
-      while (i < n) {
-        if (source[i] == r'\' && i + 1 < n) {
-          buf.write(source.substring(i, i + 2));
-          i += 2;
-        } else if (source.startsWith(delim, i)) {
-          buf.write(delim);
-          i += delim.length;
-          break;
-        } else {
-          buf.write(source[i]);
-          i++;
-        }
-      }
-      continue;
-    }
-
-    if (source.startsWith('//', i)) {
-      while (i < n && source[i] != '\n') {
-        buf.write(' ');
-        i++;
-      }
-      continue;
-    }
-
-    if (source.startsWith('/*', i)) {
-      int depth = 1;
-      buf.write('  ');
-      i += 2;
-      while (i < n && depth > 0) {
-        if (source.startsWith('/*', i)) {
-          depth++;
-          buf.write('  ');
-          i += 2;
-        } else if (source.startsWith('*/', i)) {
-          depth--;
-          buf.write('  ');
-          i += 2;
-        } else {
-          if (source[i] == '\n') {
-            buf.write('\n');
-          } else {
-            buf.write(' ');
-          }
-          i++;
-        }
-      }
-      continue;
-    }
-
-    buf.write(source[i]);
-    i++;
-  }
-  return buf.toString();
-}
+import '../../support/dart_directive_reader.dart';
 
 String normalizePath(String path) {
   final parts = path.split('/');
@@ -113,149 +30,17 @@ String? resolveUri(String fromPath, String uri) {
   return normalizePath(combined);
 }
 
-bool _isIdentChar(int codeUnit) {
-  return (codeUnit >= 65 && codeUnit <= 90) ||
-      (codeUnit >= 97 && codeUnit <= 122) ||
-      (codeUnit >= 48 && codeUnit <= 57) ||
-      codeUnit == 95 ||
-      codeUnit == 36;
-}
-
 List<String> directiveTargets(String path, String source) {
-  final clean = stripCommentsOutsideStrings(source);
   final targets = <String>{};
-  final n = clean.length;
-  int i = 0;
-  int braceDepth = 0;
-
-  int skipStringLiteral(int idx) {
-    if (idx >= n) return idx;
-    var start = idx;
-    bool isRaw = false;
-    if (clean[idx] == 'r' && idx + 1 < n && (clean[idx + 1] == "'" || clean[idx + 1] == '"')) {
-      isRaw = true;
-      idx++;
-    }
-    if (idx >= n || (clean[idx] != "'" && clean[idx] != '"')) return start;
-    final q = clean[idx];
-    final isTriple = idx + 2 < n && clean[idx + 1] == q && clean[idx + 2] == q;
-    final delim = isTriple ? q * 3 : q;
-    idx += delim.length;
-    while (idx < n) {
-      if (!isRaw && clean[idx] == r'\' && idx + 1 < n) {
-        idx += 2;
-      } else if (clean.startsWith(delim, idx)) {
-        idx += delim.length;
-        break;
-      } else {
-        idx++;
+  final directives = parseDartDirectives(source);
+  for (final d in directives) {
+    for (final uri in d.uris) {
+      final resolved = resolveUri(path, uri);
+      if (resolved != null) {
+        targets.add(resolved);
       }
     }
-    return idx;
   }
-
-  String? extractStringAt(int idx) {
-    if (idx >= n) return null;
-    bool isRaw = false;
-    if (clean[idx] == 'r' && idx + 1 < n && (clean[idx + 1] == "'" || clean[idx + 1] == '"')) {
-      isRaw = true;
-      idx++;
-    }
-    if (idx >= n || (clean[idx] != "'" && clean[idx] != '"')) return null;
-    final q = clean[idx];
-    final isTriple = idx + 2 < n && clean[idx + 1] == q && clean[idx + 2] == q;
-    final delim = isTriple ? q * 3 : q;
-    idx += delim.length;
-    final contentStart = idx;
-    while (idx < n) {
-      if (!isRaw && clean[idx] == r'\' && idx + 1 < n) {
-        idx += 2;
-      } else if (clean.startsWith(delim, idx)) {
-        final content = clean.substring(contentStart, idx);
-        return content;
-      } else {
-        idx++;
-      }
-    }
-    return null;
-  }
-
-  while (i < n) {
-    final c = clean[i];
-
-    if (c == "'" || c == '"' || (c == 'r' && i + 1 < n && (clean[i + 1] == "'" || clean[i + 1] == '"'))) {
-      i = skipStringLiteral(i);
-      continue;
-    }
-
-    if (c == '{') {
-      braceDepth++;
-      i++;
-      continue;
-    }
-    if (c == '}') {
-      if (braceDepth > 0) braceDepth--;
-      i++;
-      continue;
-    }
-
-    if (braceDepth == 0) {
-      final isStart = i == 0 || !_isIdentChar(clean.codeUnitAt(i - 1));
-      if (isStart && _isIdentChar(clean.codeUnitAt(i))) {
-        final start = i;
-        while (i < n && _isIdentChar(clean.codeUnitAt(i))) {
-          i++;
-        }
-        final ident = clean.substring(start, i);
-        if (ident == 'import' || ident == 'export' || ident == 'part') {
-          int prev = start - 1;
-          while (prev >= 0 && (clean[prev] == ' ' || clean[prev] == '\t' || clean[prev] == '\n' || clean[prev] == '\r')) {
-            prev--;
-          }
-          if (prev >= 0 && clean[prev] == '.') {
-            continue;
-          }
-
-          bool isPartOf = false;
-          if (ident == 'part') {
-            int look = i;
-            while (look < n && (clean[look] == ' ' || clean[look] == '\t' || clean[look] == '\n' || clean[look] == '\r')) {
-              look++;
-            }
-            if (look + 2 <= n && clean.substring(look, look + 2) == 'of') {
-              if (look + 2 == n || !_isIdentChar(clean.codeUnitAt(look + 2))) {
-                isPartOf = true;
-              }
-            }
-          }
-
-          while (i < n && clean[i] != ';') {
-            final ch = clean[i];
-            if (ch == "'" || ch == '"' || (ch == 'r' && i + 1 < n && (clean[i + 1] == "'" || clean[i + 1] == '"'))) {
-              final uri = extractStringAt(i);
-              final nextI = skipStringLiteral(i);
-              i = nextI;
-              if (!isPartOf && uri != null) {
-                final resolved = resolveUri(path, uri);
-                if (resolved != null) {
-                  targets.add(resolved);
-                }
-              }
-            } else {
-              i++;
-            }
-          }
-          if (i < n && clean[i] == ';') {
-            i++;
-          }
-          continue;
-        }
-      }
-    }
-
-    i++;
-  }
-
   return targets.toList()..sort();
 }
 

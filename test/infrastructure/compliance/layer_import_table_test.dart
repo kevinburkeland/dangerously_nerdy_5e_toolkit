@@ -2,11 +2,31 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/dart_directive_reader.dart';
 import '../../support/flutter_free_packages.dart';
 
 const String kAppPackagePrefix = 'package:dangerously_nerdy_5e_toolkit/';
 const String kLayerTableStartMarker = '<!-- layer-table:start -->';
 const String kLayerTableEndMarker = '<!-- layer-table:end -->';
+
+const Set<String> kPureFoldersWithPackageAllowlist = {
+  'domain',
+  'utils',
+  'models',
+  'application',
+};
+
+const Set<String> kAllowedPackagesInPureFolders = {
+  'meta',
+  'uuid',
+  'collection',
+  'fast_immutable_collections',
+  'vtt_engine_core',
+  'vtt_ruleset_dnd5e',
+  'crypto',
+  'mutex',
+  'dangerously_nerdy_5e_toolkit',
+};
 
 const Set<String> kExemptTopLevelLibFiles = {
   'lib/main.dart',
@@ -391,25 +411,38 @@ List<LayerViolation> evaluateFileLayerImports(
     ];
   }
 
-  final stripped = stripCommentsPreservingNewlines(source);
-  final directiveRegex = RegExp(
-    r'^\s*(?:import|export|part)\s+(?!of\b)[^;]+;',
-    multiLine: true,
-    dotAll: true,
-  );
-  final uriRegex = RegExp(r'''['"]([^'"]+)['"]''');
-
+  final directives = parseDartDirectives(source);
   final violations = <LayerViolation>[];
 
-  for (final match in directiveRegex.allMatches(stripped)) {
-    final stmt = match.group(0)!;
-    final lineNo = '\n'.allMatches(stripped.substring(0, match.start)).length + 1;
+  for (final directive in directives) {
+    final lineNo = directive.lineNumber;
 
-    for (final uriMatch in uriRegex.allMatches(stmt)) {
-      final uri = uriMatch.group(1)!;
+    for (final uri in directive.uris) {
       if (uri.isEmpty) continue;
 
-      if (!rule.flutterAllowed && isFlutterUri(uri)) {
+      if (!rule.flutterAllowed && (uri.startsWith('package:flutter/') || uri.startsWith('package:material_ui/') || uri.startsWith('dart:ui'))) {
+        violations.add(
+          LayerViolation(
+            filePath: normPath,
+            line: lineNo,
+            kind: 'flutter',
+            formatted: '$normPath:$lineNo: flutter ($uri)',
+          ),
+        );
+      } else if (kPureFoldersWithPackageAllowlist.contains(fromFolder) && uri.startsWith('package:')) {
+        final pkgName = uri.substring('package:'.length).split('/').first;
+        if (!kAllowedPackagesInPureFolders.contains(pkgName)) {
+          final kind = 'unallowed package ($pkgName)';
+          violations.add(
+            LayerViolation(
+              filePath: normPath,
+              line: lineNo,
+              kind: kind,
+              formatted: '$normPath:$lineNo: unallowed package $pkgName ($uri)',
+            ),
+          );
+        }
+      } else if (!rule.flutterAllowed && isFlutterUri(uri)) {
         violations.add(
           LayerViolation(
             filePath: normPath,
@@ -603,6 +636,26 @@ void main() {
         equals(['lib/models/y.dart:1: flutter (package:material_ui/material_ui.dart)']),
       );
 
+      // 3c. lib/models/x.dart importing package:shared_preferences/shared_preferences.dart -> unallowed package
+      final v3c = evaluateFileLayerImports(
+        'lib/models/x.dart',
+        "import 'package:shared_preferences/shared_preferences.dart';\n",
+      );
+      expect(
+        v3c.map((v) => v.formatted),
+        equals(['lib/models/x.dart:1: unallowed package shared_preferences (package:shared_preferences/shared_preferences.dart)']),
+      );
+
+      // 3d. lib/application/x.dart importing package:path_provider/path_provider.dart -> unallowed package
+      final v3d = evaluateFileLayerImports(
+        'lib/application/x.dart',
+        "import 'package:path_provider/path_provider.dart';\n",
+      );
+      expect(
+        v3d.map((v) => v.formatted),
+        equals(['lib/application/x.dart:1: unallowed package path_provider (package:path_provider/path_provider.dart)']),
+      );
+
       // 4. Conditional import whose second branch reaches screens -> flagged
       final v4 = evaluateFileLayerImports(
         'lib/models/x.dart',
@@ -745,29 +798,28 @@ void main() {
       final flutterImports = <String>[];
       for (final file in dartFiles) {
         final path = normalizePath(file.path);
-        final lines = file.readAsLinesSync();
-        for (var i = 0; i < lines.length; i++) {
-          final line = lines[i];
-          for (final uri in extractImportExportUris(line)) {
+        final directives = parseDartDirectivesFromFile(file);
+        for (final directive in directives) {
+          for (final uri in directive.uris) {
             if (isFlutterBoundUri(uri)) {
-              flutterImports.add('$path:${i + 1}: $line');
+              flutterImports.add('$path:${directive.lineNumber}: ${directive.statement}');
             }
           }
         }
       }
 
       // Control: synthetic file importing Flutter must be detected
-      final syntheticLines = [
-        "import 'package:flutter/material.dart';",
-        "import 'package:material_ui/material_ui.dart';",
-        "class Foo {}",
-      ];
+      const syntheticSource = '''
+import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+class Foo {}
+''';
+      final controlDirectives = parseDartDirectives(syntheticSource);
       final controlDetections = <String>[];
-      for (var i = 0; i < syntheticLines.length; i++) {
-        final line = syntheticLines[i];
-        for (final uri in extractImportExportUris(line)) {
+      for (final d in controlDirectives) {
+        for (final uri in d.uris) {
           if (isFlutterBoundUri(uri)) {
-            controlDetections.add('lib/models/synthetic.dart:${i + 1}: $line');
+            controlDetections.add('lib/models/synthetic.dart:${d.lineNumber}: ${d.statement}');
           }
         }
       }

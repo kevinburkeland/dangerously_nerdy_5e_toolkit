@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/dart_directive_reader.dart';
+
 const String kAppPackagePrefix = 'package:dangerously_nerdy_5e_toolkit/';
 const String kInjectionContainerTarget =
     'lib/infrastructure/di/injection_container.dart';
@@ -84,23 +86,7 @@ String? resolveUri(String fromPath, String uri) {
 /// Extracts all import, export, and part directive URIs from [source],
 /// including configuration branches in conditional imports.
 List<String> extractDirectiveUris(String source) {
-  final uris = <String>[];
-  final directiveRegex = RegExp(
-    r'''^\s*(?:import|export|part)\s+['"]([^'"]+)['"](?:\s+if\s*\([^)]+\)\s*['"]([^'"]+)['"])*''',
-    multiLine: true,
-  );
-  final uriStringRegex = RegExp(r'''['"]([^'"]+)['"]''');
-
-  for (final match in directiveRegex.allMatches(source)) {
-    final matchedText = match.group(0)!;
-    for (final strMatch in uriStringRegex.allMatches(matchedText)) {
-      final uri = strMatch.group(1);
-      if (uri != null && uri.isNotEmpty) {
-        uris.add(uri);
-      }
-    }
-  }
-  return uris;
+  return extractAllDirectiveUris(source);
 }
 
 /// Checks whether [source] in file [filePath] imports the injection container.

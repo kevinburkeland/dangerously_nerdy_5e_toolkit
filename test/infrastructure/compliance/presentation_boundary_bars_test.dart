@@ -126,16 +126,52 @@ List<String> checkRuleP1(String filePath, String source) {
   return violations;
 }
 
+/// Allowlist for Rule P2: files in lib/models/ permitted to retain legacy mathematical
+/// function fields, with an explicit reason.
+const Map<String, String> kRuleP2Allowlist = {
+  'lib/models/srd_summons/summon_preset.dart':
+      'BudgetCalculator mathematical scaling function (int spellLevel -> int) from initial SRD summons design',
+};
+
 List<String> checkRuleP2(String filePath, String source) {
   final stripped = stripCommentsAndStringsPreservingLines(source);
   final lines = stripped.split('\n');
   final violations = <String>[];
-  final regex = RegExp(
-      r'\bfinal\s+(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?Function\s*\([^)]*\)\s*[?]?\s*[A-Za-z0-9_]+\s*;');
+
+  // 1. Collect all typedef names in source that define function types
+  final typedefNames = <String>{};
+  final typedefRegex = RegExp(r'\btypedef\s+([A-Za-z0-9_]+)\s*=\s*[^;]*\bFunction\b[^;]*;');
+  for (final match in typedefRegex.allMatches(stripped)) {
+    typedefNames.add(match.group(1)!);
+  }
+
+  // 2. Direct Function field: with or without initializer (= ...;)
+  final directFunctionRegex = RegExp(
+    r'\b(?:final\s+)?(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?Function(?:\s*\([^)]*\))?\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
+  );
+
+  // 3. Typedef function fields: with or without initializer (= ...;)
+  final typedefFieldRegexes = typedefNames.map((name) {
+    return RegExp(
+      r'\b(?:final\s+)?' + RegExp.escape(name) + r'\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
+    );
+  }).toList();
 
   for (int idx = 0; idx < lines.length; idx++) {
     final line = lines[idx];
-    if (regex.hasMatch(line)) {
+    if (line.trim().startsWith('typedef ')) continue;
+
+    bool isMatch = directFunctionRegex.hasMatch(line);
+    if (!isMatch) {
+      for (final tr in typedefFieldRegexes) {
+        if (tr.hasMatch(line)) {
+          isMatch = true;
+          break;
+        }
+      }
+    }
+
+    if (isMatch) {
       violations.add('$filePath:${idx + 1}: ${line.trim()}');
     }
   }
@@ -168,11 +204,27 @@ void main() {
       expect(checkRuleP1('in_memory.dart', good), isEmpty);
     });
 
-    test('Rule P2 controls: flags class field with function type, allows method parameter', () {
+    test('Rule P2 controls: flags class field with function type, typedef function type, and initializers', () {
       const bad = 'class Foo { final void Function(Object? c)? onTap; }';
+      const badWithInit = 'class Foo { final void Function(Object? c)? onTap = null; }';
+      const badTypedef = '''
+typedef ActionCallback = void Function(Object? sheet);
+class CharacterCombatAction {
+  final ActionCallback? onExecute;
+}
+''';
+      const badTypedefWithInit = '''
+typedef ActionCallback = void Function(Object? sheet);
+class CharacterCombatAction {
+  final ActionCallback? onExecute = null;
+}
+''';
       const good = 'class Foo { void run(int Function(int sides) roller) {} }';
 
       expect(checkRuleP2('in_memory.dart', bad), hasLength(1));
+      expect(checkRuleP2('in_memory.dart', badWithInit), hasLength(1));
+      expect(checkRuleP2('in_memory.dart', badTypedef), hasLength(1));
+      expect(checkRuleP2('in_memory.dart', badTypedefWithInit), hasLength(1));
       expect(checkRuleP2('in_memory.dart', good), isEmpty);
     });
 
@@ -205,16 +257,35 @@ void main() {
     test('Rule P2: no class field with function type in lib/models/', () {
       final violations = <String>[];
       final modelsDir = Directory('lib/models');
+      final seenAllowlisted = <String>{};
+
       for (final entity in modelsDir.listSync(recursive: true)) {
         if (entity is File && entity.path.endsWith('.dart')) {
+          final normPath = entity.path.replaceAll(r'\', '/');
           final content = entity.readAsStringSync();
-          violations.addAll(checkRuleP2(entity.path, content));
+          final fileViolations = checkRuleP2(normPath, content);
+          if (fileViolations.isNotEmpty) {
+            if (kRuleP2Allowlist.containsKey(normPath)) {
+              seenAllowlisted.add(normPath);
+            } else {
+              violations.addAll(fileViolations);
+            }
+          }
         }
+      }
+
+      // Check for stale allowlist entries
+      for (final allowed in kRuleP2Allowlist.keys) {
+        expect(
+          seenAllowlisted,
+          contains(allowed),
+          reason: 'Stale Rule P2 allowlist entry: $allowed has no violations',
+        );
       }
 
       expect(violations, isEmpty,
           reason:
-              'Rule P2: No class field with Function(...) type allowed in lib/models/');
+              'Rule P2: No class field with Function(...) or function-typedef type allowed in lib/models/');
     });
 
     test('Rule P3: no Object?/Object/dynamic context variable or parameter in lib/', () {

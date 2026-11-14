@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/dart_directive_reader.dart';
 import '../support/flutter_free_packages.dart';
 
 List<String> parsePureFoldersFromDocs(String docContent) {
@@ -29,12 +30,11 @@ List<String> scanFolderForFlutterImports(String folderPath) {
       .toList();
   final violations = <String>[];
   for (final file in dartFiles) {
-    final lines = file.readAsLinesSync();
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      for (final uri in extractImportExportUris(line)) {
+    final directives = parseDartDirectivesFromFile(file);
+    for (final directive in directives) {
+      for (final uri in directive.uris) {
         if (isFlutterBoundUri(uri)) {
-          violations.add('${file.path}:${i + 1} -> $line');
+          violations.add('${file.path}:${directive.lineNumber} -> ${directive.statement}');
         }
       }
     }
@@ -102,6 +102,40 @@ void main() {
       expect(violations, isNotEmpty);
       expect(violations.first, contains('material_ui'));
       expect(violations.first, contains('violating_domain.dart'));
+    });
+
+    test('negative case: multiline Flutter import is caught', () {
+      final tempDir = Directory.systemTemp.createTempSync('pure_dart_multiline_negative_test_');
+      addTearDown(() {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      });
+
+      final violatingFile = File('${tempDir.path}/violating_multiline.dart');
+      violatingFile.writeAsStringSync("import\n    'package:material_ui/material_ui.dart';\nclass A {}\n");
+
+      final violations = scanFolderForFlutterImports(tempDir.path);
+      expect(violations, isNotEmpty);
+      expect(violations.first, contains('material_ui'));
+      expect(violations.first, contains('violating_multiline.dart'));
+    });
+
+    test('negative case: conditional Flutter import is caught', () {
+      final tempDir = Directory.systemTemp.createTempSync('pure_dart_conditional_negative_test_');
+      addTearDown(() {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      });
+
+      final violatingFile = File('${tempDir.path}/violating_conditional.dart');
+      violatingFile.writeAsStringSync("import 'dart:core' if (dart.library.ui) 'package:material_ui/material_ui.dart';\nclass A {}\n");
+
+      final violations = scanFolderForFlutterImports(tempDir.path);
+      expect(violations, isNotEmpty);
+      expect(violations.first, contains('material_ui'));
+      expect(violations.first, contains('violating_conditional.dart'));
     });
   });
 }

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:yaml/yaml.dart';
 
+import 'dart_directive_reader.dart' as reader;
+
 /// Helper that inspects the Dart package dependency graph from
 /// `.dart_tool/package_config.json` and package pubspecs to determine
 /// whether a package or URI is Flutter-bound.
@@ -276,19 +278,9 @@ String stripCommentsPreservingNewlines(String source) {
   return sb.toString();
 }
 
-final _directiveRegex = RegExp(
-  r'''(?:import|export)\s+(?:deferred\s+as\s+[a-zA-Z0-9_]+\s+)?(?:as\s+[a-zA-Z0-9_]+\s+)?['"]([^'"]+)['"]''',
-);
-
 /// Extracts all import and export URIs from [source], ignoring comments.
+///
+/// Uses [reader.extractImportExportUris] from `dart_directive_reader.dart`.
 List<String> extractImportExportUris(String source) {
-  final stripped = stripCommentsPreservingNewlines(source);
-  final uris = <String>[];
-  for (final match in _directiveRegex.allMatches(stripped)) {
-    final uri = match.group(1);
-    if (uri != null && uri.isNotEmpty) {
-      uris.add(uri);
-    }
-  }
-  return uris;
+  return reader.extractImportExportUris(source);
 }
