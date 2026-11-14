@@ -34,7 +34,7 @@ Fix 7.3: No hand-written dice reading in app lib
 ## Steps
 - [x] Step 1 setup-dart and glob before the deadline: core bbd4956fdd2d5dfe6d74c544d63dd3966f33d4bb run 43506779610, ruleset a894bc85d584525fa4111660e73ed075460d22e1 run 43507045209, app 5889a4d16927984a006a166791614836270b437b run 43343566938
 - [x] Step 2 Retire, and the notes and ratchet rules: core 4c32fe77c8812b9098f2a84391d85ba18eea8844 run 43510633135, ruleset b03b93608a5f63f64df2edb66cdccfcc19f5ed9d run 43510658360, app ad074573be125e834ce6db821b1eeb728d923e36 run 43515303929
-- [ ] Step 3 The dependency check fails closed by schema
+- [x] Step 3 The dependency check fails closed by schema: core 5d8ff3ee38c8bad7c08a41f52f882c74856ddc4d run 43650302385, ruleset ac46b6b38dcfc53ed4b5cdd98ad087d994810caf run 43650304011, app b8e85809033a13128077f81bfe22a9c3104ba77f run 43650309256
 - [ ] Step 4 One import reader, the package rule, and P2
 - [ ] Step 5 SRD names out, and massive damage
 - [ ] Step 6 Sync deltas, room creation, and the privacy policy
@@ -49,6 +49,8 @@ Fix 2.2 done: [Retire cs101 and its exception rows] Taught retire script to drop
 Fix 2.3 done: [Mutation ids are fixed and checked] check_notes_shas validates Mutation ids line byte-identity, token uniqueness, and matching branches at COMPLETE and IN PROGRESS
 Fix 2.4 done: [A fix commit is in the same repo and after the red run] check_notes_shas validates cause lines point to descendant commits in the same repo
 Fix 2.5 done: [The test-name ratchet refuses live and invented names] check_test_names refuses rows for live tests and names that never existed, removed live DTO purity row
+Fix 3.1 done: [Damage rows come from the fields the script reads] check_dependencies.py defines SCHEMA table for all 16 JSON/YAML inputs and accesses all fields strictly via need()
+Fix 3.2 done: [Every needed field that is missing fails] Dynamic table-driven test_check_dependencies.sh generates damage tests for all schema fields and verifies 316 fail closed and 6 valid pass
 
 ## Mutation branches
 None
@@ -58,7 +60,7 @@ None
 06e8ad23c8199366971b8658a89488158fa85d09 red run 43510818731
 
 ## Next
-Start Step 3: Implement dynamic schema-driven fail-closed law in check_dependencies.py and verify closure.
+Step 4: One import reader, the package rule, and P2
 
 ## Open issues and deviations
 Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
