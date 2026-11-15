@@ -1,8 +1,8 @@
 # Cleanup slice 11 progress notes
 Status: IN PROGRESS
 Start heads: core 8d9b3ea509bca5e78c21298924d06963c938321f, ruleset 016a09556cd3e522593248a83aa22f982fcb6adc, app 5889a4d16927984a006a166791614836270b437b
-Last pushed heads (CI green): core bbd4956fdd2d5dfe6d74c544d63dd3966f33d4bb, ruleset a894bc85d584525fa4111660e73ed075460d22e1, app 816a30b0de9a34af7496b4919cc346633b9dee02
-Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset a19c4acd1a35b1f29420ca3824a214766c694f91
+Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset bc2cd73f762ef0414037873ed337519bcc45e641, app a81b1a1194f681a3a8ef8c44190cc6cd23cd7b96
+Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset bc2cd73f762ef0414037873ed337519bcc45e641
 Fix ids: 1.1 1.2 2.1 2.2 2.3 2.4 2.5 3.1 3.2 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 6.4 7.1 7.2 7.3
 Mutation ids: D1 F1 F2 S2 M1 X1 N1 C1 T1 I1 I2 K1 K2 S1 Y1 R1 P1 L1 X2
 
@@ -36,7 +36,7 @@ Fix 7.3: No hand-written dice reading in app lib
 - [x] Step 2 Retire, and the notes and ratchet rules: core 4c32fe77c8812b9098f2a84391d85ba18eea8844 run 43510633135, ruleset b03b93608a5f63f64df2edb66cdccfcc19f5ed9d run 43510658360, app ad074573be125e834ce6db821b1eeb728d923e36 run 43515303929
 - [x] Step 3 The dependency check fails closed by schema: core 5d8ff3ee38c8bad7c08a41f52f882c74856ddc4d run 43650302385, ruleset ac46b6b38dcfc53ed4b5cdd98ad087d994810caf run 43650304011, app b8e85809033a13128077f81bfe22a9c3104ba77f run 43650309256
 - [x] Step 4 One import reader, the package rule, and P2: app 816a30b0de9a34af7496b4919cc346633b9dee02 run 43652468422
-- [ ] Step 5 SRD names out, and massive damage
+- [x] Step 5 SRD names out, and massive damage: core f71ae361d3be4eea36e50cbd67e28baa19903b6c run 43654804368, ruleset bc2cd73f762ef0414037873ed337519bcc45e641 run 43654969518, app 8c75a5409a1cc2a1f4b912aefac0534a0aefd2c4
 - [ ] Step 6 Sync deltas, room creation, and the privacy policy
 - [ ] Step 7 One dice reader
 - [ ] Step 8 Mutations and report
@@ -54,6 +54,10 @@ Fix 3.2 done: [Every needed field that is missing fails] Dynamic table-driven te
 Fix 4.1 done: [One import reader for every import check] Created test/support/dart_directive_reader.dart and migrated 11 test files to shared directive reader
 Fix 4.2 done: [Pure folders import only listed packages] Enforced pure-folder package allowlist in layer_import_table_test.dart and documented in docs/ARCHITECTURE.md
 Fix 4.3 done: [No function-typed fields in models, however written] Rule P2 in presentation_boundary_bars_test flags direct function types, initializers, and function-typed typedefs in lib/models
+Fix 5.1 done: [One SRD denylist, scanned in all three repos] Byte-identical compliance/srd_denylist.txt, check_srd_terms.py, and test_check_srd_terms.sh across core, ruleset, and app; integrated into app release.yml
+Fix 5.2 done: [Non-SRD names out of code, tests and docs] Removed non-SRD species slug checks from ruleset; removed non-SRD spell branch from app arena_combat_engine; renamed non-SRD feat advantage type to rollThreeKeepHighest with legacy key reader and denylist exceptions; renamed non-SRD test references and preserved test names in test/removed_test_names.txt
+Fix 5.3 done: [Terms of Service names the licences truthfully] Dual CC-BY-4.0 SRD 5.1 and 5.2.1 attribution in TERMS_OF_SERVICE.md and web/legal/TERMS_OF_SERVICE.md, verified byte-identical
+Fix 5.4 done: [Massive damage at 0 HP kills] Fixed applyDamage in ruleset to evaluate currentVitals.maxHp at 0 HP instead of relying on excessDamage exceeding negative maxHp
 
 ## Mutation branches
 None
@@ -61,13 +65,19 @@ None
 ## Red runs on main
 0447ece03df8722a19a0937f86dbc374457790de cancelled run 43510726706
 06e8ad23c8199366971b8658a89488158fa85d09 red run 43510818731
+518c0718f5c7c227d2d9b5872cf0054a4a3000cc red run 43654461595
+fd002b8026ee180329a10c7b62d07f36b8164dd7 red run 43654463029
+3ab87e25c91c4542ab8049679604b07f140129f9 red run 43656014152
 
 ## Next
-Step 5: SRD names out, and massive damage
+Step 6: Sync deltas, room creation, and the privacy policy
 
 ## Open issues and deviations
 Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
 Run 43510818731 cause: DCO job failed in check_notes_shas.py with undisclosed cancelled run on 0447ece03df8722a19a0937f86dbc374457790de; fixed by bd330f5dc22f5010a3b6cc27c2e6eba4c1e878d4
+Run 43654461595 cause: test_check_srd_terms fixture tokens contained denylist terms; fixed by f71ae361d3be4eea36e50cbd67e28baa19903b6c
+Run 43654463029 cause: compliance test name was renamed and caught by check_test_names.py; fixed by bc2cd73f762ef0414037873ed337519bcc45e641
+Run 43656014152 cause: big-file ratchet ceiling for arena_combat_engine.dart needed reduction from 4056 to 3985 after removing hardcoded non-SRD spell branch; fixed by 8c75a5409a1cc2a1f4b912aefac0534a0aefd2c4
 Bonus slice 2 notes run 42936489472 cause correction: cancelled by the push of 4fd8711db7177fb7dbea7c77c8d51ba69070834b
 When running the app dependency check with --today 2026-12-11, all five N4 rows in dependency_exceptions.tsv fail rule E1 because their review_by date 2026-12-10 is in the past on 2026-12-11; recorded as a known review date for Kevin without changing those rows.
 When running the app dependency check with --today 2026-11-26, transitive dependency android_file_picker 2.1.5 (resolvable 2.1.6 published 2026-11-12) also exceeded the 14-day grace window, so pubspec.lock was updated to 2.1.6 alongside glob 14.0.6.
