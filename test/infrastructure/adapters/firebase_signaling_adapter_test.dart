@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_fallback_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_signaling_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/signaling_message.dart';
 
@@ -263,13 +264,114 @@ void main() {
       expect(failingAdapter.peerTrackedDocPaths, isEmpty);
       await failingAdapter.dispose();
     });
+
+    test('initialize on a missing room writes nothing to rooms/{code}', () async {
+      final writes = <({String action, Map<String, dynamic> data})>[];
+      final fakeFirestore = _FakeFailingFirestore(
+        roomExists: false,
+        writes: writes,
+      );
+      final testAdapter = FirebaseSignalingAdapter(firestore: fakeFirestore);
+
+      await testAdapter.initialize(
+        roomCode: 'MISSING-ROOM',
+        localNodeId: 'node-missing',
+      );
+
+      expect(writes, isEmpty,
+          reason: 'Signaling adapter must never create a room document when missing');
+      await testAdapter.dispose();
+    });
+
+    test('initialize on an existing room updates room document', () async {
+      final writes = <({String action, Map<String, dynamic> data})>[];
+      final fakeFirestore = _FakeFailingFirestore(
+        roomExists: true,
+        roomData: {'roomCode': 'EXIST-ROOM', 'isStateless': true},
+        writes: writes,
+      );
+      final testAdapter = FirebaseSignalingAdapter(firestore: fakeFirestore);
+
+      await testAdapter.initialize(
+        roomCode: 'EXIST-ROOM',
+        localNodeId: 'node-exist',
+      );
+
+      expect(writes.length, 1);
+      expect(writes.first.action, 'update');
+      expect(writes.first.data['isStateless'], true);
+      await testAdapter.dispose();
+    });
+
+    test('FirebaseFallbackAdapter: initializeRoom on a missing room writes nothing to rooms/{code}', () async {
+      final writes = <({String action, Map<String, dynamic> data})>[];
+      final fakeFirestore = _FakeFailingFirestore(
+        roomExists: false,
+        writes: writes,
+      );
+      final testAdapter = FirebaseFallbackAdapter(firestore: fakeFirestore);
+
+      await testAdapter.initializeRoom('MISSING-ROOM', 'node-missing');
+
+      expect(writes, isEmpty,
+          reason: 'Fallback adapter must never create a room document when missing');
+      await testAdapter.disconnect();
+    });
+
+    test('FirebaseFallbackAdapter: initializeRoom on an existing room updates room document', () async {
+      final writes = <({String action, Map<String, dynamic> data})>[];
+      final fakeFirestore = _FakeFailingFirestore(
+        roomExists: true,
+        roomData: {'roomCode': 'EXIST-ROOM', 'isStateless': true},
+        writes: writes,
+      );
+      final testAdapter = FirebaseFallbackAdapter(firestore: fakeFirestore);
+
+      await testAdapter.initializeRoom('EXIST-ROOM', 'node-exist');
+
+      expect(writes.length, 1);
+      expect(writes.first.action, 'update');
+      expect(writes.first.data['isStateless'], true);
+      await testAdapter.disconnect();
+    });
   });
 }
 
 class _FakeFailingDocRef implements DocumentReference<Map<String, dynamic>> {
   @override
+  final String path;
+  final bool exists;
+  final Map<String, dynamic>? docData;
+  final List<({String action, Map<String, dynamic> data})>? writes;
+
+  _FakeFailingDocRef({
+    this.path = '',
+    this.exists = false,
+    this.docData,
+    this.writes,
+  });
+
+  @override
+  Future<DocumentSnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
+    return _FakeDocumentSnapshot(exists: exists, data: docData);
+  }
+
+  @override
   Future<void> set(Map<String, dynamic> data, [SetOptions? options]) async {
+    if (writes != null) {
+      writes!.add((action: 'set', data: data));
+      return;
+    }
     throw Exception('Simulated Firestore network write error');
+  }
+
+  @override
+  Future<void> update(Map<Object, Object?> data) async {
+    if (writes != null) {
+      writes!.add((action: 'update', data: Map<String, dynamic>.from(data)));
+      return;
+    }
+    throw Exception('Simulated Firestore network update error');
   }
 
   @override
@@ -278,6 +380,21 @@ class _FakeFailingDocRef implements DocumentReference<Map<String, dynamic>> {
   @override
   CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
       _FakeSignalingCollectionRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeDocumentSnapshot implements DocumentSnapshot<Map<String, dynamic>> {
+  @override
+  final bool exists;
+  final Map<String, dynamic>? _docData;
+
+  _FakeDocumentSnapshot({required this.exists, Map<String, dynamic>? data})
+      : _docData = data;
+
+  @override
+  Map<String, dynamic>? data() => _docData;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -300,22 +417,60 @@ class _FakeSignalingCollectionRef
 
 class _FakeRoomsCollectionRef
     implements CollectionReference<Map<String, dynamic>> {
+  final bool roomExists;
+  final Map<String, dynamic>? roomData;
+  final List<({String action, Map<String, dynamic> data})>? writes;
+
+  _FakeRoomsCollectionRef({
+    this.roomExists = false,
+    this.roomData,
+    this.writes,
+  });
+
   @override
   DocumentReference<Map<String, dynamic>> doc([String? path]) =>
-      _FakeFailingDocRef();
+      _FakeFailingDocRef(
+        path: path ?? '',
+        exists: roomExists,
+        docData: roomData,
+        writes: writes,
+      );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _FakeFailingFirestore implements FirebaseFirestore {
+  final bool roomExists;
+  final Map<String, dynamic>? roomData;
+  final List<({String action, Map<String, dynamic> data})>? writes;
+
+  _FakeFailingFirestore({
+    this.roomExists = false,
+    this.roomData,
+    this.writes,
+  });
+
   @override
-  CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
-      _FakeRoomsCollectionRef();
+  CollectionReference<Map<String, dynamic>> collection(String collectionPath) {
+    if (collectionPath == 'rooms') {
+      return _FakeRoomsCollectionRef(
+        roomExists: roomExists,
+        roomData: roomData,
+        writes: writes,
+      );
+    }
+    return _FakeSignalingCollectionRef();
+  }
 
   @override
   DocumentReference<Map<String, dynamic>> doc(String documentPath) =>
-      _FakeFailingDocRef();
+      _FakeFailingDocRef(
+        path: documentPath,
+        exists: roomExists,
+        docData: roomData,
+        writes: writes,
+      );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

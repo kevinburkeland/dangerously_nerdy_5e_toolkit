@@ -6,7 +6,7 @@ cd "$REPO_DIR"
 
 IGNORE_COUNT=47
 RAW_TYPE_CEILING=58
-INFERENCE_CEILING=105
+INFERENCE_CEILING=103
 
 # Ensure only root analysis_options.yaml exists
 options_files=()

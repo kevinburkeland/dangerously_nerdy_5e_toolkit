@@ -1,8 +1,12 @@
+import 'dart:convert';
+import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/utils/crypto_utils.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/dialogs/join_create_room_dialog.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -98,6 +102,105 @@ void main() {
       final hostKey = CryptoUtils.generateHostKey();
       final hostHash = CryptoUtils.sha256Hex(hostKey);
       expect(hostHash.length, equals(64));
+    });
+
+    testWidgets(
+      'Reviewer case: two stored memberships with same room code do not throw in dice join dialog or loadMemberships',
+      (tester) async {
+        final registry = CampaignRegistryService.newInstance();
+        final older = CampaignMembership(
+          roomCode: 'ROOM-DUPE1',
+          campaignName: 'Older Campaign',
+          lastPlayed: DateTime.utc(2026, 1, 1),
+        );
+        final newer = CampaignMembership(
+          roomCode: 'room-dupe1',
+          campaignName: 'Newer Campaign',
+          lastPlayed: DateTime.utc(2026, 11, 1),
+        );
+
+        SharedPreferences.setMockInitialValues({
+          'user_campaign_registry': [
+            jsonEncode(older.toMap()),
+            jsonEncode(newer.toMap()),
+          ],
+        });
+
+        final loaded = await registry.loadMemberships();
+        expect(loaded.length, equals(1));
+        expect(loaded.first.campaignName, equals('Newer Campaign'));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: JoinCreateRoomDialog(
+                campaigns: loaded,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(DropdownButtonFormField<String>));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    test('Law: 300 seeded random stored lists produce unique codes and preserve all unique codes', () async {
+      final candidateCodes = ['ROOM-AAA', 'room-aaa', 'ROOM-BBB', 'room-bbb', 'ROOM-CCC', 'room-ccc', 'room-ddd'];
+
+      for (var seed = 0; seed < 300; seed++) {
+        final rng = Random(seed);
+        final listLength = rng.nextInt(15) + 1;
+        final stored = <CampaignMembership>[];
+        final expectedUpper = <String>{};
+
+        for (var i = 0; i < listLength; i++) {
+          final code = candidateCodes[rng.nextInt(candidateCodes.length)];
+          final m = CampaignMembership(
+            roomCode: code,
+            campaignName: 'Camp $code $i',
+            lastPlayed: DateTime.fromMillisecondsSinceEpoch(1000000000000 + rng.nextInt(10000000)),
+          );
+          stored.add(m);
+          expectedUpper.add(code.trim().toUpperCase());
+        }
+
+        SharedPreferences.setMockInitialValues({
+          'user_campaign_registry': stored.map((m) => jsonEncode(m.toMap())).toList(),
+        });
+
+        final registry = CampaignRegistryService.newInstance();
+        final loaded = await registry.loadMemberships();
+
+        final loadedUpper = loaded.map((m) => m.roomCode.trim().toUpperCase()).toList();
+        final loadedUpperSet = loadedUpper.toSet();
+
+        expect(
+          loadedUpper.length,
+          equals(loadedUpperSet.length),
+          reason: 'Seed $seed: loaded codes must be unique',
+        );
+        expect(
+          loadedUpperSet,
+          equals(expectedUpper),
+          reason: 'Seed $seed: every code in the stored list must appear once in the result',
+        );
+
+        // Verify newest lastPlayed won for each unique code
+        for (final upperCode in expectedUpper) {
+          final matchingStored = stored.where((m) => m.roomCode.trim().toUpperCase() == upperCode).toList()
+            ..sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
+          final winner = loaded.firstWhere((m) => m.roomCode.trim().toUpperCase() == upperCode);
+          expect(
+            winner.lastPlayed,
+            equals(matchingStored.first.lastPlayed),
+            reason: 'Seed $seed: winning entry for $upperCode must have the newest lastPlayed',
+          );
+        }
+      }
     });
   });
 }

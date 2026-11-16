@@ -551,18 +551,23 @@ test('Write Sites and Golden Payloads Test Suite (R6)', async (t) => {
     );
   });
 
-  // lib/infrastructure/adapters/p2p/firebase_signaling_adapter.dart: initialize (stub), _sendSignal, _deletePath
-  await t.test('firebase_signaling_adapter.dart: stub touch, _sendSignal and _deletePath are ALLOWED', async () => {
+  // lib/infrastructure/adapters/p2p/firebase_signaling_adapter.dart: initialize (refresh existing room), _sendSignal, _deletePath
+  await t.test('firebase_signaling_adapter.dart: existing room refresh, _sendSignal and _deletePath are ALLOWED', async () => {
     const roomCode = 'ROOM_SIG_ADAPT';
-    const unauthDb = testEnv.unauthenticatedContext().firestore();
-
-    // initialize stub
-    await assertSucceeds(
-      unauthDb.collection('rooms').doc(roomCode).set({
+    await testEnv.withSecurityRulesDisabled(async (adminContext) => {
+      await adminContext.firestore().collection('rooms').doc(roomCode).set({
         roomCode,
         code: roomCode,
         campaignName: `Campaign ${roomCode}`,
-        isStateless: true,
+        hostKeyHash: validHostKeyHash,
+      });
+    });
+
+    const unauthDb = testEnv.unauthenticatedContext().firestore();
+
+    // initialize refresh on existing room
+    await assertSucceeds(
+      unauthDb.collection('rooms').doc(roomCode).update({
         lastUpdated: '2026-10-19T12:00:00.000Z',
         expiresAt: '2026-11-19T12:00:00.000Z',
       })
@@ -593,18 +598,23 @@ test('Write Sites and Golden Payloads Test Suite (R6)', async (t) => {
     await assertSucceeds(signalDoc.delete());
   });
 
-  // lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart: initializeRoom (stub), broadcastPayload
-  await t.test('firebase_fallback_adapter.dart: stub touch and broadcastPayload are ALLOWED', async () => {
+  // lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart: initializeRoom (refresh existing room), broadcastPayload
+  await t.test('firebase_fallback_adapter.dart: existing room refresh and broadcastPayload are ALLOWED', async () => {
     const roomCode = 'ROOM_FALLBACK_1';
-    const unauthDb = testEnv.unauthenticatedContext().firestore();
-
-    // initializeRoom stub
-    await assertSucceeds(
-      unauthDb.collection('rooms').doc(roomCode).set({
+    await testEnv.withSecurityRulesDisabled(async (adminContext) => {
+      await adminContext.firestore().collection('rooms').doc(roomCode).set({
         roomCode,
         code: roomCode,
         campaignName: `Campaign ${roomCode}`,
-        isStateless: true,
+        hostKeyHash: validHostKeyHash,
+      });
+    });
+
+    const unauthDb = testEnv.unauthenticatedContext().firestore();
+
+    // initializeRoom refresh on existing room
+    await assertSucceeds(
+      unauthDb.collection('rooms').doc(roomCode).update({
         lastUpdated: '2026-10-19T12:00:00.000Z',
         expiresAt: '2026-11-19T12:00:00.000Z',
       })

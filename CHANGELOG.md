@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-15
+- Cleanup slice 11: Focused sync deltas for party purse and pinned rules fall through to full room sync when other profile fields mutate concurrently (Fix 6.1), transport adapters refresh existing room records but never create unowned room stubs (Fix 6.2), update privacy policy and add compliance test matching declared Firestore collections (Fix 6.3), and campaign registry deduplicates stored memberships by room code with newest lastPlayed winning (Fix 6.4).
+
 ## 2026-11-13
 - Cleanup slice 11: Remove non-SRD terms from code, tests and docs, add canonical SRD denylist and compliance scanner (Fix 5.1, Fix 5.2), update Terms of Service with dual SRD 5.1 and 5.2.1 CC-BY-4.0 attribution (Fix 5.3), and re-pin ruleset with massive damage at 0 HP fix (Fix 5.4).
 - Cleanup slice 11: One import reader (Fix 4.1), pure folder package allowlist in layer import table (Fix 4.2), and no function fields or typedefs in models (Fix 4.3).

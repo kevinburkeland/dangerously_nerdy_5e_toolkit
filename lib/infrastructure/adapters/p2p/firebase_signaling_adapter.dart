@@ -135,14 +135,11 @@ class FirebaseSignalingAdapter {
             'expiresAt': expiresAt.toIso8601String(),
           });
         } else {
-          await docRef.set({
-            'roomCode': _roomCode,
-            'code': _roomCode,
-            'campaignName': 'Campaign $_roomCode',
-            'isStateless': true,
-            'lastUpdated': now.toIso8601String(),
-            'expiresAt': expiresAt.toIso8601String(),
-          });
+          LoggingService().logNonFatal(
+            StateError('Room document rooms/$_roomCode does not exist; skipping signaling adapter room refresh'),
+            StackTrace.current,
+            reason: 'Room document rooms/$_roomCode does not exist; skipping signaling adapter room refresh',
+          );
         }
       } catch (e, st) {
         LoggingService().logNonFatal(e, st,

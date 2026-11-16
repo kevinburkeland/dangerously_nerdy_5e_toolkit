@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:mutex/mutex.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
@@ -741,14 +740,8 @@ class RoomSyncOrchestrator {
 
       // Focused CRDT delta: if only partyPurse mutated, emit crdt_purse_delta
       if (last != null &&
-          last.id == profile.id &&
           last.partyPurse != profile.partyPurse &&
-          const MapEquality().equals(last.memberPurses, profile.memberPurses) &&
-          last.name == profile.name &&
-          last.notesMarkdown == profile.notesMarkdown &&
-          last.pinnedRules == profile.pinnedRules &&
-          last.roomState == profile.roomState &&
-          last.partyRoster == profile.partyRoster) {
+          profile == last.copyWith(partyPurse: profile.partyPurse)) {
         payloadToSend = payloadMapper.serializePurseDelta(
           campaignId: profile.id,
           purse: profile.partyPurse,
@@ -761,14 +754,8 @@ class RoomSyncOrchestrator {
 
       // Focused CRDT delta: if only pinnedRules mutated, emit crdt_or_set_delta
       if (last != null &&
-          last.id == profile.id &&
           last.pinnedRules != profile.pinnedRules &&
-          last.partyPurse == profile.partyPurse &&
-          const MapEquality().equals(last.memberPurses, profile.memberPurses) &&
-          last.name == profile.name &&
-          last.notesMarkdown == profile.notesMarkdown &&
-          last.roomState == profile.roomState &&
-          last.partyRoster == profile.partyRoster) {
+          profile == last.copyWith(pinnedRules: profile.pinnedRules)) {
         _trackedRulesSet = _trackedRulesSet.merge(profile.pinnedRules);
         payloadToSend = payloadMapper.serializeOrSetDelta(
           campaignId: profile.id,

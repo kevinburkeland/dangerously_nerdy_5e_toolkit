@@ -57,18 +57,31 @@ class CampaignRegistryService {
         }
       }
 
-      // Sort by lastPlayed descending
+      // Sort by lastPlayed descending so newest entry comes first
       loaded.sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
-      membershipsNotifier.value = List.unmodifiable(loaded);
+
+      final deduplicated = <CampaignMembership>[];
+      final seenCodes = <String>{};
+      for (final m in loaded) {
+        final cleanCode = m.roomCode.trim().toUpperCase();
+        if (seenCodes.add(cleanCode)) {
+          deduplicated.add(m);
+        }
+      }
+
+      membershipsNotifier.value = List.unmodifiable(deduplicated);
 
       if (activeCode != null && activeCode.isNotEmpty) {
-        final match = loaded.where((m) => m.roomCode == activeCode).firstOrNull;
+        final cleanActive = activeCode.trim().toUpperCase();
+        final match = deduplicated
+            .where((m) => m.roomCode.trim().toUpperCase() == cleanActive)
+            .firstOrNull;
         if (match != null) {
           activeCampaignNotifier.value = match;
         }
       }
 
-      return loaded;
+      return deduplicated;
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
         e,
