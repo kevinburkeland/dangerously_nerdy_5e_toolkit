@@ -1,7 +1,7 @@
 # Cleanup slice 11 progress notes
 Status: IN PROGRESS
 Start heads: core 8d9b3ea509bca5e78c21298924d06963c938321f, ruleset 016a09556cd3e522593248a83aa22f982fcb6adc, app 5889a4d16927984a006a166791614836270b437b
-Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset bc2cd73f762ef0414037873ed337519bcc45e641, app 8acd69d75abc7cb326b70301fd09d08d80f50c3e
+Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset bc2cd73f762ef0414037873ed337519bcc45e641, app bd15b2dd5630be90b2665bede8d32efa6f0e282d
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset bc2cd73f762ef0414037873ed337519bcc45e641
 Fix ids: 1.1 1.2 2.1 2.2 2.3 2.4 2.5 3.1 3.2 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 6.4 7.1 7.2 7.3
 Mutation ids: D1 F1 F2 S2 M1 X1 N1 C1 T1 I1 I2 K1 K2 S1 Y1 R1 P1 L1 X2
@@ -37,7 +37,7 @@ Fix 7.3: No hand-written dice reading in app lib
 - [x] Step 3 The dependency check fails closed by schema: core 5d8ff3ee38c8bad7c08a41f52f882c74856ddc4d run 43650302385, ruleset ac46b6b38dcfc53ed4b5cdd98ad087d994810caf run 43650304011, app b8e85809033a13128077f81bfe22a9c3104ba77f run 43650309256
 - [x] Step 4 One import reader, the package rule, and P2: app 816a30b0de9a34af7496b4919cc346633b9dee02 run 43652468422
 - [x] Step 5 SRD names out, and massive damage: core f71ae361d3be4eea36e50cbd67e28baa19903b6c run 43654804368, ruleset bc2cd73f762ef0414037873ed337519bcc45e641 run 43654969518, app 8acd69d75abc7cb326b70301fd09d08d80f50c3e run 43656952040
-- [ ] Step 6 Sync deltas, room creation, and the privacy policy
+- [x] Step 6 Sync deltas, room creation, and the privacy policy: app bd15b2dd5630be90b2665bede8d32efa6f0e282d run 43786744971
 - [ ] Step 7 One dice reader
 - [ ] Step 8 Mutations and report
 
@@ -58,6 +58,10 @@ Fix 5.1 done: [One SRD denylist, scanned in all three repos] Byte-identical comp
 Fix 5.2 done: [Non-SRD names out of code, tests and docs] Removed non-SRD species slug checks from ruleset; removed non-SRD spell branch from app arena_combat_engine; renamed non-SRD feat advantage type to rollThreeKeepHighest with legacy key reader and denylist exceptions; renamed non-SRD test references and preserved test names in test/removed_test_names.txt
 Fix 5.3 done: [Terms of Service names the licences truthfully] Dual CC-BY-4.0 SRD 5.1 and 5.2.1 attribution in TERMS_OF_SERVICE.md and web/legal/TERMS_OF_SERVICE.md, verified byte-identical
 Fix 5.4 done: [Massive damage at 0 HP kills] Fixed applyDamage in ruleset to evaluate currentVitals.maxHp at 0 HP instead of relying on excessDamage exceeding negative maxHp
+Fix 6.1 done: [A focused sync delta only when nothing else changed] Fall through to full sync on concurrent profile mutations in lib/application/services/room_sync_orchestrator.dart
+Fix 6.2 done: [Transport adapters never create a room] Adapters refresh existing rooms and skip missing in lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart and firebase_signaling_adapter.dart
+Fix 6.3 done: [The privacy policy tells the truth] Updated device storage, shared room records, Android Crashlytics, and 9 Firestore collections in PRIVACY_POLICY.md and web/legal/PRIVACY_POLICY.md
+Fix 6.4 done: [Loaded campaign memberships have unique room codes] Deduplicate loaded memberships by upper-cased room code with newest lastPlayed winning in lib/services/party/campaign_registry_service.dart
 
 ## Mutation branches
 None
@@ -70,7 +74,7 @@ fd002b8026ee180329a10c7b62d07f36b8164dd7 red run 43654463029
 3ab87e25c91c4542ab8049679604b07f140129f9 red run 43656014152
 
 ## Next
-Step 6: Sync deltas, room creation, and the privacy policy
+Step 7: One dice reader
 
 ## Open issues and deviations
 Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
