@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'dart:async';
 import 'dart:collection';
 import 'package:meta/meta.dart';
@@ -740,8 +741,14 @@ class RoomSyncOrchestrator {
 
       // Focused CRDT delta: if only partyPurse mutated, emit crdt_purse_delta
       if (last != null &&
+          last.id == profile.id &&
           last.partyPurse != profile.partyPurse &&
-          profile == last.copyWith(partyPurse: profile.partyPurse)) {
+          const MapEquality().equals(last.memberPurses, profile.memberPurses) &&
+          last.name == profile.name &&
+          last.notesMarkdown == profile.notesMarkdown &&
+          last.pinnedRules == profile.pinnedRules &&
+          last.roomState == profile.roomState &&
+          last.partyRoster == profile.partyRoster) {
         payloadToSend = payloadMapper.serializePurseDelta(
           campaignId: profile.id,
           purse: profile.partyPurse,
