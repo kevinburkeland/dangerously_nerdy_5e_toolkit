@@ -370,7 +370,17 @@ class UndeadSummons {
     upcastRules:
         'Animate or reassert control over 2 additional undead creatures for each slot level above 3rd.',
     statBlocks: [skeleton, zombie],
-    budgetCalculator: _calculateAnimateDeadBudget,
+    budgetBySpellLevel: {
+      1: 1,
+      2: 1,
+      3: 1,
+      4: 3,
+      5: 5,
+      6: 7,
+      7: 9,
+      8: 11,
+      9: 13,
+    },
     defaultMinionCount: 1,
   );
 
@@ -390,13 +400,17 @@ class UndeadSummons {
     upcastRules:
         '7th level: 4 Ghouls or 2 Ghasts/Wights. 8th level: 5 Ghouls, 3 Ghasts/Wights, or 2 Mummies. 9th level: 6 Ghouls, 4 Ghasts/Wights, or 3 Mummies.',
     statBlocks: [ghoul, ghast, wight, mummy],
-    budgetCalculator: _calculateCreateUndeadBudget,
+    budgetBySpellLevel: {
+      1: 3,
+      2: 3,
+      3: 3,
+      4: 3,
+      5: 3,
+      6: 3,
+      7: 4,
+      8: 5,
+      9: 6,
+    },
     defaultMinionCount: 3,
   );
-
-  static int _calculateAnimateDeadBudget(int spellLevel) =>
-      1 + (spellLevel - 3).clamp(0, 6) * 2;
-
-  static int _calculateCreateUndeadBudget(int spellLevel) =>
-      3 + (spellLevel - 6).clamp(0, 3);
 }

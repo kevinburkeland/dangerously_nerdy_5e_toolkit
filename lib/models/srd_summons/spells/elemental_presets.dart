@@ -812,7 +812,17 @@ class ElementalSummons {
       salamander,
       xorn
     ],
-    budgetCalculator: _calculateConjureElementalBudget,
+    budgetBySpellLevel: {
+      1: 1,
+      2: 1,
+      3: 1,
+      4: 1,
+      5: 1,
+      6: 1,
+      7: 1,
+      8: 1,
+      9: 1,
+    },
     defaultMinionCount: 1,
   );
 
@@ -838,15 +848,17 @@ class ElementalSummons {
       magmaMephit,
       steamMephit
     ],
-    budgetCalculator: _calculateConjureMinorElementalsBudget,
+    budgetBySpellLevel: {
+      1: 8,
+      2: 8,
+      3: 8,
+      4: 8,
+      5: 8,
+      6: 16,
+      7: 16,
+      8: 24,
+      9: 24,
+    },
     defaultMinionCount: 4,
   );
-
-  static int _calculateConjureElementalBudget(int spellLevel) => 1;
-
-  static int _calculateConjureMinorElementalsBudget(int spellLevel) {
-    if (spellLevel < 6) return 8;
-    if (spellLevel < 8) return 16;
-    return 24;
-  }
 }

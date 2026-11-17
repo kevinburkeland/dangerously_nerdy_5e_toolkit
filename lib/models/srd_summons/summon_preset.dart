@@ -2,8 +2,6 @@ import '../monster_codex_data.dart';
 import '../spellbook_data.dart';
 import 'minion_stat_block.dart';
 
-typedef BudgetCalculator = int Function(int spellLevel);
-
 class SummonPreset {
   final String id;
   final String? spellId;
@@ -19,7 +17,7 @@ class SummonPreset {
   final String upcastRules;
   final List<MinionStatBlock> statBlocks;
   final bool isRandomTable; // e.g., Bag of Tricks
-  final BudgetCalculator? budgetCalculator;
+  final Map<int, int>? budgetBySpellLevel;
   final int defaultMinionCount;
 
   const SummonPreset({
@@ -36,7 +34,7 @@ class SummonPreset {
     required this.upcastRules,
     required this.statBlocks,
     this.isRandomTable = false,
-    this.budgetCalculator,
+    this.budgetBySpellLevel,
     this.defaultMinionCount = 1,
   });
 
@@ -104,8 +102,9 @@ class SummonPreset {
   }
 
   int calculateMaxPoints(int spellLevel) {
-    if (budgetCalculator != null) {
-      return budgetCalculator!(spellLevel);
+    if (budgetBySpellLevel != null) {
+      final clamped = spellLevel.clamp(1, 9);
+      return budgetBySpellLevel![clamped] ?? 50;
     }
     return 50;
   }

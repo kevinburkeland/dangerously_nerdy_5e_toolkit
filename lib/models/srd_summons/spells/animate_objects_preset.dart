@@ -297,10 +297,17 @@ class AnimateObjectsSummon {
       largeObject,
       hugeObject
     ],
-    budgetCalculator: _calculateAnimateObjectsBudget,
+    budgetBySpellLevel: {
+      1: 10,
+      2: 10,
+      3: 10,
+      4: 10,
+      5: 10,
+      6: 12,
+      7: 14,
+      8: 16,
+      9: 18,
+    },
     defaultMinionCount: 10,
   );
-
-  static int _calculateAnimateObjectsBudget(int spellLevel) =>
-      10 + (spellLevel - 5).clamp(0, 4) * 2;
 }

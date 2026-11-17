@@ -126,40 +126,61 @@ List<String> checkRuleP1(String filePath, String source) {
   return violations;
 }
 
-/// Allowlist for Rule P2: files in lib/models/ permitted to retain legacy mathematical
-/// function fields, with an explicit reason.
-const Map<String, String> kRuleP2Allowlist = {
-  'lib/models/srd_summons/summon_preset.dart':
-      'BudgetCalculator mathematical scaling function (int spellLevel -> int) from initial SRD summons design',
-};
-
 List<String> checkRuleP2(String filePath, String source) {
   final stripped = stripCommentsAndStringsPreservingLines(source);
   final lines = stripped.split('\n');
   final violations = <String>[];
 
-  // 1. Collect all typedef names in source that define function types
+  // Modern typedef: typedef Name = ... Function ...;
+  final modernFuncTypedefRegex = RegExp(
+    r'\btypedef\s+([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*=\s*([^;]*\bFunction\b[^;]*);',
+  );
+  // Old-style typedef: typedef ReturnType Name(...); or typedef Name(...);
+  final oldFuncTypedefRegex = RegExp(
+    r'\btypedef\s+(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?([A-Za-z0-9_]+)\s*\([^;]*\)\s*;',
+  );
+
   final typedefNames = <String>{};
-  final typedefRegex = RegExp(r'\btypedef\s+([A-Za-z0-9_]+)\s*=\s*[^;]*\bFunction\b[^;]*;');
-  for (final match in typedefRegex.allMatches(stripped)) {
+  for (final match in modernFuncTypedefRegex.allMatches(stripped)) {
+    typedefNames.add(match.group(1)!);
+  }
+  for (final match in oldFuncTypedefRegex.allMatches(stripped)) {
     typedefNames.add(match.group(1)!);
   }
 
-  // 2. Direct Function field: with or without initializer (= ...;)
+  // Direct Function field: with or without initializer (= ...;)
   final directFunctionRegex = RegExp(
-    r'\b(?:final\s+)?(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?Function(?:\s*\([^)]*\))?\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
+    r'\b(?:(?:static|final|late|const)\s+)*(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?Function(?:\s*\([^)]*\))?\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
   );
 
-  // 3. Typedef function fields: with or without initializer (= ...;)
+  // Typedef function fields: with or without initializer (= ...;)
   final typedefFieldRegexes = typedefNames.map((name) {
     return RegExp(
-      r'\b(?:final\s+)?' + RegExp.escape(name) + r'\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
+      r'\b(?:(?:static|final|late|const)\s+)*' +
+          RegExp.escape(name) +
+          r'\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
     );
   }).toList();
 
   for (int idx = 0; idx < lines.length; idx++) {
     final line = lines[idx];
-    if (line.trim().startsWith('typedef ')) continue;
+    final trimmed = line.trim();
+
+    if (trimmed.startsWith('typedef ') || trimmed.startsWith('typedef\t')) {
+      final modernMatch = modernFuncTypedefRegex.firstMatch(line);
+      if (modernMatch != null) {
+        violations.add(
+            '$filePath:${idx + 1}: function typedef in models (${modernMatch.group(1)})');
+        continue;
+      }
+      final oldMatch = oldFuncTypedefRegex.firstMatch(line);
+      if (oldMatch != null) {
+        violations.add(
+            '$filePath:${idx + 1}: function typedef in models (${oldMatch.group(1)})');
+        continue;
+      }
+      continue;
+    }
 
     bool isMatch = directFunctionRegex.hasMatch(line);
     if (!isMatch) {
@@ -223,9 +244,32 @@ class CharacterCombatAction {
 
       expect(checkRuleP2('in_memory.dart', bad), hasLength(1));
       expect(checkRuleP2('in_memory.dart', badWithInit), hasLength(1));
-      expect(checkRuleP2('in_memory.dart', badTypedef), hasLength(1));
-      expect(checkRuleP2('in_memory.dart', badTypedefWithInit), hasLength(1));
+      expect(checkRuleP2('in_memory.dart', badTypedef), hasLength(2));
+      expect(checkRuleP2('in_memory.dart', badTypedefWithInit), hasLength(2));
       expect(checkRuleP2('in_memory.dart', good), isEmpty);
+
+      // Fix 5.1 controls:
+      const c1 = 'typedef ZzCb = void Function(Object? sheet);';
+      final v1 = checkRuleP2('in_memory.dart', c1);
+      expect(v1, hasLength(1));
+      expect(v1.first, contains('function typedef in models (ZzCb)'));
+
+      const c2 = 'typedef int ZzOld(int x);';
+      final v2 = checkRuleP2('in_memory.dart', c2);
+      expect(v2, hasLength(1));
+      expect(v2.first, contains('function typedef in models (ZzOld)'));
+
+      const c3 = 'typedef ZzMap = Map<String, int>;';
+      expect(checkRuleP2('in_memory.dart', c3), isEmpty);
+
+      const c4 = '''
+class SummonPreset {
+  static void Function(Object? sheet)? zzOnExecute;
+}
+''';
+      final v4 = checkRuleP2('lib/models/srd_summons/summon_preset.dart', c4);
+      expect(v4, hasLength(1));
+      expect(v4.first, contains('zzOnExecute'));
     });
 
     test('Rule P3 controls: flags Object? context and dynamic rawCtx, allows BuildContext context', () {
@@ -257,35 +301,19 @@ class CharacterCombatAction {
     test('Rule P2: no class field with function type in lib/models/', () {
       final violations = <String>[];
       final modelsDir = Directory('lib/models');
-      final seenAllowlisted = <String>{};
 
       for (final entity in modelsDir.listSync(recursive: true)) {
         if (entity is File && entity.path.endsWith('.dart')) {
           final normPath = entity.path.replaceAll(r'\', '/');
           final content = entity.readAsStringSync();
           final fileViolations = checkRuleP2(normPath, content);
-          if (fileViolations.isNotEmpty) {
-            if (kRuleP2Allowlist.containsKey(normPath)) {
-              seenAllowlisted.add(normPath);
-            } else {
-              violations.addAll(fileViolations);
-            }
-          }
+          violations.addAll(fileViolations);
         }
-      }
-
-      // Check for stale allowlist entries
-      for (final allowed in kRuleP2Allowlist.keys) {
-        expect(
-          seenAllowlisted,
-          contains(allowed),
-          reason: 'Stale Rule P2 allowlist entry: $allowed has no violations',
-        );
       }
 
       expect(violations, isEmpty,
           reason:
-              'Rule P2: No class field with Function(...) or function-typedef type allowed in lib/models/');
+              'Rule P2: No function typedef or class field with function type allowed in lib/models/');
     });
 
     test('Rule P3: no Object?/Object/dynamic context variable or parameter in lib/', () {
