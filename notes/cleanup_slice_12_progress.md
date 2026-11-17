@@ -1,7 +1,7 @@
 # Cleanup slice 12 progress notes
 Status: IN PROGRESS
 Start heads: core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app 8ce29311c9398ddd8949905cdba661cd60747730
-Last pushed heads (CI green): None
+Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app c04474c5ac2a94bdd09d95b6a95a06f58f850b17
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c
 Fix ids: 1.1 1.2 2.1 2.2 3.1 3.2 4.1 4.2 4.3 5.1 5.2 6.1 6.2 6.3 7.1 7.2 7.3 7.4 8.1
 Mutation ids: G1 G2 Q1 V1 V2 A1 A2 S1 W1 W2 B1 P1 P2 E1 T1 S2 C1
@@ -28,7 +28,7 @@ Fix 7.4: The DPR calculator and the arena use them
 Fix 8.1: CharacterDto is a thin codec
 
 ## Steps
-- [ ] Step 1 minimatch and the npm rows before their dates
+- [x] Step 1 minimatch and the npm rows before their dates: app c04474c5ac2a94bdd09d95b6a95a06f58f850b17 run 44134284094
 - [ ] Step 2 Retire, and step rows
 - [ ] Step 3 Guarded dependency input
 - [ ] Step 4 The dice bar reads strings, and the last dice sites
@@ -49,7 +49,7 @@ None
 None
 
 ## Next
-Push Step 1 to main, wait for CI green and dispatch dependencies.yml, then record run IDs and proceed to Step 2.
+Step 2: Retire cs11 branches across all three repositories and implement step row descendant checks in check_notes_shas.py.
 
 ## Open issues and deviations
 - Working tree at start heads contained leftover uncommitted mutation changes from slice 11 (arena_combatant.dart, campaign_registry_service.dart, PRIVACY_POLICY.md in app; dnd_5e_combat_resolver.dart, dice_expression.dart, character_stat_calculator.dart in ruleset); verified identical to cs11 branches and restored clean with git checkout -- before baseline tests.
