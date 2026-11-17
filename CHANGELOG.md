@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-16
+- Cleanup slice 11: Re-pin ruleset with DiceExpression.tryParse, DiceExpression.findAll, and dice helpers (Fix 7.1), add characterization suite for 16 dice reading sites (Fix 7.2), enforce Law D16 compliance bar with zero allowlist (Fix 7.3), and migrate all 16 app dice reading sites to DiceExpression (Fix 7.4).
+
 ## 2026-11-15
 - Cleanup slice 11: Focused sync deltas for party purse and pinned rules fall through to full room sync when other profile fields mutate concurrently (Fix 6.1), transport adapters refresh existing room records but never create unowned room stubs (Fix 6.2), update privacy policy and add compliance test matching declared Firestore collections (Fix 6.3), and campaign registry deduplicates stored memberships by room code with newest lastPlayed winning (Fix 6.4).
 

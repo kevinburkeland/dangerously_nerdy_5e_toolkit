@@ -200,12 +200,12 @@ class HomebrewIngestor {
     return firstMatchedType;
   }
 
-  /// Extracts the dice formula (e.g., "1d6", "1d8") from higherLevelsMarkdown.
-  static String? extractHigherLevelsDice(String? higherLevelsMarkdown) {
-    if (higherLevelsMarkdown == null || higherLevelsMarkdown.isEmpty)
+  /// Extracts the dice expression from higherLevelsMarkdown.
+  static DiceExpression? extractHigherLevelsDice(String? higherLevelsMarkdown) {
+    if (higherLevelsMarkdown == null || higherLevelsMarkdown.isEmpty) {
       return null;
-    final match = RegExp(r'(\d+d\d+)').firstMatch(higherLevelsMarkdown);
-    return match?.group(1);
+    }
+    return DiceExpression.findAll(higherLevelsMarkdown).firstOrNull?.expression;
   }
 
   /// Enriches damage math entries with delivery method flags (isAttackRoll, requiresSave).

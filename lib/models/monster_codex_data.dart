@@ -765,14 +765,13 @@ extension MonsterHomebrewExt on Monster {
       }
       final fullText =
           '${firstWithBonus.hitDamage ?? ""} ${firstWithBonus.description}';
-      final dmgMatch =
-          RegExp(r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?').firstMatch(fullText);
-      if (dmgMatch != null) {
-        dmgCount = int.tryParse(dmgMatch.group(1)!) ?? 1;
-        dmgSides = int.tryParse(dmgMatch.group(2)!) ?? 6;
-        final sign = dmgMatch.group(3);
-        final bonusVal = int.tryParse(dmgMatch.group(4) ?? '') ?? 0;
-        dmgBonus = sign == '-' ? -bonusVal : bonusVal;
+      final dmgExpr = DiceExpression.tryParse(fullText.trim()) ??
+          DiceExpression.findAll(fullText).firstOrNull?.expression;
+      if (dmgExpr != null && dmgExpr.diceTerms.isNotEmpty) {
+        final d = dmgExpr.diceTerms.first;
+        dmgCount = d.count;
+        dmgSides = d.sides;
+        dmgBonus = dmgExpr.constantSum;
       }
       final typeMatch = RegExp(
         r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)',
@@ -784,14 +783,13 @@ extension MonsterHomebrewExt on Monster {
       }
     } else if (attackMath.isNotEmpty) {
       final math = attackMath.first;
-      final dmgMatch = RegExp(r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?')
-          .firstMatch(math.diceFormula);
-      if (dmgMatch != null) {
-        dmgCount = int.tryParse(dmgMatch.group(1)!) ?? 1;
-        dmgSides = int.tryParse(dmgMatch.group(2)!) ?? 6;
-        final sign = dmgMatch.group(3);
-        final bonusVal = int.tryParse(dmgMatch.group(4) ?? '') ?? 0;
-        dmgBonus = sign == '-' ? -bonusVal : bonusVal;
+      final dmgExpr = DiceExpression.tryParse(math.diceFormula.trim()) ??
+          DiceExpression.findAll(math.diceFormula).firstOrNull?.expression;
+      if (dmgExpr != null && dmgExpr.diceTerms.isNotEmpty) {
+        final d = dmgExpr.diceTerms.first;
+        dmgCount = d.count;
+        dmgSides = d.sides;
+        dmgBonus = dmgExpr.constantSum;
       }
       final typeName = math.damageType.name;
       if (typeName.isNotEmpty) {

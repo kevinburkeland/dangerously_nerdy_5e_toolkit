@@ -126,7 +126,8 @@ class CompendiumSpellParser {
       }
     } else if (higherLevelsMarkdown != null && damageMath.isNotEmpty) {
       final extracted =
-          HomebrewIngestor.extractHigherLevelsDice(higherLevelsMarkdown);
+          HomebrewIngestor.extractHigherLevelsDice(higherLevelsMarkdown)
+              ?.format();
       if (extracted != null) {
         bool applied = false;
         for (var i = 0; i < damageMath.length; i++) {

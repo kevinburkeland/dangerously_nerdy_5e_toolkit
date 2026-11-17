@@ -1757,9 +1757,8 @@ class CharacterActionsResolver {
     final actionType = _detectActionType(cleanName, body);
     if (actionType == null) return;
 
-    // Extract damage formula if present
-    final dmgMatch = RegExp(r'(\d+d\d+(?:\s*[+-]\s*\d+)?)').firstMatch(body);
-    final formula = dmgMatch?.group(1);
+    final diceMatch = DiceExpression.findAll(body).firstOrNull;
+    final formula = diceMatch?.expression.format();
 
     // Extract damage type if present (prioritize "<type> damage" over loose words)
     DamageType dmgType = DamageType.untyped;

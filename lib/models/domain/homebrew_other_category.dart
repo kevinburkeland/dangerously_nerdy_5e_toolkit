@@ -1,3 +1,5 @@
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show DiceExpression;
+
 /// Granular sub-classification for [EntityType.custom] homebrew entities
 /// stored under the other/rules codex collection.
 enum HomebrewOtherCategory {
@@ -82,13 +84,15 @@ enum HomebrewOtherCategory {
       // Check column headers for dice or roll notation (e.g. "d100", "d20", "d6", "Roll", "Die", "Result")
       final colLabels = customProperties['colLabels'];
       if (colLabels is List && colLabels.isNotEmpty) {
-        final diceRegex = RegExp(r'\b(?:d\d+|d%|roll|die|dice|result)\b',
-            caseSensitive: false);
+        final rollWordRegex =
+            RegExp(r'\b(?:roll|die|dice|result)\b', caseSensitive: false);
         for (final col in colLabels) {
           final colStr =
               (col is Map ? (col['entry'] ?? col.toString()) : col.toString())
                   as String;
-          if (diceRegex.hasMatch(colStr)) {
+          if (rollWordRegex.hasMatch(colStr) ||
+              DiceExpression.tryParse(colStr.trim()) != null ||
+              DiceExpression.findAll(colStr).isNotEmpty) {
             return true;
           }
         }
@@ -108,8 +112,9 @@ enum HomebrewOtherCategory {
             return true;
           }
           final cellStr = firstCell.toString().trim();
-          if (RegExp(r'^\s*(?:\d{1,3}\s*[-–—]\s*\d{1,3}|\d{1,3}|d\d+)\s*$')
-              .hasMatch(cellStr)) {
+          if (RegExp(r'^\s*(?:\d{1,3}\s*[-–—]\s*\d{1,3}|\d{1,3})\s*$')
+                  .hasMatch(cellStr) ||
+              DiceExpression.tryParse(cellStr) != null) {
             return true;
           }
           // If rows exist with multiple cells and first cell is text (e.g. Object names or armor names)

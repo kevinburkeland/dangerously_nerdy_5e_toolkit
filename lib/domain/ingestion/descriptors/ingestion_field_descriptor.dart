@@ -1,4 +1,5 @@
 import 'package:meta/meta.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show DiceExpression;
 
 /// Semantic role of a source field from a parsing/recognition perspective.
 /// Distinct from domain invariants.
@@ -74,8 +75,8 @@ class IngestionFieldDescriptor {
         }
       case FieldValueType.diceFormula:
         final s = value.toString().trim();
-        final diceRegex = RegExp(r'^\d*d\d+(\s*[+-]\s*\d+)?$', caseSensitive: false);
-        if (!diceRegex.hasMatch(s)) {
+        final expr = DiceExpression.tryParse(s);
+        if (expr == null || !expr.hasDice) {
           return '$label must be valid dice notation (e.g. "2d6", "1d10+3"). Got "$s".';
         }
       default:

@@ -405,15 +405,13 @@ class HomebrewPersistenceService {
     }
 
     final rawRows = raw['rows'] is List ? (raw['rows'] as List) : null;
-    final colLabels =
-        raw['colLabels'] is List ? (raw['colLabels'] as List) : null;
+    final colLabels = raw['colLabels'] is List ? (raw['colLabels'] as List) : null;
 
     String? inferredDice;
     if (colLabels != null && colLabels.isNotEmpty) {
-      final firstCol = colLabels.first.toString().trim().toLowerCase();
-      if (RegExp(r'^\d*d\d+$').hasMatch(firstCol)) {
-        inferredDice = firstCol.startsWith('d') ? '1$firstCol' : firstCol;
-      }
+      final expr = DiceExpression.tryParse(colLabels.first.toString().trim()) ??
+          DiceExpression.findAll(colLabels.first.toString()).firstOrNull?.expression;
+      if (expr != null && expr.hasDice) inferredDice = expr.format();
     }
 
     if (rawRows != null && rawRows.isNotEmpty) {
@@ -433,8 +431,7 @@ class HomebrewPersistenceService {
             label =
                 r.length > 1 ? r.sublist(1).join(' - ') : rangeCol.join(' - ');
           } else if (rangeCol is int) {
-            min = rangeCol;
-            max = rangeCol;
+            min = max = rangeCol;
             label = r.length > 1 ? r.sublist(1).join(' - ') : '$rangeCol';
           } else if (rangeCol is String) {
             final trimmed = rangeCol.trim();
@@ -483,14 +480,12 @@ class HomebrewPersistenceService {
             .toList();
         if (cells.isEmpty) continue;
         if (cells.any((c) => c.contains('---'))) continue;
+        final expr = DiceExpression.tryParse(cells[0].trim()) ??
+            DiceExpression.findAll(cells[0]).firstOrNull?.expression;
         if (rowIdx == 1 &&
-            (cells[0].toLowerCase().contains('roll') ||
-                cells[0].toLowerCase().startsWith('d'))) {
-          if (inferredDice == null &&
-              RegExp(r'^\d*d\d+$').hasMatch(cells[0].toLowerCase())) {
-            inferredDice = cells[0].toLowerCase().startsWith('d')
-                ? '1${cells[0].toLowerCase()}'
-                : cells[0].toLowerCase();
+            (cells[0].toLowerCase().contains('roll') || (expr != null && expr.hasDice))) {
+          if (inferredDice == null && expr != null && expr.hasDice) {
+            inferredDice = expr.format();
           }
           continue;
         }
@@ -535,8 +530,9 @@ class HomebrewPersistenceService {
     }
     int sides = maxRoll;
     if (inferredDice != null) {
-      final m = RegExp(r'd(\d+)').firstMatch(inferredDice);
-      if (m != null) sides = int.tryParse(m.group(1)!) ?? maxRoll;
+      final expr = DiceExpression.tryParse(inferredDice.trim()) ??
+          DiceExpression.findAll(inferredDice).firstOrNull?.expression;
+      if (expr != null && expr.largestDie > 0) sides = expr.largestDie;
     }
     if (sides < 1) sides = 1;
     final formula = inferredDice ?? '1d$sides';

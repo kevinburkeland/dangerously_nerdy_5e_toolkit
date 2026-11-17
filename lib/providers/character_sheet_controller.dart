@@ -944,23 +944,21 @@ class CharacterSheetController extends ChangeNotifier {
       formula = spell.customProperties['rollFormula'].toString();
     }
 
-    // Determine base dice count and die type
-    int count = 1;
-    DieType dieType = DieType.d10;
-    int customSides = 10;
+    final parsedExpr = DiceExpression.tryParse(formula.trim()) ??
+        DiceExpression.findAll(formula).firstOrNull?.expression;
+    final diceTerms = parsedExpr?.diceTerms ?? const [];
+    final List<DiceEntry> diceEntries = diceTerms.isNotEmpty
+        ? diceTerms.map((dt) => DiceEntry(
+              dieType: DieType.values.firstWhere(
+                (d) => d.sides == dt.sides && d != DieType.custom,
+                orElse: () => DieType.custom,
+              ),
+              count: dt.count,
+              customSides: dt.sides,
+            )).toList()
+        : [DiceEntry(dieType: DieType.d10, count: 1, customSides: 10)];
 
-    final match = RegExp(r'^(\d+)d(\d+)').firstMatch(formula.trim());
-    if (match != null) {
-      count = int.tryParse(match.group(1)!) ?? 1;
-      final sides = int.tryParse(match.group(2)!) ?? 10;
-      dieType = DieType.values.firstWhere(
-        (d) => d.sides == sides && d != DieType.custom,
-        orElse: () => DieType.custom,
-      );
-      customSides = sides;
-    }
-
-    int modifier = 0;
+    int modifier = parsedExpr?.constantSum ?? 0;
     if (isEldritchBlast &&
         (hasAgonizingBlast ||
             hasCapabilityFlag('eldritchBlastChaDamage') ||
@@ -971,13 +969,7 @@ class CharacterSheetController extends ChangeNotifier {
     }
 
     final result = DiceRollResult.rollPool(
-      diceEntries: [
-        DiceEntry(
-          dieType: dieType,
-          count: count,
-          customSides: customSides,
-        ),
-      ],
+      diceEntries: diceEntries,
       modifier: modifier,
     );
 
@@ -1098,10 +1090,12 @@ class CharacterSheetController extends ChangeNotifier {
     DieType baseDieType = DieType.d10;
     int baseSides = 10;
 
-    final baseMatch = RegExp(r'^(\d+)d(\d+)').firstMatch(baseFormula.trim());
-    if (baseMatch != null) {
-      baseCount = int.tryParse(baseMatch.group(1)!) ?? 1;
-      final sides = int.tryParse(baseMatch.group(2)!) ?? 10;
+    final parsedBase = DiceExpression.tryParse(baseFormula.trim()) ??
+        DiceExpression.findAll(baseFormula).firstOrNull?.expression;
+    final firstBase = parsedBase?.diceTerms.firstOrNull;
+    if (firstBase != null) {
+      baseCount = firstBase.count;
+      final sides = firstBase.sides;
       baseDieType = DieType.values.firstWhere(
         (d) => d.sides == sides && d != DieType.custom,
         orElse: () => DieType.custom,
@@ -1124,31 +1118,26 @@ class CharacterSheetController extends ChangeNotifier {
       }
       scalingStr ??= spell.customProperties['scalingFormula']?.toString();
 
+      DiceExpression? scaleExpr;
       if (scalingStr != null) {
-        final scaleMatch = RegExp(r'(\d+)d(\d+)').firstMatch(scalingStr);
-        if (scaleMatch != null) {
-          final dicePerLevel = int.tryParse(scaleMatch.group(1)!) ?? 1;
-          final sSides = int.tryParse(scaleMatch.group(2)!) ?? baseSides;
-          additionalCount = delta * dicePerLevel;
-          additionalDieType = DieType.values.firstWhere(
-            (d) => d.sides == sSides && d != DieType.custom,
-            orElse: () => DieType.custom,
-          );
-          additionalSides = sSides;
-        }
+        scaleExpr = DiceExpression.tryParse(scalingStr.trim()) ??
+            DiceExpression.findAll(scalingStr).firstOrNull?.expression;
       } else if (spell.higherLevelsMarkdown != null) {
-        final hlMatch =
-            RegExp(r'(\d+)d(\d+)').firstMatch(spell.higherLevelsMarkdown!);
-        if (hlMatch != null) {
-          final dicePerLevel = int.tryParse(hlMatch.group(1)!) ?? 1;
-          final sSides = int.tryParse(hlMatch.group(2)!) ?? baseSides;
-          additionalCount = delta * dicePerLevel;
-          additionalDieType = DieType.values.firstWhere(
-            (d) => d.sides == sSides && d != DieType.custom,
-            orElse: () => DieType.custom,
-          );
-          additionalSides = sSides;
-        }
+        scaleExpr = DiceExpression.findAll(spell.higherLevelsMarkdown!)
+            .firstOrNull
+            ?.expression;
+      }
+
+      final scaleTerm = scaleExpr?.diceTerms.firstOrNull;
+      if (scaleTerm != null) {
+        final dicePerLevel = scaleTerm.count;
+        final sSides = scaleTerm.sides;
+        additionalCount = delta * dicePerLevel;
+        additionalDieType = DieType.values.firstWhere(
+          (d) => d.sides == sSides && d != DieType.custom,
+          orElse: () => DieType.custom,
+        );
+        additionalSides = sSides;
       }
     }
 

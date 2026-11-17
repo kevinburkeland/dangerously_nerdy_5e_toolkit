@@ -200,7 +200,8 @@ class SpellDto {
 
     // Extract higher levels scaling dice formula into damageMath.scalingFormula
     final extractedScaling =
-        HomebrewIngestor.extractHigherLevelsDice(resolvedHigherLevels);
+        HomebrewIngestor.extractHigherLevelsDice(resolvedHigherLevels)
+            ?.format();
     if (extractedScaling != null && resolvedDamageMath.isNotEmpty) {
       bool applied = false;
       for (var i = 0; i < resolvedDamageMath.length; i++) {

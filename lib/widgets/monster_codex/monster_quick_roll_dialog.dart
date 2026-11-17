@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:material_ui/material_ui.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../services/a11y_service.dart';
@@ -283,10 +284,9 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
     SpellRollResult? dmgResult;
     final hitDamage = action.hitDamage;
     if (hitDamage != null && hitDamage.isNotEmpty) {
-      final formulaMatch =
-          RegExp(r'(\d+d\d+(?:\s*[+-]\s*\d+)?)').firstMatch(hitDamage);
-      if (formulaMatch != null) {
-        final formula = formulaMatch.group(1)!;
+      final diceMatch = DiceExpression.findAll(hitDamage).firstOrNull;
+      if (diceMatch != null) {
+        final formula = diceMatch.expression.format();
         dmgResult = SpellRollEngine.roll(formula: formula);
         if (dmgResult == null) {
           ScaffoldMessenger.of(context).showSnackBar(

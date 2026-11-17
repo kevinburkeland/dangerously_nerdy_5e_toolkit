@@ -485,10 +485,13 @@ class StatBlockAclParser {
       int diceCount = 0;
       int diceSides = 0;
       int flatBonus = 0;
-      if (amountStr.contains('d')) {
-        final parts = amountStr.split('d');
-        diceCount = int.tryParse(parts[0]) ?? 1;
-        diceSides = int.tryParse(parts[1]) ?? 4;
+      final expr = DiceExpression.tryParse(amountStr.trim()) ??
+          DiceExpression.findAll(amountStr).firstOrNull?.expression;
+      if (expr != null && expr.hasDice) {
+        final d = expr.diceTerms.first;
+        diceCount = d.count;
+        diceSides = d.sides;
+        flatBonus = expr.constantSum;
       } else {
         flatBonus = int.tryParse(amountStr) ?? 0;
       }

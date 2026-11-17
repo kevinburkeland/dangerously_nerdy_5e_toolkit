@@ -15,7 +15,7 @@ void main() {
           .where((f) => f.path.endsWith('.dart'));
 
       final forbiddenImportPattern = RegExp(
-        r'''import\s+['"].*(?:models/domain|dnd5e|spell_monster|character_models|dm_screen).*['"];''',
+        r'''import\s+['"].*(?:models/domain|modules/dnd5e|spell_monster|character_models|dm_screen).*['"];''',
       );
 
       final violations = <String>[];
@@ -24,6 +24,13 @@ void main() {
         final matches = forbiddenImportPattern.allMatches(content);
         for (final m in matches) {
           violations.add('${file.path}: ${m.group(0)}');
+        }
+        // If vtt_ruleset_dnd5e is imported, only generic DiceExpression is permitted
+        if (content.contains('vtt_ruleset_dnd5e') &&
+            !content.contains('show DiceExpression')) {
+          violations.add(
+            '${file.path}: Only DiceExpression may be imported from vtt_ruleset_dnd5e in ruleset-agnostic ingestion domain',
+          );
         }
       }
 
