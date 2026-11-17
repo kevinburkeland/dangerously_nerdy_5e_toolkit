@@ -139,6 +139,45 @@ void main() {
     });
 
     group('Source Bar Self-Tests & Controls', () {
+      test('Flags hand-written dice regex literal', () {
+        const fakePath = 'lib/services/fake_service.dart';
+        const fakeContent = r'''
+class FakeService {
+  void parse(String text) {
+    final m = RegExp(r'(\d+)d(\d+)').firstMatch(text);
+  }
+}
+''';
+        final v = checkFileViolations(fakePath, fakeContent);
+        expect(v, isNotEmpty);
+      });
+
+      test('Flags .split("d") call', () {
+        const fakePath = 'lib/services/fake_service.dart';
+        const fakeContent = '''
+class FakeService {
+  void parse(String text) {
+    final parts = text.split('d');
+  }
+}
+''';
+        final v = checkFileViolations(fakePath, fakeContent);
+        expect(v, isNotEmpty);
+      });
+
+      test('Flags ad-hoc dice helper method', () {
+        const fakePath = 'lib/services/fake_service.dart';
+        const fakeContent = '''
+class FakeService {
+  static String? extractHigherLevelsDice(String? text) {
+    return null;
+  }
+}
+''';
+        final v = checkFileViolations(fakePath, fakeContent);
+        expect(v, isNotEmpty);
+      });
+
       test('16 flagged positive controls pass isDicePattern', () {
         const posControls = [
           r'(\d+)d(\d+)',
