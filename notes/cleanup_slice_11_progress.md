@@ -1,7 +1,7 @@
 # Cleanup slice 11 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 8d9b3ea509bca5e78c21298924d06963c938321f, ruleset 016a09556cd3e522593248a83aa22f982fcb6adc, app 5889a4d16927984a006a166791614836270b437b
-Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app 355dc0a89c23417d18587681a6b4b1b0960984cd
+Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app 301236553da61740b2452c6e07d9df8f2d04e495
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c
 Fix ids: 1.1 1.2 2.1 2.2 2.3 2.4 2.5 3.1 3.2 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 6.4 7.1 7.2 7.3
 Mutation ids: D1 F1 F2 S2 M1 X1 N1 C1 T1 I1 I2 K1 K2 S1 Y1 R1 P1 L1 X2
@@ -39,7 +39,7 @@ Fix 7.3: No hand-written dice reading in app lib
 - [x] Step 5 SRD names out, and massive damage: core f71ae361d3be4eea36e50cbd67e28baa19903b6c run 43654804368, ruleset bc2cd73f762ef0414037873ed337519bcc45e641 run 43654969518, app 8acd69d75abc7cb326b70301fd09d08d80f50c3e run 43656952040
 - [x] Step 6 Sync deltas, room creation, and the privacy policy: app bd15b2dd5630be90b2665bede8d32efa6f0e282d run 43786744971
 - [x] Step 7 One dice reader: ruleset d9334641b75b17993ec8bd53a90e7c612abec04c run 43950359433, app 355dc0a89c23417d18587681a6b4b1b0960984cd run 44006865703
-- [ ] Step 8 Mutations and report
+- [x] Step 8 Mutations and report
 
 ## Fix checklist
 Fix 1.1 done: [setup-dart v1.8.2 in core and ruleset] Updated dart-lang/setup-dart pins to v1.8.2 in core and ruleset ci.yml and dependencies.yml
@@ -67,7 +67,25 @@ Fix 7.2 done: [App dice reading goes through DiceExpression] Characterized 16 di
 Fix 7.3 done: [No hand-written dice reading in app lib] Enforced Law D16 compliance bar in test/infrastructure/compliance/dice_reading_bar_test.dart with empty allowlist
 
 ## Mutation branches
-None
+mutation/cs11-d1 f822bee8b629bd508040131432b2ba656149fbd6
+mutation/cs11-f1 8d00ccf99ee22134914f4361ec5fb600e34f037c
+mutation/cs11-f2 cbd40b255c2330af1fe88bc302d603f16527b15f
+mutation/cs11-s2 af0d2607300dcf6fe3749a906e97841fecc103fe
+mutation/cs11-m1 49e526e1b4a74d2934dd20ec73e459cb9e6b3c14
+mutation/cs11-x1 563c04e592bcca8dc2ee7eecbd1a06343005ee92
+mutation/cs11-t1 5b0d2da80f9b9a869460c3a046f75125aee9fb3c
+mutation/cs11-i1 fb2620ccf1cfddb0336004523aead5520139de66
+mutation/cs11-i2 b045e05e8c32fc22111ebf323785271540f06211
+mutation/cs11-k1 e29b8d2b0442c9f34f48a90c21eb467e4b5ff8fb
+mutation/cs11-k2 cdb5d09d883db1c27e8ef814c70155466505ab48
+mutation/cs11-s1 2781dbec5ca21366b44b594eac35440df619c4e5
+mutation/cs11-y1 f0daae6410eae6e2b3a3ead975d6cc9df2685f70
+mutation/cs11-r1 fcd0e4c9fe7d52b134326855fa00debb20dc1ab5
+mutation/cs11-p1 4614850589d98fe280a76ff01184f4da287ec50f
+mutation/cs11-l1 9f8b82b3f3f640ceec4cafb86fe1cd2d865e8aa2
+mutation/cs11-x2 0a325e075d9da9e0f90815de1a47b59373ffa26a
+mutation/cs11-c1 a8442172a5be944aec7848f3df500f322d2a63e9
+mutation/cs11-n1 f18f46f884338c75c6528fbc6ab90052e5fab303
 
 ## Red runs on main
 0447ece03df8722a19a0937f86dbc374457790de cancelled run 43510726706
@@ -77,7 +95,7 @@ fd002b8026ee180329a10c7b62d07f36b8164dd7 red run 43654463029
 3ab87e25c91c4542ab8049679604b07f140129f9 red run 43656014152
 
 ## Next
-Step 8: Mutations and report
+None (Cleanup slice 11 complete).
 
 ## Open issues and deviations
 Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
