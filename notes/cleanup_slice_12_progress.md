@@ -48,6 +48,8 @@ Fix 3.2 done: [Optional fields are schema rows too] Registered all optional and 
 Fix 4.1 done: [The dice bar reads every string literal] Replaced line-based RegExp scanner in dice_reading_bar_test.dart with DartStringLiteralReader to extract all string literals, multiline strings, adjacent concatenations, and raw strings, matching dice patterns via isDicePattern; 16 positive and 14 negative controls pass.
 Fix 4.2 done: [The remaining dice sites go through DiceExpression] Migrated all 12 hand-written dice regex sites across stat_block_acl_parser.dart, dpr_models.dart, spell_dto.dart, homebrew_ingestor.dart, candidate_detector.dart, dnd5e_ingestion_capability.dart, and dnd5e_class_field_extractor.dart to DiceExpression; characterization tests pass across all 28 sites.
 Fix 4.3 done: [No invented die when a formula can't be read] Removed 1d10 private fallbacks in CharacterSheetController.rollSpellDamage and _rollUpcastSpellDamage; verified with 500-seed property law test that unparseable formulas produce zero dice.
+Fix 5.1 done: [Models declare no callback types, with no file allowlist] Removed BudgetCalculator and replaced with budgetBySpellLevel map table; built Rule P2 (a) forbidding function typedefs in lib/models/ and deleted kRuleP2Allowlist.
+Fix 5.2 done: [The ruleset denylist test scans what its name says] Refactored srd_legal_compliance_test.dart in vtt-ruleset-dnd5e to scan lib/ against compliance/srd_denylist.txt and added meta-test verifying non-existsSync assertions.
 
 ## Mutation branches
 None
@@ -58,6 +60,7 @@ None
 2c3738cd1c2abd8f73f31b36757d2de5007e651f cancelled run 44191916989
 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d red run 44192285916
 2ac32da6a6502812afb25a7a35896a2939a6007b red run 44194718959
+d2f7e2bbfb49c1da85f12fd742728730f2c9bab1 red run 44199708231
 
 ## Next
 Step 5: Models callback rule, and the ruleset denylist test.
@@ -66,9 +69,11 @@ Step 5: Models callback rule, and the ruleset denylist test.
 - Working tree at start heads contained leftover uncommitted mutation changes from slice 11 (arena_combatant.dart, campaign_registry_service.dart, PRIVACY_POLICY.md in app; dnd_5e_combat_resolver.dart, dice_expression.dart, character_stat_calculator.dart in ruleset); verified identical to cs11 branches and restored clean with git checkout -- before baseline tests.
 - check_notes_shas.py requires GITHUB_TOKEN=$(gh auth token) locally to avoid GitHub API 403 rate limits on unauthenticated requests.
 - Look-ahead dependency check with --today 2026-12-01 revealed new releases for actions/setup-java (v6.3.0), firebase npm (13.4.0), and 6 pub packages with floors; updated to newest releases to maintain green look-ahead across all repos.
+- Both denylist tests in vtt-ruleset-dnd5e test/compliance/srd_legal_compliance_test.dart check the same denylist (compliance/srd_denylist.txt); historically Test 1 focused on WotC monster names while Test 2 audits comprehensive non-SRD terms. Both names are retained per prompt instructions.
 Cleanup slice 11 notes Step 1 app row correction: 9075eaceb054e1a5ff3862d01022cbe5f810ce24 run 43507783982
 Run 44135308908 cause: cancelled on 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 when push 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f was made; fixed by 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f
 Run 44135584591 cause: failed on 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f due to undisclosed cancelled run on 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 and GHSA-fc5q-39xc-vjpf; fixed by e3b9966f7c74541e6a506119903a02d435337351
 Run 44191916989 cause: cancelled on 2c3738cd1c2abd8f73f31b36757d2de5007e651f when push 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d was made; fixed by 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d
 Run 44192285916 cause: failed on 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d due to test names ratchet in dice reading bar; fixed by 4128506a769a31b8bbe58f0242330663e1e2d366
 Run 44194718959 cause: failed on 2ac32da6a6502812afb25a7a35896a2939a6007b due to typo in Step 4 commit SHA; fixed by 9bc6d310ec63778b9845665e3c17e33800ce8c21
+Run 44199708231 cause: failed on d2f7e2bbfb49c1da85f12fd742728730f2c9bab1 due to stale codebase_map.md generated folder index following removal of BudgetCalculator in Fix 5.1; fixed by a2d589d93ff02c396e4856dba72587b78b42e2dc
