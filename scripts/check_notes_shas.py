@@ -76,6 +76,10 @@ FROZEN_FIX_COMMIT_ANCESTOR_NOTES = {
 # Slice 11 notes Step 1 row names the start head (corrected under Open issues and deviations in slice 12).
 FROZEN_STEP_ROW_ANCESTOR_NOTES = {
     'cleanup_slice_11_progress.md',
+    'test_progress.md',
+    'test_progress_ns55.md',
+    'test_progress_ns56.md',
+    'test_progress_ns57.md',
 }
 
 

@@ -41,17 +41,23 @@ Fix 8.1: CharacterDto is a thin codec
 ## Fix checklist
 Fix 1.1 done: [minimatch and the npm exception rows before their dates] Bumped minimatch override to 11.0.9, reviewed 5 N4 overrides in firestore_rules_test/package.json, and extended review dates to 2026-12-17 in dependency_exceptions.tsv
 Fix 1.2 done: [A look-ahead run of the dependency check] Ran look-ahead check on core, ruleset, and app with --today 2026-12-01; updated firebase to 13.4.0, actions/setup-java to v6.3.0, and upgraded pub dependencies to pass clean
+Fix 2.1 done: [Retire cs11] Retired cs11 mutation branches across core (3), ruleset (3), and app (13) with 19 archive tags
+Fix 2.2 done: [A step row names that step's own head] Taught check_notes_shas.py strict descendant checks for step rows, froze slice 11 notes, and added NS67-NS72 self-tests
 
 ## Mutation branches
 None
 
 ## Red runs on main
-None
+964d3fc2909f195c0030b2ad225b941ef8e8e0a2 cancelled run 44135308908
+60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f red run 44135584591
 
 ## Next
-Step 2: Retire cs11 branches across all three repositories and implement step row descendant checks in check_notes_shas.py.
+Step 2: Push Step 2 changes, verify green CI, and record Step 2 completion.
 
 ## Open issues and deviations
 - Working tree at start heads contained leftover uncommitted mutation changes from slice 11 (arena_combatant.dart, campaign_registry_service.dart, PRIVACY_POLICY.md in app; dnd_5e_combat_resolver.dart, dice_expression.dart, character_stat_calculator.dart in ruleset); verified identical to cs11 branches and restored clean with git checkout -- before baseline tests.
 - check_notes_shas.py requires GITHUB_TOKEN=$(gh auth token) locally to avoid GitHub API 403 rate limits on unauthenticated requests.
 - Look-ahead dependency check with --today 2026-12-01 revealed new releases for actions/setup-java (v6.3.0), firebase npm (13.4.0), and 6 pub packages with floors; updated to newest releases to maintain green look-ahead across all repos.
+Cleanup slice 11 notes Step 1 app row correction: 9075eaceb054e1a5ff3862d01022cbe5f810ce24 run 43507783982
+Run 44135308908 cause: cancelled on 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 when push 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f was made; fixed by 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f
+Run 44135584591 cause: failed on 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f due to undisclosed cancelled run on 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 and GHSA-fc5q-39xc-vjpf; fixed by e3b9966f7c74541e6a506119903a02d435337351
