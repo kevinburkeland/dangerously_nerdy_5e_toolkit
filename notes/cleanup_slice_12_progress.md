@@ -1,7 +1,7 @@
 # Cleanup slice 12 progress notes
 Status: IN PROGRESS
 Start heads: core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app 8ce29311c9398ddd8949905cdba661cd60747730
-Last pushed heads (CI green): core da68079cede34fb9664e9a9a7c9a60f661a83e22, ruleset e4b36f30fe078168eae1e9b1b599d4a9f3bdd007, app 5b2c6552c425d88d4cba9734a403ac2b92afd3e2
+Last pushed heads (CI green): core da68079cede34fb9664e9a9a7c9a60f661a83e22, ruleset e4b36f30fe078168eae1e9b1b599d4a9f3bdd007, app 78970de63c7849e8a0a9fc67db6ec9c3d4f107c8
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c
 Fix ids: 1.1 1.2 2.1 2.2 3.1 3.2 4.1 4.2 4.3 5.1 5.2 6.1 6.2 6.3 7.1 7.2 7.3 7.4 8.1
 Mutation ids: G1 G2 Q1 V1 V2 A1 A2 S1 W1 W2 B1 P1 P2 E1 T1 S2 C1
@@ -31,7 +31,7 @@ Fix 8.1: CharacterDto is a thin codec
 - [x] Step 1 minimatch and the npm rows before their dates: app c04474c5ac2a94bdd09d95b6a95a06f58f850b17 run 44134284094
 - [x] Step 2 Retire, and step rows: core 2bfb58a0ab55130b2e01f6efa3c6e2bc066fff2f run 44135485377, ruleset e8528d1181100419393c07e1094b4b05e1243f37 run 44135517061, app ed339e0499b4566b24a03923b542c6b61e6449cf run 44139659617
 - [x] Step 3 Guarded dependency input: core da68079cede34fb9664e9a9a7c9a60f661a83e22 run 44174667146, ruleset e4b36f30fe078168eae1e9b1b599d4a9f3bdd007 run 44174680574, app 5b2c6552c425d88d4cba9734a403ac2b92afd3e2 run 44174697411
-- [ ] Step 4 The dice bar reads strings, and the last dice sites
+- [x] Step 4 The dice bar reads strings, and the last dice sites: app 78970de63c7849e8a0a9fc67db6ec9c3d4f107c8 run 44193767266
 - [ ] Step 5 Models callback rule, and the ruleset denylist test
 - [ ] Step 6 Ruleset tests come home, with coverage floors
 - [ ] Step 7 Attack odds, save odds and save damage come home
@@ -59,7 +59,7 @@ None
 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d red run 44192285916
 
 ## Next
-Step 4: The dice bar reads strings, and the last dice sites.
+Step 5: Models callback rule, and the ruleset denylist test.
 
 ## Open issues and deviations
 - Working tree at start heads contained leftover uncommitted mutation changes from slice 11 (arena_combatant.dart, campaign_registry_service.dart, PRIVACY_POLICY.md in app; dnd_5e_combat_resolver.dart, dice_expression.dart, character_stat_calculator.dart in ruleset); verified identical to cs11 branches and restored clean with git checkout -- before baseline tests.
