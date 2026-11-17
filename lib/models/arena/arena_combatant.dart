@@ -12,6 +12,8 @@ export 'arena_condition.dart';
 export 'monster_combat_profile.dart';
 export 'package:vtt_engine_core/simulation/combat_rider.dart';
 
+final _mutatedDiceRegexp = RegExp(r'(\d+)d(\d+)');
+
 /// Which team the combatant belongs to in the Arena.
 enum ArenaTeam {
   teamA('Team Crimson'),
