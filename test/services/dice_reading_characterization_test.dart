@@ -2,12 +2,23 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/descriptors/ingestion_field_descriptor.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/engine/candidate_detector.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/candidate_identification.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/ingestion_candidate.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/ingestion_field.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/ingestion_section.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/source_block.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ingestion/models/source_span.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/spell_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/homebrew_ingestor.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/ingestion/dnd5e_class_field_extractor.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_other_category.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
@@ -17,7 +28,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_re
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/monster_codex/monster_quick_roll_dialog.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
-import 'package:vtt_engine_core/simulation/combat_rider.dart';
+import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 
 import '../test_doubles/service_test_configurator.dart';
 
@@ -925,5 +936,548 @@ void main() {
         expect(r5, isNull);
       },
     );
+
+    // =========================================================================
+    // Cleanup Slice 12: 12 Sites Under H1 Characterization (Sites 17 to 28)
+    // =========================================================================
+    group('Cleanup Slice 12: 12 Sites Under H1 Characterization', () {
+      SourceBlock makeBlock(String text) {
+        return SourceBlock(
+          id: 'b1',
+          rawText: text,
+          normalizedText: text,
+          span: const SourceSpan.empty(),
+        );
+      }
+
+      MinionStatBlock makeMinion(List<CreatureAction> actions) {
+        return MinionStatBlock(
+          id: 'test',
+          name: 'Wolf',
+          sizeDisplay: 'Medium',
+          crDisplay: '1',
+          ac: 12,
+          maxHp: 20,
+          attackBonus: 4,
+          damageDiceCount: 1,
+          damageDiceSides: 6,
+          damageBonus: 2,
+          damageType: 'Piercing',
+          accentArgb: const Argb(0xFF000000),
+          actions: actions,
+        );
+      }
+
+      // -----------------------------------------------------------------------
+      // Site 17: stat_block_acl_parser.dart line 57 (_attributeDrainPattern)
+      // -----------------------------------------------------------------------
+      test('Site 17: stat_block_acl_parser.dart:57 (_attributeDrainPattern)', () {
+        List<CombatEffectRider> parse(String text) => StatBlockAclParser.extractRiders(text);
+
+        // 1. plain NdS
+        final r1 = parse("target's Strength score is reduced by 1d4 until a rest")
+            .whereType<AttributeDrainRider>()
+            .firstOrNull;
+        expect(r1, isNotNull);
+        expect(r1!.diceCount, 1);
+        expect(r1.diceSides, 4);
+
+        // 2. NdS + k
+        final r2 = parse("target's Strength score is reduced by 1d6+2 until a rest")
+            .whereType<AttributeDrainRider>()
+            .firstOrNull;
+        expect(r2, isNotNull);
+        expect(r2!.diceCount, 1);
+        expect(r2.diceSides, 6);
+
+        // 3. two dice terms
+        final r3 = parse("target's Strength score is reduced by 1d4 + 1d6 until a rest")
+            .whereType<AttributeDrainRider>()
+            .firstOrNull;
+        expect(r3, isNotNull);
+        expect(r3!.diceCount, 1);
+        expect(r3.diceSides, 4);
+
+        // 4. flat number
+        final r4 = parse("target's Strength score is reduced by 3 until a rest")
+            .whereType<AttributeDrainRider>()
+            .firstOrNull;
+        expect(r4, isNotNull);
+        expect(r4!.diceCount, 0);
+        expect(r4.flatBonus, 3);
+
+        // 5. garbage
+        final r5 = parse("target's Strength score is reduced by xyz until a rest")
+            .whereType<AttributeDrainRider>()
+            .firstOrNull;
+        expect(r5, isNull);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 18: stat_block_acl_parser.dart line 66 (_maxHpReductionPattern)
+      // -----------------------------------------------------------------------
+      test('Site 18: stat_block_acl_parser.dart:66 (_maxHpReductionPattern)', () {
+        List<CombatEffectRider> parse(String text) => StatBlockAclParser.extractRiders(text);
+
+        // 1. damage amount equals damage
+        final r1 = parse("target's hit point maximum is reduced by an amount equal to the necrotic damage")
+            .whereType<MaxHpReductionRider>()
+            .firstOrNull;
+        expect(r1, isNotNull);
+        expect(r1!.reductionEqualsDamage, isTrue);
+
+        // 2. flat reduction
+        final r2 = parse("target's hit point maximum is reduced by 10")
+            .whereType<MaxHpReductionRider>()
+            .firstOrNull;
+        expect(r2, isNotNull);
+        expect(r2!.reductionEqualsDamage, isFalse);
+        expect(r2.flatReduction, 10);
+
+        // 3. plain NdS (matches group 1, int.tryParse yields null)
+        final r3 = parse("target's hit point maximum is reduced by 1d10")
+            .whereType<MaxHpReductionRider>()
+            .firstOrNull;
+        expect(r3, isNotNull);
+        expect(r3!.reductionEqualsDamage, isFalse);
+        expect(r3.flatReduction, isNull);
+
+        // 4. NdS + k
+        final r4 = parse("target's hit point maximum is reduced by 1d8+2")
+            .whereType<MaxHpReductionRider>()
+            .firstOrNull;
+        expect(r4, isNotNull);
+        expect(r4!.reductionEqualsDamage, isFalse);
+        expect(r4.flatReduction, isNull);
+
+        // 5. garbage
+        final r5 = parse("target's hit point maximum is reduced by nothing")
+            .whereType<MaxHpReductionRider>()
+            .firstOrNull;
+        expect(r5, isNull);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 19: stat_block_acl_parser.dart line 78 (_periodicDamagePattern)
+      // -----------------------------------------------------------------------
+      test('Site 19: stat_block_acl_parser.dart:78 (_periodicDamagePattern)', () {
+        List<CombatEffectRider> parse(String text) => StatBlockAclParser.extractRiders(text);
+
+        // 1. plain NdS
+        final r1 = parse("takes 2d6 acid damage at the start of its turn")
+            .whereType<PeriodicDamageRider>()
+            .firstOrNull;
+        expect(r1, isNotNull);
+        expect(r1!.diceCount, 2);
+        expect(r1.diceSides, 6);
+        expect(r1.damageType, 'acid');
+        expect(r1.onTurnStart, isTrue);
+
+        // 2. NdS + k
+        final r2 = parse("takes 1d8 + 3 fire damage at the end of its turn")
+            .whereType<PeriodicDamageRider>()
+            .firstOrNull;
+        expect(r2, isNotNull);
+        expect(r2!.diceCount, 1);
+        expect(r2.diceSides, 8);
+        expect(r2.flatBonus, 3);
+        expect(r2.damageType, 'fire');
+        expect(r2.onTurnStart, isFalse);
+
+        // 3. with parenthesized average (dropped by old regex: expected paren around both average and dice)
+        final r3 = parse("takes (7) 2d6 cold damage at the start of each of its turns")
+            .whereType<PeriodicDamageRider>()
+            .firstOrNull;
+        expect(r3, isNull); // Cleanup slice 12: was null, dropped a term
+
+        // 4. text around it: end of turn
+        final r4 = parse("takes 1d4 poison damage at the end of each of its turns.")
+            .whereType<PeriodicDamageRider>()
+            .firstOrNull;
+        expect(r4, isNotNull);
+        expect(r4!.diceCount, 1);
+        expect(r4.diceSides, 4);
+        expect(r4.damageType, 'poison');
+        expect(r4.onTurnStart, isFalse);
+
+        // 5. garbage
+        final r5 = parse("takes some damage next turn")
+            .whereType<PeriodicDamageRider>()
+            .firstOrNull;
+        expect(r5, isNull);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 20: stat_block_acl_parser.dart line 95 (_damageDicePattern)
+      // -----------------------------------------------------------------------
+      test('Site 20: stat_block_acl_parser.dart:95 (_damageDicePattern)', () {
+        PrecomputedAttack? parseAttack(String desc) {
+          final parsed = StatBlockAclParser.parseStatBlockBoundary(
+            makeMinion([
+              CreatureAction(name: 'Bite', description: desc),
+            ]),
+          );
+          return parsed.attacks['bite'];
+        }
+
+        // 1. plain NdS
+        final a1 = parseAttack('Hit: 2d6 slashing damage');
+        expect(a1, isNotNull);
+        expect(a1!.damageGroups.length, 1);
+        expect(a1.damageGroups.first.count, 2);
+        expect(a1.damageGroups.first.faces, 6);
+
+        // 2. NdS + k
+        final a2 = parseAttack('Hit: 1d8 + 3 piercing damage');
+        expect(a2, isNotNull);
+        expect(a2!.damageGroups.first.count, 1);
+        expect(a2.damageGroups.first.faces, 8);
+        expect(a2.flatBonus, 3);
+
+        // 3. two dice terms (old code reads '+ 1' as flatBonus, dropping 'd8')
+        final a3 = parseAttack('Hit: 2d6 + 1d8 damage');
+        expect(a3, isNotNull);
+        expect(a3!.damageGroups.length, 1); // Cleanup slice 12: was 1, dropped a term
+        expect(a3.flatBonus, 1); // Cleanup slice 12: was 1, read garbage as dice
+
+        // 4. full attack text
+        final a4 = parseAttack('Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 3d10 force damage.');
+        expect(a4, isNotNull);
+        expect(a4!.damageGroups.first.count, 3);
+        expect(a4.damageGroups.first.faces, 10);
+
+        // 5. garbage
+        final a5 = parseAttack('Hit: no dice here');
+        expect(a5, isNotNull);
+        expect(a5!.damageGroups, isEmpty);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 21: dpr_models.dart line 1407 (_primaryDicePattern)
+      // -----------------------------------------------------------------------
+      test('Site 21: dpr_models.dart:1407 (_primaryDicePattern)', () {
+        DprAttackAction? parseAction(String? hitDamage, String desc) {
+          final block = makeMinion([
+            CreatureAction(name: 'Claw', hitDamage: hitDamage, description: desc),
+          ]);
+          return block.extractDprAttacks().firstOrNull;
+        }
+
+        // 1. plain NdS
+        final a1 = parseAction('2d6', 'Hit: 2d6 slashing damage');
+        expect(a1, isNotNull);
+        expect(a1!.diceCount, 2);
+        expect(a1.diceSides, 6);
+        expect(a1.damageBonus, 0);
+
+        // 2. NdS + k
+        final a2 = parseAction('1d8 + 3', 'Hit: 1d8+3 piercing damage');
+        expect(a2, isNotNull);
+        expect(a2!.diceCount, 1);
+        expect(a2.diceSides, 8);
+        expect(a2.damageBonus, 3);
+
+        // 3. two dice terms (primary matches first)
+        final a3 = parseAction('2d6 + 1d8', 'Hit: 2d6+1d8 damage');
+        expect(a3, isNotNull);
+        expect(a3!.diceCount, 2);
+        expect(a3.diceSides, 6);
+
+        // 4. from description when hitDamage is null
+        final a4 = parseAction(null, 'Melee Weapon Attack: +5 to hit. Hit: 3d10 + 4 force damage');
+        expect(a4, isNotNull);
+        expect(a4!.diceCount, 3);
+        expect(a4.diceSides, 10);
+        expect(a4.damageBonus, 4);
+
+        // 5. garbage
+        final a5 = parseAction('garbage', 'Attack does not hit');
+        expect(a5, isNotNull);
+        expect(a5!.diceCount, 0);
+        expect(a5.diceSides, 0);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 22: dpr_models.dart line 1417 (_secondaryDicePattern)
+      // -----------------------------------------------------------------------
+      test('Site 22: dpr_models.dart:1417 (_secondaryDicePattern)', () {
+        DprAttackAction? parseAction(String desc) {
+          final block = makeMinion([
+            CreatureAction(name: 'Bite', description: desc),
+          ]);
+          return block.extractDprAttacks().firstOrNull;
+        }
+
+        // 1. plus NdS type damage
+        final a1 = parseAction('Melee Weapon Attack: +5 to hit. Hit: 1d8 piercing damage plus 2d6 fire damage');
+        expect(a1, isNotNull);
+        expect(a1!.secondaryDiceCount, 2);
+        expect(a1.secondaryDiceSides, 6);
+        expect(a1.secondaryDamageType, 'fire');
+
+        // 2. and the target takes NdS type damage
+        final a2 = parseAction('Melee Weapon Attack: +5 to hit. Hit: 1d8 piercing damage and the target takes 1d6 radiant damage');
+        expect(a2, isNotNull);
+        expect(a2!.secondaryDiceCount, 1);
+        expect(a2.secondaryDiceSides, 6);
+        expect(a2.secondaryDamageType, 'radiant');
+
+        // 3. plus (average) NdS type damage
+        final a3 = parseAction('Melee Weapon Attack: +5 to hit. Hit: 1d8 piercing damage plus 7 (2d6) cold damage');
+        expect(a3, isNotNull);
+        expect(a3!.secondaryDiceCount, 2);
+        expect(a3.secondaryDiceSides, 6);
+        expect(a3.secondaryDamageType, 'cold');
+
+        // 4. extra NdS type damage
+        final a4 = parseAction('Melee Weapon Attack: +5 to hit. Hit: 1d8 damage extra 1d4 poison damage');
+        expect(a4, isNotNull);
+        expect(a4!.secondaryDiceCount, 1);
+        expect(a4.secondaryDiceSides, 4);
+        expect(a4.secondaryDamageType, 'poison');
+
+        // 5. garbage
+        final a5 = parseAction('Melee Weapon Attack: +5 to hit. Hit: 1d8 damage plus no extra damage');
+        expect(a5, isNotNull);
+        expect(a5!.secondaryDiceCount, 0);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 23: spell_dto.dart line 180 (SpellDto.fromJson description extraction)
+      // -----------------------------------------------------------------------
+      test('Site 23: spell_dto.dart:180 (SpellDto.fromJson)', () {
+        Spell parseSpell(String desc) {
+          final dto = SpellDto.fromJson({
+            'name': 'Test Spell',
+            'description': desc,
+          });
+          return dto.toDomain();
+        }
+
+        // 1. plain NdS with damage type
+        final s1 = parseSpell('The target takes 3d6 fire damage.');
+        expect(s1.damageMath.first.diceFormula, '3d6');
+        expect(s1.damageMath.first.damageType, DamageType.fire);
+
+        // 2. NdS + k
+        final s2 = parseSpell('Deals 1d8 radiant damage on impact.');
+        expect(s2.damageMath.first.diceFormula, '1d8');
+        expect(s2.damageMath.first.damageType, DamageType.radiant);
+
+        // 3. {@damage ...} tag
+        final s3 = parseSpell('Inflicts {@damage 4d6|cold} to all creatures.');
+        expect(s3.damageMath.first.diceFormula, '4d6');
+        expect(s3.damageMath.first.damageType, DamageType.cold);
+
+        // 4. two dice terms
+        final s4 = parseSpell('Deals 2d6 cold damage and 1d8 radiant damage.');
+        expect(s4.damageMath.length, 2);
+
+        // 5. garbage
+        final s5 = parseSpell('This spell heals without damage.');
+        expect(s5.damageMath, isEmpty);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 24: homebrew_ingestor.dart line 150 (correctDamageTypesFromDescription)
+      // -----------------------------------------------------------------------
+      test('Site 24: homebrew_ingestor.dart:150 (correctDamageTypesFromDescription)', () {
+        // 1. plain NdS correction
+        final res1 = HomebrewIngestor.correctDamageTypesFromDescription(
+          [const EvaluationMath(diceFormula: '1d10', damageType: DamageType.slashing)],
+          'deals 1d10 piercing damage',
+        );
+        expect(res1.first.damageType, DamageType.piercing);
+
+        // 2. overwrite mislabeled type
+        final res2 = HomebrewIngestor.correctDamageTypesFromDescription(
+          [const EvaluationMath(diceFormula: '2d6', damageType: DamageType.acid)],
+          'deals 2d6 fire damage',
+        );
+        expect(res2.first.damageType, DamageType.fire);
+
+        // 3. two dice terms
+        final res3 = HomebrewIngestor.correctDamageTypesFromDescription(
+          [
+            const EvaluationMath(diceFormula: '1d8', damageType: DamageType.slashing),
+            const EvaluationMath(diceFormula: '1d6', damageType: DamageType.acid),
+          ],
+          '1d8 slashing damage and 1d6 cold damage',
+        );
+        expect(res3[1].damageType, DamageType.cold);
+
+        // 4. text around it
+        final res4 = HomebrewIngestor.correctDamageTypesFromDescription(
+          [const EvaluationMath(diceFormula: '3d6', damageType: DamageType.acid)],
+          'On a hit, the weapon deals 3d6 lightning damage.',
+        );
+        expect(res4.first.damageType, DamageType.lightning);
+
+        // 5. garbage
+        final res5 = HomebrewIngestor.correctDamageTypesFromDescription(
+          [const EvaluationMath(diceFormula: '1d4', damageType: DamageType.acid)],
+          'unrelated text without damage',
+        );
+        expect(res5.first.damageType, DamageType.acid);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 25: candidate_detector.dart line 123 (_classHitDiePattern in identifyCluster)
+      // -----------------------------------------------------------------------
+      test('Site 25: candidate_detector.dart:123 (CandidateDetector)', () {
+        bool hasHitDieEvidence(String text) {
+          final block = makeBlock(text);
+          final ident = const CandidateDetector().identifyCluster([block]);
+          return ident.evidence.any((e) => e.category == 'Hit Die');
+        }
+
+        // 1. d8
+        expect(hasHitDieEvidence('Hit Die: d8'), isTrue);
+
+        // 2. 1d8
+        expect(hasHitDieEvidence('Hit Dice: 1d8 per level'), isTrue);
+
+        // 3. Hit Die: d10
+        expect(hasHitDieEvidence('Hit Die: d10'), isTrue);
+
+        // 4. Hit Dice: 1d12 per barbarian level
+        expect(hasHitDieEvidence('Hit Dice: 1d12 per barbarian level'), isTrue);
+
+        // 5. garbage
+        expect(hasHitDieEvidence('No hit dice mentioned here'), isFalse);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 26: dnd5e_ingestion_capability.dart line 106 (_classHitDiePattern in classifySections)
+      // -----------------------------------------------------------------------
+      test('Site 26: dnd5e_ingestion_capability.dart:106 (classifySections)', () {
+        bool isClassSection(String text) {
+          final block = makeBlock(text);
+          final sec = IngestionSection(
+            id: 'sec1',
+            headingText: 'Class Section',
+            span: block.span,
+            blocks: [block],
+            rawSource: text,
+          );
+          final classified = const Dnd5eIngestionCapability().classifySections([sec]);
+          return classified.first.classification == 'class';
+        }
+
+        // 1. d8
+        expect(isClassSection('Hit Die: d8'), isTrue);
+
+        // 2. 1d8
+        expect(isClassSection('Hit Dice: 1d8 per level'), isTrue);
+
+        // 3. Hit Die: d10
+        expect(isClassSection('Hit Die: d10'), isTrue);
+
+        // 4. Hit Dice: 1d12 per level
+        expect(isClassSection('Hit Dice: 1d12 per level'), isTrue);
+
+        // 5. garbage
+        expect(isClassSection('Regular story text without class clues'), isFalse);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 27: dnd5e_ingestion_capability.dart line 1042 (_checkRequiredHitDie in validateCandidate)
+      // -----------------------------------------------------------------------
+      test('Site 27: dnd5e_ingestion_capability.dart:1042 (validateCandidate)', () {
+        List<String> validateHitDie(String val) {
+          const span = SourceSpan.empty();
+          const ident = CandidateIdentification(
+            identifiedTypeKey: 'class',
+            confidence: 0.9,
+            evidence: [],
+          );
+          final candidate = IngestionCandidate(
+            id: 'c1',
+            targetTypeKey: 'class',
+            rawSource: 'class Warrior',
+            normalizedSource: 'class warrior',
+            blocks: const [],
+            identification: ident,
+            span: span,
+            fields: {
+              'hitDie': IngestionField<String>.extracted(
+                key: 'hitDie',
+                label: 'Hit Die',
+                value: val,
+                rawText: val,
+                span: span,
+                isRequired: true,
+              ),
+              'primaryAbility': IngestionField<List<String>>.extracted(
+                key: 'primaryAbility',
+                label: 'Primary Ability',
+                value: const ['Strength'],
+                rawText: 'Strength',
+                span: span,
+                isRequired: true,
+              ),
+              'savingThrows': IngestionField<List<String>>.extracted(
+                key: 'savingThrows',
+                label: 'Saving Throws',
+                value: const ['Strength', 'Constitution'],
+                rawText: 'Strength, Constitution',
+                span: span,
+                isRequired: true,
+              ),
+            },
+          );
+          final result = const Dnd5eIngestionCapability().validateCandidate(candidate);
+          return result.blockingErrors;
+        }
+
+        // 1. d8 -> valid
+        expect(validateHitDie('d8').where((e) => e.contains('Hit Die')), isEmpty);
+
+        // 2. 1d8 -> valid
+        expect(validateHitDie('1d8').where((e) => e.contains('Hit Die')), isEmpty);
+
+        // 3. d10 -> valid
+        expect(validateHitDie('d10').where((e) => e.contains('Hit Die')), isEmpty);
+
+        // 4. d12 -> valid
+        expect(validateHitDie('d12').where((e) => e.contains('Hit Die')), isEmpty);
+
+        // 5. garbage / invalid die
+        expect(validateHitDie('d20').any((e) => e.contains('Hit Die')), isTrue);
+      });
+
+      // -----------------------------------------------------------------------
+      // Site 28: dnd5e_class_field_extractor.dart line 15 (Dnd5eClassFieldExtractor)
+      // -----------------------------------------------------------------------
+      test('Site 28: dnd5e_class_field_extractor.dart:15 (Dnd5eClassFieldExtractor)', () {
+        String? extract(String text) {
+          final block = makeBlock(text);
+          final desc = const Dnd5eIngestionCapability().getTargetDescriptor('class')!;
+          final result = const Dnd5eClassFieldExtractor().extract(
+            blocks: [
+              makeBlock('Fighter'),
+              block,
+            ],
+            descriptor: desc,
+          );
+          return result.fields['hitDie']?.value as String?;
+        }
+
+        // 1. d8
+        expect(extract('Hit Die: d8'), 'd8');
+
+        // 2. 1d8
+        expect(extract('Hit Die: 1d8'), 'd8');
+
+        // 3. Hit Die: d10
+        expect(extract('Hit Die: d10'), 'd10');
+
+        // 4. Hit Die: 1d12
+        expect(extract('Hit Die: 1d12'), 'd12');
+
+        // 5. garbage
+        expect(extract('Just some regular text'), isNull);
+      });
+    });
   });
 }
