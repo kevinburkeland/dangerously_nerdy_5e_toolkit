@@ -61,6 +61,7 @@ None
 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d red run 44192285916
 2ac32da6a6502812afb25a7a35896a2939a6007b red run 44194718959
 d2f7e2bbfb49c1da85f12fd742728730f2c9bab1 red run 44199708231
+44eab9883b4ffb807f7026c8556ae8d9cdbbda9b red run 44200754828
 
 ## Next
 Step 5: Models callback rule, and the ruleset denylist test.
@@ -77,3 +78,4 @@ Run 44191916989 cause: cancelled on 2c3738cd1c2abd8f73f31b36757d2de5007e651f whe
 Run 44192285916 cause: failed on 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d due to test names ratchet in dice reading bar; fixed by 4128506a769a31b8bbe58f0242330663e1e2d366
 Run 44194718959 cause: failed on 2ac32da6a6502812afb25a7a35896a2939a6007b due to typo in Step 4 commit SHA; fixed by 9bc6d310ec63778b9845665e3c17e33800ce8c21
 Run 44199708231 cause: failed on d2f7e2bbfb49c1da85f12fd742728730f2c9bab1 due to stale codebase_map.md generated folder index following removal of BudgetCalculator in Fix 5.1; fixed by a2d589d93ff02c396e4856dba72587b78b42e2dc
+Run 44200754828 cause: failed on 44eab9883b4ffb807f7026c8556ae8d9cdbbda9b due to docs_truth_test.dart DT2 scanning relative ruleset test path in notes; fixed by 0e0b7d1788a01da577694875e481f9c3c9c2dcd2
