@@ -1,3 +1,4 @@
+import 'dart:io' if (dart.library.ui) 'package:material_ui/material_ui.dart';
 import 'package:meta/meta.dart';
 
 /// Represents a precise character range and line/column coordinate within the source text.
