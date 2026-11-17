@@ -81,7 +81,7 @@ Step 8: Mutations and report
 
 ## Open issues and deviations
 Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
-Run 43510818731 cause: DCO job failed in check_notes_shas.py with undisclosed cancelled run on 0447ece03df8722a19a0937f86dbc374457790de; fixed by bd330f5dc22f5010a3b6cc27c2e6eba4c1e878d4
+Run 43510818731 cause: DCO job failed in check_notes_shas.py with undisclosed cancelled run on 0447ece03df8722a19a0937f86dbc374457790de; fixed by f71ae361d3be4eea36e50cbd67e28baa19903b6c
 Run 43654461595 cause: test_check_srd_terms fixture tokens contained denylist terms; fixed by f71ae361d3be4eea36e50cbd67e28baa19903b6c
 Run 43654463029 cause: compliance test name was renamed and caught by check_test_names.py; fixed by bc2cd73f762ef0414037873ed337519bcc45e641
 Run 43656014152 cause: big-file ratchet ceiling for arena_combat_engine.dart needed reduction from 4056 to 3985 after removing hardcoded non-SRD spell branch; fixed by 8c75a5409a1cc2a1f4b912aefac0534a0aefd2c4
