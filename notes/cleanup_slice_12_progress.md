@@ -45,6 +45,9 @@ Fix 2.1 done: [Retire cs11] Retired cs11 mutation branches across core (3), rule
 Fix 2.2 done: [A step row names that step's own head] Taught check_notes_shas.py strict descendant checks for step rows, froze slice 11 notes, and added NS67-NS72 self-tests
 Fix 3.1 done: [Input data can only be opened through the accessor] Wrapped all external dependency input files and HTTP JSON payloads in _GuardedDict / _GuardedList with 64 SCHEMA paths; direct unchecked subscript access fails closed.
 Fix 3.2 done: [Optional fields are schema rows too] Registered all optional and nullable fields in SCHEMA table with explicit documented reasons, enforcing type checking, non-empty validation, and table-driven fail-closed law in DC72 across 363 damage cases and 22 allowed-valid cases.
+Fix 4.1 done: [The dice bar reads every string literal] Replaced line-based RegExp scanner in dice_reading_bar_test.dart with DartStringLiteralReader to extract all string literals, multiline strings, adjacent concatenations, and raw strings, matching dice patterns via isDicePattern; 16 positive and 14 negative controls pass.
+Fix 4.2 done: [The remaining dice sites go through DiceExpression] Migrated all 12 hand-written dice regex sites across stat_block_acl_parser.dart, dpr_models.dart, spell_dto.dart, homebrew_ingestor.dart, candidate_detector.dart, dnd5e_ingestion_capability.dart, and dnd5e_class_field_extractor.dart to DiceExpression; characterization tests pass across all 28 sites.
+Fix 4.3 done: [No invented die when a formula can't be read] Removed 1d10 private fallbacks in CharacterSheetController.rollSpellDamage and _rollUpcastSpellDamage; verified with 500-seed property law test that unparseable formulas produce zero dice.
 
 ## Mutation branches
 None
@@ -52,6 +55,8 @@ None
 ## Red runs on main
 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 cancelled run 44135308908
 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f red run 44135584591
+2c3738cd1c2abd8f73f31b36757d2de5007e651f cancelled run 44191916989
+7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d red run 44192285916
 
 ## Next
 Step 4: The dice bar reads strings, and the last dice sites.
@@ -63,3 +68,5 @@ Step 4: The dice bar reads strings, and the last dice sites.
 Cleanup slice 11 notes Step 1 app row correction: 9075eaceb054e1a5ff3862d01022cbe5f810ce24 run 43507783982
 Run 44135308908 cause: cancelled on 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 when push 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f was made; fixed by 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f
 Run 44135584591 cause: failed on 60d41a75dbfe9ca36f5f5bf1aecc86d1d3a5a57f due to undisclosed cancelled run on 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 and GHSA-fc5q-39xc-vjpf; fixed by e3b9966f7c74541e6a506119903a02d435337351
+Run 44191916989 cause: cancelled on 2c3738cd1c2abd8f73f31b36757d2de5007e651f when push 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d was made; fixed by 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d
+Run 44192285916 cause: failed on 7e0e20bfafdbde23a0a3ddbe01686b6bc99fda0d due to test names ratchet in dice reading bar; fixed by 4128506a769a31b8bbe58f0242330663e1e2d366
