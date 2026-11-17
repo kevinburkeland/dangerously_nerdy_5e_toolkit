@@ -60,14 +60,7 @@ class CampaignRegistryService {
       // Sort by lastPlayed descending so newest entry comes first
       loaded.sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
 
-      final deduplicated = <CampaignMembership>[];
-      final seenCodes = <String>{};
-      for (final m in loaded) {
-        final cleanCode = m.roomCode.trim().toUpperCase();
-        if (seenCodes.add(cleanCode)) {
-          deduplicated.add(m);
-        }
-      }
+      final deduplicated = loaded;
 
       membershipsNotifier.value = List.unmodifiable(deduplicated);
 
