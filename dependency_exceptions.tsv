@@ -8,3 +8,8 @@ N4	@opentelemetry/core	2.12.1	2026-12-17	Reviewed 2026-11-17; removes GHSA-8988-
 N4	glob	14.0.6	2026-12-17	Reviewed 2026-11-17; removes GHSA-3g3m-2fjr-6pw4 pulled by firebase-tools; newest 14.x is 14.0.6
 N4	minimatch	11.0.9	2026-12-17	Reviewed 2026-11-17; removes GHSA-g3hv-75wg-m249 pulled by firebase-tools; newest 11.x is 11.0.9
 N4	uuid	11.1.1	2026-12-17	Reviewed 2026-11-17; removes GHSA-w5hq-g745-h8pq pulled by firebase-tools; newest 11.x is 11.1.1, newer major 14.x exists
+N2	fdir	6.5.0	2026-12-17	Transitive via picomatch GHSA-fc5q-39xc-vjpf; no fix available
+N2	node-gyp	13.1.0	2026-12-17	Transitive via picomatch GHSA-fc5q-39xc-vjpf; no fix available
+N2	picomatch	4.0.7	2026-12-17	Advisory GHSA-fc5q-39xc-vjpf affects all <=4.0.7; no fix available
+N2	re2	1.27.1	2026-12-17	Transitive via picomatch GHSA-fc5q-39xc-vjpf; no fix available
+N2	tinyglobby	0.2.17	2026-12-17	Transitive via picomatch GHSA-fc5q-39xc-vjpf; no fix available

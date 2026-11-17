@@ -2061,7 +2061,292 @@ EOF
   [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS65 expected pass for frozen file with cross-repo fix, got: $out"; exit 1; }
 )
 
-# NS66: every existing notes file still passes.
+# NS67: Fix 2.2: a step row naming the start head fails.
+(
+  repo="$TMP_DIR/repo_ns67"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_start run 800006
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_start"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800006"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS67 expected failure when step row names start head"; exit 1; }
+  [[ "$out" == *"is equal to start head"* ]] || { echo "FAIL: NS67 expected is equal to start head error, got: $out"; exit 1; }
+)
+
+# NS68: Fix 2.2: a row naming a commit before the start head fails.
+(
+  repo="$TMP_DIR/repo_ns68"
+  setup_repo "$repo"
+  sha_before=$(git -C "$repo" rev-parse HEAD)
+
+  echo "start" > "$repo/start.txt" && git -C "$repo" add start.txt && git -C "$repo" commit -m "start head" >/dev/null
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_before run 800007
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_before"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800007"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS68 expected failure when step row names commit before start head"; exit 1; }
+  [[ "$out" == *"is not a descendant of start head"* ]] || { echo "FAIL: NS68 expected is not a descendant of start head error, got: $out"; exit 1; }
+)
+
+# NS69: Fix 2.2: a later step naming the same SHA as an earlier step fails.
+(
+  repo="$TMP_DIR/repo_ns69"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+
+  echo "step1" > "$repo/s1.txt" && git -C "$repo" add s1.txt && git -C "$repo" commit -m "step 1" >/dev/null
+  sha_step1=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_step1 run 800008
+- [x] Step 2 Test step: test-repo $sha_step1 run 800008
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_step1"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800008"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS69 expected failure when later step names same SHA as earlier step"; exit 1; }
+  [[ "$out" == *"is equal to earlier step commit"* ]] || { echo "FAIL: NS69 expected is equal to earlier step commit error, got: $out"; exit 1; }
+)
+
+# NS70: Fix 2.2: a later step naming an ancestor of the earlier step's SHA fails.
+(
+  repo="$TMP_DIR/repo_ns70"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+
+  echo "step1" > "$repo/s1.txt" && git -C "$repo" add s1.txt && git -C "$repo" commit -m "step 1" >/dev/null
+  sha_step1=$(git -C "$repo" rev-parse HEAD)
+
+  echo "step2" > "$repo/s2.txt" && git -C "$repo" add s2.txt && git -C "$repo" commit -m "step 2" >/dev/null
+  sha_step2=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_step2 run 800009
+- [x] Step 2 Test step: test-repo $sha_step1 run 800010
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_step2"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800009"
+  echo '{"head_sha": "'"$sha_step1"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800010"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || { echo "FAIL: NS70 expected failure when later step names ancestor of earlier step"; exit 1; }
+  [[ "$out" == *"is not a descendant of earlier step commit"* ]] || { echo "FAIL: NS70 expected is not a descendant of earlier step commit error, got: $out"; exit 1; }
+)
+
+# NS71: Fix 2.2: a correct file passes.
+(
+  repo="$TMP_DIR/repo_ns71"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+
+  echo "step1" > "$repo/s1.txt" && git -C "$repo" add s1.txt && git -C "$repo" commit -m "step 1" >/dev/null
+  sha_step1=$(git -C "$repo" rev-parse HEAD)
+
+  echo "step2" > "$repo/s2.txt" && git -C "$repo" add s2.txt && git -C "$repo" commit -m "step 2" >/dev/null
+  sha_step2=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_step1 run 800011
+- [x] Step 2 Test step: test-repo $sha_step2 run 800012
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_step1"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800011"
+  echo '{"head_sha": "'"$sha_step2"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800012"
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS71 expected pass for correct step rows, got: $out"; exit 1; }
+)
+
+# NS72: Fix 2.2: the frozen slice 11 notes still pass.
+(
+  repo="$TMP_DIR/repo_ns72"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/cleanup_slice_11_progress.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_start run 800013
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_start"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800013"
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS72 expected pass for frozen slice 11 notes naming start head, got: $out"; exit 1; }
+)
+
+# NS73: every existing notes file still passes.
 (
   core_repo=""
   ruleset_repo=""
@@ -2089,10 +2374,10 @@ EOF
     --repo "$ruleset_repo=kevinburkeland/vtt-ruleset-dnd5e" \
     "$SCRIPT_DIR/../notes"/*.md)
   if [[ "$out" != *"All SHAs are valid commits"* ]]; then
-    echo "FAIL: NS66 expected all existing notes to pass, got: $out" >&2
+    echo "FAIL: NS73 expected all existing notes to pass, got: $out" >&2
     exit 1
   fi
 )
 
-echo "All notes SHA check self-tests passed (NS1 - NS66)."
+echo "All notes SHA check self-tests passed (NS1 - NS73)."
 

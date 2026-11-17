@@ -72,6 +72,12 @@ FROZEN_FIX_COMMIT_ANCESTOR_NOTES = {
     'cleanup_slice_9_progress.md',
 }
 
+# Frozen notes that existed before Cleanup slice 12 (exempt from Fix 2.2 strict descendant step row checks)
+# Slice 11 notes Step 1 row names the start head (corrected under Open issues and deviations in slice 12).
+FROZEN_STEP_ROW_ANCESTOR_NOTES = {
+    'cleanup_slice_11_progress.md',
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Check commit SHAs and CI run IDs in notes files.')
@@ -900,6 +906,65 @@ def main():
                     for l_idx, branch_name, prefix, b_id, sha in parsed_branches:
                         if b_id.lower() not in expected_m_ids_lower:
                             problems.append(f"{file_path}:{l_idx}: unexpected mutation branch '{branch_name}' (id '{b_id.upper()}' not in 'Mutation ids:')")
+
+        # 8. Step rows verification (Fix 2.2)
+        if mutation_ids_line and base_name not in FROZEN_STEP_ROW_ANCESTOR_NOTES:
+            start_heads_line = None
+            for line in lines:
+                if line.startswith('Start heads:'):
+                    start_heads_line = line
+                    break
+
+            repo_start_shas = {}
+            if start_heads_line:
+                start_shas = [s.lower() for s in hex_pattern.findall(start_heads_line) if len(s) == 40]
+                for s_sha in start_shas:
+                    r = find_repo_for_sha(s_sha)
+                    if r:
+                        repo_start_shas[r['path']] = s_sha
+
+            last_step_sha = {}  # repo_path -> (sha, line_idx)
+            in_steps_section = False
+
+            for line_idx, line in enumerate(lines, 1):
+                stripped = line.strip()
+                if stripped.startswith('## '):
+                    in_steps_section = (stripped == '## Steps')
+                elif in_steps_section and re.match(r'^-\s*\[x\]\s*Step\b', stripped, re.IGNORECASE):
+                    step_shas = [m.group(1).lower() for m in hex_pattern.finditer(line) if len(m.group(1)) == 40]
+                    for sha in step_shas:
+                        repo = find_repo_for_sha(sha)
+                        if not repo:
+                            problems.append(f"{file_path}:{line_idx}: step commit {sha} not found in any given repo")
+                            continue
+                        r_path = repo['path']
+                        if r_path not in repo_start_shas:
+                            problems.append(f"{file_path}:{line_idx}: no start head found in Start heads: for repo '{r_path}' (commit {sha})")
+                            continue
+                        start_sha = repo_start_shas[r_path]
+                        if sha == start_sha:
+                            problems.append(f"{file_path}:{line_idx}: step commit {sha} is equal to start head {start_sha}")
+                        else:
+                            anc_res = subprocess.run(
+                                ['git', '-C', r_path, 'merge-base', '--is-ancestor', start_sha, sha],
+                                capture_output=True, text=True
+                            )
+                            if anc_res.returncode != 0:
+                                problems.append(f"{file_path}:{line_idx}: step commit {sha} is not a descendant of start head {start_sha}")
+
+                        if r_path in last_step_sha:
+                            prev_sha, prev_line_idx = last_step_sha[r_path]
+                            if sha == prev_sha:
+                                problems.append(f"{file_path}:{line_idx}: step commit {sha} is equal to earlier step commit {prev_sha} on line {prev_line_idx}")
+                            else:
+                                anc_prev = subprocess.run(
+                                    ['git', '-C', r_path, 'merge-base', '--is-ancestor', prev_sha, sha],
+                                    capture_output=True, text=True
+                                )
+                                if anc_prev.returncode != 0:
+                                    problems.append(f"{file_path}:{line_idx}: step commit {sha} is not a descendant of earlier step commit {prev_sha} on line {prev_line_idx}")
+
+                        last_step_sha[r_path] = (sha, line_idx)
 
     if problems:
         for p in problems:
