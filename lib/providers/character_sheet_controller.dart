@@ -937,26 +937,21 @@ class CharacterSheetController extends ChangeNotifier {
         spell.name.toLowerCase() == 'eldritch blast';
 
     // Parse or retrieve damage dice
-    String formula = '1d10';
-    if (spell.damageMath.isNotEmpty) {
-      formula = spell.damageMath.first.diceFormula;
-    } else if (spell.customProperties['rollFormula'] != null) {
-      formula = spell.customProperties['rollFormula'].toString();
-    }
-
-    final parsedExpr = DiceExpression.tryParse(formula.trim()) ??
-        DiceExpression.findAll(formula).firstOrNull?.expression;
+    final rawFormula = spell.damageMath.firstOrNull?.diceFormula ??
+        spell.customProperties['rollFormula']?.toString() ?? '';
+    final parsedExpr = rawFormula.trim().isNotEmpty
+        ? (DiceExpression.tryParse(rawFormula.trim()) ??
+            DiceExpression.findAll(rawFormula).firstOrNull?.expression)
+        : null;
     final diceTerms = parsedExpr?.diceTerms ?? const [];
-    final List<DiceEntry> diceEntries = diceTerms.isNotEmpty
-        ? diceTerms.map((dt) => DiceEntry(
-              dieType: DieType.values.firstWhere(
-                (d) => d.sides == dt.sides && d != DieType.custom,
-                orElse: () => DieType.custom,
-              ),
-              count: dt.count,
-              customSides: dt.sides,
-            )).toList()
-        : [DiceEntry(dieType: DieType.d10, count: 1, customSides: 10)];
+    final List<DiceEntry> diceEntries = [
+      for (final dt in diceTerms)
+        DiceEntry(
+          dieType: DieType.values.firstWhere((d) => d.sides == dt.sides && d != DieType.custom, orElse: () => DieType.custom),
+          count: dt.count,
+          customSides: dt.sides,
+        ),
+    ];
 
     int modifier = parsedExpr?.constantSum ?? 0;
     if (isEldritchBlast &&
@@ -1079,29 +1074,19 @@ class CharacterSheetController extends ChangeNotifier {
     }
 
     // Parse base formula
-    String baseFormula = '1d10';
-    if (spell.damageMath.isNotEmpty) {
-      baseFormula = spell.damageMath.first.diceFormula;
-    } else if (spell.customProperties['rollFormula'] != null) {
-      baseFormula = spell.customProperties['rollFormula'].toString();
-    }
-
-    int baseCount = 1;
-    DieType baseDieType = DieType.d10;
-    int baseSides = 10;
-
-    final parsedBase = DiceExpression.tryParse(baseFormula.trim()) ??
-        DiceExpression.findAll(baseFormula).firstOrNull?.expression;
+    final baseFormula = spell.damageMath.firstOrNull?.diceFormula ??
+        spell.customProperties['rollFormula']?.toString() ?? '';
+    final parsedBase = baseFormula.trim().isNotEmpty
+        ? (DiceExpression.tryParse(baseFormula.trim()) ??
+            DiceExpression.findAll(baseFormula).firstOrNull?.expression)
+        : null;
     final firstBase = parsedBase?.diceTerms.firstOrNull;
-    if (firstBase != null) {
-      baseCount = firstBase.count;
-      final sides = firstBase.sides;
-      baseDieType = DieType.values.firstWhere(
-        (d) => d.sides == sides && d != DieType.custom,
-        orElse: () => DieType.custom,
-      );
-      baseSides = sides;
-    }
+    final int baseCount = firstBase?.count ?? 0;
+    final int baseSides = firstBase?.sides ?? 10;
+    final DieType baseDieType = DieType.values.firstWhere(
+      (d) => d.sides == baseSides && d != DieType.custom,
+      orElse: () => DieType.custom,
+    );
 
     // Upcast scaling
     int additionalCount = 0;
@@ -1153,18 +1138,20 @@ class CharacterSheetController extends ChangeNotifier {
 
     // Assemble pool
     final List<DiceEntry> entries = [];
-    if (additionalCount > 0 && additionalSides == baseSides) {
+    if (additionalCount > 0 && additionalSides == baseSides && baseCount > 0) {
       entries.add(DiceEntry(
         dieType: baseDieType,
         count: baseCount + additionalCount,
         customSides: baseSides,
       ));
     } else {
-      entries.add(DiceEntry(
-        dieType: baseDieType,
-        count: baseCount,
-        customSides: baseSides,
-      ));
+      if (baseCount > 0) {
+        entries.add(DiceEntry(
+          dieType: baseDieType,
+          count: baseCount,
+          customSides: baseSides,
+        ));
+      }
       if (additionalCount > 0) {
         entries.add(DiceEntry(
           dieType: additionalDieType,

@@ -146,20 +146,22 @@ class HomebrewIngestor {
   ) {
     if (damageMath.isEmpty || description.isEmpty) return damageMath;
 
-    final regex = RegExp(
-      r'(\d+d\d+)[^\w\n]*(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\s+damage',
+    final typeRegex = RegExp(
+      r'^[^\w\n]*(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\s+damage',
       caseSensitive: false,
     );
 
-    final matches = regex.allMatches(description);
-    if (matches.isEmpty) return damageMath;
-
     final formulaToType = <String, DamageType>{};
-    for (final m in matches) {
-      final formula = m.group(1)!.toLowerCase().replaceAll(' ', '');
-      final typeStr = m.group(2)!.toLowerCase();
-      formulaToType[formula] = DamageType.fromLooseString(typeStr);
+    for (final match in DiceExpression.findAll(description)) {
+      final after = description.substring(match.end);
+      final tm = typeRegex.firstMatch(after);
+      if (tm != null) {
+        final formula = match.text(description).toLowerCase().replaceAll(' ', '');
+        final typeStr = tm.group(1)!.toLowerCase();
+        formulaToType[formula] = DamageType.fromLooseString(typeStr);
+      }
     }
+    if (formulaToType.isEmpty) return damageMath;
 
     return damageMath.map((dm) {
       final cleanFormula = dm.diceFormula.toLowerCase().replaceAll(' ', '');

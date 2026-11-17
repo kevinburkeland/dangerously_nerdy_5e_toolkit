@@ -144,8 +144,7 @@ void main() {
         final r5 = controller.rollSpellDamage(
           _makeSpell(formula: 'invalid_garbage'),
         );
-        expect(r5.diceEntries.first.count, 1);
-        expect(r5.diceEntries.first.sides, 10);
+        expect(r5.diceEntries, isEmpty); // Cleanup slice 12: was 1d10, invented a d10
       },
     );
 
@@ -192,7 +191,7 @@ void main() {
         _makeSpell(formula: 'garbage', scalingFormula: '1d6'),
         castLevel: 2,
       );
-      expect(r5?.diceEntries.first.sides, 10);
+      expect(r5?.diceEntries.first.sides, 6); // Cleanup slice 12: was 1d10, invented a d10
     });
 
     // -------------------------------------------------------------------------
@@ -1088,7 +1087,10 @@ void main() {
         final r3 = parse("takes (7) 2d6 cold damage at the start of each of its turns")
             .whereType<PeriodicDamageRider>()
             .firstOrNull;
-        expect(r3, isNull); // Cleanup slice 12: was null, dropped a term
+        expect(r3, isNotNull); // Cleanup slice 12: was null, dropped a term
+        expect(r3!.diceCount, 2);
+        expect(r3.diceSides, 6);
+        expect(r3.damageType, 'cold');
 
         // 4. text around it: end of turn
         final r4 = parse("takes 1d4 poison damage at the end of each of its turns.")
@@ -1137,8 +1139,8 @@ void main() {
         // 3. two dice terms (old code reads '+ 1' as flatBonus, dropping 'd8')
         final a3 = parseAttack('Hit: 2d6 + 1d8 damage');
         expect(a3, isNotNull);
-        expect(a3!.damageGroups.length, 1); // Cleanup slice 12: was 1, dropped a term
-        expect(a3.flatBonus, 1); // Cleanup slice 12: was 1, read garbage as dice
+        expect(a3!.damageGroups.length, 2); // Cleanup slice 12: was 1, dropped a term
+        expect(a3.flatBonus, 0); // Cleanup slice 12: was 1, read garbage as dice
 
         // 4. full attack text
         final a4 = parseAttack('Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 3d10 force damage.');

@@ -102,10 +102,16 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     return null;
   }
 
-  static final _classHitDiePattern = RegExp(
-    r'\bHit\s+Di(?:e|ce)\s*[:]?\s*(?:1)?(d\d+)\b',
+  static final _classHitDieHeaderPattern = RegExp(
+    r'\bHit\s+Di(?:e|ce)\s*[:]?\s*',
     caseSensitive: false,
   );
+
+  static bool _hasHitDieClue(String text) =>
+      _classHitDieHeaderPattern.allMatches(text).any((m) {
+        final dice = DiceExpression.findAll(text.substring(m.end));
+        return dice.isNotEmpty && dice.first.start == 0;
+      });
   static final _classSavingThrowsPattern = RegExp(
     r'\bSaving\s+Throws?\s*[:]?\s*(?:Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\b',
     caseSensitive: false,
@@ -318,7 +324,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
       }
       confidence = ident.confidence;
     } else if (sec.blocks.any((b) =>
-        _classHitDiePattern.hasMatch(b.normalizedText) ||
+        _hasHitDieClue(b.normalizedText) ||
         _classSavingThrowsPattern.hasMatch(b.normalizedText))) {
       classification = 'class';
       confidence = 0.9;
@@ -1039,7 +1045,9 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
       return;
     }
     final val = field.value?.toString().trim().toLowerCase();
-    if (val == null || !RegExp(r'^(?:1)?d(?:6|8|10|12)$').hasMatch(val)) {
+    final expr = val != null ? DiceExpression.tryParse(val) : null;
+    final term = expr?.diceTerms.firstOrNull;
+    if (expr == null || expr.constantSum != 0 || expr.diceTerms.length != 1 || term?.count != 1 || !const [6, 8, 10, 12].contains(term?.sides)) {
       errors.add('$label must be valid hit die notation (d6, d8, d10, d12)');
     }
   }
@@ -1050,20 +1058,8 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     String label,
     List<String> errors,
   ) {
-    final field = candidate.fields[key];
-    if (field == null || field.state == IngestionFieldState.missing || field.value == null) {
-      errors.add('Missing required field: $label');
-      return;
-    }
-    if (field.value is List) {
-      final list = field.value as List;
-      if (list.isEmpty) {
-        errors.add('Missing required field: $label');
-      }
-      return;
-    }
-    final str = field.value.toString().trim();
-    if (str.isEmpty) {
+    final val = candidate.fields[key]?.value;
+    if (val == null || (val is List && val.isEmpty) || (val is! List && val.toString().trim().isEmpty)) {
       errors.add('Missing required field: $label');
     }
   }
@@ -1077,23 +1073,19 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
 
     final lower = candidate.targetTypeKey!.toLowerCase().trim();
     switch (lower) {
-      case 'monster':
-      case 'creature':
+      case 'monster' || 'creature':
         return _convertMonster(candidate);
       case 'spell':
         return _convertSpell(candidate);
-      case 'item':
-      case 'equipment':
+      case 'item' || 'equipment':
         return _convertItem(candidate);
       case 'feat':
         return _convertFeat(candidate);
-      case 'class':
-      case 'classdefinition':
+      case 'class' || 'classdefinition':
         return _convertClass(candidate);
       case 'subclass':
         return _convertSubclass(candidate);
-      case 'species':
-      case 'race':
+      case 'species' || 'race':
         return _convertSpecies(candidate);
       case 'background':
         return _convertBackground(candidate);

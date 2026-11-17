@@ -54,7 +54,7 @@ class StatBlockAclParser {
     caseSensitive: false,
   );
   static final _attributeDrainPattern = RegExp(
-    r"target's\s*(Strength|Constitution|Dexterity|Intelligence|Wisdom|Charisma)\s*score is reduced by\s*(\d+d\d+|\d+)(?:.*?(target dies if this reduces (?:its\s+)?.*?to 0))?",
+    r"target's\s*(Strength|Constitution|Dexterity|Intelligence|Wisdom|Charisma)\s*score is reduced by\s*([^.\n;]+)",
     caseSensitive: false,
     dotAll: true,
   );
@@ -63,7 +63,7 @@ class StatBlockAclParser {
     caseSensitive: false,
   );
   static final _maxHpReductionPattern = RegExp(
-    r"target's hit point maximum is reduced by (?:an amount equal to the (?:necrotic )?damage|(\d+d\d+|\d+))",
+    r"target's hit point maximum is reduced by (?:an amount equal to the (?:necrotic )?damage|([^.\n;]+))",
     caseSensitive: false,
   );
   static final _reelingPattern = RegExp(
@@ -75,7 +75,7 @@ class StatBlockAclParser {
     caseSensitive: false,
   );
   static final _periodicDamagePattern = RegExp(
-    r'takes (?:(\d+)\s*\()?(\d+)d(\d+)(?:\s*\+\s*(\d+))?\)?\s*(\w+)?\s*damage at the (start|end) of (?:each of )?its turns?',
+    r'takes\s+(?:(?:\(\d+\)|\d+)\s+)?(.+?)\s+damage\s+at\s+the\s+(start|end)\s+of\s+(?:each\s+of\s+)?its\s+turns?',
     caseSensitive: false,
   );
   static final _saveConditionPattern = RegExp(
@@ -89,10 +89,6 @@ class StatBlockAclParser {
   );
   static final _attackToHitPattern = RegExp(
     r'([+-]?\s*\d+)\s*to\s*hit',
-    caseSensitive: false,
-  );
-  static final _damageDicePattern = RegExp(
-    r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?',
     caseSensitive: false,
   );
 
@@ -285,15 +281,11 @@ class StatBlockAclParser {
       int flatBonus = 0;
       final hitIndex = desc.indexOf('Hit:');
       final hitPart = hitIndex >= 0 ? desc.substring(hitIndex) : desc;
-      for (final m in _damageDicePattern.allMatches(hitPart)) {
-        final count = int.tryParse(m.group(1) ?? '') ?? 1;
-        final faces = int.tryParse(m.group(2) ?? '') ?? 6;
-        groups.add(DamageDieGroup(count: count, faces: faces));
-        if (m.group(4) != null) {
-          final sign = m.group(3) == '-' ? -1 : 1;
-          final bonusVal = int.tryParse(m.group(4)!) ?? 0;
-          flatBonus += sign * bonusVal;
+      for (final match in DiceExpression.findAll(hitPart)) {
+        for (final term in match.expression.diceTerms) {
+          groups.add(DamageDieGroup(count: term.count, faces: term.sides));
         }
+        flatBonus += match.expression.constantSum;
       }
 
       final riders = extractRiders(
@@ -476,33 +468,35 @@ class StatBlockAclParser {
     if (drainMatch != null) {
       final abilityStr = drainMatch.group(1)!;
       final ability = AbilityType.fromLooseString(abilityStr);
-      final amountStr = drainMatch.group(2)!;
-      final deathAtZero = drainMatch.group(3) != null ||
+      final amountStr = drainMatch.group(2)!.trim();
+      final deathAtZero =
           _attributeDrainDeathPattern.hasMatch(text) ||
           text.toLowerCase().contains('target dies if this reduces') ||
           text.toLowerCase().contains('dies if this reduces its');
 
-      int diceCount = 0;
-      int diceSides = 0;
-      int flatBonus = 0;
-      final expr = DiceExpression.tryParse(amountStr.trim()) ??
-          DiceExpression.findAll(amountStr).firstOrNull?.expression;
-      if (expr != null && expr.hasDice) {
-        final d = expr.diceTerms.first;
-        diceCount = d.count;
-        diceSides = d.sides;
-        flatBonus = expr.constantSum;
+      final diceMatches = DiceExpression.findAll(amountStr);
+      if (diceMatches.isNotEmpty) {
+        final d = diceMatches.first.expression.diceTerms.first;
+        riders.add(AttributeDrainRider(
+          targetAttributeKey: ability.name,
+          diceCount: d.count,
+          diceSides: d.sides,
+          flatBonus: diceMatches.first.expression.constantSum,
+          deathAtZero: deathAtZero,
+        ));
       } else {
-        flatBonus = int.tryParse(amountStr) ?? 0;
+        final flatMatch = RegExp(r'^\s*(\d+)').firstMatch(amountStr);
+        if (flatMatch != null) {
+          final flatBonus = int.tryParse(flatMatch.group(1)!) ?? 0;
+          riders.add(AttributeDrainRider(
+            targetAttributeKey: ability.name,
+            diceCount: 0,
+            diceSides: 0,
+            flatBonus: flatBonus,
+            deathAtZero: deathAtZero,
+          ));
+        }
       }
-
-      riders.add(AttributeDrainRider(
-        targetAttributeKey: ability.name,
-        diceCount: diceCount,
-        diceSides: diceSides,
-        flatBonus: flatBonus,
-        deathAtZero: deathAtZero,
-      ));
     }
 
     // 4. Max HP Reduction Rider
@@ -513,12 +507,15 @@ class StatBlockAclParser {
           textLower.contains('to 0') || textLower.contains('dies');
       final reductionGroup = maxHpMatch.group(1);
       if (reductionGroup != null && reductionGroup.isNotEmpty) {
-        final flatVal = int.tryParse(reductionGroup);
-        riders.add(MaxHpReductionRider(
-          reductionEqualsDamage: false,
-          flatReduction: flatVal,
-          deathAtZero: deathAtZero,
-        ));
+        final diceMatches = DiceExpression.findAll(reductionGroup);
+        final flatVal = int.tryParse(reductionGroup.trim());
+        if (diceMatches.isNotEmpty || flatVal != null) {
+          riders.add(MaxHpReductionRider(
+            reductionEqualsDamage: false,
+            flatReduction: flatVal,
+            deathAtZero: deathAtZero,
+          ));
+        }
       } else {
         riders.add(MaxHpReductionRider(
           reductionEqualsDamage: true,
@@ -541,19 +538,24 @@ class StatBlockAclParser {
     // 6. Periodic / Ongoing Damage Rider
     final dotMatch = _periodicDamagePattern.firstMatch(text);
     if (dotMatch != null) {
-      final dCount = int.tryParse(dotMatch.group(2) ?? '') ?? 0;
-      final dSides = int.tryParse(dotMatch.group(3) ?? '') ?? 0;
-      final flat = int.tryParse(dotMatch.group(4) ?? '') ?? 0;
-      final dmgType = dotMatch.group(5) ?? 'untyped';
-      final isStart = (dotMatch.group(6) ?? '').toLowerCase() == 'start';
-
-      riders.add(PeriodicDamageRider(
-        diceCount: dCount,
-        diceSides: dSides,
-        flatBonus: flat,
-        damageType: dmgType,
-        onTurnStart: isStart,
-      ));
+      final formulaAndType = dotMatch.group(1)!;
+      final isStart = (dotMatch.group(2) ?? '').toLowerCase() == 'start';
+      final diceMatches = DiceExpression.findAll(formulaAndType);
+      if (diceMatches.isNotEmpty) {
+        final match = diceMatches.first;
+        final d = match.expression.diceTerms.firstOrNull;
+        if (d != null) {
+          final after = formulaAndType.substring(match.end).trim();
+          final dmgType = after.isNotEmpty ? after : 'untyped';
+          riders.add(PeriodicDamageRider(
+            diceCount: d.count,
+            diceSides: d.sides,
+            flatBonus: match.expression.constantSum,
+            damageType: dmgType,
+            onTurnStart: isStart,
+          ));
+        }
+      }
     }
 
     // 7. Condition Saving Throw Riders (e.g. Wolf prone save or poison save)

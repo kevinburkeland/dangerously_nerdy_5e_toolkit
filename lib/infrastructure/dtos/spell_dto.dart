@@ -176,19 +176,19 @@ class SpellDto {
 
     // If damageMath was not explicitly supplied, extract from markdown/text
     if (resolvedDamageMath.isEmpty && resolvedDescription.isNotEmpty) {
-      final damageRegex = RegExp(
-        r'(?:\{@damage\s+)?(\d+d\d+)(?:\|([a-zA-Z]+))?\}?|\b(\d+d\d+)\s*(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)?\b',
+      final typeRegex = RegExp(
+        r'^\s*(?:\|\s*([a-zA-Z]+)\s*\}|\}\s*(?:([a-zA-Z]+))?|(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\b)',
         caseSensitive: false,
       );
-      for (final m in damageRegex.allMatches(resolvedDescription)) {
-        final formula = m.group(1) ?? m.group(3) ?? '';
-        final typeStr = m.group(2) ?? m.group(4);
-        if (formula.isNotEmpty) {
-          resolvedDamageMath.add(EvaluationMath(
-            diceFormula: formula,
-            damageType: DamageType.fromLooseString(typeStr),
-          ));
-        }
+      for (final match in DiceExpression.findAll(resolvedDescription)) {
+        final formula = match.text(resolvedDescription);
+        final after = resolvedDescription.substring(match.end);
+        final tm = typeRegex.firstMatch(after);
+        final typeStr = tm?.group(1) ?? tm?.group(2) ?? tm?.group(3);
+        resolvedDamageMath.add(EvaluationMath(
+          diceFormula: formula,
+          damageType: DamageType.fromLooseString(typeStr),
+        ));
       }
     }
 

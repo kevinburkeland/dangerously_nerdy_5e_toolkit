@@ -1,4 +1,5 @@
 import '../../../../domain/ingestion/descriptors/ingestion_field_descriptor.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show DiceExpression;
 import '../../../../domain/ingestion/descriptors/ingestion_target_descriptor.dart';
 import '../../../../domain/ingestion/engine/field_extractor.dart';
 import '../../../../domain/ingestion/models/field_state.dart';
@@ -11,8 +12,8 @@ import '../../../../domain/ingestion/models/source_span.dart';
 class Dnd5eClassFieldExtractor implements FieldExtractor {
   const Dnd5eClassFieldExtractor();
 
-  static final _hitDiePattern = RegExp(
-    r'^Hit\s+Die\s*[:]?\s*(?:1)?(d(?:6|8|10|12))\b',
+  static final _hitDieHeader = RegExp(
+    r'^Hit\s+Die\s*[:]?\s*',
     caseSensitive: false,
   );
 
@@ -80,19 +81,29 @@ class Dnd5eClassFieldExtractor implements FieldExtractor {
       final block = blocks[i];
       final text = block.normalizedText;
 
-      final hdMatch = _hitDiePattern.firstMatch(text);
+      final hdMatch = _hitDieHeader.firstMatch(text);
       if (hdMatch != null && !fields.containsKey('hitDie')) {
-        final die = hdMatch.group(1)!.toLowerCase();
-        fields['hitDie'] = IngestionField<String>.extracted(
-          key: 'hitDie',
-          label: 'Hit Die',
-          value: die,
-          rawText: block.rawText,
-          span: block.span,
-          isRequired: true,
-        );
-        consumedBlockIds.add(block.id);
-        continue;
+        final after = text.substring(hdMatch.end);
+        final dice = DiceExpression.findAll(after);
+        if (dice.isNotEmpty && dice.first.start == 0) {
+          final term = dice.first.expression.diceTerms.firstOrNull;
+          if (term != null &&
+              term.count == 1 &&
+              dice.first.expression.constantSum == 0 &&
+              const [6, 8, 10, 12].contains(term.sides)) {
+            final die = 'd${term.sides}';
+            fields['hitDie'] = IngestionField<String>.extracted(
+              key: 'hitDie',
+              label: 'Hit Die',
+              value: die,
+              rawText: block.rawText,
+              span: block.span,
+              isRequired: true,
+            );
+            consumedBlockIds.add(block.id);
+            continue;
+          }
+        }
       }
 
       final paMatch = _primaryAbilityPattern.firstMatch(text);

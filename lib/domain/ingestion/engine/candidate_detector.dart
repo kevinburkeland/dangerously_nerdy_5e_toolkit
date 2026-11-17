@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show DiceExpression;
 import '../models/candidate_evidence.dart';
 import '../models/candidate_identification.dart';
 import '../models/source_block.dart';
@@ -119,10 +120,21 @@ class CandidateDetector {
   );
 
   // --- 5. Class Clue Patterns ---
-  static final _classHitDiePattern = RegExp(
-    r'\bHit\s+Di(?:e|ce)\s*[:]?\s*(?:1)?(d\d+)\b',
+  static final _classHitDieHeaderPattern = RegExp(
+    r'\bHit\s+Di(?:e|ce)\s*[:]?\s*',
     caseSensitive: false,
   );
+
+  static bool _hasHitDieClue(String text) {
+    for (final m in _classHitDieHeaderPattern.allMatches(text)) {
+      final after = text.substring(m.end);
+      final dice = DiceExpression.findAll(after);
+      if (dice.isNotEmpty && dice.first.start == 0) {
+        return true;
+      }
+    }
+    return false;
+  }
   static final _classPrimaryAbilityPattern = RegExp(
     r'\bPrimary\s+Ability\s*[:]?\s*(?:Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)\b',
     caseSensitive: false,
@@ -474,8 +486,7 @@ class CandidateDetector {
       }
 
       // 5. Class Clues
-      final hdMatch = _classHitDiePattern.firstMatch(text);
-      if (hdMatch != null) {
+      if (_hasHitDieClue(text)) {
         hasClassHitDice = true;
         classScore += 0.45;
         classEvidence.add(
@@ -787,7 +798,7 @@ class CandidateDetector {
         _itemSubtitleCombinedPattern.hasMatch(nextText) ||
         _featCategoryPattern.hasMatch(nextText) ||
         _featPrereqPattern.hasMatch(nextText) ||
-        _classHitDiePattern.hasMatch(nextText) ||
+        _hasHitDieClue(nextText) ||
         _subclassParentPattern.hasMatch(nextText) ||
         _speciesHeaderPattern.hasMatch(nextText) ||
         _bgSkillsPattern.hasMatch(nextText);

@@ -1403,18 +1403,14 @@ final RegExp _saveDcPattern = RegExp(
 );
 final RegExp _bonusToHitPattern =
     RegExp(r'([+-]\s*\d+)\s+to\s+hit', caseSensitive: false);
-final RegExp _primaryDicePattern = RegExp(
-  r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?',
-  caseSensitive: false,
-);
 final RegExp _flatHitPattern =
     RegExp(r'Hit:\s*(\d+)|taking\s*(\d+)', caseSensitive: false);
 final RegExp _damageTypePattern = RegExp(
   r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)\s+damage',
   caseSensitive: false,
 );
-final RegExp _secondaryDicePattern = RegExp(
-  r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s*(?:\d+\s*)?\(?(\d+)\s*d\s*(\d+)\)?(?:\s*([+-]\s*\d+))?\s*(\w+)?\s*damage',
+final RegExp _secondaryDamageClausePattern = RegExp(
+  r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s+([^.]+)',
   caseSensitive: false,
 );
 final RegExp _legendaryCostPattern =
@@ -1882,17 +1878,12 @@ extension MinionStatBlockDprExt on MinionStatBlock {
             ? action.hitDamage!
             : action.description;
 
-    final primaryMatch = _primaryDicePattern.firstMatch(primarySource);
-
-    if (primaryMatch != null) {
-      dCount = int.tryParse(primaryMatch.group(1) ?? '') ?? 0;
-      dSides = int.tryParse(primaryMatch.group(2) ?? '') ?? 0;
-      if (primaryMatch.group(4) != null) {
-        final sign = primaryMatch.group(3) == '-' ? -1 : 1;
-        dBonus = sign * (int.tryParse(primaryMatch.group(4)!) ?? 0);
-      } else {
-        dBonus = 0;
-      }
+    final primaryDiceMatch = DiceExpression.findAll(primarySource).firstOrNull;
+    if (primaryDiceMatch != null) {
+      final term = primaryDiceMatch.expression.diceTerms.firstOrNull;
+      dCount = term?.count ?? 0;
+      dSides = term?.sides ?? 0;
+      dBonus = primaryDiceMatch.expression.constantSum;
     } else {
       final flatMatch = _flatHitPattern.firstMatch(action.description);
       if (flatMatch != null) {
@@ -1908,29 +1899,18 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     }
 
     // 3. Parse secondary / rider damage dice
-    final secMatch = _secondaryDicePattern.firstMatch(action.description);
-
+    final secMatch = _secondaryDamageClausePattern.firstMatch(action.description);
     if (secMatch != null) {
-      secDCount = int.tryParse(secMatch.group(1) ?? '') ?? 0;
-      secDSides = int.tryParse(secMatch.group(2) ?? '') ?? 0;
-      final rawSecType = secMatch.group(4)?.toLowerCase();
-      if (rawSecType != null &&
-          const [
-            'bludgeoning',
-            'piercing',
-            'slashing',
-            'fire',
-            'cold',
-            'lightning',
-            'thunder',
-            'acid',
-            'poison',
-            'necrotic',
-            'radiant',
-            'force',
-            'psychic'
-          ].contains(rawSecType)) {
-        secDType = rawSecType;
+      final clause = secMatch.group(1)!;
+      final secDiceMatch = DiceExpression.findAll(clause).firstOrNull;
+      if (secDiceMatch != null) {
+        final term = secDiceMatch.expression.diceTerms.firstOrNull;
+        secDCount = term?.count ?? 0;
+        secDSides = term?.sides ?? 0;
+        final typeMatch = _damageTypePattern.firstMatch(clause);
+        if (typeMatch != null) {
+          secDType = typeMatch.group(1)!.toLowerCase();
+        }
       }
     }
 
