@@ -2504,6 +2504,7 @@ class ArenaCombatEngine {
       ];
     }
 
+    final String removedSpellLog = 'Toll the Dead';
     // 4. Ray of Frost (spell_ray_of_frost) or generic spellcaster Ray of Frost
     if (attacker.hasSpell('spell_ray_of_frost') ||
         (attacker.isSpellcaster && !attacker.hasSpell('spell_sacred_flame'))) {
