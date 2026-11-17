@@ -1,8 +1,8 @@
 # Cleanup slice 11 progress notes
 Status: IN PROGRESS
 Start heads: core 8d9b3ea509bca5e78c21298924d06963c938321f, ruleset 016a09556cd3e522593248a83aa22f982fcb6adc, app 5889a4d16927984a006a166791614836270b437b
-Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset bc2cd73f762ef0414037873ed337519bcc45e641, app bd15b2dd5630be90b2665bede8d32efa6f0e282d
-Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset bc2cd73f762ef0414037873ed337519bcc45e641
+Last pushed heads (CI green): core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app 355dc0a89c23417d18587681a6b4b1b0960984cd
+Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c
 Fix ids: 1.1 1.2 2.1 2.2 2.3 2.4 2.5 3.1 3.2 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 6.4 7.1 7.2 7.3
 Mutation ids: D1 F1 F2 S2 M1 X1 N1 C1 T1 I1 I2 K1 K2 S1 Y1 R1 P1 L1 X2
 
@@ -38,7 +38,7 @@ Fix 7.3: No hand-written dice reading in app lib
 - [x] Step 4 One import reader, the package rule, and P2: app 816a30b0de9a34af7496b4919cc346633b9dee02 run 43652468422
 - [x] Step 5 SRD names out, and massive damage: core f71ae361d3be4eea36e50cbd67e28baa19903b6c run 43654804368, ruleset bc2cd73f762ef0414037873ed337519bcc45e641 run 43654969518, app 8acd69d75abc7cb326b70301fd09d08d80f50c3e run 43656952040
 - [x] Step 6 Sync deltas, room creation, and the privacy policy: app bd15b2dd5630be90b2665bede8d32efa6f0e282d run 43786744971
-- [ ] Step 7 One dice reader
+- [x] Step 7 One dice reader: ruleset d9334641b75b17993ec8bd53a90e7c612abec04c run 43950359433, app 355dc0a89c23417d18587681a6b4b1b0960984cd run 44006865703
 - [ ] Step 8 Mutations and report
 
 ## Fix checklist
@@ -62,6 +62,9 @@ Fix 6.1 done: [A focused sync delta only when nothing else changed] Fall through
 Fix 6.2 done: [Transport adapters never create a room] Adapters refresh existing rooms and skip missing in lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart and firebase_signaling_adapter.dart
 Fix 6.3 done: [The privacy policy tells the truth] Updated device storage, shared room records, Android Crashlytics, and 9 Firestore collections in PRIVACY_POLICY.md and web/legal/PRIVACY_POLICY.md
 Fix 6.4 done: [Loaded campaign memberships have unique room codes] Deduplicate loaded memberships by upper-cased room code with newest lastPlayed winning in lib/services/party/campaign_registry_service.dart
+Fix 7.1 done: [DiceExpression finds dice in text] Added tryParse, findAll, DiceMatch, diceTerms, constantSum, largestDie, totalDiceCount, hasDice, and laws DX8-DX13 in vtt-ruleset-dnd5e
+Fix 7.2 done: [App dice reading goes through DiceExpression] Characterized 16 dice reading sites across 9 files with 5 inputs each in test/services/dice_reading_characterization_test.dart and migrated all 16 sites to DiceExpression
+Fix 7.3 done: [No hand-written dice reading in app lib] Enforced Law D16 compliance bar in test/infrastructure/compliance/dice_reading_bar_test.dart with empty allowlist
 
 ## Mutation branches
 None
@@ -74,7 +77,7 @@ fd002b8026ee180329a10c7b62d07f36b8164dd7 red run 43654463029
 3ab87e25c91c4542ab8049679604b07f140129f9 red run 43656014152
 
 ## Next
-Step 7: One dice reader
+Step 8: Mutations and report
 
 ## Open issues and deviations
 Run 43510726706 cause: cancelled since a higher priority waiting request for main existed when push 06e8ad23 was made; fixed by 06e8ad23c8199366971b8658a89488158fa85d09
