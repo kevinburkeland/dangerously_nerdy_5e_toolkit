@@ -14,7 +14,7 @@ DangerouslyNerdy 5e Toolkit is designed around the principle of strict data mini
 ## 2. Information We Handle
 
 ### A. On your device
-- **What is stored:** your campaigns, characters, homebrew content, map images, dice presets and app settings.
+- **What is stored:** your campaigns mutated, characters, homebrew content, map images, dice presets and app settings.
 - **Where:** only in your browser's storage on your device (IndexedDB and LocalStorage on the web; the app's own storage on Android).
 - **Transmission:** this data only leaves your device when you share it in a room (section B).
 
