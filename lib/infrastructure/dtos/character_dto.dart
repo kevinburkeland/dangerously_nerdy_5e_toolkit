@@ -1,3 +1,5 @@
+import
+    'package:material_ui/material_ui.dart';
 import 'dart:convert';
 import '../../models/domain/character_models.dart';
 
