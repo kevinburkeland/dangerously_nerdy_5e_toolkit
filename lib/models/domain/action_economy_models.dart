@@ -53,7 +53,10 @@ final class RestorePactSlotOnUse extends ActionUse {
 }
 
 /// Rich, interactive representation of a combat action available to a character.
+typedef ActionCallback = void Function();
+
 class CharacterCombatAction {
+  final ActionCallback? onExecute = null;
   final String id;
   final String name;
   final ActionType actionType;
