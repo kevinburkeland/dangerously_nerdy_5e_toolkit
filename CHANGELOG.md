@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-17
+- Cleanup slice 12: Bump minimatch npm override to 11.0.9, review five N4 overrides and extend review dates to 2026-12-17, update firebase npm dependency to 13.4.0, update actions/setup-java pin to v6.3.0, and upgrade pub dependencies (Fix 1.1, Fix 1.2).
+
 ## 2026-11-16
 - Cleanup slice 11: Re-pin ruleset with DiceExpression.tryParse, DiceExpression.findAll, and dice helpers (Fix 7.1), add characterization suite for 16 dice reading sites (Fix 7.2), enforce Law D16 compliance bar with zero allowlist (Fix 7.3), and migrate all 16 app dice reading sites to DiceExpression (Fix 7.4).
 
