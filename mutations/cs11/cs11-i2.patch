@@ -1,0 +1,25 @@
+From b045e05e8c32fc22111ebf323785271540f06211 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 16 Nov 2026 19:17:43 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20I2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/domain/ingestion/models/source_span.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/domain/ingestion/models/source_span.dart b/lib/domain/ingestion/models/source_span.dart
+index b7f30fab..ece03a56 100644
+--- a/lib/domain/ingestion/models/source_span.dart
++++ b/lib/domain/ingestion/models/source_span.dart
+@@ -1,3 +1,4 @@
++import 'dart:io' if (dart.library.ui) 'package:material_ui/material_ui.dart';
+ import 'package:meta/meta.dart';
+ 
+ /// Represents a precise character range and line/column coordinate within the source text.
+-- 
+2.55.0
+

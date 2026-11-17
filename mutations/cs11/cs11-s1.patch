@@ -1,0 +1,28 @@
+From 2781dbec5ca21366b44b594eac35440df619c4e5 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 16 Nov 2026 19:18:47 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20S1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/rules/arena_combat_engine.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/services/rules/arena_combat_engine.dart b/lib/services/rules/arena_combat_engine.dart
+index d95aaa4c..2b3e7cb0 100644
+--- a/lib/services/rules/arena_combat_engine.dart
++++ b/lib/services/rules/arena_combat_engine.dart
+@@ -2504,6 +2504,7 @@ class ArenaCombatEngine {
+       ];
+     }
+ 
++    final String removedSpellLog = 'Toll the Dead';
+     // 4. Ray of Frost (spell_ray_of_frost) or generic spellcaster Ray of Frost
+     if (attacker.hasSpell('spell_ray_of_frost') ||
+         (attacker.isSpellcaster && !attacker.hasSpell('spell_sacred_flame'))) {
+-- 
+2.55.0
+

@@ -1,0 +1,40 @@
+From fcd0e4c9fe7d52b134326855fa00debb20dc1ab5 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 16 Nov 2026 19:19:52 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20R1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../adapters/p2p/firebase_fallback_adapter.dart     | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart b/lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart
+index 8aad1d41..74db3afe 100644
+--- a/lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart
++++ b/lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart
+@@ -130,11 +130,14 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
+             'expiresAt': expiresAt.toIso8601String(),
+           });
+         } else {
+-          LoggingService().logNonFatal(
+-            StateError('Room document rooms/$_roomCode does not exist; skipping fallback adapter room refresh'),
+-            StackTrace.current,
+-            reason: 'Room document rooms/$_roomCode does not exist; skipping fallback adapter room refresh',
+-          );
++          await docRef.set({
++            'roomCode': _roomCode,
++            'code': _roomCode,
++            'campaignName': 'Campaign $_roomCode',
++            'isStateless': true,
++            'lastUpdated': now.toIso8601String(),
++            'expiresAt': expiresAt.toIso8601String(),
++          });
+         }
+       } catch (e, st) {
+         LoggingService().logNonFatal(e, st,
+-- 
+2.55.0
+

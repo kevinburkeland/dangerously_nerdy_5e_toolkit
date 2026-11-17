@@ -1,0 +1,29 @@
+From 0a325e075d9da9e0f90815de1a47b59373ffa26a Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 16 Nov 2026 19:23:15 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20X2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/arena/arena_combatant.dart | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/models/arena/arena_combatant.dart b/lib/models/arena/arena_combatant.dart
+index bbd2dbf6..d430c333 100644
+--- a/lib/models/arena/arena_combatant.dart
++++ b/lib/models/arena/arena_combatant.dart
+@@ -12,6 +12,8 @@ export 'arena_condition.dart';
+ export 'monster_combat_profile.dart';
+ export 'package:vtt_engine_core/simulation/combat_rider.dart';
+ 
++final _mutatedDiceRegexp = RegExp(r'(\d+)d(\d+)');
++
+ /// Which team the combatant belongs to in the Arena.
+ enum ArenaTeam {
+   teamA('Team Crimson'),
+-- 
+2.55.0
+

@@ -1,0 +1,26 @@
+From fb2620ccf1cfddb0336004523aead5520139de66 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 16 Nov 2026 19:17:26 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20I1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/dtos/character_dto.dart | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/infrastructure/dtos/character_dto.dart b/lib/infrastructure/dtos/character_dto.dart
+index aecc8a35..e8188362 100644
+--- a/lib/infrastructure/dtos/character_dto.dart
++++ b/lib/infrastructure/dtos/character_dto.dart
+@@ -1,3 +1,5 @@
++import
++    'package:material_ui/material_ui.dart';
+ import 'dart:convert';
+ import '../../models/domain/character_models.dart';
+ 
+-- 
+2.55.0
+

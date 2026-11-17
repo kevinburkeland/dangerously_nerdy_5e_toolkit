@@ -1,0 +1,36 @@
+From 9f8b82b3f3f640ceec4cafb86fe1cd2d865e8aa2 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Mon, 16 Nov 2026 19:22:50 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20L1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/party/campaign_registry_service.dart | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/lib/services/party/campaign_registry_service.dart b/lib/services/party/campaign_registry_service.dart
+index cec69e30..9c638e64 100644
+--- a/lib/services/party/campaign_registry_service.dart
++++ b/lib/services/party/campaign_registry_service.dart
+@@ -60,14 +60,7 @@ class CampaignRegistryService {
+       // Sort by lastPlayed descending so newest entry comes first
+       loaded.sort((a, b) => b.lastPlayed.compareTo(a.lastPlayed));
+ 
+-      final deduplicated = <CampaignMembership>[];
+-      final seenCodes = <String>{};
+-      for (final m in loaded) {
+-        final cleanCode = m.roomCode.trim().toUpperCase();
+-        if (seenCodes.add(cleanCode)) {
+-          deduplicated.add(m);
+-        }
+-      }
++      final deduplicated = loaded;
+ 
+       membershipsNotifier.value = List.unmodifiable(deduplicated);
+ 
+-- 
+2.55.0
+
