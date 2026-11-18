@@ -89,3 +89,4 @@ Run 44200754828 cause: failed on 44eab9883b4ffb807f7026c8556ae8d9cdbbda9b due to
 Run 44354852871 cause: failed on 704c265bfb1a48fce5bdbbdd15a83bcaad5ef09c in vtt-ruleset-dnd5e due to disallowed ignore: avoid_print comment in save_and_attack_odds_law_test.dart; fixed by 18a2768cf6bd153410946c84ed8713a3d59b4775
 Run 44354222017 cause: failed on 2585841c44ebffc67edd723f152fff492a3679e0 in DCO self-tests due to transient GitHub API HTTP 502 and undisclosed ruleset failure on 704c265bfb1a48fce5bdbbdd15a83bcaad5ef09c; fixed by 61f0b6ee878c508347e877f4df843ceb976ba923
 Run 44357321252 cause: failed on d795dd5124234f83ee1be5e8270c5ecf77b45ab9 in Check Dependency Currency & Security due to 5 stale N2 exceptions in dependency_exceptions.tsv; fixed by 356f2c3c34d10f4744df70c02b63fe73a9af9e5e
+Run 44358434701 cause: failed on 356f2c3c34d10f4744df70c02b63fe73a9af9e5e due to missing 'fixed by <sha>' suffix on the prior cause line; fixed by 276895b29b6af0c5e60363d7c01b33d00e1078ed
