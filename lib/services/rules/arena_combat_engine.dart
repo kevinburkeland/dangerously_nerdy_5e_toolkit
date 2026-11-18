@@ -37,7 +37,7 @@ class ArenaCombatEngine {
           : 'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took $damageApplied $damageType damage via Evasion!';
     }
     if (saved) return 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc)$summaryNote took half: $damageApplied $damageType damage$fatal';
-    if (outcome == SaveDamageOutcome.half && hasEvasion) return 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took half: $damageApplied $damageType damage (Evasion)$fatal';
+    if (outcome == SaveDamageOutcome.half && hasEvasion) return 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took 0 $damageType damage (Evasion)$fatal';
     return 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took full: $damageApplied $damageType damage$fatal';
   }
 
