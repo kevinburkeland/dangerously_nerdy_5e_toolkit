@@ -27,3 +27,10 @@ class CharacterDto {
   /// Serializes to a Map for database storage or network transmission.
   Map<String, dynamic> toMap() => _rawMap;
 }
+
+bool _zzHasDice(String s) {
+  final _zz = RegExp(
+    r'(\d+)d(\d+)',
+  );
+  return _zz.hasMatch(s);
+}
