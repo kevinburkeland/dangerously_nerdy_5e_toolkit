@@ -963,8 +963,11 @@ class CharacterSheetController extends ChangeNotifier {
       modifier += chaMod;
     }
 
+    final effectiveEntries = diceEntries.isEmpty
+        ? [DiceEntry(dieType: DieType.d10, count: 1)]
+        : diceEntries;
     final result = DiceRollResult.rollPool(
-      diceEntries: diceEntries,
+      diceEntries: effectiveEntries,
       modifier: modifier,
     );
 
