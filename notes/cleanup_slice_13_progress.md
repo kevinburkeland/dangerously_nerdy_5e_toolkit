@@ -1,8 +1,8 @@
 # Cleanup slice 13 progress notes
 Status: IN PROGRESS
 Start heads: core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app a7480b4e98552fe81f276d388eebf7a5a1c4dc45
-Last pushed heads (CI green): core 833832074a32a23cec7ba5fbc95a8951587eba7a, ruleset 7ce8176d541e37bcd900dc26c3aa9b53c0c229ef, app 82a7e07eef1cdf8a3a87a2f40e83f83d93beb8ef
-Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775
+Last pushed heads (CI green): core 833832074a32a23cec7ba5fbc95a8951587eba7a, ruleset de529f197a77ccc642c1876babeed0db3cbeefd3, app d1a7719cce40f2d85865362b8157060a09580593
+Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset de529f197a77ccc642c1876babeed0db3cbeefd3
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 7.1 7.2 8.1 8.2 8.3 8.4 8.5
 Mutation ids: F1 F2 W1 N1 U1 H1 T1 M1 D1 D2 D3 D4 R1 R2 P1 P2 C1 U2 H2 S1 S2 A1
 
@@ -36,7 +36,7 @@ Fix 8.5: Party AC comes from the rules
 ## Steps
 - [x] Step 1 SRD content, and the npm rows before their date: core dcff80304b79da4fcd685719dc17e57d6c276947 run 44414996938, ruleset a448ac5acaeb708d49bd5c818ebb9d00355fe38d run 44415002158, app bbc42a7bcfbe09f07609238077b27a92f9bf7628 run 44416093330
 - [x] Step 2 Retire, and two small test fixes: core 833832074a32a23cec7ba5fbc95a8951587eba7a run 44419043293, ruleset 7ce8176d541e37bcd900dc26c3aa9b53c0c229ef run 44419892271, app 82a7e07eef1cdf8a3a87a2f40e83f83d93beb8ef run 44419896322
-- [ ] Step 3 Spell damage keeps every die group
+- [x] Step 3 Spell damage keeps every die group: ruleset de529f197a77ccc642c1876babeed0db3cbeefd3 run 44421675824, app d1a7719cce40f2d85865362b8157060a09580593 run 44423457857
 - [ ] Step 4 Dice bar, models callback rule, crit threshold
 - [ ] Step 5 Dependency schema and coverage history
 - [ ] Step 6 Character map goldens
@@ -53,6 +53,9 @@ Fix 1.5 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead (
 Fix 2.1 done: [Retire cs12] Retired all 17 cs12 mutation branches (core 2, ruleset 6, app 9) into archive tags and mutations/cs12/ patches via retire_mutation_branches.sh.
 Fix 2.2 done: [The denylist guard test plants a real term] Updated ruleset srd_legal_compliance_test.dart so the guard exercises _scanFilesForDenylistTerms on a temp directory with a planted denylist term and a clean file while keeping the static check.
 Fix 2.3 done: [No thinking-out-loud comments in tests] Rewrote the thinking-out-loud comment at dpr_golden_characterization_test.dart line 124 as a plain statement; verified grep across all three repos.
+Fix 3.1 done: [Spell damage rolls every die group and the flat bonus] Updated character_sheet_controller.dart castSpell to combine all base and scaling die groups and flat bonuses, verified with cast_spell_damage_law_test.dart.
+Fix 3.2 done: [An unreadable spell formula is reported, not rolled] Validated spell formulas in castSpell before spending slots, returned null without broadcasting, showed SnackBar in interactive_spell_tile.dart and spell_card.dart, deleted dead rollSpellDamage, and updated removed_test_names.txt.
+Fix 3.3 done: [No die group is taken out of an expression] Added DiceExpression.singleDieGroup in ruleset dice_expression.dart with law test, re-pinned app, migrated all five single-group sites (dnd5e_class_field_extractor.dart, dnd5e_ingestion_capability.dart, stat_block_acl_parser.dart, dpr_models.dart, monster_codex_data.dart), and added dice_terms_access_bar_test.dart.
 
 ## Mutation branches
 None
@@ -63,7 +66,7 @@ a66d1ef621f9c929ba0c0cd4cb6687118f5f254f cancelled run 44417061507
 47b629d3fed735d0748df165a3cdd5303b9c4e51 red run 44417186375
 
 ## Next
-Begin Step 3 by committing the spell damage and single-die-group characterization tests, then fixing castSpell multi-group damage and unreadable formula reporting, removing dead rollSpellDamage, and adding the .diceTerms source bar.
+Begin Step 4 by extending the dice reading bar, upgrading the models callback rule to statement-level cross-file scanning, and removing critThreshold clamping in the DPR calculator engine.
 
 ## Open issues and deviations
 Run 44415073858 cause: big_file_ratchet_test failed because Step 1 shrank three allowlisted files (srd_loot_tables.dart, dpr_models.dart, character_sheet_controller.dart) below their recorded ceilings; fixed by bbc42a7bcfbe09f07609238077b27a92f9bf7628
@@ -72,3 +75,4 @@ Run 44417186375 cause: check_notes_shas failed because the prior cancelled run o
 - In Fix 1.3, scripts/check_srd_terms.py previously skipped the entire test/removed_test_names.txt file, and three existing Cleanup slice 11 rows (lines 45-47) contained previously denylisted names with Cleanup slice 11 reasons. To keep check_srd_terms.py at the single named exception ("removed for SRD compliance in Cleanup slice 13") with zero new allowlist rows, those three existing SRD-compliance rows had their reason normalized to "removed for SRD compliance in Cleanup slice 13".
 - In Fix 1.2, four of the five proper-named loot items have no bundled MagicItem entry in MagicItemLibrary, so their rows were removed and their roll ranges absorbed into adjacent entries to preserve 1..100 coverage; only the restorative ointment entry is bundled and was remapped to item_restorative_ointment.
 - In Fix 1.5, the 14-day look-ahead (--today 2026-12-02) caught fast_immutable_collections 12.0.0 behind 12.0.1 (published 2026-11-17) in app, which was upgraded to ^12.0.1; core and ruleset had coverage 1.16.0 behind 1.16.1 in untracked local pubspec.lock, resolved by dart pub upgrade.
+- Step 3 findAll(...).first/.firstOrNull audit (non-spell sites not fixed in this slice): homebrew_ingestor.dart (homebrew formula text; drops later damage clauses), homebrew_persistence_service.dart (homebrew action/item damage text; drops later clauses), character_actions_resolver.dart (action description display formula; drops secondary clauses), monster_codex_data.dart (minion primary attack; drops secondary clauses), monster_quick_roll_dialog.dart (quick-roll formula string; drops second expression if separated by text), dpr_models.dart (primary and secondary clause extractors; right per clause, would miss a third clause), character_sheet_controller.dart higherLevelsMarkdown (prose; first match is right).
