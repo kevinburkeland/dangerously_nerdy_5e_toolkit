@@ -683,7 +683,7 @@ class LandingToolRegistry {
           icon: Icons.table_chart,
           accentColor: const Color(0xFFF59E0B),
           description:
-              'Browse and roll on all 5e SRD tables: Treasure Hoards, Magic Item Tables A-I, Gemstones, Art Objects, 100 Trinkets, Wild Magic Surge, Madness, and Party Share Calculator.',
+              'Browse and roll on all 5e SRD tables: Treasure Hoards, Magic Item Tables A-I, Gemstones, Art Objects, 100 Trinkets, Madness, and Party Share Calculator.',
           keywords: [
             'table',
             'tables',
@@ -699,8 +699,6 @@ class LandingToolRegistry {
             'art',
             'trinket',
             'trinkets',
-            'wild magic',
-            'surge',
             'madness',
             'confusion',
             'reincarnate',

@@ -95,7 +95,7 @@ void main() {
   ],
   "table": [
     {
-      "name": "Wild Magic Surges (Expanded)",
+      "name": "Chaos Spark Surges (Expanded)",
       "source": "HOMEBREW",
       "caption": "d100 Chaos Table",
       "entries": [
@@ -154,7 +154,7 @@ void main() {
       // Other / Tables
       expect(result.otherEntries.length, equals(1));
       expect(result.otherEntries.first.name,
-          equals('Wild Magic Surges (Expanded)'));
+          equals('Chaos Spark Surges (Expanded)'));
       expect(result.otherEntries.first.category, equals('Table'));
     });
 

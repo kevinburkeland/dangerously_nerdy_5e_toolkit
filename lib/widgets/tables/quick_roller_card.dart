@@ -14,18 +14,10 @@ class QuickRollerCard extends StatefulWidget {
 }
 
 class _QuickRollerCardState extends State<QuickRollerCard> {
-  TableRollResult? _wildMagicResult;
   TableRollResult? _trinketResult;
   TableRollResult? _madnessResult;
   TableRollResult? _reincarnateResult;
   TableRollResult? _confusionResult;
-
-  void _rollWildMagic() {
-    HapticService.heavyImpact(context);
-    setState(() {
-      _wildMagicResult = SrdMagicTables.wildMagicSurge.roll();
-    });
-  }
 
   void _rollTrinket() {
     HapticService.lightImpact(context);
@@ -65,21 +57,7 @@ class _QuickRollerCardState extends State<QuickRollerCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Wild Magic Surge Card
-          _buildQuickBox(
-            context,
-            title: 'Wild Magic Surge (d100)',
-            icon: Icons.auto_awesome,
-            accentColor: const Color(0xFFC084FC),
-            buttonLabel: 'Surge Chaos (d100)',
-            onRoll: _rollWildMagic,
-            result: _wildMagicResult,
-            isDark: isDark,
-          ),
-
-          const SizedBox(height: 14),
-
-          // 2. Trinket Dispenser Card
+          // 1. Trinket Dispenser Card
           _buildQuickBox(
             context,
             title: '100 SRD Trinkets Dispenser',

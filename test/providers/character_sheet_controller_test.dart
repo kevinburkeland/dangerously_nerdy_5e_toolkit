@@ -700,48 +700,5 @@ void main() {
       expect(warlockCtrl.character.resources.spellSlots.pactMagicCurrent,
           equals(1));
     });
-
-    test(
-        'castSpell with Armor of Agathys on Warlock sets temp HP and expends pact slot',
-        () async {
-      const agathysSpell = Spell(
-        id: EntityId(
-            slug: 'spell_armor_of_agathys', ruleset: RulesetVersion.v2024),
-        name: 'Armor of Agathys',
-        level: 1,
-        school: 'abjuration',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration:
-            SpellDuration(type: DurationType.timed, durationSeconds: 3600),
-        range: 'Self',
-        components: SpellComponents(),
-        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
-      );
-
-      final warlockChar = testCharacter.copyWith(
-        resources: testCharacter.resources.copyWith(
-          tempHp: 0,
-          spellSlots: const SpellSlotPool(
-            pactMagicMax: 2,
-            pactMagicCurrent: 2,
-            pactMagicSlotLevel: 3,
-          ),
-        ),
-      );
-      final warlockCtrl = CharacterSheetController(
-        character: warlockChar,
-        persistenceService: fakePersistence,
-        replicaId: _testReplicaId,
-      );
-
-      final roll = await warlockCtrl.castSpell(agathysSpell,
-          castLevel: 3, isPactMagic: true);
-      expect(roll, isNotNull);
-      // Level 3 slot = 3 * 5 = 15 Temp HP
-      expect(roll!.total, equals(15));
-      expect(warlockCtrl.character.resources.tempHp, equals(15));
-      expect(warlockCtrl.character.resources.spellSlots.pactMagicCurrent,
-          equals(1));
-    });
   });
 }

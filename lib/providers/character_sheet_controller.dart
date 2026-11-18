@@ -1027,51 +1027,6 @@ class CharacterSheetController extends ChangeNotifier {
     final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
     final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
         spell.name.toLowerCase() == 'eldritch blast';
-    final isArmorOfAgathys = cleanSlug == 'armor-of-agathys' ||
-        spell.name.toLowerCase() == 'armor of agathys';
-
-    // Armor of Agathys: grants 5 temp HP per slot level & 5 cold retaliation damage
-    if (isArmorOfAgathys) {
-      final flatHp = effectiveLevel > 0 ? (effectiveLevel * 5) : 5;
-      if (flatHp > _character.resources.tempHp) {
-        await setTempHp(flatHp);
-      }
-      final roomService = DiceRoomService();
-      final activeRoom = roomService.activeRoomCode ?? 'LOCAL';
-      final playerName =
-          _character.name.isNotEmpty ? _character.name : 'Player';
-      final pactLabel = effectiveIsPact
-          ? ' (Pact Magic Level $effectiveLevel)'
-          : (effectiveLevel > spell.level
-              ? ' (Cast at Level $effectiveLevel)'
-              : '');
-      final agathysResult = DiceRollResult(
-        timestamp: DateTime.now(),
-        diceEntries: const [],
-        groupResults: const [],
-        modifier: flatHp,
-        rollMode: RollMode.normal,
-        individualRolls: const [],
-        total: flatHp,
-        isCrit: false,
-        isFumble: false,
-      );
-      final roomRoll = RoomRoll(
-        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
-        roomCode: activeRoom,
-        playerName: playerName,
-        formulaString:
-            '${spell.name}$pactLabel: $flatHp Temp HP ($flatHp Cold Retaliation)',
-        total: flatHp,
-        individualRolls: const [],
-        details: ['$flatHp Temp HP & $flatHp Cold Damage on melee hit'],
-        timestamp: DateTime.now(),
-        isCrit: false,
-        isFumble: false,
-      );
-      roomService.broadcastRoll(roomRoll);
-      return agathysResult;
-    }
 
     // Parse base formula
     final baseFormula = spell.damageMath.firstOrNull?.diceFormula ??

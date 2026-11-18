@@ -21,7 +21,6 @@ class SrdTablesLibrary {
     SrdLootTables.trinketsTable,
 
     // --- Magic & Chaos Tables ---
-    SrdMagicTables.wildMagicSurge,
     SrdMagicTables.confusionBehavior,
     SrdMagicTables.reincarnateRace,
     SrdMagicTables.teleportationMishap,

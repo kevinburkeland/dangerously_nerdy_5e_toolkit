@@ -116,7 +116,7 @@ class _TableIndexScreenState extends State<TableIndexScreen>
                 // Tab 2: All Rollable Tables Directory
                 _buildAllTablesDirectory(context, isDark),
 
-                // Tab 3: Quick Rollers (Wild Magic, Trinkets, Madness)
+                // Tab 3: Quick Rollers (Trinkets, Madness, Reincarnate, Confusion)
                 const QuickRollerCard(),
               ],
             ),

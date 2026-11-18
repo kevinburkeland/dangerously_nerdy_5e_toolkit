@@ -102,11 +102,11 @@ void main() {
       expect(find.text('Search all SRD tables, loot items, magic surges...'),
           findsOneWidget);
 
-      // Enter search query
-      await tester.enterText(find.byType(TextField), 'Wild Magic');
+      // Enter search query (Cleanup slice 13: non-SRD table removed)
+      await tester.enterText(find.byType(TextField), 'Trinkets');
       await tester.pumpAndSettle();
 
-      expect(find.text('Wild Magic Surge'), findsOneWidget);
+      expect(find.text('100 SRD Trinkets'), findsOneWidget);
 
       // Tap roll button
       final rollBtn = find.text('1d100').first;
@@ -117,7 +117,7 @@ void main() {
     });
 
     testWidgets(
-        'switches to Quick Rollers tab and dispenses trinket and wild magic',
+        'switches to Quick Rollers tab and dispenses trinket',
         (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -128,7 +128,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(QuickRollerCard), findsOneWidget);
-      expect(find.text('Wild Magic Surge (d100)'), findsOneWidget);
+      // Cleanup slice 13: non-SRD table removed
       expect(find.text('100 SRD Trinkets Dispenser'), findsOneWidget);
 
       // Tap Dispense Trinket

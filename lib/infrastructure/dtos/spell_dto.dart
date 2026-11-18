@@ -230,7 +230,7 @@ class SpellDto {
       }
     }
 
-    // Variable damage type resolution (Chromatic Orb, Chaos Bolt, etc.)
+    // Variable damage type resolution (Chromatic Orb, etc.)
     final computedMathType = resolvedDamageMath.isNotEmpty &&
             resolvedDamageMath.first.damageType != DamageType.untyped
         ? resolvedDamageMath.first.damageType.name

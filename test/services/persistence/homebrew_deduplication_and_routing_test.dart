@@ -694,7 +694,7 @@ void main() {
       // Rolling Table with dice column
       final rollTable = HomebrewOtherCategory.classify(
         category: 'Table',
-        name: 'Wild Magic Table',
+        name: 'Chaos Spark Table',
         customProperties: {
           'colLabels': ['d100', 'Effect'],
           'rows': [

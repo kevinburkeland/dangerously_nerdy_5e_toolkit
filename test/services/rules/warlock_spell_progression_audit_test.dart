@@ -65,7 +65,7 @@ void main() {
 
       expect(warlock.spellsKnown.length, 2);
 
-      // 2. Level up to Level 2: learns Armor of Agathys
+      // 2. Level up to Level 2: learns Charm Person
       const lvl2Request = LevelUpRequest(
         targetClassSlug: 'warlock',
         targetClassDisplayName: 'WARLOCK',
@@ -73,8 +73,8 @@ void main() {
         newSpells: [
           EntityReference<Spell>.empty(
               refType: EntityType.spell,
-              slug: 'spell_armor_of_agathys',
-              displayName: 'Armor of Agathys'),
+              slug: 'spell_charm_person',
+              displayName: 'Charm Person'),
         ],
       );
       warlock = CharacterProgressionEngine.applyLevelUp(warlock, lvl2Request);
@@ -83,7 +83,7 @@ void main() {
           warlock.allocatedSpells['class-warlock-spells']
               ?.map((s) => s.slug)
               .toSet(),
-          contains('spell_armor_of_agathys'));
+          contains('spell_charm_person'));
 
       // 3. Level up to Level 3:
       // Player untrains Hellish Rebuke to learn Darkness, AND learns Misty Step (1 new + 1 replacement = 2 new spells)
@@ -105,7 +105,7 @@ void main() {
       );
       warlock = CharacterProgressionEngine.applyLevelUp(warlock, lvl3Request);
 
-      // At level 3, Warlock must have exactly 4 spells known: Hex, Armor of Agathys, Misty Step, Darkness
+      // At level 3, Warlock must have exactly 4 spells known: Hex, Charm Person, Misty Step, Darkness
       expect(warlock.spellsKnown.map((s) => s.slug).toSet(),
           isNot(contains('spell_hellish_rebuke')));
       expect(warlock.spellsKnown.length, 4,
@@ -175,7 +175,7 @@ void main() {
         ],
       );
 
-      // Level 2: learns Armor of Agathys (this goes into allocatedSpells['class-warlock-spells'])
+      // Level 2: learns Charm Person (this goes into allocatedSpells['class-warlock-spells'])
       const lvl2Request = LevelUpRequest(
         targetClassSlug: 'warlock',
         targetClassDisplayName: 'WARLOCK',
@@ -183,8 +183,8 @@ void main() {
         newSpells: [
           EntityReference<Spell>.empty(
               refType: EntityType.spell,
-              slug: 'spell_armor_of_agathys',
-              displayName: 'Armor of Agathys'),
+              slug: 'spell_charm_person',
+              displayName: 'Charm Person'),
         ],
       );
       warlock = CharacterProgressionEngine.applyLevelUp(warlock, lvl2Request);
@@ -192,9 +192,9 @@ void main() {
           warlock.allocatedSpells['class-warlock-spells']
               ?.map((s) => s.slug)
               .toSet(),
-          contains('spell_armor_of_agathys'));
+          contains('spell_charm_person'));
 
-      // Level 3: Swaps Armor of Agathys for Darkness, and learns Misty Step
+      // Level 3: Swaps Charm Person for Darkness, and learns Misty Step
       const lvl3Request = LevelUpRequest(
         targetClassSlug: 'warlock',
         targetClassDisplayName: 'WARLOCK',
@@ -209,18 +209,18 @@ void main() {
               slug: 'spell_darkness',
               displayName: 'Darkness'),
         ],
-        replacedSpellIds: ['spell_armor_of_agathys'],
+        replacedSpellIds: ['spell_charm_person'],
       );
       warlock = CharacterProgressionEngine.applyLevelUp(warlock, lvl3Request);
 
-      // Verify Armor of Agathys was removed from allocatedSpells AND spellsKnown
+      // Verify Charm Person was removed from allocatedSpells AND spellsKnown
       expect(
           warlock.allocatedSpells['class-warlock-spells']
               ?.map((s) => s.slug)
               .toSet(),
-          isNot(contains('spell_armor_of_agathys')));
+          isNot(contains('spell_charm_person')));
       expect(warlock.spellsKnown.map((s) => s.slug).toSet(),
-          isNot(contains('spell_armor_of_agathys')));
+          isNot(contains('spell_charm_person')));
       expect(warlock.spellsKnown.length, 4);
 
       // Level 4: applyLevelUp with 1 new leveled spell and 1 new cantrip
@@ -333,8 +333,8 @@ void main() {
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
           EntityReference<Spell>.empty(
               refType: EntityType.spell,
-              slug: 'spell_armor_of_agathys',
-              displayName: 'Armor of Agathys'),
+              slug: 'spell_charm_person',
+              displayName: 'Charm Person'),
           EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_misty_step',

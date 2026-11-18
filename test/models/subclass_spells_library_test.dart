@@ -67,63 +67,6 @@ void main() {
     });
 
     test(
-        '4. Sorcerer with divine magic origin receives full Cleric spell list in getExpandedSpells',
-        () {
-      final expanded =
-          SubclassSpellsLibrary.getExpandedSpells('sorcerer', 'divine-soul');
-      expect(expanded, contains('sacred flame'));
-      expect(expanded, contains('guidance'));
-      expect(expanded, contains('cure wounds'));
-      expect(expanded, contains('bless'));
-      expect(expanded, contains('spiritual weapon'));
-      expect(expanded, contains('spirit guardians'));
-      expect(expanded, contains('revivify'));
-    });
-
-    test(
-        '5. isExpandedSpell returns true for Cleric spells for Sorcerers with divine magic origin',
-        () {
-      final sacredFlame = SpellbookLibrary.findSpell('sacred flame')!;
-      final guidingBolt = SpellbookLibrary.findSpell('guiding bolt')!;
-      final spiritualWeapon = SpellbookLibrary.findSpell('spiritual weapon')!;
-      final eldritchBlast = SpellbookLibrary.findSpell('eldritch blast')!;
-
-      // 2014 edition
-      expect(
-        SubclassSpellsLibrary.isExpandedSpell(
-            'sorcerer', 'divine-soul', sacredFlame, DmRulesEdition.v2014),
-        isTrue,
-      );
-      expect(
-        SubclassSpellsLibrary.isExpandedSpell(
-            'sorcerer', 'divine-soul', guidingBolt, DmRulesEdition.v2014),
-        isTrue,
-      );
-      expect(
-        SubclassSpellsLibrary.isExpandedSpell(
-            'sorcerer', 'divine-soul', spiritualWeapon, DmRulesEdition.v2014),
-        isTrue,
-      );
-      expect(
-        SubclassSpellsLibrary.isExpandedSpell(
-            'sorcerer', 'divine-soul', eldritchBlast, DmRulesEdition.v2014),
-        isFalse,
-      );
-
-      // 2024 edition
-      expect(
-        SubclassSpellsLibrary.isExpandedSpell(
-            'sorcerer', 'divine-soul', sacredFlame, DmRulesEdition.v2024),
-        isTrue,
-      );
-      expect(
-        SubclassSpellsLibrary.isExpandedSpell(
-            'sorcerer', 'divine_soul', guidingBolt, DmRulesEdition.v2024),
-        isTrue,
-      );
-    });
-
-    test(
         '6. Dynamic Homebrew Subclass with compendium expanded filters resolves correctly',
         () {
       final customRadiantSubclass = Subclass(
@@ -178,46 +121,6 @@ void main() {
             sacredFlame, DmRulesEdition.v2014),
         isTrue,
       );
-    });
-
-    test(
-        '7. Character creation spell pool for Sorcerer with divine magic origin includes Cleric cantrips & 1st-level spells',
-        () {
-      const edition = DmRulesEdition.v2014;
-      const classSlug = 'sorcerer';
-      const subclassSlug = 'divine-soul';
-
-      final allAvailableSpells = SpellbookLibrary.allSpells.where((s) {
-        if (s.level > 1) return false;
-        final rules = s.getRules(edition);
-        final isClassSpell = rules.classes.contains(SpellClass.sorcerer);
-        final isExpanded = SubclassSpellsLibrary.isExpandedSpell(
-            classSlug, subclassSlug, s, edition);
-        return isClassSpell || isExpanded;
-      }).toList();
-
-      final availableCantrips = allAvailableSpells
-          .where((s) => s.level == 0)
-          .map((s) => s.name.toLowerCase())
-          .toSet();
-      final availableLevel1 = allAvailableSpells
-          .where((s) => s.level == 1)
-          .map((s) => s.name.toLowerCase())
-          .toSet();
-
-      // Sorcerer native spells
-      expect(availableCantrips, contains('fire bolt'));
-      expect(availableCantrips, contains('mage hand'));
-      expect(availableLevel1, contains('magic missile'));
-      expect(availableLevel1, contains('shield'));
-
-      // Cleric expanded spells via Divine Emissary
-      expect(availableCantrips, contains('sacred flame'));
-      expect(availableCantrips, contains('guidance'));
-      expect(availableLevel1, contains('cure wounds'));
-      expect(availableLevel1, contains('bless'));
-      expect(availableLevel1, contains('guiding bolt'));
-      expect(availableLevel1, contains('sanctuary'));
     });
   });
 }

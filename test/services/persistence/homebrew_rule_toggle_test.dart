@@ -321,8 +321,8 @@ void main() {
         'DmRuleCard renders markdown tables and shows Rollable badge with Table Roller button',
         (tester) async {
       const rollableTableItem = DmReferenceItem(
-        id: 'wild-magic-surge-table',
-        title: 'Wild Magic Surge Table',
+        id: 'chaos-spark-surge-table',
+        title: 'Chaos Spark Table',
         category: DmCategory.tables,
         subCategory: 'Rollable Tables',
         summary: 'Rollable table with 50 outcomes.',
@@ -339,7 +339,7 @@ void main() {
           '| 03-04 | For next minute, you can see any invisible creature. |',
         ],
         tags: ['Homebrew', 'Table', 'Rollable Tables'],
-        linkedTableQuery: 'Wild Magic Surge Table',
+        linkedTableQuery: 'Chaos Spark Table',
         linkedTableLabel: 'Roll on Table',
       );
 

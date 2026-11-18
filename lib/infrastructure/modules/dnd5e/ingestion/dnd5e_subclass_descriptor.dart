@@ -18,7 +18,7 @@ class Dnd5eSubclassDescriptor extends IngestionTargetDescriptor {
           key: 'name',
           label: 'Subclass Name',
           expectation: SourceFieldExpectation.requiredForRecognition,
-          helpText: 'Title or heading of the subclass (e.g. "Echo Knight", "Circle of Spores").',
+          helpText: 'Title or heading of the subclass (e.g. "Champion", "Circle of the Land").',
         ),
         IngestionFieldDescriptor(
           key: 'classSlug',

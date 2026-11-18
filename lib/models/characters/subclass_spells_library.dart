@@ -317,22 +317,6 @@ class SubclassSpellsLibrary {
       }
     }
 
-    // Canonical Divine Soul Sorcerer grant: full Cleric spell list (5e RAW Divine Magic)
-    final isDivineSoul = classSlug.toLowerCase() == 'sorcerer' &&
-        (cleanSub.contains('divine_soul') ||
-            cleanSub.contains('divine-soul') ||
-            cleanSub == 'divinesoul' ||
-            cleanSub.contains('divine'));
-    if (isDivineSoul) {
-      for (final s in SpellbookLibrary.allSpells) {
-        if (s.rules2014.classes.contains(SpellClass.cleric) ||
-            s.rules2024.classes.contains(SpellClass.cleric)) {
-          results.add(s.name.toLowerCase());
-          results.add(s.id.toLowerCase());
-        }
-      }
-    }
-
     // Dynamic resolution from loaded subclasses (including homebrew)
     final matchedSub = SrdClassesLibrary.findSubclass(
       cleanSubHyphen,
@@ -401,16 +385,6 @@ class SubclassSpellsLibrary {
   ) {
     if (subclassSlug == null || subclassSlug.isEmpty) return false;
     final cleanSub = subclassSlug.toLowerCase().replaceAll('-', '_').trim();
-
-    // Fast-path: Divine Soul Sorcerers learn from both Sorcerer and Cleric lists (Divine Magic)
-    if (classSlug.toLowerCase() == 'sorcerer' &&
-        (cleanSub.contains('divine_soul') ||
-            cleanSub.contains('divine-soul') ||
-            cleanSub == 'divinesoul' ||
-            cleanSub.contains('divine'))) {
-      final rules = spell.getRules(edition);
-      if (rules.classes.contains(SpellClass.cleric)) return true;
-    }
 
     // Fast-path: Arcane Trickster Rogues & Eldritch Knight Fighters learn Wizard spells
     if (classSlug.toLowerCase() == 'rogue' &&

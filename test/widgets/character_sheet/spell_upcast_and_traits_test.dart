@@ -430,67 +430,6 @@ void main() {
     });
 
     testWidgets(
-        'Warlock casting Armor of Agathys auto-upcasts to Pact Magic level without warning or modal',
-        (tester) async {
-      final warlockChar = baseCharacter.copyWith(
-        resources: baseCharacter.resources.copyWith(
-          tempHp: 0,
-          spellSlots: const SpellSlotPool(
-            maxSlots: {},
-            currentSlots: {},
-            pactMagicMax: 2,
-            pactMagicCurrent: 2,
-            pactMagicSlotLevel: 2,
-          ),
-        ),
-      );
-      final controller = CharacterSheetController(replicaId: _testReplica, 
-          character: warlockChar, persistenceService: fakeRepo);
-
-      const agathys = Spell(
-        id: EntityId(slug: 'armor-of-agathys', ruleset: RulesetVersion.v2024),
-        name: 'Armor of Agathys',
-        level: 1,
-        school: 'abjuration',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration:
-            SpellDuration(type: DurationType.timed, durationSeconds: 3600),
-        range: 'Self',
-        components: SpellComponents(),
-        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: InteractiveSpellTile(
-              spell: agathys,
-              controller: controller,
-            ),
-          ),
-        ),
-      );
-
-      // Tap Armor of Agathys to cast
-      await tester.tap(find.text('Armor of Agathys'));
-      await tester.pumpAndSettle();
-
-      // Ensure NO error warning about missing level 1 spell slots appears
-      expect(find.textContaining('No spell slots available'), findsNothing);
-      // Ensure bottom sheet did NOT open because there is only one slot level (auto-upcast)
-      expect(find.byType(SpellUpcastSheet), findsNothing);
-
-      // Pact magic slot decrements 2 -> 1
-      expect(controller.character.resources.spellSlots.pactMagicCurrent,
-          equals(1));
-      // Grants 2 * 5 = 10 temp HP (auto-upcast to 2nd level)
-      expect(controller.character.resources.tempHp, equals(10));
-
-      // SnackBar shows auto-upcast to Pact Magic Level 2
-      expect(find.textContaining('Pact Magic Level 2'), findsOneWidget);
-    });
-
-    testWidgets(
         'Depleted Pact Magic slots block casting and display helpful notification',
         (tester) async {
       final warlockChar = baseCharacter.copyWith(
@@ -507,31 +446,30 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, 
           character: warlockChar, persistenceService: fakeRepo);
 
-      const agathys = Spell(
-        id: EntityId(slug: 'armor-of-agathys', ruleset: RulesetVersion.v2024),
-        name: 'Armor of Agathys',
+      const hellishRebuke = Spell(
+        id: EntityId(slug: 'hellish-rebuke', ruleset: RulesetVersion.v2024),
+        name: 'Hellish Rebuke',
         level: 1,
-        school: 'abjuration',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration:
-            SpellDuration(type: DurationType.timed, durationSeconds: 3600),
-        range: 'Self',
+        school: 'evocation',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.reaction),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '60 feet',
         components: SpellComponents(),
-        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
+        descriptionMarkdown: 'Deal 2d10 fire damage on a failed Dexterity save.',
       );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: InteractiveSpellTile(
-              spell: agathys,
+              spell: hellishRebuke,
               controller: controller,
             ),
           ),
         ),
       );
 
-      await tester.tap(find.text('Armor of Agathys'));
+      await tester.tap(find.text('Hellish Rebuke'));
       await tester.pumpAndSettle();
 
       // Verify notification appears
@@ -558,24 +496,23 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, 
           character: multiclassChar, persistenceService: fakeRepo);
 
-      const agathys = Spell(
-        id: EntityId(slug: 'armor-of-agathys', ruleset: RulesetVersion.v2024),
-        name: 'Armor of Agathys',
+      const hellishRebuke = Spell(
+        id: EntityId(slug: 'hellish-rebuke', ruleset: RulesetVersion.v2024),
+        name: 'Hellish Rebuke',
         level: 1,
-        school: 'abjuration',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration:
-            SpellDuration(type: DurationType.timed, durationSeconds: 3600),
-        range: 'Self',
+        school: 'evocation',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.reaction),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '60 feet',
         components: SpellComponents(),
-        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
+        descriptionMarkdown: 'Deal 2d10 fire damage on a failed Dexterity save.',
       );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: InteractiveSpellTile(
-              spell: agathys,
+              spell: hellishRebuke,
               controller: controller,
             ),
           ),
@@ -583,7 +520,7 @@ void main() {
       );
 
       // Tap to cast -> since both regular slots and pact slots exist, sheet opens
-      await tester.tap(find.text('Armor of Agathys'));
+      await tester.tap(find.text('Hellish Rebuke'));
       await tester.pumpAndSettle();
 
       expect(find.byType(SpellUpcastSheet), findsOneWidget);

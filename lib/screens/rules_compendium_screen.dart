@@ -227,7 +227,7 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Roll on SRD treasure hoards, magic items A-I, trinkets, wild magic, and madness tables.',
+                                        'Roll on SRD treasure hoards, magic items A-I, trinkets, and madness tables.',
                                         style: TextStyle(
                                           fontSize: 11.5,
                                           color: theme.colorScheme.onSurface

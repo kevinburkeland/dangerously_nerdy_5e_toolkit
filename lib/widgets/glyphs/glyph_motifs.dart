@@ -1425,7 +1425,7 @@ class GlyphMotifs {
             center + Offset(4.5 * scale, 0), 0.8 * scale, nodeFill);
 
       case DndClassType.sorcerer:
-        // WILD MAGIC CHAOS VORTEX & INNER DRAGON SPARK
+        // ARCANE CHAOS VORTEX & INNER DRAGON SPARK
         final vortex = Path();
         const vortexPts = 6;
         for (int i = 0; i < vortexPts; i++) {

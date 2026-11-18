@@ -280,7 +280,7 @@ class SrdMagicWands {
       ),
       rules2024: ItemEditionDetails(
         summary:
-            '7 charges to roll on the Wild Magic Wand table for unexpected, exciting chaotic effects.',
+            '7 charges to roll on the Wand of Wonder table for unexpected, exciting chaotic effects.',
         description:
             'Roll d100 on the updated 2024 Wand of Wonder table to trigger sudden Fireballs, Invisibility, Slow, Darkness, and bizarre manifestations.',
         activation: '1 Action',
@@ -293,7 +293,7 @@ class SrdMagicWands {
       diffHighlights: [
         '2024: Updated chaotic d100 table rules.',
       ],
-      tags: ['wand', 'wonder', 'wild magic', 'chaotic', 'fun'],
+      tags: ['wand', 'wonder', 'chaotic', 'fun'],
     ),
 
     // Wand of Polymorph

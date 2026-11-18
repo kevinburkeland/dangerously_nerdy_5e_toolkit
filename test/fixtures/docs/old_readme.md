@@ -211,7 +211,7 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - **Subcategory Filtering**: Filter the compendium rules view by `All Tables`, `Rollable Tables`, or `Data & Reference Tables`.
   - **Native Tabular Rendering**: Formats compendium tables into scrollable, responsive Flutter `Table` widgets with styled headers, borders, and Markdown cells instead of plain text or unstructured bullet lists.
 * **🎲 Table Index & Loot Oracle**:
-  - Interactive rolling for all 5e SRD tables: Treasure Hoards (CR 0–4, 5–10, 11–16, 17+), Magic Item Tables A–I, Gemstones (10 gp to 5,000 gp), Art Objects (25 gp to 7,500 gp), 100 Trinkets, Wild Magic Surge, Madness, Confusion, and Reincarnate.
+  - Interactive rolling for all 5e SRD tables: Treasure Hoards (CR 0–4, 5–10, 11–16, 17+), Magic Item Tables A–I, Gemstones (10 gp to 5,000 gp), Art Objects (25 gp to 7,500 gp), 100 Trinkets, Madness, Confusion, and Reincarnate.
   - Integrated Party Share Calculator with automatic coin liquidation.
 
 ---
@@ -250,7 +250,7 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   2. **Accuracy %**: Hit Chance %, Advantage Hit %, Disadvantage Hit %, and Crit Rate % on a 0%–100% bounded accuracy scale.
   3. **Damage on Hit Breakdown**: Regular Hit Damage, Critical Hit Damage, and Miss / Graze Damage output per attack.
 * **2024 Weapon Masteries**: Full offensive modeling for **Graze**, **Vex**, **Nick**, and **Topple**.
-* **Cantrip & Weapon Damage Presets**: Built-in SRD damage actions including *Eldritch Blast* (with **Agonizing Blast** +Mod toggle), *Fire Bolt*, *Ray of Frost*, *Sacred Flame*, *Chill Touch*, *Shocking Grasp*, *Poison Spray*, *Acid Splash*, *Vicious Mockery*, *Produce Flame*, *Thorn Whip*, *Shillelagh*, and *Magic Stone*, plus standard weapons and magic weapons (*Flame Tongue*, *Sun Blade*, *Frost Brand*, *Holy Avenger*). Arbitrary custom or homebrew attack profiles are fully supported.
+* **Cantrip & Weapon Damage Presets**: Built-in SRD damage actions including *Eldritch Blast* (with **Agonizing Blast** +Mod toggle), *Fire Bolt*, *Ray of Frost*, *Sacred Flame*, *Chill Touch*, *Shocking Grasp*, *Poison Spray*, *Acid Splash*, *Vicious Mockery*, *Produce Flame*, *Shillelagh*, and *Magic Stone*, plus standard weapons and magic weapons (*Flame Tongue*, *Sun Blade*, *Frost Brand*, *Holy Avenger*). Arbitrary custom or homebrew attack profiles are fully supported.
 
 ---
 

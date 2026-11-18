@@ -206,21 +206,21 @@ Primary Ability: Intelligence
     group('Subclass Ingestion', () {
       test('representative valid subclass is identified and converts to Subclass', () {
         const source = '''
-### Echo Knight
+### Iron Vanguard
 Fighter Archetype
 
-A mysterious warrior who summons temporal echos to confuse and conquer foes.
+A stalwart warrior who anchors the frontline with unyielding discipline.
 
-### Manifest Echo
-3rd-Level Echo Knight Feature
-You can use a bonus action to magically manifest an echo of yourself in an unoccupied space.
+### Bulwark Stance
+3rd-Level Iron Vanguard Feature
+You can use a bonus action to brace your shield and fortify your stance.
 ''';
         final result = service.parse(source);
         expect(result.candidates.length, equals(1));
         final candidate = result.candidates.first;
 
         expect(candidate.targetTypeKey, equals('subclass'));
-        expect(candidate.fields['name']?.value, equals('Echo Knight'));
+        expect(candidate.fields['name']?.value, equals('Iron Vanguard'));
         expect(candidate.fields['classSlug']?.value, equals('fighter'));
 
         final validation = service.validate(candidate);
@@ -231,9 +231,9 @@ You can use a bonus action to magically manifest an echo of yourself in an unocc
         expect(conversion.entity, isA<Subclass>());
 
         final sub = conversion.entity as Subclass;
-        expect(sub.name, equals('Echo Knight'));
+        expect(sub.name, equals('Iron Vanguard'));
         expect(sub.classSlug, equals('fighter'));
-        expect(sub.featuresMarkdown, contains('Manifest Echo'));
+        expect(sub.featuresMarkdown, contains('Bulwark Stance'));
       });
 
       test('subclass missing parent class fails validation until user selects it', () {

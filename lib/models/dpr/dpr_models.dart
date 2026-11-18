@@ -603,44 +603,6 @@ class DprWeaponPreset {
         isRanged: true,
         isCantrip: true),
 
-    // Thorn Whip
-    DprWeaponPreset(
-        id: 'thorn_whip_1',
-        name: 'Thorn Whip (1d6 Piercing, Lvl 1-4)',
-        category: 'Damage Cantrip',
-        diceCount: 1,
-        diceSides: 6,
-        damageType: 'piercing',
-        isRanged: true,
-        isCantrip: true),
-    DprWeaponPreset(
-        id: 'thorn_whip_2',
-        name: 'Thorn Whip (2d6 Piercing, Lvl 5-10)',
-        category: 'Damage Cantrip',
-        diceCount: 2,
-        diceSides: 6,
-        damageType: 'piercing',
-        isRanged: true,
-        isCantrip: true),
-    DprWeaponPreset(
-        id: 'thorn_whip_3',
-        name: 'Thorn Whip (3d6 Piercing, Lvl 11-16)',
-        category: 'Damage Cantrip',
-        diceCount: 3,
-        diceSides: 6,
-        damageType: 'piercing',
-        isRanged: true,
-        isCantrip: true),
-    DprWeaponPreset(
-        id: 'thorn_whip_4',
-        name: 'Thorn Whip (4d6 Piercing, Lvl 17-20)',
-        category: 'Damage Cantrip',
-        diceCount: 4,
-        diceSides: 6,
-        damageType: 'piercing',
-        isRanged: true,
-        isCantrip: true),
-
     // Weapon Enhancing & Ranged Utility Cantrips
     DprWeaponPreset(
         id: 'shillelagh',

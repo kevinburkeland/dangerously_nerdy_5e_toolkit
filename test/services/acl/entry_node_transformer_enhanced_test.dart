@@ -62,7 +62,7 @@ void main() {
     test('processes tags in table colLabels and captions', () {
       final tableNode = {
         'type': 'table',
-        'caption': 'Roll on {@table Wild Magic}',
+        'caption': 'Roll on {@table Chaos Spark}',
         'colLabels': ['{@dice d8}', 'Damage Type'],
         'rows': [
           [1, 'Acid'],
@@ -71,7 +71,7 @@ void main() {
       };
 
       final result = transformer.transformEntries(tableNode);
-      expect(result.markdown, contains('**Roll on **Wild Magic****'));
+      expect(result.markdown, contains('**Roll on **Chaos Spark****'));
       expect(result.markdown, contains('| **`d8`** | Damage Type |'));
       expect(result.markdown, isNot(contains('{@dice')));
       expect(result.markdown, isNot(contains('{@table')));

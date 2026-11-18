@@ -42,9 +42,9 @@ renders party member vitals and AC | exercised only lib/widgets/dm_dashboard/dm_
 renders without overflow under 2.0x dynamic type scaling | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 respects disableAnimations for reduced motion preferences | exercised only lib/presentation/core/accessible_action_tile.dart, unreachable from lib/main.dart; removed in Cleanup slice 6
 Ensures no files in lib/infrastructure/dtos/ import Flutter-bound packages | Restored original test name in Bonus slice 2
-11. Booming Blade is absent from bundled DPR presets | renamed to "11. Non-SRD cantrip 1 is absent from bundled DPR presets" in Cleanup slice 11
-12. Green-Flame Blade is absent from bundled DPR presets | renamed to "12. Non-SRD cantrip 2 is absent from bundled DPR presets" in Cleanup slice 11
-14. User-imported Booming Blade and Green-Flame Blade remain supported | renamed to "14. User-imported custom cantrips remain supported" in Cleanup slice 11
+11. Booming Blade is absent from bundled DPR presets | removed for SRD compliance in Cleanup slice 13
+12. Green-Flame Blade is absent from bundled DPR presets | removed for SRD compliance in Cleanup slice 13
+14. User-imported Booming Blade and Green-Flame Blade remain supported | removed for SRD compliance in Cleanup slice 13
 ExhaustionState | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
 calculates 2014 cumulative tier descriptions correctly | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
 calculates 2024 linear penalties correctly | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
@@ -126,3 +126,10 @@ round-trips arbitrary unknown homebrew fields with 100% fidelity | replaced by C
 strictly clamps level between 1 and 20 and strength between 1 and 30 | removed level/strength clamps in Cleanup slice 12 Fix 8.1
 safely defaults missing or erroneous keys without throwing TypeErrors | replaced by CharacterDto thin codec tests in Cleanup slice 12 Fix 8.1
 supports copyWith and value equality | removed copyWith and equality from CharacterDto in Cleanup slice 12 Fix 8.1
+Wild Magic Surge table covers all rolls 1 through 100 | removed for SRD compliance in Cleanup slice 13
+switches to Quick Rollers tab and dispenses trinket and wild magic | removed for SRD compliance in Cleanup slice 13
+4. Sorcerer with divine magic origin receives full Cleric spell list in getExpandedSpells | removed for SRD compliance in Cleanup slice 13
+5. isExpandedSpell returns true for Cleric spells for Sorcerers with divine magic origin | removed for SRD compliance in Cleanup slice 13
+7. Character creation spell pool for Sorcerer with divine magic origin includes Cleric cantrips & 1st-level spells | removed for SRD compliance in Cleanup slice 13
+castSpell with Armor of Agathys on Warlock sets temp HP and expends pact slot | removed for SRD compliance in Cleanup slice 13
+Warlock casting Armor of Agathys auto-upcasts to Pact Magic level without warning or modal | removed for SRD compliance in Cleanup slice 13
