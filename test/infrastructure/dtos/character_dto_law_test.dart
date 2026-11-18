@@ -49,6 +49,7 @@ void main() {
     }) {
       final rng = Random(seed);
       final levels = [-5, 0, 1, 3, 5, 10, 20, 25, 99, 'bad', null];
+      final classLevels = [-5, 0, 1, 3, 5, 10, 20, 25, 99, null];
       final strengths = [-10, 0, 1, 8, 10, 18, 30, 45, 99, 'bad', null];
       final names = [
         'Valeros',
@@ -64,12 +65,14 @@ void main() {
         final m = <String, dynamic>{
           'id': i % 7 == 0 ? {'slug': 'char_$i'} : 'char_$i',
           'level': levels[rng.nextInt(levels.length)],
-          'classes': [
-            {
-              'classRef': {'slug': 'fighter', 'displayName': 'Fighter'},
-              'level': levels[rng.nextInt(levels.length)],
-            },
-          ],
+          'progression': {
+            'classes': [
+              {
+                'classRef': {'slug': 'fighter', 'displayName': 'Fighter'},
+                'level': classLevels[rng.nextInt(classLevels.length)],
+              },
+            ],
+          },
           'strength': strengths[rng.nextInt(strengths.length)],
           'dexterity': rng.nextInt(25) + 1,
           'constitution': rng.nextInt(25) + 1,
