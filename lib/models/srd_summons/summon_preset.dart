@@ -2,6 +2,8 @@ import '../monster_codex_data.dart';
 import '../spellbook_data.dart';
 import 'minion_stat_block.dart';
 
+typedef ZzCb = void Function(Object? sheet);
+
 class SummonPreset {
   final String id;
   final String? spellId;
