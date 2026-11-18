@@ -181,7 +181,7 @@ flutter test test/application/services/room_state_reconciliation_service_test.da
 flutter test test/application/services/aggregate_convergence_pass_4_test.dart
 
 # Rules engine & dual-ruleset divergence tests (< 3s)
-flutter test test/services/rules/dual_ruleset_divergence_test.dart test/services/rules/character_evaluation_engine_test.dart
+flutter test test/services/rules/dual_ruleset_divergence_test.dart test/services/rules/character_progression_engine_test.dart
 
 # Static analysis (must report zero warnings/errors)
 flutter analyze

@@ -45,3 +45,79 @@ Ensures no files in lib/infrastructure/dtos/ import Flutter-bound packages | Res
 11. Booming Blade is absent from bundled DPR presets | renamed to "11. Non-SRD cantrip 1 is absent from bundled DPR presets" in Cleanup slice 11
 12. Green-Flame Blade is absent from bundled DPR presets | renamed to "12. Non-SRD cantrip 2 is absent from bundled DPR presets" in Cleanup slice 11
 14. User-imported Booming Blade and Green-Flame Blade remain supported | renamed to "14. User-imported custom cantrips remain supported" in Cleanup slice 11
+ExhaustionState | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
+calculates 2014 cumulative tier descriptions correctly | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
+calculates 2024 linear penalties correctly | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
+handles level 6 death on both rulesets | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
+increment, decrement, and reset helpers behave predictably | exact copy of vtt-ruleset-dnd5e/test/mechanics/exhaustion_state_test.dart; removed in Cleanup slice 12
+Weapon Mastery | exact copy of vtt-ruleset-dnd5e/test/mechanics/weapon_mastery_test.dart; removed in Cleanup slice 12
+enum properties expose display names and summaries | exact copy of vtt-ruleset-dnd5e/test/mechanics/weapon_mastery_test.dart; removed in Cleanup slice 12
+validates prerequisite requirements on 2024 ruleset | exact copy of vtt-ruleset-dnd5e/test/mechanics/weapon_mastery_test.dart; removed in Cleanup slice 12
+validates ruleset 2014 disallows weapon mastery | exact copy of vtt-ruleset-dnd5e/test/mechanics/weapon_mastery_test.dart; removed in Cleanup slice 12
+D&D 5e Ruleset Modules (2014 RAW vs 2024 Revised) Invariants | exact copy of vtt-ruleset-dnd5e/test/modules/dnd_5e_ruleset_module_test.dart; removed in Cleanup slice 12
+verifies 5e attribute modifier calculations | exact copy of vtt-ruleset-dnd5e/test/modules/dnd_5e_ruleset_module_test.dart; removed in Cleanup slice 12
+verifies exhaustion mechanics differences | exact copy of vtt-ruleset-dnd5e/test/modules/dnd_5e_ruleset_module_test.dart; removed in Cleanup slice 12
+verifies potion consumption action cost inversion | exact copy of vtt-ruleset-dnd5e/test/modules/dnd_5e_ruleset_module_test.dart; removed in Cleanup slice 12
+verifies weapon masteries capability gating | exact copy of vtt-ruleset-dnd5e/test/modules/dnd_5e_ruleset_module_test.dart; removed in Cleanup slice 12
+RulesetEdition canonical value object parsing and conversions | exact copy of vtt-ruleset-dnd5e/test/modules/ruleset_engine_test.dart; removed in Cleanup slice 12
+RulesetEngine arbitration | exact copy of vtt-ruleset-dnd5e/test/modules/ruleset_engine_test.dart; removed in Cleanup slice 12
+RulesetEngine2014 designates potion consumption as DndActionCost.action | exact copy of vtt-ruleset-dnd5e/test/modules/ruleset_engine_test.dart; removed in Cleanup slice 12
+RulesetEngine2014 exhaustion speed reductions and fatal threshold | exact copy of vtt-ruleset-dnd5e/test/modules/ruleset_engine_test.dart; removed in Cleanup slice 12
+RulesetEngine2024 designates potion consumption as DndActionCost.bonusAction | exact copy of vtt-ruleset-dnd5e/test/modules/ruleset_engine_test.dart; removed in Cleanup slice 12
+RulesetEngine2024 scales d20 penalty linearly by -2 per level and triggers death at level 6 | exact copy of vtt-ruleset-dnd5e/test/modules/ruleset_engine_test.dart; removed in Cleanup slice 12
+D&D 5e Currency System Tests | subset duplicate of vtt-ruleset-dnd5e/test/currency/currency_system_test.dart; removed in Cleanup slice 12
+converts coin denominations accurately against gold standard | subset duplicate of vtt-ruleset-dnd5e/test/currency/currency_system_test.dart; removed in Cleanup slice 12
+exposes all 5 canonical coin denominations | subset duplicate of vtt-ruleset-dnd5e/test/currency/currency_system_test.dart; removed in Cleanup slice 12
+formats balances cleanly | subset duplicate of vtt-ruleset-dnd5e/test/currency/currency_system_test.dart; removed in Cleanup slice 12
+Attunement item bonuses are ignored if item is not attuned | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Barbarian Unarmored Defense calculates 10 + DEX + CON (allows shield) | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Calculates Skill modifiers and Proficiency multipliers (Proficient & Expertise) | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Calculates standard unarmored AC (10 + DEX) | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Character evaluation scales attunement slots dynamically via customProperties and feats | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+CharacterEvaluationEngine Tests | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Handaxe (Thrown) uses STR whereas Dagger (Finesse, Thrown) uses DEX if DEX > STR | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Medium Armor (Breastplate) caps DEX contribution at maxDexBonus (+2) | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Monk Unarmored Defense calculates 10 + DEX + WIS (disallowed if shield equipped) | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Plate Armor sets flat AC 18 and ignores DEX bonus | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Stat Overrides (Belt of Giant Strength) correctly override lower base stat when attuned | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+Subclass with attackAbilitySubstitution grant wielding magic weapon uses INT when INT > STR/DEX | subset duplicate of vtt-ruleset-dnd5e/test/evaluation/character_evaluation_test.dart; removed in Cleanup slice 12
+CharacterResourcePool Extension Tests | moved to vtt-ruleset-dnd5e/test/models/character_resource_pool_test.dart in Cleanup slice 12
+clamps death saves to 0-3 and exhaustion to 0-10 | moved to vtt-ruleset-dnd5e/test/models/character_resource_pool_test.dart in Cleanup slice 12
+composes EntityVitals and synchronizes vitals state via withVitals | moved to vtt-ruleset-dnd5e/test/models/character_resource_pool_test.dart in Cleanup slice 12
+copyWith preserves and updates extended fields with clamping | moved to vtt-ruleset-dnd5e/test/models/character_resource_pool_test.dart in Cleanup slice 12
+default values are initialized properly | moved to vtt-ruleset-dnd5e/test/models/character_resource_pool_test.dart in Cleanup slice 12
+toMap and fromMap preserve all extended fields round-trip | moved to vtt-ruleset-dnd5e/test/models/character_resource_pool_test.dart in Cleanup slice 12
+All factory constructors enforce deterministic grantId | moved to vtt-ruleset-dnd5e/test/models/feature_grant_fortification_test.dart in Cleanup slice 12
+FeatureGrant Fortification & Strict Required grantId Tests | moved to vtt-ruleset-dnd5e/test/models/feature_grant_fortification_test.dart in Cleanup slice 12
+Serialization toMap preserves grantId and fromMap handles legacy unkeyed maps safely | moved to vtt-ruleset-dnd5e/test/models/feature_grant_fortification_test.dart in Cleanup slice 12
+Cantrip Allocation Routing & Spellbook Definition Querying Tests | moved to vtt-ruleset-dnd5e/test/models/cantrip_allocation_routing_test.dart in Cleanup slice 12
+Natively granted cantrips and spellsKnown are merged without duplicates | moved to vtt-ruleset-dnd5e/test/models/cantrip_allocation_routing_test.dart in Cleanup slice 12
+Non-cantrip named grant keys correctly route 0th-level spells to cantrips getter | moved to vtt-ruleset-dnd5e/test/models/cantrip_allocation_routing_test.dart in Cleanup slice 12
+EvaluationMath Domain Model Tests | moved to vtt-ruleset-dnd5e/test/models/spell_monster_equipment_test.dart in Cleanup slice 12
+copyWith accepts and assigns isAttackRoll, requiresSave, and scalingFormula | moved to vtt-ruleset-dnd5e/test/models/spell_monster_equipment_test.dart in Cleanup slice 12
+toMap and fromMap serialize and deserialize flags cleanly | moved to vtt-ruleset-dnd5e/test/models/spell_monster_equipment_test.dart in Cleanup slice 12
+D&D 5e Combat Resolver & Vitals Invariants | moved to vtt-ruleset-dnd5e/test/combat/dnd_5e_combat_resolver_test.dart in Cleanup slice 12
+executes DprSimulator.runWithResolver using Dnd5eCombatResolver | moved to vtt-ruleset-dnd5e/test/combat/dnd_5e_combat_resolver_test.dart in Cleanup slice 12
+resolves 5e RAW vitals modifications and massive damage instant death | moved to vtt-ruleset-dnd5e/test/combat/dnd_5e_combat_resolver_test.dart in Cleanup slice 12
+resolves attacks against target AC with crits and fumbles | moved to vtt-ruleset-dnd5e/test/combat/dnd_5e_combat_resolver_test.dart in Cleanup slice 12
+Ability Modifier calculation matches 5e RAW floor((score-10)/2) | moved to vtt-ruleset-dnd5e/test/attributes/dnd_5e_rules_engine_test.dart in Cleanup slice 12
+Dnd5eScoreMath Extension Tests | moved to vtt-ruleset-dnd5e/test/attributes/dnd_5e_rules_engine_test.dart in Cleanup slice 12
+Formatted modifier strings include explicit sign | moved to vtt-ruleset-dnd5e/test/attributes/dnd_5e_rules_engine_test.dart in Cleanup slice 12
+Proficiency Bonus scales correctly from Level 1 to 20 | moved to vtt-ruleset-dnd5e/test/attributes/dnd_5e_rules_engine_test.dart in Cleanup slice 12
+4-Phase Pipeline: Phase A bounds scores [1, 30] and Phase B ingests embedded bonus scores | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+4-Phase Pipeline: Phase C applies additions then overrides then clamps ceiling | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+CharacterStatCalculator Tests | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+Gauntlets of Ogre Power overrides STR to 19 when attuned | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+attunement requirement enforces stat bonus only when attuned | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+computes Barbarian Unarmored Defense (10 + DEX + CON) | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+computes Medium Armor with DEX capped at +2, plus Shield | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+computes unarmored AC (10 + DEX mod) | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+finesse weapon picks DEX over STR when DEX is higher | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+missing equipment reference falls back gracefully to UnresolvedReference stub without crash | moved to vtt-ruleset-dnd5e/test/evaluation/character_stat_calculator_test.dart in Cleanup slice 12
+LevelUpPipeline Tests | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
+advances current class with fixed average HP | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
+advances level with ASI (+2 to INT) | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
+advances level with Tough Feat (+2 HP per level) | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
+multiclass spell slots aggregate correctly (Wizard 3 / Paladin 2) | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
+multiclassing succeeds when prerequisites are satisfied | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
+multiclassing validates prerequisites and rejects if below 13 | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12

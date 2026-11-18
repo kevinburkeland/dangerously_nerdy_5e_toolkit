@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-17
+- Cleanup slice 12: Move pure ruleset tests to vtt-ruleset-dnd5e, re-pin ruleset to b7936cfe772e14ce6c672843652ce917b10f812e, and add ruleset_tests_home_test compliance bar (Fix 6.1, Fix 6.3).
 - Cleanup slice 12: Models declare no callback types, remove kRuleP2Allowlist, and replace SummonPreset BudgetCalculator with pure table data (Fix 5.1).
 - Cleanup slice 12: Bump minimatch npm override to 11.0.9, review five N4 overrides and extend review dates to 2026-12-17, update firebase npm dependency to 13.4.0, update actions/setup-java pin to v6.3.0, and upgrade pub dependencies (Fix 1.1, Fix 1.2).
 
