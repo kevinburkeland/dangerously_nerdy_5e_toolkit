@@ -64,6 +64,12 @@ void main() {
         final m = <String, dynamic>{
           'id': i % 7 == 0 ? {'slug': 'char_$i'} : 'char_$i',
           'level': levels[rng.nextInt(levels.length)],
+          'classes': [
+            {
+              'classRef': {'slug': 'fighter', 'displayName': 'Fighter'},
+              'level': levels[rng.nextInt(levels.length)],
+            },
+          ],
           'strength': strengths[rng.nextInt(strengths.length)],
           'dexterity': rng.nextInt(25) + 1,
           'constitution': rng.nextInt(25) + 1,
