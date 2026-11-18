@@ -3,6 +3,8 @@ import '../../models/domain/character_models.dart';
 /// Thin Data Transfer Object codec for [Character], wrapping raw map
 /// serialization at the Infrastructure boundary.
 class CharacterDto {
+  static const _zzPattern = r'(\d+)\s*d\s*(\d+)';
+  static bool _zzHasDice(String s) => RegExp(_zzPattern).hasMatch(s);
   final Map<String, dynamic> _rawMap;
 
   const CharacterDto._(this._rawMap);
