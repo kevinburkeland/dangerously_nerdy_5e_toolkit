@@ -4,27 +4,29 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../support/dart_string_literal_reader.dart';
 
 bool isDicePattern(String s) {
-  // Condition 1: Contains at least one regex escape or group construct:
-  // \d, \s, \w, \b (or \D, \S, \W, \B) or (?:, (?=, (?!, (?<
-  final c1 = RegExp(r'\\[dswbDSWB]|\(\?(?:[:=!]|<)').hasMatch(s);
+  // Condition 1: Contains at least one regex escape, digit character class, or group construct:
+  // \d, \s, \w, \b (or \D, \S, \W, \B), [0-9], or (?:, (?=, (?!, (?<
+  final c1 = RegExp(r'\\[dswbDSWB]|\[0-9\]|\(\?(?:[:=!]|<)').hasMatch(s);
   if (!c1) return false;
 
-  // Condition 2: Has a standalone letter d or D (or d%) adjacent to a regex digit token
-  // (e.g. \d, \d+, [0-9], [0-9]+, or an explicit digit), separated by at most optional
-  // whitespace or grouping parens, OR a class of dice faces d(?:4|6|8|10|12|20|100).
-  // The die letter d or D must NOT be preceded by backslash \ (which would make it \d).
-  const dieLetter = r'(?<![a-zA-Z_\\])[dD](?![a-zA-Z_])';
+  // Condition 2: Has a standalone die letter (d, D, or a character class whose members
+  // are only d/D such as [d], [D], [dD], [Dd]) adjacent to a regex digit token
+  // (\d, [0-9], digits, with optional quantifiers +, *, ?, {m,n}), separated by
+  // whitespace/separator escapes or group brackets, OR d%, OR a face class d(?:4|6|...).
+  const dieClass = r'\[[dD]+\]';
+  const dieLetterStandalone = r'(?:' + dieClass + r'|(?<![a-zA-Z_\\\[])[dD](?![a-zA-Z_\]]))';
+  const dieLetterAfterDigit = r'(?:' + dieClass + r'|(?<!\\)(?<!\[)[dD](?![a-zA-Z_\]]))';
   const faceClass = r'd\(\?:\s*(?:4|6|8|10|12|20|100)(?:\s*\|\s*(?:4|6|8|10|12|20|100))*\)';
-  const digitToken = r'(?:\\[dD]|\[0-9\]|\d+)(?:\+)?';
-  const sep = r'(?:\s*|\\s\*|\(|\)|\[|\/)*';
+  const digitToken = r'(?:\\[dD]|\[0-9\]|\d+)(?:\{\d+(?:,\d*)?\}|[+*?])?';
+  const sep = r'(?:\\s(?:\{\d+(?:,\d*)?\}|[+*?])?| (?:\{\d+(?:,\d*)?\}|[+*?])?|\(\?:|\(|\)|\/)*';
 
   final c2 = RegExp(
     '(?:'
-    '(?:$digitToken$sep$dieLetter)'
+    '(?:$digitToken$sep$dieLetterAfterDigit)'
     '|'
-    '(?:$dieLetter$sep$digitToken)'
+    '(?:$dieLetterStandalone$sep$digitToken)'
     '|'
-    '(?:$dieLetter%)'
+    '(?:$dieLetterStandalone%)'
     '|'
     '(?:$faceClass)'
     ')',
@@ -259,6 +261,73 @@ void parse(String text) {
         expect(v.length, 2);
         expect(v[0], contains('Direct .indexOf("d")'));
         expect(v[1], contains('Direct .split("d")'));
+      });
+
+      test('Fix 4.1 generated law: every die-letter x separator x digit-token combination is flagged', () {
+        const dieLetters = ['d', 'D', '[d]', '[D]', '[dD]', '[Dd]'];
+        const seps = [
+          '',
+          ' ',
+          r'\s',
+          r'\s*',
+          r'\s+',
+          r'\s?',
+          ' ?',
+          ' *',
+          ' +',
+          r'\s{0,2}',
+          ' {0,2}',
+        ];
+        const digitTokens = [
+          r'\d+',
+          r'\d',
+          r'[0-9]+',
+          r'(\d+)',
+          r'(?:\d+)',
+          r'\d{1,3}',
+        ];
+
+        final misses = <String>[];
+        var total = 0;
+        for (final dl in dieLetters) {
+          for (final sep in seps) {
+            for (final dt in digitTokens) {
+              total++;
+              final pat = '$dt$sep$dl$sep$dt';
+              if (!isDicePattern(pat)) {
+                misses.add(pat);
+              }
+            }
+          }
+        }
+        expect(
+          misses,
+          isEmpty,
+          reason: 'Fix 4.1 dice law: missed ${misses.length} of $total combinations; first misses: ${misses.take(10).join(', ')}',
+        );
+      });
+
+      test('Fix 4.1 controls: must-flag and must-not-flag spellings', () {
+        const mustFlag = [
+          r'(\d+)[dD](\d+)',
+          r'[dD]\d+',
+          r'(\d+)\s+d\s+(\d+)',
+          r'(\d+) ?d ?(\d+)',
+          r'\d+[Dd]\d+',
+          r'(\d+)[d](\d+)',
+          r'(\d{1,2})\s{0,2}d\s{0,2}(\d{1,3})',
+        ];
+        for (final pat in mustFlag) {
+          expect(isDicePattern(pat), isTrue, reason: 'Must flag: $pat');
+        }
+
+        const mustNotFlag = [
+          r'[a-d]\d+',
+          r'[\dD]',
+        ];
+        for (final pat in mustNotFlag) {
+          expect(isDicePattern(pat), isFalse, reason: 'Must NOT flag: $pat');
+        }
       });
     });
   });

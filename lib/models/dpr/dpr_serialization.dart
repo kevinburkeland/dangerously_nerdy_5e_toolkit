@@ -53,8 +53,11 @@ extension DprAttackActionSerialization on DprAttackAction {
         ((map['secondaryDiceCount'] as num?)?.toInt() ?? 0).clamp(0, 100);
     final secDSides =
         ((map['secondaryDiceSides'] as num?)?.toInt() ?? 0).clamp(0, 100);
-    final critThresh =
-        ((map['critThreshold'] as num?)?.toInt() ?? 20).clamp(1, 20);
+    final rawCritThresh = (map['critThreshold'] as num?)?.toInt() ?? 20;
+    if (rawCritThresh < 2 || rawCritThresh > 20) {
+      throw RangeError.range(rawCritThresh, 2, 20, 'critThreshold');
+    }
+    final critThresh = rawCritThresh;
     final apr = ((map['attacksPerRound'] as num?)?.toInt() ?? 1).clamp(0, 50);
 
     return DprAttackAction(

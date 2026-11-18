@@ -101,6 +101,89 @@ void main() {
           closeTo(0.19, 0.001));
     });
 
+    test('Fix 4.3: critThreshold outside 2..20 throws ArgumentError instead of clamping', () {
+      expect(
+        () => DprCalculatorEngine.calculateHitProbability(
+          5,
+          15,
+          AdvantageType.normal,
+          critThreshold: 1,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => DprCalculatorEngine.calculateHitProbability(
+          5,
+          15,
+          AdvantageType.normal,
+          critThreshold: 21,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => DprCalculatorEngine.calculateCritProbability(
+          AdvantageType.normal,
+          critThreshold: 1,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => DprCalculatorEngine.calculateCritProbability(
+          AdvantageType.normal,
+          critThreshold: 21,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => DprCalculatorEngine.calculateSingleAttackDpr(
+          const DprAttackAction(
+            id: 'bad_crit_low',
+            name: 'Bad Crit Low',
+            attackBonus: 5,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 3,
+            critThreshold: 1,
+          ),
+          15,
+          AdvantageType.normal,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => DprCalculatorEngine.calculateSingleAttackDpr(
+          const DprAttackAction(
+            id: 'bad_crit_high',
+            name: 'Bad Crit High',
+            attackBonus: 5,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 3,
+            critThreshold: 21,
+          ),
+          15,
+          AdvantageType.normal,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => DprAttackActionSerialization.fromMap({'critThreshold': 1}),
+        throwsArgumentError,
+      );
+      expect(
+        () => DprAttackActionSerialization.fromMap({'critThreshold': 21}),
+        throwsArgumentError,
+      );
+      // Control: 19 gives exact Champion crit probability
+      expect(
+        DprCalculatorEngine.calculateCritProbability(
+          AdvantageType.normal,
+          critThreshold: 19,
+        ),
+        closeTo(0.10, 1e-12),
+      );
+    });
+
     test('calculateSingleAttackDpr evaluates basic weapon attack DPR', () {
       // 1d8 + 3 (mod +3, to-hit +5) vs AC 15
       // Hit prob = (21 - 10)/20 = 0.55. Crit prob = 0.05. Regular hit prob = 0.50.

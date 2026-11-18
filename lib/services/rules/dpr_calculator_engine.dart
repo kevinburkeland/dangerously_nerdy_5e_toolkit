@@ -53,7 +53,7 @@ class DprCalculatorEngine {
     return computeAttackOdds(
       attackBonus: effectiveAttackBonus,
       targetAc: targetAc,
-      critThreshold: critThreshold.clamp(2, 20),
+      critThreshold: critThreshold,
       mode: _toRollMode(advantage),
       rerollOnes: hasHalflingLuck,
     ).hit;
@@ -68,7 +68,7 @@ class DprCalculatorEngine {
     return computeAttackOdds(
       attackBonus: 0,
       targetAc: 100,
-      critThreshold: critThreshold.clamp(2, 20),
+      critThreshold: critThreshold,
       mode: _toRollMode(advantage),
       rerollOnes: hasHalflingLuck,
     ).crit;
@@ -172,7 +172,7 @@ class DprCalculatorEngine {
     final odds = computeAttackOdds(
       attackBonus: effBonus,
       targetAc: targetAc,
-      critThreshold: attack.critThreshold.clamp(2, 20),
+      critThreshold: attack.critThreshold,
       mode: _toRollMode(advantage),
       rerollOnes: luck,
     );

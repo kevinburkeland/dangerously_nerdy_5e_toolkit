@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/dart_directive_reader.dart';
 
 /// Strips block comments, line comments, and string literal contents
 /// (preserving `${...}` interpolation code) from [source], preserving line count.
@@ -126,77 +128,251 @@ List<String> checkRuleP1(String filePath, String source) {
   return violations;
 }
 
-List<String> checkRuleP2(String filePath, String source) {
-  final stripped = stripCommentsAndStringsPreservingLines(source);
-  final lines = stripped.split('\n');
+final _modernFuncTypedefRegex = RegExp(
+  r'\btypedef\s+([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*=\s*([^;]*\bFunction\b[^;]*);',
+);
+final _oldFuncTypedefRegex = RegExp(
+  r'\btypedef\s+(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?([A-Za-z0-9_]+)\s*\([^;]*\)\s*;',
+);
+
+/// Extracts top-level and class-member statements terminated by `;` (at brace
+/// depth 0 or 1), collapsing internal newlines/whitespace to single spaces and
+/// recording the 1-based line where each statement starts.
+List<({int startLine, String text})> _extractTopAndMemberStatements(
+  String stripped,
+) {
+  final statements = <({int startLine, String text})>[];
+  var depth = 0;
+  var line = 1;
+  var stmtStartLine = -1;
+  final buf = StringBuffer();
+
+  void flushStmt() {
+    final normalized = buf.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (normalized.isNotEmpty && stmtStartLine > 0) {
+      statements.add((startLine: stmtStartLine, text: normalized));
+    }
+    buf.clear();
+    stmtStartLine = -1;
+  }
+
+  for (var i = 0; i < stripped.length; i++) {
+    final c = stripped[i];
+    if (c == '\n') {
+      if (stmtStartLine > 0 && depth <= 1) {
+        buf.write(' ');
+      }
+      line++;
+      continue;
+    }
+
+    if (c == '{') {
+      if (depth == 0) {
+        // Opening a class/mixin/extension/function body: discard header
+        buf.clear();
+        stmtStartLine = -1;
+      } else if (depth == 1) {
+        // Opening a method/getter body inside a class: discard header
+        buf.clear();
+        stmtStartLine = -1;
+      }
+      depth++;
+      continue;
+    }
+
+    if (c == '}') {
+      if (depth > 0) depth--;
+      if (depth <= 1) {
+        buf.clear();
+        stmtStartLine = -1;
+      }
+      continue;
+    }
+
+    if (depth > 1) continue;
+
+    if (c == ';') {
+      if (stmtStartLine > 0) {
+        buf.write(';');
+        flushStmt();
+      }
+      continue;
+    }
+
+    if (stmtStartLine == -1) {
+      if (c.trim().isEmpty) continue;
+      stmtStartLine = line;
+    }
+    buf.write(c);
+  }
+
+  return statements;
+}
+
+Set<String> collectFunctionTypedefs(String source) {
+  final stripped = stripCommentsAndStringsPreservingNewlines(source);
+  final stmts = _extractTopAndMemberStatements(stripped);
+  final names = <String>{};
+  for (final stmt in stmts) {
+    final t = stmt.text;
+    if (!t.startsWith('typedef ')) continue;
+    final m1 = _modernFuncTypedefRegex.firstMatch(t);
+    if (m1 != null) {
+      names.add(m1.group(1)!);
+      continue;
+    }
+    final m2 = _oldFuncTypedefRegex.firstMatch(t);
+    if (m2 != null) {
+      names.add(m2.group(1)!);
+    }
+  }
+  return names;
+}
+
+Set<String> collectAllProjectFunctionTypedefs() {
+  final names = <String>{};
+  void scanDir(Directory dir) {
+    if (!dir.existsSync()) {
+      throw StateError('Required Dart library directory missing: ${dir.path}');
+    }
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is File && entity.path.endsWith('.dart')) {
+        names.addAll(collectFunctionTypedefs(entity.readAsStringSync()));
+      }
+    }
+  }
+
+  // 1. App lib/
+  scanDir(Directory('lib'));
+
+  // 2. External packages vtt_engine_core and vtt_ruleset_dnd5e via package_config.json
+  final pkgConfigFile = File('.dart_tool/package_config.json');
+  if (!pkgConfigFile.existsSync()) {
+    throw StateError('Missing .dart_tool/package_config.json (fail-closed)');
+  }
+  final decoded = jsonDecode(pkgConfigFile.readAsStringSync());
+  if (decoded is! Map<String, dynamic> || decoded['packages'] is! List) {
+    throw StateError('Malformed .dart_tool/package_config.json');
+  }
+  final pkgConfigDir = pkgConfigFile.parent.absolute.uri;
+  final packages = (decoded['packages'] as List).cast<Map<String, dynamic>>();
+
+  for (final reqPkg in const ['vtt_engine_core', 'vtt_ruleset_dnd5e']) {
+    final entry = packages.cast<Map<String, dynamic>?>().firstWhere(
+          (p) => p?['name'] == reqPkg,
+          orElse: () => null,
+        );
+    if (entry == null) {
+      throw StateError('Package $reqPkg not found in package_config.json');
+    }
+    final rootUriStr = entry['rootUri'] as String?;
+    final pkgUriStr = (entry['packageUri'] as String?) ?? 'lib/';
+    if (rootUriStr == null) {
+      throw StateError('Package $reqPkg missing rootUri in package_config.json');
+    }
+    final rootUri = pkgConfigDir.resolve(rootUriStr);
+    final libUri = rootUri.resolve(pkgUriStr);
+    scanDir(Directory.fromUri(libUri));
+  }
+
+  return names;
+}
+
+List<String> checkRuleP2(
+  String filePath,
+  String source, {
+  Set<String> extraTypedefs = const {},
+}) {
+  final stripped = stripCommentsAndStringsPreservingNewlines(source);
+  final stmts = _extractTopAndMemberStatements(stripped);
   final violations = <String>[];
 
-  // Modern typedef: typedef Name = ... Function ...;
-  final modernFuncTypedefRegex = RegExp(
-    r'\btypedef\s+([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*=\s*([^;]*\bFunction\b[^;]*);',
-  );
-  // Old-style typedef: typedef ReturnType Name(...); or typedef Name(...);
-  final oldFuncTypedefRegex = RegExp(
-    r'\btypedef\s+(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?([A-Za-z0-9_]+)\s*\([^;]*\)\s*;',
-  );
+  final typedefNames = <String>{
+    ...extraTypedefs,
+    ...collectFunctionTypedefs(source),
+  };
 
-  final typedefNames = <String>{};
-  for (final match in modernFuncTypedefRegex.allMatches(stripped)) {
-    typedefNames.add(match.group(1)!);
-  }
-  for (final match in oldFuncTypedefRegex.allMatches(stripped)) {
-    typedefNames.add(match.group(1)!);
-  }
-
-  // Direct Function field: with or without initializer (= ...;)
-  final directFunctionRegex = RegExp(
-    r'\b(?:(?:static|final|late|const)\s+)*(?:(?:void|[A-Za-z0-9_<>?]+)\s+)?Function(?:\s*\([^)]*\))?\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
+  // Direct Function field (including nested in generics such as List<void Function()>)
+  final directFunctionFieldRegex = RegExp(
+    r'\bFunction\b',
   );
 
-  // Typedef function fields: with or without initializer (= ...;)
-  final typedefFieldRegexes = typedefNames.map((name) {
-    return RegExp(
-      r'\b(?:(?:static|final|late|const)\s+)*' +
-          RegExp.escape(name) +
-          r'\s*[?]?\s*[A-Za-z0-9_]+\s*(?:=[^;]+)?;',
-    );
-  }).toList();
+  // Match any typedef name appearing as a type identifier in a field declaration
+  final typedefWordRegexes = typedefNames
+      .map((name) => RegExp('\\b${RegExp.escape(name)}\\b'))
+      .toList();
 
-  for (int idx = 0; idx < lines.length; idx++) {
-    final line = lines[idx];
-    final trimmed = line.trim();
+  for (final stmt in stmts) {
+    final t = stmt.text;
 
-    if (trimmed.startsWith('typedef ') || trimmed.startsWith('typedef\t')) {
-      final modernMatch = modernFuncTypedefRegex.firstMatch(line);
+    if (t.startsWith('typedef ')) {
+      final modernMatch = _modernFuncTypedefRegex.firstMatch(t);
       if (modernMatch != null) {
         violations.add(
-            '$filePath:${idx + 1}: function typedef in models (${modernMatch.group(1)})');
+            '$filePath:${stmt.startLine}: function typedef in models (${modernMatch.group(1)})');
         continue;
       }
-      final oldMatch = oldFuncTypedefRegex.firstMatch(line);
+      final oldMatch = _oldFuncTypedefRegex.firstMatch(t);
       if (oldMatch != null) {
         violations.add(
-            '$filePath:${idx + 1}: function typedef in models (${oldMatch.group(1)})');
+            '$filePath:${stmt.startLine}: function typedef in models (${oldMatch.group(1)})');
         continue;
       }
       continue;
     }
 
-    bool isMatch = directFunctionRegex.hasMatch(line);
-    if (!isMatch) {
-      for (final tr in typedefFieldRegexes) {
-        if (tr.hasMatch(line)) {
-          isMatch = true;
-          break;
-        }
+    // Ignore non-field directives/constructors/methods/getters/returns
+    if (t.startsWith('import ') ||
+        t.startsWith('export ') ||
+        t.startsWith('part ') ||
+        t.startsWith('library ') ||
+        t.startsWith('return ') ||
+        t.startsWith('const ') && !t.contains('=')) {
+      continue;
+    }
+
+    // Extract the declaration portion before any `=` or `=>`
+    final eqIdx = t.indexOf('=');
+    final declPart = eqIdx == -1 ? t : t.substring(0, eqIdx).trim();
+    // Skip abstract methods / getters / setters with `=>` or method parameter lists
+    // unless `Function(` is part of the type!
+    final isGetterOrMethodWithoutFunc =
+        declPart.contains(' get ') || declPart.contains(' set ');
+    if (isGetterOrMethodWithoutFunc) continue;
+
+    // Check if declPart is a field declaration with a Function type or typedef
+    if (directFunctionFieldRegex.hasMatch(declPart)) {
+      // Ensure it is a field (ends with an identifier before `;` or `=`), not a method
+      if (!declPart.endsWith(')')) {
+        violations.add('$filePath:${stmt.startLine}: $t');
+        continue;
       }
     }
 
-    if (isMatch) {
-      violations.add('$filePath:${idx + 1}: ${line.trim()}');
+    var matchedTypedef = false;
+    for (final tr in typedefWordRegexes) {
+      if (tr.hasMatch(declPart) && !declPart.contains('(')) {
+        matchedTypedef = true;
+        break;
+      }
+    }
+    if (matchedTypedef) {
+      violations.add('$filePath:${stmt.startLine}: $t');
     }
   }
   return violations;
+}
+
+List<String> checkRuleP2AcrossFiles({
+  required String targetPath,
+  required String targetSource,
+  Map<String, String> extraSources = const {},
+}) {
+  final allTypedefs = <String>{};
+  for (final src in extraSources.values) {
+    allTypedefs.addAll(collectFunctionTypedefs(src));
+  }
+  return checkRuleP2(targetPath, targetSource, extraTypedefs: allTypedefs);
 }
 
 List<String> checkRuleP3(String filePath, String source) {
@@ -272,6 +448,65 @@ class SummonPreset {
       expect(v4.first, contains('zzOnExecute'));
     });
 
+    test('Fix 4.2 Rule P2 controls: multi-line typedefs and cross-file typedef references', () {
+      const multiLineTypedef = '''
+typedef ZzMultiCb =
+    void Function(Object? sheet);
+''';
+      expect(
+        checkRuleP2('lib/models/zz_multi.dart', multiLineTypedef),
+        hasLength(1),
+        reason: 'Multi-line function typedef in models must be flagged',
+      );
+
+      const genericMultiLineTypedef = '''
+typedef ZzGen<T> =
+  T Function(T);
+''';
+      expect(
+        checkRuleP2('lib/models/zz_gen.dart', genericMultiLineTypedef),
+        hasLength(1),
+        reason: 'Generic multi-line function typedef in models must be flagged',
+      );
+
+      const nonFuncMultiLineTypedef = '''
+typedef ZzMap =
+    Map<String, int>;
+''';
+      expect(
+        checkRuleP2('lib/models/zz_map.dart', nonFuncMultiLineTypedef),
+        isEmpty,
+        reason: 'Non-function multi-line typedef must NOT be flagged',
+      );
+
+      const utilFile = 'typedef ZzUtilCb = void Function();\n';
+      const modelWithUtilCb = '''
+class ZzModel {
+  final ZzUtilCb? cb;
+}
+''';
+      const modelWithMapUtilCb = '''
+class ZzModel2 {
+  final Map<String, ZzUtilCb> zz;
+}
+''';
+      final crossViolations1 = checkRuleP2AcrossFiles(
+        targetPath: 'lib/models/zz_model.dart',
+        targetSource: modelWithUtilCb,
+        extraSources: {'lib/utils/zz_util.dart': utilFile},
+      );
+      expect(crossViolations1, hasLength(1),
+          reason: 'Nullable field using cross-file function typedef must be flagged');
+
+      final crossViolations2 = checkRuleP2AcrossFiles(
+        targetPath: 'lib/models/zz_model2.dart',
+        targetSource: modelWithMapUtilCb,
+        extraSources: {'lib/utils/zz_util.dart': utilFile},
+      );
+      expect(crossViolations2, hasLength(1),
+          reason: 'Map field mentioning cross-file function typedef must be flagged');
+    });
+
     test('Rule P3 controls: flags Object? context and dynamic rawCtx, allows BuildContext context', () {
       const bad1 = 'void f(Object? context) {}';
       const bad2 = 'void g(dynamic rawCtx) {}';
@@ -299,6 +534,7 @@ class SummonPreset {
     });
 
     test('Rule P2: no class field with function type in lib/models/', () {
+      final allTypedefs = collectAllProjectFunctionTypedefs();
       final violations = <String>[];
       final modelsDir = Directory('lib/models');
 
@@ -306,14 +542,18 @@ class SummonPreset {
         if (entity is File && entity.path.endsWith('.dart')) {
           final normPath = entity.path.replaceAll(r'\', '/');
           final content = entity.readAsStringSync();
-          final fileViolations = checkRuleP2(normPath, content);
+          final fileViolations = checkRuleP2(
+            normPath,
+            content,
+            extraTypedefs: allTypedefs,
+          );
           violations.addAll(fileViolations);
         }
       }
 
       expect(violations, isEmpty,
           reason:
-              'Rule P2: No function typedef or class field with function type allowed in lib/models/');
+              'Rule P2: No function typedef or class field with function type allowed in lib/models/:\n${violations.join('\n')}');
     });
 
     test('Rule P3: no Object?/Object/dynamic context variable or parameter in lib/', () {
