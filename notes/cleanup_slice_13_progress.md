@@ -1,7 +1,7 @@
 # Cleanup slice 13 progress notes
 Status: IN PROGRESS
 Start heads: core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app a7480b4e98552fe81f276d388eebf7a5a1c4dc45
-Last pushed heads (CI green): core dcff80304b79da4fcd685719dc17e57d6c276947, ruleset a448ac5acaeb708d49bd5c818ebb9d00355fe38d, app bbc42a7bcfbe09f07609238077b27a92f9bf7628
+Last pushed heads (CI green): core 833832074a32a23cec7ba5fbc95a8951587eba7a, ruleset 7ce8176d541e37bcd900dc26c3aa9b53c0c229ef, app 82a7e07eef1cdf8a3a87a2f40e83f83d93beb8ef
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 7.1 7.2 8.1 8.2 8.3 8.4 8.5
 Mutation ids: F1 F2 W1 N1 U1 H1 T1 M1 D1 D2 D3 D4 R1 R2 P1 P2 C1 U2 H2 S1 S2 A1
@@ -35,7 +35,7 @@ Fix 8.5: Party AC comes from the rules
 
 ## Steps
 - [x] Step 1 SRD content, and the npm rows before their date: core dcff80304b79da4fcd685719dc17e57d6c276947 run 44414996938, ruleset a448ac5acaeb708d49bd5c818ebb9d00355fe38d run 44415002158, app bbc42a7bcfbe09f07609238077b27a92f9bf7628 run 44416093330
-- [ ] Step 2 Retire, and two small test fixes
+- [x] Step 2 Retire, and two small test fixes: core 833832074a32a23cec7ba5fbc95a8951587eba7a run 44419043293, ruleset 7ce8176d541e37bcd900dc26c3aa9b53c0c229ef run 44419892271, app 82a7e07eef1cdf8a3a87a2f40e83f83d93beb8ef run 44419896322
 - [ ] Step 3 Spell damage keeps every die group
 - [ ] Step 4 Dice bar, models callback rule, crit threshold
 - [ ] Step 5 Dependency schema and coverage history
@@ -50,6 +50,9 @@ Fix 1.2 done: [SRD names only, and every loot row points at a bundled item] Adde
 Fix 1.3 done: [The denylist knows the new terms] Added 14 non-SRD terms to compliance/srd_denylist.txt and updated check_srd_terms.py and test_check_srd_terms.sh (SR16-SR19) identically across all three repos.
 Fix 1.4 done: [The npm exception rows before 2026-12-17] Reviewed all five N4 overrides via scratch npm audit, removed the unneeded minimatch override from firestore_rules_test/package.json and dependency_exceptions.tsv, and extended the remaining four review_by dates to 2026-12-18.
 Fix 1.5 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead (--today 2026-12-02) in all three repos; upgraded fast_immutable_collections to 12.0.1 in app pubspec.yaml/pubspec.lock and refreshed local pub cache for coverage 1.16.1 in core and ruleset.
+Fix 2.1 done: [Retire cs12] Retired all 17 cs12 mutation branches (core 2, ruleset 6, app 9) into archive tags and mutations/cs12/ patches via retire_mutation_branches.sh.
+Fix 2.2 done: [The denylist guard test plants a real term] Updated ruleset srd_legal_compliance_test.dart so the guard exercises _scanFilesForDenylistTerms on a temp directory with a planted denylist term and a clean file while keeping the static check.
+Fix 2.3 done: [No thinking-out-loud comments in tests] Rewrote the thinking-out-loud comment at dpr_golden_characterization_test.dart line 124 as a plain statement; verified grep across all three repos.
 
 ## Mutation branches
 None
@@ -60,7 +63,7 @@ a66d1ef621f9c929ba0c0cd4cb6687118f5f254f cancelled run 44417061507
 47b629d3fed735d0748df165a3cdd5303b9c4e51 red run 44417186375
 
 ## Next
-Begin Step 2 by retiring cs12 mutation branches in all three repos, then complete the ruleset denylist guard test fix and remove the thinking-out-loud comment in the DPR golden characterization test.
+Begin Step 3 by committing the spell damage and single-die-group characterization tests, then fixing castSpell multi-group damage and unreadable formula reporting, removing dead rollSpellDamage, and adding the .diceTerms source bar.
 
 ## Open issues and deviations
 Run 44415073858 cause: big_file_ratchet_test failed because Step 1 shrank three allowlisted files (srd_loot_tables.dart, dpr_models.dart, character_sheet_controller.dart) below their recorded ceilings; fixed by bbc42a7bcfbe09f07609238077b27a92f9bf7628
