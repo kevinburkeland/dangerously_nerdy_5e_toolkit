@@ -28,7 +28,7 @@ Fix 7.4: The DPR calculator and the arena use them
 Fix 8.1: CharacterDto is a thin codec
 
 ## Steps
-- [x] Step 1 minimatch and the npm rows before their dates: app c04474c5ac2a94bdd09d95b6a95a06f58f850b17 run 44134284094
+- [x] Step 1 minimatch and the npm rows before their dates: app 8ce29311c9398ddd8949905cdba661cd60747730 run 44134284094
 - [x] Step 2 Retire, and step rows: core 2bfb58a0ab55130b2e01f6efa3c6e2bc066fff2f run 44135485377, ruleset e8528d1181100419393c07e1094b4b05e1243f37 run 44135517061, app ed339e0499b4566b24a03923b542c6b61e6449cf run 44139659617
 - [x] Step 3 Guarded dependency input: core da68079cede34fb9664e9a9a7c9a60f661a83e22 run 44174667146, ruleset e4b36f30fe078168eae1e9b1b599d4a9f3bdd007 run 44174680574, app 5b2c6552c425d88d4cba9734a403ac2b92afd3e2 run 44174697411
 - [x] Step 4 The dice bar reads strings, and the last dice sites: app 78970de6344897b144d2f793c8c2887c8838eca5 run 44193767266
