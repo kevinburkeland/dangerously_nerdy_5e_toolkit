@@ -56,12 +56,16 @@ None
 
 ## Red runs on main
 2cd4e02be368544cc5146606069284ef2a8a0850 red run 44415073858
+a66d1ef621f9c929ba0c0cd4cb6687118f5f254f cancelled run 44417061507
+47b629d3fed735d0748df165a3cdd5303b9c4e51 red run 44417186375
 
 ## Next
 Begin Step 2 by retiring cs12 mutation branches in all three repos, then complete the ruleset denylist guard test fix and remove the thinking-out-loud comment in the DPR golden characterization test.
 
 ## Open issues and deviations
 Run 44415073858 cause: big_file_ratchet_test failed because Step 1 shrank three allowlisted files (srd_loot_tables.dart, dpr_models.dart, character_sheet_controller.dart) below their recorded ceilings; fixed by bbc42a7bcfbe09f07609238077b27a92f9bf7628
+Run 44417061507 cause: cancelled by 47b629d3fed735d0748df165a3cdd5303b9c4e51 while fixing red-run cause line bullet prefix; fixed by 47b629d3fed735d0748df165a3cdd5303b9c4e51
+Run 44417186375 cause: check_notes_shas failed because the prior cancelled run on a66d1ef621f9c929ba0c0cd4cb6687118f5f254f was not yet disclosed in progress notes; fixed by 6d2b289e40f5c79e519cd8869202adaec1e7c26f
 - In Fix 1.3, scripts/check_srd_terms.py previously skipped the entire test/removed_test_names.txt file, and three existing Cleanup slice 11 rows (lines 45-47) contained previously denylisted names with Cleanup slice 11 reasons. To keep check_srd_terms.py at the single named exception ("removed for SRD compliance in Cleanup slice 13") with zero new allowlist rows, those three existing SRD-compliance rows had their reason normalized to "removed for SRD compliance in Cleanup slice 13".
 - In Fix 1.2, four of the five proper-named loot items have no bundled MagicItem entry in MagicItemLibrary, so their rows were removed and their roll ranges absorbed into adjacent entries to preserve 1..100 coverage; only the restorative ointment entry is bundled and was remapped to item_restorative_ointment.
 - In Fix 1.5, the 14-day look-ahead (--today 2026-12-02) caught fast_immutable_collections 12.0.0 behind 12.0.1 (published 2026-11-17) in app, which was upgraded to ^12.0.1; core and ruleset had coverage 1.16.0 behind 1.16.1 in untracked local pubspec.lock, resolved by dart pub upgrade.
