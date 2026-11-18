@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-18
+- Cleanup slice 13: Retire cs12 mutation branches and replace thinking-out-loud comment in DPR golden characterization test (Fixes 2.1, 2.3).
 - Cleanup slice 13: Remove non-SRD table, presets, subclass/spell special cases, and non-SRD loot labels; enforce bundled MagicItem reference law on all loot tables; expand shared SRD denylist and scanner; review npm N4 overrides (remove unneeded minimatch override, extend remaining four to 2026-12-18) and upgrade fast_immutable_collections to 12.0.1 (Fixes 1.1-1.5).
 - Cleanup slice 12: Simplify CharacterDto to a thin codec wrapping Character.fromMap/toMap and migrate HomebrewIngestor.parseCustomCharacters to Character.fromMap (Fix 8.1).
 - Cleanup slice 12: Re-pin vtt_ruleset_dnd5e to 18a2768cf6bd153410946c84ed8713a3d59b4775, route DprCalculatorEngine hit/crit/save odds through ruleset computeAttackOdds/computeSaveFailureProbability, and route all three ArenaCombatEngine save sites through computeSaveDamage (Fix 7.4).

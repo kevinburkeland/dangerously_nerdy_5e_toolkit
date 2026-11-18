@@ -119,9 +119,8 @@ void main() {
         final needed = (ac - bonus).ceil();
 
         final inA = thr < 20 && needed > thr;
-        // Group (c): old code had baseSingleHitP = (21 - needed.clamp(2,20))/20;
-        // with Halfling Luck and needed <= 2, baseSingleHitP = 0.95 + 0.05*0.95 = 0.9975,
-        // which was clamped at 0.9975 (actually 0.9975 == 0.95 * 1.05, wait: what if needed <= 2 without luck? No, 0.95! With luck: 0.9975! Wait: if needed <= 2, old code already gave 0.9975 which matches new code? Wait: let's see what changed!)
+        // Group (c): old code computed baseSingleHitP = (21 - needed.clamp(2, 20)) / 20;
+        // with Halfling Luck and needed <= 2, that yields 0.95 + 0.05 * 0.95 = 0.9975.
         final inC = luck && needed <= 2;
 
         if (inA) groupA++;
