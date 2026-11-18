@@ -22,7 +22,28 @@ class CharacterDto {
       : 'Unknown Adventurer';
 
   /// Converts this DTO into a domain [Character] entity.
-  Character toDomain() => Character.fromMap(_rawMap);
+  Character toDomain() {
+    final copy = Map<String, dynamic>.from(_rawMap);
+    if (copy['level'] is num) {
+      copy['level'] = (copy['level'] as num).toInt().clamp(1, 20);
+    }
+    final prog = copy['progression'];
+    if (prog is Map && prog['classes'] is List) {
+      final progCopy = Map<String, dynamic>.from(prog);
+      progCopy['classes'] = [
+        for (final c in progCopy['classes'] as List)
+          if (c is Map && c['level'] is num)
+            {
+              ...Map<String, dynamic>.from(c),
+              'level': (c['level'] as num).toInt().clamp(1, 20),
+            }
+          else
+            c,
+      ];
+      copy['progression'] = progCopy;
+    }
+    return Character.fromMap(copy);
+  }
 
   /// Serializes to a Map for database storage or network transmission.
   Map<String, dynamic> toMap() => _rawMap;
