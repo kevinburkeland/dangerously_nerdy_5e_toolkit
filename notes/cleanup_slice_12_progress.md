@@ -1,7 +1,7 @@
 # Cleanup slice 12 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app 8ce29311c9398ddd8949905cdba661cd60747730
-Last pushed heads (CI green): core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app cb6b4afe81bf335b305e7cf5ce08e73707846531
+Last pushed heads (CI green): core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app e2783aa5e04e4744152643e71f427ee302f06ada
 Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775
 Fix ids: 1.1 1.2 2.1 2.2 3.1 3.2 4.1 4.2 4.3 5.1 5.2 6.1 6.2 6.3 7.1 7.2 7.3 7.4 8.1
 Mutation ids: G1 G2 Q1 V1 V2 A1 A2 S1 W1 W2 B1 P1 P2 E1 T1 S2 C1
@@ -36,7 +36,7 @@ Fix 8.1: CharacterDto is a thin codec
 - [x] Step 6 Ruleset tests come home, with coverage floors: core 3dd11fe068af9f42c1a2214fe27308737e8036f9 run 44208643201, ruleset b7936cfe772e14ce6c672843652ce917b10f812e run 44208674880, app 8b376186278f421302e7eaf89efd67bad3045309 run 44210286613
 - [x] Step 7 Attack odds, save odds and save damage come home: ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775 run 44355285074, app 0d0fae047566a0f5e7d8172ed8b6047b08b85753 run 44359835654
 - [x] Step 8 CharacterDto: app cb6b4afe81bf335b305e7cf5ce08e73707846531 run 44361848862
-- [ ] Step 9 Mutations and report
+- [x] Step 9 Mutations and report: app e2783aa5e04e4744152643e71f427ee302f06ada run 44368782013
 
 ## Fix checklist
 Fix 1.1 done: [minimatch and the npm exception rows before their dates] Bumped minimatch override to 11.0.9, reviewed 5 N4 overrides in firestore_rules_test/package.json, and extended review dates to 2026-12-17 in dependency_exceptions.tsv
@@ -60,7 +60,23 @@ Fix 7.4 done: [The DPR calculator and the arena use them] Re-pinned vtt_ruleset_
 Fix 8.1 done: [CharacterDto is a thin codec] Reduced lib/infrastructure/dtos/character_dto.dart to a thin codec wrapping Character.fromMap/toMap, verified with character_dto_law_test.dart across legacy fixtures and 320 seeded maps, lowered dynamic_ratchet_test.dart ceiling to 1044, and migrated HomebrewIngestor.parseCustomCharacters to Character.fromMap.
 
 ## Mutation branches
-None
+mutation/cs12-g1 8894bd0ddf723d44f8c668bbb6e3e67892cc23f1
+mutation/cs12-g2 20b71a3ea2d569f8af04d921ed46815f94ef71b8
+mutation/cs12-q1 d22a2de91fc62f0da1fa38eba184c2d7c54e94ec
+mutation/cs12-v1 88fa79507dae4387f4fce9f936e3c34b808a13b3
+mutation/cs12-v2 6762df88539abcb989ebe9806bd1edb16acf0626
+mutation/cs12-a1 7a2421fd4a8c0ff77ee4888f52f855ad67f180ce
+mutation/cs12-a2 89980a8fc7790dec732e4d65aba04182def516b2
+mutation/cs12-s1 147d525035e789131b43baabf72478f12161755d
+mutation/cs12-w1 82bd311a9862894bf4fe28c4b6abde3ea948c779
+mutation/cs12-w2 0c9b3f931b6e9afeac7dd0afca3dc78e0b3cfa54
+mutation/cs12-b1 b10b5202d9fa4a0a235ab1007dfbdffb5b4fa79b
+mutation/cs12-p1 6fa38bf7c54cd6c3a9aba3e65e1d24b8db78c503
+mutation/cs12-p2 11aedf7ed56176ee07d922a05ebb83c284b84594
+mutation/cs12-e1 8e689bece3cc73e7a7632cc2b6cce142f6e56e72
+mutation/cs12-t1 3d5b027f3d44d4ebcde515d7b8d373f48a87e445
+mutation/cs12-s2 cd2522c99a54f217479f26388230a8095d853a0c
+mutation/cs12-c1 6f25faf5f596f0bf209e23b0bd73ea0855274d6e
 
 ## Red runs on main
 964d3fc2909f195c0030b2ad225b941ef8e8e0a2 cancelled run 44135308908
@@ -76,7 +92,7 @@ d795dd5124234f83ee1be5e8270c5ecf77b45ab9 red run 44357321252
 356f2c3c34d10f4744df70c02b63fe73a9af9e5e red run 44358434701
 
 ## Next
-Step 9: Push all 17 mutation branches, verify each is caught, run exit checks, and write the final report.
+None. Cleanup slice 12 is complete.
 
 ## Open issues and deviations
 - Working tree at start heads contained leftover uncommitted mutation changes from slice 11 (arena_combatant.dart, campaign_registry_service.dart, PRIVACY_POLICY.md in app; dnd_5e_combat_resolver.dart, dice_expression.dart, character_stat_calculator.dart in ruleset); verified identical to cs11 branches and restored clean with git checkout -- before baseline tests.
@@ -95,3 +111,5 @@ Run 44354852871 cause: failed on 704c265bfb1a48fce5bdbbdd15a83bcaad5ef09c in vtt
 Run 44354222017 cause: failed on 2585841c44ebffc67edd723f152fff492a3679e0 in DCO self-tests due to transient GitHub API HTTP 502 and undisclosed ruleset failure on 704c265bfb1a48fce5bdbbdd15a83bcaad5ef09c; fixed by 61f0b6ee878c508347e877f4df843ceb976ba923
 Run 44357321252 cause: failed on d795dd5124234f83ee1be5e8270c5ecf77b45ab9 in Check Dependency Currency & Security due to 5 stale N2 exceptions in dependency_exceptions.tsv; fixed by 356f2c3c34d10f4744df70c02b63fe73a9af9e5e
 Run 44358434701 cause: failed on 356f2c3c34d10f4744df70c02b63fe73a9af9e5e due to missing 'fixed by <sha>' suffix on the prior cause line; fixed by 276895b29b6af0c5e60363d7c01b33d00e1078ed
+- Step 9 mutation T1: character_stat_calculator_test.dart in vtt-ruleset-dnd5e imports helper files not present in app, so mutation/cs12-t1 restored moved score_math_test.dart instead and was caught by ruleset_tests_home_test.dart.
+- Step 9 mutation C1: Character.fromMap reads class level from progression.classes[].level rather than top-level level, so character_dto_law_test.dart was updated on main (e2783aa5e04e4744152643e71f427ee302f06ada) to seed out-of-range progression.classes[0].level and mutation/cs12-c1 clamps both top-level and progression class levels.
