@@ -1,0 +1,50 @@
+From 6f25faf5f596f0bf209e23b0bd73ea0855274d6e Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 10:21:16 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20C1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/dtos/character_dto.dart | 23 +++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/lib/infrastructure/dtos/character_dto.dart b/lib/infrastructure/dtos/character_dto.dart
+index 80253bb9..7ef39740 100644
+--- a/lib/infrastructure/dtos/character_dto.dart
++++ b/lib/infrastructure/dtos/character_dto.dart
+@@ -22,7 +22,28 @@ class CharacterDto {
+       : 'Unknown Adventurer';
+ 
+   /// Converts this DTO into a domain [Character] entity.
+-  Character toDomain() => Character.fromMap(_rawMap);
++  Character toDomain() {
++    final copy = Map<String, dynamic>.from(_rawMap);
++    if (copy['level'] is num) {
++      copy['level'] = (copy['level'] as num).toInt().clamp(1, 20);
++    }
++    final prog = copy['progression'];
++    if (prog is Map && prog['classes'] is List) {
++      final progCopy = Map<String, dynamic>.from(prog);
++      progCopy['classes'] = [
++        for (final c in progCopy['classes'] as List)
++          if (c is Map && c['level'] is num)
++            {
++              ...Map<String, dynamic>.from(c),
++              'level': (c['level'] as num).toInt().clamp(1, 20),
++            }
++          else
++            c,
++      ];
++      copy['progression'] = progCopy;
++    }
++    return Character.fromMap(copy);
++  }
+ 
+   /// Serializes to a Map for database storage or network transmission.
+   Map<String, dynamic> toMap() => _rawMap;
+-- 
+2.55.0
+

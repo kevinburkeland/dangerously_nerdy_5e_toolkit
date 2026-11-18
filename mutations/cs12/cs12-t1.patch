@@ -1,0 +1,74 @@
+From 3d5b027f3d44d4ebcde515d7b8d373f48a87e445 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 10:14:11 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20T1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/services/rules/score_math_test.dart | 50 ++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+ create mode 100644 test/services/rules/score_math_test.dart
+
+diff --git a/test/services/rules/score_math_test.dart b/test/services/rules/score_math_test.dart
+new file mode 100644
+index 00000000..2fdccd35
+--- /dev/null
++++ b/test/services/rules/score_math_test.dart
+@@ -0,0 +1,50 @@
++import 'package:test/test.dart';
++import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
++void main() {
++  group('Dnd5eScoreMath Extension Tests', () {
++    test('Ability Modifier calculation matches 5e RAW floor((score-10)/2)', () {
++      expect(1.dndModifier, -5);
++      expect(3.dndModifier, -4);
++      expect(8.dndModifier, -1);
++      expect(9.dndModifier, -1);
++      expect(10.dndModifier, 0);
++      expect(11.dndModifier, 0);
++      expect(12.dndModifier, 1);
++      expect(13.dndModifier, 1);
++      expect(14.dndModifier, 2);
++      expect(18.dndModifier, 4);
++      expect(20.dndModifier, 5);
++      expect(24.dndModifier, 7);
++      expect(30.dndModifier, 10);
++    });
++
++    test('Formatted modifier strings include explicit sign', () {
++      expect(1.dndModifierString, '-5');
++      expect(10.dndModifierString, '+0');
++      expect(14.dndModifierString, '+2');
++      expect(20.dndModifierString, '+5');
++    });
++
++    test('Proficiency Bonus scales correctly from Level 1 to 20', () {
++      // Level 1-4: +2
++      expect(1.dndProficiencyBonus, 2);
++      expect(4.dndProficiencyBonus, 2);
++
++      // Level 5-8: +3
++      expect(5.dndProficiencyBonus, 3);
++      expect(8.dndProficiencyBonus, 3);
++
++      // Level 9-12: +4
++      expect(9.dndProficiencyBonus, 4);
++      expect(12.dndProficiencyBonus, 4);
++
++      // Level 13-16: +5
++      expect(13.dndProficiencyBonus, 5);
++      expect(16.dndProficiencyBonus, 5);
++
++      // Level 17-20: +6
++      expect(17.dndProficiencyBonus, 6);
++      expect(20.dndProficiencyBonus, 6);
++    });
++  });
++}
+\ No newline at end of file
+-- 
+2.55.0
+
