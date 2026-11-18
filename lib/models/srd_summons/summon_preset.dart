@@ -3,6 +3,7 @@ import '../spellbook_data.dart';
 import 'minion_stat_block.dart';
 
 class SummonPreset {
+  static void Function(Object? sheet)? zzOnExecute;
   final String id;
   final String? spellId;
   final String name;
