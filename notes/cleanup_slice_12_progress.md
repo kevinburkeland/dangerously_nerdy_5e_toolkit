@@ -1,8 +1,8 @@
 # Cleanup slice 12 progress notes
 Status: IN PROGRESS
 Start heads: core f71ae361d3be4eea36e50cbd67e28baa19903b6c, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c, app 8ce29311c9398ddd8949905cdba661cd60747730
-Last pushed heads (CI green): core da68079cede34fb9664e9a9a7c9a60f661a83e22, ruleset 14726e5aa24949ae00ff7c93c4e38c62040faa92, app 41db1fd867a659218347d55fdd6158466bdfc61d
-Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset d9334641b75b17993ec8bd53a90e7c612abec04c
+Last pushed heads (CI green): core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset b7936cfe772e14ce6c672843652ce917b10f812e, app 8b376186278f421302e7eaf89efd67bad3045309
+Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset b7936cfe772e14ce6c672843652ce917b10f812e
 Fix ids: 1.1 1.2 2.1 2.2 3.1 3.2 4.1 4.2 4.3 5.1 5.2 6.1 6.2 6.3 7.1 7.2 7.3 7.4 8.1
 Mutation ids: G1 G2 Q1 V1 V2 A1 A2 S1 W1 W2 B1 P1 P2 E1 T1 S2 C1
 
@@ -33,7 +33,7 @@ Fix 8.1: CharacterDto is a thin codec
 - [x] Step 3 Guarded dependency input: core da68079cede34fb9664e9a9a7c9a60f661a83e22 run 44174667146, ruleset e4b36f30fe078168eae1e9b1b599d4a9f3bdd007 run 44174680574, app 5b2c6552c425d88d4cba9734a403ac2b92afd3e2 run 44174697411
 - [x] Step 4 The dice bar reads strings, and the last dice sites: app 78970de6344897b144d2f793c8c2887c8838eca5 run 44193767266
 - [x] Step 5 Models callback rule, and the ruleset denylist test: ruleset 14726e5aa24949ae00ff7c93c4e38c62040faa92 run 44199598132, app 41db1fd867a659218347d55fdd6158466bdfc61d run 44201812932
-- [ ] Step 6 Ruleset tests come home, with coverage floors
+- [x] Step 6 Ruleset tests come home, with coverage floors: core 3dd11fe068af9f42c1a2214fe27308737e8036f9 run 44208643201, ruleset b7936cfe772e14ce6c672843652ce917b10f812e run 44208674880, app 8b376186278f421302e7eaf89efd67bad3045309 run 44210286613
 - [ ] Step 7 Attack odds, save odds and save damage come home
 - [ ] Step 8 CharacterDto
 - [ ] Step 9 Mutations and report
@@ -50,6 +50,9 @@ Fix 4.2 done: [The remaining dice sites go through DiceExpression] Migrated all 
 Fix 4.3 done: [No invented die when a formula can't be read] Removed 1d10 private fallbacks in CharacterSheetController.rollSpellDamage and _rollUpcastSpellDamage; verified with 500-seed property law test that unparseable formulas produce zero dice.
 Fix 5.1 done: [Models declare no callback types, with no file allowlist] Removed BudgetCalculator and replaced with budgetBySpellLevel map table; built Rule P2 (a) forbidding function typedefs in lib/models/ and deleted kRuleP2Allowlist.
 Fix 5.2 done: [The ruleset denylist test scans what its name says] Refactored srd_legal_compliance_test.dart in vtt-ruleset-dnd5e to scan lib/ against compliance/srd_denylist.txt and added meta-test verifying non-existsSync assertions.
+Fix 6.1 done: [Pure ruleset tests move to the ruleset] Added InMemoryEntityResolver helper in vtt-ruleset-dnd5e/test/helpers/, moved 8 pure ruleset test files to vtt-ruleset-dnd5e, deleted 6 duplicate/subset files and 8 moved files in app with test/removed_test_names.txt ratchet rows, and kept 3 near files with app collaborators.
+Fix 6.2 done: [Coverage floors in core and ruleset that only go up] Added byte-identical check_coverage_floor.py, test_check_coverage_floor.sh (9/9 self-tests), and coverage_floors.tsv (core 71.0%, ruleset 57.9%) with CI enforcement.
+Fix 6.3 done: [No pure ruleset test in the app] Added test/infrastructure/compliance/ruleset_tests_home_test.dart with empty allowlist, barrel expansion via dart_directive_reader.dart, and 3 controls.
 
 ## Mutation branches
 None
@@ -64,7 +67,7 @@ d2f7e2bbfb49c1da85f12fd742728730f2c9bab1 red run 44199708231
 44eab9883b4ffb807f7026c8556ae8d9cdbbda9b red run 44200754828
 
 ## Next
-Step 6: Ruleset tests come home, with coverage floors.
+Step 7: Attack odds, save odds, and save damage come home.
 
 ## Open issues and deviations
 - Working tree at start heads contained leftover uncommitted mutation changes from slice 11 (arena_combatant.dart, campaign_registry_service.dart, PRIVACY_POLICY.md in app; dnd_5e_combat_resolver.dart, dice_expression.dart, character_stat_calculator.dart in ruleset); verified identical to cs11 branches and restored clean with git checkout -- before baseline tests.
