@@ -121,3 +121,8 @@ advances level with Tough Feat (+2 HP per level) | moved to vtt-ruleset-dnd5e/te
 multiclass spell slots aggregate correctly (Wizard 3 / Paladin 2) | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
 multiclassing succeeds when prerequisites are satisfied | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
 multiclassing validates prerequisites and rejects if below 13 | moved to vtt-ruleset-dnd5e/test/progression/level_up_pipeline_test.dart in Cleanup slice 12
+CharacterDto Serialization & ACL Integrity | replaced by CharacterDto thin codec tests in Cleanup slice 12 Fix 8.1
+round-trips arbitrary unknown homebrew fields with 100% fidelity | replaced by CharacterDto thin codec tests in Cleanup slice 12 Fix 8.1
+strictly clamps level between 1 and 20 and strength between 1 and 30 | removed level/strength clamps in Cleanup slice 12 Fix 8.1
+safely defaults missing or erroneous keys without throwing TypeErrors | replaced by CharacterDto thin codec tests in Cleanup slice 12 Fix 8.1
+supports copyWith and value equality | removed copyWith and equality from CharacterDto in Cleanup slice 12 Fix 8.1

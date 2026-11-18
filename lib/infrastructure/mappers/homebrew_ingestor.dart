@@ -1,11 +1,11 @@
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart'
     as domain_rules;
+import '../../models/domain/character_models.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../services/logging_service.dart';
 import '../dtos/animated_object_dto.dart';
-import '../dtos/character_dto.dart';
 import '../dtos/homebrew_entity_dto.dart';
 import '../dtos/spell_dto.dart';
 
@@ -295,9 +295,9 @@ class HomebrewIngestor {
     return damageMath;
   }
 
-  /// Ingests a raw list of homebrew character JSON objects into validated [CharacterDto] instances.
-  static List<CharacterDto> parseCustomCharacters(List<dynamic> rawList) {
-    final validCharacters = <CharacterDto>[];
+  /// Ingests a raw list of homebrew character JSON objects into validated [Character] instances.
+  static List<Character> parseCustomCharacters(List<dynamic> rawList) {
+    final validCharacters = <Character>[];
 
     for (final item in rawList) {
       if (item is! Map) continue;
@@ -305,9 +305,9 @@ class HomebrewIngestor {
           item is Map<String, dynamic> ? item : Map<String, dynamic>.from(item);
 
       try {
-        final dto = CharacterDto.fromJson(map);
-        if (dto.id.isNotEmpty && dto.name.isNotEmpty) {
-          validCharacters.add(dto);
+        final character = Character.fromMap(map);
+        if (character.id.slug.isNotEmpty && character.name.isNotEmpty) {
+          validCharacters.add(character);
         }
       } catch (e, st) {
         LoggingService().logNonFatal(

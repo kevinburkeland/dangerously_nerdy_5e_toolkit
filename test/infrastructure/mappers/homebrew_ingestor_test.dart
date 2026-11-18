@@ -156,9 +156,9 @@ void main() {
 
       final characters = HomebrewIngestor.parseCustomCharacters(rawCharacters);
       expect(characters.length, equals(2));
+      expect(characters[0].id.slug, equals('hero-1'));
       expect(characters[0].name, equals('Sir Galahad'));
-      expect(characters[0].unparsedPayload['customBackstory'],
-          equals('Knight of the Realm'));
+      expect(characters[1].id.slug, equals('hero-2'));
       expect(characters[1].name, equals('Merlin'));
     });
 

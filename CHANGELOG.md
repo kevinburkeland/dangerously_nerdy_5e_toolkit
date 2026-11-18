@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-18
+- Cleanup slice 12: Simplify CharacterDto to a thin codec wrapping Character.fromMap/toMap and migrate HomebrewIngestor.parseCustomCharacters to Character.fromMap (Fix 8.1).
 - Cleanup slice 12: Re-pin vtt_ruleset_dnd5e to 18a2768cf6bd153410946c84ed8713a3d59b4775, route DprCalculatorEngine hit/crit/save odds through ruleset computeAttackOdds/computeSaveFailureProbability, and route all three ArenaCombatEngine save sites through computeSaveDamage (Fix 7.4).
 
 ## 2026-11-17
