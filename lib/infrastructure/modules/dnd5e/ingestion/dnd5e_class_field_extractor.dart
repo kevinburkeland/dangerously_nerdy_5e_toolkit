@@ -86,7 +86,7 @@ class Dnd5eClassFieldExtractor implements FieldExtractor {
         final after = text.substring(hdMatch.end);
         final dice = DiceExpression.findAll(after);
         if (dice.isNotEmpty && dice.first.start == 0) {
-          final term = dice.first.expression.diceTerms.firstOrNull;
+          final term = dice.first.expression.singleDieGroup;
           if (term != null &&
               term.count == 1 &&
               dice.first.expression.constantSum == 0 &&

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_doubles/service_test_configurator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart'
     show DmRulesEdition;
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
@@ -463,7 +464,7 @@ void main() {
   group('Character Sheet Controller - Capability Flags & Agonizing Blast', () {
     test(
         'hasAgonizingBlast exposes flag and injects CHA modifier into Eldritch Blast damage',
-        () {
+        () async {
       const warlockClass = ClassLevelProgression(
         classRef: EntityReference<DomainEntity>.empty(
           refType: EntityType.classDefinition,
@@ -512,9 +513,11 @@ void main() {
         },
       );
 
-      final damageResult = controller.rollSpellDamage(eldritchBlast);
+      configureTestDiceRoomService();
+      final damageResult = await controller.castSpell(eldritchBlast);
       // Modifier must be +3 (CHA modifier)
-      expect(damageResult.modifier, equals(3));
+      expect(damageResult, isNotNull);
+      expect(damageResult!.modifier, equals(3));
       expect(damageResult.total, greaterThanOrEqualTo(4)); // 1 + 3 minimum
     });
   });

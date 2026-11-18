@@ -1842,10 +1842,8 @@ extension MinionStatBlockDprExt on MinionStatBlock {
 
     final primaryDiceMatch = DiceExpression.findAll(primarySource).firstOrNull;
     if (primaryDiceMatch != null) {
-      final term = primaryDiceMatch.expression.diceTerms.firstOrNull;
-      dCount = term?.count ?? 0;
-      dSides = term?.sides ?? 0;
-      dBonus = primaryDiceMatch.expression.constantSum;
+      final term = primaryDiceMatch.expression.singleDieGroup;
+      if (term != null) { dCount = term.count; dSides = term.sides; dBonus = primaryDiceMatch.expression.constantSum; }
     } else {
       final flatMatch = _flatHitPattern.firstMatch(action.description);
       if (flatMatch != null) {
@@ -1866,12 +1864,11 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       final clause = secMatch.group(1)!;
       final secDiceMatch = DiceExpression.findAll(clause).firstOrNull;
       if (secDiceMatch != null) {
-        final term = secDiceMatch.expression.diceTerms.firstOrNull;
-        secDCount = term?.count ?? 0;
-        secDSides = term?.sides ?? 0;
-        final typeMatch = _damageTypePattern.firstMatch(clause);
-        if (typeMatch != null) {
-          secDType = typeMatch.group(1)!.toLowerCase();
+        final term = secDiceMatch.expression.singleDieGroup;
+        if (term != null) {
+          secDCount = term.count; secDSides = term.sides;
+          final typeMatch = _damageTypePattern.firstMatch(clause);
+          if (typeMatch != null) secDType = typeMatch.group(1)!.toLowerCase();
         }
       }
     }

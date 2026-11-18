@@ -168,16 +168,21 @@ void main() {
   });
 
   group('Step 3 Characterization: castSpell baseline behavior', () {
-    final baseCases = <(String label, String? formula, List<String> expectedAtBase, int expectedMod)>[
+    final baseCases = <(String label, String? formula, List<String>? expectedAtBase, int expectedMod)>[
       ('2d6', '2d6', ['2d6'], 0),
-      ('2d6 + 1d8', '2d6 + 1d8', ['2d6'], 0),
-      ('1d4 + 1', '1d4 + 1', ['1d4'], 0),
-      ('3d4 + 3', '3d4 + 3', ['3d4'], 0),
+      // Cleanup slice 13: was ['2d6'], dropped a die group
+      ('2d6 + 1d8', '2d6 + 1d8', ['2d6', '1d8'], 0),
+      // Cleanup slice 13: was modifier 0, dropped flat bonus
+      ('1d4 + 1', '1d4 + 1', ['1d4'], 1),
+      // Cleanup slice 13: was modifier 0, dropped flat bonus
+      ('3d4 + 3', '3d4 + 3', ['3d4'], 3),
       ('8d6', '8d6', ['8d6'], 0),
-      ('1d10 + 1d6 + 2', '1d10 + 1d6 + 2', ['1d10'], 0),
+      // Cleanup slice 13: was ['1d10'] mod 0, dropped a die group and flat bonus
+      ('1d10 + 1d6 + 2', '1d10 + 1d6 + 2', ['1d10', '1d6'], 2),
       ('2d6 fire', '2d6 fire', ['2d6'], 0),
       ('no formula', null, [], 0),
-      ('garbage', 'banana', [], 0),
+      // Cleanup slice 13: was empty pool roll, now returns null without spending slot or broadcasting
+      ('garbage', 'banana', null, 0),
     ];
 
     test('castSpell at base level records dice entries, modifier, broadcast, and slot spend', () async {
@@ -192,17 +197,23 @@ void main() {
         );
 
         final res = await ctrl.castSpell(_makeSpell(formula: formula), castLevel: 1);
-        expect(res, isNotNull, reason: 'base case $label');
-        expect(_entryPairs(res!.diceEntries), equals(expectedEntries), reason: 'entries for $label');
-        expect(res.modifier, equals(expectedMod), reason: 'modifier for $label');
-        expect(room.getCachedRolls('LOCAL').length, equals(beforeRolls + 1), reason: 'broadcast for $label');
-        expect(ctrl.character.resources.spellSlots.currentSlots[1], equals(3), reason: 'slot spent for $label');
+        if (expectedEntries == null) {
+          expect(res, isNull, reason: 'base case $label');
+          expect(room.getCachedRolls('LOCAL').length, equals(beforeRolls), reason: 'no broadcast for $label');
+          expect(ctrl.character.resources.spellSlots.currentSlots[1], equals(4), reason: 'no slot spent for $label');
+        } else {
+          expect(res, isNotNull, reason: 'base case $label');
+          expect(_entryPairs(res!.diceEntries), equals(expectedEntries), reason: 'entries for $label');
+          expect(res.modifier, equals(expectedMod), reason: 'modifier for $label');
+          expect(room.getCachedRolls('LOCAL').length, equals(beforeRolls + 1), reason: 'broadcast for $label');
+          expect(ctrl.character.resources.spellSlots.currentSlots[1], equals(3), reason: 'slot spent for $label');
+        }
       }
     });
 
     test('castSpell upcast +2 with 1d6 and 1d6 + 1d4 scaling records baseline dice entries', () async {
       for (final scaling in ['1d6', '1d6 + 1d4']) {
-        for (final (label, formula, baseEntries, _) in baseCases) {
+        for (final (label, formula, baseEntries, expectedMod) in baseCases) {
           configureTestDiceRoomService();
           final room = DiceRoomService();
           final beforeRolls = room.getCachedRolls('LOCAL').length;
@@ -216,57 +227,34 @@ void main() {
             _makeSpell(formula: formula, scalingFormula: scaling),
             castLevel: 3,
           );
+          if (baseEntries == null) {
+            expect(res, isNull, reason: 'upcast ($scaling) case $label');
+            expect(room.getCachedRolls('LOCAL').length, equals(beforeRolls), reason: 'no broadcast for $label ($scaling)');
+            expect(ctrl.character.resources.spellSlots.currentSlots[3], equals(2), reason: 'no slot spent for $label ($scaling)');
+            continue;
+          }
           expect(res, isNotNull, reason: 'upcast ($scaling) case $label');
-          final expected = baseEntries.isEmpty
-              ? (formula == null ? <String>[] : ['2d6'])
-              : baseEntries.first.endsWith('d6')
-                  ? ['${int.parse(baseEntries.first.split('d').first) + 2}d6']
-                  : [...baseEntries, '2d6'];
+          // Merge expected base dice + 2x scaling dice (Cleanup slice 13: keeps all scaling groups)
+          final counts = <int, int>{};
+          for (final pair in baseEntries) {
+            final parts = pair.split('d');
+            final c = int.parse(parts[0]);
+            final s = int.parse(parts[1]);
+            counts[s] = (counts[s] ?? 0) + c;
+          }
+          if (formula != null) {
+            counts[6] = (counts[6] ?? 0) + 2;
+            if (scaling == '1d6 + 1d4') {
+              counts[4] = (counts[4] ?? 0) + 2;
+            }
+          }
+          final expected = [for (final e in counts.entries) '${e.value}d${e.key}'];
           expect(_entryPairs(res!.diceEntries), equals(expected), reason: 'entries for $label ($scaling)');
-          expect(res.modifier, equals(0), reason: 'modifier for $label ($scaling)');
+          expect(res.modifier, equals(expectedMod), reason: 'modifier for $label ($scaling)');
           expect(room.getCachedRolls('LOCAL').length, equals(beforeRolls + 1), reason: 'broadcast for $label ($scaling)');
           expect(ctrl.character.resources.spellSlots.currentSlots[3], equals(1), reason: 'slot 3 spent for $label ($scaling)');
         }
       }
-    });
-  });
-
-  group('Step 3 Characterization: rollSpellDamage baseline behavior', () {
-    test('rollSpellDamage outside a room keeps all terms and constantSum', () {
-      final ctrl = CharacterSheetController(
-        replicaId: _testReplica,
-        character: _makeCaster(),
-        persistenceService: _InMemoryRepo(),
-      );
-
-      final r1 = ctrl.rollSpellDamage(_makeSpell(formula: '2d6 + 1d8'));
-      expect(_entryPairs(r1.diceEntries), equals(['2d6', '1d8']));
-      expect(r1.modifier, equals(0));
-
-      final r2 = ctrl.rollSpellDamage(_makeSpell(formula: '1d10 + 1d6 + 2'));
-      expect(_entryPairs(r2.diceEntries), equals(['1d10', '1d6']));
-      expect(r2.modifier, equals(2));
-
-      final rGarbage = ctrl.rollSpellDamage(_makeSpell(formula: 'banana'));
-      expect(rGarbage.diceEntries, isEmpty);
-      expect(rGarbage.total, equals(0));
-    });
-
-    test('rollSpellDamage inside an active room throws StateError on garbage formula', () {
-      final ctrl = CharacterSheetController(
-        replicaId: _testReplica,
-        character: _makeCaster(),
-        persistenceService: _InMemoryRepo(),
-      );
-      DiceRoomService().joinRoom('ROOM1', 'Tester', remember: false);
-
-      final rOk = ctrl.rollSpellDamage(_makeSpell(formula: '2d6 + 1d8'));
-      expect(_entryPairs(rOk.diceEntries), equals(['2d6', '1d8']));
-
-      expect(
-        () => ctrl.rollSpellDamage(_makeSpell(formula: 'banana')),
-        throwsStateError,
-      );
     });
   });
 
@@ -282,8 +270,8 @@ void main() {
       }
 
       expect(extract('1d8'), equals('d8'));
-      expect(extract('1d8 + 1d6'), equals('d8'));
-      expect(extract('1d8 - 1d4'), equals('d8'));
+      expect(extract('1d8 + 1d6'), isNull); // Cleanup slice 13: was 'd8', dropped a die group
+      expect(extract('1d8 - 1d4'), isNull); // Cleanup slice 13: was 'd8', dropped a die group
       expect(extract('banana'), isNull);
     });
 
@@ -357,14 +345,12 @@ void main() {
       final d2 = StatBlockAclParser.extractRiders(
         "The target's Strength score is reduced by 1d8 + 1d6 until a rest.",
       ).whereType<AttributeDrainRider>().toList();
-      expect(d2.length, 1);
-      expect((d2.first.diceCount, d2.first.diceSides), equals((1, 8)));
+      expect(d2, isEmpty); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final dNeg = StatBlockAclParser.extractRiders(
         "The target's Strength score is reduced by 1d8 - 1d4 until a rest.",
       ).whereType<AttributeDrainRider>().toList();
-      expect(dNeg.length, 1);
-      expect((dNeg.first.diceCount, dNeg.first.diceSides), equals((1, 8)));
+      expect(dNeg, isEmpty); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final dGarbage = StatBlockAclParser.extractRiders(
         "The target's Strength score is reduced by banana until a rest.",
@@ -380,14 +366,12 @@ void main() {
       final p2 = StatBlockAclParser.extractRiders(
         'The target takes 1d8 + 1d6 fire damage at the start of each of its turns.',
       ).whereType<PeriodicDamageRider>().toList();
-      expect(p2.length, 1);
-      expect((p2.first.diceCount, p2.first.diceSides), equals((1, 8)));
+      expect(p2, isEmpty); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final pNeg = StatBlockAclParser.extractRiders(
         'The target takes 1d8 - 1d4 fire damage at the start of each of its turns.',
       ).whereType<PeriodicDamageRider>().toList();
-      expect(pNeg.length, 1);
-      expect((pNeg.first.diceCount, pNeg.first.diceSides), equals((1, 8)));
+      expect(pNeg, isEmpty); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final pGarbage = StatBlockAclParser.extractRiders(
         'The target takes banana fire damage at the start of each of its turns.',
@@ -414,15 +398,15 @@ void main() {
         '1d8 + 1d6',
         'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 8 (1d8 + 1d6) piercing damage plus 1d8 + 1d4 poison damage.',
       );
-      expect((a2.diceCount, a2.diceSides), equals((1, 8)));
-      expect((a2.secondaryDiceCount, a2.secondaryDiceSides), equals((1, 8)));
+      expect((a2.diceCount, a2.diceSides), equals((0, 0))); // Cleanup slice 13: was (1, 8), dropped a die group
+      expect((a2.secondaryDiceCount, a2.secondaryDiceSides), equals((0, 0))); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final aNeg = parseAction(
         '1d8 - 1d4',
         'Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 2 (1d8 - 1d4) piercing damage plus 1d8 - 1d4 poison damage.',
       );
-      expect((aNeg.diceCount, aNeg.diceSides), equals((1, 8)));
-      expect((aNeg.secondaryDiceCount, aNeg.secondaryDiceSides), equals((1, 8)));
+      expect((aNeg.diceCount, aNeg.diceSides), equals((0, 0))); // Cleanup slice 13: was (1, 8), dropped a die group
+      expect((aNeg.secondaryDiceCount, aNeg.secondaryDiceSides), equals((0, 0))); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final aGarbage = parseAction(
         'banana',
@@ -453,10 +437,10 @@ void main() {
       expect((c1.damageDiceCount, c1.damageDiceSides, c1.damageBonus), equals((1, 8, 2)));
 
       final c2 = makeActionMonster('1d8 + 1d6').toMinionStatBlock();
-      expect((c2.damageDiceCount, c2.damageDiceSides), equals((1, 8)));
+      expect((c2.damageDiceCount, c2.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final cNeg = makeActionMonster('1d8 - 1d4').toMinionStatBlock();
-      expect((cNeg.damageDiceCount, cNeg.damageDiceSides), equals((1, 8)));
+      expect((cNeg.damageDiceCount, cNeg.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final cGarbage = makeActionMonster('banana').toMinionStatBlock();
       expect((cGarbage.damageDiceCount, cGarbage.damageDiceSides), equals((1, 6)));
@@ -482,10 +466,10 @@ void main() {
       expect((m1.damageDiceCount, m1.damageDiceSides, m1.damageBonus), equals((1, 8, 2)));
 
       final m2 = makeMathMonster('1d8 + 1d6').toMinionStatBlock();
-      expect((m2.damageDiceCount, m2.damageDiceSides), equals((1, 8)));
+      expect((m2.damageDiceCount, m2.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final mNeg = makeMathMonster('1d8 - 1d4').toMinionStatBlock();
-      expect((mNeg.damageDiceCount, m2.damageDiceSides), equals((1, 8)));
+      expect((mNeg.damageDiceCount, mNeg.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
       final mGarbage = makeMathMonster('banana').toMinionStatBlock();
       expect((mGarbage.damageDiceCount, mGarbage.damageDiceSides), equals((1, 6)));

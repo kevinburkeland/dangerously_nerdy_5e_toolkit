@@ -476,14 +476,16 @@ class StatBlockAclParser {
 
       final diceMatches = DiceExpression.findAll(amountStr);
       if (diceMatches.isNotEmpty) {
-        final d = diceMatches.first.expression.diceTerms.first;
-        riders.add(AttributeDrainRider(
-          targetAttributeKey: ability.name,
-          diceCount: d.count,
-          diceSides: d.sides,
-          flatBonus: diceMatches.first.expression.constantSum,
-          deathAtZero: deathAtZero,
-        ));
+        final d = diceMatches.first.expression.singleDieGroup;
+        if (d != null) {
+          riders.add(AttributeDrainRider(
+            targetAttributeKey: ability.name,
+            diceCount: d.count,
+            diceSides: d.sides,
+            flatBonus: diceMatches.first.expression.constantSum,
+            deathAtZero: deathAtZero,
+          ));
+        }
       } else {
         final flatMatch = RegExp(r'^\s*(\d+)').firstMatch(amountStr);
         if (flatMatch != null) {
@@ -543,7 +545,7 @@ class StatBlockAclParser {
       final diceMatches = DiceExpression.findAll(formulaAndType);
       if (diceMatches.isNotEmpty) {
         final match = diceMatches.first;
-        final d = match.expression.diceTerms.firstOrNull;
+        final d = match.expression.singleDieGroup;
         if (d != null) {
           final after = formulaAndType.substring(match.end).trim();
           final dmgType = after.isNotEmpty ? after : 'untyped';

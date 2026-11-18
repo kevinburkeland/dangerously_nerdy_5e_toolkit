@@ -102,7 +102,22 @@ class SpellCard extends StatelessWidget {
         onCast!(0);
       } else if (controller != null) {
         final domainSpell = _buildDomainSpell();
-        await controller!.castSpell(domainSpell, castLevel: 0);
+        final rollResult = await controller!.castSpell(domainSpell, castLevel: 0);
+        final rawFormula = domainSpell.damageMath.firstOrNull?.diceFormula ??
+            domainSpell.customProperties['rollFormula']?.toString() ??
+            '';
+        if (rollResult == null && rawFormula.trim().isNotEmpty && context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Can\'t roll "$rawFormula": not dice notation',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
       return;
     }
@@ -176,11 +191,26 @@ class SpellCard extends StatelessWidget {
       onCast!(chosenSlot);
     } else if (controller != null) {
       final domainSpell = _buildDomainSpell();
-      await controller!.castSpell(
+      final rollResult = await controller!.castSpell(
         domainSpell,
         castLevel: chosenSlot,
         isPactMagic: isPactMagic,
       );
+      final rawFormula = domainSpell.damageMath.firstOrNull?.diceFormula ??
+          domainSpell.customProperties['rollFormula']?.toString() ??
+          '';
+      if (rollResult == null && rawFormula.trim().isNotEmpty && context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Can\'t roll "$rawFormula": not dice notation',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

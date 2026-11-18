@@ -928,76 +928,42 @@ class CharacterSheetController extends ChangeNotifier {
     return result;
   }
 
-  /// Executes a spell damage roll, dynamically routing capability flags
-  /// (e.g. adding Charisma modifier to Eldritch Blast if 'eldritchBlastChaDamage' is active).
-  DiceRollResult rollSpellDamage(Spell spell, {int? slotLevel}) {
-    final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
-    final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
-    final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
-        spell.name.toLowerCase() == 'eldritch blast';
+  /// Parses a spell damage or scaling formula field into combined positive die terms
+  /// and flat constant bonus. Returns `null` if the formula cannot be read or contains
+  /// any negative die group (which [DiceRollResult.rollPool] cannot represent).
+  static ({List<DiceRollTerm> dice, int constantSum})? _parseSpellFormulaField(
+    String rawFormula,
+  ) {
+    final trimmed = rawFormula.trim();
+    if (trimmed.isEmpty) return null;
 
-    // Parse or retrieve damage dice
-    final rawFormula = spell.damageMath.firstOrNull?.diceFormula ??
-        spell.customProperties['rollFormula']?.toString() ?? '';
-    final parsedExpr = rawFormula.trim().isNotEmpty
-        ? (DiceExpression.tryParse(rawFormula.trim()) ??
-            DiceExpression.findAll(rawFormula).firstOrNull?.expression)
-        : null;
-    final diceTerms = parsedExpr?.diceTerms ?? const [];
-    final List<DiceEntry> diceEntries = [
-      for (final dt in diceTerms)
-        DiceEntry(
-          dieType: DieType.values.firstWhere((d) => d.sides == dt.sides && d != DieType.custom, orElse: () => DieType.custom),
-          count: dt.count,
-          customSides: dt.sides,
-        ),
-    ];
+    final whole = DiceExpression.tryParse(trimmed);
+    final expressions = whole != null
+        ? <DiceExpression>[whole]
+        : DiceExpression.findAll(rawFormula).map((m) => m.expression).toList();
+    if (expressions.isEmpty) return null;
 
-    int modifier = parsedExpr?.constantSum ?? 0;
-    if (isEldritchBlast &&
-        (hasAgonizingBlast ||
-            hasCapabilityFlag('eldritchBlastChaDamage') ||
-            hasCapabilityFlag('agonizing_blast'))) {
-      final chaMod =
-          _character.effectiveAbilityScores.getModifier(AbilityType.charisma);
-      modifier += chaMod;
+    final dice = <DiceRollTerm>[];
+    var constantSum = 0;
+    for (final expr in expressions) {
+      if (expr.diceTerms.any((t) => t.isNegative)) {
+        return null;
+      }
+      for (final dt in expr.diceTerms) {
+        dice.add(dt);
+      }
+      constantSum += expr.constantSum;
     }
-
-    final result = DiceRollResult.rollPool(
-      diceEntries: diceEntries,
-      modifier: modifier,
-    );
-
-    // Broadcast roll to dice room if active
-    final roomService = DiceRoomService();
-    final activeRoom = roomService.activeRoomCode;
-    if (activeRoom != null) {
-      final playerName =
-          _character.name.isNotEmpty ? _character.name : 'Player';
-      final roomRoll = RoomRoll(
-        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
-        roomCode: activeRoom,
-        playerName: playerName,
-        formulaString: '${spell.name} (Damage: ${result.formulaString})',
-        total: result.total,
-        individualRolls: result.individualRolls,
-        details: [
-          '${result.diceEntries.first.formulaString}(${result.individualRolls.join(", ")})'
-              '${modifier != 0 ? (modifier > 0 ? " + $modifier" : " - ${modifier.abs()}") : ""} = ${result.total}'
-        ],
-        isCrit: result.isCrit,
-        isFumble: result.isFumble,
-        timestamp: DateTime.now(),
-      );
-      roomService.broadcastRoll(roomRoll);
-    }
-
-    return result;
+    if (dice.isEmpty && constantSum == 0) return null;
+    return (dice: dice, constantSum: constantSum);
   }
 
   /// Casts a spell, expending the specified spell slot (or Pact Magic slot),
   /// scaling damage dice or effects if upcast above base spell level, and dispatching
   /// the roll to [DiceRoomService].
+  ///
+  /// Returns `null` (without spending a slot or broadcasting) if the spell carries
+  /// a damage or scaling formula that cannot be parsed as dice notation.
   Future<DiceRollResult?> castSpell(
     Spell spell, {
     int? castLevel,
@@ -1010,44 +976,26 @@ class CharacterSheetController extends ChangeNotifier {
             pool.pactMagicSlotLevel == castLevel &&
             pool.pactMagicMax > 0);
 
-    if (castLevel != null && castLevel > 0) {
-      if (effectiveIsPact) {
-        await expendPactSlot();
-      } else {
-        await expendSpellSlot(castLevel);
-      }
-    }
-
     final effectiveLevel =
         castLevel ?? (effectiveIsPact ? pool.pactMagicSlotLevel : spell.level);
     final delta =
         effectiveLevel > spell.level ? (effectiveLevel - spell.level) : 0;
 
-    final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
-    final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
-    final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
-        spell.name.toLowerCase() == 'eldritch blast';
-
-    // Parse base formula
+    // Validate and parse base formula BEFORE spending any spell slot.
     final baseFormula = spell.damageMath.firstOrNull?.diceFormula ??
-        spell.customProperties['rollFormula']?.toString() ?? '';
-    final parsedBase = baseFormula.trim().isNotEmpty
-        ? (DiceExpression.tryParse(baseFormula.trim()) ??
-            DiceExpression.findAll(baseFormula).firstOrNull?.expression)
-        : null;
-    final firstBase = parsedBase?.diceTerms.firstOrNull;
-    final int baseCount = firstBase?.count ?? 0;
-    final int baseSides = firstBase?.sides ?? 10;
-    final DieType baseDieType = DieType.values.firstWhere(
-      (d) => d.sides == baseSides && d != DieType.custom,
-      orElse: () => DieType.custom,
-    );
+        spell.customProperties['rollFormula']?.toString() ??
+        '';
+    final hasBaseFormula = baseFormula.trim().isNotEmpty;
+    ({List<DiceRollTerm> dice, int constantSum})? parsedBase;
+    if (hasBaseFormula) {
+      parsedBase = _parseSpellFormulaField(baseFormula);
+      if (parsedBase == null) {
+        return null;
+      }
+    }
 
-    // Upcast scaling
-    int additionalCount = 0;
-    DieType additionalDieType = baseDieType;
-    int additionalSides = baseSides;
-
+    // Validate and parse upcast scaling BEFORE spending any spell slot.
+    ({List<DiceRollTerm> dice, int constantSum})? parsedScale;
     if (delta > 0) {
       String? scalingStr;
       for (final dm in spell.damageMath) {
@@ -1058,30 +1006,44 @@ class CharacterSheetController extends ChangeNotifier {
       }
       scalingStr ??= spell.customProperties['scalingFormula']?.toString();
 
-      DiceExpression? scaleExpr;
-      if (scalingStr != null) {
-        scaleExpr = DiceExpression.tryParse(scalingStr.trim()) ??
-            DiceExpression.findAll(scalingStr).firstOrNull?.expression;
+      if (scalingStr != null && scalingStr.trim().isNotEmpty) {
+        parsedScale = _parseSpellFormulaField(scalingStr);
+        if (parsedScale == null) {
+          return null;
+        }
       } else if (spell.higherLevelsMarkdown != null) {
-        scaleExpr = DiceExpression.findAll(spell.higherLevelsMarkdown!)
-            .firstOrNull
-            ?.expression;
-      }
-
-      final scaleTerm = scaleExpr?.diceTerms.firstOrNull;
-      if (scaleTerm != null) {
-        final dicePerLevel = scaleTerm.count;
-        final sSides = scaleTerm.sides;
-        additionalCount = delta * dicePerLevel;
-        additionalDieType = DieType.values.firstWhere(
-          (d) => d.sides == sSides && d != DieType.custom,
-          orElse: () => DieType.custom,
-        );
-        additionalSides = sSides;
+        // higherLevelsMarkdown is prose; its first DiceExpression match is the scaling rule.
+        final proseMatch =
+            DiceExpression.findAll(spell.higherLevelsMarkdown!).firstOrNull;
+        if (proseMatch != null &&
+            !proseMatch.expression.diceTerms.any((t) => t.isNegative)) {
+          final proseDice = <DiceRollTerm>[];
+          for (final dt in proseMatch.expression.diceTerms) {
+            proseDice.add(dt);
+          }
+          parsedScale = (
+            dice: proseDice,
+            constantSum: proseMatch.expression.constantSum,
+          );
+        }
       }
     }
 
-    int modifier = 0;
+    if (castLevel != null && castLevel > 0) {
+      if (effectiveIsPact) {
+        await expendPactSlot();
+      } else {
+        await expendSpellSlot(castLevel);
+      }
+    }
+
+    final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
+    final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
+    final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
+        spell.name.toLowerCase() == 'eldritch blast';
+
+    int modifier = (parsedBase?.constantSum ?? 0) +
+        (delta > 0 ? delta * (parsedScale?.constantSum ?? 0) : 0);
     if (isEldritchBlast &&
         (hasAgonizingBlast ||
             hasCapabilityFlag('eldritchBlastChaDamage') ||
@@ -1091,30 +1053,31 @@ class CharacterSheetController extends ChangeNotifier {
       modifier += chaMod;
     }
 
-    // Assemble pool
-    final List<DiceEntry> entries = [];
-    if (additionalCount > 0 && additionalSides == baseSides && baseCount > 0) {
-      entries.add(DiceEntry(
-        dieType: baseDieType,
-        count: baseCount + additionalCount,
-        customSides: baseSides,
-      ));
-    } else {
-      if (baseCount > 0) {
-        entries.add(DiceEntry(
-          dieType: baseDieType,
-          count: baseCount,
-          customSides: baseSides,
-        ));
-      }
-      if (additionalCount > 0) {
-        entries.add(DiceEntry(
-          dieType: additionalDieType,
-          count: additionalCount,
-          customSides: additionalSides,
-        ));
+    // Assemble dice pool combining every base and scaling die group (merging same-sided dice).
+    final countsBySides = <int, int>{};
+    if (parsedBase != null) {
+      for (final dt in parsedBase.dice) {
+        countsBySides[dt.sides] = (countsBySides[dt.sides] ?? 0) + dt.count;
       }
     }
+    if (delta > 0 && parsedScale != null) {
+      for (final st in parsedScale.dice) {
+        countsBySides[st.sides] =
+            (countsBySides[st.sides] ?? 0) + (delta * st.count);
+      }
+    }
+
+    final List<DiceEntry> entries = [
+      for (final e in countsBySides.entries)
+        DiceEntry(
+          dieType: DieType.values.firstWhere(
+            (d) => d.sides == e.key && d != DieType.custom,
+            orElse: () => DieType.custom,
+          ),
+          count: e.value,
+          customSides: e.key,
+        ),
+    ];
 
     final result = DiceRollResult.rollPool(
       diceEntries: entries,

@@ -133,3 +133,8 @@ switches to Quick Rollers tab and dispenses trinket and wild magic | removed for
 7. Character creation spell pool for Sorcerer with divine magic origin includes Cleric cantrips & 1st-level spells | removed for SRD compliance in Cleanup slice 13
 castSpell with Armor of Agathys on Warlock sets temp HP and expends pact slot | removed for SRD compliance in Cleanup slice 13
 Warlock casting Armor of Agathys auto-upcasts to Pact Magic level without warning or modal | removed for SRD compliance in Cleanup slice 13
+Over >= 500 seeded generated non-dice strings, rollSpellDamage never rolls dice | tested rollSpellDamage, deleted as dead code in Cleanup slice 13
+Site 1: character_sheet_controller.dart:952 (rollSpellDamage base) | tested rollSpellDamage, deleted as dead code in Cleanup slice 13
+Step 3 Characterization: rollSpellDamage baseline behavior | tested rollSpellDamage, deleted as dead code in Cleanup slice 13
+rollSpellDamage outside a room keeps all terms and constantSum | tested rollSpellDamage, deleted as dead code in Cleanup slice 13
+rollSpellDamage inside an active room throws StateError on garbage formula | tested rollSpellDamage, deleted as dead code in Cleanup slice 13

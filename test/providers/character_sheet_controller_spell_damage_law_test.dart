@@ -6,6 +6,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 
+import '../test_doubles/service_test_configurator.dart';
+
 final _testReplica = ReplicaId('law_test_replica');
 
 const _baseCharacter = Character(
@@ -62,8 +64,14 @@ Spell _makeSpellWithFormula(String formula) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    configureTestDiceRoomService();
+  });
+
   group('Law D17: No invented die when a formula cannot be read', () {
-    test('Over >= 500 seeded generated non-dice strings, rollSpellDamage never rolls dice', () {
+    test('Over >= 500 seeded generated non-dice strings, castSpell never rolls dice', () async {
       final controller = CharacterSheetController(
         replicaId: _testReplica,
         character: _baseCharacter,
@@ -88,12 +96,12 @@ void main() {
         final candidate = chars.join();
 
         final spell = _makeSpellWithFormula(candidate);
-        final result = controller.rollSpellDamage(spell);
+        final result = await controller.castSpell(spell);
 
         expect(
-          result.diceEntries,
+          result?.diceEntries ?? const [],
           isEmpty,
-          reason: 'Seed $i with non-dice string "$candidate" must not roll any dice, but rolled: ${result.diceEntries}',
+          reason: 'Seed $i with non-dice string "$candidate" must not roll any dice, but rolled: ${result?.diceEntries}',
         );
       }
     });

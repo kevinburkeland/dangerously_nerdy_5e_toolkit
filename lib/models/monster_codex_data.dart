@@ -767,11 +767,11 @@ extension MonsterHomebrewExt on Monster {
           '${firstWithBonus.hitDamage ?? ""} ${firstWithBonus.description}';
       final dmgExpr = DiceExpression.tryParse(fullText.trim()) ??
           DiceExpression.findAll(fullText).firstOrNull?.expression;
-      if (dmgExpr != null && dmgExpr.diceTerms.isNotEmpty) {
-        final d = dmgExpr.diceTerms.first;
+      final d = dmgExpr?.singleDieGroup;
+      if (d != null) {
         dmgCount = d.count;
         dmgSides = d.sides;
-        dmgBonus = dmgExpr.constantSum;
+        dmgBonus = dmgExpr!.constantSum;
       }
       final typeMatch = RegExp(
         r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)',
@@ -785,11 +785,11 @@ extension MonsterHomebrewExt on Monster {
       final math = attackMath.first;
       final dmgExpr = DiceExpression.tryParse(math.diceFormula.trim()) ??
           DiceExpression.findAll(math.diceFormula).firstOrNull?.expression;
-      if (dmgExpr != null && dmgExpr.diceTerms.isNotEmpty) {
-        final d = dmgExpr.diceTerms.first;
+      final d = dmgExpr?.singleDieGroup;
+      if (d != null) {
         dmgCount = d.count;
         dmgSides = d.sides;
-        dmgBonus = dmgExpr.constantSum;
+        dmgBonus = dmgExpr!.constantSum;
       }
       final typeName = math.damageType.name;
       if (typeName.isNotEmpty) {

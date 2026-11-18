@@ -104,51 +104,6 @@ void main() {
 
   group('Step 7 Characterization Tests: 16 Sites Across 9 Files', () {
     // -------------------------------------------------------------------------
-    // Site 1: character_sheet_controller.dart line 952 (rollSpellDamage base)
-    // -------------------------------------------------------------------------
-    test(
-      'Site 1: character_sheet_controller.dart:952 (rollSpellDamage base)',
-      () {
-        final controller = CharacterSheetController(
-          replicaId: _testReplica,
-          character: _baseCharacter,
-        );
-
-        // 1. plain NdS
-        final r1 = controller.rollSpellDamage(_makeSpell(formula: '2d6'));
-        expect(r1.diceEntries.first.count, 2);
-        expect(r1.diceEntries.first.sides, 6);
-        expect(r1.modifier, 0);
-
-        // 2. NdS + k
-        final r2 = controller.rollSpellDamage(_makeSpell(formula: '1d8+3'));
-        expect(r2.diceEntries.first.count, 1);
-        expect(r2.diceEntries.first.sides, 8);
-        expect(r2.modifier, 3); // Cleanup slice 11: was 0, dropped a term
-
-        // 3. two dice terms
-        final r3 = controller.rollSpellDamage(_makeSpell(formula: '2d6 + 1d8'));
-        expect(r3.diceEntries.first.count, 2);
-        expect(r3.diceEntries.first.sides, 6);
-        expect(
-          r3.diceEntries.length,
-          2,
-        ); // Cleanup slice 11: was 1, dropped a term
-
-        // 4. text around it: starts with dice notation
-        final r4 = controller.rollSpellDamage(_makeSpell(formula: '3d6 fire'));
-        expect(r4.diceEntries.first.count, 3);
-        expect(r4.diceEntries.first.sides, 6);
-
-        // 5. garbage: falls back to 1d10
-        final r5 = controller.rollSpellDamage(
-          _makeSpell(formula: 'invalid_garbage'),
-        );
-        expect(r5.diceEntries, isEmpty); // Cleanup slice 12: was 1d10, invented a d10
-      },
-    );
-
-    // -------------------------------------------------------------------------
     // Site 2: character_sheet_controller.dart line 1101 (_rollUpcastSpellDamage base)
     // -------------------------------------------------------------------------
     test('Site 2: character_sheet_controller.dart:1101 (_rollUpcastSpellDamage base)', () async {
@@ -186,12 +141,12 @@ void main() {
       );
       expect(r4?.diceEntries.first.sides, 6);
 
-      // 5. garbage (base defaults to 1d10)
+      // 5. garbage (unreadable base formula now returns null)
       final r5 = await controller.castSpell(
         _makeSpell(formula: 'garbage', scalingFormula: '1d6'),
         castLevel: 2,
       );
-      expect(r5?.diceEntries.first.sides, 6); // Cleanup slice 12: was 1d10, invented a d10
+      expect(r5, isNull); // Cleanup slice 13: was 1d6, unreadable formula now returns null
     });
 
     // -------------------------------------------------------------------------
@@ -233,12 +188,12 @@ void main() {
         );
         expect(r4?.diceEntries.first.count, 3);
 
-        // 5. garbage (no scaling applied, base 1d10 remains 1d10)
+        // 5. garbage (unreadable scaling formula now returns null)
         final r5 = await controller.castSpell(
           _makeSpell(formula: '1d10', scalingFormula: 'garbage'),
           castLevel: 3,
         );
-        expect(r5?.diceEntries.first.count, 1);
+        expect(r5, isNull); // Cleanup slice 13: was 1d10, unreadable scaling formula now returns null
       },
     );
 
@@ -503,12 +458,12 @@ void main() {
 
       // 3. two dice terms
       final s3 = makeMonster('2d6 + 1d8').toMinionStatBlock();
-      expect(s3.damageDiceCount, 2);
+      expect(s3.damageDiceCount, 1); // Cleanup slice 13: was 2, dropped a die group
       expect(s3.damageDiceSides, 6);
       expect(
         s3.damageBonus,
-        0,
-      ); // Cleanup slice 11: was 1, read garbage as dice
+        2,
+      ); // Cleanup slice 13: was 0, dropped a die group
 
       // 4. text around it
       final s4 = makeMonster('Hit: 3d6 slashing damage').toMinionStatBlock();
@@ -560,12 +515,12 @@ void main() {
 
       // 3. two dice terms
       final s3 = makeMonsterMath('2d6 + 1d8').toMinionStatBlock();
-      expect(s3.damageDiceCount, 2);
+      expect(s3.damageDiceCount, 1); // Cleanup slice 13: was 2, dropped a die group
       expect(s3.damageDiceSides, 6);
       expect(
         s3.damageBonus,
-        0,
-      ); // Cleanup slice 11: was 1, read garbage as dice
+        2,
+      ); // Cleanup slice 13: was 0, dropped a die group
 
       // 4. text around it
       final s4 = makeMonsterMath('3d6 fire').toMinionStatBlock();
@@ -918,9 +873,7 @@ void main() {
         // 3. two dice terms
         final riders3 = parseDrain('1d4 + 1d6');
         final r3 = riders3.whereType<AttributeDrainRider>().firstOrNull;
-        expect(r3, isNotNull);
-        expect(r3!.diceCount, 1);
-        expect(r3.diceSides, 4);
+        expect(r3, isNull); // Cleanup slice 13: was 1d4, dropped a die group
 
         // 4. flat number
         final riders4 = parseDrain('2');
@@ -993,9 +946,7 @@ void main() {
         final r3 = parse("target's Strength score is reduced by 1d4 + 1d6 until a rest")
             .whereType<AttributeDrainRider>()
             .firstOrNull;
-        expect(r3, isNotNull);
-        expect(r3!.diceCount, 1);
-        expect(r3.diceSides, 4);
+        expect(r3, isNull); // Cleanup slice 13: was 1d4, dropped a die group
 
         // 4. flat number
         final r4 = parse("target's Strength score is reduced by 3 until a rest")
@@ -1179,11 +1130,11 @@ void main() {
         expect(a2.diceSides, 8);
         expect(a2.damageBonus, 3);
 
-        // 3. two dice terms (primary matches first)
+        // 3. two dice terms (now treated as unreadable single-group expression)
         final a3 = parseAction('2d6 + 1d8', 'Hit: 2d6+1d8 damage');
         expect(a3, isNotNull);
-        expect(a3!.diceCount, 2);
-        expect(a3.diceSides, 6);
+        expect(a3!.diceCount, 0); // Cleanup slice 13: was 2, dropped a die group
+        expect(a3.diceSides, 0); // Cleanup slice 13: was 6, dropped a die group
 
         // 4. from description when hitDamage is null
         final a4 = parseAction(null, 'Melee Weapon Attack: +5 to hit. Hit: 3d10 + 4 force damage');

@@ -1046,8 +1046,8 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
     }
     final val = field.value?.toString().trim().toLowerCase();
     final expr = val != null ? DiceExpression.tryParse(val) : null;
-    final term = expr?.diceTerms.firstOrNull;
-    if (expr == null || expr.constantSum != 0 || expr.diceTerms.length != 1 || term?.count != 1 || !const [6, 8, 10, 12].contains(term?.sides)) {
+    final term = expr?.singleDieGroup;
+    if (expr == null || expr.constantSum != 0 || term == null || term.count != 1 || !const [6, 8, 10, 12].contains(term.sides)) {
       errors.add('$label must be valid hit die notation (d6, d8, d10, d12)');
     }
   }

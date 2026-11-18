@@ -123,6 +123,24 @@ class InteractiveSpellTile extends StatelessWidget {
       isPactMagic: isPactMagic,
     );
 
+    final rawFormula = spell.damageMath.firstOrNull?.diceFormula ??
+        spell.customProperties['rollFormula']?.toString() ??
+        '';
+    if (rollResult == null && rawFormula.trim().isNotEmpty) {
+      final msg = 'Can\'t roll "$rawFormula": not dice notation';
+      A11yService.announce(msg);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg, style: const TextStyle(fontWeight: FontWeight.bold)),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
     final upcastTag = isPactMagic
         ? ' (Pact Magic Lvl $castLevel)'
         : ((castLevel != null && castLevel > spell.level)

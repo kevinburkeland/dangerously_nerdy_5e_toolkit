@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_doubles/service_test_configurator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
@@ -113,9 +114,11 @@ void main() {
       // Damage should show 1d10 + 3 Force
       expect(find.textContaining('1d10 + 3 Force'), findsOneWidget);
 
-      // Controller rollSpellDamage should also include +3
-      final damageRoll = controller.rollSpellDamage(eldritchBlast);
-      expect(damageRoll.formulaString, equals('1d10 + 3'));
+      // Controller castSpell should also include +3
+      configureTestDiceRoomService();
+      final damageRoll = await controller.castSpell(eldritchBlast);
+      expect(damageRoll, isNotNull);
+      expect(damageRoll!.formulaString, equals('1d10 + 3'));
       expect(damageRoll.total, inInclusiveRange(4, 13));
     });
   });

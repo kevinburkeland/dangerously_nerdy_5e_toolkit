@@ -138,20 +138,23 @@ void main() {
 
     test(
         'Injects Charisma modifier into Eldritch Blast damage roll when Agonizing Blast is active',
-        () {
+        () async {
       final ctrlWith =
           CharacterSheetController(replicaId: _testReplica, character: warlockWithAgonizing);
       final ctrlWithout =
           CharacterSheetController(replicaId: _testReplica, character: warlockWithoutAgonizing);
 
       // Level 2 Warlock with Cha 16 (+3 mod) & Agonizing Blast: 1d10 + 3
-      final rollWith = ctrlWith.rollSpellDamage(eldritchBlast);
-      expect(rollWith.formulaString, equals('1d10 + 3'));
+      configureTestDiceRoomService();
+      final rollWith = await ctrlWith.castSpell(eldritchBlast);
+      expect(rollWith, isNotNull);
+      expect(rollWith!.formulaString, equals('1d10 + 3'));
       expect(rollWith.total, inInclusiveRange(4, 13));
 
       // Level 2 Warlock without Agonizing Blast: 1d10
-      final rollWithout = ctrlWithout.rollSpellDamage(eldritchBlast);
-      expect(rollWithout.formulaString, equals('1d10'));
+      final rollWithout = await ctrlWithout.castSpell(eldritchBlast);
+      expect(rollWithout, isNotNull);
+      expect(rollWithout!.formulaString, equals('1d10'));
       expect(rollWithout.total, inInclusiveRange(1, 10));
     });
 
