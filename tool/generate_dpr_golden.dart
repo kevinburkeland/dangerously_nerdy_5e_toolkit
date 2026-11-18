@@ -33,6 +33,7 @@ void main() {
               ac,
               adv,
               hasHalflingLuck: halflingLuck,
+              critThreshold: critThreshold,
             );
             final crit = DprCalculatorEngine.calculateCritProbability(
               adv,

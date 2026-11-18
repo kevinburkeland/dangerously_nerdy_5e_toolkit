@@ -137,7 +137,8 @@ void main() {
         expect(step.attackEvents[0].damageDealt, equals(17));
         expect(
           step.attackEvents[0].summaryText,
-          equals('Failed Save (Rolled 8 + 2 = 10 vs DC 11) took full: 17 fire damage'),
+          // Cleanup slice 12: was "Failed Save (Rolled 8 + 2 = 10 vs DC 11) took full: 17 fire damage"
+          equals('Failed Save (Rolled 8 + 2 = 10 vs DC 11) took half: 17 fire damage (Evasion)'),
         );
         expect(step.attackEvents[1].defenderId, equals('t_std'));
         expect(step.attackEvents[1].damageDealt, equals(17));
@@ -178,8 +179,9 @@ void main() {
         expect(step.attackEvents[0].damageDealt, equals(useEvasion ? 15 : 30));
         expect(
           step.attackEvents[0].summaryText,
+          // Cleanup slice 12: was "Failed Save (Rolled 5 + 2 = 7 vs DC 11) took full: 15 fire damage"
           equals(useEvasion
-              ? 'Failed Save (Rolled 5 + 2 = 7 vs DC 11) took full: 15 fire damage'
+              ? 'Failed Save (Rolled 5 + 2 = 7 vs DC 11) took half: 15 fire damage (Evasion)'
               : 'Failed Save (Rolled 5 + 2 = 7 vs DC 11) took full: 30 fire damage'),
         );
       }
@@ -244,7 +246,8 @@ void main() {
         expect(step.attackEvents[0].damageDealt, equals(33));
         expect(
           step.attackEvents[0].summaryText,
-          equals('EVADED! (Rolled 13 + 2 = 15 vs DC 17) took 0 fire damage via Evasion!'),
+          // Cleanup slice 12: was "EVADED! (Rolled 13 + 2 = 15 vs DC 17) took 0 fire damage via Evasion!"
+          equals('Failed Save (Rolled 13 + 2 = 15 vs DC 17) took half: 33 fire damage (Evasion)'),
         );
         expect(step.attackEvents[1].defenderId, equals('t_std'));
         expect(step.attackEvents[1].damageDealt, equals(66));

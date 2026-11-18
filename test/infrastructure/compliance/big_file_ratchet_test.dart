@@ -19,7 +19,7 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/models/monster_codex/bestiary/bestiary_cr_0_to_quarter.dart': 4226,
   'lib/widgets/character_builder/level_up_wizard_dialog.dart': 4217,
   'lib/services/persistence/homebrew_persistence_service.dart': 4104,
-  'lib/services/rules/arena_combat_engine.dart': 3985,
+  'lib/services/rules/arena_combat_engine.dart': 3962,
   'lib/screens/glyph_showcase_screen.dart': 3685,
   'lib/models/monster_codex/bestiary/bestiary_cr_five_to_eight.dart': 3616,
   'lib/services/party/party_room_service.dart': 3605,

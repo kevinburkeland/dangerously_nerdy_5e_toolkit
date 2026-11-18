@@ -1,10 +1,18 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../../models/dpr/dpr_models.dart';
 
 /// Pure 5e probabilistic mathematical calculation engine for DPR, Accuracy, and Break-Even Analysis.
 class DprCalculatorEngine {
   DprCalculatorEngine._();
+
+  static D20RollMode _toRollMode(AdvantageType advantage) => switch (advantage) {
+        AdvantageType.normal => D20RollMode.normal,
+        AdvantageType.advantage => D20RollMode.advantage,
+        AdvantageType.disadvantage => D20RollMode.disadvantage,
+        AdvantageType.rollThreeKeepHighest => D20RollMode.threeDiceKeepHighest,
+      };
 
   /// Computes the expected value of a single die considering Great Weapon Fighting style rules.
   static double expectedDieValue(int sides,
@@ -40,25 +48,15 @@ class DprCalculatorEngine {
     int targetAc,
     AdvantageType advantage, {
     bool hasHalflingLuck = false,
+    int critThreshold = 20,
   }) {
-    // 5e standard rule: Natural 1 always misses, Natural 20 always hits.
-    // Minimum roll required on d20:
-    final neededRoll = (targetAc - effectiveAttackBonus).ceil().clamp(2, 20);
-    var baseSingleHitP = (21.0 - neededRoll) / 20.0;
-    if (hasHalflingLuck) {
-      // Halfling Luck: on rolling 1 (5% chance), reroll once with standard hit probability
-      baseSingleHitP += 0.05 * baseSingleHitP;
-    }
-    final clampedBase = baseSingleHitP.clamp(0.05, 0.9975);
-
-    return switch (advantage) {
-      AdvantageType.normal => clampedBase,
-      AdvantageType.advantage =>
-        1.0 - math.pow(1.0 - clampedBase, 2).toDouble(),
-      AdvantageType.disadvantage => math.pow(clampedBase, 2).toDouble(),
-      AdvantageType.rollThreeKeepHighest =>
-        1.0 - math.pow(1.0 - clampedBase, 3).toDouble(),
-    };
+    return computeAttackOdds(
+      attackBonus: effectiveAttackBonus,
+      targetAc: targetAc,
+      critThreshold: critThreshold.clamp(2, 20),
+      mode: _toRollMode(advantage),
+      rerollOnes: hasHalflingLuck,
+    ).hit;
   }
 
   /// Calculates critical hit probability.
@@ -67,20 +65,13 @@ class DprCalculatorEngine {
     int critThreshold = 20,
     bool hasHalflingLuck = false,
   }) {
-    final clampedThreshold = critThreshold.clamp(1, 20);
-    var baseCritP = (21.0 - clampedThreshold) / 20.0;
-    if (hasHalflingLuck) {
-      // Halfling Luck: on rolling 1 (5% chance), reroll once with standard crit probability
-      baseCritP += 0.05 * baseCritP;
-    }
-
-    return switch (advantage) {
-      AdvantageType.normal => baseCritP,
-      AdvantageType.advantage => 1.0 - math.pow(1.0 - baseCritP, 2).toDouble(),
-      AdvantageType.disadvantage => math.pow(baseCritP, 2).toDouble(),
-      AdvantageType.rollThreeKeepHighest =>
-        1.0 - math.pow(1.0 - baseCritP, 3).toDouble(),
-    };
+    return computeAttackOdds(
+      attackBonus: 0,
+      targetAc: 100,
+      critThreshold: critThreshold.clamp(2, 20),
+      mode: _toRollMode(advantage),
+      rerollOnes: hasHalflingLuck,
+    ).crit;
   }
 
   /// Calculates saving throw failure probability for spells (Save-for-Half or Save-for-None).
@@ -90,20 +81,14 @@ class DprCalculatorEngine {
     bool targetHasAdvantage = false,
     bool targetHasDisadvantage = false,
   }) {
-    // 5e standard saving throw rule: Target succeeds if d20 + saveBonus >= saveDc
-    final neededRoll = (saveDc - targetSaveBonus).clamp(1, 20);
-    final singlePassProb = ((21.0 - neededRoll) / 20.0).clamp(0.05, 0.95);
-
-    double totalPassProb;
-    if (targetHasAdvantage) {
-      totalPassProb = 1.0 - math.pow(1.0 - singlePassProb, 2).toDouble();
-    } else if (targetHasDisadvantage) {
-      totalPassProb = math.pow(singlePassProb, 2).toDouble();
-    } else {
-      totalPassProb = singlePassProb;
-    }
-
-    return 1.0 - totalPassProb;
+    final mode = targetHasAdvantage
+        ? D20RollMode.advantage
+        : (targetHasDisadvantage ? D20RollMode.disadvantage : D20RollMode.normal);
+    return computeSaveFailureProbability(
+      saveDc: saveDc,
+      saveBonus: targetSaveBonus,
+      mode: mode,
+    );
   }
 
   /// Calculates single attack expected DPR against target AC.
@@ -184,15 +169,17 @@ class DprCalculatorEngine {
     // Standard attack roll actions (to-hit vs target AC)
     final effBonus = calculateEffectiveAttackBonus(attack);
     final luck = hasHalflingLuck || attack.hasHalflingLuck;
-    final totalHitChance = calculateHitProbability(
-        effBonus, targetAc, advantage,
-        hasHalflingLuck: luck);
-    final critChance = calculateCritProbability(advantage,
-        critThreshold: attack.critThreshold, hasHalflingLuck: luck);
-
-    // Regular hit chance is total hit chance minus critical hit chance (clamped to 0)
-    final regularHitChance = math.max(0.0, totalHitChance - critChance);
-    final missChance = math.max(0.0, 1.0 - totalHitChance);
+    final odds = computeAttackOdds(
+      attackBonus: effBonus,
+      targetAc: targetAc,
+      critThreshold: attack.critThreshold.clamp(2, 20),
+      mode: _toRollMode(advantage),
+      rerollOnes: luck,
+    );
+    final totalHitChance = odds.hit;
+    final critChance = odds.crit;
+    final regularHitChance = odds.regularHit;
+    final missChance = odds.miss;
 
     // Expected primary damage per die
     final primaryDieEv =

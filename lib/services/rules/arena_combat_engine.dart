@@ -17,6 +17,30 @@ class ArenaCombatEngine {
 
   ArenaCombatEngine({Random? rng}) : _rng = rng ?? secureRandom;
 
+  static String _formatSaveDamageSummary(
+    SaveDamageOutcome outcome,
+    bool saved,
+    bool hasEvasion,
+    int d20,
+    int saveBonus,
+    int totalSave,
+    int saveDc,
+    String summaryNote,
+    int damageApplied,
+    String damageType,
+    String fatal, [
+    String? evadedSpellName,
+  ]) {
+    if (outcome == SaveDamageOutcome.none && hasEvasion) {
+      return evadedSpellName != null
+          ? 'EVADED! $evadedSpellName dealt $damageApplied $damageType damage via Evasion!'
+          : 'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took $damageApplied $damageType damage via Evasion!';
+    }
+    if (saved) return 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc)$summaryNote took half: $damageApplied $damageType damage$fatal';
+    if (outcome == SaveDamageOutcome.half && hasEvasion) return 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took half: $damageApplied $damageType damage (Evasion)$fatal';
+    return 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took full: $damageApplied $damageType damage$fatal';
+  }
+
   /// Rolls 1d20 + initiative bonus for each combatant and returns sorted order.
   List<ArenaCombatant> rollInitiatives(
     List<ArenaCombatant> combatants,
@@ -1028,23 +1052,13 @@ class ArenaCombatEngine {
 
           final hasEvasion = defender.hasEvasion(edition) &&
               candidate.saveAbility.toLowerCase() == 'dex';
-          bool evadedWithEvasion = false;
-          int effectiveDamage;
-
-          if (saved) {
-            if (hasEvasion) {
-              evadedWithEvasion = true;
-              effectiveDamage = 0;
-            } else {
-              effectiveDamage = (rawDamage / 2).floor();
-            }
-          } else {
-            if (hasEvasion) {
-              effectiveDamage = (rawDamage / 2).floor();
-            } else {
-              effectiveDamage = rawDamage;
-            }
-          }
+          final saveDamage = computeSaveDamage(
+            rawDamage: rawDamage,
+            saved: saved,
+            halfOnSuccess: true,
+            hasEvasion: hasEvasion,
+          );
+          int effectiveDamage = saveDamage.damageTaken;
 
           effectiveDamage = _applyDefensiveModifiers(effectiveDamage,
               candidate.damageType, defender, edition, environment);
@@ -1060,19 +1074,11 @@ class ArenaCombatEngine {
                 ArenaCondition.unconscious, _rollDie, edition);
           }
 
-          String summary;
-          if (evadedWithEvasion) {
-            summary =
-                'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took 0 ${candidate.damageType} damage via Evasion!';
-          } else if (saved) {
-            final fatal = isKillShot ? ' — SLAIN!' : '';
-            summary =
-                'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $effectiveDamage ${candidate.damageType} damage$fatal';
-          } else {
-            final fatal = isKillShot ? ' — SLAIN!' : '';
-            summary =
-                'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $effectiveDamage ${candidate.damageType} damage$fatal';
-          }
+          final fatal = isKillShot ? ' — SLAIN!' : '';
+          String summary = _formatSaveDamageSummary(
+              saveDamage.outcome, saved, hasEvasion, d20, saveBonus, totalSave,
+              attacker.spellSaveDc, saveRes.summaryNote, effectiveDamage,
+              candidate.damageType, fatal);
 
           if (effectiveDamage > 0 &&
               defender.activeConcentrationSpellId != null) {
@@ -1106,7 +1112,7 @@ class ArenaCombatEngine {
               saveDc: attacker.spellSaveDc,
               saveRoll: totalSave,
               saved: saved,
-              evadedWithEvasion: evadedWithEvasion,
+              evadedWithEvasion: saveDamage.outcome == SaveDamageOutcome.none && hasEvasion,
               damageDealt: effectiveDamage,
               damageType: candidate.damageType,
               isKillShot: isKillShot,
@@ -2206,7 +2212,6 @@ class ArenaCombatEngine {
       final saved = saveRes.saved;
 
       final hasEvasion = target.hasEvasion(edition) && saveAbility == 'dex';
-      bool evadedWithEvasion = false;
 
       final numDice = minLvl == 5
           ? 8 + (slotLvl - 5)
@@ -2214,21 +2219,13 @@ class ArenaCombatEngine {
       final diceSides = minLvl == 5 ? 8 : (minLvl == 3 ? 6 : 8);
       final rawDmg = _rollDice(numDice, diceSides);
 
-      int damageDealt;
-      if (saved) {
-        if (hasEvasion) {
-          evadedWithEvasion = true;
-          damageDealt = 0;
-        } else {
-          damageDealt = (rawDmg / 2).floor();
-        }
-      } else {
-        if (hasEvasion) {
-          damageDealt = (rawDmg / 2).floor();
-        } else {
-          damageDealt = rawDmg;
-        }
-      }
+      final saveDamage = computeSaveDamage(
+        rawDamage: rawDmg,
+        saved: saved,
+        halfOnSuccess: true,
+        hasEvasion: hasEvasion,
+      );
+      int damageDealt = saveDamage.damageTaken;
 
       damageDealt = _applyDefensiveModifiers(
           damageDealt, dmgType, target, edition, environment);
@@ -2243,11 +2240,10 @@ class ArenaCombatEngine {
       }
 
       final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
-      String summary = evadedWithEvasion
-          ? 'EVADED! $spellName dealt 0 $dmgType damage via Evasion!'
-          : (saved
-              ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $damageDealt $dmgType damage$fatal'
-              : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt $dmgType damage$fatal');
+      String summary = _formatSaveDamageSummary(
+          saveDamage.outcome, saved, hasEvasion, d20, saveBonus, totalSave,
+          attacker.spellSaveDc, saveRes.summaryNote, damageDealt, dmgType,
+          fatal, spellName);
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
         final conRes =
@@ -2277,7 +2273,7 @@ class ArenaCombatEngine {
           saveDc: attacker.spellSaveDc,
           saveRoll: totalSave,
           saved: saved,
-          evadedWithEvasion: evadedWithEvasion,
+          evadedWithEvasion: saveDamage.outcome == SaveDamageOutcome.none && hasEvasion,
           damageDealt: damageDealt,
           damageType: dmgType,
           isKillShot: isKillShot,
@@ -2912,24 +2908,13 @@ class ArenaCombatEngine {
 
       final hasEvasion =
           defender.hasEvasion(edition) && saveAbility.toLowerCase() == 'dex';
-      bool evadedWithEvasion = false;
-      int effectiveDamage;
-
-      if (saved) {
-        if (hasEvasion) {
-          evadedWithEvasion = true;
-          effectiveDamage = 0;
-        } else {
-          effectiveDamage = (rawDamage / 2).floor();
-        }
-      } else {
-        if (hasEvasion) {
-          evadedWithEvasion = true;
-          effectiveDamage = (rawDamage / 2).floor();
-        } else {
-          effectiveDamage = rawDamage;
-        }
-      }
+      final saveDamage = computeSaveDamage(
+        rawDamage: rawDamage,
+        saved: saved,
+        halfOnSuccess: true,
+        hasEvasion: hasEvasion,
+      );
+      int effectiveDamage = saveDamage.damageTaken;
 
       // Apply resistances, immunities & environmental modifiers
       effectiveDamage = _applyDefensiveModifiers(
@@ -2944,19 +2929,11 @@ class ArenaCombatEngine {
         defender.applyCondition(ArenaCondition.unconscious, _rollDie, edition);
       }
 
-      String summary;
-      if (evadedWithEvasion) {
-        summary =
-            'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took 0 ${attack.damageType} damage via Evasion!';
-      } else if (saved) {
-        final fatal = isKillShot ? ' — SLAIN!' : '';
-        summary =
-            'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc)${saveRes.summaryNote} took half: $effectiveDamage ${attack.damageType} damage$fatal';
-      } else {
-        final fatal = isKillShot ? ' — SLAIN!' : '';
-        summary =
-            'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took full: $effectiveDamage ${attack.damageType} damage$fatal';
-      }
+      final fatal = isKillShot ? ' — SLAIN!' : '';
+      String summary = _formatSaveDamageSummary(
+          saveDamage.outcome, saved, hasEvasion, d20, saveBonus, totalSave,
+          saveDc, saveRes.summaryNote, effectiveDamage, attack.damageType,
+          fatal);
 
       // Concentration Check Pipeline for AoE attacks
       if (effectiveDamage > 0 && defender.activeConcentrationSpellId != null) {
@@ -2990,7 +2967,7 @@ class ArenaCombatEngine {
           saveDc: saveDc,
           saveRoll: totalSave,
           saved: saved,
-          evadedWithEvasion: evadedWithEvasion,
+          evadedWithEvasion: saveDamage.outcome == SaveDamageOutcome.none && hasEvasion,
           damageDealt: effectiveDamage,
           damageType: attack.damageType,
           isKillShot: isKillShot,
