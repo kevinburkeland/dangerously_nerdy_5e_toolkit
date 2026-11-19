@@ -221,12 +221,12 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
-        id: EntityId(slug: 'my-custom-warlock', ruleset: RulesetVersion.v2014),
+      final character = Character(
+        id: const EntityId(slug: 'my-custom-warlock', ruleset: RulesetVersion.v2014),
         name: 'Generic Custom Warlock',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -244,14 +244,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 14,
             constitution: 14,
             intelligence: 10,
             wisdom: 12,
             charisma: 16),
-        resources: CharacterResourcePool(currentHp: 10),
+        resources: const CharacterResourcePool(currentHp: 10),
       );
 
       final controller = CharacterSheetController(
@@ -464,12 +464,12 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(stubSub);
 
-      const charLevel6 = Character(
-        id: EntityId(slug: 'mariner-warlock-6', ruleset: RulesetVersion.v2014),
+      final charLevel6 = Character(
+        id: const EntityId(slug: 'mariner-warlock-6', ruleset: RulesetVersion.v2014),
         name: 'Mariner Warlock',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -487,14 +487,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 14,
             constitution: 14,
             intelligence: 10,
             wisdom: 12,
             charisma: 16),
-        resources: CharacterResourcePool(currentHp: 40),
+        resources: const CharacterResourcePool(currentHp: 40),
       );
 
       final controller = CharacterSheetController(
@@ -585,12 +585,12 @@ void main() {
       SrdClassesLibrary.addCustomSubclass(paladinSub);
 
       // Verify druid character gets the bonus action
-      const druidChar = Character(
-        id: EntityId(slug: 'blight-druid-2', ruleset: RulesetVersion.v2014),
+      final druidChar = Character(
+        id: const EntityId(slug: 'blight-druid-2', ruleset: RulesetVersion.v2014),
         name: 'Blight Druid',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -608,14 +608,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 12,
             constitution: 14,
             intelligence: 10,
             wisdom: 16,
             charisma: 10),
-        resources: CharacterResourcePool(currentHp: 16),
+        resources: const CharacterResourcePool(currentHp: 16),
       );
 
       final druidController = CharacterSheetController(
@@ -636,12 +636,12 @@ void main() {
           reason: 'Druid Blight Bloom should be extracted as a Bonus Action');
 
       // Verify paladin character gets the reaction
-      const paladinChar = Character(
-        id: EntityId(slug: 'justice-paladin-3', ruleset: RulesetVersion.v2014),
+      final paladinChar = Character(
+        id: const EntityId(slug: 'justice-paladin-3', ruleset: RulesetVersion.v2014),
         name: 'Justice Paladin',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -659,14 +659,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 16,
             dexterity: 10,
             constitution: 14,
             intelligence: 10,
             wisdom: 10,
             charisma: 14),
-        resources: CharacterResourcePool(currentHp: 28),
+        resources: const CharacterResourcePool(currentHp: 28),
       );
 
       final paladinController = CharacterSheetController(

@@ -34,15 +34,15 @@ void main() {
       expect(SpellbookLibrary.getSpellById('mystic-spark')!.level, 0);
 
       // Create a character with allocated mystic-spark
-      const character = Character(
-        id: EntityId(slug: 'char-123', ruleset: RulesetVersion.homebrew),
+      final character = Character(
+        id: const EntityId(slug: 'char-123', ruleset: RulesetVersion.homebrew),
         name: 'Sparky',
-        speciesRef: EntityReference<Race>.empty(
+        speciesRef: const EntityReference<Race>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 10,
           constitution: 10,
@@ -50,8 +50,8 @@ void main() {
           wisdom: 10,
           charisma: 10,
         ),
-        resources: CharacterResourcePool(currentHp: 8),
-        progression: CharacterProgression(
+        resources: const CharacterResourcePool(currentHp: 8),
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<CharacterClass>.empty(
@@ -66,12 +66,12 @@ void main() {
         ),
         allocatedSpells: {
           'wizard': [
-            EntityReference<Spell>.empty(
+            const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'mystic-spark',
               displayName: 'Mystic Spark',
             ),
-            EntityReference<Spell>.empty(
+            const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'magic-missile',
               displayName: 'Magic Missile',

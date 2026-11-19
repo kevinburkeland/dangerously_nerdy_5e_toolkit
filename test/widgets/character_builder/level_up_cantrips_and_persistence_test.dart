@@ -79,15 +79,15 @@ void main() {
     setUp(() {
       mockPersistence = _MockPersistenceService();
 
-      level1Wizard = const Character(
-        id: EntityId(slug: 'gandalf', ruleset: RulesetVersion.v2024),
+      level1Wizard = Character(
+        id: const EntityId(slug: 'gandalf', ruleset: RulesetVersion.v2024),
         name: 'Gandalf',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -101,24 +101,24 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           intelligence: 16, // +3 mod
           constitution: 14,
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 8,
           currentHitDice: {'d6': 1},
         ),
         cantrips: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_fire_bolt',
               displayName: 'Fire Bolt'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_light',
               displayName: 'Light'),

@@ -47,12 +47,12 @@ void main() {
       // Character: Level 4 Warlock leveling to Level 5.
       // Already selected: Armor of Shadows and Fiendish Vigor at Level 2.
       // Already known spells: Eldritch Blast (cantrip), Hex (level 1), Hellish Rebuke (level 1).
-      const character = Character(
-        id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2014),
+      final character = Character(
+        id: const EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2014),
         name: 'Test Warlock',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'human', displayName: 'Human', refType: EntityType.species),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -68,7 +68,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 14,
             constitution: 14,
@@ -76,20 +76,20 @@ void main() {
             wisdom: 12,
             charisma: 16),
         cantrips: [
-          EntityReference.empty(
+          const EntityReference.empty(
               slug: 'eldritch-blast',
               displayName: 'Eldritch Blast',
               refType: EntityType.spell),
         ],
         spellsKnown: [
-          EntityReference.empty(
+          const EntityReference.empty(
               slug: 'hex', displayName: 'Hex', refType: EntityType.spell),
-          EntityReference.empty(
+          const EntityReference.empty(
               slug: 'hellish-rebuke',
               displayName: 'Hellish Rebuke',
               refType: EntityType.spell),
         ],
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       await tester.pumpWidget(

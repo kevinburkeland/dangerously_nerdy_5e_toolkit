@@ -42,17 +42,17 @@ void main() {
       final repo = sl<ICampaignRepository>();
 
       // 1. Create a legacy campaign with an embedded character map
-      const hero = Character(
-        id: EntityId(slug: 'strider-ranger', ruleset: RulesetVersion.v2024),
+      final hero = Character(
+        id: const EntityId(slug: 'strider-ranger', ruleset: RulesetVersion.v2024),
         name: 'Strider',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           slug: 'human',
           refType: EntityType.species,
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 28),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 28),
       );
       final heroDto = CharacterDto.fromDomain(hero);
 

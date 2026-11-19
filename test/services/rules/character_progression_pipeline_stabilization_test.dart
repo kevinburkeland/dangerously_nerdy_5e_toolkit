@@ -117,15 +117,15 @@ void main() {
         displayName: 'Mage Hand',
       );
 
-      const character = Character(
-        id: EntityId(slug: 'elf-wizard', ruleset: RulesetVersion.v2014),
+      final character = Character(
+        id: const EntityId(slug: 'elf-wizard', ruleset: RulesetVersion.v2014),
         name: 'Elaris',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'high-elf',
           displayName: 'High Elf',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -139,8 +139,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(),
+        resources: const CharacterResourcePool(),
         allocatedSpells: {
           'high-elf-cantrip': [cantripRef],
           'class-wizard-cantrips': [wizardCantripRef],
@@ -177,15 +177,15 @@ void main() {
     test(
         'Phase 3: Historical ledger (manualHpRolls) preserves exact rolls across character modifications',
         () {
-      var char = const Character(
-        id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2014),
+      var char = Character(
+        id: const EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2014),
         name: 'Arthur',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -200,8 +200,8 @@ void main() {
           ],
           manualHpRolls: {1: 10},
         ),
-        baseScores: AbilityScores(constitution: 14), // +2 CON
-        resources: CharacterResourcePool(currentHp: 12),
+        baseScores: const AbilityScores(constitution: 14), // +2 CON
+        resources: const CharacterResourcePool(currentHp: 12),
       );
 
       // Level up to Level 2 with manual roll 9
@@ -234,15 +234,15 @@ void main() {
         'Phase 4: Ruleset-aware spell slot math rounds half-casters differently in 2014 vs 2024 and isolates Warlock',
         () {
       // 1 Paladin / 1 Sorcerer in 2014 vs 2024
-      const multiclassChar2014 = Character(
-        id: EntityId(slug: 'palsorc-2014', ruleset: RulesetVersion.v2014),
+      final multiclassChar2014 = Character(
+        id: const EntityId(slug: 'palsorc-2014', ruleset: RulesetVersion.v2014),
         name: 'Gish 2014',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -265,8 +265,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
       );
 

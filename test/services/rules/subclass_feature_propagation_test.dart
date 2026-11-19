@@ -205,12 +205,12 @@ void main() {
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
-        id: EntityId(slug: 'test-fighter', ruleset: RulesetVersion.homebrew),
+      final character = Character(
+        id: const EntityId(slug: 'test-fighter', ruleset: RulesetVersion.homebrew),
         name: 'Test Fighter',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -229,8 +229,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 28),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 28),
       );
 
       final report = CharacterHomebrewValidator.validate(character);
@@ -349,12 +349,12 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
-        id: EntityId(slug: 'test-char', ruleset: RulesetVersion.homebrew),
+      final character = Character(
+        id: const EntityId(slug: 'test-char', ruleset: RulesetVersion.homebrew),
         name: 'Void Warrior',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -373,14 +373,14 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 16,
             dexterity: 14,
             constitution: 14,
             intelligence: 10,
             wisdom: 12,
             charisma: 8),
-        resources: CharacterResourcePool(currentHp: 28),
+        resources: const CharacterResourcePool(currentHp: 28),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: character);
@@ -426,13 +426,13 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
       );
       SrdClassesLibrary.addCustomSubclass(customSub);
 
-      const character = Character(
-        id: EntityId(
+      final character = Character(
+        id: const EntityId(
             slug: 'test-astral-char', ruleset: RulesetVersion.homebrew),
         name: 'Astral Sentinel',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -451,8 +451,8 @@ As an action, you unleash spatial distortion dealing 2d8 force damage to all nea
             ),
           ],
         ),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 28),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 28),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: character);

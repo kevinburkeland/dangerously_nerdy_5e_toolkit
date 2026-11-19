@@ -14,15 +14,15 @@ void main() {
     late Character testFighter;
 
     setUp(() {
-      testFighter = const Character(
-        id: EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2024),
+      testFighter = Character(
+        id: const EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2024),
         name: 'Galahad',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
@@ -34,7 +34,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 16,
           dexterity: 14,
           constitution: 14,
@@ -42,7 +42,7 @@ void main() {
           wisdom: 12,
           charisma: 8,
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 12,
           currentHitDice: {'d10': 1},
         ),

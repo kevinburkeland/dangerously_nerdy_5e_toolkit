@@ -34,15 +34,15 @@ import '../test_doubles/service_test_configurator.dart';
 
 final _testReplica = ReplicaId('test_runner_replica');
 
-const _baseCharacter = Character(
-  id: EntityId(slug: 'char-test', ruleset: RulesetVersion.v2024),
+final _baseCharacter = Character(
+  id: const EntityId(slug: 'char-test', ruleset: RulesetVersion.v2024),
   name: 'Test Hero',
-  speciesRef: EntityReference.empty(
+  speciesRef: const EntityReference.empty(
     refType: EntityType.species,
     slug: 'human',
     displayName: 'Human',
   ),
-  progression: CharacterProgression(
+  progression: const CharacterProgression(
     classes: [
       ClassLevelProgression(
         classRef: EntityReference.empty(
@@ -56,8 +56,8 @@ const _baseCharacter = Character(
       ),
     ],
   ),
-  baseScores: AbilityScores(strength: 16, charisma: 14),
-  resources: CharacterResourcePool(),
+  baseScores: const AbilityScores(strength: 16, charisma: 14),
+  resources: const CharacterResourcePool(),
 );
 
 Spell _makeSpell({

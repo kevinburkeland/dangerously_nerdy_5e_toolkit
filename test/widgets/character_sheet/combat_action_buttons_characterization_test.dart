@@ -270,15 +270,15 @@ void main() {
         isRemembered: false,
       );
 
-      const bard = Character(
-        id: EntityId(slug: 'bard-5', ruleset: RulesetVersion.v2024),
+      final bard = Character(
+        id: const EntityId(slug: 'bard-5', ruleset: RulesetVersion.v2024),
         name: 'Bard Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -292,7 +292,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 14,
           constitution: 12,
@@ -300,7 +300,7 @@ void main() {
           wisdom: 10,
           charisma: 16,
         ),
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       final controller =

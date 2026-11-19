@@ -11,15 +11,15 @@ void main() {
   testWidgets(
       'SkillsSavesMatrix renders all 6 saves, 18 skills, and allows Advantage toggling',
       (tester) async {
-    const character = Character(
-      id: EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
+    final character = Character(
+      id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
       name: 'Rogue Scout',
-      speciesRef: EntityReference<DomainEntity>.empty(
+      speciesRef: const EntityReference<DomainEntity>.empty(
         refType: EntityType.species,
         slug: 'elf',
         displayName: 'Elf',
       ),
-      progression: CharacterProgression(
+      progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
             classRef: EntityReference<DomainEntity>.empty(
@@ -33,7 +33,7 @@ void main() {
           ),
         ],
       ),
-      baseScores: AbilityScores(
+      baseScores: const AbilityScores(
         strength: 10,
         dexterity: 18,
         constitution: 14,
@@ -49,7 +49,7 @@ void main() {
         AbilityType.dexterity,
         AbilityType.intelligence,
       },
-      resources: CharacterResourcePool(currentHp: 38),
+      resources: const CharacterResourcePool(currentHp: 38),
     );
 
     final controller = CharacterSheetController(

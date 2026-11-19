@@ -15,12 +15,12 @@ void main() {
     test(
         'Paladin level 3 features translate to Actions and Bonus/Special actions',
         () {
-      const paladin2024 = Character(
-        id: EntityId(slug: 'pally-test', ruleset: RulesetVersion.v2024),
+      final paladin2024 = Character(
+        id: const EntityId(slug: 'pally-test', ruleset: RulesetVersion.v2024),
         name: 'Sir Arthur',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -33,8 +33,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 16, charisma: 14),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(strength: 16, charisma: 14),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: paladin2024);
@@ -58,12 +58,12 @@ void main() {
     test(
         'Cleric level 2 Light Domain translates Turn Undead, Radiance of Dawn, and Warding Flare',
         () {
-      const clericLight = Character(
-        id: EntityId(slug: 'cleric-light', ruleset: RulesetVersion.v2024),
+      final clericLight = Character(
+        id: const EntityId(slug: 'cleric-light', ruleset: RulesetVersion.v2024),
         name: 'Sister Dawn',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -80,8 +80,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(wisdom: 16),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(wisdom: 16),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: clericLight);
@@ -106,12 +106,12 @@ void main() {
 
     test('Druid Moon Druid gets Combat Wild Shape as Bonus Action and healing',
         () {
-      const moonDruid = Character(
-        id: EntityId(slug: 'druid-moon', ruleset: RulesetVersion.v2024),
+      final moonDruid = Character(
+        id: const EntityId(slug: 'druid-moon', ruleset: RulesetVersion.v2024),
         name: 'Ursoc',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -128,8 +128,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(wisdom: 16),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(wisdom: 16),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: moonDruid);
@@ -153,12 +153,12 @@ void main() {
     test(
         'Rogue Level 5 translates Sneak Attack, Cunning Action, Steady Aim, and Uncanny Dodge',
         () {
-      const rogue5 = Character(
-        id: EntityId(slug: 'rogue-5', ruleset: RulesetVersion.v2024),
+      final rogue5 = Character(
+        id: const EntityId(slug: 'rogue-5', ruleset: RulesetVersion.v2024),
         name: 'Vax',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -171,8 +171,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(dexterity: 18),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(dexterity: 18),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: rogue5);
@@ -201,12 +201,12 @@ void main() {
     test(
         'Monk Level 5 translates Deflect Missiles to Reactions and Stunning Strike to Special',
         () {
-      const monk5 = Character(
-        id: EntityId(slug: 'monk-5', ruleset: RulesetVersion.v2024),
+      final monk5 = Character(
+        id: const EntityId(slug: 'monk-5', ruleset: RulesetVersion.v2024),
         name: 'Oogway',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -219,8 +219,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(dexterity: 16, wisdom: 14),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(dexterity: 16, wisdom: 14),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: monk5);
@@ -246,12 +246,12 @@ void main() {
     test(
         'Wizard Level 2 translates Arcane Recovery (Action) and Arcane Ward (Special)',
         () {
-      const wizardAbjurer = Character(
-        id: EntityId(slug: 'wiz-abjurer', ruleset: RulesetVersion.v2024),
+      final wizardAbjurer = Character(
+        id: const EntityId(slug: 'wiz-abjurer', ruleset: RulesetVersion.v2024),
         name: 'Arcanist',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -268,8 +268,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(intelligence: 18),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(intelligence: 18),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: wizardAbjurer);
@@ -289,12 +289,12 @@ void main() {
 
     test('Fighting Style: Protection and Interception translate to Reactions',
         () {
-      const fighterProtection = Character(
-        id: EntityId(slug: 'fighter-prot', ruleset: RulesetVersion.v2024),
+      final fighterProtection = Character(
+        id: const EntityId(slug: 'fighter-prot', ruleset: RulesetVersion.v2024),
         name: 'Shield Master',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -310,8 +310,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 16),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(strength: 16),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: fighterProtection);
@@ -329,12 +329,12 @@ void main() {
     test(
         'Warlock level 11 with Moderately Armored feat does NOT receive Fighting Style: Protection reaction',
         () {
-      const warlock = Character(
-        id: EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2014),
+      final warlock = Character(
+        id: const EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2014),
         name: 'Eldritch Scholar',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -357,20 +357,20 @@ void main() {
           ],
         ),
         feats: [
-          EntityReference<DomainEntity>.empty(
+          const EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'moderately-armored',
             displayName: 'Moderately Armored',
           ),
         ],
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 14,
             constitution: 14,
             intelligence: 10,
             wisdom: 10,
             charisma: 18),
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: warlock);
@@ -413,12 +413,12 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       // Character is Level 3 Blood Knight:
       // Should have: Dread Presence (Action, Lvl 1), Blood Surge (Bonus Action, Lvl 3)
       // Should NOT have: Unholy Retribution (Lvl 7 gated)
-      const characterLvl3 = Character(
-        id: EntityId(slug: 'blood-knight-3', ruleset: RulesetVersion.v2024),
+      final characterLvl3 = Character(
+        id: const EntityId(slug: 'blood-knight-3', ruleset: RulesetVersion.v2024),
         name: 'Vampiric Champion',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -431,8 +431,8 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 16),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(strength: 16),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: characterLvl3);
@@ -476,12 +476,12 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       );
       SrdClassesLibrary.addCustomSubclass(customSubclass);
 
-      const characterWarden = Character(
-        id: EntityId(slug: 'fighter-warden', ruleset: RulesetVersion.v2024),
+      final characterWarden = Character(
+        id: const EntityId(slug: 'fighter-warden', ruleset: RulesetVersion.v2024),
         name: 'Warden Fighter',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -498,8 +498,8 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 16),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(strength: 16),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: characterWarden);
@@ -536,12 +536,12 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       );
       SrdClassesLibrary.addCustomClass(customClass);
 
-      const characterAdept = Character(
-        id: EntityId(slug: 'force-adept-char', ruleset: RulesetVersion.v2024),
+      final characterAdept = Character(
+        id: const EntityId(slug: 'force-adept-char', ruleset: RulesetVersion.v2024),
         name: 'Kineticist',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -554,8 +554,8 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
             ),
           ],
         ),
-        baseScores: AbilityScores(intelligence: 16),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(intelligence: 16),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: characterAdept);
@@ -617,12 +617,12 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
       // Psychic Thrust (Action, Lvl 1): YES
       // Thought Shield (Reaction, Lvl 2): YES
       // Psionic Leap (Bonus Action, Lvl 6): NO (gated)
-      const psionChar = Character(
-        id: EntityId(slug: 'psion-char', ruleset: RulesetVersion.v2024),
+      final psionChar = Character(
+        id: const EntityId(slug: 'psion-char', ruleset: RulesetVersion.v2024),
         name: 'Mindbender',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -635,8 +635,8 @@ As an action, emit a horrific aura that forces creatures within 30 feet to make 
             ),
           ],
         ),
-        baseScores: AbilityScores(intelligence: 16),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(intelligence: 16),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(replicaId: _testReplica, character: psionChar);

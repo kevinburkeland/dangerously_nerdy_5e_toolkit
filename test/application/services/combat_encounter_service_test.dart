@@ -159,15 +159,15 @@ void main() {
         clock: StatefulHlcClock(replicaId: ReplicaId('node-test-1')),
       );
 
-      testChar = const Character(
-        id: EntityId(slug: 'fighter_bob', ruleset: RulesetVersion.v2024),
+      testChar = Character(
+        id: const EntityId(slug: 'fighter_bob', ruleset: RulesetVersion.v2024),
         name: 'Bob the Fighter',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 16,
           dexterity: 14,
           constitution: 14,
@@ -175,7 +175,7 @@ void main() {
           wisdom: 12,
           charisma: 8,
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -188,7 +188,7 @@ void main() {
             ),
           ],
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 20,
           tempHp: 5,
         ),

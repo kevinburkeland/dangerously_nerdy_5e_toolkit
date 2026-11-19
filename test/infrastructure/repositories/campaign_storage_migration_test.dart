@@ -110,13 +110,13 @@ void main() {
     });
 
     test('Step 2: Embedded legacy characters saved to character service and profile re-saved without them', () async {
-      const hero = Character(
-        id: EntityId(slug: 'aragorn-strider', ruleset: RulesetVersion.v2024),
+      final hero = Character(
+        id: const EntityId(slug: 'aragorn-strider', ruleset: RulesetVersion.v2024),
         name: 'Aragorn Strider',
-        speciesRef: EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 35),
+        speciesRef: const EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 35),
       );
 
       final heroDto = CharacterDto.fromDomain(hero);

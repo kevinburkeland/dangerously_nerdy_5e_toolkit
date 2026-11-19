@@ -273,17 +273,17 @@ void main() {
     });
 
     test('S1: Character holding level-less spell reference resolves level via catalog immediately', () {
-      const s1Char = Character(
-        id: EntityId(slug: 's1-char', ruleset: RulesetVersion.v2024),
+      final s1Char = Character(
+        id: const EntityId(slug: 's1-char', ruleset: RulesetVersion.v2024),
         name: 'S1 Char',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         allocatedSpells: {
           'spells': [
-            EntityReference<Spell>.empty(
+            const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'fire-bolt',
               displayName: 'Fire Bolt',
@@ -345,15 +345,15 @@ void main() {
     });
 
     test('H3: MulticlassSlotMatrix computes slots via installed catalog findClass', () {
-      const character = Character(
-        id: EntityId(slug: 'test-char', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'test-char', ruleset: RulesetVersion.v2024),
         name: 'Custom Caster',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(

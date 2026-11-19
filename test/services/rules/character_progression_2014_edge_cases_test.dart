@@ -91,12 +91,12 @@ void main() {
     test(
         'Single-class half-caster (Paladin/Ranger) 2014 spell slot tables grant Level 2 slots at class level 5',
         () {
-      const paladinChar = Character(
-        id: EntityId(slug: 'holy-warrior', ruleset: RulesetVersion.v2014),
+      final paladinChar = Character(
+        id: const EntityId(slug: 'holy-warrior', ruleset: RulesetVersion.v2014),
         name: 'Holy Warrior',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -109,8 +109,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
       );
 
@@ -125,12 +125,12 @@ void main() {
     test(
         'Single-class 1/3-caster (Eldritch Knight) grants 3 1st slots at L4 and 2nd slots at L7',
         () {
-      const ekCharLevel4 = Character(
-        id: EntityId(slug: 'arcane-fighter', ruleset: RulesetVersion.v2014),
+      final ekCharLevel4 = Character(
+        id: const EntityId(slug: 'arcane-fighter', ruleset: RulesetVersion.v2014),
         name: 'Arcane Fighter',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -147,8 +147,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
       );
 
@@ -188,14 +188,14 @@ void main() {
       final resolver = ReferenceResolver(repo);
 
       // Hill Dwarf Draconic Sorcerer Level 5
-      const character = Character(
-        id: EntityId(slug: 'dwarf-sorcerer', ruleset: RulesetVersion.v2014),
+      final character = Character(
+        id: const EntityId(slug: 'dwarf-sorcerer', ruleset: RulesetVersion.v2014),
         name: 'Dwarf Sorcerer',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species,
             slug: 'hill-dwarf',
             displayName: 'Hill Dwarf'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -213,8 +213,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(constitution: 14), // +2 CON mod
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(constitution: 14), // +2 CON mod
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
       );
 
@@ -231,12 +231,12 @@ void main() {
         'ASI clamps inherent score to getAbilityScoreMaximum while preserving item overrides',
         () {
       // Character with base 19 Strength and a generic magical item setting effective Strength to 21
-      const character = Character(
-        id: EntityId(slug: 'mighty-hero', ruleset: RulesetVersion.v2014),
+      final character = Character(
+        id: const EntityId(slug: 'mighty-hero', ruleset: RulesetVersion.v2014),
         name: 'Mighty Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -249,8 +249,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 19),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(strength: 19),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
         customProperties: {
           'abilityOverrides': {'strength': 21}, // e.g. generic magical belt
@@ -280,12 +280,12 @@ void main() {
     test(
         'Inherent ability score maximum dynamically expands for Level 20 Barbarian capstone and custom treatises',
         () {
-      const barbarian20 = Character(
-        id: EntityId(slug: 'primal-warrior', ruleset: RulesetVersion.v2014),
+      final barbarian20 = Character(
+        id: const EntityId(slug: 'primal-warrior', ruleset: RulesetVersion.v2014),
         name: 'Primal Warrior',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -298,8 +298,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 20, constitution: 20),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(strength: 20, constitution: 20),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
       );
 
@@ -328,12 +328,12 @@ void main() {
       final resolver = ReferenceResolver(repo);
 
       // Started as Monk 1, multiclassed into Barbarian 1
-      const monkFirst = Character(
-        id: EntityId(slug: 'monk-barb', ruleset: RulesetVersion.v2014),
+      final monkFirst = Character(
+        id: const EntityId(slug: 'monk-barb', ruleset: RulesetVersion.v2014),
         name: 'Monk Barbarian',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -355,12 +355,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           dexterity: 14, // +2
           constitution: 16, // +3
           wisdom: 12, // +1
         ),
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
       );
 

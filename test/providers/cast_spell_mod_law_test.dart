@@ -559,16 +559,16 @@ void main() {
       'multiclass caster picks the first spellcasting class whose spell list holds the spell, else primary',
       () async {
         // Wizard (INT 18 -> +4) / Cleric (WIS 14 -> +2)
-        const multi = Character(
-          id: EntityId(slug: 'wiz-cleric', ruleset: RulesetVersion.v2024),
+        final multi = Character(
+          id: const EntityId(slug: 'wiz-cleric', ruleset: RulesetVersion.v2024),
           name: 'Wizard Cleric',
           rulesEdition: RulesetEdition.v2024,
-          speciesRef: EntityReference.empty(
+          speciesRef: const EntityReference.empty(
             refType: EntityType.species,
             slug: 'human',
             displayName: 'Human',
           ),
-          progression: CharacterProgression(
+          progression: const CharacterProgression(
             classes: [
               ClassLevelProgression(
                 classRef: EntityReference.empty(
@@ -591,8 +591,8 @@ void main() {
               ),
             ],
           ),
-          baseScores: AbilityScores(intelligence: 18, wisdom: 14),
-          resources: CharacterResourcePool(
+          baseScores: const AbilityScores(intelligence: 18, wisdom: 14),
+          resources: const CharacterResourcePool(
             currentHp: 35,
             spellSlots: SpellSlotPool(
               maxSlots: {1: 4, 2: 3, 3: 3},

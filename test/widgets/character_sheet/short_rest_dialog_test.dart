@@ -18,15 +18,15 @@ void main() {
 
     setUp(() async {
       await harness.setUpInMemory();
-      baseCharacter = const Character(
-        id: EntityId(slug: 'fighter-short-rest', ruleset: RulesetVersion.v2024),
+      baseCharacter = Character(
+        id: const EntityId(slug: 'fighter-short-rest', ruleset: RulesetVersion.v2024),
         name: 'Gareth',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -39,10 +39,10 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           constitution: 14, // Mod +2
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 15,
           currentHitDice: {'d10': 4},
         ),

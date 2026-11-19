@@ -404,15 +404,15 @@ void main() {
     test(
         'Multiclass Hit Die Recovery Test: greedy allocation to highest die face',
         () async {
-      const multiclassChar = Character(
-        id: EntityId(slug: 'multi-hero', ruleset: RulesetVersion.v2024),
+      final multiclassChar = Character(
+        id: const EntityId(slug: 'multi-hero', ruleset: RulesetVersion.v2024),
         name: 'MultiHero',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -444,7 +444,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 10,
           constitution: 10,
@@ -452,7 +452,7 @@ void main() {
           wisdom: 10,
           charisma: 10,
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 1,
           currentHitDice: {
             'd10': 0,
@@ -481,15 +481,15 @@ void main() {
         'Dynamic Max HP Healing Test: healing clamps against dynamically evaluated max HP',
         () async {
       // Base CON 10 with level 1 base max HP 10, boosted to evaluated max HP 25 via Tough feat and level progression
-      const buffedChar = Character(
-        id: EntityId(slug: 'dynamic-hp-hero', ruleset: RulesetVersion.v2024),
+      final buffedChar = Character(
+        id: const EntityId(slug: 'dynamic-hp-hero', ruleset: RulesetVersion.v2024),
         name: 'BuffedHero',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -505,13 +505,13 @@ void main() {
           ],
         ),
         feats: [
-          EntityReference<DomainEntity>.empty(
+          const EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'tough', // +2 HP per level => +4 HP => 21 + 4 = 25
             displayName: 'Tough',
           ),
         ],
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 10,
           constitution: 10, // Base CON 10 (+0 mod)
@@ -519,7 +519,7 @@ void main() {
           wisdom: 10,
           charisma: 10,
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 5,
         ),
       );

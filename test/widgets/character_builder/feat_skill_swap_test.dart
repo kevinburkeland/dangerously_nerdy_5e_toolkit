@@ -25,15 +25,15 @@ void main() {
   });
 
   Character createTestRogueLvl3() {
-    return const Character(
-      id: EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2014),
+    return Character(
+      id: const EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2014),
       name: 'Rogue Hero',
-      speciesRef: EntityReference.empty(
+      speciesRef: const EntityReference.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
       ),
-      progression: CharacterProgression(
+      progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
@@ -47,7 +47,7 @@ void main() {
           ),
         ],
       ),
-      baseScores: AbilityScores(
+      baseScores: const AbilityScores(
         strength: 10,
         dexterity: 16,
         constitution: 14,
@@ -59,7 +59,7 @@ void main() {
         SkillType.stealth: SkillProficiencyLevel.proficient,
         SkillType.sleightOfHand: SkillProficiencyLevel.proficient,
       },
-      resources: CharacterResourcePool(),
+      resources: const CharacterResourcePool(),
     );
   }
 

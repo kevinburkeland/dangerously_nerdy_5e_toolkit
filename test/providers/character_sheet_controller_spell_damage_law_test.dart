@@ -10,15 +10,15 @@ import '../test_doubles/service_test_configurator.dart';
 
 final _testReplica = ReplicaId('law_test_replica');
 
-const _baseCharacter = Character(
-  id: EntityId(slug: 'char-law', ruleset: RulesetVersion.v2024),
+final _baseCharacter = Character(
+  id: const EntityId(slug: 'char-law', ruleset: RulesetVersion.v2024),
   name: 'Law Hero',
-  speciesRef: EntityReference.empty(
+  speciesRef: const EntityReference.empty(
     refType: EntityType.species,
     slug: 'human',
     displayName: 'Human',
   ),
-  progression: CharacterProgression(
+  progression: const CharacterProgression(
     classes: [
       ClassLevelProgression(
         classRef: EntityReference.empty(
@@ -32,8 +32,8 @@ const _baseCharacter = Character(
       ),
     ],
   ),
-  baseScores: AbilityScores(intelligence: 16),
-  resources: CharacterResourcePool(),
+  baseScores: const AbilityScores(intelligence: 16),
+  resources: const CharacterResourcePool(),
 );
 
 Spell _makeSpellWithFormula(String formula) {

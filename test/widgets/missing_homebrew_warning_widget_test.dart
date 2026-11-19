@@ -10,16 +10,16 @@ void main() {
     late Character testCharacter;
 
     setUp(() {
-      testCharacter = const Character(
-        id: EntityId(slug: 'alden_custom', ruleset: RulesetVersion.v2024),
+      testCharacter = Character(
+        id: const EntityId(slug: 'alden_custom', ruleset: RulesetVersion.v2024),
         name: 'Alden the Homebrewed',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'custom_maiar',
           displayName: 'Maiar',
           rulesetPreferred: RulesetVersion.homebrew,
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -34,8 +34,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(
           currentHp: 30,
           spellSlots: SpellSlotPool(),
         ),

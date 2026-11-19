@@ -138,10 +138,10 @@ void main() {
         throwsA(anything),
       );
 
-      const character = Character(
-        id: EntityId(slug: 'hero', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'hero', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',

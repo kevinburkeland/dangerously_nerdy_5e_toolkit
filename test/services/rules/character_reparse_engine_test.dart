@@ -75,22 +75,22 @@ void main() {
       addTearDown(() =>
           SrdBackgroundsLibrary.removeCustomBackground('homebrew-inquisitor'));
 
-      const char = Character(
-        id: EntityId(slug: 'inquisitor-test', ruleset: RulesetVersion.v2014),
+      final char = Character(
+        id: const EntityId(slug: 'inquisitor-test', ruleset: RulesetVersion.v2014),
         name: 'Inquisitor Vane',
         rulesEdition: DmRulesEdition.v2014,
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: EntityReference<DomainEntity>.empty(
+        backgroundRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'homebrew-inquisitor',
           displayName: 'Homebrew Inquisitor',
         ),
-        resources: CharacterResourcePool(),
-        progression: CharacterProgression(
+        resources: const CharacterResourcePool(),
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -104,7 +104,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(dexterity: 16),
+        baseScores: const AbilityScores(dexterity: 16),
         // Artificially missing background skills and empty feature
         skillProficiencies: {
           SkillType.stealth: SkillProficiencyLevel.proficient,

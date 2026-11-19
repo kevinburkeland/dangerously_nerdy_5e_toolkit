@@ -15,15 +15,15 @@ void main() {
 
   group('Pass 6: Fail-Loud Collaborator Invariant Tests', () {
     test('1. Class lookup through CharacterEvaluationEngine.evaluate throws StateError', () {
-      const hero = Character(
-        id: EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2024),
+      final hero = Character(
+        id: const EntityId(slug: 'hero-1', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -48,15 +48,15 @@ void main() {
     });
 
     test('2. Spell slots through MulticlassSlotMatrix throws StateError', () {
-      const hero = Character(
-        id: EntityId(slug: 'hero-2', ruleset: RulesetVersion.v2024),
+      final hero = Character(
+        id: const EntityId(slug: 'hero-2', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -81,16 +81,16 @@ void main() {
     });
 
     test('3. Feat lookup through CharacterEvaluationEngine.evaluate throws StateError', () {
-      const hero = Character(
-        id: EntityId(slug: 'hero-3', ruleset: RulesetVersion.v2024),
+      final hero = Character(
+        id: const EntityId(slug: 'hero-3', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         feats: [
-          EntityReference<DomainEntity>.empty(
+          const EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'tough',
             displayName: 'Tough',
@@ -157,17 +157,17 @@ void main() {
     });
 
     test('6. Spell level resolution via Character.cantrips throws StateError', () {
-      const hero = Character(
-        id: EntityId(slug: 'hero-6', ruleset: RulesetVersion.v2024),
+      final hero = Character(
+        id: const EntityId(slug: 'hero-6', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
         allocatedSpells: {
           'spells': [
-            EntityReference<Spell>.empty(
+            const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'fire-bolt',
               displayName: 'Fire Bolt',

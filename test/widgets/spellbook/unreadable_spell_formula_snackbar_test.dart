@@ -47,15 +47,15 @@ class _FakeRepo implements ICharacterRepository<Character> {
       saved != null ? [saved!] : [];
 }
 
-Character _makeCaster() => const Character(
-      id: EntityId(slug: 'widget-caster', ruleset: RulesetVersion.v2024),
+Character _makeCaster() => Character(
+      id: const EntityId(slug: 'widget-caster', ruleset: RulesetVersion.v2024),
       name: 'Widget Caster',
-      speciesRef: EntityReference.empty(
+      speciesRef: const EntityReference.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
       ),
-      progression: CharacterProgression(
+      progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
@@ -69,8 +69,8 @@ Character _makeCaster() => const Character(
           ),
         ],
       ),
-      baseScores: AbilityScores(intelligence: 16),
-      resources: CharacterResourcePool(
+      baseScores: const AbilityScores(intelligence: 16),
+      resources: const CharacterResourcePool(
         currentHp: 20,
         spellSlots: SpellSlotPool(
           maxSlots: {1: 4},
@@ -186,15 +186,15 @@ void main() {
     );
   });
 
-  Character makeNonCaster() => const Character(
-        id: EntityId(slug: 'widget-fighter', ruleset: RulesetVersion.v2024),
+  Character makeNonCaster() => Character(
+        id: const EntityId(slug: 'widget-fighter', ruleset: RulesetVersion.v2024),
         name: 'Widget Fighter',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -208,8 +208,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 16, wisdom: 16),
-        resources: CharacterResourcePool(
+        baseScores: const AbilityScores(strength: 16, wisdom: 16),
+        resources: const CharacterResourcePool(
           currentHp: 30,
           spellSlots: SpellSlotPool(
             maxSlots: {1: 4},

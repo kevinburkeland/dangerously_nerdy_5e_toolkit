@@ -23,15 +23,15 @@ void main() {
       expect(resolver, isA<IEntityResolver>());
 
       // 3. Verify character evaluation executes through external ruleset engine
-      const character = Character(
-        id: EntityId(slug: 'composition-test-hero', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'composition-test-hero', ruleset: RulesetVersion.v2024),
         name: 'Sir Galahad',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -44,8 +44,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 16, dexterity: 10, constitution: 14),
-        resources: CharacterResourcePool(currentHp: 28),
+        baseScores: const AbilityScores(strength: 16, dexterity: 10, constitution: 14),
+        resources: const CharacterResourcePool(currentHp: 28),
       );
 
       final stats = CharacterEvaluationEngine.evaluate(character);

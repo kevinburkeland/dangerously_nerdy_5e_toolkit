@@ -76,23 +76,23 @@ void main() {
     test('Initial loadData resolves relational characters by foreign key IDs',
         () async {
       // 1. Seed Character database with top-level characters
-      const hero1 = Character(
-        id: EntityId(slug: 'hero_valen', ruleset: RulesetVersion.v2024),
+      final hero1 = Character(
+        id: const EntityId(slug: 'hero_valen', ruleset: RulesetVersion.v2024),
         name: 'Valen',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 50),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 50),
       );
-      const hero2 = Character(
-        id: EntityId(slug: 'hero_sylas', ruleset: RulesetVersion.v2024),
+      final hero2 = Character(
+        id: const EntityId(slug: 'hero_sylas', ruleset: RulesetVersion.v2024),
         name: 'Sylas',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'elf', refType: EntityType.species, displayName: 'Elf'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 40),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 40),
       );
       await characterService.saveCharacters([hero1, hero2]);
 
@@ -126,14 +126,14 @@ void main() {
     test(
         'modifyCharacterHp updates Character in persistence without re-saving CampaignProfile',
         () async {
-      const hero = Character(
-        id: EntityId(slug: 'hero_dain', ruleset: RulesetVersion.v2024),
+      final hero = Character(
+        id: const EntityId(slug: 'hero_dain', ruleset: RulesetVersion.v2024),
         name: 'Dain',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'dwarf', refType: EntityType.species, displayName: 'Dwarf'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 60),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 60),
       );
       await characterService.saveCharacter(hero);
 
@@ -177,14 +177,14 @@ void main() {
     test(
         'toggleSpellSlot mutates spell slots in Character without touching CampaignProfile',
         () async {
-      const wizard = Character(
-        id: EntityId(slug: 'hero_alden', ruleset: RulesetVersion.v2024),
+      final wizard = Character(
+        id: const EntityId(slug: 'hero_alden', ruleset: RulesetVersion.v2024),
         name: 'Alden',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(
           currentHp: 30,
           spellSlots: SpellSlotPool(
             maxSlots: {1: 4, 2: 3},

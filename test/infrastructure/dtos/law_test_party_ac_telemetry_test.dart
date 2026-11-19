@@ -7,16 +7,16 @@ import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 void main() {
   group('Fix 8.5 Law Test: Party Telemetry AC Comes From Rules', () {
     test('DEX 18 unarmored rogue telemetry AC is 14, not 10', () {
-      const rogue = Character(
-        id: EntityId(slug: 'dex-18-rogue', ruleset: RulesetVersion.v2024),
+      final rogue = Character(
+        id: const EntityId(slug: 'dex-18-rogue', ruleset: RulesetVersion.v2024),
         name: 'Dex 18 Rogue',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        baseScores: AbilityScores(dexterity: 18),
-        progression: CharacterProgression(classes: [
+        baseScores: const AbilityScores(dexterity: 18),
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference<DomainEntity>.empty(
               refType: EntityType.classDefinition,

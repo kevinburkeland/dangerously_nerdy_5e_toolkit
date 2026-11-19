@@ -181,17 +181,17 @@ void main() {
     await ctx.campRepo.putProfile(unrelated);
 
     // One saved character
-    const testChar = Character(
-      id: EntityId(slug: 'hero_r1', ruleset: RulesetVersion.v2024),
+    final testChar = Character(
+      id: const EntityId(slug: 'hero_r1', ruleset: RulesetVersion.v2024),
       name: 'Hero R1',
-      speciesRef: EntityReference.empty(
+      speciesRef: const EntityReference.empty(
         slug: 'human',
         refType: EntityType.species,
         displayName: 'Human',
       ),
-      progression: CharacterProgression(classes: []),
-      baseScores: AbilityScores.standardArray(),
-      resources: CharacterResourcePool(currentHp: 20),
+      progression: const CharacterProgression(classes: []),
+      baseScores: const AbilityScores.standardArray(),
+      resources: const CharacterResourcePool(currentHp: 20),
     );
     await ctx.charRepo.saveCharacter(testChar);
 

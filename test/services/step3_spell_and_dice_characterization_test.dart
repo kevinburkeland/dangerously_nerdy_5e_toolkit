@@ -58,15 +58,15 @@ class _InMemoryRepo implements ICharacterRepository<Character> {
       saved != null ? [saved!] : [];
 }
 
-Character _makeCaster() => const Character(
-      id: EntityId(slug: 'step3-caster', ruleset: RulesetVersion.v2024),
+Character _makeCaster() => Character(
+      id: const EntityId(slug: 'step3-caster', ruleset: RulesetVersion.v2024),
       name: 'Step3 Caster',
-      speciesRef: EntityReference.empty(
+      speciesRef: const EntityReference.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
       ),
-      progression: CharacterProgression(
+      progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
@@ -80,8 +80,8 @@ Character _makeCaster() => const Character(
           ),
         ],
       ),
-      baseScores: AbilityScores(intelligence: 18, charisma: 14),
-      resources: CharacterResourcePool(
+      baseScores: const AbilityScores(intelligence: 18, charisma: 14),
+      resources: const CharacterResourcePool(
         currentHp: 30,
         spellSlots: SpellSlotPool(
           maxSlots: {1: 4, 2: 3, 3: 2},

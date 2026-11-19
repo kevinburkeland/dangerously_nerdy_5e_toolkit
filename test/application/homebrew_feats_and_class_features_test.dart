@@ -167,12 +167,12 @@ void main() {
       );
       SrdFeatsLibrary.addCustomFeat(testFeat);
 
-      const char = Character(
-        id: EntityId(slug: 'test-hero', ruleset: RulesetVersion.v2014),
+      final char = Character(
+        id: const EntityId(slug: 'test-hero', ruleset: RulesetVersion.v2014),
         name: 'Test Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -184,14 +184,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 15,
             dexterity: 14,
             constitution: 13,
             intelligence: 12,
             wisdom: 10,
             charisma: 8),
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(
@@ -277,12 +277,12 @@ void main() {
       );
       SrdClassesLibrary.addCustomClass(customClass);
 
-      const hero = Character(
-        id: EntityId(slug: 'expert-hero', ruleset: RulesetVersion.v2014),
+      final hero = Character(
+        id: const EntityId(slug: 'expert-hero', ruleset: RulesetVersion.v2014),
         name: 'Expert Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -294,14 +294,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 16,
             constitution: 14,
             intelligence: 12,
             wisdom: 10,
             charisma: 8),
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(

@@ -264,12 +264,12 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       // Create a Level 1 Warlock leveling up to Level 2 without Eldritch Blast
-      const character = Character(
-        id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2014),
+      final character = Character(
+        id: const EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2014),
         name: 'Test Warlock',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'human', displayName: 'Human', refType: EntityType.species),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -282,7 +282,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 14,
             constitution: 14,
@@ -290,12 +290,12 @@ void main() {
             wisdom: 12,
             charisma: 16),
         cantrips: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               slug: 'chill-touch',
               displayName: 'Chill Touch',
               refType: EntityType.spell),
         ],
-        resources: CharacterResourcePool(),
+        resources: const CharacterResourcePool(),
       );
 
       await tester.pumpWidget(

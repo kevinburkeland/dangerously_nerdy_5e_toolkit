@@ -611,13 +611,13 @@ void main() {
         );
         await controller.loadData(initialCampaignId: initialProfile.id);
 
-        const testChar = Character(
-          id: EntityId(slug: 'paladin-1', ruleset: RulesetVersion.v2024),
+        final testChar = Character(
+          id: const EntityId(slug: 'paladin-1', ruleset: RulesetVersion.v2024),
           name: 'Sir Gareth',
-          speciesRef: EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
-          progression: CharacterProgression(classes: []),
-          baseScores: AbilityScores.standardArray(),
-          resources: CharacterResourcePool(currentHp: 45),
+          speciesRef: const EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
+          progression: const CharacterProgression(classes: []),
+          baseScores: const AbilityScores.standardArray(),
+          resources: const CharacterResourcePool(currentHp: 45),
         );
 
         await controller.addCharacterToParty(testChar);
@@ -640,13 +640,13 @@ void main() {
           characterRepo: LocalCharacterRepository(),
         );
 
-        const testChar = Character(
-          id: EntityId(slug: 'paladin-1', ruleset: RulesetVersion.v2024),
+        final testChar = Character(
+          id: const EntityId(slug: 'paladin-1', ruleset: RulesetVersion.v2024),
           name: 'Sir Gareth',
-          speciesRef: EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
-          progression: CharacterProgression(classes: []),
-          baseScores: AbilityScores.standardArray(),
-          resources: CharacterResourcePool(currentHp: 45),
+          speciesRef: const EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
+          progression: const CharacterProgression(classes: []),
+          baseScores: const AbilityScores.standardArray(),
+          resources: const CharacterResourcePool(currentHp: 45),
         );
         await charRepo.saveCharacter(testChar);
 

@@ -75,36 +75,36 @@ void main() {
     campRepo.dispose();
   });
 
-  const testHero = Character(
-    id: EntityId(slug: 'char_test_hero', ruleset: RulesetVersion.v2024),
+  final testHero = Character(
+    id: const EntityId(slug: 'char_test_hero', ruleset: RulesetVersion.v2024),
     name: 'Thorek Ironbreaker',
-    speciesRef: EntityReference.empty(
+    speciesRef: const EntityReference.empty(
         refType: EntityType.species, slug: 'dwarf', displayName: 'Dwarf'),
-    baseScores: AbilityScores(
+    baseScores: const AbilityScores(
         strength: 14,
         dexterity: 10,
         constitution: 14,
         intelligence: 10,
         wisdom: 10,
         charisma: 10),
-    progression: CharacterProgression(classes: []),
-    resources: CharacterResourcePool(),
+    progression: const CharacterProgression(classes: []),
+    resources: const CharacterResourcePool(),
   );
 
-  const legacyHero = Character(
-    id: EntityId(slug: 'legacy_wizard', ruleset: RulesetVersion.v2024),
+  final legacyHero = Character(
+    id: const EntityId(slug: 'legacy_wizard', ruleset: RulesetVersion.v2024),
     name: 'Alden the Grey',
-    speciesRef: EntityReference.empty(
+    speciesRef: const EntityReference.empty(
         refType: EntityType.species, slug: 'human', displayName: 'Human'),
-    baseScores: AbilityScores(
+    baseScores: const AbilityScores(
         strength: 10,
         dexterity: 10,
         constitution: 10,
         intelligence: 16,
         wisdom: 14,
         charisma: 12),
-    progression: CharacterProgression(classes: []),
-    resources: CharacterResourcePool(),
+    progression: const CharacterProgression(classes: []),
+    resources: const CharacterResourcePool(),
   );
 
   group('Single-Source Persistence Verification Tests', () {

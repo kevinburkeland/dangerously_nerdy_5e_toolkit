@@ -158,12 +158,12 @@ void main() {
       SrdFeatsLibrary.addCustomFeat(alertFeat);
       addTearDown(() => SrdFeatsLibrary.removeCustomFeat('alert'));
 
-      const char = Character(
-        id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2014),
+      final char = Character(
+        id: const EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2014),
         name: 'Fighter Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -176,8 +176,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(strength: 16, constitution: 14),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(strength: 16, constitution: 14),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2014,
       );
 
@@ -189,7 +189,7 @@ void main() {
                 onPressed: () {
                   showDialog(
                     context: ctx,
-                    builder: (_) => const LevelUpWizardDialog(character: char),
+                    builder: (_) => LevelUpWizardDialog(character: char),
                   );
                 },
                 child: const Text('Open Wizard'),
@@ -248,12 +248,12 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      const wizardChar = Character(
-        id: EntityId(slug: 'wizard-hero', ruleset: RulesetVersion.v2024),
+      final wizardChar = Character(
+        id: const EntityId(slug: 'wizard-hero', ruleset: RulesetVersion.v2024),
         name: 'Wizard Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -266,8 +266,8 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(intelligence: 16, constitution: 14),
-        resources: CharacterResourcePool(),
+        baseScores: const AbilityScores(intelligence: 16, constitution: 14),
+        resources: const CharacterResourcePool(),
         rulesEdition: DmRulesEdition.v2024,
       );
 
@@ -280,7 +280,7 @@ void main() {
                   showDialog(
                     context: ctx,
                     builder: (_) =>
-                        const LevelUpWizardDialog(character: wizardChar),
+                        LevelUpWizardDialog(character: wizardChar),
                   );
                 },
                 child: const Text('Open Wizard'),

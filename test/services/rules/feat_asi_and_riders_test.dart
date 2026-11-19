@@ -214,15 +214,15 @@ void main() {
     });
 
     Character createBaseRogueLevel3() {
-      return const Character(
-        id: EntityId(slug: 'shadow-rogue', ruleset: RulesetVersion.v2024),
+      return Character(
+        id: const EntityId(slug: 'shadow-rogue', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 15,
           constitution: 13, // +1 modifier
@@ -230,7 +230,7 @@ void main() {
           wisdom: 14,
           charisma: 8,
         ),
-        bonusScores: AbilityScores(
+        bonusScores: const AbilityScores(
           strength: 0,
           dexterity: 0,
           constitution: 0,
@@ -242,7 +242,7 @@ void main() {
           AbilityType.dexterity,
           AbilityType.intelligence,
         },
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -262,7 +262,7 @@ void main() {
           SkillType.acrobatics: SkillProficiencyLevel.proficient,
           SkillType.stealth: SkillProficiencyLevel.expertise,
         },
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 21, // 8+1 + 5+1 + 5+1 = 21
           tempHp: 0,
           currentHitDice: {'d8': 3},

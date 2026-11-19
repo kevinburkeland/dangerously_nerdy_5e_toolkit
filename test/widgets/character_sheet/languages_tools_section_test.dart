@@ -12,17 +12,17 @@ void main() {
     late CharacterSheetController controller;
 
     setUp(() {
-      testCharacter = const Character(
-        id: EntityId(slug: 'rogue-tester', ruleset: RulesetVersion.v2024),
+      testCharacter = Character(
+        id: const EntityId(slug: 'rogue-tester', ruleset: RulesetVersion.v2024),
         name: 'Shadowfoot',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
         languages: ['Common', 'Elvish'],
         toolProficiencies: ["Thieves' Tools"],
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -36,12 +36,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           dexterity: 16, // +3
           intelligence: 12,
           wisdom: 10,
         ),
-        resources: CharacterResourcePool(currentHp: 20),
+        resources: const CharacterResourcePool(currentHp: 20),
       );
 
       controller = CharacterSheetController(

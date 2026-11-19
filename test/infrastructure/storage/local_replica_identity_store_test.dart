@@ -90,13 +90,13 @@ void main() {
       expect(dmController.replicaId, equals(authoritativeReplica));
       expect(dmController.combatEncounterService.localNodeId, equals(expectedNodeId));
 
-      const testChar = Character(
-        id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
+      final testChar = Character(
+        id: const EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
       );
       final charController = CharacterSheetController(
         character: testChar,
@@ -329,13 +329,13 @@ void main() {
       CampaignProfileService.resetForTesting();
       expect(sl.isRegistered<ReplicaId>(), isFalse);
 
-      const testChar = Character(
-        id: EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
+      final testChar = Character(
+        id: const EntityId(slug: 'hero1', ruleset: RulesetVersion.v2024),
         name: 'Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
       );
 
       // Services with optional or fallback replicaId throw StateError when DI is absent

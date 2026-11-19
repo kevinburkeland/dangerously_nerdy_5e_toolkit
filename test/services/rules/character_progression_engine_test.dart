@@ -19,15 +19,15 @@ void main() {
 
     test('Single-class progression (Fighter 1 -> 2 -> 3 Champion -> 4 ASI)',
         () {
-      var fighter = const Character(
-        id: EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
+      var fighter = Character(
+        id: const EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
         name: 'Warrior',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
@@ -40,7 +40,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 16,
           dexterity: 14,
           constitution: 14, // +2 mod
@@ -48,7 +48,7 @@ void main() {
           wisdom: 12,
           charisma: 8,
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 12, // 10 + 2 CON
           tempHp: 0,
           currentHitDice: {'d10': 1},
@@ -120,15 +120,15 @@ void main() {
     test('Retroactive CON HP recalculation when CON score increases at Level 4',
         () {
       // Wizard with base CON 12 (+1 mod)
-      var wizard = const Character(
-        id: EntityId(slug: 'mage', ruleset: RulesetVersion.v2024),
+      var wizard = Character(
+        id: const EntityId(slug: 'mage', ruleset: RulesetVersion.v2024),
         name: 'Mage',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
@@ -141,7 +141,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 8,
           dexterity: 14,
           constitution: 12, // +1 mod
@@ -149,7 +149,7 @@ void main() {
           wisdom: 12,
           charisma: 10,
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 7, // 6 + 1 CON
           currentHitDice: {'d6': 1},
         ),
@@ -206,15 +206,15 @@ void main() {
 
     test('Multiclass Progression & Slot Pooling (Paladin 2 / Sorcerer 3)', () {
       // Paladin 2 base
-      var paladin = const Character(
-        id: EntityId(slug: 'gish', ruleset: RulesetVersion.v2024),
+      var paladin = Character(
+        id: const EntityId(slug: 'gish', ruleset: RulesetVersion.v2024),
         name: 'Holy Sorcerer',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
@@ -227,7 +227,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 16,
           dexterity: 10,
           constitution: 14,
@@ -235,7 +235,7 @@ void main() {
           wisdom: 10,
           charisma: 16,
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 20,
           currentHitDice: {'d10': 2},
         ),
@@ -287,15 +287,15 @@ void main() {
 
     test('Warlock Pact Magic slots are pooled correctly with standard slots',
         () {
-      const warlockSorcerer = Character(
-        id: EntityId(slug: 'coffelock', ruleset: RulesetVersion.v2024),
+      final warlockSorcerer = Character(
+        id: const EntityId(slug: 'coffelock', ruleset: RulesetVersion.v2024),
         name: 'Coffeelock',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
@@ -316,7 +316,7 @@ void main() {
             hitDie: 'd8',
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 10,
           dexterity: 14,
           constitution: 14,
@@ -324,7 +324,7 @@ void main() {
           wisdom: 10,
           charisma: 16,
         ),
-        resources: CharacterResourcePool(currentHp: 30),
+        resources: const CharacterResourcePool(currentHp: 30),
       );
 
       final stats = CharacterStatCalculator.compute(warlockSorcerer, resolver);
@@ -349,15 +349,15 @@ void main() {
     });
 
     test('Multiclass validation rejects if attribute score is below 13', () {
-      const weakMage = Character(
-        id: EntityId(slug: 'weak_mage', ruleset: RulesetVersion.v2024),
+      final weakMage = Character(
+        id: const EntityId(slug: 'weak_mage', ruleset: RulesetVersion.v2024),
         name: 'Weak Mage',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
@@ -369,7 +369,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 8,
           dexterity: 12,
           constitution: 12,
@@ -377,7 +377,7 @@ void main() {
           wisdom: 10,
           charisma: 10,
         ),
-        resources: CharacterResourcePool(currentHp: 12),
+        resources: const CharacterResourcePool(currentHp: 12),
       );
 
       // Barbarian requires STR 13
@@ -483,17 +483,17 @@ void main() {
     test(
         'applyLevelUp merges newToolProficiencies and newLanguages without duplicates',
         () {
-      const initialCharacter = Character(
-        id: EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2024),
+      final initialCharacter = Character(
+        id: const EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
         languages: ['Common', 'Elvish'],
         toolProficiencies: ["Thieves' Tools"],
-        progression: CharacterProgression(classes: [
+        progression: const CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
               refType: EntityType.classDefinition,
@@ -505,8 +505,8 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: AbilityScores(dexterity: 16),
-        resources: CharacterResourcePool(currentHp: 16),
+        baseScores: const AbilityScores(dexterity: 16),
+        resources: const CharacterResourcePool(currentHp: 16),
       );
 
       final leveled = CharacterProgressionEngine.applyLevelUp(

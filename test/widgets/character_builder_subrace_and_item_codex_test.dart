@@ -145,12 +145,12 @@ void main() {
 
     test('CharacterSheetController adds and removes inventory items seamlessly',
         () async {
-      const initialChar = Character(
-        id: EntityId(slug: 'test-adventurer', ruleset: RulesetVersion.v2024),
+      final initialChar = Character(
+        id: const EntityId(slug: 'test-adventurer', ruleset: RulesetVersion.v2024),
         name: 'Test Adventurer',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -163,14 +163,14 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 10,
             constitution: 10,
             intelligence: 10,
             wisdom: 10,
             charisma: 10),
-        resources: CharacterResourcePool(currentHp: 10),
+        resources: const CharacterResourcePool(currentHp: 10),
       );
 
       final controller = CharacterSheetController(

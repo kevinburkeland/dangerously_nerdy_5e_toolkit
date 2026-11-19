@@ -49,21 +49,21 @@ void main() {
         },
       );
 
-      warlockWithAgonizing = const Character(
-        id: EntityId(slug: 'warlock-agonizing', ruleset: RulesetVersion.v2024),
+      warlockWithAgonizing = Character(
+        id: const EntityId(slug: 'warlock-agonizing', ruleset: RulesetVersion.v2024),
         name: 'Malakor',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        backgroundRef: EntityReference<DomainEntity>.empty(
+        backgroundRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.background,
           slug: 'acolyte',
           displayName: 'Acolyte',
         ),
-        resources: CharacterResourcePool(),
-        progression: CharacterProgression(
+        resources: const CharacterResourcePool(),
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -80,13 +80,13 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           charisma: 16, // Modifier +3
           constitution: 14,
           dexterity: 12,
         ),
         feats: [
-          EntityReference<DomainEntity>.empty(
+          const EntityReference<DomainEntity>.empty(
             refType: EntityType.feat,
             slug: 'alert',
             displayName: 'Alert',
@@ -94,16 +94,16 @@ void main() {
         ],
       );
 
-      warlockWithoutAgonizing = const Character(
-        id: EntityId(slug: 'warlock-plain', ruleset: RulesetVersion.v2024),
+      warlockWithoutAgonizing = Character(
+        id: const EntityId(slug: 'warlock-plain', ruleset: RulesetVersion.v2024),
         name: 'Novice Warlock',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        resources: CharacterResourcePool(),
-        progression: CharacterProgression(
+        resources: const CharacterResourcePool(),
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -118,7 +118,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           charisma: 16, // Modifier +3
         ),
       );
@@ -202,16 +202,16 @@ void main() {
         },
       );
 
-      warlock = const Character(
-        id: EntityId(slug: 'warlock-hero', ruleset: RulesetVersion.v2024),
+      warlock = Character(
+        id: const EntityId(slug: 'warlock-hero', ruleset: RulesetVersion.v2024),
         name: 'Malakor',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        resources: CharacterResourcePool(),
-        progression: CharacterProgression(
+        resources: const CharacterResourcePool(),
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -228,7 +228,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           charisma: 16,
         ),
       );

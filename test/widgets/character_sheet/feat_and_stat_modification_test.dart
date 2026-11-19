@@ -26,15 +26,15 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       await harness.setUpInMemory();
       await initServiceLocator();
-      baseCharacter = const Character(
-        id: EntityId(slug: 'hero-bob', ruleset: RulesetVersion.v2024),
+      baseCharacter = Character(
+        id: const EntityId(slug: 'hero-bob', ruleset: RulesetVersion.v2024),
         name: 'Bob the Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
           strength: 14,
           dexterity: 12,
           constitution: 14,
@@ -42,7 +42,7 @@ void main() {
           wisdom: 12,
           charisma: 8,
         ),
-        bonusScores: AbilityScores(
+        bonusScores: const AbilityScores(
           strength: 0,
           dexterity: 0,
           constitution: 0,
@@ -50,7 +50,7 @@ void main() {
           wisdom: 0,
           charisma: 0,
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -65,7 +65,7 @@ void main() {
             ),
           ],
         ),
-        resources: CharacterResourcePool(
+        resources: const CharacterResourcePool(
           currentHp: 28,
           tempHp: 0,
           currentHitDice: {'d10': 3},

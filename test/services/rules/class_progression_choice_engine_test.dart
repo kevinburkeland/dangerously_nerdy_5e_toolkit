@@ -342,12 +342,12 @@ void main() {
         );
         baseLayer.registerEntity(leatherArmor);
 
-        const characterWithoutArmor = Character(
-          id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
+        final characterWithoutArmor = Character(
+          id: const EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
           name: 'Fighter Hero',
-          speciesRef: EntityReference.empty(
+          speciesRef: const EntityReference.empty(
               refType: EntityType.species, slug: 'human', displayName: 'Human'),
-          progression: CharacterProgression(classes: [
+          progression: const CharacterProgression(classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
@@ -360,7 +360,7 @@ void main() {
               },
             ),
           ]),
-          baseScores: AbilityScores(
+          baseScores: const AbilityScores(
               strength: 16,
               dexterity: 14,
               constitution: 14,
@@ -369,7 +369,7 @@ void main() {
               charisma: 10),
           inventory: [],
           resources:
-              CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
+              const CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
         );
 
         final unarmoredStats =
@@ -401,12 +401,12 @@ void main() {
 
       test('Draconic Sorcerer subclass grants base AC 13 + DEX when unarmored',
           () {
-        const sorcerer = Character(
-          id: EntityId(slug: 'draconic-sorc', ruleset: RulesetVersion.v2024),
+        final sorcerer = Character(
+          id: const EntityId(slug: 'draconic-sorc', ruleset: RulesetVersion.v2024),
           name: 'Dragon Sorcerer',
-          speciesRef: EntityReference.empty(
+          speciesRef: const EntityReference.empty(
               refType: EntityType.species, slug: 'human', displayName: 'Human'),
-          progression: CharacterProgression(classes: [
+          progression: const CharacterProgression(classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
@@ -420,7 +420,7 @@ void main() {
               hitDie: 'd6',
             ),
           ]),
-          baseScores: AbilityScores(
+          baseScores: const AbilityScores(
               strength: 10,
               dexterity: 16,
               constitution: 14,
@@ -429,7 +429,7 @@ void main() {
               charisma: 16),
           inventory: [],
           resources:
-              CharacterResourcePool(currentHp: 8, currentHitDice: {'d6': 1}),
+              const CharacterResourcePool(currentHp: 8, currentHitDice: {'d6': 1}),
         );
 
         final stats = CharacterStatCalculator.compute(sorcerer, resolver);
@@ -441,12 +441,12 @@ void main() {
       test(
           'LevelUpRequest preserves and aggregates selectedFeatureOptions across level ups',
           () {
-        const baseFighter = Character(
-          id: EntityId(slug: 'fighter-prog', ruleset: RulesetVersion.v2024),
+        final baseFighter = Character(
+          id: const EntityId(slug: 'fighter-prog', ruleset: RulesetVersion.v2024),
           name: 'Fighter Progression',
-          speciesRef: EntityReference.empty(
+          speciesRef: const EntityReference.empty(
               refType: EntityType.species, slug: 'human', displayName: 'Human'),
-          progression: CharacterProgression(classes: [
+          progression: const CharacterProgression(classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
                   refType: EntityType.classDefinition,
@@ -459,10 +459,10 @@ void main() {
               },
             ),
           ]),
-          baseScores: AbilityScores.standardArray(),
+          baseScores: const AbilityScores.standardArray(),
           inventory: [],
           resources:
-              CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
+              const CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
         );
 
         // Advance to Level 2

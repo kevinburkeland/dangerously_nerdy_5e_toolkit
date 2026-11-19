@@ -66,12 +66,12 @@ void main() {
     configureTestCampaignProfileService();
     configureTestDiceRoomService();
     fakeRepo = _FakeRepo();
-    baseCharacter = const Character(
-      id: EntityId(slug: 'hero-caster', ruleset: RulesetVersion.v2024),
+    baseCharacter = Character(
+      id: const EntityId(slug: 'hero-caster', ruleset: RulesetVersion.v2024),
       name: 'Eldritch Scholar',
-      speciesRef: EntityReference.empty(
+      speciesRef: const EntityReference.empty(
           refType: EntityType.species, slug: 'elf', displayName: 'High Elf'),
-      progression: CharacterProgression(
+      progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
             classRef: EntityReference.empty(
@@ -84,7 +84,7 @@ void main() {
           ),
         ],
       ),
-      baseScores: AbilityScores(
+      baseScores: const AbilityScores(
         strength: 14,
         dexterity: 16,
         constitution: 14,
@@ -92,7 +92,7 @@ void main() {
         wisdom: 12,
         charisma: 10,
       ),
-      resources: CharacterResourcePool(
+      resources: const CharacterResourcePool(
         currentHp: 28,
         spellSlots: SpellSlotPool(
           maxSlots: {1: 4, 2: 3, 3: 2, 4: 1},

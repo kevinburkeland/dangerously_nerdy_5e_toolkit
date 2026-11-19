@@ -44,20 +44,20 @@ void main() {
     test(
         'CharacterPersistenceService migrates legacy SharedPreferences and persists to database',
         () async {
-      const legacyChar = Character(
-        id: EntityId(slug: 'legacy-hero', ruleset: RulesetVersion.v2024),
+      final legacyChar = Character(
+        id: const EntityId(slug: 'legacy-hero', ruleset: RulesetVersion.v2024),
         name: 'Legacy Hero',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 10,
             constitution: 10,
             intelligence: 10,
             wisdom: 10,
             charisma: 10),
-        progression: CharacterProgression(classes: []),
-        resources: CharacterResourcePool(),
+        progression: const CharacterProgression(classes: []),
+        resources: const CharacterResourcePool(),
       );
 
       // Seed SharedPreferences with legacy character
@@ -71,20 +71,20 @@ void main() {
       expect(loaded.first.id.slug, equals('legacy-hero'));
 
       // Save a new character
-      const newChar = Character(
-        id: EntityId(slug: 'new-mage', ruleset: RulesetVersion.v2024),
+      final newChar = Character(
+        id: const EntityId(slug: 'new-mage', ruleset: RulesetVersion.v2024),
         name: 'New Mage',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
             refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        baseScores: AbilityScores(
+        baseScores: const AbilityScores(
             strength: 10,
             dexterity: 10,
             constitution: 10,
             intelligence: 10,
             wisdom: 10,
             charisma: 10),
-        progression: CharacterProgression(classes: []),
-        resources: CharacterResourcePool(),
+        progression: const CharacterProgression(classes: []),
+        resources: const CharacterResourcePool(),
       );
       await charService.saveCharacter(newChar);
 

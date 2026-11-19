@@ -67,15 +67,15 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
       );
     } else {
       // Fallback empty character
-      active = const Character(
-        id: EntityId(slug: 'hero-default', ruleset: RulesetVersion.v2024),
+      active = Character(
+        id: const EntityId(slug: 'hero-default', ruleset: RulesetVersion.v2024),
         name: 'Adventurer',
-        speciesRef: EntityReference<DomainEntity>.empty(
+        speciesRef: const EntityReference<DomainEntity>.empty(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>.empty(
@@ -89,8 +89,8 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
             ),
           ],
         ),
-        baseScores: AbilityScores.standardArray(),
-        resources: CharacterResourcePool(currentHp: 12),
+        baseScores: const AbilityScores.standardArray(),
+        resources: const CharacterResourcePool(currentHp: 12),
       );
     }
 

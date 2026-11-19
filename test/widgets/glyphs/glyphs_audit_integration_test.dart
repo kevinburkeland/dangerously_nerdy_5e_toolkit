@@ -30,15 +30,15 @@ void main() {
   late Spell testSpell;
 
   setUp(() {
-    testCharacter = const Character(
-      id: EntityId(slug: 'solomon-test', ruleset: RulesetVersion.v2024),
+    testCharacter = Character(
+      id: const EntityId(slug: 'solomon-test', ruleset: RulesetVersion.v2024),
       name: 'Solomon Kane',
-      speciesRef: EntityReference<DomainEntity>.empty(
+      speciesRef: const EntityReference<DomainEntity>.empty(
         refType: EntityType.species,
         slug: 'human',
         displayName: 'Human',
       ),
-      progression: CharacterProgression(
+      progression: const CharacterProgression(
         classes: [
           ClassLevelProgression(
             classRef: EntityReference<DomainEntity>.empty(
@@ -51,7 +51,7 @@ void main() {
           ),
         ],
       ),
-      baseScores: AbilityScores(
+      baseScores: const AbilityScores(
         strength: 10,
         dexterity: 14,
         constitution: 14,
@@ -59,7 +59,7 @@ void main() {
         wisdom: 12,
         charisma: 8,
       ),
-      resources: CharacterResourcePool(
+      resources: const CharacterResourcePool(
         currentHp: 28,
         currentHitDice: {'d6': 5},
         deathSaveSuccesses: 1,

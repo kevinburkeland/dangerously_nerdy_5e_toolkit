@@ -16,15 +16,15 @@ void main() {
         'Warlock untraining at level 3 must not prevent learning 5th spell at level 4',
         () {
       // 1. Level 1 Warlock
-      var warlock = const Character(
-        id: EntityId(slug: 'warlock_test', ruleset: RulesetVersion.v2014),
+      var warlock = Character(
+        id: const EntityId(slug: 'warlock_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock Test',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -38,25 +38,25 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(charisma: 16),
-        resources: CharacterResourcePool(
+        baseScores: const AbilityScores(charisma: 16),
+        resources: const CharacterResourcePool(
           currentHp: 10,
           currentHitDice: {'d8': 1},
         ),
         cantrips: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
         ],
         spellsKnown: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_hellish_rebuke',
               displayName: 'Hellish Rebuke'),
@@ -132,15 +132,15 @@ void main() {
     test(
         'Untraining a spell previously learned at level up (stored in allocatedSpells) removes it from allocatedSpells',
         () {
-      var warlock = const Character(
-        id: EntityId(slug: 'warlock_test_2', ruleset: RulesetVersion.v2014),
+      var warlock = Character(
+        id: const EntityId(slug: 'warlock_test_2', ruleset: RulesetVersion.v2014),
         name: 'Warlock Test 2',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -154,21 +154,21 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(charisma: 16),
-        resources: CharacterResourcePool(
+        baseScores: const AbilityScores(charisma: 16),
+        resources: const CharacterResourcePool(
           currentHp: 10,
           currentHitDice: {'d8': 1},
         ),
         cantrips: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
         ],
         spellsKnown: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_arms_of_hadar',
               displayName: 'Arms of Hadar'),
@@ -291,15 +291,15 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       // Character at Level 3 Warlock with 4 spells known and 2 cantrips
-      const lvl3Warlock = Character(
-        id: EntityId(slug: 'warlock_hud_test', ruleset: RulesetVersion.v2014),
+      final lvl3Warlock = Character(
+        id: const EntityId(slug: 'warlock_hud_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock HUD Test',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -313,33 +313,33 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(charisma: 16),
-        resources: CharacterResourcePool(
+        baseScores: const AbilityScores(charisma: 16),
+        resources: const CharacterResourcePool(
           currentHp: 24,
           currentHitDice: {'d8': 3},
         ),
         cantrips: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_eldritch_blast',
               displayName: 'Eldritch Blast'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_mage_hand',
               displayName: 'Mage Hand'),
         ],
         spellsKnown: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_charm_person',
               displayName: 'Charm Person'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_misty_step',
               displayName: 'Misty Step'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_darkness',
               displayName: 'Darkness'),
@@ -347,7 +347,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(
               character: lvl3Warlock,
@@ -394,15 +394,15 @@ void main() {
         'CharacterSheetController.removeSpell purges spell from allocatedSpells as well as spellsKnown',
         () async {
       final mockPersistence = _MockAuditPersistence();
-      const testChar = Character(
-        id: EntityId(slug: 'warlock_sheet_test', ruleset: RulesetVersion.v2014),
+      final testChar = Character(
+        id: const EntityId(slug: 'warlock_sheet_test', ruleset: RulesetVersion.v2014),
         name: 'Warlock Sheet Test',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           refType: EntityType.species,
           slug: 'tiefling',
           displayName: 'Tiefling',
         ),
-        progression: CharacterProgression(
+        progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference.empty(
@@ -416,27 +416,27 @@ void main() {
             ),
           ],
         ),
-        baseScores: AbilityScores(charisma: 16),
-        resources: CharacterResourcePool(
+        baseScores: const AbilityScores(charisma: 16),
+        resources: const CharacterResourcePool(
           currentHp: 24,
           currentHitDice: {'d8': 3},
         ),
         allocatedSpells: {
           'class-warlock-spells': [
-            EntityReference<Spell>.empty(
+            const EntityReference<Spell>.empty(
                 refType: EntityType.spell,
                 slug: 'spell_hex',
                 displayName: 'Hex'),
-            EntityReference<Spell>.empty(
+            const EntityReference<Spell>.empty(
                 refType: EntityType.spell,
                 slug: 'spell_darkness',
                 displayName: 'Darkness'),
           ],
         },
         spellsKnown: [
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell, slug: 'spell_hex', displayName: 'Hex'),
-          EntityReference<Spell>.empty(
+          const EntityReference<Spell>.empty(
               refType: EntityType.spell,
               slug: 'spell_darkness',
               displayName: 'Darkness'),

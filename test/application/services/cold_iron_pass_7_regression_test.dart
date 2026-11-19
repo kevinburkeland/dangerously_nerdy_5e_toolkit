@@ -497,16 +497,16 @@ void main() {
         customRoomCode: roomCode,
       );
 
-      const character = Character(
-        id: EntityId(slug: 'aria', ruleset: RulesetVersion.v2024),
+      final character = Character(
+        id: const EntityId(slug: 'aria', ruleset: RulesetVersion.v2024),
         name: 'Aria',
-        speciesRef: EntityReference.empty(
+        speciesRef: const EntityReference.empty(
           slug: 'human',
           refType: EntityType.species,
           displayName: 'Human',
         ),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
       );
       await characterService.saveCharacter(character);
 
@@ -610,19 +610,19 @@ void main() {
           reason: 'P1 cloneProfile copied roomCode: ${cloned.roomState.roomCode} (expected empty)');
 
       // 2. Adoption test: seeds roster with only membership's own character
-      const charA = Character(
-        id: EntityId(slug: 'aria', ruleset: RulesetVersion.v2024),
+      final charA = Character(
+        id: const EntityId(slug: 'aria', ruleset: RulesetVersion.v2024),
         name: 'Aria',
-        speciesRef: EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
+        speciesRef: const EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
       );
-      const charB = Character(
-        id: EntityId(slug: 'boris', ruleset: RulesetVersion.v2024),
+      final charB = Character(
+        id: const EntityId(slug: 'boris', ruleset: RulesetVersion.v2024),
         name: 'Boris',
-        speciesRef: EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
-        progression: CharacterProgression(classes: []),
-        baseScores: AbilityScores.standardArray(),
+        speciesRef: const EntityReference.empty(slug: 'human', refType: EntityType.species, displayName: 'Human'),
+        progression: const CharacterProgression(classes: []),
+        baseScores: const AbilityScores.standardArray(),
       );
       await characterService.saveCharacter(charA);
       await characterService.saveCharacter(charB);
