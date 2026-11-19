@@ -1,3 +1,5 @@
+import 'package:vtt_engine_core/vtt_engine_core.dart' hide
+    AttributePool;
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
