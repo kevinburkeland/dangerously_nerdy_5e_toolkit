@@ -61,3 +61,5 @@ class DiceFormatters {
     return primary;
   }
 }
+
+bool zzMutR1(String s) => RegExp(r'(\d+)[dD](\d+)').hasMatch(s);
