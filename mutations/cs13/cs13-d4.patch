@@ -1,0 +1,31 @@
+From d900a9a725862330b0c307594c63bd353b7e76ff Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:27 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D4?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/ingestion/stat_block_acl_parser.dart | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/lib/services/ingestion/stat_block_acl_parser.dart b/lib/services/ingestion/stat_block_acl_parser.dart
+index 6cbd2b84..f0b77f44 100644
+--- a/lib/services/ingestion/stat_block_acl_parser.dart
++++ b/lib/services/ingestion/stat_block_acl_parser.dart
+@@ -476,7 +476,9 @@ class StatBlockAclParser {
+ 
+       final diceMatches = DiceExpression.findAll(amountStr);
+       if (diceMatches.isNotEmpty) {
+-        final d = diceMatches.first.expression.singleDieGroup;
++        final d = diceMatches.first.expression
++            .diceTerms
++            .first;
+         if (d != null) {
+           riders.add(AttributeDrainRider(
+             targetAttributeKey: ability.name,
+-- 
+2.55.0
+

@@ -1,0 +1,101 @@
+From ff97961600a20bef302efb4fcf137f81e3994818 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:48 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/animated_object.dart |  3 ++
+ lib/utils/dice_formatters.dart  | 63 +--------------------------------
+ 2 files changed, 4 insertions(+), 62 deletions(-)
+
+diff --git a/lib/models/animated_object.dart b/lib/models/animated_object.dart
+index d7e66c15..57438be7 100644
+--- a/lib/models/animated_object.dart
++++ b/lib/models/animated_object.dart
+@@ -1,3 +1,4 @@
++import '../utils/dice_formatters.dart';
+ // Compatibility re-export bridging domain entity and infrastructure DTO.
+ import 'domain/minion_instance.dart';
+ 
+@@ -10,3 +11,5 @@ export '../infrastructure/dtos/animated_object_dto.dart';
+ typedef AnimatedObjectInstance = MinionInstance;
+ typedef AnimatedObjectStats = MinionStats;
+ typedef ObjectSize = EntitySize;
++
++class ZzModelWithCb { final ZzUtilCb? zz; const ZzModelWithCb({this.zz}); }
+diff --git a/lib/utils/dice_formatters.dart b/lib/utils/dice_formatters.dart
+index 9a7636aa..ffbc6ec8 100644
+--- a/lib/utils/dice_formatters.dart
++++ b/lib/utils/dice_formatters.dart
+@@ -1,63 +1,2 @@
+-export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show Dnd5eScoreMath;
+ 
+-/// Consolidated formatting utilities for dice expressions and modifier signs.
+-class DiceFormatters {
+-  DiceFormatters._();
+-
+-  /// Formats an integer bonus with an explicit sign (e.g., "+3", "-2", or empty if 0).
+-  static String formatBonus(int bonus, {bool includeZero = false}) {
+-    if (bonus == 0 && !includeZero) return '';
+-    return bonus >= 0 ? '+$bonus' : '$bonus';
+-  }
+-
+-  /// Formats a spaced modifier expression for multi-die addition (e.g., " + 5", " - 2", or empty if 0).
+-  static String formatModifierExpression(int modifier) {
+-    if (modifier > 0) return ' + $modifier';
+-    if (modifier < 0) return ' - ${modifier.abs()}';
+-    return '';
+-  }
+-
+-  /// Formats a complete damage or attack formula (e.g., "1d4+4 Bludgeoning").
+-  static String formatFormula({
+-    required int count,
+-    required int sides,
+-    int bonus = 0,
+-    String? damageType,
+-  }) {
+-    final bonusStr = formatBonus(bonus);
+-    final base = '${count}d$sides$bonusStr';
+-    if (damageType != null && damageType.trim().isNotEmpty) {
+-      return '$base ${damageType.trim()}';
+-    }
+-    return base;
+-  }
+-
+-  /// Formats a composite primary + secondary damage formula expression (e.g., "2d6+3 Slashing + 1d6 Fire").
+-  static String formatCompositeFormula({
+-    required int primaryCount,
+-    required int primarySides,
+-    int primaryBonus = 0,
+-    String? primaryDamageType,
+-    int secondaryCount = 0,
+-    int secondarySides = 0,
+-    String? secondaryDamageType,
+-  }) {
+-    final primary = formatFormula(
+-      count: primaryCount,
+-      sides: primarySides,
+-      bonus: primaryBonus,
+-      damageType: primaryDamageType,
+-    );
+-    if (secondaryCount > 0 &&
+-        secondaryDamageType != null &&
+-        secondaryDamageType.trim().isNotEmpty) {
+-      final secondary = formatFormula(
+-        count: secondaryCount,
+-        sides: secondarySides,
+-        damageType: secondaryDamageType,
+-      );
+-      return '$primary + $secondary';
+-    }
+-    return primary;
+-  }
+-}
++typedef ZzUtilCb = void Function();
+-- 
+2.55.0
+

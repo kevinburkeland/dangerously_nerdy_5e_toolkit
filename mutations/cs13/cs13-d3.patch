@@ -1,0 +1,30 @@
+From b25ebe7c8839e631992c28e99e4b7d062d9a085c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:22 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/providers/character_sheet_controller.dart | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/lib/providers/character_sheet_controller.dart b/lib/providers/character_sheet_controller.dart
+index 52c1ced8..bbbe61bb 100644
+--- a/lib/providers/character_sheet_controller.dart
++++ b/lib/providers/character_sheet_controller.dart
+@@ -1042,8 +1042,7 @@ class CharacterSheetController extends ChangeNotifier {
+     final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
+         spell.name.toLowerCase() == 'eldritch blast';
+ 
+-    int modifier = (parsedBase?.constantSum ?? 0) +
+-        (delta > 0 ? delta * (parsedScale?.constantSum ?? 0) : 0);
++    int modifier = 0;
+     if (isEldritchBlast &&
+         (hasAgonizingBlast ||
+             hasCapabilityFlag('eldritchBlastChaDamage') ||
+-- 
+2.55.0
+

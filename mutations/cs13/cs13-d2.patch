@@ -1,0 +1,30 @@
+From f45d4e52f293710d7245a0b70414546accee548c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:18 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/providers/character_sheet_controller.dart | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/lib/providers/character_sheet_controller.dart b/lib/providers/character_sheet_controller.dart
+index 52c1ced8..7b2b42ff 100644
+--- a/lib/providers/character_sheet_controller.dart
++++ b/lib/providers/character_sheet_controller.dart
+@@ -989,9 +989,6 @@ class CharacterSheetController extends ChangeNotifier {
+     ({List<DiceRollTerm> dice, int constantSum})? parsedBase;
+     if (hasBaseFormula) {
+       parsedBase = _parseSpellFormulaField(baseFormula);
+-      if (parsedBase == null) {
+-        return null;
+-      }
+     }
+ 
+     // Validate and parse upcast scaling BEFORE spending any spell slot.
+-- 
+2.55.0
+

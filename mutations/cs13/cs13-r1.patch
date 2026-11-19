@@ -1,0 +1,26 @@
+From bcd22379a4a05fde2b02d94ff3bcbf8c4d1c9a21 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:32 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20R1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/utils/dice_formatters.dart | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/utils/dice_formatters.dart b/lib/utils/dice_formatters.dart
+index 9a7636aa..a9424f4a 100644
+--- a/lib/utils/dice_formatters.dart
++++ b/lib/utils/dice_formatters.dart
+@@ -61,3 +61,5 @@ class DiceFormatters {
+     return primary;
+   }
+ }
++
++bool zzMutR1(String s) => RegExp(r'(\d+)[dD](\d+)').hasMatch(s);
+-- 
+2.55.0
+

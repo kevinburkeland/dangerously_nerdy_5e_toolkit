@@ -1,0 +1,27 @@
+From dac8964dae73d7efad65e9c0df10015f63cd1662 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:42 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/animated_object.dart | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/models/animated_object.dart b/lib/models/animated_object.dart
+index d7e66c15..fdc511a9 100644
+--- a/lib/models/animated_object.dart
++++ b/lib/models/animated_object.dart
+@@ -10,3 +10,6 @@ export '../infrastructure/dtos/animated_object_dto.dart';
+ typedef AnimatedObjectInstance = MinionInstance;
+ typedef AnimatedObjectStats = MinionStats;
+ typedef ObjectSize = EntitySize;
++
++typedef ZzMultiCb =
++    void Function(Object? sheet);
+-- 
+2.55.0
+

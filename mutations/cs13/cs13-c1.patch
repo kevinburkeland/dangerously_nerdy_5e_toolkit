@@ -1,0 +1,29 @@
+From e74fe1eda1ffb77d4e31a5220b45118c9f53bcae Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:52 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20C1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/rules/dpr_calculator_engine.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/rules/dpr_calculator_engine.dart b/lib/services/rules/dpr_calculator_engine.dart
+index 61d34d14..ecd31e04 100644
+--- a/lib/services/rules/dpr_calculator_engine.dart
++++ b/lib/services/rules/dpr_calculator_engine.dart
+@@ -53,7 +53,7 @@ class DprCalculatorEngine {
+     return computeAttackOdds(
+       attackBonus: effectiveAttackBonus,
+       targetAc: targetAc,
+-      critThreshold: critThreshold,
++      critThreshold: critThreshold.clamp(2, 20),
+       mode: _toRollMode(advantage),
+       rerollOnes: hasHalflingLuck,
+     ).hit;
+-- 
+2.55.0
+

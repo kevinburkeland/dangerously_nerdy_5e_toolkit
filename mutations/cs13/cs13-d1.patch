@@ -1,0 +1,34 @@
+From c5632fb1e4d941b553f5ae98b667b6a6b4f57fc9 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:11:13 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20D1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/providers/character_sheet_controller.dart | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/lib/providers/character_sheet_controller.dart b/lib/providers/character_sheet_controller.dart
+index 52c1ced8..39bd8d57 100644
+--- a/lib/providers/character_sheet_controller.dart
++++ b/lib/providers/character_sheet_controller.dart
+@@ -1055,10 +1055,9 @@ class CharacterSheetController extends ChangeNotifier {
+ 
+     // Assemble dice pool combining every base and scaling die group (merging same-sided dice).
+     final countsBySides = <int, int>{};
+-    if (parsedBase != null) {
+-      for (final dt in parsedBase.dice) {
+-        countsBySides[dt.sides] = (countsBySides[dt.sides] ?? 0) + dt.count;
+-      }
++    if (parsedBase != null && parsedBase.dice.isNotEmpty) {
++      final dt = parsedBase.dice.first;
++      countsBySides[dt.sides] = (countsBySides[dt.sides] ?? 0) + dt.count;
+     }
+     if (delta > 0 && parsedScale != null) {
+       for (final st in parsedScale.dice) {
+-- 
+2.55.0
+

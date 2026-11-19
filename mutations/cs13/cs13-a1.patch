@@ -1,0 +1,45 @@
+From cb6a4731e2ca3183e617122c54a4435c99bad24f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 18 Nov 2026 22:13:16 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20A1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/dtos/character_telemetry_dto.dart | 5 +----
+ pubspec.yaml                                         | 4 ++++
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/lib/infrastructure/dtos/character_telemetry_dto.dart b/lib/infrastructure/dtos/character_telemetry_dto.dart
+index d0e953b9..b9d705c6 100644
+--- a/lib/infrastructure/dtos/character_telemetry_dto.dart
++++ b/lib/infrastructure/dtos/character_telemetry_dto.dart
+@@ -566,10 +566,7 @@ extension CharacterTelemetryDtoX on Character {
+       currentHp: resources.currentHp,
+       maxHp: CharacterEvaluationEngine.evaluate(this).maxHp,
+       tempHp: resources.tempHp,
+-      armorClass: queryStat(
+-        'ac',
+-        module: Dnd5eRulesetModule.forEdition(rulesEdition),
+-      ),
++      armorClass: queryStat('ac'),
+       speed: baseSpeedFeet,
+       level: totalLevel,
+       passivePerception: passivePerc.toInt(),
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 4303798a..c6da2f6c 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -50,3 +50,7 @@ dev_dependencies:
+ 
+ flutter:
+   uses-material-design: true
++
++dependency_overrides:
++  vtt_ruleset_dnd5e:
++    path: ../cleanup_slice_13_outputs/a1_ruleset_copy
+-- 
+2.55.0
+
