@@ -1,7 +1,7 @@
 # Cleanup slice 13 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app a7480b4e98552fe81f276d388eebf7a5a1c4dc45
-Last pushed heads (CI green): core 87011633eb26d170a67b7992132cae9866cd297b, ruleset 0562855170a8e74d351e01d6c0c5333cd75451d9, app 6190c5a430da3dd3cc0774c6f5f8ed28c7fbf294
+Last pushed heads (CI green): core 0ac9fd681bd514bca1a76b84e6eb7b69092d4c67, ruleset 9f44a7f3553b9c64d0f3f089e13f9e8dddf95b8b, app e9999fd0ee2050412dc10529fcfc0bc516ffe021
 Pins now: ruleset -> core 87011633eb26d170a67b7992132cae9866cd297b; app -> core 87011633eb26d170a67b7992132cae9866cd297b, ruleset 0562855170a8e74d351e01d6c0c5333cd75451d9
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 7.1 7.2 8.1 8.2 8.3 8.4 8.5
 Mutation ids: F1 F2 W1 N1 U1 H1 T1 M1 D1 D2 D3 D4 R1 R2 P1 P2 C1 U2 H2 S1 S2 A1
@@ -42,7 +42,7 @@ Fix 8.5: Party AC comes from the rules
 - [x] Step 6 Character map goldens: ruleset 983beb8be6ab3dc9262e3e2fe85c3b3ca11c8656 run 44433181074
 - [x] Step 7 One name per type: core db2e90c5e657a6c6ccba631764e999816d2e14fd run 44434058125, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d run 44434445875, app 2bc799368753edfdcb2c56e893dc2d6d2c376917 run 44465411460
 - [x] Step 8 D&D fields leave core, and typed contract: core 87011633eb26d170a67b7992132cae9866cd297b run 44466622750, ruleset 0562855170a8e74d351e01d6c0c5333cd75451d9 run 44469143416, app 6190c5a430da3dd3cc0774c6f5f8ed28c7fbf294 run 44469486261
-- [ ] Step 9 Mutations and report
+- [x] Step 9 Mutations and report: core 0ac9fd681bd514bca1a76b84e6eb7b69092d4c67 run 44469954629, ruleset 9f44a7f3553b9c64d0f3f089e13f9e8dddf95b8b run 44469957397, app e9999fd0ee2050412dc10529fcfc0bc516ffe021 run 44470140748
 
 ## Fix checklist
 Fix 1.1 done: [The non-SRD surge table is gone] Deleted the non-SRD surge table from srd_magic_tables.dart, srd_tables_library.dart, quick_roller_card.dart, table_index_screen.dart, landing_tool_item.dart, rules_compendium_screen.dart, glyph_motifs.dart, wands.dart, FEATURES.md, and updated table tests and removed_test_names.txt.
@@ -72,7 +72,28 @@ Fix 8.4 done: [Core's word bar reads identifiers and strings] Added identifier-a
 Fix 8.5 done: [Party AC comes from the rules] Added Dnd5eRulesetModule.forEdition, routed CharacterTelemetryDto.armorClass through queryStat('ac', module: Dnd5eRulesetModule.forEdition(rulesEdition)) as the first production caller, routed no-module Character.queryStat through edition module with ArgumentError on unknown keys, aligned customProperties['armorClass'/'ac'] and negative-modifier Unarmored Defense between CharacterEvaluationEngine and calculateCharacterArmorClass, verified 300-seed party AC law, and updated ruleset and app Step 6 goldens with diff-guard tests.
 
 ## Mutation branches
-None
+mutation/cs13-f1 8f9cfbf4637fc77f67fd1bfdb883a044ce4bdce5
+mutation/cs13-f2 cfcfb643dd5397cf5d4b2089ec052f9232a3ef50
+mutation/cs13-w1 e8a68d418e98c08ffa297e64a9db19957721fc61
+mutation/cs13-n1 7ffb16222f6ae9949336c750238212be52bd767c
+mutation/cs13-u1 d5852ef821e77136f4562642511cf4aee7bac490
+mutation/cs13-h1 7cae0f139577fbe14b690ed4d9ac4ba57ee10f9a
+mutation/cs13-t1 27414e2add30076082e09334f94d94ba1dffe5dc
+mutation/cs13-m1 2dc9ecd0aad9680ff82732f30f415161265d1db3
+mutation/cs13-d1 c5632fb1e4d941b553f5ae98b667b6a6b4f57fc9
+mutation/cs13-d2 f45d4e52f293710d7245a0b70414546accee548c
+mutation/cs13-d3 b25ebe7c8839e631992c28e99e4b7d062d9a085c
+mutation/cs13-d4 d900a9a725862330b0c307594c63bd353b7e76ff
+mutation/cs13-r1 bcd22379a4a05fde2b02d94ff3bcbf8c4d1c9a21
+mutation/cs13-r2 6aeba68c784aba6c7b153ab5e4a870fe4104b380
+mutation/cs13-p1 dac8964dae73d7efad65e9c0df10015f63cd1662
+mutation/cs13-p2 ff97961600a20bef302efb4fcf137f81e3994818
+mutation/cs13-c1 e74fe1eda1ffb77d4e31a5220b45118c9f53bcae
+mutation/cs13-u2 549bad0760ae9466ec8890820c6fe1ecde6e3656
+mutation/cs13-h2 91ce1ab0660f7ac4d3b21790d9a0cf149f5f4ae3
+mutation/cs13-s1 a3e83a6880a09273fab844c00184634538396a42
+mutation/cs13-s2 cfc545e8f0304f1151fc036e5ac18ea93b11ec19
+mutation/cs13-a1 cb6a4731e2ca3183e617122c54a4435c99bad24f
 
 ## Red runs on main
 2cd4e02be368544cc5146606069284ef2a8a0850 red run 44415073858
@@ -84,7 +105,7 @@ a66d1ef621f9c929ba0c0cd4cb6687118f5f254f cancelled run 44417061507
 8ef8e9f0412efb8d433ff679e901b82dc71341a6 red run 44467738327
 
 ## Next
-Complete Step 8 (D&D fields leave core, generic IRulesetModule, typed ruleset models, core word bar, party AC from rules) in core, ruleset, and app.
+None (Cleanup slice 13 complete).
 
 ## Open issues and deviations
 Run 44415073858 cause: big_file_ratchet_test failed because Step 1 shrank three allowlisted files (srd_loot_tables.dart, dpr_models.dart, character_sheet_controller.dart) below their recorded ceilings; fixed by bbc42a7bcfbe09f07609238077b27a92f9bf7628
@@ -100,3 +121,6 @@ Run 44467738327 cause: ruleset min-sdk CI job used shallow checkout so git show 
 - In Fix 1.2, four of the five proper-named loot items have no bundled MagicItem entry in MagicItemLibrary, so their rows were removed and their roll ranges absorbed into adjacent entries to preserve 1..100 coverage; only the restorative ointment entry is bundled and was remapped to item_restorative_ointment.
 - In Fix 1.5, the 14-day look-ahead (--today 2026-12-02) caught fast_immutable_collections 12.0.0 behind 12.0.1 (published 2026-11-17) in app, which was upgraded to ^12.0.1; core and ruleset had coverage 1.16.0 behind 1.16.1 in untracked local pubspec.lock, resolved by dart pub upgrade.
 - Step 3 findAll(...).first/.firstOrNull audit (non-spell sites not fixed in this slice): homebrew_ingestor.dart (homebrew formula text; drops later damage clauses), homebrew_persistence_service.dart (homebrew action/item damage text; drops later clauses), character_actions_resolver.dart (action description display formula; drops secondary clauses), monster_codex_data.dart (minion primary attack; drops secondary clauses), monster_quick_roll_dialog.dart (quick-roll formula string; drops second expression if separated by text), dpr_models.dart (primary and secondary clause extractors; right per clause, would miss a third clause), character_sheet_controller.dart higherLevelsMarkdown (prose; first match is right).
+- In Step 9, mutation F1 initially escaped test_check_dependencies.sh because is_version_in_ranges called need_keys(ev, ...) before opt_child(ev, ...), catching events: ["0"] earlier. Added DC74 directly testing opt_child on non-dict inputs to scripts/test_check_dependencies.sh across all three repos, then re-ran F1 and confirmed it is caught.
+- In Step 9, mutation T1 restored both Character.resources and Character.inventory pre-Step-8 super.* getters because Character passes resources directly to super(resources: resources) so the resources is-check branch alone would still return the identical object; restoring both pre-Step-8 getters caused both the Fix 8.3 identical law and the Fix 8.3 no-super-conversion bar to fail.
+- In Step 9, mutation A1 used a temporary dependency_overrides path to a local ruleset copy (../cleanup_slice_13_outputs/a1_ruleset_copy) on branch mutation/cs13-a1 only, as requested.
