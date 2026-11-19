@@ -476,7 +476,9 @@ class StatBlockAclParser {
 
       final diceMatches = DiceExpression.findAll(amountStr);
       if (diceMatches.isNotEmpty) {
-        final d = diceMatches.first.expression.singleDieGroup;
+        final d = diceMatches.first.expression
+            .diceTerms
+            .first;
         if (d != null) {
           riders.add(AttributeDrainRider(
             targetAttributeKey: ability.name,
