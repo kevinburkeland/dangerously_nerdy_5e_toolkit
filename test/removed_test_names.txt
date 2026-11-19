@@ -151,3 +151,6 @@ Warlock Mystic Arcanum milestones at levels 11, 13, 15, 17 | moved to vtt-rulese
 Warlock Level 11 validates 11 known spells AND 1 Level 6 Mystic Arcanum spell without quota error | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
 Warlock Level 13 validates lower-tier Level 6 Arcanum alongside new Level 7 Arcanum | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
 validateSpellAllocations accepts class-warlock-mystic-arcanum grant key | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+PartyRoomService Tests | deleted unused duplicate lib/application/services/party_room_service.dart in Cleanup slice 14
+initializes with a valid node ID and creates local timestamps | deleted unused duplicate lib/application/services/party_room_service.dart in Cleanup slice 14
+application PartyRoomService validates identity | deleted unused duplicate lib/application/services/party_room_service.dart in Cleanup slice 14

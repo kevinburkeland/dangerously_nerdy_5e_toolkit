@@ -847,6 +847,11 @@ class RoomSyncOrchestrator {
     _antiEntropyTimer?.cancel();
     _antiEntropyTimer = null;
     _lastProfileSyncTimestamp = 0;
+    _localSequenceNumber = 0;
+    _lastEmittedProfile = null;
+    _trackedRulesSet = const CrdtOrSet<String>.empty();
+    _appliedProfileHashRing.clear();
+    _appliedProfiles.clear();
     _processedPayloadHashes.clear();
     _lastSeenSequenceByNode.clear();
     _lastSeenPeers.clear();

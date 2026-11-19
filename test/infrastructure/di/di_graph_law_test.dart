@@ -25,8 +25,6 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_rec
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/storage/storage_durability_coordinator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/webrtc_mesh_adapter.dart';
-import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart'
-    as app_party;
 
 import '../../test_doubles/hive_test_harness.dart';
 
@@ -100,7 +98,6 @@ void main() {
         'StorageDurabilityCoordinator': () =>
             sl<StorageDurabilityCoordinator>(),
         'WebRtcMeshAdapter': () => sl<WebRtcMeshAdapter>(),
-        'app_party.PartyRoomService': () => sl<app_party.PartyRoomService>(),
       };
 
       final actualTypes = typeResolvers.keys.toSet();

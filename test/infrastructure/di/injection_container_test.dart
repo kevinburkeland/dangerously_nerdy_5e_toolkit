@@ -11,7 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_session_s
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
-import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_import_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/blob/blob_channel_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/local_wifi_adapter.dart';

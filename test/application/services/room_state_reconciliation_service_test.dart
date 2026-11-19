@@ -1,42 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vtt_engine_core/crdt/replica_id.dart';
-import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
-import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
+import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/minion_instance.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 
 void main() {
-  group('PartyRoomService Tests', () {
-    test('initializes with a valid node ID and creates local timestamps',
-        () {
-      final rep1 = ReplicaId('node-alpha-1');
-      final rep2 = ReplicaId('node-beta-2');
-      final service1 = PartyRoomService(
-        replicaId: rep1,
-        clock: StatefulHlcClock(replicaId: rep1),
-      );
-      final service2 = PartyRoomService(
-        replicaId: rep2,
-        clock: StatefulHlcClock(replicaId: rep2),
-      );
-
-      expect(service1.localNodeId, isNotEmpty);
-      expect(service2.localNodeId, isNotEmpty);
-      expect(service1.localNodeId, isNot(equals(service2.localNodeId)));
-
-      final ts = service1.createLocalTimestamp();
-      expect(ts.nodeId, equals(service1.localNodeId));
-      expect(ts.logicalCounter, equals(0));
-      expect(ts.physicalTime, greaterThan(0));
-    });
-  });
-
   group('RoomStateReconciliationService Tests', () {
     final service = RoomStateReconciliationService(
       networkTimeProvider: () => DateTime.now().toUtc().millisecondsSinceEpoch,

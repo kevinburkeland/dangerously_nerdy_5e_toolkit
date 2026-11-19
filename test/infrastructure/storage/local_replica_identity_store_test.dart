@@ -17,8 +17,6 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encount
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart'
-    as app_party;
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
@@ -445,14 +443,6 @@ void main() {
       );
       expect(orchestrator.replicaId, equals(authoritativeId));
       expect(orchestrator.localNodeId, equals(authoritativeId.value));
-
-      // Application PartyRoomService
-      final appPartyService = app_party.PartyRoomService(
-        replicaId: authoritativeId,
-        clock: sharedClock,
-      );
-      expect(appPartyService.replicaId, equals(authoritativeId));
-      expect(appPartyService.localNodeId, equals(authoritativeId.value));
 
       // Persistence PartyRoomService
       final persistencePartyService = PartyRoomService(

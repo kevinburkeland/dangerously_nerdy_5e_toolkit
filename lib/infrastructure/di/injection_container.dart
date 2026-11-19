@@ -1,7 +1,6 @@
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
-import '../../application/services/party_room_service.dart' as app_party;
 import '../../application/services/homebrew_import_orchestrator.dart';
 import '../storage/local_replica_identity_store.dart';
 import '../../application/services/cascading_transport_router.dart';
@@ -145,13 +144,6 @@ Future<void> initServiceLocator({
     roomDocumentPort: roomDocPort,
   );
   sl.registerSingleton<PartyRoomService>(partyRoomService);
-
-  sl.registerLazySingleton<app_party.PartyRoomService>(
-    () => app_party.PartyRoomService(
-      replicaId: resolvedReplicaId,
-      clock: sl<StatefulHlcClock>(),
-    ),
-  );
 
   sl.registerLazySingleton<IGithubIngestorPort>(
     () => GithubIngestorAdapter(),

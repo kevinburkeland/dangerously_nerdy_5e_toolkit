@@ -3,8 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart'
-    as app_party;
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
@@ -580,24 +578,6 @@ void main() {
         );
       });
 
-      test('application PartyRoomService validates identity', () {
-        expect(
-          () => app_party.PartyRoomService(
-            replicaId: replicaA,
-            clock: clockA,
-          ),
-          returnsNormally,
-        );
-
-        expect(
-          () => app_party.PartyRoomService(
-            replicaId: replicaA,
-            clock: clockB,
-          ),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
-
       test('services/party PartyRoomService.newInstance validates identity', () {
         expect(
           () => svc_party.PartyRoomService.newInstance(
@@ -700,10 +680,6 @@ void main() {
       final partyRoomService = sl<svc_party.PartyRoomService>();
       expect(partyRoomService.replicaId, equals(resolvedId));
       expect(partyRoomService.clock.replicaId, equals(resolvedId));
-
-      final appPartyService = sl<app_party.PartyRoomService>();
-      expect(appPartyService.replicaId, equals(resolvedId));
-      expect(appPartyService.clock.replicaId, equals(resolvedId));
 
       final roomSync = sl<RoomSyncOrchestrator>();
       expect(roomSync.replicaId, equals(resolvedId));

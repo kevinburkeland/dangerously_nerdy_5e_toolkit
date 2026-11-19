@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../support/dart_directive_reader.dart';
+
 String _stripCommentsAndStrings(String source) {
   final out = StringBuffer();
   final len = source.length;
@@ -208,6 +210,67 @@ List<String> findThreePackageCollisions({
   return violations;
 }
 
+String? _resolveAppUri(String fromRelPath, String uri) {
+  if (uri.startsWith('dart:')) return null;
+  if (uri.startsWith('package:')) {
+    const prefix = 'package:dangerously_nerdy_5e_toolkit/';
+    if (!uri.startsWith(prefix)) return null;
+    return 'lib/${uri.substring(prefix.length)}';
+  }
+  final resolved = Uri.parse(fromRelPath).resolve(uri).path;
+  return resolved.startsWith('/') ? resolved.substring(1) : resolved;
+}
+
+String _pairKey(String a, String b) => a.compareTo(b) <= 0 ? '$a||$b' : '$b||$a';
+
+/// Finds public top-level type names declared in more than one file within
+/// [filesByRelPath], exempting pairs of files that appear as branches of the
+/// same conditional `import` or `export` directive.
+List<String> findAppInternalTypeCollisions(Map<String, String> filesByRelPath) {
+  final conditionalPairs = <String>{};
+  for (final entry in filesByRelPath.entries) {
+    final fromPath = entry.key;
+    for (final d in parseDartDirectives(entry.value)) {
+      if (!(d.isImport || d.isExport)) continue;
+      if (!d.detailedUris.any((u) => u.isConditional)) continue;
+      final resolved = <String>[];
+      for (final u in d.uris) {
+        final target = _resolveAppUri(fromPath, u);
+        if (target != null) resolved.add(target);
+      }
+      for (var i = 0; i < resolved.length; i++) {
+        for (var j = i + 1; j < resolved.length; j++) {
+          conditionalPairs.add(_pairKey(resolved[i], resolved[j]));
+        }
+      }
+    }
+  }
+
+  final declsByName = <String, List<String>>{};
+  final sortedPaths = filesByRelPath.keys.toList()..sort();
+  for (final rel in sortedPaths) {
+    for (final name in extractTopLevelDeclaredTypeNames(filesByRelPath[rel]!)) {
+      declsByName.putIfAbsent(name, () => <String>[]).add(rel);
+    }
+  }
+
+  final violations = <String>[];
+  final sortedNames = declsByName.keys.toList()..sort();
+  for (final name in sortedNames) {
+    final paths = declsByName[name]!;
+    if (paths.length < 2) continue;
+    for (var i = 0; i < paths.length; i++) {
+      for (var j = i + 1; j < paths.length; j++) {
+        if (conditionalPairs.contains(_pairKey(paths[i], paths[j]))) {
+          continue;
+        }
+        violations.add('$name: declared in ${paths[i]} and ${paths[j]}');
+      }
+    }
+  }
+  return violations;
+}
+
 void main() {
   group('Fix 7.1: One name, one type across core, ruleset, and app', () {
     test('Controls: flags duplicate class/typedef/enum, ignores private and comments/strings', () {
@@ -263,6 +326,51 @@ void main() {
         violations,
         isEmpty,
         reason: 'Shared top-level type names across packages:\n${violations.join('\n')}',
+      );
+    });
+
+    test('Controls (Fix 5.4): flags duplicate app-internal type, allows conditional import branches', () {
+      const twoDups = {
+        'lib/foo/a.dart': 'class ZzDup {}',
+        'lib/bar/b.dart': 'class ZzDup {}',
+      };
+      expect(
+        findAppInternalTypeCollisions(twoDups),
+        ['ZzDup: declared in lib/bar/b.dart and lib/foo/a.dart'],
+      );
+
+      const conditionalPair = {
+        'lib/entry.dart':
+            "import 'foo/a.dart' if (dart.library.js_interop) 'bar/b.dart';\n",
+        'lib/foo/a.dart': 'class ZzDup {}',
+        'lib/bar/b.dart': 'class ZzDup {}',
+      };
+      expect(findAppInternalTypeCollisions(conditionalPair), isEmpty);
+    });
+
+    test('Fix 5.4: No public top-level type name is declared in two app lib/ files except conditional import/export branches', () {
+      final libDir = Directory('lib');
+      final rootNorm = libDir.path.replaceAll('\\', '/');
+      final filesByRelPath = <String, String>{};
+      final files = libDir
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
+      for (final file in files) {
+        final rel = file.path
+            .replaceAll('\\', '/')
+            .substring(rootNorm.length)
+            .replaceFirst(RegExp(r'^/+'), 'lib/');
+        filesByRelPath[rel] = file.readAsStringSync();
+      }
+
+      final violations = findAppInternalTypeCollisions(filesByRelPath);
+      expect(
+        violations,
+        isEmpty,
+        reason: 'Duplicate top-level type names within app lib/:\n${violations.join('\n')}',
       );
     });
   });

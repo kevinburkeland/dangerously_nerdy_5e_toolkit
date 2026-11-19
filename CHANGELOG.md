@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-19
+- Cleanup slice 14: Stamp legacy CampaignProfileDto.toDomain roomState title with HybridLogicalClock.genesis, reset per-session fields in RoomSyncOrchestrator.stopSynchronization, delegate CryptoUtils.sha256Hex to package:crypto, enforce app-internal unique type names, and delete unused duplicate lib/application/services/party_room_service.dart (Fixes 5.1-5.4).
 - Cleanup slice 14: Re-pin vtt_ruleset_dnd5e to dca5db4a5f5928634ae828598e5d0b9bef532599 (read-only Character inventory and closure super-conversion bar) and make parse_semver fail closed in check_dependencies.py with DC75-DC76 self-tests (Fixes 4.1-4.3).
 - Cleanup slice 14: Re-pin vtt_ruleset_dnd5e to 862a6f64e1d61d01fa3017f3ba27f6549c107514, resolve DiceModTerm in CharacterSheetController.castSpell using the caster's spellcasting modifier (with class selection and no-spellcasting-modifier SnackBar rejection in SpellCard and InteractiveSpellTile), reject signed non-match tokens in _parseSpellFormulaField, and add bundled-spell and 520-seed formula laws (Fixes 3.1-3.3).
 - Cleanup slice 14: Prove all 13 Bonus slice 1.1 and 4 Cleanup slice 7 S1-S4 archived mutations from their patches, verify all 15 Cleanup slice 5 archives end to end with archive/cs5-* tags, and record the backfill table in notes/mutation_evidence_backfill.md (Fixes 2.1-2.3).
