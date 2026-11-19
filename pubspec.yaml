@@ -50,3 +50,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  vtt_ruleset_dnd5e:
+    path: ../cleanup_slice_13_outputs/a1_ruleset_copy

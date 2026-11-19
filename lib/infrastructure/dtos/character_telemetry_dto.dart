@@ -566,10 +566,7 @@ extension CharacterTelemetryDtoX on Character {
       currentHp: resources.currentHp,
       maxHp: CharacterEvaluationEngine.evaluate(this).maxHp,
       tempHp: resources.tempHp,
-      armorClass: queryStat(
-        'ac',
-        module: Dnd5eRulesetModule.forEdition(rulesEdition),
-      ),
+      armorClass: queryStat('ac'),
       speed: baseSpeedFeet,
       level: totalLevel,
       passivePerception: passivePerc.toInt(),
