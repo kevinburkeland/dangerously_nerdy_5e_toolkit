@@ -598,7 +598,7 @@ class SrdLootTables {
       TableEntry(
           minRoll: 68,
           maxRoll: 70,
-          label: 'Restorative Ointment',
+          label: "Keoghtom's Ointment",
           itemRefId: 'item_restorative_ointment'),
       TableEntry(
           minRoll: 71,
