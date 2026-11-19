@@ -53,7 +53,7 @@ class DprCalculatorEngine {
     return computeAttackOdds(
       attackBonus: effectiveAttackBonus,
       targetAc: targetAc,
-      critThreshold: critThreshold,
+      critThreshold: critThreshold.clamp(2, 20),
       mode: _toRollMode(advantage),
       rerollOnes: hasHalflingLuck,
     ).hit;
