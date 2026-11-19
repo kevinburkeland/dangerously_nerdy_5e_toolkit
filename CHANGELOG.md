@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-19
+- Cleanup slice 14: Prove all 13 Bonus slice 1.1 and 4 Cleanup slice 7 S1-S4 archived mutations from their patches, verify all 15 Cleanup slice 5 archives end to end with archive/cs5-* tags, and record the backfill table in notes/mutation_evidence_backfill.md (Fixes 2.1-2.3).
 - Cleanup slice 14: Retire cs13 mutation branches, restore three slice 11 renamed-test reasons in test/removed_test_names.txt, allow renamed-test reasons in check_srd_terms.py, enforce append-only history on test/removed_test_names.txt in check_test_names.py, and upgrade dbus to 0.8.1 and firebase-tools to 15.37.0 (Fixes 1.1-1.4).
 
 ## 2026-11-18
