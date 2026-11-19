@@ -129,5 +129,34 @@ void main() {
         );
       }
     });
+
+    test('Fix 8.5 diff-guard: Step 8 app golden differs from Step 6 baseline only in toMap.armorClass', () {
+      const baselinePath =
+          'test/fixtures/character_map_goldens/app_legacy_character_goldens_step6_baseline.json';
+      final oldDoc = jsonDecode(File(baselinePath).readAsStringSync())
+          as Map<String, dynamic>;
+      final newDoc = jsonDecode(File(_goldenPath).readAsStringSync())
+          as Map<String, dynamic>;
+
+      expect(newDoc['totalCases'], oldDoc['totalCases']);
+      final oldCases = oldDoc['cases'] as List<dynamic>;
+      final newCases = newDoc['cases'] as List<dynamic>;
+      expect(newCases.length, oldCases.length);
+      for (var i = 0; i < oldCases.length; i++) {
+        final o = Map<String, dynamic>.from(oldCases[i] as Map);
+        final n = Map<String, dynamic>.from(newCases[i] as Map);
+        final oToMap = Map<String, dynamic>.from(o['toMap'] as Map)
+          ..remove('armorClass');
+        final nToMap = Map<String, dynamic>.from(n['toMap'] as Map)
+          ..remove('armorClass');
+        o['toMap'] = oToMap;
+        n['toMap'] = nToMap;
+        expect(
+          _canonicalJson(n),
+          _canonicalJson(o),
+          reason: 'Unexpected non-armorClass diff at case ${o['id']}',
+        );
+      }
+    });
   });
 }

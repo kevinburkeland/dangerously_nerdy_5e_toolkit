@@ -83,7 +83,7 @@ The following components reside in `../vtt-engine-core` and are consumed via `pa
 - **Generic Domain Models & Value Objects:** `HitPoints`, `EntityReference`, `LootContainer`, `CampaignProfile`, `PartyPurse`, `RoomRoll`
 - **Abstract Ports:** `ICampaignRepository`, `ICharacterRepository`, `IP2pTransportPort`, `INetworkTimePort`, `IRoomSyncPayloadPort`, `TransportState`
 - **Ruleset SPI:** `IRulesetModule`, `ICombatResolver`, `RulesetEdition`
-- **Agnostic Simulation:** `ISimulationStrategy`, `DprSimulator`, `PrecomputedAttack`, `CombatEffectRider`
+- **Agnostic Simulation:** `ISimulationStrategy`, `PrecomputedAttack`, `CombatEffectRider`
 - **Storage Durability Contracts:** `IStorageDurabilityPort`, `IPhysicalSnapshotPort`, `ICampaignSnapshotSerializerPort`, `EngineProfile`, `StorageSnapshotBundle`
 
 ### External Ruleset Ownership (`vtt_ruleset_dnd5e`)

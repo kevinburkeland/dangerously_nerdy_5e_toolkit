@@ -39,7 +39,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 18,
         "backgroundRef": {
           "displayName": "Acolyte",
           "grantedSkills": [],
@@ -389,7 +389,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -554,7 +554,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -702,7 +702,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -867,7 +867,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -1015,7 +1015,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -1180,7 +1180,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -1328,7 +1328,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -1493,7 +1493,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -1641,7 +1641,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -1806,7 +1806,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -1954,7 +1954,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -2119,7 +2119,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -2267,7 +2267,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -2432,7 +2432,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -2580,7 +2580,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -2745,7 +2745,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -2893,7 +2893,7 @@
       "separateFromMapEqual": true,
       "toMap": {
         "allocatedSpells": {},
-        "armorClass": 10,
+        "armorClass": 16,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
@@ -3058,7 +3058,7 @@
             }
           ]
         },
-        "armorClass": 10,
+        "armorClass": 12,
         "backgroundRef": null,
         "baseScores": {
           "charisma": 8,
