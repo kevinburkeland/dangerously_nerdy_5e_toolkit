@@ -1042,8 +1042,7 @@ class CharacterSheetController extends ChangeNotifier {
     final isEldritchBlast = cleanSlug == 'eldritch-blast' ||
         spell.name.toLowerCase() == 'eldritch blast';
 
-    int modifier = (parsedBase?.constantSum ?? 0) +
-        (delta > 0 ? delta * (parsedScale?.constantSum ?? 0) : 0);
+    int modifier = 0;
     if (isEldritchBlast &&
         (hasAgonizingBlast ||
             hasCapabilityFlag('eldritchBlastChaDamage') ||
