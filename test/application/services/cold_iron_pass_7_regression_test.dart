@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character, EntityType;
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';

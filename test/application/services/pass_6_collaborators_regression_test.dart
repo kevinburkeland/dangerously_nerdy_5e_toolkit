@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character, CharacterResourcePool, EntityType;
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';

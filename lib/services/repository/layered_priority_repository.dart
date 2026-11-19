@@ -1,4 +1,3 @@
-import 'package:vtt_engine_core/models/core_types.dart' as core;
 import '../../models/domain/core_types.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 
@@ -27,7 +26,7 @@ class PriorityLayer {
     this.isActive = true,
   });
 
-  static String buildKey(core.EntityType type, String slug) => '${type.key}:$slug';
+  static String buildKey(TabletopEntityType type, String slug) => '${type.key}:$slug';
 
   void registerEntity(DomainEntity entity) {
     _entities[buildKey(entity.entityType, entity.slug)] = entity;
@@ -37,7 +36,7 @@ class PriorityLayer {
     _entities.remove(buildKey(type, slug));
   }
 
-  DomainEntity? get(String slug, {core.EntityType? type}) {
+  DomainEntity? get(String slug, {TabletopEntityType? type}) {
     if (type != null) {
       return _entities[buildKey(type, slug)];
     }
@@ -95,7 +94,7 @@ class LayeredPriorityRepository {
   /// Top-to-bottom lookup across active priority layers.
   T? lookup<T extends DomainEntity>(
     String slug, {
-    core.EntityType? type,
+    TabletopEntityType? type,
     RulesetVersion? preferredRuleset,
   }) {
     final effectiveType = type ?? _inferEntityType<T>();

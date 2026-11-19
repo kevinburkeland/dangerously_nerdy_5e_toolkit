@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character, CharacterResourcePool, EntityType, InventoryItemInstance;
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_telemetry_dto.dart';
 
 void main() {

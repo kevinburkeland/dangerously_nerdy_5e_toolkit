@@ -29,7 +29,7 @@ void main() {
         CharacterProgressionEngine.isSubclassMilestone(
           'wizard',
           2,
-          ruleset: RulesetVersion.v2014,
+          ruleset: RulesetEdition.v2014,
           characterClass: wizardClass2014,
         ),
         isTrue,
@@ -38,7 +38,7 @@ void main() {
         CharacterProgressionEngine.isSubclassMilestone(
           'druid',
           2,
-          ruleset: RulesetVersion.v2014,
+          ruleset: RulesetEdition.v2014,
           characterClass: druidClass2014,
         ),
         isTrue,
@@ -49,7 +49,7 @@ void main() {
         CharacterProgressionEngine.isSubclassMilestone(
           'cleric',
           1,
-          ruleset: RulesetVersion.v2014,
+          ruleset: RulesetEdition.v2014,
           characterClass: clericClass2014,
         ),
         isTrue,
@@ -60,7 +60,7 @@ void main() {
         CharacterProgressionEngine.isSubclassMilestone(
           'fighter',
           2,
-          ruleset: RulesetVersion.v2014,
+          ruleset: RulesetEdition.v2014,
           characterClass: fighterClass2014,
         ),
         isFalse,
@@ -69,7 +69,7 @@ void main() {
         CharacterProgressionEngine.isSubclassMilestone(
           'fighter',
           3,
-          ruleset: RulesetVersion.v2014,
+          ruleset: RulesetEdition.v2014,
           characterClass: fighterClass2014,
         ),
         isTrue,
@@ -80,7 +80,7 @@ void main() {
         CharacterProgressionEngine.isSubclassMilestone(
           'wizard',
           2,
-          ruleset: RulesetVersion.v2024,
+          ruleset: RulesetEdition.v2024,
           characterClass: SrdClassesLibrary.findBySlug('wizard',
               ruleset: RulesetVersion.v2024),
         ),

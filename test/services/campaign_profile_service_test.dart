@@ -13,7 +13,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character, EntityType;
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import '../test_doubles/fake_blob_store.dart';
 import '../test_doubles/hive_test_harness.dart';
 

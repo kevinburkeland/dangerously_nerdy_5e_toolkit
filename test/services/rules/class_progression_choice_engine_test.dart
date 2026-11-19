@@ -121,19 +121,19 @@ void main() {
         // Engine milestone checks
         expect(
             CharacterProgressionEngine.isSubclassMilestone('warlock', 1,
-                ruleset: RulesetVersion.v2014),
+                ruleset: RulesetEdition.v2014),
             isTrue);
         expect(
             CharacterProgressionEngine.isSubclassMilestone('warlock', 2,
-                ruleset: RulesetVersion.v2014),
+                ruleset: RulesetEdition.v2014),
             isFalse);
         expect(
             CharacterProgressionEngine.isSubclassMilestone('druid', 2,
-                ruleset: RulesetVersion.v2014),
+                ruleset: RulesetEdition.v2014),
             isTrue);
         expect(
             CharacterProgressionEngine.isSubclassMilestone('fighter', 3,
-                ruleset: RulesetVersion.v2014),
+                ruleset: RulesetEdition.v2014),
             isTrue);
       });
 
@@ -154,19 +154,19 @@ void main() {
 
         expect(
             CharacterProgressionEngine.isSubclassMilestone('warlock', 1,
-                ruleset: RulesetVersion.v2024),
+                ruleset: RulesetEdition.v2024),
             isFalse);
         expect(
             CharacterProgressionEngine.isSubclassMilestone('warlock', 3,
-                ruleset: RulesetVersion.v2024),
+                ruleset: RulesetEdition.v2024),
             isTrue);
         expect(
             CharacterProgressionEngine.isSubclassMilestone('cleric', 1,
-                ruleset: RulesetVersion.v2024),
+                ruleset: RulesetEdition.v2024),
             isFalse);
         expect(
             CharacterProgressionEngine.isSubclassMilestone('cleric', 3,
-                ruleset: RulesetVersion.v2024),
+                ruleset: RulesetEdition.v2024),
             isTrue);
       });
     });

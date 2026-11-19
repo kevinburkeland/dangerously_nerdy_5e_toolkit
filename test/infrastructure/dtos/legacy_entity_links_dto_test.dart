@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character;
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';

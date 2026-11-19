@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart' hide Character, EntityType;
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/migration/party_ledger_legacy_import.dart';

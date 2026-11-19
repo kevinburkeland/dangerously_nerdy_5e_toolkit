@@ -2,8 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart'
-    hide Character, EntityType, CharacterResourcePool;
+import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';

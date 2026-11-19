@@ -404,7 +404,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
         CharacterProgressionEngine.isSubclassMilestone(
           _selectedClassSlug,
           _targetClassNewLevel,
-          ruleset: widget.character.id.ruleset,
+          ruleset: widget.character.rulesEdition,
           characterClass: cls,
         );
   }
