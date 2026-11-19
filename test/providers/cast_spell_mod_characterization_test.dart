@@ -239,31 +239,44 @@ void main() {
                   fakeRoom.getCachedRolls('LOCAL').length;
               final broadcast = broadcastCountAfter > broadcastCountBefore;
 
-              // Today (before Fix 3.2): mod is silently dropped (modifier == 0 for all
-              // dice+mod spells, or 10 for Barkskin's '10 + mod'), and both cleric and
-              // non-caster roll and spend slots identically.
-              expect(
-                res,
-                isNotNull,
-                reason: '${item.id} (${dmEd.name}) L$castLevel caster=$isCaster',
-              );
-              expect(broadcast, isTrue);
-              expect(slotSpent, equals(castLevel > 0));
-
-              if (item.name.toLowerCase() == 'barkskin') {
-                expect(res!.diceEntries, isEmpty);
-                expect(res.modifier, equals(10));
-              } else {
+              if (isCaster) {
+                // After Fix 3.2: WIS 16 Cleric resolves mod to +3 (and Barkskin 10 + 3 = 13).
                 expect(
-                  res!.diceEntries,
-                  isNotEmpty,
-                  reason: '${item.id} (${dmEd.name}) "$rawFormula" L$castLevel',
+                  res,
+                  isNotNull,
+                  reason: '${item.id} (${dmEd.name}) L$castLevel caster=$isCaster',
                 );
+                expect(broadcast, isTrue);
+                expect(slotSpent, equals(castLevel > 0));
+
+                if (item.name.toLowerCase() == 'barkskin') {
+                  expect(res!.diceEntries, isEmpty);
+                  expect(res.modifier, equals(13));
+                } else {
+                  expect(
+                    res!.diceEntries,
+                    isNotEmpty,
+                    reason: '${item.id} (${dmEd.name}) "$rawFormula" L$castLevel',
+                  );
+                  expect(
+                    res.modifier,
+                    equals(3),
+                    reason:
+                        'After Fix 3.2, ${item.id} (${dmEd.name}) "$rawFormula" adds WIS +3',
+                  );
+                }
+              } else {
+                // After Fix 3.2: non-spellcaster cannot roll mod formulas; no slot spent, no broadcast.
                 expect(
-                  res.modifier,
-                  equals(0),
-                  reason:
-                      'Before Fix 3.2, ${item.id} (${dmEd.name}) "$rawFormula" drops mod to 0',
+                  res,
+                  isNull,
+                  reason: '${item.id} (${dmEd.name}) L$castLevel non-caster must return null',
+                );
+                expect(broadcast, isFalse);
+                expect(slotSpent, isFalse);
+                expect(
+                  ctrl.lastCastError,
+                  equals('Can\'t roll "$rawFormula": no spellcasting modifier'),
                 );
               }
             }

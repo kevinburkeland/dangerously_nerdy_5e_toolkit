@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/dice_roll.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
+import 'spell_cast_formula_resolver.dart';
 import '../models/characters/srd_feats_library.dart';
 import '../models/domain/homebrew_extended_entities.dart';
 import '../models/party/campaign_membership.dart';
@@ -35,6 +36,11 @@ class CharacterSheetController extends ChangeNotifier {
   late Character _character;
   late EvaluatedCharacterStats _stats;
   bool _isSaving = false;
+  String? _lastCastError;
+
+  /// Human-readable error message from the most recent [castSpell] call if it
+  /// returned `null` due to an unreadable formula or missing spellcasting modifier.
+  String? get lastCastError => _lastCastError;
 
   CharacterSheetController({
     required this._character,
@@ -928,47 +934,30 @@ class CharacterSheetController extends ChangeNotifier {
     return result;
   }
 
-  /// Parses a spell damage or scaling formula field into combined positive die terms
-  /// and flat constant bonus. Returns `null` if the formula cannot be read or contains
-  /// any negative die group (which [DiceRollResult.rollPool] cannot represent).
-  static ({List<DiceRollTerm> dice, int constantSum})? _parseSpellFormulaField(
-    String rawFormula,
-  ) {
-    final trimmed = rawFormula.trim();
-    if (trimmed.isEmpty) return null;
-
-    final whole = DiceExpression.tryParse(trimmed);
-    final expressions = whole != null
-        ? <DiceExpression>[whole]
-        : DiceExpression.findAll(rawFormula).map((m) => m.expression).toList();
-    if (expressions.isEmpty) return null;
-
-    final dice = <DiceRollTerm>[];
-    var constantSum = 0;
-    for (final expr in expressions) {
-      if (expr.diceTerms.any((t) => t.isNegative)) {
-        return null;
-      }
-      for (final dt in expr.diceTerms) {
-        dice.add(dt);
-      }
-      constantSum += expr.constantSum;
-    }
-    if (dice.isEmpty && constantSum == 0) return null;
-    return (dice: dice, constantSum: constantSum);
-  }
+  /// Resolves the spellcasting ability modifier for [spell] on the active character.
+  /// Delegates to [SpellCastFormulaResolver.resolveSpellcastingModifierForSpell].
+  int? resolveSpellcastingModifierForSpell(Spell spell) =>
+      SpellCastFormulaResolver.resolveSpellcastingModifierForSpell(
+        spell,
+        stats: _stats,
+        rulesEdition: _character.rulesEdition,
+      );
 
   /// Casts a spell, expending the specified spell slot (or Pact Magic slot),
   /// scaling damage dice or effects if upcast above base spell level, and dispatching
   /// the roll to [DiceRoomService].
   ///
   /// Returns `null` (without spending a slot or broadcasting) if the spell carries
-  /// a damage or scaling formula that cannot be parsed as dice notation.
+  /// a damage or scaling formula that cannot be parsed as dice notation, or if the
+  /// formula requires a spellcasting modifier (`mod`) and the character has no
+  /// spellcasting class.
   Future<DiceRollResult?> castSpell(
     Spell spell, {
     int? castLevel,
     bool isPactMagic = false,
   }) async {
+    _lastCastError = null;
+
     final pool = _character.resources.spellSlots;
     final effectiveIsPact = isPactMagic ||
         (castLevel != null &&
@@ -981,53 +970,20 @@ class CharacterSheetController extends ChangeNotifier {
     final delta =
         effectiveLevel > spell.level ? (effectiveLevel - spell.level) : 0;
 
-    // Validate and parse base formula BEFORE spending any spell slot.
-    final baseFormula = spell.damageMath.firstOrNull?.diceFormula ??
-        spell.customProperties['rollFormula']?.toString() ??
-        '';
-    final hasBaseFormula = baseFormula.trim().isNotEmpty;
-    ({List<DiceRollTerm> dice, int constantSum})? parsedBase;
-    if (hasBaseFormula) {
-      parsedBase = _parseSpellFormulaField(baseFormula);
-      if (parsedBase == null) {
-        return null;
-      }
+    // Validate base, scaling, and spellcasting modifier BEFORE spending any slot.
+    final plan = SpellCastFormulaResolver.resolvePlan(
+      spell,
+      delta: delta,
+      stats: _stats,
+      rulesEdition: _character.rulesEdition,
+    );
+    if (plan.errorMessage != null) {
+      _lastCastError = plan.errorMessage;
+      return null;
     }
-
-    // Validate and parse upcast scaling BEFORE spending any spell slot.
-    ({List<DiceRollTerm> dice, int constantSum})? parsedScale;
-    if (delta > 0) {
-      String? scalingStr;
-      for (final dm in spell.damageMath) {
-        if (dm.scalingFormula != null && dm.scalingFormula!.trim().isNotEmpty) {
-          scalingStr = dm.scalingFormula;
-          break;
-        }
-      }
-      scalingStr ??= spell.customProperties['scalingFormula']?.toString();
-
-      if (scalingStr != null && scalingStr.trim().isNotEmpty) {
-        parsedScale = _parseSpellFormulaField(scalingStr);
-        if (parsedScale == null) {
-          return null;
-        }
-      } else if (spell.higherLevelsMarkdown != null) {
-        // higherLevelsMarkdown is prose; its first DiceExpression match is the scaling rule.
-        final proseMatch =
-            DiceExpression.findAll(spell.higherLevelsMarkdown!).firstOrNull;
-        if (proseMatch != null &&
-            !proseMatch.expression.diceTerms.any((t) => t.isNegative)) {
-          final proseDice = <DiceRollTerm>[];
-          for (final dt in proseMatch.expression.diceTerms) {
-            proseDice.add(dt);
-          }
-          parsedScale = (
-            dice: proseDice,
-            constantSum: proseMatch.expression.constantSum,
-          );
-        }
-      }
-    }
+    final parsedBase = plan.parsedBase;
+    final parsedScale = plan.parsedScale;
+    final spellModContribution = plan.spellModContribution;
 
     if (castLevel != null && castLevel > 0) {
       if (effectiveIsPact) {
@@ -1043,7 +999,8 @@ class CharacterSheetController extends ChangeNotifier {
         spell.name.toLowerCase() == 'eldritch blast';
 
     int modifier = (parsedBase?.constantSum ?? 0) +
-        (delta > 0 ? delta * (parsedScale?.constantSum ?? 0) : 0);
+        (delta > 0 ? delta * (parsedScale?.constantSum ?? 0) : 0) +
+        spellModContribution;
     if (isEldritchBlast &&
         (hasAgonizingBlast ||
             hasCapabilityFlag('eldritchBlastChaDamage') ||

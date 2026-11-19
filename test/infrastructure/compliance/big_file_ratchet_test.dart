@@ -43,7 +43,7 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/screens/homebrew_studio_screen.dart': 1912,
   'lib/models/spells/level_5_spells.dart': 1892,
   'lib/models/domain/homebrew_extended_entities.dart': 1846,
-  'lib/providers/character_sheet_controller.dart': 1708,
+  'lib/providers/character_sheet_controller.dart': 1665,
   'lib/models/characters/srd_classes_library.dart': 1794,
   'lib/models/magic_items/items/armor_and_shields.dart': 1698,
   'lib/infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart': 1659,

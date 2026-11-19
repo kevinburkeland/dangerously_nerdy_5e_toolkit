@@ -107,11 +107,13 @@ class SpellCard extends StatelessWidget {
             domainSpell.customProperties['rollFormula']?.toString() ??
             '';
         if (rollResult == null && rawFormula.trim().isNotEmpty && context.mounted) {
+          final msg = controller!.lastCastError ??
+              'Can\'t roll "$rawFormula": not dice notation';
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Can\'t roll "$rawFormula": not dice notation',
+                msg,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               behavior: SnackBarBehavior.floating,
@@ -200,11 +202,13 @@ class SpellCard extends StatelessWidget {
           domainSpell.customProperties['rollFormula']?.toString() ??
           '';
       if (rollResult == null && rawFormula.trim().isNotEmpty && context.mounted) {
+        final msg = controller!.lastCastError ??
+            'Can\'t roll "$rawFormula": not dice notation';
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Can\'t roll "$rawFormula": not dice notation',
+              msg,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             behavior: SnackBarBehavior.floating,

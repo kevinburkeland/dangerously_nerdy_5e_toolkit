@@ -127,7 +127,8 @@ class InteractiveSpellTile extends StatelessWidget {
         spell.customProperties['rollFormula']?.toString() ??
         '';
     if (rollResult == null && rawFormula.trim().isNotEmpty) {
-      final msg = 'Can\'t roll "$rawFormula": not dice notation';
+      final msg = controller.lastCastError ??
+          'Can\'t roll "$rawFormula": not dice notation';
       A11yService.announce(msg);
       if (context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();

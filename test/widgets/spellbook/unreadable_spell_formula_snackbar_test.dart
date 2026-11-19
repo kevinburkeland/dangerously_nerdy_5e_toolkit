@@ -185,4 +185,136 @@ void main() {
       findsOneWidget,
     );
   });
+
+  Character makeNonCaster() => const Character(
+        id: EntityId(slug: 'widget-fighter', ruleset: RulesetVersion.v2024),
+        name: 'Widget Fighter',
+        speciesRef: EntityReference.empty(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference.empty(
+                refType: EntityType.classDefinition,
+                slug: 'fighter',
+                displayName: 'Fighter',
+              ),
+              level: 3,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: AbilityScores(strength: 16, wisdom: 16),
+        resources: CharacterResourcePool(
+          currentHp: 30,
+          spellSlots: SpellSlotPool(
+            maxSlots: {1: 4},
+            currentSlots: {1: 4},
+          ),
+        ),
+      );
+
+  testWidgets(
+      'InteractiveSpellTile shows SnackBar when mod spell cast with no spellcasting modifier',
+      (tester) async {
+    final controller = CharacterSheetController(
+      replicaId: _widgetReplica,
+      character: makeNonCaster(),
+      persistenceService: _FakeRepo(),
+    );
+    const modSpell = Spell(
+      id: EntityId(slug: 'shillelagh-test', ruleset: RulesetVersion.v2024),
+      name: 'Mod Cantrip',
+      level: 0,
+      school: 'transmutation',
+      castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
+      duration: SpellDuration(type: DurationType.instantaneous),
+      range: 'Touch',
+      components: SpellComponents(v: true),
+      descriptionMarkdown: 'Requires spellcasting modifier.',
+      damageMath: [
+        EvaluationMath(diceFormula: '1d8 + mod', damageType: DamageType.bludgeoning),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: InteractiveSpellTile(
+            spell: modSpell,
+            controller: controller,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Mod Cantrip'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Can\'t roll "1d8 + mod": no spellcasting modifier'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+      'SpellCard shows SnackBar when mod spell cast with no spellcasting modifier',
+      (tester) async {
+    final controller = CharacterSheetController(
+      replicaId: _widgetReplica,
+      character: makeNonCaster(),
+      persistenceService: _FakeRepo(),
+    );
+    const modSpellItem = SpellItem(
+      id: 'mod-card-spell',
+      name: 'Mod Cantrip Card',
+      level: 0,
+      school: SpellSchool.transmutation,
+      rules2014: SpellEditionDetails(
+        castingTime: '1 Bonus Action',
+        range: 'Touch',
+        components: 'V',
+        duration: '1 minute',
+        description: ['A cantrip using mod.'],
+        classes: [SpellClass.druid],
+        rollFormula: '1d8 + mod',
+      ),
+      rules2024: SpellEditionDetails(
+        castingTime: '1 Bonus Action',
+        range: 'Touch',
+        components: 'V',
+        duration: '1 minute',
+        description: ['A cantrip using mod.'],
+        classes: [SpellClass.druid],
+        rollFormula: '1d8 + mod',
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SpellCard(
+            spell: modSpellItem,
+            edition: DmRulesEdition.v2024,
+            isPinned: false,
+            onTap: () {},
+            onTogglePin: () {},
+            controller: controller,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Cast'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Can\'t roll "1d8 + mod": no spellcasting modifier'),
+      findsOneWidget,
+    );
+  });
 }
