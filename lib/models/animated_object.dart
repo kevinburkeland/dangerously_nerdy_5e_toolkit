@@ -1,3 +1,4 @@
+import '../utils/dice_formatters.dart';
 // Compatibility re-export bridging domain entity and infrastructure DTO.
 import 'domain/minion_instance.dart';
 
@@ -10,3 +11,5 @@ export '../infrastructure/dtos/animated_object_dto.dart';
 typedef AnimatedObjectInstance = MinionInstance;
 typedef AnimatedObjectStats = MinionStats;
 typedef ObjectSize = EntitySize;
+
+class ZzModelWithCb { final ZzUtilCb? zz; const ZzModelWithCb({this.zz}); }
