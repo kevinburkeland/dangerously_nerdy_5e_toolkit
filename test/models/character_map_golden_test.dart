@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 
 const _goldenPath =
     'test/fixtures/character_map_goldens/app_legacy_character_goldens.json';
@@ -80,10 +80,10 @@ Map<String, dynamic> _buildAppGoldenPayload() {
   final cases = <Map<String, dynamic>>[];
 
   for (final item in inputs) {
-    final c1 = Character.fromMap(item.map);
-    final c2 = Character.fromMap(item.map);
-    final serialized = c1.toMap();
-    final roundTrip = Character.fromMap(serialized);
+    final c1 = CharacterDto.fromMap(item.map).toDomain();
+    final c2 = CharacterDto.fromMap(item.map).toDomain();
+    final serialized = CharacterDto.fromDomain(c1).toMap();
+    final roundTrip = CharacterDto.fromMap(serialized).toDomain();
     cases.add({
       'id': item.id,
       'toMap': _canonicalize(serialized),
