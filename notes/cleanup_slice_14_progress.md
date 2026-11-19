@@ -63,6 +63,9 @@ Fix 5.1 done: [Legacy room state carries the genesis clock] Switched CampaignPro
 Fix 5.2 done: [Stopping sync forgets the old campaign] Reset RoomSyncOrchestrator sequence, last emitted profile, tracked rules set, and applied-profile deduplication caches in stopSynchronization with a lifecycle test
 Fix 5.3 done: [SHA-256 comes from package crypto] Replaced the hand-written SHA-256 in CryptoUtils.sha256Hex with package:crypto sha256 verified by NIST KATs, 1050 seeded strings, and block-edge lengths
 Fix 5.4 done: [One PartyRoomService, and app type names are unique] Extended unique_type_names_law_test.dart to app-internal top-level declarations, deleted unused duplicate PartyRoomService, and updated DI, tests, removed_test_names.txt, and codebase_map.md
+Fix 6.1 done: [The purity bar walks imports transitively] Added transitive_purity_test.dart with empty allowlist verifying 0 Flutter/Crashlytics leaks across lib/models, lib/domain, lib/application, and lib/infrastructure/dtos
+Fix 6.2 done: [Logging goes through a pure port] Routed LoggingService through pure LogSink port (CrashlyticsLogSink installed at start of main, RecordingLogSink in flutter_test_config.dart, fail-closed StateError without sink) and decoupled RoomSyncOrchestrator from DiceRoomService via IRemoteRollIngestor
+Fix 6.3 done: [The DPR engine's math is plain Dart] Removed package:flutter/foundation.dart from dpr_calculator_engine.dart and moved compute wrappers to dpr_calculator_async.dart with DPR golden unchanged
 
 ## Mutation branches
 None
@@ -71,6 +74,7 @@ None
 965cc87801560b92c92ac86b40b9472d6815709b red run 44626433270
 9e3bd933eebd7fd2d0fdfb17f664d3a06eb3fed0 red run 44627656241
 968a5f013be8d3aa14c81b2d250c0f6115181282 red run 44629210882
+45983910dff9a4ac11ad46b84c17e5ef0fc0a6a4 red run 44636385070
 
 ## Resets
 None
@@ -86,6 +90,8 @@ Implement Step 6: transitive purity bar (Fix 6.1), pure LogSink port and Crashly
 - Fix 4.1 Character constructor: wrapping inventory once via List.unmodifiable required making Character(...) a factory constructor delegating to const Character._(...); updated const Character(...) call sites in ruleset and app tests and updated character_typed_contract_law_test.dart line 89 to assert element identity and identical(c.inventory, c.inventory) rather than identical(c.inventory, mutableInput).
 - Fix 5.1 saved legacy data: legacy campaigns already upgraded and re-saved under the old legacy_import timestamp retain that saved clock and can still collide if two devices saved divergent names before Fix 5.1; all newly upgraded legacy records use HybridLogicalClock.genesis.
 - Fix 5.4 test references: five test files (rather than three) referenced the deleted duplicate PartyRoomService (di_graph_law_test.dart, injection_container_test.dart, local_replica_identity_store_test.dart, room_state_reconciliation_service_test.dart, crdt_pass_3_3_1_test.dart).
+- Fix 6.1 transitive scan before Fixes 6.2-6.3: found 29 / 6 / 3 / 0 (models / application / dtos / domain), higher than the expected 15 in models because srd_summons and bestiary files also transitively imported monster_codex_data.dart -> dpr_calculator_engine.dart; also found room_sync_orchestrator.dart -> dice_room_service.dart -> package:flutter/foundation.dart in application, closed via pure IRemoteRollIngestor port.
 Run 44626433270 cause: const Character replacement script accidentally touched frozen legacy storage fixtures under test/fixtures/legacy_storage/, caught by LC3 MANIFEST.json sha256 check; fixed by 9e3bd933eebd7fd2d0fdfb17f664d3a06eb3fed0
 Run 44627656241 cause: check_notes_shas failed because the prior red run on 965cc87801560b92c92ac86b40b9472d6815709b was not yet disclosed in progress notes; fixed by b683a896da1387406a85c9b30b72049213f0a219
 Run 44629210882 cause: DT2 in docs_truth_test flagged non-literal E1..E9 path syntax in Step 4 progress notes; fixed by 2185c60d9df938369f19a13e58e2bf956a4cf069
+Run 44636385070 cause: dynamic_ratchet_test DR1 failed because removing dynamic onNonFatalForTesting from logging_service.dart reduced total dynamic count from 1044 to 1041; fixed by e3f92c843cef8aeffcdb35dff8a65c7900ffc3bf
