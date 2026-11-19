@@ -66,6 +66,7 @@ None
 ## Red runs on main
 965cc87801560b92c92ac86b40b9472d6815709b red run 44626433270
 9e3bd933eebd7fd2d0fdfb17f664d3a06eb3fed0 red run 44627656241
+968a5f013be8d3aa14c81b2d250c0f6115181282 red run 44629210882
 
 ## Resets
 None
@@ -81,3 +82,4 @@ Implement Step 5: legacy room state genesis clock (Fix 5.1), RoomSyncOrchestrato
 - Fix 4.1 Character constructor: wrapping inventory once via List.unmodifiable required making Character(...) a factory constructor delegating to const Character._(...); updated const Character(...) call sites in ruleset and app tests and updated character_typed_contract_law_test.dart line 89 to assert element identity and identical(c.inventory, c.inventory) rather than identical(c.inventory, mutableInput).
 Run 44626433270 cause: const Character replacement script accidentally touched frozen legacy storage fixtures under test/fixtures/legacy_storage/, caught by LC3 MANIFEST.json sha256 check; fixed by 9e3bd933eebd7fd2d0fdfb17f664d3a06eb3fed0
 Run 44627656241 cause: check_notes_shas failed because the prior red run on 965cc87801560b92c92ac86b40b9472d6815709b was not yet disclosed in progress notes; fixed by b683a896da1387406a85c9b30b72049213f0a219
+Run 44629210882 cause: DT2 in docs_truth_test flagged non-literal E1..E9 path syntax in Step 4 progress notes; fixed by 2185c60d9df938369f19a13e58e2bf956a4cf069
