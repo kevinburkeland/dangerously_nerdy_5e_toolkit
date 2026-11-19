@@ -10,3 +10,6 @@ export '../infrastructure/dtos/animated_object_dto.dart';
 typedef AnimatedObjectInstance = MinionInstance;
 typedef AnimatedObjectStats = MinionStats;
 typedef ObjectSize = EntitySize;
+
+typedef ZzMultiCb =
+    void Function(Object? sheet);
