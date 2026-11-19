@@ -989,9 +989,6 @@ class CharacterSheetController extends ChangeNotifier {
     ({List<DiceRollTerm> dice, int constantSum})? parsedBase;
     if (hasBaseFormula) {
       parsedBase = _parseSpellFormulaField(baseFormula);
-      if (parsedBase == null) {
-        return null;
-      }
     }
 
     // Validate and parse upcast scaling BEFORE spending any spell slot.
