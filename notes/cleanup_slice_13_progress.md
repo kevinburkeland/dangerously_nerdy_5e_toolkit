@@ -1,7 +1,7 @@
 # Cleanup slice 13 progress notes
 Status: IN PROGRESS
 Start heads: core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app a7480b4e98552fe81f276d388eebf7a5a1c4dc45
-Last pushed heads (CI green): core 87011633eb26d170a67b7992132cae9866cd297b, ruleset 0562855170a8e74d351e01d6c0c5333cd75451d9, app 2bc799368753edfdcb2c56e893dc2d6d2c376917
+Last pushed heads (CI green): core 87011633eb26d170a67b7992132cae9866cd297b, ruleset 0562855170a8e74d351e01d6c0c5333cd75451d9, app 6190c5a430da3dd3cc0774c6f5f8ed28c7fbf294
 Pins now: ruleset -> core 87011633eb26d170a67b7992132cae9866cd297b; app -> core 87011633eb26d170a67b7992132cae9866cd297b, ruleset 0562855170a8e74d351e01d6c0c5333cd75451d9
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 7.1 7.2 8.1 8.2 8.3 8.4 8.5
 Mutation ids: F1 F2 W1 N1 U1 H1 T1 M1 D1 D2 D3 D4 R1 R2 P1 P2 C1 U2 H2 S1 S2 A1
@@ -41,7 +41,7 @@ Fix 8.5: Party AC comes from the rules
 - [x] Step 5 Dependency schema and coverage history: core 1cf60c4aed6aaf00e5c3f80efffc1bb7b8182ed1 run 44431575577, ruleset a9bdf3963f8a4ac024660ccb6331811de08b6de8 run 44431580583, app 6b99c35ac4bfa87287d01c64b1990884694bdc20 run 44431730280
 - [x] Step 6 Character map goldens: ruleset 983beb8be6ab3dc9262e3e2fe85c3b3ca11c8656 run 44433181074
 - [x] Step 7 One name per type: core db2e90c5e657a6c6ccba631764e999816d2e14fd run 44434058125, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d run 44434445875, app 2bc799368753edfdcb2c56e893dc2d6d2c376917 run 44465411460
-- [ ] Step 8 D&D fields leave core, and typed contract
+- [x] Step 8 D&D fields leave core, and typed contract: core 87011633eb26d170a67b7992132cae9866cd297b run 44466622750, ruleset 0562855170a8e74d351e01d6c0c5333cd75451d9 run 44469143416, app 6190c5a430da3dd3cc0774c6f5f8ed28c7fbf294 run 44469486261
 - [ ] Step 9 Mutations and report
 
 ## Fix checklist
