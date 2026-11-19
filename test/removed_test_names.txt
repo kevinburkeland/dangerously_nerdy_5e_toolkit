@@ -138,3 +138,15 @@ Site 1: character_sheet_controller.dart:952 (rollSpellDamage base) | tested roll
 Step 3 Characterization: rollSpellDamage baseline behavior | tested rollSpellDamage, deleted as dead code in Cleanup slice 13
 rollSpellDamage outside a room keeps all terms and constantSum | tested rollSpellDamage, deleted as dead code in Cleanup slice 13
 rollSpellDamage inside an active room throws StateError on garbage formula | tested rollSpellDamage, deleted as dead code in Cleanup slice 13
+Wizard Level 1 spell limits and spellbook initial scribe quota | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Wizard Level 1 validates exactly 6 spellbook spells | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Sorcerer Spells Known progression across levels | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Paladin spellcasting starts at Level 2 in 2014, Level 1 in 2024 | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Max tier gating prevents selecting higher level spells | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Bard 2014 Magical Secrets progression at levels 10, 14, 18 | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Lore Bard Additional Magical Secrets at Level 6 (2014 vs 2024) | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Bard 2024 Level 10 Magical Secrets unlocks Cleric, Druid, and Wizard spell lists | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Warlock Mystic Arcanum milestones at levels 11, 13, 15, 17 | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Warlock Level 11 validates 11 known spells AND 1 Level 6 Mystic Arcanum spell without quota error | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+Warlock Level 13 validates lower-tier Level 6 Arcanum alongside new Level 7 Arcanum | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13
+validateSpellAllocations accepts class-warlock-mystic-arcanum grant key | moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart in Cleanup slice 13

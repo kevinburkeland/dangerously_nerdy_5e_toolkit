@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-18
+- Cleanup slice 13: Enforce full schema paths on need_child/opt_child, OSV range events, and npm audit entries in check_dependencies.py, and move 12 pure-ruleset SpellAllocationValidator tests to vtt_ruleset_dnd5e (Fixes 5.1, 5.3).
 - Cleanup slice 13: Tighten dice reading compliance bar to catch case-insensitive/spaced/character-class dice regexes, upgrade Rule P2 callback bar to statement-level cross-file typedef resolution, and remove critThreshold clamping in DprCalculatorEngine while rejecting out-of-range critThreshold on deserialization (Fixes 4.1-4.3).
 - Cleanup slice 13: Re-pin vtt_ruleset_dnd5e to de529f197a77ccc642c1876babeed0db3cbeefd3, fix castSpell to roll all base/scaling die groups and flat bonuses, reject unreadable formulas before slot spend with SnackBar feedback, delete dead rollSpellDamage, migrate single-group sites to singleDieGroup, and add .diceTerms source bar (Fixes 3.1-3.3).
 - Cleanup slice 13: Retire cs12 mutation branches and replace thinking-out-loud comment in DPR golden characterization test (Fixes 2.1, 2.3).
