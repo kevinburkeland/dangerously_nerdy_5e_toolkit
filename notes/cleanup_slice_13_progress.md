@@ -1,7 +1,7 @@
 # Cleanup slice 13 progress notes
 Status: IN PROGRESS
 Start heads: core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app a7480b4e98552fe81f276d388eebf7a5a1c4dc45
-Last pushed heads (CI green): core db2e90c5e657a6c6ccba631764e999816d2e14fd, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d, app 6b99c35ac4bfa87287d01c64b1990884694bdc20
+Last pushed heads (CI green): core db2e90c5e657a6c6ccba631764e999816d2e14fd, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d, app 2bc799368753edfdcb2c56e893dc2d6d2c376917
 Pins now: ruleset -> core db2e90c5e657a6c6ccba631764e999816d2e14fd; app -> core db2e90c5e657a6c6ccba631764e999816d2e14fd, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 7.1 7.2 8.1 8.2 8.3 8.4 8.5
 Mutation ids: F1 F2 W1 N1 U1 H1 T1 M1 D1 D2 D3 D4 R1 R2 P1 P2 C1 U2 H2 S1 S2 A1
@@ -39,8 +39,8 @@ Fix 8.5: Party AC comes from the rules
 - [x] Step 3 Spell damage keeps every die group: ruleset de529f197a77ccc642c1876babeed0db3cbeefd3 run 44421675824, app d1a7719cce40f2d85865362b8157060a09580593 run 44423457857
 - [x] Step 4 Dice bar, models callback rule, crit threshold: app 95293c2efbd0cd23cfc3b28689dfa31340763690 run 44425061868
 - [x] Step 5 Dependency schema and coverage history: core 1cf60c4aed6aaf00e5c3f80efffc1bb7b8182ed1 run 44431575577, ruleset a9bdf3963f8a4ac024660ccb6331811de08b6de8 run 44431580583, app 6b99c35ac4bfa87287d01c64b1990884694bdc20 run 44431730280
-- [ ] Step 6 Character map goldens
-- [ ] Step 7 One name per type
+- [x] Step 6 Character map goldens: ruleset 983beb8be6ab3dc9262e3e2fe85c3b3ca11c8656 run 44433181074
+- [x] Step 7 One name per type: core db2e90c5e657a6c6ccba631764e999816d2e14fd run 44434058125, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d run 44434445875, app 2bc799368753edfdcb2c56e893dc2d6d2c376917 run 44465411460
 - [ ] Step 8 D&D fields leave core, and typed contract
 - [ ] Step 9 Mutations and report
 
@@ -62,6 +62,9 @@ Fix 4.3 done: [The DPR calculator passes the crit threshold through] Removed all
 Fix 5.1 done: [Advisory events and npm entries go through the schema] Updated need_child/opt_child in check_dependencies.py to require full SCHEMA paths and fail closed on non-dict/wrong-type/null, enforced OSV events (introduced/fixed/last_affected/limit) and get_ghsa_ids fail-closed validation, removed all isinstance checks outside wrap_guarded/accessors, extended AST+runtime closure checks and FC law (412 rows failed closed, 29 allowed-valid passed), synced byte-identical across all three repos.
 Fix 5.2 done: [Coverage floors are checked over the whole history] Replaced HEAD~1 check in check_coverage_floor.py with full git history inspection (including renames, removals, TOTAL, working tree vs HEAD, shallow-clone fail-closed), set fetch-depth: 0 in core and ruleset CI, and verified 18/18 self-tests and real history of both repos.
 Fix 5.3 done: [Floors follow measured coverage, and the spell allocation validator is tested at home] Added > 0.5 floor-lag failure to check_coverage_floor.py, moved 12 pure-ruleset SpellAllocationValidator tests to vtt-ruleset-dnd5e plus extra branch tests reaching 97.1% coverage (203/209 lines), kept 1 Life Domain catalog integration test in app, and raised all floors in core and ruleset to measured rounded down to 1 decimal.
+Fix 6.1 done: [Character map goldens before the contract changes] Added 328 character map golden cases plus 30 queryStat cases in ruleset test/models/character_map_golden_test.dart and 19 legacy/campaign character map goldens through CharacterDto in app test/infrastructure/dtos/character_map_golden_test.dart.
+Fix 7.1 done: [One name, one type across the three packages] Renamed core Character/CharacterResourcePool/InventoryItemInstance/EntityType to TabletopCharacter/TabletopResourcePool/TabletopItemInstance/TabletopEntityType, deleted unused StartingEquipmentItemRequest and ruleset RulesetVersion alias, migrated callers across ruleset and app, and added unique_type_names_law_test.dart in ruleset and app.
+Fix 7.2 done: [No hide of a package name] Removed all 3 core hide combinators in ruleset and all 16 core/ruleset hide combinators in app, and added no_package_hide_bar_test.dart in ruleset and app.
 
 ## Mutation branches
 None
@@ -74,7 +77,7 @@ a66d1ef621f9c929ba0c0cd4cb6687118f5f254f cancelled run 44417061507
 69f4913a1fb725643a3f6b44c1a5d81b88847c45 red run 44434118694
 
 ## Next
-Verify CI green on Step 7 app push, then check off Steps 6 and 7 and begin Step 8 (D&D fields leave core, generic IRulesetModule, typed ruleset models, core word bar, party AC from rules).
+Complete Step 8 (D&D fields leave core, generic IRulesetModule, typed ruleset models, core word bar, party AC from rules) in core, ruleset, and app.
 
 ## Open issues and deviations
 Run 44415073858 cause: big_file_ratchet_test failed because Step 1 shrank three allowlisted files (srd_loot_tables.dart, dpr_models.dart, character_sheet_controller.dart) below their recorded ceilings; fixed by bbc42a7bcfbe09f07609238077b27a92f9bf7628
