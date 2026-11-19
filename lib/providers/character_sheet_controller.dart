@@ -1055,10 +1055,9 @@ class CharacterSheetController extends ChangeNotifier {
 
     // Assemble dice pool combining every base and scaling die group (merging same-sided dice).
     final countsBySides = <int, int>{};
-    if (parsedBase != null) {
-      for (final dt in parsedBase.dice) {
-        countsBySides[dt.sides] = (countsBySides[dt.sides] ?? 0) + dt.count;
-      }
+    if (parsedBase != null && parsedBase.dice.isNotEmpty) {
+      final dt = parsedBase.dice.first;
+      countsBySides[dt.sides] = (countsBySides[dt.sides] ?? 0) + dt.count;
     }
     if (delta > 0 && parsedScale != null) {
       for (final st in parsedScale.dice) {
