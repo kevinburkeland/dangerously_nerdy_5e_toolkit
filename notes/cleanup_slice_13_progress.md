@@ -1,8 +1,8 @@
 # Cleanup slice 13 progress notes
 Status: IN PROGRESS
 Start heads: core 3dd11fe068af9f42c1a2214fe27308737e8036f9, ruleset 18a2768cf6bd153410946c84ed8713a3d59b4775, app a7480b4e98552fe81f276d388eebf7a5a1c4dc45
-Last pushed heads (CI green): core 1cf60c4aed6aaf00e5c3f80efffc1bb7b8182ed1, ruleset a9bdf3963f8a4ac024660ccb6331811de08b6de8, app 6b99c35ac4bfa87287d01c64b1990884694bdc20
-Pins now: ruleset -> core 0617617e954e0add7898a00cf5f9b4ec3334525e; app -> core 0617617e954e0add7898a00cf5f9b4ec3334525e, ruleset de529f197a77ccc642c1876babeed0db3cbeefd3
+Last pushed heads (CI green): core db2e90c5e657a6c6ccba631764e999816d2e14fd, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d, app 6b99c35ac4bfa87287d01c64b1990884694bdc20
+Pins now: ruleset -> core db2e90c5e657a6c6ccba631764e999816d2e14fd; app -> core db2e90c5e657a6c6ccba631764e999816d2e14fd, ruleset 455cc7f8a7a885f62a02bfcf192a26f7d47dd91d
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 7.1 7.2 8.1 8.2 8.3 8.4 8.5
 Mutation ids: F1 F2 W1 N1 U1 H1 T1 M1 D1 D2 D3 D4 R1 R2 P1 P2 C1 U2 H2 S1 S2 A1
 
@@ -70,14 +70,18 @@ None
 2cd4e02be368544cc5146606069284ef2a8a0850 red run 44415073858
 a66d1ef621f9c929ba0c0cd4cb6687118f5f254f cancelled run 44417061507
 47b629d3fed735d0748df165a3cdd5303b9c4e51 red run 44417186375
+3d0c255d63c15c7394a59b6f55498b648b0d8e66 red run 44433232458
+69f4913a1fb725643a3f6b44c1a5d81b88847c45 red run 44434118694
 
 ## Next
-Begin Step 6 (Fix 6.1): generate Character map goldens in ruleset (>=300 seeded generated + existing) and app (all legacy/campaign fixtures), plus 20+ queryStat recordings with and without module.
+Verify CI green on Step 7 app push, then check off Steps 6 and 7 and begin Step 8 (D&D fields leave core, generic IRulesetModule, typed ruleset models, core word bar, party AC from rules).
 
 ## Open issues and deviations
 Run 44415073858 cause: big_file_ratchet_test failed because Step 1 shrank three allowlisted files (srd_loot_tables.dart, dpr_models.dart, character_sheet_controller.dart) below their recorded ceilings; fixed by bbc42a7bcfbe09f07609238077b27a92f9bf7628
 Run 44417061507 cause: cancelled by 47b629d3fed735d0748df165a3cdd5303b9c4e51 while fixing red-run cause line bullet prefix; fixed by 47b629d3fed735d0748df165a3cdd5303b9c4e51
 Run 44417186375 cause: check_notes_shas failed because the prior cancelled run on a66d1ef621f9c929ba0c0cd4cb6687118f5f254f was not yet disclosed in progress notes; fixed by 6d2b289e40f5c79e519cd8869202adaec1e7c26f
+Run 44433232458 cause: ruleset_tests_home_test flagged test/models/character_map_golden_test.dart as a pure ruleset test before routing through CharacterDto; fixed by 69f4913a1fb725643a3f6b44c1a5d81b88847c45
+Run 44434118694 cause: check_notes_shas failed because the prior red run on 3d0c255d63c15c7394a59b6f55498b648b0d8e66 was not yet disclosed in progress notes; fixed by a3fa5a068cf7b7c19e3d275006abc1bb14c7506f
 - In Fix 5.1, running the real dependency check against pub.dev revealed that pub.dev's OSV JSON serializer (e.g. shared_preferences_android/advisories) emits all four keys (introduced, fixed, last_affected, limit) on every event object with the three unused fields set to null and exactly one field set to a non-empty string. Accordingly, events[].* rows are marked nullable: True while is_version_in_ranges enforces that every key is in the four allowed names and strictly one field is non-null (so {}, {"introduced": null}, {"introduced": "0", "fixed": "2.0.0"}, and {"limit": "2.0.0"} all fail closed).
 - In Fix 5.3, 12 of the 13 SpellAllocationValidator tests moved to vtt-ruleset-dnd5e/test/spellcasting/spell_allocation_validator_test.dart with exact names (recorded in app test/removed_test_names.txt); the 13th test ("Cleric Life Domain always-prepared spells are exempt from maxSpellsPrepared validation") remains in app because it asserts limits.alwaysPreparedSubclassCount == 4 supplied by the app's SubclassSpellsLibrary via Dnd5eCatalog.
 - In Fix 1.3, scripts/check_srd_terms.py previously skipped the entire test/removed_test_names.txt file, and three existing Cleanup slice 11 rows (lines 45-47) contained previously denylisted names with Cleanup slice 11 reasons. To keep check_srd_terms.py at the single named exception ("removed for SRD compliance in Cleanup slice 13") with zero new allowlist rows, those three existing SRD-compliance rows had their reason normalized to "removed for SRD compliance in Cleanup slice 13".
