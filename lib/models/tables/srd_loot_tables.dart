@@ -599,7 +599,7 @@ class SrdLootTables {
           minRoll: 68,
           maxRoll: 70,
           label: 'Restorative Ointment',
-          itemRefId: 'item_restorative_ointment'),
+          itemRefId: 'item_zz_nonexistent_loot_item'),
       TableEntry(
           minRoll: 71,
           maxRoll: 73,
