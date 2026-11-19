@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-19
+- Cleanup slice 14: Retire cs13 mutation branches, restore three slice 11 renamed-test reasons in test/removed_test_names.txt, allow renamed-test reasons in check_srd_terms.py, enforce append-only history on test/removed_test_names.txt in check_test_names.py, and upgrade dbus to 0.8.1 and firebase-tools to 15.37.0 (Fixes 1.1-1.4).
+
 ## 2026-11-18
 - Cleanup slice 13: Re-pin vtt_engine_core (87011633eb26d170a67b7992132cae9866cd297b) and vtt_ruleset_dnd5e (0562855170a8e74d351e01d6c0c5333cd75451d9), route CharacterTelemetryDto.armorClass through queryStat('ac', module: Dnd5eRulesetModule.forEdition(rulesEdition)), add 300-seed party AC telemetry law, and update app legacy character goldens with Step 8 diff-guard (Fixes 8.1-8.5).
 - Cleanup slice 13: Re-pin vtt_engine_core (db2e90c5e657a6c6ccba631764e999816d2e14fd) and vtt_ruleset_dnd5e (455cc7f8a7a885f62a02bfcf192a26f7d47dd91d), update TabletopEntityType and RulesetEdition call sites, remove all 16 hide combinators on core/ruleset imports, and add unique-type-names and no-package-hide compliance bars (Fixes 6.1, 7.1, 7.2).
