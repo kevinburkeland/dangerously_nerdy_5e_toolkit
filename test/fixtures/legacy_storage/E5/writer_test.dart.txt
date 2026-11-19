@@ -83,7 +83,7 @@ void main() {
     final settingsProvider = SettingsProvider(autoLoad: false);
 
     // 1. Build Characters
-    final charFighter = Character(
+    const charFighter = Character(
       id: EntityId(slug: 'char_fighter', ruleset: RulesetVersion.v2024),
       name: 'Fighter One',
       speciesRef: EntityReference.empty(
@@ -149,7 +149,7 @@ void main() {
       ],
     );
 
-    final charWizardCleric = Character(
+    const charWizardCleric = Character(
       id: EntityId(slug: 'char_wizard_cleric', ruleset: RulesetVersion.v2024),
       name: 'Mage Cleric',
       speciesRef: EntityReference.empty(
