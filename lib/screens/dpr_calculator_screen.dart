@@ -6,7 +6,7 @@ import '../providers/settings_provider.dart';
 import '../services/app_services.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/dpr_persistence_service.dart';
-import '../services/rules/dpr_calculator_engine.dart';
+import '../services/rules/dpr_calculator_async.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/dpr/dpr_chart_widget.dart';
 import '../widgets/dpr/dpr_combatant_configurator.dart';

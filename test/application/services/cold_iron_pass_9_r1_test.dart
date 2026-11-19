@@ -8,9 +8,9 @@ import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
+import '../../test_doubles/recording_log_sink.dart';
 import '../../test_doubles/fake_room_document_port.dart';
 import '../../test_doubles/hive_test_harness.dart';
 import '../../test_doubles/service_test_configurator.dart';
@@ -249,12 +249,12 @@ void main() {
     test('Lobby read failure: a fake that throws on the read produces one logged non-fatal and no profile', () async {
       dynamic loggedError;
       String? loggedReason;
-      LoggingService.onNonFatalForTesting = (err, st, reason) {
+      testLogSink.onNonFatal = (err, st, reason) {
         loggedError = err;
         loggedReason = reason;
       };
       addTearDown(() {
-        LoggingService.onNonFatalForTesting = null;
+        testLogSink.onNonFatal = null;
       });
 
       recordingPort.shouldThrowOnGet = Exception('Simulated Firestore read timeout');

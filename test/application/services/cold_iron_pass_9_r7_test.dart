@@ -9,7 +9,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_pa
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
+import '../../test_doubles/recording_log_sink.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
@@ -161,14 +161,14 @@ void main() {
     });
 
     tearDown(() {
-      LoggingService.onNonFatalForTesting = null;
+      testLogSink.onNonFatal = null;
     });
 
     test(
         'Orchestrator: a transport whose broadcastPayload throws produces exactly one logged non-fatal per failed send',
         () async {
       final nonFatals = <String>[];
-      LoggingService.onNonFatalForTesting = (exception, stackTrace, reason) {
+      testLogSink.onNonFatal = (exception, stackTrace, reason) {
         nonFatals.add('$reason: $exception');
       };
 
@@ -238,7 +238,7 @@ void main() {
         'setActiveProfileId with a failing disk write logs one non-fatal. The in-memory active id still changes, as today.',
         () async {
       final nonFatals = <String>[];
-      LoggingService.onNonFatalForTesting = (exception, stackTrace, reason) {
+      testLogSink.onNonFatal = (exception, stackTrace, reason) {
         nonFatals.add('$reason: $exception');
       };
 
@@ -274,7 +274,7 @@ void main() {
         'Payload mapper: a full-profile message whose pinned-rules block is malformed logs a non-fatal, and the rest of the message is still applied as today',
         () {
       final nonFatals = <String>[];
-      LoggingService.onNonFatalForTesting = (exception, stackTrace, reason) {
+      testLogSink.onNonFatal = (exception, stackTrace, reason) {
         nonFatals.add('$reason: $exception');
       };
 

@@ -16,7 +16,7 @@ import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/aggregate_hlc_extractor.dart';
-import '../../services/dice_room_service.dart';
+import '../ports/remote_roll_ingestor.dart';
 import '../../services/logging_service.dart';
 
 /// Application service orchestrating bidirectional synchronization between
@@ -29,7 +29,7 @@ class RoomSyncOrchestrator {
   final ICampaignRepository campaignRepo;
   final RoomStateReconciliationService reconciliationService;
   final ClockSyncService clockSyncService;
-  final DiceRoomService diceRoomService;
+  final IRemoteRollIngestor? diceRoomService;
   final IRoomSyncPayloadPort payloadMapper;
   final bool isHost;
   final ReplicaId replicaId;
@@ -95,7 +95,7 @@ class RoomSyncOrchestrator {
     required this.campaignRepo,
     required this.reconciliationService,
     required this.clockSyncService,
-    DiceRoomService? diceRoomService,
+    this.diceRoomService,
     required this.payloadMapper,
     int Function()? localTimeProvider,
     this.isHost = false,
@@ -106,7 +106,6 @@ class RoomSyncOrchestrator {
     Duration? heartbeatTtl,
     required this._clock,
   })  : transportPort = transportPort ?? router!,
-        diceRoomService = diceRoomService ?? DiceRoomService(),
         _localTimeProvider =
             localTimeProvider ?? (() => clockSyncService.currentNetworkTimeMs),
         heartbeatTtl = heartbeatTtl ?? (transportPort ?? router)!.heartbeatTtl,
@@ -627,7 +626,7 @@ class RoomSyncOrchestrator {
             };
 
           case DiceRollSyncMessage msg:
-            diceRoomService.ingestRemoteRoll(msg.roll);
+            diceRoomService?.ingestRemoteRoll(msg.roll);
 
           case UnknownSyncMessage():
             break;

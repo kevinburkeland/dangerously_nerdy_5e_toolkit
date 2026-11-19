@@ -1,13 +1,37 @@
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
+import '../application/ports/log_sink.dart';
 
-/// Logging and crash reporting wrapper.
-/// Outputs to [debugPrint] in debug builds. Forwards errors to
-/// FirebaseCrashlytics on non-web platforms (Crashlytics does not support web).
+/// Pure Dart logging and crash-reporting facade.
+///
+/// Redacts PII (emails and room codes) before forwarding to the installed
+/// [LogSink]. Calling any logging method before a sink is installed throws
+/// [StateError] naming the call.
 class LoggingService {
   static final LoggingService _instance = LoggingService._internal();
   factory LoggingService() => _instance;
   LoggingService._internal();
+
+  /// Creates a fresh [LoggingService] instance isolated from the singleton.
+  LoggingService.isolated([this._sink]);
+
+  LogSink? _sink;
+
+  /// Installs the active [LogSink] on the shared [LoggingService] singleton.
+  static void installSink(LogSink? sink) {
+    _instance._sink = sink;
+  }
+
+  /// Returns the currently installed [LogSink], or `null` if none is installed.
+  static LogSink? get installedSink => _instance._sink;
+
+  LogSink _requireSink(String callName) {
+    final sink = _sink;
+    if (sink == null) {
+      throw StateError(
+        'LoggingService.$callName called before a LogSink was installed via LoggingService.installSink(...).',
+      );
+    }
+    return sink;
+  }
 
   /// Regex patterns for stripping sensitive user PII from crash logs
   static final RegExp _roomCodeRegex =
@@ -24,77 +48,40 @@ class LoggingService {
 
   /// Logs informational breadcrumb messages
   void logInfo(String message) {
+    final sink = _requireSink('logInfo');
     final sanitized = sanitizeMessage(message);
-    if (kDebugMode) {
-      debugPrint('[INFO] $sanitized');
-    }
+    sink.info(sanitized);
   }
 
   /// Logs non-fatal warnings (e.g. network retries, offline sync fallback)
   void logWarning(String message, [dynamic error]) {
+    final sink = _requireSink('logWarning');
     final sanitized = sanitizeMessage(message);
-    if (kDebugMode) {
-      debugPrint('[WARNING] $sanitized ${error != null ? "--> $error" : ""}');
-    }
+    sink.warning(sanitized, error);
   }
 
-  @visibleForTesting
-  void Function(dynamic exception, StackTrace? stackTrace, String? reason)?
-      onNonFatalForTestingInstance;
-
-  @visibleForTesting
-  static void Function(dynamic exception, StackTrace? stackTrace, String? reason)? get onNonFatalForTesting => _instance.onNonFatalForTestingInstance;
-
-  @visibleForTesting
-  static set onNonFatalForTesting(void Function(dynamic exception, StackTrace? stackTrace, String? reason)? fn) => _instance.onNonFatalForTestingInstance = fn;
-
   /// Logs non-fatal exceptions (e.g. caught Firestore timeouts or parse failures).
-  /// Forwards to FirebaseCrashlytics on non-web platforms.
   void logNonFatal(dynamic exception, StackTrace? stackTrace,
       {String? reason}) {
-    onNonFatalForTestingInstance?.call(exception, stackTrace, reason);
+    final sink = _requireSink('logNonFatal');
     final sanitizedReason =
         reason != null ? sanitizeMessage(reason) : 'Non-fatal error caught';
-    if (kDebugMode) {
-      debugPrint('[NON-FATAL] $sanitizedReason: $exception');
-      if (stackTrace != null) {
-        debugPrint(stackTrace.toString());
-      }
-    }
-    if (!kIsWeb) {
-      try {
-        FirebaseCrashlytics.instance.recordError(
-          exception,
-          stackTrace,
-          reason: sanitizedReason,
-          fatal: false,
-        );
-      } catch (_) {
-        // intentional: Crashlytics not initialized (e.g. headless unit tests or offline run)
-      }
-    }
+    sink.nonFatal(
+      exception,
+      stackTrace,
+      sanitizedReason: sanitizedReason,
+    );
   }
 
   /// Logs critical unhandled crashes captured by global error zones.
-  /// Forwards to FirebaseCrashlytics on non-web platforms.
   void logFatal(dynamic exception, StackTrace stackTrace, {String? reason}) {
+    final sink = _requireSink('logFatal');
     final sanitizedReason =
         reason != null ? sanitizeMessage(reason) : 'Unhandled fatal error';
-    if (kDebugMode) {
-      debugPrint('[FATAL CRASH] $sanitizedReason: $exception');
-      debugPrint(stackTrace.toString());
-    }
-    if (!kIsWeb) {
-      try {
-        FirebaseCrashlytics.instance.recordError(
-          exception,
-          stackTrace,
-          reason: sanitizedReason,
-          fatal: true,
-        );
-      } catch (_) {
-        // intentional: Crashlytics not initialized during headless tests or offline run
-      }
-    }
+    sink.fatal(
+      exception,
+      stackTrace,
+      sanitizedReason: sanitizedReason,
+    );
   }
 }

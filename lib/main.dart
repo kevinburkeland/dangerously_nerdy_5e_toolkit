@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'infrastructure/di/injection_container.dart';
+import 'infrastructure/logging/crashlytics_log_sink.dart';
 import 'models/app_settings.dart' hide ThemeMode;
 import 'presentation/visual/visual_ui.dart';
 import 'providers/settings_provider.dart';
@@ -450,6 +451,7 @@ class _StorageUnavailablePageState extends State<StorageUnavailablePage> {
 }
 
 void main() {
+  LoggingService.installSink(const CrashlyticsLogSink());
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
 

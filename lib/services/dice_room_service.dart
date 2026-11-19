@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../application/ports/remote_roll_ingestor.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import '../application/services/room_session_starter.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
@@ -23,7 +24,7 @@ class RoomSession {
   });
 }
 
-class DiceRoomService {
+class DiceRoomService implements IRemoteRollIngestor {
   static const _kPersistedRoomCode = 'dice_room_persisted_code';
   static const _kPersistedPlayerName = 'dice_room_persisted_player_name';
   static const _kPersistedRemember = 'dice_room_persisted_remember';
@@ -524,6 +525,7 @@ class DiceRoomService {
   }
 
   /// Ingests a roll received from a remote transport (P2P mesh, relay, or network bridge)
+  @override
   void ingestRemoteRoll(RoomRoll roll) {
     final cleanCode = roll.roomCode.trim().toUpperCase();
     if (!_localRooms.containsKey(cleanCode)) {

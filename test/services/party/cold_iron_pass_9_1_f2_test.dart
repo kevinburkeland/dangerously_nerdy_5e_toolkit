@@ -10,10 +10,10 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import '../../test_doubles/fake_room_document_port.dart';
+import '../../test_doubles/recording_log_sink.dart';
 import '../../test_doubles/service_test_configurator.dart';
 
 class _InMemoryCampaignRepo implements ICampaignRepository {
@@ -236,13 +236,13 @@ void main() {
       dynamic loggedError;
       String? loggedReason;
 
-      LoggingService.onNonFatalForTesting = (err, st, reason) {
+      testLogSink.onNonFatal = (err, st, reason) {
         nonFatalCount++;
         loggedError = err;
         loggedReason = reason;
       };
       addTearDown(() {
-        LoggingService.onNonFatalForTesting = null;
+        testLogSink.onNonFatal = null;
       });
 
       recordingPort.shouldThrowOnGet = Exception('Simulated server read crash');

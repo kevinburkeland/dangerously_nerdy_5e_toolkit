@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_serialization.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/rules/dpr_calculator_engine.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/dpr_calculator_async.dart';
 
 void main() {
   group('DprCalculatorEngine Math & Probabilities', () {
@@ -618,7 +618,7 @@ void main() {
         ],
       );
 
-      final curve = await DprCalculatorEngine.generateCurveAsync(profile,
+      final curve = await generateCurveAsync(profile,
           minAc: 10, maxAc: 20);
       expect(curve.points.length, 11);
       expect(curve.pointAt(10)?.dpr, greaterThan(curve.pointAt(20)?.dpr ?? 0));
@@ -644,7 +644,7 @@ void main() {
         ],
       );
 
-      final result = await DprCalculatorEngine.calculateGwmBreakEvenAsync(
+      final result = await calculateGwmBreakEvenAsync(
           profile,
           minAc: 10,
           maxAc: 20);

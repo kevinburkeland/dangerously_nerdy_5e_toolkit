@@ -6,9 +6,12 @@ import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_document_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
 import 'test_doubles/fake_room_document_port.dart';
+import 'test_doubles/recording_log_sink.dart';
 
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
+  LoggingService.installSink(testLogSink);
   installRulesetCatalog();
   CampaignProfile.defaultRulesetEdition = RulesetEdition.v2024;
   if (!sl.isRegistered<ReplicaId>()) {
