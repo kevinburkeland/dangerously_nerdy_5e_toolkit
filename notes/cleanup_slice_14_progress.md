@@ -1,8 +1,8 @@
 # Cleanup slice 14 progress notes
 Status: IN PROGRESS
 Start heads: core 0ac9fd681bd514bca1a76b84e6eb7b69092d4c67, ruleset 9f44a7f3553b9c64d0f3f089e13f9e8dddf95b8b, app e188a91003a941672e9429408fe8b857133fb086
-Last pushed heads (CI green): core 8691313bf85cd25052df48d97ff874690d405094, ruleset dca5db4a5f5928634ae828598e5d0b9bef532599, app e0cf227c3bc80a90b3614bf1e125b907b5f74e88
-Pins now: ruleset -> core 87011633eb26d170a67b7992132cae9866cd297b; app -> core 87011633eb26d170a67b7992132cae9866cd297b, ruleset dca5db4a5f5928634ae828598e5d0b9bef532599
+Last pushed heads (CI green): core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app e457420b4823f9e4763e58281919c21731668d96
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 7.1 7.2 7.3 7.4 8.1 8.2
 Mutation ids: E1 B1 V1 K1 L1 M1 B2 S1 S2 T1 G1 Z1 H1 U1 P1 C1
 
@@ -40,8 +40,8 @@ Fix 8.2: One file per campaign dialog
 - [x] Step 3 Spell formulas use the spellcasting modifier: ruleset 862a6f64e1d61d01fa3017f3ba27f6549c107514 run 44614156424, app characterization 57c0c1f9d3dd4b85f99da4b2badd62e765055b40 run 44614852758, app a9ae2d699606ea41acf1b14c66721199c34ce35b run 44622396688
 - [x] Step 4 Inventory, versions, super-conversion bar: core 8691313bf85cd25052df48d97ff874690d405094 run 44625994045, ruleset dca5db4a5f5928634ae828598e5d0b9bef532599 run 44626002074, app 9e3bd933eebd7fd2d0fdfb17f664d3a06eb3fed0 (all code/test/build jobs green; red run disclosed below)
 - [x] Step 5 Sync and identity: app e0cf227c3bc80a90b3614bf1e125b907b5f74e88 run 44633009813
-- [ ] Step 6 Purity
-- [ ] Step 7 Core encoding and split, big-file bars, duplicate tests
+- [x] Step 6 Purity: app 030c32677a7a22a0df49850431a16343e6fab7b1 run 44637374733 (red run disclosed below)
+- [x] Step 7 Core encoding and split, big-file bars, duplicate tests: core ec9f155cbdce8315b0d84213842ddf8a22e46a66 run 44948282649, ruleset e49258140498c919eb91808c1d48da20870cfd7d run 44948466401, app e457420b4823f9e4763e58281919c21731668d96 run 44948702607
 - [ ] Step 8 Campaign dialogs split
 - [ ] Step 9 Mutations and report
 
@@ -66,6 +66,10 @@ Fix 5.4 done: [One PartyRoomService, and app type names are unique] Extended uni
 Fix 6.1 done: [The purity bar walks imports transitively] Added transitive_purity_test.dart with empty allowlist verifying 0 Flutter/Crashlytics leaks across lib/models, lib/domain, lib/application, and lib/infrastructure/dtos
 Fix 6.2 done: [Logging goes through a pure port] Routed LoggingService through pure LogSink port (CrashlyticsLogSink installed at start of main, RecordingLogSink in flutter_test_config.dart, fail-closed StateError without sink) and decoupled RoomSyncOrchestrator from DiceRoomService via IRemoteRollIngestor
 Fix 6.3 done: [The DPR engine's math is plain Dart] Removed package:flutter/foundation.dart from dpr_calculator_engine.dart and moved compute wrappers to dpr_calculator_async.dart with DPR golden unchanged
+Fix 7.1 done: [Sets have a canonical encoding] Added sorted Set encoding with type tag set: to CrdtLwwRegister._encodeCanonical in core with 360-seed laws
+Fix 7.2 done: [Core's session graph file is split by type] Split core session_graph_models.dart into 5 files under the core session_graph folder leaving session_graph_models.dart as exports only, with updated coverage_floors.tsv and check_coverage_floor.py barrel support
+Fix 7.3 done: [Core and the ruleset get a big-file bar] Added 1500-line big_file_ratchet_test.dart in core (empty allowlist) and ruleset (character_models.dart at 1742 lines)
+Fix 7.4 done: [Duplicate ruleset test files are removed] Diffed and removed duplicate ruleset test files dnd_5e_rules_engine_test and dnd_5e_combat_resolver_test (6 duplicate tests removed, all unique tests preserved) and re-pinned core and ruleset in app
 
 ## Mutation branches
 None
@@ -80,7 +84,7 @@ None
 None
 
 ## Next
-Implement Step 6: transitive purity bar (Fix 6.1), pure LogSink port and Crashlytics sink (Fix 6.2), and plain-Dart DPR calculator math with moved compute wrappers (Fix 6.3).
+Implement Step 8: characterization tests for every campaign dialog (Fix 8.1) and split campaign_dialogs.dart into one file per dialog (Fix 8.2).
 
 ## Open issues and deviations
 - Fix 1.4 look-ahead run (--today 2026-12-03) passed in core and the ruleset, and found dbus (0.8.0 -> 0.8.1) and firebase-tools (15.36.0 -> 15.37.0) crossing the 14-day window in the app; both were updated in Step 1.
@@ -91,6 +95,9 @@ Implement Step 6: transitive purity bar (Fix 6.1), pure LogSink port and Crashly
 - Fix 5.1 saved legacy data: legacy campaigns already upgraded and re-saved under the old legacy_import timestamp retain that saved clock and can still collide if two devices saved divergent names before Fix 5.1; all newly upgraded legacy records use HybridLogicalClock.genesis.
 - Fix 5.4 test references: five test files (rather than three) referenced the deleted duplicate PartyRoomService (di_graph_law_test.dart, injection_container_test.dart, local_replica_identity_store_test.dart, room_state_reconciliation_service_test.dart, crdt_pass_3_3_1_test.dart).
 - Fix 6.1 transitive scan before Fixes 6.2-6.3: found 29 / 6 / 3 / 0 (models / application / dtos / domain), higher than the expected 15 in models because srd_summons and bestiary files also transitively imported monster_codex_data.dart -> dpr_calculator_engine.dart; also found room_sync_orchestrator.dart -> dice_room_service.dart -> package:flutter/foundation.dart in application, closed via pure IRemoteRollIngestor port.
+- Fix 7.1 rules wording: .agents/rules/crdt_and_sync.md already states that CrdtLwwRegister genesis ties resolve by canonical type-tagged order and required no edit.
+- Fix 7.3 ruleset allowlist: character_models.dart in ruleset is 1742 lines at the Step 4 head (no changes needed after restoring accidental formatting).
+- Fix 8.1 DisperseLootDialog: campaign_dialogs.dart has 13 dialog classes plus the ImportDmPasskeyDialog typedef alias (14 total). DisperseLootDialog with a non-empty roster throws RenderShrinkWrappingViewport does not support returning intrinsic dimensions because its ListView.builder(shrinkWrap: true) sits inside AlertDialog without a bounded width; Fix 8.1 pins the 0-recipient reserve-only flow without altering lib/.
 Run 44626433270 cause: const Character replacement script accidentally touched frozen legacy storage fixtures under test/fixtures/legacy_storage/, caught by LC3 MANIFEST.json sha256 check; fixed by 9e3bd933eebd7fd2d0fdfb17f664d3a06eb3fed0
 Run 44627656241 cause: check_notes_shas failed because the prior red run on 965cc87801560b92c92ac86b40b9472d6815709b was not yet disclosed in progress notes; fixed by b683a896da1387406a85c9b30b72049213f0a219
 Run 44629210882 cause: DT2 in docs_truth_test flagged non-literal E1..E9 path syntax in Step 4 progress notes; fixed by 2185c60d9df938369f19a13e58e2bf956a4cf069
