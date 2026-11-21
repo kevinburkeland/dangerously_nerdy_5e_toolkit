@@ -1,4 +1,7 @@
 import 'arena_combatant.dart';
+import '../../services/persistence/character_persistence_service.dart';
+
+Type mutationP1Leak() => CharacterPersistenceService;
 
 /// Represents a single attack roll and damage outcome within a turn.
 class ArenaAttackEvent {
