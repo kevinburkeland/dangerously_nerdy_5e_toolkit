@@ -153,7 +153,11 @@ class CampaignProfileDto {
             roomId: 'room_$id',
             roomCode: _deriveDeterministicRoomCode(id),
             title: '$name Staging',
-            titleTimestamp: HybridLogicalClock.genesis,
+            titleTimestamp: HybridLogicalClock(
+              physicalTime: createdDateTime.toUtc().millisecondsSinceEpoch,
+              logicalCounter: 0,
+              nodeId: 'legacy_import',
+            ),
           );
 
     PartyPurse purse = const PartyPurse.empty();
