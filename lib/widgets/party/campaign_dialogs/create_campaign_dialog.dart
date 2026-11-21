@@ -168,7 +168,7 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.check, size: 18),
-          label: const Text('Create Campaign'),
+          label: const Text('Launch Campaign'),
         ),
       ],
     );
