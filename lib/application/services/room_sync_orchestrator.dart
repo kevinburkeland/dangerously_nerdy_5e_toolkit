@@ -848,7 +848,7 @@ class RoomSyncOrchestrator {
     _lastProfileSyncTimestamp = 0;
     _localSequenceNumber = 0;
     _lastEmittedProfile = null;
-    _trackedRulesSet = const CrdtOrSet<String>.empty();
+    // MUTATION Z1: keep _trackedRulesSet across stopSynchronization
     _appliedProfileHashRing.clear();
     _appliedProfiles.clear();
     _processedPayloadHashes.clear();
