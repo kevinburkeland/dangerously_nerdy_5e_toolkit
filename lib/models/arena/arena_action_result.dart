@@ -95,3 +95,5 @@ class ArenaTurnStep {
       attackEvents.fold(0, (sum, event) => sum + event.damageDealt);
   int get killsThisTurn => attackEvents.where((e) => e.isKillShot).length;
 }
+
+class PartyRoomService {}
