@@ -43,7 +43,7 @@ class CryptoUtils {
 
   /// Computes SHA-256 hex digest for passwordless hostKey verification.
   static String sha256Hex(String input) {
-    return sha256.convert(utf8.encode(input)).toString();
+    return sha256.convert(utf8.encode(input)).toString().toUpperCase();
   }
 
   // =========================================================================
