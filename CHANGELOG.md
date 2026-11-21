@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-21
+- Cleanup slice 14: Re-pin vtt_engine_core to ec9f155cbdce8315b0d84213842ddf8a22e46a66 (canonical Set encoding, session_graph split, empty-allowlist big-file bar) and vtt_ruleset_dnd5e to e49258140498c919eb91808c1d48da20870cfd7d (big-file bar and duplicate test removal) (Fixes 7.1-7.4).
+
 ## 2026-11-19
 - Cleanup slice 14: Add transitive purity bar (test/domain/transitive_purity_test.dart) with empty allowlist verifying 0 Flutter/Crashlytics leaks across lib/models, lib/domain, lib/application, and lib/infrastructure/dtos; route LoggingService through pure LogSink port (CrashlyticsLogSink installed in main.dart, RecordingLogSink in test/flutter_test_config.dart, fail-closed StateError when uninstalled); decouple RoomSyncOrchestrator from DiceRoomService via IRemoteRollIngestor; move DPR compute wrappers to lib/services/rules/dpr_calculator_async.dart (Fixes 6.1-6.3).
 - Cleanup slice 14: Stamp legacy CampaignProfileDto.toDomain roomState title with HybridLogicalClock.genesis, reset per-session fields in RoomSyncOrchestrator.stopSynchronization, delegate CryptoUtils.sha256Hex to package:crypto, enforce app-internal unique type names, and delete unused duplicate lib/application/services/party_room_service.dart (Fixes 5.1-5.4).
