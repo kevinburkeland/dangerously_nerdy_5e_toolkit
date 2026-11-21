@@ -1,7 +1,7 @@
 # Cleanup slice 14 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 0ac9fd681bd514bca1a76b84e6eb7b69092d4c67, ruleset 9f44a7f3553b9c64d0f3f089e13f9e8dddf95b8b, app e188a91003a941672e9429408fe8b857133fb086
-Last pushed heads (CI green): core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app e457420b4823f9e4763e58281919c21731668d96
+Last pushed heads (CI green): core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app 729283ea6a4ca26333911e263044139ea3b5ba73
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 7.1 7.2 7.3 7.4 8.1 8.2
 Mutation ids: E1 B1 V1 K1 L1 M1 B2 S1 S2 T1 G1 Z1 H1 U1 P1 C1
@@ -42,8 +42,8 @@ Fix 8.2: One file per campaign dialog
 - [x] Step 5 Sync and identity: app e0cf227c3bc80a90b3614bf1e125b907b5f74e88 run 44633009813
 - [x] Step 6 Purity: app 030c32677a7a22a0df49850431a16343e6fab7b1 run 44637374733 (red run disclosed below)
 - [x] Step 7 Core encoding and split, big-file bars, duplicate tests: core ec9f155cbdce8315b0d84213842ddf8a22e46a66 run 44948282649, ruleset e49258140498c919eb91808c1d48da20870cfd7d run 44948466401, app e457420b4823f9e4763e58281919c21731668d96 run 44948702607
-- [ ] Step 8 Campaign dialogs split
-- [ ] Step 9 Mutations and report
+- [x] Step 8 Campaign dialogs split: app characterization 4dce2b527de44677633000ed407ada21df694dc4 run 44949705716, app 729283ea6a4ca26333911e263044139ea3b5ba73 run 44950619395
+- [x] Step 9 Mutations and report: 16 mutation/cs14-* branches pushed and verified, exit checks and dependencies.yml dispatches green (core 44951462556, ruleset 44951465741, app 44951468725)
 
 ## Fix checklist
 Fix 1.1 done: [Retire cs13] Retired 3 core, 5 ruleset, and 14 app cs13 mutation branches with 22 archive tags into MANIFEST.tsv and mutations/cs13
@@ -70,9 +70,26 @@ Fix 7.1 done: [Sets have a canonical encoding] Added sorted Set encoding with ty
 Fix 7.2 done: [Core's session graph file is split by type] Split core session_graph_models.dart into 5 files under the core session_graph folder leaving session_graph_models.dart as exports only, with updated coverage_floors.tsv and check_coverage_floor.py barrel support
 Fix 7.3 done: [Core and the ruleset get a big-file bar] Added 1500-line big_file_ratchet_test.dart in core (empty allowlist) and ruleset (character_models.dart at 1742 lines)
 Fix 7.4 done: [Duplicate ruleset test files are removed] Diffed and removed duplicate ruleset test files dnd_5e_rules_engine_test and dnd_5e_combat_resolver_test (6 duplicate tests removed, all unique tests preserved) and re-pinned core and ruleset in app
+Fix 8.1 done: [Characterization tests for every campaign dialog] Added campaign_dialogs_characterization_test.dart covering all 13 dialog classes plus ImportDmPasskeyDialog alias with spy PartyRoomService and committed on its own
+Fix 8.2 done: [One file per campaign dialog] Split campaign_dialogs.dart into 13 files under lib/widgets/party/campaign_dialogs/ leaving campaign_dialogs.dart as exports only, removed campaign_dialogs.dart from big_file_ratchet_test.dart, and verified moves-only diff and build_web.sh
 
 ## Mutation branches
-None
+mutation/cs14-e1 57422c144cb6e5e23b01154834815dc5a1535d8e
+mutation/cs14-b1 00abfd8406fd58ed992aba6c6b3d2d1cff450f13
+mutation/cs14-v1 6b50d47ca3e8dc0e2cfcd90041ed0890016ec7c2
+mutation/cs14-k1 70669526954e7dd20d8bc845ef640c0316f9f161
+mutation/cs14-l1 71cd9b824925bd13727170d027ef5f5a471d2d8c
+mutation/cs14-m1 afb762c87bdd77b8157a14829bac466c5d4e9604
+mutation/cs14-b2 c75db21a8ab26441681560ce09073f973e9d46af
+mutation/cs14-s1 998521631a099676a7eebfc40f716eb31b917a52
+mutation/cs14-s2 d69d31dc41660c6dfbfe761b6e7926a7a97247c8
+mutation/cs14-t1 694de6bcc72c9765469be2e53b2fe05f131662f9
+mutation/cs14-g1 ca1c0f3b3e221f1fefdd80ac01f9cc144825ea0d
+mutation/cs14-z1 32df99fe72e204b5160653209a643829ed25c850
+mutation/cs14-h1 684020f5fd7d8d061e73f8ea2141a5878ad16db9
+mutation/cs14-u1 504f3e668c07035a5aedd52352ba718ba4ccee2f
+mutation/cs14-p1 452a7c3ad38c49048ed531399cc83698928058ba
+mutation/cs14-c1 1faa9deac25a2539321fda41ec2abdacceff387b
 
 ## Red runs on main
 965cc87801560b92c92ac86b40b9472d6815709b red run 44626433270
@@ -84,7 +101,7 @@ None
 None
 
 ## Next
-Implement Step 8: characterization tests for every campaign dialog (Fix 8.1) and split campaign_dialogs.dart into one file per dialog (Fix 8.2).
+None (Cleanup slice 14 complete; awaiting review).
 
 ## Open issues and deviations
 - Fix 1.4 look-ahead run (--today 2026-12-03) passed in core and the ruleset, and found dbus (0.8.0 -> 0.8.1) and firebase-tools (15.36.0 -> 15.37.0) crossing the 14-day window in the app; both were updated in Step 1.
