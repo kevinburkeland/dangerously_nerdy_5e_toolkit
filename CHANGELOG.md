@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-21
+- Cleanup slice 14: Add characterization widget tests for all campaign dialogs and ImportDmPasskeyDialog, split campaign_dialogs.dart into 13 files under lib/widgets/party/campaign_dialogs/ leaving campaign_dialogs.dart as exports only, and remove campaign_dialogs.dart from big_file_ratchet_test.dart (Fixes 8.1-8.2).
 - Cleanup slice 14: Re-pin vtt_engine_core to ec9f155cbdce8315b0d84213842ddf8a22e46a66 (canonical Set encoding, session_graph split, empty-allowlist big-file bar) and vtt_ruleset_dnd5e to e49258140498c919eb91808c1d48da20870cfd7d (big-file bar and duplicate test removal) (Fixes 7.1-7.4).
 
 ## 2026-11-19
