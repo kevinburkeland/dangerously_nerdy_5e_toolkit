@@ -120,7 +120,7 @@ class SpellCastFormulaResolver {
               'Can\'t roll "$displayFormula": no spellcasting modifier',
         );
       }
-      spellModContribution = totalModMultiplier * castMod;
+      spellModContribution = 0 * castMod;
     }
 
     return (
