@@ -232,25 +232,7 @@ class SpellCastFormulaResolver {
       final matches = DiceExpression.findAll(rawFormula);
       if (matches.isEmpty) return null;
 
-      var cursor = 0;
-      for (final m in matches) {
-        final gap = rawFormula.substring(cursor, m.start);
-        final isBareLeadingPlus = cursor == 0 && gap.trim() == '+';
-        if (!isBareLeadingPlus && (gap.contains('+') || gap.contains('-'))) {
-          return null;
-        }
-        final matchLead = rawFormula.substring(m.start, m.end).trimLeft();
-        if (!isBareLeadingPlus &&
-            gap.trim().isNotEmpty &&
-            (matchLead.startsWith('+') || matchLead.startsWith('-'))) {
-          return null;
-        }
-        cursor = m.end;
-      }
-      final trailing = rawFormula.substring(cursor);
-      if (trailing.contains('+') || trailing.contains('-')) {
-        return null;
-      }
+      // MUTATION S2: fallback skips non-match gaps
 
       expressions = [for (final m in matches) m.expression];
     }
