@@ -1,7 +1,7 @@
 # Cleanup slice 15 progress notes
 Status: IN PROGRESS
 Start heads: core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app 058f7bda940ed634413328f798c779f3c7644e86
-Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 72c62b2295d6311e636bca28e8c740de8fde61d0, app 5f751d470fa962d860e3682ffa89fcd5954dd436
+Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 72c62b2295d6311e636bca28e8c740de8fde61d0, app 7729245ee750d67528e473949d754e2dbb244ca9
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 3.1 3.2 4.1 4.2 5.1 5.2 5.3 5.4 6.1 6.2 7.1 7.2 7.3 8.1 8.2
 Mutation ids: C1 R1 R2 R3 A1 D1 L1 H1 H2 G1 W1 P1 F1 I1 S1 S2
@@ -31,7 +31,7 @@ Fix 8.2: The party room screen is split
 
 ## Steps
 - [x] Step 1 Retire, barrel case, scaling flag, look-ahead: core 73007473fedbaaeb2778776dcbe55fc127c4ce79 run 45262883355, ruleset 72c62b2295d6311e636bca28e8c740de8fde61d0 run 45262983455, app 5f751d470fa962d860e3682ffa89fcd5954dd436 run 45264114586
-- [ ] Step 2 Campaign dialogs with lists
+- [x] Step 2 Campaign dialogs with lists: app 7729245ee750d67528e473949d754e2dbb244ca9 run 45268393281
 - [ ] Step 3 Host role per session
 - [ ] Step 4 Arena goldens
 - [ ] Step 5 Arena rules into the ruleset
@@ -45,6 +45,8 @@ Fix 1.1 done: [Retire cs14] Retired all cs14 mutation branches across core, rule
 Fix 1.2 done: [The barrel floor rule has a failing case] Added self-test cases 21-24 to test_check_coverage_floor.sh in core and ruleset (byte-identical).
 Fix 1.3 done: [The cast resolver reads addsAbilityMod from the scaling rule] Updated lib/providers/spell_cast_formula_resolver.dart to read addsAbilityMod from SpellScalingFormula instead of customProperties and added test/providers/spell_cast_formula_resolver_test.dart.
 Fix 1.4 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead (2026-12-07) in all three repos; upgraded cli_util locally in core/ruleset and upgraded 7 pub packages plus file_picker floor in app pubspec.yaml/pubspec.lock.
+Fix 2.1 done: [Every campaign dialog opens with a list of any size] Added test/widgets/party/campaign_dialogs_list_size_law_test.dart covering all 13 public dialogs at sizes 0, 1, 3, and 12 on 360x640 and 1280x800 with a completeness bar and control.
+Fix 2.2 done: [Disperse Loot works with a roster] Wrapped DisperseLootDialog content in SizedBox(width: double.maxFinite), replaced its shrinkWrap ListView with a scrollable Column, fixed 360x640 overflows in 9 campaign dialogs, and added the 3-member Disperse Loot characterization case.
 
 ## Mutation branches
 None
@@ -56,7 +58,7 @@ c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 None
 
 ## Next
-Write the Fix 2.1 campaign dialogs list-size law and completeness bar, confirm DisperseLootDialog fails with non-empty rosters, then fix its layout in Fix 2.2.
+Move host role ownership from RoomSyncOrchestrator construction to required isHost arguments on startSynchronization and RoomSessionStarter.start, wire all three callers from CampaignRegistryService, and reset the role in stopSynchronization.
 
 ## Open issues and deviations
 - Fix 1.2: Prompt stated "case 19 (around line 262) proves the passing case only. Nothing proves a file with real code still fails at 0.0." Existing test_check_coverage_floor.sh in core and ruleset already had case 20 ("non-barrel file lowering floor to 0.0 still fails"); new cases 21-24 continued numbering and all four passed as guards on the existing check_coverage_floor.py.
