@@ -1,7 +1,8 @@
 import '../models/dm_screen_data.dart' show DmRulesEdition;
 import '../models/domain/character_models.dart';
 import '../models/domain/spell_monster_equipment.dart';
-import '../models/spellbook_data.dart' show SpellbookLibrary;
+import '../models/spellbook_data.dart'
+    show SpellScalingFormula, SpellbookLibrary;
 
 /// Parsed result of a spell damage or scaling formula field.
 typedef ParsedSpellFormula = ({
@@ -31,6 +32,7 @@ class SpellCastFormulaResolver {
     required int delta,
     required EvaluatedCharacterStats stats,
     required RulesetEdition rulesEdition,
+    SpellScalingFormula? scalingRule,
   }) {
     final baseFormula = spell.damageMath.firstOrNull?.diceFormula ??
         spell.customProperties['rollFormula']?.toString() ??
@@ -97,8 +99,16 @@ class SpellCastFormulaResolver {
 
     final baseModCount = parsedBase?.modCount ?? 0;
     final scaleModCount = delta > 0 ? (parsedScale?.modCount ?? 0) : 0;
+    final dmEdition = rulesEdition == RulesetEdition.v2024
+        ? DmRulesEdition.v2024
+        : DmRulesEdition.v2014;
+    final effectiveScalingRule = scalingRule ??
+        (SpellbookLibrary.getSpellById(spell.id.slug) ??
+                SpellbookLibrary.getSpellByName(spell.name))
+            ?.getRules(dmEdition)
+            .scalingFormula;
     final addsAbilityModOnce =
-        spell.customProperties['addsAbilityMod'] == true && baseModCount == 0;
+        (effectiveScalingRule?.addsAbilityMod ?? false) && baseModCount == 0;
     final totalModMultiplier =
         baseModCount + (delta * scaleModCount) + (addsAbilityModOnce ? 1 : 0);
 
