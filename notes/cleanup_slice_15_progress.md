@@ -42,7 +42,7 @@ Fix 8.2: The party room screen is split
 
 ## Fix checklist
 Fix 1.1 done: [Retire cs14] Retired all cs14 mutation branches across core, ruleset, and app with archive tags and manifests.
-Fix 1.2 done: [The barrel floor rule has a failing case] Added self-test cases 21-24 to scripts/test_check_coverage_floor.sh in core and ruleset (byte-identical).
+Fix 1.2 done: [The barrel floor rule has a failing case] Added self-test cases 21-24 to test_check_coverage_floor.sh in core and ruleset (byte-identical).
 Fix 1.3 done: [The cast resolver reads addsAbilityMod from the scaling rule] Updated lib/providers/spell_cast_formula_resolver.dart to read addsAbilityMod from SpellScalingFormula instead of customProperties and added test/providers/spell_cast_formula_resolver_test.dart.
 Fix 1.4 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead (2026-12-07) in all three repos; upgraded cli_util locally in core/ruleset and upgraded 7 pub packages plus file_picker floor in app pubspec.yaml/pubspec.lock.
 
@@ -59,5 +59,5 @@ None
 Write the Fix 2.1 campaign dialogs list-size law and completeness bar, confirm DisperseLootDialog fails with non-empty rosters, then fix its layout in Fix 2.2.
 
 ## Open issues and deviations
-- Fix 1.2: Prompt stated "case 19 (around line 262) proves the passing case only. Nothing proves a file with real code still fails at 0.0." Existing scripts/test_check_coverage_floor.sh already had case 20 ("non-barrel file lowering floor to 0.0 still fails"); new cases 21-24 continued numbering and all four passed as guards on the existing check_coverage_floor.py.
+- Fix 1.2: Prompt stated "case 19 (around line 262) proves the passing case only. Nothing proves a file with real code still fails at 0.0." Existing test_check_coverage_floor.sh in core and ruleset already had case 20 ("non-barrel file lowering floor to 0.0 still fails"); new cases 21-24 continued numbering and all four passed as guards on the existing check_coverage_floor.py.
 - Fix 1.4: Look-ahead (--today 2026-12-07) in app also flagged T1 (Flutter SDK pin 3.50.0 behind newest stable 3.50.1, released 2026-11-20, 3 days old today). Not bumped because pubspec.yaml pins exact Flutter version 3.50.0 and local SDK is 3.50.0; today's dependency check passes within the 14-day grace period.
