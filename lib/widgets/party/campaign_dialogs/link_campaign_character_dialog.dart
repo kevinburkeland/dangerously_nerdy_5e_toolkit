@@ -114,8 +114,10 @@ class _LinkCampaignCharacterDialogState
         children: [
           Icon(Icons.link, color: colorScheme.primary),
           const SizedBox(width: 10),
-          const Text('Link Character to Campaign',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+          const Expanded(
+            child: Text('Link Character to Campaign',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+          ),
         ],
       ),
       content: SingleChildScrollView(

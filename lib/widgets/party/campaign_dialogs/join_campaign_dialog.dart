@@ -237,8 +237,10 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
         children: [
           Icon(Icons.login, color: colorScheme.primary),
           const SizedBox(width: 10),
-          const Text('Join Existing Campaign',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Expanded(
+            child: Text('Join Existing Campaign',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ),
         ],
       ),
       content: SingleChildScrollView(
@@ -292,10 +294,12 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
                         Icon(Icons.person_pin,
                             size: 18, color: colorScheme.primary),
                         const SizedBox(width: 6),
-                        const Text(
-                          'Character Vault Link',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 13),
+                        const Expanded(
+                          child: Text(
+                            'Character Vault Link',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
                         ),
                       ],
                     ),

@@ -242,11 +242,13 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
           ),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Campaign selector if multiple
             if (memberships.length > 1) ...[
               const Text('Destination Campaign:',
@@ -290,9 +292,12 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total to Disperse:',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Flexible(
+                    child: Text('Total to Disperse:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13)),
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     '~${(widget.purse.totalGpEquivalent + (_includeLiquidated ? widget.liquidatedGemsAndArtGp : 0)).toStringAsFixed(1)} GP',
                     style: const TextStyle(
@@ -345,10 +350,12 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Party Member Recipients (${_selectedRecipients.length}):',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 12.5),
+                Expanded(
+                  child: Text(
+                    'Party Member Recipients (${_selectedRecipients.length}):',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 12.5),
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -385,30 +392,31 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
             else
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 180),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: candidates.length,
-                  itemBuilder: (context, idx) {
-                    final name = candidates[idx];
-                    final isChecked = _selectedRecipients.contains(name);
-
-                    return CheckboxListTile(
-                      value: isChecked,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            _selectedRecipients.add(name);
-                          } else {
-                            _selectedRecipients.remove(name);
-                          }
-                        });
-                      },
-                      title: Text(name, style: const TextStyle(fontSize: 12.5)),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                      dense: true,
-                    );
-                  },
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final name in candidates)
+                        CheckboxListTile(
+                          value: _selectedRecipients.contains(name),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _selectedRecipients.add(name);
+                              } else {
+                                _selectedRecipients.remove(name);
+                              }
+                            });
+                          },
+                          title: Text(name,
+                              style: const TextStyle(fontSize: 12.5)),
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 4),
+                          dense: true,
+                        ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -436,32 +444,45 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Each Character Gets:',
-                          style: TextStyle(fontSize: 12)),
-                      Text(perShareText,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.amber)),
+                      const Flexible(
+                        child: Text('Each Character Gets:',
+                            style: TextStyle(fontSize: 12)),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(perShareText,
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber)),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Party Reserve Gets:',
-                          style: TextStyle(fontSize: 12)),
-                      Text(reserveText,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blueAccent)),
+                      const Flexible(
+                        child: Text('Party Reserve Gets:',
+                            style: TextStyle(fontSize: 12)),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(reserveText,
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent)),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
           ],
+        ),
         ),
       ),
       actions: [

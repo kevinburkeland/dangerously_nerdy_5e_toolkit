@@ -245,12 +245,14 @@ class _ClaimDmPasskeyDialogState extends State<ClaimDmPasskeyDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text('Role: ',
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('DM / Host'),
                   selected: _selectedRole == CampaignRole.host,
@@ -259,7 +261,6 @@ class _ClaimDmPasskeyDialogState extends State<ClaimDmPasskeyDialog> {
                       setState(() => _selectedRole = CampaignRole.host);
                   },
                 ),
-                const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('Co-DM'),
                   selected: _selectedRole == CampaignRole.coDm,

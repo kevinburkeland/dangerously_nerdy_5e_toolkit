@@ -110,8 +110,10 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
         children: [
           Icon(Icons.add_circle_outline, color: colorScheme.primary),
           const SizedBox(width: 10),
-          const Text('Create New Campaign',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Expanded(
+            child: Text('Create New Campaign',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ),
         ],
       ),
       content: SingleChildScrollView(

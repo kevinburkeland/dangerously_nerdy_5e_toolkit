@@ -85,6 +85,7 @@ class _AddLootItemDialogState extends State<AddLootItemDialog> {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               // ignore: deprecated_member_use
               value: _category,
               items: const [

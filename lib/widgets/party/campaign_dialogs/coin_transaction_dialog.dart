@@ -107,8 +107,10 @@ class _CoinTransactionDialogState extends State<CoinTransactionDialog> {
           Icon(isDeposit ? Icons.arrow_downward : Icons.arrow_upward,
               color: color),
           const SizedBox(width: 10),
-          Text(isDeposit ? 'Deposit Coins' : 'Withdraw Coins',
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(isDeposit ? 'Deposit Coins' : 'Withdraw Coins',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
       content: SingleChildScrollView(

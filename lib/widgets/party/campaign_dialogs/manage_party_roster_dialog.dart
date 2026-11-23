@@ -167,8 +167,10 @@ class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
         children: [
           Icon(Icons.groups, color: Colors.indigoAccent),
           SizedBox(width: 10),
-          Text('Party Character Roster',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Expanded(
+            child: Text('Party Character Roster',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ),
         ],
       ),
       content: SizedBox(

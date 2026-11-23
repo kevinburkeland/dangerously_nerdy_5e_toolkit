@@ -56,47 +56,49 @@ class AssignLootDialog extends StatelessWidget {
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select who will claim this item into their character inventory:',
-              style: TextStyle(fontSize: 12.5),
-            ),
-            const SizedBox(height: 10),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 260),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: allCandidates.length,
-                itemBuilder: (context, idx) {
-                  final name = allCandidates[idx];
-                  final isMe = name == currentActiveName;
-
-                  return ListTile(
-                    dense: true,
-                    leading: Icon(isMe ? Icons.star : Icons.person_outline,
-                        color: isMe ? Colors.amber : Colors.blue),
-                    title: Text(
-                      name + (isMe ? ' (You)' : ''),
-                      style: TextStyle(
-                          fontWeight:
-                              isMe ? FontWeight.bold : FontWeight.normal),
-                    ),
-                    onTap: () => Navigator.pop(context, name),
-                  );
-                },
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select who will claim this item into their character inventory:',
+                style: TextStyle(fontSize: 12.5),
               ),
-            ),
-            const Divider(),
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.archive_outlined, color: Colors.grey),
-              title: const Text('Return to Vault (Unclaim / Shared)'),
-              onTap: () => Navigator.pop(context, '__unclaim__'),
-            ),
-          ],
+              const SizedBox(height: 10),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 260),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: allCandidates.length,
+                  itemBuilder: (context, idx) {
+                    final name = allCandidates[idx];
+                    final isMe = name == currentActiveName;
+
+                    return ListTile(
+                      dense: true,
+                      leading: Icon(isMe ? Icons.star : Icons.person_outline,
+                          color: isMe ? Colors.amber : Colors.blue),
+                      title: Text(
+                        name + (isMe ? ' (You)' : ''),
+                        style: TextStyle(
+                            fontWeight:
+                                isMe ? FontWeight.bold : FontWeight.normal),
+                      ),
+                      onTap: () => Navigator.pop(context, name),
+                    );
+                  },
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.archive_outlined, color: Colors.grey),
+                title: const Text('Return to Vault (Unclaim / Shared)'),
+                onTap: () => Navigator.pop(context, '__unclaim__'),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
