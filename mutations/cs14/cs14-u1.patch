@@ -1,0 +1,26 @@
+From 504f3e668c07035a5aedd52352ba718ba4ccee2f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 21 Nov 2026 13:22:20 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20U1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/arena/arena_action_result.dart | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/models/arena/arena_action_result.dart b/lib/models/arena/arena_action_result.dart
+index e6445e0b..3b10f63e 100644
+--- a/lib/models/arena/arena_action_result.dart
++++ b/lib/models/arena/arena_action_result.dart
+@@ -95,3 +95,5 @@ class ArenaTurnStep {
+       attackEvents.fold(0, (sum, event) => sum + event.damageDealt);
+   int get killsThisTurn => attackEvents.where((e) => e.isKillShot).length;
+ }
++
++class PartyRoomService {}
+-- 
+2.55.0
+

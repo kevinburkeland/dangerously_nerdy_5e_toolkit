@@ -1,0 +1,47 @@
+From d69d31dc41660c6dfbfe761b6e7926a7a97247c8 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 21 Nov 2026 13:21:01 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20S2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../spell_cast_formula_resolver.dart          | 20 +------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
+
+diff --git a/lib/providers/spell_cast_formula_resolver.dart b/lib/providers/spell_cast_formula_resolver.dart
+index fe5a9de4..3e7fadd8 100644
+--- a/lib/providers/spell_cast_formula_resolver.dart
++++ b/lib/providers/spell_cast_formula_resolver.dart
+@@ -232,25 +232,7 @@ class SpellCastFormulaResolver {
+       final matches = DiceExpression.findAll(rawFormula);
+       if (matches.isEmpty) return null;
+ 
+-      var cursor = 0;
+-      for (final m in matches) {
+-        final gap = rawFormula.substring(cursor, m.start);
+-        final isBareLeadingPlus = cursor == 0 && gap.trim() == '+';
+-        if (!isBareLeadingPlus && (gap.contains('+') || gap.contains('-'))) {
+-          return null;
+-        }
+-        final matchLead = rawFormula.substring(m.start, m.end).trimLeft();
+-        if (!isBareLeadingPlus &&
+-            gap.trim().isNotEmpty &&
+-            (matchLead.startsWith('+') || matchLead.startsWith('-'))) {
+-          return null;
+-        }
+-        cursor = m.end;
+-      }
+-      final trailing = rawFormula.substring(cursor);
+-      if (trailing.contains('+') || trailing.contains('-')) {
+-        return null;
+-      }
++      // MUTATION S2: fallback skips non-match gaps
+ 
+       expressions = [for (final m in matches) m.expression];
+     }
+-- 
+2.55.0
+

@@ -1,0 +1,29 @@
+From 684020f5fd7d8d061e73f8ea2141a5878ad16db9 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 21 Nov 2026 13:22:07 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20H1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/utils/crypto_utils.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/utils/crypto_utils.dart b/lib/utils/crypto_utils.dart
+index 04859a7b..27e947f8 100644
+--- a/lib/utils/crypto_utils.dart
++++ b/lib/utils/crypto_utils.dart
+@@ -43,7 +43,7 @@ class CryptoUtils {
+ 
+   /// Computes SHA-256 hex digest for passwordless hostKey verification.
+   static String sha256Hex(String input) {
+-    return sha256.convert(utf8.encode(input)).toString();
++    return sha256.convert(utf8.encode(input)).toString().toUpperCase();
+   }
+ 
+   // =========================================================================
+-- 
+2.55.0
+

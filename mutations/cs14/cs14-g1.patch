@@ -1,0 +1,33 @@
+From ca1c0f3b3e221f1fefdd80ac01f9cc144825ea0d Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 21 Nov 2026 13:21:26 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20G1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/infrastructure/dtos/campaign_profile_dto.dart | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/lib/infrastructure/dtos/campaign_profile_dto.dart b/lib/infrastructure/dtos/campaign_profile_dto.dart
+index 6e1652fa..74815b76 100644
+--- a/lib/infrastructure/dtos/campaign_profile_dto.dart
++++ b/lib/infrastructure/dtos/campaign_profile_dto.dart
+@@ -153,7 +153,11 @@ class CampaignProfileDto {
+             roomId: 'room_$id',
+             roomCode: _deriveDeterministicRoomCode(id),
+             title: '$name Staging',
+-            titleTimestamp: HybridLogicalClock.genesis,
++            titleTimestamp: HybridLogicalClock(
++              physicalTime: createdDateTime.toUtc().millisecondsSinceEpoch,
++              logicalCounter: 0,
++              nodeId: 'legacy_import',
++            ),
+           );
+ 
+     PartyPurse purse = const PartyPurse.empty();
+-- 
+2.55.0
+

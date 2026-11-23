@@ -1,0 +1,28 @@
+From 452a7c3ad38c49048ed531399cc83698928058ba Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Sat, 21 Nov 2026 13:22:40 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/arena/arena_action_result.dart | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/models/arena/arena_action_result.dart b/lib/models/arena/arena_action_result.dart
+index e6445e0b..8252c576 100644
+--- a/lib/models/arena/arena_action_result.dart
++++ b/lib/models/arena/arena_action_result.dart
+@@ -1,4 +1,7 @@
+ import 'arena_combatant.dart';
++import '../../services/persistence/character_persistence_service.dart';
++
++Type mutationP1Leak() => CharacterPersistenceService;
+ 
+ /// Represents a single attack roll and damage outcome within a turn.
+ class ArenaAttackEvent {
+-- 
+2.55.0
+
