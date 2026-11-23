@@ -50,7 +50,7 @@ Fix 1.4 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead (
 None
 
 ## Red runs on main
-None
+c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 
 ## Resets
 None
@@ -61,3 +61,4 @@ Write the Fix 2.1 campaign dialogs list-size law and completeness bar, confirm D
 ## Open issues and deviations
 - Fix 1.2: Prompt stated "case 19 (around line 262) proves the passing case only. Nothing proves a file with real code still fails at 0.0." Existing test_check_coverage_floor.sh in core and ruleset already had case 20 ("non-barrel file lowering floor to 0.0 still fails"); new cases 21-24 continued numbering and all four passed as guards on the existing check_coverage_floor.py.
 - Fix 1.4: Look-ahead (--today 2026-12-07) in app also flagged T1 (Flutter SDK pin 3.50.0 behind newest stable 3.50.1, released 2026-11-20, 3 days old today). Not bumped because pubspec.yaml pins exact Flutter version 3.50.0 and local SDK is 3.50.0; today's dependency check passes within the 14-day grace period.
+Run 45265072151 cause: docs_truth_test.dart DT2 flagged a scripts/ path to test_check_coverage_floor.sh in notes/cleanup_slice_15_progress.md because that script lives in core and ruleset, not app; fixed by 996eae6830246db0f242cf43f42ee6d729b5a6f0
