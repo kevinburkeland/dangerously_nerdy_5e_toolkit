@@ -61,6 +61,7 @@ None
 
 ## Red runs on main
 c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
+8949993c0edd6e84d60d74d528f1ed2a19cd1abd red run 45489705049
 
 ## Resets
 Run 2 start: saved uncommitted Step 3 WIP diff to step_3_interrupted.diff (and earlier pause diff to step_3_saved_before_pause.diff plus host_role_session_lifecycle_test.dart.bak) and reset app working tree to 9190c8f86ef4bd37eefb97a4a5959016d3492413 before completing Step 3.
@@ -78,3 +79,5 @@ Split lib/services/rules/arena_combat_engine.dart into a new arena subfolder und
 - Step 4 preset count: Prompt estimated "8 preset matchups" (384 matches); ArenaPresetMatchup.defaultPresets has 7 presets, so preset_matches.json records 336 matches (7 x 2 x 4 x 3 x 2) and monte_carlo.json records 7 presets.
 - Step 4 Fix 4.2 bundled attack damage types: Only srd_mon_shrieker (v2014 and v2024) has a non-SRD damageType ("none", 0 damage); no bundled attack, spell, or rider in the arena produces an empty-string damage type.
 Run 45265072151 cause: docs_truth_test.dart DT2 flagged a scripts/ path to test_check_coverage_floor.sh in notes/cleanup_slice_15_progress.md because that script lives in core and ruleset, not app; fixed by 996eae6830246db0f242cf43f42ee6d729b5a6f0
+
+Run 45489705049 cause: docs_truth_test.dart DT2 flagged the planned future arena subfolder path in Next before Step 6 created it; fixed by d06dcc12c228dfb6a11e907c203e3625d045646a
