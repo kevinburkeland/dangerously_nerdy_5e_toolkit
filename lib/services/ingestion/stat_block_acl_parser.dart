@@ -168,7 +168,7 @@ class StatBlockAclParser {
       final val = int.tryParse(dcMatch.group(1) ?? '');
       if (val != null) dc = val;
     } else {
-      final pb = _computeProficiencyBonus(challengeRating);
+      final pb = proficiencyBonusForChallengeRating(challengeRating);
       final castingMod = math.max(sb.intMod, math.max(sb.wisMod, sb.chaMod));
       dc = computeSaveDc(proficiencyBonus: pb, abilityModifier: castingMod);
     }
@@ -181,7 +181,7 @@ class StatBlockAclParser {
       final val = int.tryParse(clean);
       if (val != null) attackBonus = val;
     } else {
-      final pb = _computeProficiencyBonus(challengeRating);
+      final pb = proficiencyBonusForChallengeRating(challengeRating);
       final castingMod = math.max(sb.intMod, math.max(sb.wisMod, sb.chaMod));
       attackBonus = pb + castingMod;
     }
@@ -254,7 +254,7 @@ class StatBlockAclParser {
 
     // 9. Executable Attacks & Action Riders
     final attacks = <String, PrecomputedAttack>{};
-    final pb = _computeProficiencyBonus(challengeRating);
+    final pb = proficiencyBonusForChallengeRating(challengeRating);
     final fallbackDc = computeSaveDc(
       proficiencyBonus: pb,
       abilityModifier: math.max(sb.strMod, sb.dexMod),
@@ -378,14 +378,6 @@ class StatBlockAclParser {
         .toLowerCase()
         .replaceAll('_', ' ')
         .replaceAll('*', ' ');
-  }
-
-  static int _computeProficiencyBonus(double cr) {
-    if (cr >= 17) return 6;
-    if (cr >= 13) return 5;
-    if (cr >= 9) return 4;
-    if (cr >= 5) return 3;
-    return 2;
   }
 
   static int _computeSavingThrowBonus(MinionStatBlock sb, AbilityType ab) {

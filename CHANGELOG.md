@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-24
+- Cleanup slice 15: Re-pin vtt_ruleset_dnd5e to 5ec366a49af9cc274560ba677e3ae1b8af736c7e, delegate arena damage defenses, attack roll classification, Shield reaction, save DC, and full SRD CR 0-30 proficiency bonus (+2 to +9) to ruleset, add arena rules source bar and default save DC law, and update CR 21+ arena goldens (Fixes 5.1-5.4).
 - Cleanup slice 15: Add deterministic arena match goldens (336 preset matches, 343 creature duels, 7 Monte Carlo presets) and 10,290-row bundled creature damage-defense table fixtures with explicit opt-in generator (Fixes 4.1, 4.2).
 - Cleanup slice 15: Move host role from RoomSyncOrchestrator constructor to required isHost argument on startSynchronization and RoomSessionStarter.start, wire PartyRoomScreen, RoomBannerWidget, and DiceRoomService from CampaignRegistryService, and reset host role in stopSynchronization (Fixes 3.1, 3.2).
 
