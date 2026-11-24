@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/vtt_engine_core.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_room_lobby.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
@@ -322,9 +325,19 @@ void main() {
       final rep = ReplicaId('landing_test_replica');
       final clock = StatefulHlcClock(replicaId: rep);
       final repo = _CountingCampaignRepo();
+      final charRepo = LocalCharacterRepository();
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      sl.registerSingleton<ICharacterRepository>(charRepo);
+      sl.registerSingleton<CombatEncounterService>(CombatEncounterService(
+        characterRepo: charRepo,
+        campaignRepo: repo,
+        combatResolver: const Dnd5eCombatResolver(),
+        replicaId: rep,
+        clock: clock,
+      ));
+      sl.registerSingleton<RoomSyncOrchestrator>(NoOpRoomSyncOrchestrator());
       configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(replicaId: rep, clock: clock);
@@ -367,9 +380,19 @@ void main() {
       final rep = ReplicaId('dm_test_replica');
       final clock = StatefulHlcClock(replicaId: rep);
       final repo = _CountingCampaignRepo();
+      final charRepo = LocalCharacterRepository();
       sl.registerSingleton<ReplicaId>(rep);
       sl.registerSingleton<StatefulHlcClock>(clock);
       sl.registerSingleton<ICampaignRepository>(repo);
+      sl.registerSingleton<ICharacterRepository>(charRepo);
+      sl.registerSingleton<CombatEncounterService>(CombatEncounterService(
+        characterRepo: charRepo,
+        campaignRepo: repo,
+        combatResolver: const Dnd5eCombatResolver(),
+        replicaId: rep,
+        clock: clock,
+      ));
+      sl.registerSingleton<RoomSyncOrchestrator>(NoOpRoomSyncOrchestrator());
       configureTestServices(repository: repo, replicaId: rep, clock: clock);
 
       final partyService = PartyRoomService(replicaId: rep, clock: clock);
