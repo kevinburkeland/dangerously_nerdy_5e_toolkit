@@ -434,7 +434,7 @@ class ArenaAttackResolver {
         rng: ctx.rng,
         isCrit: isCrit,
         edition: edition,
-        damageModifier: (raw) => ctx.applyDefensiveModifiers(
+        damageModifier: (raw) => 1 + ctx.applyDefensiveModifiers(
           raw,
           attack.damageType,
           defender,
