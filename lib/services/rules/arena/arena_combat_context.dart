@@ -260,9 +260,10 @@ class ArenaCombatContext {
 
   /// Default DC calculation when not explicit (8 + proficiency + ability modifier).
   int computeDefaultSaveDc(ArenaCombatant attacker, DmRulesEdition edition) {
-    final pb = proficiencyBonusForChallengeRating(
+    final rawPb = proficiencyBonusForChallengeRating(
       attacker.monster.challengeRating,
     );
+    final pb = rawPb > 6 ? 6 : rawPb;
     final sb = attacker.getStatBlock(edition);
     final mod = max(sb.conMod, max(sb.strMod, sb.chaMod));
     return computeSaveDc(proficiencyBonus: pb, abilityModifier: mod);
