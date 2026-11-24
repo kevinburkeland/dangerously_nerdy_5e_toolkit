@@ -105,7 +105,7 @@ class DmCombatTrackerCard extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.person_add_alt_1, size: 20),
-                  tooltip: 'Add Combatant',
+                  tooltip: 'Broken Add',
                   onPressed: onAddCombatant,
                 ),
               ],
