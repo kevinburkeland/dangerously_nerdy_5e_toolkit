@@ -1,7 +1,7 @@
 # Cleanup slice 15 progress notes
 Status: IN PROGRESS
 Start heads: core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app 058f7bda940ed634413328f798c779f3c7644e86
-Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 72c62b2295d6311e636bca28e8c740de8fde61d0, app 1ee86efd3127052e489114eb7f70b53caf81b5d5
+Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 72c62b2295d6311e636bca28e8c740de8fde61d0, app 8f5a68ebd1d602229f1b5d161f981fb2b5e37719
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 3.1 3.2 4.1 4.2 5.1 5.2 5.3 5.4 6.1 6.2 7.1 7.2 7.3 8.1 8.2
 Mutation ids: C1 R1 R2 R3 A1 D1 L1 H1 H2 G1 W1 P1 F1 I1 S1 S2
@@ -33,7 +33,7 @@ Fix 8.2: The party room screen is split
 - [x] Step 1 Retire, barrel case, scaling flag, look-ahead: core 73007473fedbaaeb2778776dcbe55fc127c4ce79 run 45262883355, ruleset 72c62b2295d6311e636bca28e8c740de8fde61d0 run 45262983455, app 5f751d470fa962d860e3682ffa89fcd5954dd436 run 45264114586
 - [x] Step 2 Campaign dialogs with lists: app 7729245ee750d67528e473949d754e2dbb244ca9 run 45268393281
 - [x] Step 3 Host role per session: app 1ee86efd3127052e489114eb7f70b53caf81b5d5 run 45482109288
-- [ ] Step 4 Arena goldens
+- [x] Step 4 Arena goldens: app 8f5a68ebd1d602229f1b5d161f981fb2b5e37719 run 45485123855
 - [ ] Step 5 Arena rules into the ruleset
 - [ ] Step 6 Arena engine split
 - [ ] Step 7 DM dashboard
@@ -49,6 +49,8 @@ Fix 2.1 done: [Every campaign dialog opens with a list of any size] Added test/w
 Fix 2.2 done: [Disperse Loot works with a roster] Wrapped DisperseLootDialog content in SizedBox(width: double.maxFinite), replaced its shrinkWrap ListView with a scrollable Column, fixed 360x640 overflows in 9 campaign dialogs, and added the 3-member Disperse Loot characterization case.
 Fix 3.1 done: [The host role is given to each sync session] Removed RoomSyncOrchestrator constructor isHost, added required isHost to startSynchronization and RoomSessionStarter.start, wired PartyRoomScreen, RoomBannerWidget, and DiceRoomService from CampaignRegistryService, and added host_role_session_lifecycle_test.dart.
 Fix 3.2 done: [Stopping sync forgets the host role] Reset _isHost to false in RoomSyncOrchestrator.stopSynchronization before emitting telemetry, verified by host-to-player session switch test.
+Fix 4.1 done: [Arena match goldens for fixed seeds] Verified determinism control with Random(7) and recorded 336 preset matches (7 presets), 343 creature duels, and 7 Monte Carlo runs in test/fixtures/arena_goldens/ with test/services/arena_match_goldens_test.dart.
+Fix 4.2 done: [A damage-defense table for every bundled creature] Recorded 10,290 damage-defense rows across 686 bundled stat blocks via public executeTurn 101-damage probe in test/services/arena_damage_defense_table_test.dart (322 empty-string non-none rows, 0 zzz rows; only shrieker uses damageType "none", no bundled attack uses empty string).
 
 ## Mutation branches
 None
@@ -60,10 +62,12 @@ c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 Run 2 start: saved uncommitted Step 3 WIP diff to step_3_interrupted.diff (and earlier pause diff to step_3_saved_before_pause.diff plus host_role_session_lifecycle_test.dart.bak) and reset app working tree to 9190c8f86ef4bd37eefb97a4a5959016d3492413 before completing Step 3.
 
 ## Next
-Verify arena determinism, generate and commit Step 4 arena match goldens (presets, all monster picker creatures, and Monte Carlo) plus the bundled creature damage-defense table.
+Add DamageDefenses, attack classification, Shield reaction, save DC, and SRD CR proficiency rules with laws to vtt-ruleset-dnd5e, re-pin the ruleset in the app, migrate all arena and parser call sites, and update only CR 21+ default-DC goldens.
 
 ## Open issues and deviations
 - Fix 1.2: Prompt stated "case 19 (around line 262) proves the passing case only. Nothing proves a file with real code still fails at 0.0." Existing test_check_coverage_floor.sh in core and ruleset already had case 20 ("non-barrel file lowering floor to 0.0 still fails"); new cases 21-24 continued numbering and all four passed as guards on the existing check_coverage_floor.py.
 - Fix 1.4: Look-ahead (--today 2026-12-07) in app also flagged T1 (Flutter SDK pin 3.50.0 behind newest stable 3.50.1, released 2026-11-20, 3 days old today). Not bumped because pubspec.yaml pins exact Flutter version 3.50.0 and local SDK is 3.50.0; today's dependency check passes within the 14-day grace period.
 - Step 3 executeHostMilestoneFlush: calls campaignRepo.updateProfile with an identity transform returning current unchanged; LocalCampaignRepository.updateProfile cancels any pending debounced save and re-persists current to disk, so unless a debounced write is pending it writes nothing that was not already saved and retains all tombstones unchanged.
+- Step 4 preset count: Prompt estimated "8 preset matchups" (384 matches); ArenaPresetMatchup.defaultPresets has 7 presets, so preset_matches.json records 336 matches (7 x 2 x 4 x 3 x 2) and monte_carlo.json records 7 presets.
+- Step 4 Fix 4.2 bundled attack damage types: Only srd_mon_shrieker (v2014 and v2024) has a non-SRD damageType ("none", 0 damage); no bundled attack, spell, or rider in the arena produces an empty-string damage type.
 Run 45265072151 cause: docs_truth_test.dart DT2 flagged a scripts/ path to test_check_coverage_floor.sh in notes/cleanup_slice_15_progress.md because that script lives in core and ruleset, not app; fixed by 996eae6830246db0f242cf43f42ee6d729b5a6f0
