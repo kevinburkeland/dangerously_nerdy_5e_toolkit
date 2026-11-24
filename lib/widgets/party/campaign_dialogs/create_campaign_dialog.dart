@@ -178,3 +178,9 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
 }
 
 /// Dialog to explicitly Join an Existing Campaign Room
+
+class UncoveredTestCampaignDialog extends StatelessWidget {
+  const UncoveredTestCampaignDialog({super.key});
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
