@@ -27,7 +27,6 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/models/magic_items/items/weapons.dart': 3075,
   'lib/models/dm_screen_data.dart': 2684,
   'lib/models/spells/level_2_spells.dart': 2576,
-  'lib/screens/party_room_screen.dart': 2401,
   'lib/models/tables/srd_loot_tables.dart': 2291,
   'lib/widgets/character_sheet/character_sheet_tabs.dart': 2394,
   'lib/models/spells/level_1_spells.dart': 2349,
