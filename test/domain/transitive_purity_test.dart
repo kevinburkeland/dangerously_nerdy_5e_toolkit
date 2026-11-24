@@ -12,6 +12,7 @@ const List<String> kTransitivePureFolders = [
   'lib/domain',
   'lib/application',
   'lib/infrastructure/dtos',
+  'lib/services/rules/arena',
 ];
 
 /// Empty allowlist — no pure-layer file may transitively reach Flutter or Crashlytics.
