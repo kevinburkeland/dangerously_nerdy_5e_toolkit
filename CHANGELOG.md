@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-24
+- Cleanup slice 15: Add deterministic arena match goldens (336 preset matches, 343 creature duels, 7 Monte Carlo presets) and 10,290-row bundled creature damage-defense table fixtures with explicit opt-in generator (Fixes 4.1, 4.2).
 - Cleanup slice 15: Move host role from RoomSyncOrchestrator constructor to required isHost argument on startSynchronization and RoomSessionStarter.start, wire PartyRoomScreen, RoomBannerWidget, and DiceRoomService from CampaignRegistryService, and reset host role in stopSynchronization (Fixes 3.1, 3.2).
 
 ## 2026-11-23
