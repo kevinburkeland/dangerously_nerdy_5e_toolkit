@@ -170,7 +170,7 @@ class StatBlockAclParser {
     } else {
       final pb = _computeProficiencyBonus(challengeRating);
       final castingMod = math.max(sb.intMod, math.max(sb.wisMod, sb.chaMod));
-      dc = 8 + pb + castingMod;
+      dc = computeSaveDc(proficiencyBonus: pb, abilityModifier: castingMod);
     }
 
     // 4. Spell Attack Bonus
@@ -255,7 +255,10 @@ class StatBlockAclParser {
     // 9. Executable Attacks & Action Riders
     final attacks = <String, PrecomputedAttack>{};
     final pb = _computeProficiencyBonus(challengeRating);
-    final fallbackDc = (8 + pb + math.max(sb.strMod, sb.dexMod)).toInt();
+    final fallbackDc = computeSaveDc(
+      proficiencyBonus: pb,
+      abilityModifier: math.max(sb.strMod, sb.dexMod),
+    );
     final allActions = [
       ...sb.actions,
       ...sb.legendaryActions,

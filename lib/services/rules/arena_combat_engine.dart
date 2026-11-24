@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 import '../../models/arena/arena_action_result.dart';
 import '../../models/arena/arena_combatant.dart';
@@ -1680,27 +1681,8 @@ class ArenaCombatEngine {
         if (target.isDefeated) break;
         attacker.attacksMade++;
 
-        final d20 = _rollDie(20);
-        final isCrit = d20 == 20;
-        final isFumble = d20 == 1;
-        final totalAttack = d20 + attacker.spellAttackBonus;
-        bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
-
-        bool shielded = false;
-        // Shield reaction check
-        if (isHit &&
-            !isCrit &&
-            !target.usedReactionThisRound &&
-            target.hasSpell('spell_shield') &&
-            target.hasAvailableSlots) {
-          if (totalAttack < target.effectiveAc + 5) {
-            _deductLowestSlot(target, 1);
-            target.usedReactionThisRound = true;
-            target.temporaryAcBonus += 5;
-            shielded = true;
-            isHit = false;
-          }
-        }
+        final (:d20, :totalAttack, :isHit, :isCrit, :isFumble, :shielded) =
+            _rollSpellAttackWithShield(attacker, target);
 
         int damageDealt = 0;
         bool isKillShot = false;
@@ -1872,26 +1854,8 @@ class ArenaCombatEngine {
       final slotLvl = _deductHighestSlot(attacker, 1)!;
       attacker.attacksMade++;
 
-      final d20 = _rollDie(20);
-      final isCrit = d20 == 20;
-      final isFumble = d20 == 1;
-      final totalAttack = d20 + attacker.spellAttackBonus;
-      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
-
-      bool shielded = false;
-      if (isHit &&
-          !isCrit &&
-          !target.usedReactionThisRound &&
-          target.hasSpell('spell_shield') &&
-          target.hasAvailableSlots) {
-        if (totalAttack < target.effectiveAc + 5) {
-          _deductLowestSlot(target, 1);
-          target.usedReactionThisRound = true;
-          target.temporaryAcBonus += 5;
-          shielded = true;
-          isHit = false;
-        }
-      }
+      final (:d20, :totalAttack, :isHit, :isCrit, :isFumble, :shielded) =
+          _rollSpellAttackWithShield(attacker, target);
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -1971,26 +1935,8 @@ class ArenaCombatEngine {
       final slotLvl = _deductHighestSlot(attacker, 1)!;
       attacker.attacksMade++;
 
-      final d20 = _rollDie(20);
-      final isCrit = d20 == 20;
-      final isFumble = d20 == 1;
-      final totalAttack = d20 + attacker.spellAttackBonus;
-      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
-
-      bool shielded = false;
-      if (isHit &&
-          !isCrit &&
-          !target.usedReactionThisRound &&
-          target.hasSpell('spell_shield') &&
-          target.hasAvailableSlots) {
-        if (totalAttack < target.effectiveAc + 5) {
-          _deductLowestSlot(target, 1);
-          target.usedReactionThisRound = true;
-          target.temporaryAcBonus += 5;
-          shielded = true;
-          isHit = false;
-        }
-      }
+      final (:d20, :totalAttack, :isHit, :isCrit, :isFumble, :shielded) =
+          _rollSpellAttackWithShield(attacker, target);
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -2070,26 +2016,8 @@ class ArenaCombatEngine {
       final slotLvl = _deductHighestSlot(attacker, 2)!;
       attacker.attacksMade++;
 
-      final d20 = _rollDie(20);
-      final isCrit = d20 == 20;
-      final isFumble = d20 == 1;
-      final totalAttack = d20 + attacker.spellAttackBonus;
-      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
-
-      bool shielded = false;
-      if (isHit &&
-          !isCrit &&
-          !target.usedReactionThisRound &&
-          target.hasSpell('spell_shield') &&
-          target.hasAvailableSlots) {
-        if (totalAttack < target.effectiveAc + 5) {
-          _deductLowestSlot(target, 1);
-          target.usedReactionThisRound = true;
-          target.temporaryAcBonus += 5;
-          shielded = true;
-          isHit = false;
-        }
-      }
+      final (:d20, :totalAttack, :isHit, :isCrit, :isFumble, :shielded) =
+          _rollSpellAttackWithShield(attacker, target);
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -2307,26 +2235,8 @@ class ArenaCombatEngine {
         if (target.isDefeated) break;
         attacker.attacksMade++;
 
-        final d20 = _rollDie(20);
-        final isCrit = d20 == 20;
-        final isFumble = d20 == 1;
-        final totalAttack = d20 + attacker.spellAttackBonus;
-        bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
-
-        bool shielded = false;
-        if (isHit &&
-            !isCrit &&
-            !target.usedReactionThisRound &&
-            target.hasSpell('spell_shield') &&
-            target.hasAvailableSlots) {
-          if (totalAttack < target.effectiveAc + 5) {
-            _deductLowestSlot(target, 1);
-            target.usedReactionThisRound = true;
-            target.temporaryAcBonus += 5;
-            shielded = true;
-            isHit = false;
-          }
-        }
+        final (:d20, :totalAttack, :isHit, :isCrit, :isFumble, :shielded) =
+            _rollSpellAttackWithShield(attacker, target);
 
         int damageDealt = 0;
         bool isKillShot = false;
@@ -2406,26 +2316,8 @@ class ArenaCombatEngine {
     // 2. Fire Bolt (spell_fire_bolt)
     if (attacker.hasSpell('spell_fire_bolt')) {
       attacker.attacksMade++;
-      final d20 = _rollDie(20);
-      final isCrit = d20 == 20;
-      final isFumble = d20 == 1;
-      final totalAttack = d20 + attacker.spellAttackBonus;
-      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
-
-      bool shielded = false;
-      if (isHit &&
-          !isCrit &&
-          !target.usedReactionThisRound &&
-          target.hasSpell('spell_shield') &&
-          target.hasAvailableSlots) {
-        if (totalAttack < target.effectiveAc + 5) {
-          _deductLowestSlot(target, 1);
-          target.usedReactionThisRound = true;
-          target.temporaryAcBonus += 5;
-          shielded = true;
-          isHit = false;
-        }
-      }
+      final (:d20, :totalAttack, :isHit, :isCrit, :isFumble, :shielded) =
+          _rollSpellAttackWithShield(attacker, target);
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -2504,26 +2396,8 @@ class ArenaCombatEngine {
     if (attacker.hasSpell('spell_ray_of_frost') ||
         (attacker.isSpellcaster && !attacker.hasSpell('spell_sacred_flame'))) {
       attacker.attacksMade++;
-      final d20 = _rollDie(20);
-      final isCrit = d20 == 20;
-      final isFumble = d20 == 1;
-      final totalAttack = d20 + attacker.spellAttackBonus;
-      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
-
-      bool shielded = false;
-      if (isHit &&
-          !isCrit &&
-          !target.usedReactionThisRound &&
-          target.hasSpell('spell_shield') &&
-          target.hasAvailableSlots) {
-        if (totalAttack < target.effectiveAc + 5) {
-          _deductLowestSlot(target, 1);
-          target.usedReactionThisRound = true;
-          target.temporaryAcBonus += 5;
-          shielded = true;
-          isHit = false;
-        }
-      }
+      final (:d20, :totalAttack, :isHit, :isCrit, :isFumble, :shielded) =
+          _rollSpellAttackWithShield(attacker, target);
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -2983,6 +2857,53 @@ class ArenaCombatEngine {
     return events;
   }
 
+  ({
+    int d20,
+    int totalAttack,
+    bool isHit,
+    bool isCrit,
+    bool isFumble,
+    bool shielded,
+  }) _rollSpellAttackWithShield(
+    ArenaCombatant attacker,
+    ArenaCombatant target,
+  ) {
+    final d20 = _rollDie(20);
+    final totalAttack = d20 + attacker.spellAttackBonus;
+    final rollOutcome = classifyAttackRoll(
+      naturalRoll: d20,
+      totalToHit: totalAttack,
+      targetAc: target.effectiveAc,
+    );
+    final isCrit = rollOutcome == AttackOutcomeType.criticalHit;
+    final isFumble = rollOutcome == AttackOutcomeType.criticalMiss;
+    var isHit = rollOutcome == AttackOutcomeType.hit || isCrit;
+    var shielded = false;
+    if (isHit &&
+        !target.usedReactionThisRound &&
+        target.hasSpell('spell_shield') &&
+        target.hasAvailableSlots &&
+        doesShieldBlockAttack(
+          totalToHit: totalAttack,
+          targetAc: target.effectiveAc,
+          isCriticalHit: isCrit,
+        )) {
+      _deductLowestSlot(target, 1);
+      target.usedReactionThisRound = true;
+      target.temporaryAcBonus += 5;
+      shielded = true;
+      isHit = false;
+    }
+    return (
+      d20: d20,
+      totalAttack: totalAttack,
+      isHit: isHit,
+      isCrit: isCrit,
+      isFumble: isFumble,
+      shielded: shielded,
+    );
+  }
+
   /// Default DC calculation when not explicit (8 + proficiency + ability modifier).
   int _computeSaveDc(ArenaCombatant attacker, DmRulesEdition edition) {
     final cr = attacker.monster.challengeRating;
@@ -2993,7 +2914,7 @@ class ArenaCombatEngine {
     if (cr >= 17) pb = 6;
     final sb = attacker.getStatBlock(edition);
     final mod = max(sb.conMod, max(sb.strMod, sb.chaMod));
-    return 8 + pb + mod;
+    return computeSaveDc(proficiencyBonus: pb, abilityModifier: mod);
   }
 
   /// Resolves an individual single-target attack roll vs defender's AC,
@@ -3108,11 +3029,16 @@ class ArenaCombatEngine {
     if (hasAdvantage && d20B != null) naturalRoll = max(d20A, d20B);
     if (hasDisadvantage && d20B != null) naturalRoll = min(d20A, d20B);
 
-    final isFumble = naturalRoll == 1;
     final totalAttack = naturalRoll + attack.attackBonus;
-    bool isHit = (naturalRoll == 20) ||
-        (!isFumble && totalAttack >= defender.effectiveAc);
-    final isCrit = (naturalRoll == 20) ||
+    final rollOutcome = classifyAttackRoll(
+      naturalRoll: naturalRoll,
+      totalToHit: totalAttack,
+      targetAc: defender.effectiveAc,
+    );
+    final isFumble = rollOutcome == AttackOutcomeType.criticalMiss;
+    bool isHit = rollOutcome == AttackOutcomeType.hit ||
+        rollOutcome == AttackOutcomeType.criticalHit;
+    final isCrit = (rollOutcome == AttackOutcomeType.criticalHit) ||
         (isHit &&
             (defender.isParalyzed || defender.isUnconscious) &&
             attack.attackType == AttackType.meleeStandard);
@@ -3124,17 +3050,19 @@ class ArenaCombatEngine {
 
     // Defensive Reaction Hook: Shield (spell_shield)
     if (isHit &&
-        !isCrit &&
         !defender.usedReactionThisRound &&
         defender.hasSpell('spell_shield') &&
-        defender.hasAvailableSlots) {
-      if (totalAttack < defender.effectiveAc + 5) {
-        _deductLowestSlot(defender, 1);
-        defender.usedReactionThisRound = true;
-        defender.temporaryAcBonus += 5;
-        shielded = true;
-        isHit = false;
-      }
+        defender.hasAvailableSlots &&
+        doesShieldBlockAttack(
+          totalToHit: totalAttack,
+          targetAc: defender.effectiveAc,
+          isCriticalHit: isCrit,
+        )) {
+      _deductLowestSlot(defender, 1);
+      defender.usedReactionThisRound = true;
+      defender.temporaryAcBonus += 5;
+      shielded = true;
+      isHit = false;
     }
 
     if (isHit) {
@@ -3266,24 +3194,18 @@ class ArenaCombatEngine {
   ]) {
     final sb = defender.getStatBlock(edition);
     final dmgLower = damageType.toLowerCase().trim();
+    final defenses = DamageDefenses.fromStatBlockText(
+      immunities: sb.damageImmunities,
+      resistances: sb.damageResistances,
+      vulnerabilities: sb.damageVulnerabilities,
+    );
 
-    // Check Immunity (0 damage)
-    final immunities = (sb.damageImmunities ?? '').toLowerCase();
-    final immune = immunities.isNotEmpty &&
-        (immunities.contains(dmgLower) || immunities.contains('all'));
-
-    // Check Resistance (Flooded Abyss grants natural fire resistance to submerged creatures)
-    final resistances = (sb.damageResistances ?? '').toLowerCase();
-    var resistant = resistances.isNotEmpty &&
-        (resistances.contains(dmgLower) || resistances.contains('all'));
+    final immune = defenses.isImmune(dmgLower);
+    var resistant = defenses.isResistant(dmgLower);
     if (environment == ArenaEnvironment.floodedAbyss && dmgLower == 'fire') {
       resistant = true;
     }
-
-    // Check Vulnerability
-    final vulnerabilities = (sb.damageVulnerabilities ?? '').toLowerCase();
-    final vulnerable =
-        vulnerabilities.isNotEmpty && vulnerabilities.contains(dmgLower);
+    final vulnerable = defenses.isVulnerable(dmgLower);
 
     return adjustDamageForDefenses(
       rawDamage,
@@ -3404,14 +3326,18 @@ class ArenaCombatEngine {
           legendary.attacksMade++;
 
           final d20 = _rollDie(20);
-          final isCrit = d20 == 20;
-          final isFumble = d20 == 1;
           final atkBonus = legendary.spellAttackBonus > 0
               ? legendary.spellAttackBonus
               : sb.attackBonus;
           final totalAttack = d20 + atkBonus;
-          final isHit =
-              isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+          final rollOutcome = classifyAttackRoll(
+            naturalRoll: d20,
+            totalToHit: totalAttack,
+            targetAc: target.effectiveAc,
+          );
+          final isCrit = rollOutcome == AttackOutcomeType.criticalHit;
+          final isFumble = rollOutcome == AttackOutcomeType.criticalMiss;
+          final isHit = rollOutcome == AttackOutcomeType.hit || isCrit;
 
           int damageDealt = 0;
           bool isKillShot = false;
