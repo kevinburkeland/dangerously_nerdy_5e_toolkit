@@ -1,8 +1,8 @@
 # Cleanup slice 15 progress notes
 Status: IN PROGRESS
 Start heads: core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app 058f7bda940ed634413328f798c779f3c7644e86
-Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 72c62b2295d6311e636bca28e8c740de8fde61d0, app 8f5a68ebd1d602229f1b5d161f981fb2b5e37719
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d
+Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 524fba8936af3ae6e5185540bef691fe012fda11
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 3.1 3.2 4.1 4.2 5.1 5.2 5.3 5.4 6.1 6.2 7.1 7.2 7.3 8.1 8.2
 Mutation ids: C1 R1 R2 R3 A1 D1 L1 H1 H2 G1 W1 P1 F1 I1 S1 S2
 
@@ -34,7 +34,7 @@ Fix 8.2: The party room screen is split
 - [x] Step 2 Campaign dialogs with lists: app 7729245ee750d67528e473949d754e2dbb244ca9 run 45268393281
 - [x] Step 3 Host role per session: app 1ee86efd3127052e489114eb7f70b53caf81b5d5 run 45482109288
 - [x] Step 4 Arena goldens: app 8f5a68ebd1d602229f1b5d161f981fb2b5e37719 run 45485123855
-- [ ] Step 5 Arena rules into the ruleset
+- [x] Step 5 Arena rules into the ruleset: ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e run 45487553077, app 524fba8936af3ae6e5185540bef691fe012fda11 run 45488746529
 - [ ] Step 6 Arena engine split
 - [ ] Step 7 DM dashboard
 - [ ] Step 8 Party room screen
@@ -51,6 +51,10 @@ Fix 3.1 done: [The host role is given to each sync session] Removed RoomSyncOrch
 Fix 3.2 done: [Stopping sync forgets the host role] Reset _isHost to false in RoomSyncOrchestrator.stopSynchronization before emitting telemetry, verified by host-to-player session switch test.
 Fix 4.1 done: [Arena match goldens for fixed seeds] Verified determinism control with Random(7) and recorded 336 preset matches (7 presets), 343 creature duels, and 7 Monte Carlo runs in test/fixtures/arena_goldens/ with test/services/arena_match_goldens_test.dart.
 Fix 4.2 done: [A damage-defense table for every bundled creature] Recorded 10,290 damage-defense rows across 686 bundled stat blocks via public executeTurn 101-damage probe in test/services/arena_damage_defense_table_test.dart (322 empty-string non-none rows, 0 zzz rows; only shrieker uses damageType "none", no bundled attack uses empty string).
+Fix 5.1 done: [Damage defenses from stat-block text live in the ruleset] Added DamageDefenses with laws in vtt-ruleset-dnd5e, re-pinned app to 5ec366a49af9cc274560ba677e3ae1b8af736c7e, migrated ArenaCombatEngine._applyDefensiveModifiers, and updated only the 322 empty-string rows in damage_defense_table.json to none.
+Fix 5.2 done: [Attack rolls and the Shield reaction live in the ruleset] Added classifyAttackRoll and doesShieldBlockAttack with laws in vtt-ruleset-dnd5e, migrated all 9 attack-roll sites and 8 Shield sites in ArenaCombatEngine, and added test/infrastructure/compliance/arena_rules_source_bar_test.dart.
+Fix 5.3 done: [Save DCs live in the ruleset] Added computeSaveDc with laws in vtt-ruleset-dnd5e and migrated ArenaCombatEngine._computeSaveDc and StatBlockAclParser.parseStatBlockBoundary.
+Fix 5.4 done: [Monster proficiency follows the SRD table above CR 20] Added proficiencyBonusForChallengeRating (CR 0-30, +2 to +9) in vtt-ruleset-dnd5e, replaced both +6-capped ladders in ArenaCombatEngine and StatBlockAclParser, added test/services/arena_default_save_dc_law_test.dart, and updated only the two CR 21+ creature duels (Solar CR 21 and Tarrasque CR 30) in creature_duels.json.
 
 ## Mutation branches
 None
@@ -62,9 +66,12 @@ c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 Run 2 start: saved uncommitted Step 3 WIP diff to step_3_interrupted.diff (and earlier pause diff to step_3_saved_before_pause.diff plus host_role_session_lifecycle_test.dart.bak) and reset app working tree to 9190c8f86ef4bd37eefb97a4a5959016d3492413 before completing Step 3.
 
 ## Next
-Add DamageDefenses, attack classification, Shield reaction, save DC, and SRD CR proficiency rules with laws to vtt-ruleset-dnd5e, re-pin the ruleset in the app, migrate all arena and parser call sites, and update only CR 21+ default-DC goldens.
+Split lib/services/rules/arena_combat_engine.dart into lib/services/rules/arena/ (no file over 800 lines), move compute wrappers out of arena/ and switch aoe_resolver.dart to package:meta/meta.dart, add lib/services/rules/arena to test/domain/transitive_purity_test.dart, and remove arena_combat_engine.dart from big_file_ratchet_test.dart.
 
 ## Open issues and deviations
+- Step 5 other 8 + DC formula: lib/services/rules/dpr_calculator_engine.dart line 125 has an 8 + formula; left untouched as out of scope for Step 5.
+- Step 5 StatBlockAclParser persistence (Inferred): StatBlockAclParser.parseStatBlockBoundary is called only from MonsterCombatProfile.fromStatBlock in memory; its computed spellSaveDc, spellAttackBonus, and fallback rider DCs are not persisted to disk.
+- Step 5 Fix 5.4 golden diff (Executed): Only 2 of 343 creature duels changed (Solar CR 21 v2024 spell attack +16 -> +17; Tarrasque CR 30 v2024 spell attack +6 -> +9, totalRounds 3 -> 2). All 336 preset matches, 341 other creature duels, and 7 Monte Carlo presets were byte-identical.
 - Fix 1.2: Prompt stated "case 19 (around line 262) proves the passing case only. Nothing proves a file with real code still fails at 0.0." Existing test_check_coverage_floor.sh in core and ruleset already had case 20 ("non-barrel file lowering floor to 0.0 still fails"); new cases 21-24 continued numbering and all four passed as guards on the existing check_coverage_floor.py.
 - Fix 1.4: Look-ahead (--today 2026-12-07) in app also flagged T1 (Flutter SDK pin 3.50.0 behind newest stable 3.50.1, released 2026-11-20, 3 days old today). Not bumped because pubspec.yaml pins exact Flutter version 3.50.0 and local SDK is 3.50.0; today's dependency check passes within the 14-day grace period.
 - Step 3 executeHostMilestoneFlush: calls campaignRepo.updateProfile with an identity transform returning current unchanged; LocalCampaignRepository.updateProfile cancels any pending debounced save and re-persists current to disk, so unless a debounced write is pending it writes nothing that was not already saved and retains all tombstones unchanged.
