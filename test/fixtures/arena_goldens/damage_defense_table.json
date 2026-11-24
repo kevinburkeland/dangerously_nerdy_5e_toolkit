@@ -83,7 +83,7 @@
     "monsterId": "ao_huge",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_huge",
@@ -175,7 +175,7 @@
     "monsterId": "ao_huge",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_huge",
@@ -267,7 +267,7 @@
     "monsterId": "ao_large",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_large",
@@ -359,7 +359,7 @@
     "monsterId": "ao_large",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_large",
@@ -451,7 +451,7 @@
     "monsterId": "ao_medium",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_medium",
@@ -543,7 +543,7 @@
     "monsterId": "ao_medium",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_medium",
@@ -635,7 +635,7 @@
     "monsterId": "ao_small",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_small",
@@ -727,7 +727,7 @@
     "monsterId": "ao_small",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_small",
@@ -819,7 +819,7 @@
     "monsterId": "ao_tiny",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_tiny",
@@ -911,7 +911,7 @@
     "monsterId": "ao_tiny",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "ao_tiny",
@@ -1003,7 +1003,7 @@
     "monsterId": "elem_fire_snake",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "elem_fire_snake",
@@ -1095,7 +1095,7 @@
     "monsterId": "elem_fire_snake",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "elem_fire_snake",
@@ -2659,7 +2659,7 @@
     "monsterId": "item_obsidian_steed",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "item_obsidian_steed",
@@ -2751,7 +2751,7 @@
     "monsterId": "item_obsidian_steed",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "item_obsidian_steed",
@@ -2843,7 +2843,7 @@
     "monsterId": "item_onyx_dog",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "item_onyx_dog",
@@ -2935,7 +2935,7 @@
     "monsterId": "item_onyx_dog",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "item_onyx_dog",
@@ -3763,7 +3763,7 @@
     "monsterId": "srd_mon_adult_black_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_black_dragon",
@@ -3855,7 +3855,7 @@
     "monsterId": "srd_mon_adult_black_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_black_dragon",
@@ -3947,7 +3947,7 @@
     "monsterId": "srd_mon_adult_blue_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_blue_dragon",
@@ -4039,7 +4039,7 @@
     "monsterId": "srd_mon_adult_blue_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_blue_dragon",
@@ -4131,7 +4131,7 @@
     "monsterId": "srd_mon_adult_brass_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_brass_dragon",
@@ -4223,7 +4223,7 @@
     "monsterId": "srd_mon_adult_brass_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_brass_dragon",
@@ -4315,7 +4315,7 @@
     "monsterId": "srd_mon_adult_bronze_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_bronze_dragon",
@@ -4407,7 +4407,7 @@
     "monsterId": "srd_mon_adult_bronze_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_bronze_dragon",
@@ -4499,7 +4499,7 @@
     "monsterId": "srd_mon_adult_copper_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_copper_dragon",
@@ -4591,7 +4591,7 @@
     "monsterId": "srd_mon_adult_copper_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_copper_dragon",
@@ -4683,7 +4683,7 @@
     "monsterId": "srd_mon_adult_gold_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_gold_dragon",
@@ -4775,7 +4775,7 @@
     "monsterId": "srd_mon_adult_gold_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_gold_dragon",
@@ -4867,7 +4867,7 @@
     "monsterId": "srd_mon_adult_green_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_green_dragon",
@@ -4959,7 +4959,7 @@
     "monsterId": "srd_mon_adult_green_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_green_dragon",
@@ -5051,7 +5051,7 @@
     "monsterId": "srd_mon_adult_red_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_red_dragon",
@@ -5143,7 +5143,7 @@
     "monsterId": "srd_mon_adult_red_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_red_dragon",
@@ -5235,7 +5235,7 @@
     "monsterId": "srd_mon_adult_silver_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_silver_dragon",
@@ -5327,7 +5327,7 @@
     "monsterId": "srd_mon_adult_silver_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_silver_dragon",
@@ -5419,7 +5419,7 @@
     "monsterId": "srd_mon_adult_white_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_white_dragon",
@@ -5511,7 +5511,7 @@
     "monsterId": "srd_mon_adult_white_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_adult_white_dragon",
@@ -5528,103 +5528,103 @@
   {
     "monsterId": "srd_mon_air_elemental",
     "edition": "v2014",
-    "damageType": "bludgeoning",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "cold",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "fire",
-    "colosseum": "none",
-    "floodedAbyssFire": "resistant",
-    "floodedAbyssChangesFire": true
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "force",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "lightning",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "necrotic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "piercing",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "poison",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "psychic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "radiant",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "slashing",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "thunder",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2014",
-    "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2024",
-    "damageType": "acid",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_air_elemental",
-    "edition": "v2024",
     "damageType": "bludgeoning",
     "colosseum": "resistant"
   },
   {
     "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "cold",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "fire",
+    "colosseum": "none",
+    "floodedAbyssFire": "resistant",
+    "floodedAbyssChangesFire": true
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "force",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "lightning",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "necrotic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "piercing",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "poison",
+    "colosseum": "immune"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "psychic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "radiant",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "slashing",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "thunder",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2014",
+    "damageType": "zzz",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
+    "edition": "v2024",
+    "damageType": "bludgeoning",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_air_elemental",
     "edition": "v2024",
     "damageType": "cold",
     "colosseum": "none"
@@ -5695,7 +5695,7 @@
     "monsterId": "srd_mon_air_elemental",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_air_elemental",
@@ -5971,7 +5971,7 @@
     "monsterId": "srd_mon_ancient_black_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_black_dragon",
@@ -6063,7 +6063,7 @@
     "monsterId": "srd_mon_ancient_black_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_black_dragon",
@@ -6155,7 +6155,7 @@
     "monsterId": "srd_mon_ancient_blue_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_blue_dragon",
@@ -6247,7 +6247,7 @@
     "monsterId": "srd_mon_ancient_blue_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_blue_dragon",
@@ -6339,7 +6339,7 @@
     "monsterId": "srd_mon_ancient_brass_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_brass_dragon",
@@ -6431,7 +6431,7 @@
     "monsterId": "srd_mon_ancient_brass_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_brass_dragon",
@@ -6523,7 +6523,7 @@
     "monsterId": "srd_mon_ancient_bronze_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_bronze_dragon",
@@ -6615,7 +6615,7 @@
     "monsterId": "srd_mon_ancient_bronze_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_bronze_dragon",
@@ -6707,7 +6707,7 @@
     "monsterId": "srd_mon_ancient_copper_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_copper_dragon",
@@ -6799,7 +6799,7 @@
     "monsterId": "srd_mon_ancient_copper_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_copper_dragon",
@@ -6891,7 +6891,7 @@
     "monsterId": "srd_mon_ancient_gold_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_gold_dragon",
@@ -6983,7 +6983,7 @@
     "monsterId": "srd_mon_ancient_gold_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_gold_dragon",
@@ -7075,7 +7075,7 @@
     "monsterId": "srd_mon_ancient_green_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_green_dragon",
@@ -7167,7 +7167,7 @@
     "monsterId": "srd_mon_ancient_green_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_green_dragon",
@@ -7259,7 +7259,7 @@
     "monsterId": "srd_mon_ancient_red_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_red_dragon",
@@ -7351,7 +7351,7 @@
     "monsterId": "srd_mon_ancient_red_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_red_dragon",
@@ -7443,7 +7443,7 @@
     "monsterId": "srd_mon_ancient_silver_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_silver_dragon",
@@ -7535,7 +7535,7 @@
     "monsterId": "srd_mon_ancient_silver_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_silver_dragon",
@@ -7627,7 +7627,7 @@
     "monsterId": "srd_mon_ancient_white_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_white_dragon",
@@ -7719,7 +7719,7 @@
     "monsterId": "srd_mon_ancient_white_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ancient_white_dragon",
@@ -7811,7 +7811,7 @@
     "monsterId": "srd_mon_androsphinx",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_androsphinx",
@@ -7903,7 +7903,7 @@
     "monsterId": "srd_mon_androsphinx",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_androsphinx",
@@ -7995,7 +7995,7 @@
     "monsterId": "srd_mon_animated_armor",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_animated_armor",
@@ -8087,7 +8087,7 @@
     "monsterId": "srd_mon_animated_armor",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_animated_armor",
@@ -8731,7 +8731,7 @@
     "monsterId": "srd_mon_archmage",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_archmage",
@@ -8823,7 +8823,7 @@
     "monsterId": "srd_mon_archmage",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_archmage",
@@ -8915,7 +8915,7 @@
     "monsterId": "srd_mon_assassin",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_assassin",
@@ -9007,7 +9007,7 @@
     "monsterId": "srd_mon_assassin",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_assassin",
@@ -9099,7 +9099,7 @@
     "monsterId": "srd_mon_awakened_shrub",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant+vulnerable"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_awakened_shrub",
@@ -9191,7 +9191,7 @@
     "monsterId": "srd_mon_awakened_shrub",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant+vulnerable"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_awakened_shrub",
@@ -9283,7 +9283,7 @@
     "monsterId": "srd_mon_awakened_tree",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant+vulnerable"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_awakened_tree",
@@ -9375,7 +9375,7 @@
     "monsterId": "srd_mon_awakened_tree",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant+vulnerable"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_awakened_tree",
@@ -9651,7 +9651,7 @@
     "monsterId": "srd_mon_azer",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_azer",
@@ -9743,7 +9743,7 @@
     "monsterId": "srd_mon_azer",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_azer",
@@ -10203,7 +10203,7 @@
     "monsterId": "srd_mon_balor",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_balor",
@@ -10295,7 +10295,7 @@
     "monsterId": "srd_mon_balor",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_balor",
@@ -10755,7 +10755,7 @@
     "monsterId": "srd_mon_barbed_devil",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_barbed_devil",
@@ -10847,7 +10847,7 @@
     "monsterId": "srd_mon_barbed_devil",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_barbed_devil",
@@ -11307,7 +11307,7 @@
     "monsterId": "srd_mon_bearded_devil",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_bearded_devil",
@@ -11399,7 +11399,7 @@
     "monsterId": "srd_mon_bearded_devil",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_bearded_devil",
@@ -11491,7 +11491,7 @@
     "monsterId": "srd_mon_behir",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_behir",
@@ -11583,7 +11583,7 @@
     "monsterId": "srd_mon_behir",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_behir",
@@ -12043,7 +12043,7 @@
     "monsterId": "srd_mon_black_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_black_dragon_wyrmling",
@@ -12135,7 +12135,7 @@
     "monsterId": "srd_mon_black_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_black_dragon_wyrmling",
@@ -12227,7 +12227,7 @@
     "monsterId": "srd_mon_black_pudding",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_black_pudding",
@@ -12319,7 +12319,7 @@
     "monsterId": "srd_mon_black_pudding",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_black_pudding",
@@ -12779,7 +12779,7 @@
     "monsterId": "srd_mon_blue_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_blue_dragon_wyrmling",
@@ -12871,7 +12871,7 @@
     "monsterId": "srd_mon_blue_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_blue_dragon_wyrmling",
@@ -13147,7 +13147,7 @@
     "monsterId": "srd_mon_bone_devil",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_bone_devil",
@@ -13239,7 +13239,7 @@
     "monsterId": "srd_mon_bone_devil",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_bone_devil",
@@ -13331,7 +13331,7 @@
     "monsterId": "srd_mon_brass_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_brass_dragon_wyrmling",
@@ -13423,7 +13423,7 @@
     "monsterId": "srd_mon_brass_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_brass_dragon_wyrmling",
@@ -13515,7 +13515,7 @@
     "monsterId": "srd_mon_bronze_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_bronze_dragon_wyrmling",
@@ -13607,7 +13607,7 @@
     "monsterId": "srd_mon_bronze_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_bronze_dragon_wyrmling",
@@ -14803,7 +14803,7 @@
     "monsterId": "srd_mon_chain_devil",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_chain_devil",
@@ -14895,7 +14895,7 @@
     "monsterId": "srd_mon_chain_devil",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_chain_devil",
@@ -15171,7 +15171,7 @@
     "monsterId": "srd_mon_chuul",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_chuul",
@@ -15263,7 +15263,7 @@
     "monsterId": "srd_mon_chuul",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_chuul",
@@ -15355,7 +15355,7 @@
     "monsterId": "srd_mon_clay_golem",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_clay_golem",
@@ -15447,7 +15447,7 @@
     "monsterId": "srd_mon_clay_golem",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_clay_golem",
@@ -16459,7 +16459,7 @@
     "monsterId": "srd_mon_copper_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_copper_dragon_wyrmling",
@@ -16551,7 +16551,7 @@
     "monsterId": "srd_mon_copper_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_copper_dragon_wyrmling",
@@ -16643,7 +16643,7 @@
     "monsterId": "srd_mon_couatl",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_couatl",
@@ -16735,7 +16735,7 @@
     "monsterId": "srd_mon_couatl",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_couatl",
@@ -18483,7 +18483,7 @@
     "monsterId": "srd_mon_deva",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_deva",
@@ -18575,7 +18575,7 @@
     "monsterId": "srd_mon_deva",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_deva",
@@ -18851,7 +18851,7 @@
     "monsterId": "srd_mon_djinni",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_djinni",
@@ -18943,7 +18943,7 @@
     "monsterId": "srd_mon_djinni",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_djinni",
@@ -19403,7 +19403,7 @@
     "monsterId": "srd_mon_dragon_turtle",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_dragon_turtle",
@@ -19495,7 +19495,7 @@
     "monsterId": "srd_mon_dragon_turtle",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_dragon_turtle",
@@ -19587,7 +19587,7 @@
     "monsterId": "srd_mon_dretch",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_dretch",
@@ -19679,7 +19679,7 @@
     "monsterId": "srd_mon_dretch",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_dretch",
@@ -20507,7 +20507,7 @@
     "monsterId": "srd_mon_duergar",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_duergar",
@@ -20599,7 +20599,7 @@
     "monsterId": "srd_mon_duergar",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_duergar",
@@ -20691,7 +20691,7 @@
     "monsterId": "srd_mon_dust_mephit",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_dust_mephit",
@@ -20783,7 +20783,7 @@
     "monsterId": "srd_mon_dust_mephit",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_dust_mephit",
@@ -21059,7 +21059,7 @@
     "monsterId": "srd_mon_earth_elemental",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_earth_elemental",
@@ -21151,7 +21151,7 @@
     "monsterId": "srd_mon_earth_elemental",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_earth_elemental",
@@ -21243,7 +21243,7 @@
     "monsterId": "srd_mon_efreeti",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_efreeti",
@@ -21335,7 +21335,7 @@
     "monsterId": "srd_mon_efreeti",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_efreeti",
@@ -21795,7 +21795,7 @@
     "monsterId": "srd_mon_erinyes",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_erinyes",
@@ -21887,7 +21887,7 @@
     "monsterId": "srd_mon_erinyes",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_erinyes",
@@ -22347,7 +22347,7 @@
     "monsterId": "srd_mon_fire_elemental",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_fire_elemental",
@@ -22439,7 +22439,7 @@
     "monsterId": "srd_mon_fire_elemental",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_fire_elemental",
@@ -22531,7 +22531,7 @@
     "monsterId": "srd_mon_fire_giant",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_fire_giant",
@@ -22623,7 +22623,7 @@
     "monsterId": "srd_mon_fire_giant",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_fire_giant",
@@ -22715,7 +22715,7 @@
     "monsterId": "srd_mon_flesh_golem",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_flesh_golem",
@@ -22807,7 +22807,7 @@
     "monsterId": "srd_mon_flesh_golem",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_flesh_golem",
@@ -23083,7 +23083,7 @@
     "monsterId": "srd_mon_flying_sword",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_flying_sword",
@@ -23175,7 +23175,7 @@
     "monsterId": "srd_mon_flying_sword",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_flying_sword",
@@ -23451,7 +23451,7 @@
     "monsterId": "srd_mon_frost_giant",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_frost_giant",
@@ -23543,7 +23543,7 @@
     "monsterId": "srd_mon_frost_giant",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_frost_giant",
@@ -23560,103 +23560,103 @@
   {
     "monsterId": "srd_mon_gargoyle",
     "edition": "v2014",
-    "damageType": "bludgeoning",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "cold",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "fire",
-    "colosseum": "none",
-    "floodedAbyssFire": "resistant",
-    "floodedAbyssChangesFire": true
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "force",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "lightning",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "necrotic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "piercing",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "poison",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "psychic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "radiant",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "slashing",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "thunder",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2014",
-    "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2024",
-    "damageType": "acid",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_gargoyle",
-    "edition": "v2024",
     "damageType": "bludgeoning",
     "colosseum": "resistant"
   },
   {
     "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "cold",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "fire",
+    "colosseum": "none",
+    "floodedAbyssFire": "resistant",
+    "floodedAbyssChangesFire": true
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "force",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "lightning",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "necrotic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "piercing",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "poison",
+    "colosseum": "immune"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "psychic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "radiant",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "slashing",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "thunder",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2014",
+    "damageType": "zzz",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
+    "edition": "v2024",
+    "damageType": "bludgeoning",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_gargoyle",
     "edition": "v2024",
     "damageType": "cold",
     "colosseum": "none"
@@ -23727,7 +23727,7 @@
     "monsterId": "srd_mon_gargoyle",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_gargoyle",
@@ -24003,7 +24003,7 @@
     "monsterId": "srd_mon_ghast",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ghast",
@@ -24095,7 +24095,7 @@
     "monsterId": "srd_mon_ghast",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ghast",
@@ -24187,7 +24187,7 @@
     "monsterId": "srd_mon_ghost",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ghost",
@@ -24279,7 +24279,7 @@
     "monsterId": "srd_mon_ghost",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ghost",
@@ -24371,7 +24371,7 @@
     "monsterId": "srd_mon_ghoul",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ghoul",
@@ -24463,7 +24463,7 @@
     "monsterId": "srd_mon_ghoul",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ghoul",
@@ -30075,7 +30075,7 @@
     "monsterId": "srd_mon_glabrezu",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_glabrezu",
@@ -30167,7 +30167,7 @@
     "monsterId": "srd_mon_glabrezu",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_glabrezu",
@@ -30995,7 +30995,7 @@
     "monsterId": "srd_mon_gold_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_gold_dragon_wyrmling",
@@ -31087,7 +31087,7 @@
     "monsterId": "srd_mon_gold_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_gold_dragon_wyrmling",
@@ -31363,7 +31363,7 @@
     "monsterId": "srd_mon_gray_ooze",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_gray_ooze",
@@ -31455,7 +31455,7 @@
     "monsterId": "srd_mon_gray_ooze",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_gray_ooze",
@@ -31547,7 +31547,7 @@
     "monsterId": "srd_mon_green_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_green_dragon_wyrmling",
@@ -31639,7 +31639,7 @@
     "monsterId": "srd_mon_green_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_green_dragon_wyrmling",
@@ -31915,7 +31915,7 @@
     "monsterId": "srd_mon_grick",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_grick",
@@ -32007,7 +32007,7 @@
     "monsterId": "srd_mon_grick",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_grick",
@@ -32620,103 +32620,103 @@
   {
     "monsterId": "srd_mon_guardian_naga",
     "edition": "v2014",
-    "damageType": "poison",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2014",
-    "damageType": "psychic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2014",
-    "damageType": "radiant",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2014",
-    "damageType": "slashing",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2014",
-    "damageType": "thunder",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2014",
-    "damageType": "",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2014",
-    "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "acid",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "bludgeoning",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "cold",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "fire",
-    "colosseum": "none",
-    "floodedAbyssFire": "resistant",
-    "floodedAbyssChangesFire": true
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "force",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "lightning",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "necrotic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
-    "damageType": "piercing",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_guardian_naga",
-    "edition": "v2024",
     "damageType": "poison",
     "colosseum": "immune"
   },
   {
     "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2014",
+    "damageType": "psychic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2014",
+    "damageType": "radiant",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2014",
+    "damageType": "slashing",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2014",
+    "damageType": "thunder",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2014",
+    "damageType": "",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2014",
+    "damageType": "zzz",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "bludgeoning",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "cold",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "fire",
+    "colosseum": "none",
+    "floodedAbyssFire": "resistant",
+    "floodedAbyssChangesFire": true
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "force",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "lightning",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "necrotic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "piercing",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
+    "edition": "v2024",
+    "damageType": "poison",
+    "colosseum": "immune"
+  },
+  {
+    "monsterId": "srd_mon_guardian_naga",
     "edition": "v2024",
     "damageType": "psychic",
     "colosseum": "none"
@@ -32743,7 +32743,7 @@
     "monsterId": "srd_mon_guardian_naga",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_guardian_naga",
@@ -32835,7 +32835,7 @@
     "monsterId": "srd_mon_gynosphinx",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_gynosphinx",
@@ -32927,7 +32927,7 @@
     "monsterId": "srd_mon_gynosphinx",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_gynosphinx",
@@ -33019,7 +33019,7 @@
     "monsterId": "srd_mon_half_red_dragon_veteran",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_half_red_dragon_veteran",
@@ -33111,7 +33111,7 @@
     "monsterId": "srd_mon_half_red_dragon_veteran",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_half_red_dragon_veteran",
@@ -33571,7 +33571,7 @@
     "monsterId": "srd_mon_hell_hound",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_hell_hound",
@@ -33663,7 +33663,7 @@
     "monsterId": "srd_mon_hell_hound",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_hell_hound",
@@ -33755,7 +33755,7 @@
     "monsterId": "srd_mon_hezrou",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_hezrou",
@@ -33847,7 +33847,7 @@
     "monsterId": "srd_mon_hezrou",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_hezrou",
@@ -34491,7 +34491,7 @@
     "monsterId": "srd_mon_homunculus",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_homunculus",
@@ -34583,7 +34583,7 @@
     "monsterId": "srd_mon_homunculus",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_homunculus",
@@ -34675,7 +34675,7 @@
     "monsterId": "srd_mon_horned_devil",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_horned_devil",
@@ -34767,7 +34767,7 @@
     "monsterId": "srd_mon_horned_devil",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_horned_devil",
@@ -35411,7 +35411,7 @@
     "monsterId": "srd_mon_ice_devil",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ice_devil",
@@ -35503,7 +35503,7 @@
     "monsterId": "srd_mon_ice_devil",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ice_devil",
@@ -35595,7 +35595,7 @@
     "monsterId": "srd_mon_ice_mephit",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ice_mephit",
@@ -35687,7 +35687,7 @@
     "monsterId": "srd_mon_ice_mephit",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ice_mephit",
@@ -35779,7 +35779,7 @@
     "monsterId": "srd_mon_imp",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_imp",
@@ -35871,7 +35871,7 @@
     "monsterId": "srd_mon_imp",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_imp",
@@ -35963,7 +35963,7 @@
     "monsterId": "srd_mon_invisible_stalker",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_invisible_stalker",
@@ -36055,7 +36055,7 @@
     "monsterId": "srd_mon_invisible_stalker",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_invisible_stalker",
@@ -36147,7 +36147,7 @@
     "monsterId": "srd_mon_iron_golem",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_iron_golem",
@@ -36239,7 +36239,7 @@
     "monsterId": "srd_mon_iron_golem",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_iron_golem",
@@ -37067,7 +37067,7 @@
     "monsterId": "srd_mon_kraken",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_kraken",
@@ -37159,7 +37159,7 @@
     "monsterId": "srd_mon_kraken",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_kraken",
@@ -37435,7 +37435,7 @@
     "monsterId": "srd_mon_lemure",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_lemure",
@@ -37527,7 +37527,7 @@
     "monsterId": "srd_mon_lemure",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_lemure",
@@ -37619,7 +37619,7 @@
     "monsterId": "srd_mon_lich",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_lich",
@@ -37711,7 +37711,7 @@
     "monsterId": "srd_mon_lich",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_lich",
@@ -38539,7 +38539,7 @@
     "monsterId": "srd_mon_magma_mephit",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_magma_mephit",
@@ -38631,7 +38631,7 @@
     "monsterId": "srd_mon_magma_mephit",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_magma_mephit",
@@ -38723,7 +38723,7 @@
     "monsterId": "srd_mon_magmin",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_magmin",
@@ -38815,7 +38815,7 @@
     "monsterId": "srd_mon_magmin",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_magmin",
@@ -39275,7 +39275,7 @@
     "monsterId": "srd_mon_marilith",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_marilith",
@@ -39367,7 +39367,7 @@
     "monsterId": "srd_mon_marilith",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_marilith",
@@ -40195,7 +40195,7 @@
     "monsterId": "srd_mon_mimic",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_mimic",
@@ -40287,7 +40287,7 @@
     "monsterId": "srd_mon_mimic",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_mimic",
@@ -40488,103 +40488,103 @@
   {
     "monsterId": "srd_mon_minotaur_skeleton",
     "edition": "v2014",
-    "damageType": "bludgeoning",
-    "colosseum": "vulnerable"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "cold",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "fire",
-    "colosseum": "none",
-    "floodedAbyssFire": "resistant",
-    "floodedAbyssChangesFire": true
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "force",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "lightning",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "necrotic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "piercing",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "poison",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "psychic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "radiant",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "slashing",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "thunder",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2014",
-    "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2024",
-    "damageType": "acid",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_minotaur_skeleton",
-    "edition": "v2024",
     "damageType": "bludgeoning",
     "colosseum": "vulnerable"
   },
   {
     "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "cold",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "fire",
+    "colosseum": "none",
+    "floodedAbyssFire": "resistant",
+    "floodedAbyssChangesFire": true
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "force",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "lightning",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "necrotic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "piercing",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "poison",
+    "colosseum": "immune"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "psychic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "radiant",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "slashing",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "thunder",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2014",
+    "damageType": "zzz",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
+    "edition": "v2024",
+    "damageType": "bludgeoning",
+    "colosseum": "vulnerable"
+  },
+  {
+    "monsterId": "srd_mon_minotaur_skeleton",
     "edition": "v2024",
     "damageType": "cold",
     "colosseum": "none"
@@ -40655,7 +40655,7 @@
     "monsterId": "srd_mon_minotaur_skeleton",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_minotaur_skeleton",
@@ -40931,7 +40931,7 @@
     "monsterId": "srd_mon_mummy",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_mummy",
@@ -41023,7 +41023,7 @@
     "monsterId": "srd_mon_mummy",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_mummy",
@@ -41115,7 +41115,7 @@
     "monsterId": "srd_mon_mummy_lord",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_mummy_lord",
@@ -41207,7 +41207,7 @@
     "monsterId": "srd_mon_mummy_lord",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_mummy_lord",
@@ -41299,7 +41299,7 @@
     "monsterId": "srd_mon_nalfeshnee",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_nalfeshnee",
@@ -41391,7 +41391,7 @@
     "monsterId": "srd_mon_nalfeshnee",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_nalfeshnee",
@@ -41483,7 +41483,7 @@
     "monsterId": "srd_mon_night_hag",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_night_hag",
@@ -41575,7 +41575,7 @@
     "monsterId": "srd_mon_night_hag",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_night_hag",
@@ -41667,7 +41667,7 @@
     "monsterId": "srd_mon_nightmare",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_nightmare",
@@ -41759,7 +41759,7 @@
     "monsterId": "srd_mon_nightmare",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_nightmare",
@@ -42035,7 +42035,7 @@
     "monsterId": "srd_mon_ochre_jelly",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ochre_jelly",
@@ -42127,7 +42127,7 @@
     "monsterId": "srd_mon_ochre_jelly",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ochre_jelly",
@@ -42587,7 +42587,7 @@
     "monsterId": "srd_mon_ogre_zombie",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ogre_zombie",
@@ -42679,7 +42679,7 @@
     "monsterId": "srd_mon_ogre_zombie",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_ogre_zombie",
@@ -44243,7 +44243,7 @@
     "monsterId": "srd_mon_pit_fiend",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_pit_fiend",
@@ -44335,7 +44335,7 @@
     "monsterId": "srd_mon_pit_fiend",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_pit_fiend",
@@ -44427,7 +44427,7 @@
     "monsterId": "srd_mon_planetar",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_planetar",
@@ -44519,7 +44519,7 @@
     "monsterId": "srd_mon_planetar",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_planetar",
@@ -45899,7 +45899,7 @@
     "monsterId": "srd_mon_quasit",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_quasit",
@@ -45991,7 +45991,7 @@
     "monsterId": "srd_mon_quasit",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_quasit",
@@ -46267,7 +46267,7 @@
     "monsterId": "srd_mon_rakshasa",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_rakshasa",
@@ -46359,7 +46359,7 @@
     "monsterId": "srd_mon_rakshasa",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_rakshasa",
@@ -46819,7 +46819,7 @@
     "monsterId": "srd_mon_red_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_red_dragon_wyrmling",
@@ -46911,7 +46911,7 @@
     "monsterId": "srd_mon_red_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_red_dragon_wyrmling",
@@ -47187,7 +47187,7 @@
     "monsterId": "srd_mon_remorhaz",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_remorhaz",
@@ -47279,7 +47279,7 @@
     "monsterId": "srd_mon_remorhaz",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_remorhaz",
@@ -48107,7 +48107,7 @@
     "monsterId": "srd_mon_rug_of_smothering",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_rug_of_smothering",
@@ -48199,7 +48199,7 @@
     "monsterId": "srd_mon_rug_of_smothering",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_rug_of_smothering",
@@ -48843,7 +48843,7 @@
     "monsterId": "srd_mon_salamander",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_salamander",
@@ -48935,7 +48935,7 @@
     "monsterId": "srd_mon_salamander",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_salamander",
@@ -49947,7 +49947,7 @@
     "monsterId": "srd_mon_shadow",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_shadow",
@@ -50039,7 +50039,7 @@
     "monsterId": "srd_mon_shadow",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_shadow",
@@ -50131,7 +50131,7 @@
     "monsterId": "srd_mon_shambling_mound",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_shambling_mound",
@@ -50223,7 +50223,7 @@
     "monsterId": "srd_mon_shambling_mound",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_shambling_mound",
@@ -50315,7 +50315,7 @@
     "monsterId": "srd_mon_shield_guardian",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_shield_guardian",
@@ -50407,7 +50407,7 @@
     "monsterId": "srd_mon_shield_guardian",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_shield_guardian",
@@ -50683,7 +50683,7 @@
     "monsterId": "srd_mon_silver_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_silver_dragon_wyrmling",
@@ -50775,7 +50775,7 @@
     "monsterId": "srd_mon_silver_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_silver_dragon_wyrmling",
@@ -50867,7 +50867,7 @@
     "monsterId": "srd_mon_skeleton",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_skeleton",
@@ -50959,7 +50959,7 @@
     "monsterId": "srd_mon_skeleton",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_skeleton",
@@ -51051,7 +51051,7 @@
     "monsterId": "srd_mon_solar",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_solar",
@@ -51143,7 +51143,7 @@
     "monsterId": "srd_mon_solar",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_solar",
@@ -51235,7 +51235,7 @@
     "monsterId": "srd_mon_specter",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_specter",
@@ -51327,7 +51327,7 @@
     "monsterId": "srd_mon_specter",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_specter",
@@ -51603,7 +51603,7 @@
     "monsterId": "srd_mon_spirit_naga",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_spirit_naga",
@@ -51695,7 +51695,7 @@
     "monsterId": "srd_mon_spirit_naga",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_spirit_naga",
@@ -52155,7 +52155,7 @@
     "monsterId": "srd_mon_steam_mephit",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_steam_mephit",
@@ -52247,7 +52247,7 @@
     "monsterId": "srd_mon_steam_mephit",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_steam_mephit",
@@ -52707,7 +52707,7 @@
     "monsterId": "srd_mon_stone_golem",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_stone_golem",
@@ -52799,7 +52799,7 @@
     "monsterId": "srd_mon_stone_golem",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_stone_golem",
@@ -52822,103 +52822,103 @@
   {
     "monsterId": "srd_mon_storm_giant",
     "edition": "v2014",
-    "damageType": "cold",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "fire",
-    "colosseum": "none",
-    "floodedAbyssFire": "resistant",
-    "floodedAbyssChangesFire": true
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "force",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "lightning",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "necrotic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "piercing",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "poison",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "psychic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "radiant",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "slashing",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "thunder",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2014",
-    "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2024",
-    "damageType": "acid",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2024",
-    "damageType": "bludgeoning",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_storm_giant",
-    "edition": "v2024",
     "damageType": "cold",
     "colosseum": "resistant"
   },
   {
     "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "fire",
+    "colosseum": "none",
+    "floodedAbyssFire": "resistant",
+    "floodedAbyssChangesFire": true
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "force",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "lightning",
+    "colosseum": "immune"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "necrotic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "piercing",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "poison",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "psychic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "radiant",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "slashing",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "thunder",
+    "colosseum": "immune"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2014",
+    "damageType": "zzz",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2024",
+    "damageType": "bludgeoning",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
+    "edition": "v2024",
+    "damageType": "cold",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_storm_giant",
     "edition": "v2024",
     "damageType": "fire",
     "colosseum": "none",
@@ -52983,7 +52983,7 @@
     "monsterId": "srd_mon_storm_giant",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_storm_giant",
@@ -53075,7 +53075,7 @@
     "monsterId": "srd_mon_succubus_incubus",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_succubus_incubus",
@@ -53167,7 +53167,7 @@
     "monsterId": "srd_mon_succubus_incubus",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_succubus_incubus",
@@ -53259,23 +53259,23 @@
     "monsterId": "srd_mon_swarm_of_bats",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_bats",
     "edition": "v2014",
     "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_swarm_of_bats",
-    "edition": "v2024",
-    "damageType": "acid",
     "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_bats",
     "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_swarm_of_bats",
+    "edition": "v2024",
     "damageType": "bludgeoning",
     "colosseum": "resistant"
   },
@@ -53351,7 +53351,7 @@
     "monsterId": "srd_mon_swarm_of_bats",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_bats",
@@ -53443,23 +53443,23 @@
     "monsterId": "srd_mon_swarm_of_beetles",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_beetles",
     "edition": "v2014",
     "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_swarm_of_beetles",
-    "edition": "v2024",
-    "damageType": "acid",
     "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_beetles",
     "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_swarm_of_beetles",
+    "edition": "v2024",
     "damageType": "bludgeoning",
     "colosseum": "resistant"
   },
@@ -53535,7 +53535,7 @@
     "monsterId": "srd_mon_swarm_of_beetles",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_beetles",
@@ -53627,7 +53627,7 @@
     "monsterId": "srd_mon_swarm_of_centipedes",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_centipedes",
@@ -53719,7 +53719,7 @@
     "monsterId": "srd_mon_swarm_of_centipedes",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_centipedes",
@@ -53811,7 +53811,7 @@
     "monsterId": "srd_mon_swarm_of_insects",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_insects",
@@ -53903,7 +53903,7 @@
     "monsterId": "srd_mon_swarm_of_insects",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_insects",
@@ -53995,7 +53995,7 @@
     "monsterId": "srd_mon_swarm_of_poisonous_snakes",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_poisonous_snakes",
@@ -54087,7 +54087,7 @@
     "monsterId": "srd_mon_swarm_of_poisonous_snakes",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_poisonous_snakes",
@@ -54179,7 +54179,7 @@
     "monsterId": "srd_mon_swarm_of_quippers",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_quippers",
@@ -54271,7 +54271,7 @@
     "monsterId": "srd_mon_swarm_of_quippers",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_quippers",
@@ -54363,7 +54363,7 @@
     "monsterId": "srd_mon_swarm_of_rats",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_rats",
@@ -54455,7 +54455,7 @@
     "monsterId": "srd_mon_swarm_of_rats",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_rats",
@@ -54547,7 +54547,7 @@
     "monsterId": "srd_mon_swarm_of_ravens",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_ravens",
@@ -54639,7 +54639,7 @@
     "monsterId": "srd_mon_swarm_of_ravens",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_ravens",
@@ -54731,7 +54731,7 @@
     "monsterId": "srd_mon_swarm_of_spiders",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_spiders",
@@ -54823,7 +54823,7 @@
     "monsterId": "srd_mon_swarm_of_spiders",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_spiders",
@@ -54915,7 +54915,7 @@
     "monsterId": "srd_mon_swarm_of_wasps",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_wasps",
@@ -55007,7 +55007,7 @@
     "monsterId": "srd_mon_swarm_of_wasps",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_swarm_of_wasps",
@@ -55099,7 +55099,7 @@
     "monsterId": "srd_mon_tarrasque",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_tarrasque",
@@ -55191,7 +55191,7 @@
     "monsterId": "srd_mon_tarrasque",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_tarrasque",
@@ -55651,7 +55651,7 @@
     "monsterId": "srd_mon_treant",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant+vulnerable"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_treant",
@@ -55743,7 +55743,7 @@
     "monsterId": "srd_mon_treant",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant+vulnerable"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_treant",
@@ -56571,7 +56571,7 @@
     "monsterId": "srd_mon_unicorn",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_unicorn",
@@ -56663,7 +56663,7 @@
     "monsterId": "srd_mon_unicorn",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_unicorn",
@@ -56755,7 +56755,7 @@
     "monsterId": "srd_mon_vampire",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_vampire",
@@ -56847,7 +56847,7 @@
     "monsterId": "srd_mon_vampire",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_vampire",
@@ -56939,7 +56939,7 @@
     "monsterId": "srd_mon_vampire_spawn",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_vampire_spawn",
@@ -57031,7 +57031,7 @@
     "monsterId": "srd_mon_vampire_spawn",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_vampire_spawn",
@@ -57491,7 +57491,7 @@
     "monsterId": "srd_mon_vrock",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_vrock",
@@ -57583,7 +57583,7 @@
     "monsterId": "srd_mon_vrock",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_vrock",
@@ -58043,7 +58043,7 @@
     "monsterId": "srd_mon_warhorse_skeleton",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_warhorse_skeleton",
@@ -58135,7 +58135,7 @@
     "monsterId": "srd_mon_warhorse_skeleton",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_warhorse_skeleton",
@@ -58227,7 +58227,7 @@
     "monsterId": "srd_mon_water_elemental",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_water_elemental",
@@ -58319,7 +58319,7 @@
     "monsterId": "srd_mon_water_elemental",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_water_elemental",
@@ -58595,7 +58595,7 @@
     "monsterId": "srd_mon_werebear",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_werebear",
@@ -58687,7 +58687,7 @@
     "monsterId": "srd_mon_werebear",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_werebear",
@@ -58779,7 +58779,7 @@
     "monsterId": "srd_mon_wereboar",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_wereboar",
@@ -58871,7 +58871,7 @@
     "monsterId": "srd_mon_wereboar",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_wereboar",
@@ -58963,7 +58963,7 @@
     "monsterId": "srd_mon_wererat",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_wererat",
@@ -59055,7 +59055,7 @@
     "monsterId": "srd_mon_wererat",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_wererat",
@@ -59147,7 +59147,7 @@
     "monsterId": "srd_mon_weretiger",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_weretiger",
@@ -59239,7 +59239,7 @@
     "monsterId": "srd_mon_weretiger",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_weretiger",
@@ -59331,7 +59331,7 @@
     "monsterId": "srd_mon_werewolf",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_werewolf",
@@ -59423,7 +59423,7 @@
     "monsterId": "srd_mon_werewolf",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_werewolf",
@@ -59515,7 +59515,7 @@
     "monsterId": "srd_mon_white_dragon_wyrmling",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_white_dragon_wyrmling",
@@ -59607,7 +59607,7 @@
     "monsterId": "srd_mon_white_dragon_wyrmling",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_white_dragon_wyrmling",
@@ -59624,103 +59624,103 @@
   {
     "monsterId": "srd_mon_wight",
     "edition": "v2014",
-    "damageType": "bludgeoning",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "cold",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "fire",
-    "colosseum": "none",
-    "floodedAbyssFire": "resistant",
-    "floodedAbyssChangesFire": true
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "force",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "lightning",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "necrotic",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "piercing",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "poison",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "psychic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "radiant",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "slashing",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "thunder",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "",
-    "colosseum": "immune"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2014",
-    "damageType": "zzz",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2024",
-    "damageType": "acid",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_wight",
-    "edition": "v2024",
     "damageType": "bludgeoning",
     "colosseum": "resistant"
   },
   {
     "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "cold",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "fire",
+    "colosseum": "none",
+    "floodedAbyssFire": "resistant",
+    "floodedAbyssChangesFire": true
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "force",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "lightning",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "necrotic",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "piercing",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "poison",
+    "colosseum": "immune"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "psychic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "radiant",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "slashing",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "thunder",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2014",
+    "damageType": "zzz",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2024",
+    "damageType": "acid",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_wight",
+    "edition": "v2024",
+    "damageType": "bludgeoning",
+    "colosseum": "resistant"
+  },
+  {
+    "monsterId": "srd_mon_wight",
     "edition": "v2024",
     "damageType": "cold",
     "colosseum": "none"
@@ -59791,7 +59791,7 @@
     "monsterId": "srd_mon_wight",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_wight",
@@ -59883,7 +59883,7 @@
     "monsterId": "srd_mon_will_o_wisp",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_will_o_wisp",
@@ -59975,7 +59975,7 @@
     "monsterId": "srd_mon_will_o_wisp",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_will_o_wisp",
@@ -60067,7 +60067,7 @@
     "monsterId": "srd_mon_winter_wolf",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_winter_wolf",
@@ -60159,7 +60159,7 @@
     "monsterId": "srd_mon_winter_wolf",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_winter_wolf",
@@ -60619,7 +60619,7 @@
     "monsterId": "srd_mon_wraith",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_wraith",
@@ -60711,7 +60711,7 @@
     "monsterId": "srd_mon_wraith",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_wraith",
@@ -60987,7 +60987,7 @@
     "monsterId": "srd_mon_xorn",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "resistant"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_xorn",
@@ -61043,47 +61043,47 @@
     "monsterId": "srd_mon_xorn",
     "edition": "v2024",
     "damageType": "piercing",
-    "colosseum": "resistant"
-  },
-  {
-    "monsterId": "srd_mon_xorn",
-    "edition": "v2024",
-    "damageType": "poison",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_xorn",
-    "edition": "v2024",
-    "damageType": "psychic",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_xorn",
-    "edition": "v2024",
-    "damageType": "radiant",
-    "colosseum": "none"
-  },
-  {
-    "monsterId": "srd_mon_xorn",
-    "edition": "v2024",
-    "damageType": "slashing",
     "colosseum": "resistant"
   },
   {
     "monsterId": "srd_mon_xorn",
     "edition": "v2024",
-    "damageType": "thunder",
+    "damageType": "poison",
     "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_xorn",
     "edition": "v2024",
-    "damageType": "",
+    "damageType": "psychic",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_xorn",
+    "edition": "v2024",
+    "damageType": "radiant",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_xorn",
+    "edition": "v2024",
+    "damageType": "slashing",
     "colosseum": "resistant"
   },
   {
     "monsterId": "srd_mon_xorn",
     "edition": "v2024",
+    "damageType": "thunder",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_xorn",
+    "edition": "v2024",
+    "damageType": "",
+    "colosseum": "none"
+  },
+  {
+    "monsterId": "srd_mon_xorn",
+    "edition": "v2024",
     "damageType": "zzz",
     "colosseum": "none"
   },
@@ -61171,7 +61171,7 @@
     "monsterId": "srd_mon_young_black_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_black_dragon",
@@ -61263,7 +61263,7 @@
     "monsterId": "srd_mon_young_black_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_black_dragon",
@@ -61355,7 +61355,7 @@
     "monsterId": "srd_mon_young_blue_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_blue_dragon",
@@ -61447,7 +61447,7 @@
     "monsterId": "srd_mon_young_blue_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_blue_dragon",
@@ -61539,7 +61539,7 @@
     "monsterId": "srd_mon_young_brass_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_brass_dragon",
@@ -61631,7 +61631,7 @@
     "monsterId": "srd_mon_young_brass_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_brass_dragon",
@@ -61723,7 +61723,7 @@
     "monsterId": "srd_mon_young_bronze_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_bronze_dragon",
@@ -61815,7 +61815,7 @@
     "monsterId": "srd_mon_young_bronze_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_bronze_dragon",
@@ -61907,7 +61907,7 @@
     "monsterId": "srd_mon_young_copper_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_copper_dragon",
@@ -61999,7 +61999,7 @@
     "monsterId": "srd_mon_young_copper_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_copper_dragon",
@@ -62091,7 +62091,7 @@
     "monsterId": "srd_mon_young_gold_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_gold_dragon",
@@ -62183,7 +62183,7 @@
     "monsterId": "srd_mon_young_gold_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_gold_dragon",
@@ -62275,7 +62275,7 @@
     "monsterId": "srd_mon_young_green_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_green_dragon",
@@ -62367,7 +62367,7 @@
     "monsterId": "srd_mon_young_green_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_green_dragon",
@@ -62459,7 +62459,7 @@
     "monsterId": "srd_mon_young_red_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_red_dragon",
@@ -62551,7 +62551,7 @@
     "monsterId": "srd_mon_young_red_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_red_dragon",
@@ -62643,7 +62643,7 @@
     "monsterId": "srd_mon_young_silver_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_silver_dragon",
@@ -62735,7 +62735,7 @@
     "monsterId": "srd_mon_young_silver_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_silver_dragon",
@@ -62827,7 +62827,7 @@
     "monsterId": "srd_mon_young_white_dragon",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_white_dragon",
@@ -62919,7 +62919,7 @@
     "monsterId": "srd_mon_young_white_dragon",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_young_white_dragon",
@@ -63011,7 +63011,7 @@
     "monsterId": "srd_mon_zombie",
     "edition": "v2014",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_zombie",
@@ -63103,7 +63103,7 @@
     "monsterId": "srd_mon_zombie",
     "edition": "v2024",
     "damageType": "",
-    "colosseum": "immune"
+    "colosseum": "none"
   },
   {
     "monsterId": "srd_mon_zombie",
