@@ -229,7 +229,7 @@ class ArenaCombatContext {
       totalToHit: totalAttack,
       targetAc: target.effectiveAc,
     );
-    final isCrit = rollOutcome == AttackOutcomeType.criticalHit;
+    final isCrit = d20 == 20 || rollOutcome == AttackOutcomeType.criticalHit;
     final isFumble = rollOutcome == AttackOutcomeType.criticalMiss;
     var isHit = rollOutcome == AttackOutcomeType.hit || isCrit;
     var shielded = false;
