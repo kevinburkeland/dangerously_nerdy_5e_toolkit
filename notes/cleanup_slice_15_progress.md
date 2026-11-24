@@ -1,7 +1,7 @@
 # Cleanup slice 15 progress notes
 Status: IN PROGRESS
 Start heads: core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app 058f7bda940ed634413328f798c779f3c7644e86
-Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 524fba8936af3ae6e5185540bef691fe012fda11
+Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 91130e9007a364f40adee32c15d6d100ec4a6116
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 3.1 3.2 4.1 4.2 5.1 5.2 5.3 5.4 6.1 6.2 7.1 7.2 7.3 8.1 8.2
 Mutation ids: C1 R1 R2 R3 A1 D1 L1 H1 H2 G1 W1 P1 F1 I1 S1 S2
@@ -35,7 +35,7 @@ Fix 8.2: The party room screen is split
 - [x] Step 3 Host role per session: app 1ee86efd3127052e489114eb7f70b53caf81b5d5 run 45482109288
 - [x] Step 4 Arena goldens: app 8f5a68ebd1d602229f1b5d161f981fb2b5e37719 run 45485123855
 - [x] Step 5 Arena rules into the ruleset: ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e run 45487553077, app 524fba8936af3ae6e5185540bef691fe012fda11 run 45488746529
-- [ ] Step 6 Arena engine split
+- [x] Step 6 Arena engine split: app 91130e9007a364f40adee32c15d6d100ec4a6116 run 45492495145
 - [ ] Step 7 DM dashboard
 - [ ] Step 8 Party room screen
 - [ ] Step 9 Mutations and report
@@ -55,6 +55,8 @@ Fix 5.1 done: [Damage defenses from stat-block text live in the ruleset] Added D
 Fix 5.2 done: [Attack rolls and the Shield reaction live in the ruleset] Added classifyAttackRoll and doesShieldBlockAttack with laws in vtt-ruleset-dnd5e, migrated all 9 attack-roll sites and 8 Shield sites in ArenaCombatEngine, and added test/infrastructure/compliance/arena_rules_source_bar_test.dart.
 Fix 5.3 done: [Save DCs live in the ruleset] Added computeSaveDc with laws in vtt-ruleset-dnd5e and migrated ArenaCombatEngine._computeSaveDc and StatBlockAclParser.parseStatBlockBoundary.
 Fix 5.4 done: [Monster proficiency follows the SRD table above CR 20] Added proficiencyBonusForChallengeRating (CR 0-30, +2 to +9) in vtt-ruleset-dnd5e, replaced both +6-capped ladders in ArenaCombatEngine and StatBlockAclParser, added test/services/arena_default_save_dc_law_test.dart, and updated only the two CR 21+ creature duels (Solar CR 21 and Tarrasque CR 30) in creature_duels.json.
+Fix 6.1 done: [The arena engine is split by concern] Split lib/services/rules/arena_combat_engine.dart into 10 pure-Dart modules under lib/services/rules/arena/ (all under 580 lines) behind a 163-line facade preserving all public signatures and removed arena_combat_engine.dart from big_file_ratchet_test.dart.
+Fix 6.2 done: [The arena rules folder is plain Dart] Moved compute isolate wrappers to lib/services/rules/arena_combat_engine_async.dart, switched lib/services/rules/aoe_resolver.dart to package:meta/meta.dart, and added lib/services/rules/arena to test/domain/transitive_purity_test.dart with zero violations.
 
 ## Mutation branches
 None
@@ -67,7 +69,7 @@ c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 Run 2 start: saved uncommitted Step 3 WIP diff to step_3_interrupted.diff (and earlier pause diff to step_3_saved_before_pause.diff plus host_role_session_lifecycle_test.dart.bak) and reset app working tree to 9190c8f86ef4bd37eefb97a4a5959016d3492413 before completing Step 3.
 
 ## Next
-Split lib/services/rules/arena_combat_engine.dart into a new arena subfolder under lib/services/rules (no file over 800 lines), move compute wrappers out of that folder and switch aoe_resolver.dart to package:meta/meta.dart, add the new arena folder to test/domain/transitive_purity_test.dart, and remove arena_combat_engine.dart from big_file_ratchet_test.dart.
+Write characterization tests for DmDashboardScreen, remove all 12 service-locator fallbacks from DmDashboardController and DmDashboardScreen, split lib/screens/dm_dashboard_screen.dart into widgets under lib/widgets, and remove dm_dashboard_screen.dart from big_file_ratchet_test.dart.
 
 ## Open issues and deviations
 - Step 5 other 8 + DC formula: lib/services/rules/dpr_calculator_engine.dart line 125 has an 8 + formula; left untouched as out of scope for Step 5.
