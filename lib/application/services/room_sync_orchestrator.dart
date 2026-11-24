@@ -859,7 +859,6 @@ class RoomSyncOrchestrator {
     _lastSeenSequenceByNode.clear();
     _lastSeenPeers.clear();
     _lastTransportState = null;
-    _isHost = false;
     _emitTelemetry();
   }
 
