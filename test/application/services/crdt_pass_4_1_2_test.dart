@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/crdt_or_set.dart';
@@ -607,7 +608,14 @@ void main() {
           replicaId: ReplicaId('dm-test-node'),
           clock: clock,
           campaignRepository: campRepo,
-          characterPersistenceService: charRepo,
+          characterRepository: charRepo,
+          combatEncounterService: CombatEncounterService(
+            characterRepo: charRepo,
+            campaignRepo: campRepo,
+            combatResolver: const Dnd5eCombatResolver(),
+            replicaId: ReplicaId('dm-test-node'),
+            clock: clock,
+          ),
         );
         await controller.loadData(initialCampaignId: initialProfile.id);
 
@@ -663,7 +671,14 @@ void main() {
           replicaId: ReplicaId('dm-test-node'),
           clock: clock,
           campaignRepository: campRepo,
-          characterPersistenceService: charRepo,
+          characterRepository: charRepo,
+          combatEncounterService: CombatEncounterService(
+            characterRepo: charRepo,
+            campaignRepo: campRepo,
+            combatResolver: const Dnd5eCombatResolver(),
+            replicaId: ReplicaId('dm-test-node'),
+            clock: clock,
+          ),
         );
         await controller.loadData(initialCampaignId: initialProfile.id);
 

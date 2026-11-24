@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
@@ -88,7 +90,14 @@ void main() {
       // Verify via DmDashboardController reading through ICampaignRepository
       final controller = DmDashboardController(
         campaignRepository: repo,
-        characterPersistenceService: charService,
+        characterRepository: charService,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: charService,
+          campaignRepo: repo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: replicaId,
+          clock: clock,
+        ),
         replicaId: replicaId,
         clock: clock,
       );

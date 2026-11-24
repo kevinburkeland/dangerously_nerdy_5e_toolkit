@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_contain
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/storage/local_replica_identity_store.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'dart:io';
@@ -81,8 +82,14 @@ void main() {
       expect(partyService.localNodeId, equals(expectedNodeId));
       expect(partyService.replicaId, equals(authoritativeReplica));
 
+      final dmClock = sl<StatefulHlcClock>();
       final dmController = DmDashboardController(
         replicaId: authoritativeReplica,
+        clock: dmClock,
+        campaignRepository: sl<ICampaignRepository>(),
+        characterRepository:
+            sl<ICharacterRepository>() as ICharacterRepository<Character>,
+        combatEncounterService: sl<CombatEncounterService>(),
       );
       expect(dmController.nodeId, equals(expectedNodeId));
       expect(dmController.replicaId, equals(authoritativeReplica));
@@ -418,9 +425,20 @@ void main() {
       );
 
       // DmDashboardController
+      final dmClock2 = sl<StatefulHlcClock>();
+      final dmCharRepo2 = LocalCharacterRepository();
       final dmController = DmDashboardController(
         replicaId: authoritativeId,
+        clock: dmClock2,
         campaignRepository: mockRepo,
+        characterRepository: dmCharRepo2,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: dmCharRepo2,
+          campaignRepo: mockRepo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: authoritativeId,
+          clock: dmClock2,
+        ),
       );
       expect(dmController.replicaId, equals(authoritativeId));
       expect(dmController.nodeId, equals(authoritativeId.value));

@@ -28,8 +28,6 @@ const Map<String, String> kAllowedLocatorImporters = {
       'Resolves token picker asset repositories',
   'lib/presentation/widgets/map/map_view.dart':
       'Resolves map view interactive sync and controllers',
-  'lib/providers/dm_dashboard_controller.dart':
-      'Resolves repository and encounter services for DM dashboard',
   'lib/screens/character_builder_screen.dart':
       'Resolves character builder state and draft persistence',
   'lib/screens/character_sheet_view.dart':
@@ -47,14 +45,11 @@ const Map<String, String> kAllowedLocatorImporters = {
 };
 
 /// Exact counts of `.isRegistered` calls permitted in exempted files.
-const Map<String, int> kExpectedIsRegisteredCounts = {
-  'lib/providers/dm_dashboard_controller.dart': 9,
-  'lib/screens/dm_dashboard_screen.dart': 3,
-};
+const Map<String, int> kExpectedIsRegisteredCounts = {};
 
 /// Ceilings for service locator usages and collaborator `??` defaults.
-const int kSlUsesCeiling = 56;
-const int kCollaboratorDefaultsCeiling = 45;
+const int kSlUsesCeiling = 37;
+const int kCollaboratorDefaultsCeiling = 44;
 
 String normalizePath(String path) {
   final parts = path.split('/');

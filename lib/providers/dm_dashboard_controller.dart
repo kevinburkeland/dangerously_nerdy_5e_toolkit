@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../application/services/combat_encounter_service.dart';
-import 'package:vtt_engine_core/rules/i_combat_resolver.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
@@ -12,10 +11,8 @@ import '../models/campaign_profile.dart';
 import '../models/dm_screen_data.dart';
 import '../models/domain/session_graph_models.dart';
 import '../models/party/party_purse.dart';
-import '../services/persistence/character_persistence_service.dart';
 import '../infrastructure/dtos/character_telemetry_dto.dart';
 import '../infrastructure/resolvers/character_telemetry_resolver.dart';
-import '../infrastructure/di/injection_container.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import '../services/logging_service.dart';
@@ -41,82 +38,15 @@ class DmDashboardController extends ChangeNotifier {
   bool _isLoading = true;
   int _currentRound = 1;
 
-  factory DmDashboardController({
-    required ReplicaId replicaId,
-    StatefulHlcClock? clock,
-    ICampaignRepository? campaignRepository,
-    ICharacterRepository<Character>? characterRepository,
-    CombatEncounterService? combatEncounterService,
-    CharacterPersistenceService? characterPersistenceService,
-    RoomSyncOrchestrator? roomSyncOrchestrator,
-  }) {
-    final effectiveClock = clock ??
-        (sl.isRegistered<StatefulHlcClock>()
-            ? sl<StatefulHlcClock>()
-            : throw StateError(
-                'Authoritative StatefulHlcClock is required for DmDashboardController. '
-                'Pass clock explicitly or register StatefulHlcClock in DI.',
-              ));
-    return DmDashboardController._internal(
-      replicaId: replicaId,
-      clock: effectiveClock,
-      campaignRepository: campaignRepository,
-      characterRepository: characterRepository,
-      combatEncounterService: combatEncounterService,
-      characterPersistenceService: characterPersistenceService,
-      roomSyncOrchestrator: roomSyncOrchestrator,
-    );
-  }
-
-  DmDashboardController._internal({
-    required ReplicaId replicaId,
-    required StatefulHlcClock clock,
-    ICampaignRepository? campaignRepository,
-    ICharacterRepository<Character>? characterRepository,
-    CombatEncounterService? combatEncounterService,
-    CharacterPersistenceService? characterPersistenceService,
-    RoomSyncOrchestrator? roomSyncOrchestrator,
-  })  : _replicaId = replicaId,
-        _clock = clock,
-        _campaignProfileService = campaignRepository ??
-            (sl.isRegistered<ICampaignRepository>()
-                ? sl<ICampaignRepository>()
-                : throw StateError(
-                    'Authoritative ICampaignRepository is required for DmDashboardController. '
-                    'Pass campaignRepository explicitly or register ICampaignRepository in DI.',
-                  )),
-        _characterPersistenceService = characterRepository ??
-            characterPersistenceService ??
-            (sl.isRegistered<ICharacterRepository<Character>>()
-                ? sl<ICharacterRepository<Character>>()
-                : (sl.isRegistered<ICharacterRepository>()
-                    ? sl<ICharacterRepository>() as ICharacterRepository<Character>
-                    : CharacterPersistenceService())),
-        _combatEncounterService = combatEncounterService ??
-            (sl.isRegistered<CombatEncounterService>()
-                ? sl<CombatEncounterService>()
-                : CombatEncounterService(
-                    characterRepo: characterRepository ??
-                        characterPersistenceService ??
-                        (sl.isRegistered<ICharacterRepository>()
-                            ? sl<ICharacterRepository>()
-                            : CharacterPersistenceService()),
-                    campaignRepo: campaignRepository ??
-                        (sl.isRegistered<ICampaignRepository>()
-                            ? sl<ICampaignRepository>()
-                            : throw StateError(
-                                'Authoritative ICampaignRepository is required for CombatEncounterService.',
-                              )),
-                    combatResolver: sl.isRegistered<ICombatResolver>()
-                        ? sl<ICombatResolver>()
-                        : const Dnd5eCombatResolver(),
-                    replicaId: replicaId,
-                    clock: clock,
-                  )),
-        _roomSyncOrchestrator = roomSyncOrchestrator ??
-            (sl.isRegistered<RoomSyncOrchestrator>()
-                ? sl<RoomSyncOrchestrator>()
-                : null) {
+  DmDashboardController({
+    required this._replicaId,
+    required this._clock,
+    required ICampaignRepository campaignRepository,
+    required ICharacterRepository<Character> characterRepository,
+    required this._combatEncounterService,
+    this._roomSyncOrchestrator,
+  })  : _campaignProfileService = campaignRepository,
+        _characterPersistenceService = characterRepository {
     if (_clock.replicaId != _replicaId) {
       throw ArgumentError(
         'DmDashboardController writer identity mismatch: '

@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
@@ -178,11 +179,19 @@ void main() {
         await repo.putProfile(initialProfile);
         await repo.setActiveProfileId('c1');
 
+        final dmClock = StatefulHlcClock(replicaId: ReplicaId('me'));
         final controller = DmDashboardController(
           campaignRepository: repo,
           characterRepository: charRepo,
+          combatEncounterService: CombatEncounterService(
+            characterRepo: charRepo,
+            campaignRepo: repo,
+            combatResolver: const Dnd5eCombatResolver(),
+            replicaId: ReplicaId('me'),
+            clock: dmClock,
+          ),
           replicaId: ReplicaId('me'),
-          clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+          clock: dmClock,
         );
         await controller.loadData();
 
@@ -282,11 +291,19 @@ void main() {
           clock: StatefulHlcClock(replicaId: ReplicaId('me')),
           telemetryInterval: const Duration(seconds: 5),
         );
+        final dmClock = StatefulHlcClock(replicaId: ReplicaId('me'));
         final controller = DmDashboardController(
           campaignRepository: repo,
           characterRepository: charRepo,
+          combatEncounterService: CombatEncounterService(
+            characterRepo: charRepo,
+            campaignRepo: repo,
+            combatResolver: const Dnd5eCombatResolver(),
+            replicaId: ReplicaId('me'),
+            clock: dmClock,
+          ),
           replicaId: ReplicaId('me'),
-          clock: StatefulHlcClock(replicaId: ReplicaId('me')),
+          clock: dmClock,
         );
         await controller.loadData();
 

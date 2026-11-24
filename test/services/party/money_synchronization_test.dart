@@ -1,4 +1,5 @@
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,8 @@ import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_pers
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
+import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
@@ -68,12 +71,22 @@ void main() {
     final repId = ReplicaId('money_sync_replica');
     sl.registerSingleton<ReplicaId>(repId);
     sl.registerSingleton<StatefulHlcClock>(StatefulHlcClock(replicaId: repId));
+    final charRepo = LocalCharacterRepository();
+    sl.registerSingleton<ICharacterRepository>(charRepo);
     final campRepo = LocalCampaignRepository(
       replicaId: repId,
       clock: sl<StatefulHlcClock>(),
-      characterRepo: LocalCharacterRepository(),
+      characterRepo: charRepo,
     );
     sl.registerSingleton<ICampaignRepository>(campRepo);
+    sl.registerSingleton<CombatEncounterService>(CombatEncounterService(
+      characterRepo: charRepo,
+      campaignRepo: campRepo,
+      combatResolver: const Dnd5eCombatResolver(),
+      replicaId: repId,
+      clock: sl<StatefulHlcClock>(),
+    ));
+    sl.registerSingleton<RoomSyncOrchestrator>(NoOpRoomSyncOrchestrator());
     addTearDown(campRepo.dispose);
     configureTestServices(
       repository: campRepo,
@@ -179,7 +192,14 @@ void main() {
 
       final controller = DmDashboardController(
         campaignRepository: sl<ICampaignRepository>(),
-        characterPersistenceService: persistence,
+        characterRepository: persistence,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: persistence,
+          campaignRepo: sl<ICampaignRepository>(),
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: sl<ReplicaId>(),
+          clock: sl<StatefulHlcClock>(),
+        ),
         replicaId: sl<ReplicaId>(),
         clock: sl<StatefulHlcClock>(),
       );

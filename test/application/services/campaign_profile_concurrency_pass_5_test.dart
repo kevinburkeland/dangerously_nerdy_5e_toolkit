@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -355,6 +356,13 @@ void main() {
       final controller = DmDashboardController(
         campaignRepository: repo,
         characterRepository: charRepo,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: charRepo,
+          campaignRepo: repo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: ReplicaId('host_node'),
+          clock: clock,
+        ),
         replicaId: ReplicaId('host_node'),
         clock: clock,
       );
@@ -470,6 +478,13 @@ void main() {
         final controller = DmDashboardController(
           campaignRepository: repo,
           characterRepository: charRepo,
+          combatEncounterService: CombatEncounterService(
+            characterRepo: charRepo,
+            campaignRepo: repo,
+            combatResolver: const Dnd5eCombatResolver(),
+            replicaId: ReplicaId('local_dm'),
+            clock: sharedClock,
+          ),
           replicaId: ReplicaId('local_dm'),
           clock: sharedClock,
         );

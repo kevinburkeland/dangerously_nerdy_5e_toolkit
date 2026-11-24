@@ -616,22 +616,44 @@ void main() {
 
       test('DmDashboardController validates identity', () {
         expect(
-          () => DmDashboardController(
-            replicaId: replicaA,
-            clock: clockA,
-            campaignRepository: _FakeCampaignRepo(),
-            characterRepository: _FakeCharRepo(),
-          ),
+          () {
+            final fakeCamp = _FakeCampaignRepo();
+            final fakeChar = _FakeCharRepo();
+            return DmDashboardController(
+              replicaId: replicaA,
+              clock: clockA,
+              campaignRepository: fakeCamp,
+              characterRepository: fakeChar,
+              combatEncounterService: CombatEncounterService(
+                characterRepo: fakeChar,
+                campaignRepo: fakeCamp,
+                combatResolver: const Dnd5eCombatResolver(),
+                replicaId: replicaA,
+                clock: clockA,
+              ),
+            );
+          },
           returnsNormally,
         );
 
         expect(
-          () => DmDashboardController(
-            replicaId: replicaA,
-            clock: clockB,
-            campaignRepository: _FakeCampaignRepo(),
-            characterRepository: _FakeCharRepo(),
-          ),
+          () {
+            final fakeCamp = _FakeCampaignRepo();
+            final fakeChar = _FakeCharRepo();
+            return DmDashboardController(
+              replicaId: replicaA,
+              clock: clockB,
+              campaignRepository: fakeCamp,
+              characterRepository: fakeChar,
+              combatEncounterService: CombatEncounterService(
+                characterRepo: fakeChar,
+                campaignRepo: fakeCamp,
+                combatResolver: const Dnd5eCombatResolver(),
+                replicaId: replicaB,
+                clock: clockB,
+              ),
+            );
+          },
           throwsA(isA<ArgumentError>()),
         );
       });

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -536,7 +537,14 @@ void main() {
 
       final controller = DmDashboardController(
         campaignRepository: campaignRepo,
-        characterPersistenceService: characterService,
+        characterRepository: characterService,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: characterService,
+          campaignRepo: campaignRepo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: repId,
+          clock: clock,
+        ),
         replicaId: repId,
         clock: clock,
       );

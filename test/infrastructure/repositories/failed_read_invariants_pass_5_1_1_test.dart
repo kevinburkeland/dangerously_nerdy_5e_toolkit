@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'dart:math';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -538,9 +539,17 @@ void main() {
         characterRepo: charRepo,
       );
 
+      final dmCharRepo = CharacterPersistenceService();
       final controller = DmDashboardController(
         campaignRepository: repo,
-        characterPersistenceService: CharacterPersistenceService(),
+        characterRepository: dmCharRepo,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: dmCharRepo,
+          campaignRepo: repo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: replicaId,
+          clock: clock,
+        ),
         replicaId: replicaId,
         clock: clock,
       );

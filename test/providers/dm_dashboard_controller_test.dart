@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/dm_dashboard_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
@@ -61,7 +64,14 @@ void main() {
       characterService = CharacterPersistenceService();
       controller = DmDashboardController(
         campaignRepository: campaignRepo,
-        characterPersistenceService: characterService,
+        characterRepository: characterService,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: characterService,
+          campaignRepo: campaignRepo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: repId,
+          clock: clock,
+        ),
         replicaId: repId,
         clock: clock,
       );
@@ -356,11 +366,20 @@ void main() {
         clock: sl<StatefulHlcClock>(),
       );
 
+      final orchClock = sl<StatefulHlcClock>();
       final orchController = DmDashboardController(
         campaignRepository: campaignRepo,
-        characterPersistenceService: characterService,
+        characterRepository: characterService,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: characterService,
+          campaignRepo: campaignRepo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: orchClock.replicaId,
+          clock: orchClock,
+        ),
         roomSyncOrchestrator: orchestrator,
-        replicaId: ReplicaId('test_dm_node'),
+        replicaId: orchClock.replicaId,
+        clock: orchClock,
       );
 
       expect(orchController.roomSyncOrchestrator, equals(orchestrator));
@@ -368,6 +387,18 @@ void main() {
 
       orchestrator.stopSynchronization();
     });
+
+    testWidgets(
+      'Fix 7.2: DmDashboardScreen throws StateError when required DI types are missing',
+      (tester) async {
+        sl.reset();
+        await tester.pumpWidget(
+          const MaterialApp(home: DmDashboardScreen()),
+        );
+        final err = tester.takeException();
+        expect(err, isA<StateError>());
+      },
+    );
   });
 }
 

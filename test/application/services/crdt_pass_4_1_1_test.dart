@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/combat_encounter_service.dart';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -438,7 +439,14 @@ void main() {
         replicaId: testReplica,
         clock: clock,
         campaignRepository: campaignRepo,
-        characterPersistenceService: charPersistence,
+        characterRepository: charPersistence,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: charPersistence,
+          campaignRepo: campaignRepo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: testReplica,
+          clock: clock,
+        ),
       );
 
       final initialProfile = CampaignProfile.raw(
@@ -493,7 +501,14 @@ void main() {
         replicaId: testReplica,
         clock: clock,
         campaignRepository: campaignRepo,
-        characterPersistenceService: charPersistence,
+        characterRepository: charPersistence,
+        combatEncounterService: CombatEncounterService(
+          characterRepo: charPersistence,
+          campaignRepo: campaignRepo,
+          combatResolver: const Dnd5eCombatResolver(),
+          replicaId: testReplica,
+          clock: clock,
+        ),
       );
 
       final charCleric = _createTestChar('cleric-1', 'Cleric One');
