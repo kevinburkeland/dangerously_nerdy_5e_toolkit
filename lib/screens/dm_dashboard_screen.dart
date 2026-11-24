@@ -43,7 +43,7 @@ class DmDashboardScreen extends StatefulWidget {
 
 class _DmDashboardScreenState extends State<DmDashboardScreen> {
   late final DmDashboardController _controller = () {
-    final clock = sl<StatefulHlcClock>();
+    final clock = sl.isRegistered<StatefulHlcClock>() ? sl<StatefulHlcClock>() : sl<StatefulHlcClock>();
     return DmDashboardController(
       replicaId: clock.replicaId,
       clock: clock,
