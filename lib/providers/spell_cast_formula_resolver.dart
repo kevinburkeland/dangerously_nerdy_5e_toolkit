@@ -108,7 +108,7 @@ class SpellCastFormulaResolver {
             ?.getRules(dmEdition)
             .scalingFormula;
     final addsAbilityModOnce =
-        (effectiveScalingRule?.addsAbilityMod ?? false) && baseModCount == 0;
+        (effectiveScalingRule != null && spell.customProperties['addsAbilityMod'] == true) && baseModCount == 0;
     final totalModMultiplier =
         baseModCount + (delta * scaleModCount) + (addsAbilityModOnce ? 1 : 0);
 
