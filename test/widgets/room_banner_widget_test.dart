@@ -140,7 +140,7 @@ class FakePartyRoomService extends Fake implements PartyRoomService {
 
 class FakeRoomSessionStarter extends Fake implements RoomSessionStarter {
   @override
-  void start() {}
+  void start({required bool isHost}) {}
 }
 
 class FakeRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator {

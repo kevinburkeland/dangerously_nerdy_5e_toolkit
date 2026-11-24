@@ -198,7 +198,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
     }
     try {
       await _partyService.openRoomProfile(_roomCode);
-      sl<RoomSessionStarter>().start();
+      sl<RoomSessionStarter>().start(isHost: _registry.getMembership(_roomCode)?.isHost ?? false);
     } catch (e, st) {
       LoggingService().logNonFatal(
         e,

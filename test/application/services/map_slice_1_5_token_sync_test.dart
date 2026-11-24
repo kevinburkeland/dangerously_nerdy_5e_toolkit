@@ -533,7 +533,6 @@ void main() {
         roomCode: 'TOKEN_ROOM',
         telemetryInterval: shortTick,
         antiEntropyInterval: fastAntiEntropy,
-        isHost: true,
       );
 
       final base = createBaseProfile('TOKEN_ROOM', dm.clock, 'dm');
@@ -567,7 +566,7 @@ void main() {
           .withMinionOwner('m1', 'aria', dmStamp);
 
       await dm.repo.putProfile(dmInitial);
-      dm.orchestrator.startSynchronization();
+      dm.orchestrator.startSynchronization(isHost: true);
 
       // Player is detached initially
       final player = DeviceHarness.create(
@@ -579,7 +578,7 @@ void main() {
       );
       player.node.isAttached = false;
       await player.repo.putProfile(base);
-      player.orchestrator.startSynchronization();
+      player.orchestrator.startSynchronization(isHost: false);
 
       expect(player.repo.activeProfile!.mapTokens.items, isEmpty);
 

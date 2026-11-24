@@ -143,7 +143,7 @@ class _FakeP2pTransport implements IP2pTransportPort {
 
 class _FakeRoomSessionStarter extends Fake implements RoomSessionStarter {
   @override
-  void start() {}
+  void start({required bool isHost}) {}
 }
 
 class _FakeRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator {

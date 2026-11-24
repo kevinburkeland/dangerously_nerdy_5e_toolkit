@@ -171,7 +171,6 @@ void main() {
           payloadMapper: const RoomSyncPayloadMapper(),
           replicaId: replica,
           clock: clock,
-          isHost: true,
           localTimeProvider: () => 1700000000000,
         );
 
@@ -189,7 +188,7 @@ void main() {
           pinnedRules: campaignAEmpty.pinnedRules.add('a', 'a', tsA2),
         );
         repo.emitLocal(campaignAEmpty);
-        orchestrator.startSynchronization();
+        orchestrator.startSynchronization(isHost: true);
         repo.emitLocal(campaignAEmpty);
         await Future<void>.delayed(const Duration(milliseconds: 30));
         repo.emitLocal(campaignA);
@@ -219,7 +218,7 @@ void main() {
           nodeId: replica.value,
         );
         repo.emitLocal(campaignB);
-        orchestrator.startSynchronization();
+        orchestrator.startSynchronization(isHost: true);
         repo.emitLocal(campaignB);
         await Future<void>.delayed(const Duration(milliseconds: 50));
 

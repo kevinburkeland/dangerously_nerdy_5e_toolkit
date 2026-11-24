@@ -178,7 +178,7 @@ void main() {
         if (payload.isEmpty) emptyBroadcasts++;
       };
 
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Inbound purse delta (100 gp)
       final incomingPurse = PartyPurse(

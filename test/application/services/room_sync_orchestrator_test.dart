@@ -249,7 +249,6 @@ void main() {
         clockSyncService: clockSyncService,
         clock: StatefulHlcClock(replicaId: ReplicaId('test_orchestrator_node')),
         localTimeProvider: () => 1700000000500,
-        isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
       );
     });
@@ -264,7 +263,7 @@ void main() {
         'Echo Cancellation Test: inbound save does not echo back to transport mesh',
         () async {
       mockRepo.emitOnSaveImmediate = true;
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Remote profile update
       final remoteProfile = initialProfile.copyWith(
@@ -299,7 +298,7 @@ void main() {
     test(
         'Outbound Sync Test: genuine local UI mutation triggers mesh broadcast',
         () async {
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       final updatedProfile = initialProfile.copyWith(
         name: 'Locally Mutated Campaign Title',
@@ -329,7 +328,7 @@ void main() {
         'Microtask Lock Release Test: mutex unlocks after inbound cycle allowing subsequent broadcasts',
         () async {
       mockRepo.emitOnSaveImmediate = true;
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       final remoteProfile = initialProfile.copyWith(
         name: 'Inbound Remote Update',
@@ -367,7 +366,7 @@ void main() {
     test(
         'CvRDT Delta Merge Test: crdt_or_set_delta reconciles active values and tombstones',
         () async {
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Setup local tracked CRDT set with item 'grapple'
       const ts1 = HybridLogicalClock(
@@ -424,7 +423,6 @@ void main() {
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
         clock: StatefulHlcClock(replicaId: ReplicaId('dm-host-prime')),
-        isHost: true,
         replicaId: ReplicaId('dm-host-prime'),
         milestoneInterval: const Duration(milliseconds: 100),
       );
@@ -476,7 +474,7 @@ void main() {
       final emittedTelemetry = <RoomConnectionTelemetry>[];
       final sub = orchestrator.watchTelemetry().listen(emittedTelemetry.add);
 
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Initial emission happens immediately on startSynchronization
       await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -497,7 +495,7 @@ void main() {
     test(
         'Teardown & Cleanup Test: stopSynchronization releases subscriptions and timers cleanly',
         () {
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
       expect(orchestrator.isSynchronizing, isTrue);
 
       orchestrator.stopSynchronization();
@@ -527,7 +525,7 @@ void main() {
       final sub =
           genericOrchestrator.watchTelemetry().listen(telemetrySnapshots.add);
 
-      genericOrchestrator.startSynchronization();
+      genericOrchestrator.startSynchronization(isHost: false);
       await Future<void>.delayed(const Duration(milliseconds: 30));
 
       expect(telemetrySnapshots.isNotEmpty, isTrue);
@@ -584,12 +582,11 @@ void main() {
         clockSyncService: clockSyncService,
         clock: StatefulHlcClock(replicaId: ReplicaId('test_orchestrator_node')),
         localTimeProvider: () => 1700000000500,
-        isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
       );
 
       mockRepo.emitOnSaveImmediate = false;
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       expect(router.currentState, equals(TransportState.webRtc));
 
@@ -671,7 +668,7 @@ void main() {
     test(
         'Causality Tracking & Offline Edits: valid offline edits older than 30s reconnect and reconcile cleanly while duplicate/stale sequence packets are dropped',
         () async {
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
       const localTime = 1700000000500;
 
       // 1. Process initial inbound profile at t = localTime - 500ms (1700000000000) with origin sequence 1
@@ -779,7 +776,7 @@ void main() {
     test(
         'LRU Cache Eviction: caps at 500 entries and evicts least recently used',
         () async {
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
       const localTime = 1700000000500;
 
       // Inject 501 unique payloads within sliding lookback window
@@ -813,7 +810,6 @@ void main() {
         clockSyncService: clockSyncService,
         clock: StatefulHlcClock(replicaId: ReplicaId('dm-host-1')),
         localTimeProvider: () => now,
-        isHost: true,
         replicaId: ReplicaId('dm-host-1'),
         heartbeatTtl: const Duration(seconds: 10), // lookback = 20,000 ms
       );
@@ -859,7 +855,6 @@ void main() {
         clockSyncService: clockSyncService,
         clock: StatefulHlcClock(replicaId: ReplicaId('dm-host-1')),
         localTimeProvider: () => simulatedNow,
-        isHost: true,
         replicaId: ReplicaId('dm-host-1'),
         heartbeatTtl: const Duration(seconds: 10),
       );
@@ -1039,7 +1034,6 @@ void main() {
         clockSyncService: clockSyncService,
         clock: StatefulHlcClock(replicaId: ReplicaId('test_orchestrator_node')),
         localTimeProvider: () => 1700000000500,
-        isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
       );
 

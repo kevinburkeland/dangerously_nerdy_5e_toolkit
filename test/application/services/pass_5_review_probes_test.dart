@@ -143,11 +143,10 @@ void main() {
           payloadMapper: const RoomSyncPayloadMapper(),
           replicaId: ReplicaId('me'),
           clock: StatefulHlcClock(replicaId: ReplicaId('me')),
-          isHost: false,
           telemetryInterval: const Duration(seconds: 5),
         );
 
-        orchestrator.startSynchronization();
+        orchestrator.startSynchronization(isHost: false);
 
         if (concurrent) {
           await Future.wait([
@@ -217,7 +216,6 @@ void main() {
         payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('me'),
         clock: clock,
-        isHost: false,
         telemetryInterval: const Duration(seconds: 5),
       );
 
@@ -228,7 +226,7 @@ void main() {
         clock: clock,
       );
       await controller.loadData();
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Inbound delta: must not echo
       await orchestrator.handleIncomingPayload(purseDelta('peerA', 100));
@@ -298,11 +296,10 @@ void main() {
         payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('host'),
         clock: clock,
-        isHost: true,
         telemetryInterval: const Duration(seconds: 5),
       );
 
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: true);
 
       await orchestrator.executeHostMilestoneFlush();
       await Future<void>.delayed(const Duration(milliseconds: 15));

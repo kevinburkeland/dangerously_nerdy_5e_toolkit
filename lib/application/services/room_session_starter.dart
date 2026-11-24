@@ -11,8 +11,8 @@ class RoomSessionStarter {
   });
 
   /// Starts room sync and map serving/fetching together. Safe to call more than once.
-  void start() {
-    orchestrator.startSynchronization();
+  void start({required bool isHost}) {
+    orchestrator.startSynchronization(isHost: isHost);
     maps.start();
   }
 }

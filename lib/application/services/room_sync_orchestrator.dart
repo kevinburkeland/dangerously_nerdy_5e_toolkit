@@ -31,7 +31,11 @@ class RoomSyncOrchestrator {
   final ClockSyncService clockSyncService;
   final IRemoteRollIngestor? diceRoomService;
   final IRoomSyncPayloadPort payloadMapper;
-  final bool isHost;
+  bool _isHost = false;
+
+  /// Whether the active synchronization session has host authority.
+  /// Always `false` when no session is active.
+  bool get isHost => _isHost;
   final ReplicaId replicaId;
   String get localNodeId => replicaId.value;
 
@@ -98,7 +102,6 @@ class RoomSyncOrchestrator {
     this.diceRoomService,
     required this.payloadMapper,
     int Function()? localTimeProvider,
-    this.isHost = false,
     required this.replicaId,
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
@@ -156,8 +159,9 @@ class RoomSyncOrchestrator {
   set trackedRulesSet(CrdtOrSet<String> set) => _trackedRulesSet = set;
 
   /// Activates bidirectional synchronization and begins telemetry polling.
-  void startSynchronization() {
+  void startSynchronization({required bool isHost}) {
     if (isSynchronizing) return;
+    _isHost = isHost;
     if (_telemetryController.isClosed) {
       _telemetryController =
           StreamController<RoomConnectionTelemetry>.broadcast(sync: false);
@@ -855,6 +859,7 @@ class RoomSyncOrchestrator {
     _lastSeenSequenceByNode.clear();
     _lastSeenPeers.clear();
     _lastTransportState = null;
+    _isHost = false;
     _emitTelemetry();
   }
 

@@ -43,7 +43,7 @@ class _MockDiceP2pTransport implements IP2pTransportPort {
 
 class _FakeDiceRoomSessionStarter extends Fake implements RoomSessionStarter {
   @override
-  void start() {}
+  void start({required bool isHost}) {}
 }
 
 class _FakeDiceRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator {

@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-24
+- Cleanup slice 15: Move host role from RoomSyncOrchestrator constructor to required isHost argument on startSynchronization and RoomSessionStarter.start, wire PartyRoomScreen, RoomBannerWidget, and DiceRoomService from CampaignRegistryService, and reset host role in stopSynchronization (Fixes 3.1, 3.2).
+
 ## 2026-11-23
 - Cleanup slice 15: Add campaign dialog list-size and completeness law test across all 13 dialogs at sizes 0/1/3/12 and 360x640/1280x800, fix DisperseLootDialog RenderShrinkWrappingViewport crash with non-empty rosters, and fix narrow-screen layout overflows in 9 campaign dialogs (Fixes 2.1, 2.2).
 - Cleanup slice 15: Retire cs14 mutation branches, read addsAbilityMod from SpellScalingFormula in SpellCastFormulaResolver instead of customProperties, and upgrade 7 pending pub packages (file_picker family and jni/jni_flutter) (Fixes 1.1, 1.3, 1.4).

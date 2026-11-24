@@ -416,7 +416,7 @@ void main() {
 
       final base = createBaseProfile('DRIFT_ROOM', player.clock, 'player');
       await player.repo.putProfile(base);
-      player.orchestrator.startSynchronization();
+      player.orchestrator.startSynchronization(isHost: false);
 
       final ref = _sampleRef();
       final tenYearsMs = DateTime.now().toUtc().millisecondsSinceEpoch + const Duration(days: 3650).inMilliseconds;
@@ -490,7 +490,6 @@ void main() {
         roomCode: 'MAP_ROOM',
         telemetryInterval: shortTick,
         antiEntropyInterval: fastAntiEntropy,
-        isHost: true,
       );
 
       final base = createBaseProfile('MAP_ROOM', dm.clock, 'dm');
@@ -499,7 +498,7 @@ void main() {
       final dmWithMap = base.withActiveMap(ref, dmStamp);
 
       await dm.repo.putProfile(dmWithMap);
-      dm.orchestrator.startSynchronization();
+      dm.orchestrator.startSynchronization(isHost: true);
 
       // Player is detached initially
       final player = DeviceHarness.create(
@@ -511,7 +510,7 @@ void main() {
       );
       player.node.isAttached = false;
       await player.repo.putProfile(base);
-      player.orchestrator.startSynchronization();
+      player.orchestrator.startSynchronization(isHost: false);
 
       expect(player.repo.activeProfile!.activeMap, isNull);
 

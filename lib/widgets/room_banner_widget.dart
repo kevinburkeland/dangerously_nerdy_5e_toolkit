@@ -100,7 +100,10 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
               campaignRepo: CampaignProfileService().repo,
               roomDocPort: party.roomDocPort,
             ).openIfCampaign(effectiveRoom);
-            sl<RoomSessionStarter>().start();
+            final isHost =
+                CampaignRegistryService().getMembership(effectiveRoom)?.isHost ??
+                    false;
+            sl<RoomSessionStarter>().start(isHost: isHost);
           } catch (e, st) {
             LoggingService().logNonFatal(
               e,

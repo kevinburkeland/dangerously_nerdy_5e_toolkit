@@ -181,10 +181,9 @@ void main() {
           replicaId: ReplicaId('local_node'),
           timeProvider: () => baseTime,
         ),
-        isHost: false,
         telemetryInterval: const Duration(seconds: 5),
       );
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Dead letter stream observation
       final errors = <SyncErrorEvent>[];
@@ -350,7 +349,6 @@ void main() {
         payloadMapper: const RoomSyncPayloadMapper(),
         replicaId: ReplicaId('host_node'),
         clock: clock,
-        isHost: true,
         telemetryInterval: const Duration(seconds: 10),
       );
 
@@ -361,7 +359,7 @@ void main() {
         clock: clock,
       );
       await controller.loadData();
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: true);
 
       // Control: genuine local change broadcasts 1 payload
       await controller.modifyPartyPurseCoin('gp', 10);
@@ -455,7 +453,6 @@ void main() {
           payloadMapper: const RoomSyncPayloadMapper(),
           replicaId: ReplicaId('local_dm'),
           clock: sharedClock,
-          isHost: false,
           telemetryInterval: const Duration(seconds: 10),
         );
 
@@ -477,7 +474,7 @@ void main() {
           clock: sharedClock,
         );
         await controller.loadData();
-        orchestrator.startSynchronization();
+        orchestrator.startSynchronization(isHost: false);
 
         // 2 to 4 remote replicas
         final replicaCount = 2 + rng.nextInt(3);

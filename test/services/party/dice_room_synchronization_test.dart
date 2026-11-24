@@ -353,7 +353,7 @@ void main() {
         payloadMapper: const RoomSyncPayloadMapper(),
       );
 
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       final stream = diceService.streamRoomRolls(roomCode);
       final emissions = <List<RoomRoll>>[];

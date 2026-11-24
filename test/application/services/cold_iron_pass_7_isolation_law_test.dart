@@ -179,7 +179,7 @@ void main() {
           replicaId: ReplicaId('local_node_$seed'),
           clock: clock,
         );
-        orchestrator.startSynchronization();
+        orchestrator.startSynchronization(isHost: false);
 
         final deadLetters = <SyncErrorEvent>[];
         final sub = orchestrator.deadLetterStream.listen(deadLetters.add);

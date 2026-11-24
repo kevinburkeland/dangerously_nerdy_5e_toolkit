@@ -273,7 +273,6 @@ class DeviceHarness {
       clock: clk,
       telemetryInterval: telemetryInterval,
       antiEntropyInterval: antiEntropyInterval,
-      isHost: isHost,
     );
 
     return DeviceHarness._(
@@ -345,7 +344,7 @@ void main() {
           nameRegister: CrdtLwwRegister<String>(value: 'Dragon Heist', timestamp: stampCtrl),
         );
         await dmCtrl.repo.putProfile(dmEditedCtrl);
-        dmCtrl.orchestrator.startSynchronization();
+        dmCtrl.orchestrator.startSynchronization(isHost: true);
 
         // Player attaches later while bus is down
         final playerCtrl = DeviceHarness.create(
@@ -356,7 +355,7 @@ void main() {
           antiEntropyInterval: longPeriod,
         );
         await playerCtrl.repo.putProfile(baseCtrl);
-        playerCtrl.orchestrator.startSynchronization();
+        playerCtrl.orchestrator.startSynchronization(isHost: false);
 
         await Future<void>.delayed(shortTick * 2 + const Duration(milliseconds: 15));
         expect(playerCtrl.repo.activeProfile!.name, 'Base Campaign');
@@ -400,7 +399,7 @@ void main() {
         partyPurse: editedPurse,
       );
       await dm.repo.putProfile(dmEdited);
-      dm.orchestrator.startSynchronization();
+      dm.orchestrator.startSynchronization(isHost: true);
 
       // Small delay so DM is established
       await Future<void>.delayed(shortTick);
@@ -417,7 +416,7 @@ void main() {
       player.node.stateOverride = TransportState.connecting;
       final playerInitial = base;
       await player.repo.putProfile(playerInitial);
-      player.orchestrator.startSynchronization();
+      player.orchestrator.startSynchronization(isHost: false);
 
       final dmCountBefore = dm.node.messageCount;
 
@@ -456,7 +455,7 @@ void main() {
 
       final base = createBaseProfile('ROOM1', dm.clock, 'dm');
       await dm.repo.putProfile(base);
-      dm.orchestrator.startSynchronization();
+      dm.orchestrator.startSynchronization(isHost: true);
 
       // Write player's profile to its repository BEFORE startSynchronization
       final pStamp = player.clock.nextTimestamp();
@@ -467,7 +466,7 @@ void main() {
       await player.repo.putProfile(playerProfile);
 
       // Start player synchronization (Trigger A must fire on start)
-      player.orchestrator.startSynchronization();
+      player.orchestrator.startSynchronization(isHost: false);
 
       await Future<void>.delayed(const Duration(milliseconds: 30));
 
@@ -505,8 +504,8 @@ void main() {
 
       // devA starts while transport is connecting
       devA.node.stateOverride = TransportState.connecting;
-      devA.orchestrator.startSynchronization();
-      devB.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
+      devB.orchestrator.startSynchronization(isHost: false);
 
       await Future<void>.delayed(const Duration(milliseconds: 25));
       // devB should not have received it yet
@@ -544,8 +543,8 @@ void main() {
       final base = createBaseProfile('ROOM1', devA.clock, 'devA');
       await devA.repo.putProfile(base);
       await devB.repo.putProfile(base);
-      devA.orchestrator.startSynchronization();
-      devB.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
+      devB.orchestrator.startSynchronization(isHost: false);
 
       // Cut link A-B
       bus.cutLink('devA', 'devB');
@@ -615,8 +614,8 @@ void main() {
 
       // Start with link cut so A does not send on start to B
       bus.cutLink('devA', 'devB');
-      devA.orchestrator.startSynchronization();
-      devB.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
+      devB.orchestrator.startSynchronization(isHost: false);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       expect(devB.repo.activeProfile!.name, 'Base Campaign');
@@ -680,8 +679,8 @@ void main() {
       final base = createBaseProfile('ROOM1', devA.clock, 'devA');
       await devA.repo.putProfile(base);
       await devB.repo.putProfile(base);
-      devA.orchestrator.startSynchronization();
-      devB.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
+      devB.orchestrator.startSynchronization(isHost: false);
 
       // Cut link, edit both sides, heal (E4 flow)
       bus.cutLink('devA', 'devB');
@@ -739,8 +738,8 @@ void main() {
       await devA.repo.putProfile(base);
       await devB.repo.putProfile(base);
 
-      devA.orchestrator.startSynchronization();
-      devB.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
+      devB.orchestrator.startSynchronization(isHost: false);
 
       // Drop every message for a while
       bus.dropRate = 1.0;
@@ -798,8 +797,8 @@ void main() {
       await devA.repo.putProfile(base);
       await devB.repo.putProfile(base);
 
-      devA.orchestrator.startSynchronization();
-      devB.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
+      devB.orchestrator.startSynchronization(isHost: false);
 
       // Drop messages while deltas are emitted
       bus.dropRate = 1.0;
@@ -850,7 +849,7 @@ void main() {
       await devA.repo.putProfile(base);
 
       final msgCountBefore = devA.node.messageCount;
-      devA.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
 
       await Future<void>.delayed(fastPeriod * 2 + const Duration(milliseconds: 20));
 
@@ -872,7 +871,7 @@ void main() {
 
       final base = createBaseProfile('ROOM1', devA.clock, 'devA');
       await devA.repo.putProfile(base);
-      devA.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
 
       await Future<void>.delayed(const Duration(milliseconds: 20));
       devA.orchestrator.stopSynchronization();
@@ -913,8 +912,8 @@ void main() {
       final base = createBaseProfile('ROOM1', devA.clock, 'devA');
       await devA.repo.putProfile(base);
       await devB.repo.putProfile(base);
-      devA.orchestrator.startSynchronization();
-      devB.orchestrator.startSynchronization();
+      devA.orchestrator.startSynchronization(isHost: false);
+      devB.orchestrator.startSynchronization(isHost: false);
 
       // Wait for start trigger / sync
       await Future<void>.delayed(const Duration(milliseconds: 25));
@@ -969,7 +968,7 @@ void main() {
         final base = createBaseProfile('LAW_ROOM', devices['dm']!.clock, 'dm');
         for (final d in devices.values) {
           await d.repo.putProfile(base);
-          d.orchestrator.startSynchronization();
+          d.orchestrator.startSynchronization(isHost: true);
         }
 
         // Recorded edits for verification

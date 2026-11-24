@@ -199,7 +199,6 @@ void main() {
         clockSyncService: clockSync,
         clock: StatefulHlcClock(replicaId: ReplicaId('node_test_r7')),
         localTimeProvider: () => 1700000000000,
-        isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
       );
 

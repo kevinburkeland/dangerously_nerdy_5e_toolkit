@@ -103,7 +103,7 @@ class _BannerTestOrchestrator extends Fake implements RoomSyncOrchestrator {
   bool get isSynchronizing => false;
 
   @override
-  void startSynchronization() {}
+  void startSynchronization({required bool isHost}) {}
 
   @override
   void stopSynchronization() {}
@@ -118,7 +118,7 @@ class _BannerTestOrchestrator extends Fake implements RoomSyncOrchestrator {
 
 class _BannerTestStarter extends Fake implements RoomSessionStarter {
   @override
-  void start() {}
+  void start({required bool isHost}) {}
 }
 
 void main() {

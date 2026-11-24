@@ -52,7 +52,7 @@ class NoOpRoomSyncOrchestrator extends Fake implements RoomSyncOrchestrator {
   bool get isSynchronizing => _synchronizing;
 
   @override
-  void startSynchronization() {
+  void startSynchronization({required bool isHost}) {
     _synchronizing = true;
   }
 
@@ -74,8 +74,8 @@ class NoOpRoomSessionStarter extends Fake implements RoomSessionStarter {
   NoOpRoomSessionStarter([this._orchestrator]);
 
   @override
-  void start() {
-    _orchestrator?.startSynchronization();
+  void start({required bool isHost}) {
+    _orchestrator?.startSynchronization(isHost: isHost);
   }
 }
 

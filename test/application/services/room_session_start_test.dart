@@ -348,9 +348,9 @@ void main() {
     expect(transport.watchIncomingCount, equals(0));
     expect(repo.watchActiveProfileCount, equals(0));
 
-    starter.start();
-    starter.start();
-    starter.start();
+    starter.start(isHost: false);
+    starter.start(isHost: false);
+    starter.start(isHost: false);
 
     expect(orchestrator.isSynchronizing, isTrue);
     expect(mapController.isStarted, isTrue);

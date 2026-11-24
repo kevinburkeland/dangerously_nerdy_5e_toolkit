@@ -418,7 +418,7 @@ void main() {
         replicaId: ReplicaId('local-node'),
         clock: clock,
       );
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Control: matching campaign_id: c1 -> gp becomes 100
       final controlPayload = jsonEncode({
@@ -676,7 +676,7 @@ void main() {
         replicaId: ReplicaId('local-node'),
         clock: clock,
       );
-      orchestrator.startSynchronization();
+      orchestrator.startSynchronization(isHost: false);
 
       // Active profile with room code CR-B
       final profileB = CampaignProfile(

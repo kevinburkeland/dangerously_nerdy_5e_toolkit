@@ -132,7 +132,6 @@ void main() {
           payloadMapper: const RoomSyncPayloadMapper(),
           replicaId: ReplicaId('me'),
           clock: StatefulHlcClock(replicaId: ReplicaId('me')),
-          isHost: false,
           telemetryInterval: const Duration(seconds: 5),
         );
 
@@ -210,7 +209,6 @@ void main() {
           payloadMapper: const RoomSyncPayloadMapper(),
           replicaId: ReplicaId('me'),
           clock: StatefulHlcClock(replicaId: ReplicaId('me')),
-          isHost: false,
           telemetryInterval: const Duration(seconds: 5),
         );
 
@@ -282,7 +280,6 @@ void main() {
           payloadMapper: const RoomSyncPayloadMapper(),
           replicaId: ReplicaId('me'),
           clock: StatefulHlcClock(replicaId: ReplicaId('me')),
-          isHost: false,
           telemetryInterval: const Duration(seconds: 5),
         );
         final controller = DmDashboardController(
@@ -293,7 +290,7 @@ void main() {
         );
         await controller.loadData();
 
-        orchestrator.startSynchronization();
+        orchestrator.startSynchronization(isHost: false);
 
         if (inboundPending) {
           // Slow down DB to simulate in-flight save window

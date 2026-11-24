@@ -725,9 +725,8 @@ void main() {
           reconciliationService: reconciler,
           clockSyncService: clockSync,
           clock: clock,
-          isHost: false,
         );
-        orchestrator.startSynchronization();
+        orchestrator.startSynchronization(isHost: false);
 
         final deadLetters = <SyncErrorEvent>[];
         final sub = orchestrator.deadLetterStream.listen((evt) => deadLetters.add(evt));

@@ -11,6 +11,7 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../models/room_roll.dart';
 import '../utils/secure_random.dart';
 import 'logging_service.dart';
+import 'party/campaign_registry_service.dart';
 
 class RoomSession {
   final String roomCode;
@@ -168,7 +169,9 @@ class DiceRoomService implements IRemoteRollIngestor {
           '$playerName-${roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
       await transport.initializeRoom(roomCode, localNodeId);
       if (!orchestrator.isSynchronizing) {
-        starter.start();
+        final isHost =
+            CampaignRegistryService().getMembership(roomCode)?.isHost ?? false;
+        starter.start(isHost: isHost);
       }
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(

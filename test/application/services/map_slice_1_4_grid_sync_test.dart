@@ -618,7 +618,6 @@ void main() {
         roomCode: 'GRID_ROOM',
         telemetryInterval: shortTick,
         antiEntropyInterval: fastAntiEntropy,
-        isHost: true,
       );
 
       final base = createBaseProfile('GRID_ROOM', dm.clock, 'dm');
@@ -631,7 +630,7 @@ void main() {
           .withMapGrid(grid, dmStamp2);
 
       await dm.repo.putProfile(dmWithMapAndGrid);
-      dm.orchestrator.startSynchronization();
+      dm.orchestrator.startSynchronization(isHost: true);
 
       // Player is detached initially
       final player = DeviceHarness.create(
@@ -643,7 +642,7 @@ void main() {
       );
       player.node.isAttached = false;
       await player.repo.putProfile(base);
-      player.orchestrator.startSynchronization();
+      player.orchestrator.startSynchronization(isHost: false);
 
       expect(player.repo.activeProfile!.mapGrid, isNull);
 
