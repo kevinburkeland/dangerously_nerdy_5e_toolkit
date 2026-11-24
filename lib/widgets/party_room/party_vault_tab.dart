@@ -75,7 +75,7 @@ class PartyVaultTab extends StatelessWidget {
             return item.category == 'magicItem';
           if (selectedCategoryFilter == 'gem_art')
             return item.category == 'gem' || item.category == 'art';
-          if (selectedCategoryFilter == 'gear')
+          if (selectedCategoryFilter == 'broken_gear')
             return item.category == 'gear' || item.category == 'currency';
           if (selectedCategoryFilter == 'claimed') return item.isClaimed;
           if (selectedCategoryFilter == 'unclaimed') return !item.isClaimed;
