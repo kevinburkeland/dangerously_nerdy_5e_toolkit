@@ -1,7 +1,7 @@
 # Cleanup slice 15 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset e49258140498c919eb91808c1d48da20870cfd7d, app 058f7bda940ed634413328f798c779f3c7644e86
-Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 813af515eeb329445cadb8e7c120f8439d72e861
+Last pushed heads (CI green): core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 88574449d2499334233321fa2dd0ad03d78f84ba
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e
 Fix ids: 1.1 1.2 1.3 1.4 2.1 2.2 3.1 3.2 4.1 4.2 5.1 5.2 5.3 5.4 6.1 6.2 7.1 7.2 7.3 8.1 8.2
 Mutation ids: C1 R1 R2 R3 A1 D1 L1 H1 H2 G1 W1 P1 F1 I1 S1 S2
@@ -38,7 +38,7 @@ Fix 8.2: The party room screen is split
 - [x] Step 6 Arena engine split: app 91130e9007a364f40adee32c15d6d100ec4a6116 run 45492495145
 - [x] Step 7 DM dashboard: app d937228a2c7f31944b6a4fa70dcd53d7b8baf9c3 run 45495349388 (Fix 7.1); Fixes 7.2-7.3 landed in 499d68113bbb47a1c816e88c4ffa97c1706f51e4
 - [x] Step 8 Party room screen: app 813af515eeb329445cadb8e7c120f8439d72e861 run 45505228355
-- [ ] Step 9 Mutations and report
+- [x] Step 9 Mutations and report: 16 mutation/cs15-* branches pushed and verified, exit checks and dependencies.yml dispatches green (core 45506579115, ruleset 45506615508, app 45509560445)
 
 ## Fix checklist
 Fix 1.1 done: [Retire cs14] Retired all cs14 mutation branches across core, ruleset, and app with archive tags and manifests.
@@ -64,7 +64,22 @@ Fix 8.1 done: [Characterization tests for the party room screen] Added test/widg
 Fix 8.2 done: [The party room screen is split] Split lib/screens/party_room_screen.dart (2,401 -> 767 lines) into 7 files under lib/widgets/party_room/ (122-508 lines each) keeping all service-locator calls in party_room_screen.dart, and removed party_room_screen.dart from big_file_ratchet_test.dart.
 
 ## Mutation branches
-None
+mutation/cs15-c1 0ae6dc882f1529fa86711315c0244dafd5843416
+mutation/cs15-r1 d96a012df2c96d6baee1076d8b846e864ed95080
+mutation/cs15-r2 6508c851882719f1c88758452564f43a86991ca8
+mutation/cs15-r3 43a8bf906e0358c30ca77d7e701fea45feba0a78
+mutation/cs15-a1 8ca09534eb4c4fae1462fe824c97b3163501965a
+mutation/cs15-d1 be58c67606771f04b51b5f4f18200e848e88b832
+mutation/cs15-l1 f971a997f680bb39731d2a9da53d4e34084f373a
+mutation/cs15-h1 eeb57d4c43fcd1492d2923c6b2ddc47af8b43bd6
+mutation/cs15-h2 4efc4e5d93a3c52d433c1e5e3736eb1aa92f6809
+mutation/cs15-g1 2bf8e3c5cb3d79495c8d4f40f2848666742d7e7c
+mutation/cs15-w1 464ed14c928ccdb2748ed273080d851e93527bc4
+mutation/cs15-p1 442d413965bd4b9e8f23990289c1ea3ac5519810
+mutation/cs15-f1 8199228001bc286dd80ca879bf5ec166abe5b038
+mutation/cs15-i1 d57ca5307b080f2f9b4fd2747b70c59bfe7d4bc3
+mutation/cs15-s1 d3138db31e99822a301d3080465fa3225150319b
+mutation/cs15-s2 608a9bb9ca3ca53b8d9c419376d9035759407bca
 
 ## Red runs on main
 c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
@@ -77,7 +92,7 @@ c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 Run 2 start: saved uncommitted Step 3 WIP diff to step_3_interrupted.diff (and earlier pause diff to step_3_saved_before_pause.diff plus host_role_session_lifecycle_test.dart.bak) and reset app working tree to 9190c8f86ef4bd37eefb97a4a5959016d3492413 before completing Step 3.
 
 ## Next
-Push all 16 cs15 mutation branches across core, ruleset, and app, verify exit checks and dependency workflows across all three repos, mark progress notes complete, and write the full 16-section report.
+None — Cleanup slice 15 is complete.
 
 ## Open issues and deviations
 - Step 5 other 8 + DC formula: lib/services/rules/dpr_calculator_engine.dart line 125 has an 8 + formula; left untouched as out of scope for Step 5.
