@@ -66,7 +66,7 @@ c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 Run 2 start: saved uncommitted Step 3 WIP diff to step_3_interrupted.diff (and earlier pause diff to step_3_saved_before_pause.diff plus host_role_session_lifecycle_test.dart.bak) and reset app working tree to 9190c8f86ef4bd37eefb97a4a5959016d3492413 before completing Step 3.
 
 ## Next
-Split lib/services/rules/arena_combat_engine.dart into lib/services/rules/arena/ (no file over 800 lines), move compute wrappers out of arena/ and switch aoe_resolver.dart to package:meta/meta.dart, add lib/services/rules/arena to test/domain/transitive_purity_test.dart, and remove arena_combat_engine.dart from big_file_ratchet_test.dart.
+Split lib/services/rules/arena_combat_engine.dart into a new arena subfolder under lib/services/rules (no file over 800 lines), move compute wrappers out of that folder and switch aoe_resolver.dart to package:meta/meta.dart, add the new arena folder to test/domain/transitive_purity_test.dart, and remove arena_combat_engine.dart from big_file_ratchet_test.dart.
 
 ## Open issues and deviations
 - Step 5 other 8 + DC formula: lib/services/rules/dpr_calculator_engine.dart line 125 has an 8 + formula; left untouched as out of scope for Step 5.
