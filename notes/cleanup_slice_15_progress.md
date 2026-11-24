@@ -69,6 +69,7 @@ c20c44cf7f48878c5a8295661d9d30d186c51ca8 red run 45265072151
 8949993c0edd6e84d60d74d528f1ed2a19cd1abd red run 45489705049
 72bf0e59357b6663fc68d6e20b7ba40a3d5b0f61 red run 45497804963
 499d68113bbb47a1c816e88c4ffa97c1706f51e4 red run 45498842483
+59cd50771d739f40d609d8d3b9e2b47acf45c6ef red run 45499863000
 
 ## Resets
 Run 2 start: saved uncommitted Step 3 WIP diff to step_3_interrupted.diff (and earlier pause diff to step_3_saved_before_pause.diff plus host_role_session_lifecycle_test.dart.bak) and reset app working tree to 9190c8f86ef4bd37eefb97a4a5959016d3492413 before completing Step 3.
@@ -91,3 +92,4 @@ Run 45489705049 cause: docs_truth_test.dart DT2 flagged the planned future arena
 Run 45497804963 cause: two widget tests pumping DmDashboardScreen (dm_linked_character_sheet_test.dart and cold_iron_pass_7_2_regression_test.dart) did not register ICharacterRepository, CombatEncounterService, and RoomSyncOrchestrator in sl after Fix 7.2 removed isRegistered fallbacks; fixed by 499d68113bbb47a1c816e88c4ffa97c1706f51e4
 
 Run 45498842483 cause: check_notes_shas.py flagged an undisclosed prior red run because the test fix commit landed before progress notes were updated; fixed by 51ccf7c110ecaedb2e5bd337858a5697f39de4cb
+Run 45499863000 cause: check_notes_shas.py flagged parenthesized and bare run-id prose in step 7 progress notes; fixed by dc94a6f40bde25a494e69ef7b9f000be5cd7022d
