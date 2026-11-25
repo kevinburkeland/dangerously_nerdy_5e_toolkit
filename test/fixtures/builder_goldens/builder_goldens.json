@@ -7341,6 +7341,7 @@
         "class",
         "background",
         "scores",
+        "spells",
         "equipment",
         "review"
       ],
@@ -7350,8 +7351,9 @@
         "Step 3: Choose Class & Starting Skills",
         "Step 4: Choose Background Origin",
         "Step 5: Ability Score Allocation",
-        "Step 6: Starting Equipment & Inventory (SRD)",
-        "Step 7: Review & Finalize"
+        "Step 6: Spells & Cantrips",
+        "Step 7: Starting Equipment & Inventory (SRD)",
+        "Step 8: Review & Finalize"
       ],
       "character": {
         "allocatedSpells": {},
