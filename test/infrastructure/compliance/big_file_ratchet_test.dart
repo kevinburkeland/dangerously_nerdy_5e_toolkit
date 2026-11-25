@@ -12,7 +12,6 @@ const int kMaxFileLineLimit = 1500;
 /// Any listed file that shrinks fails until its ceiling is lowered.
 /// Any listed file that drops to 1,500 or below must be removed from this list.
 const Map<String, int> kBigFileAllowlist = {
-  'lib/screens/character_builder_screen.dart': 5888,
   'lib/models/monster_codex/bestiary/bestiary_cr_nine_plus.dart': 5526,
   'lib/models/magic_items/items/wondrous_items.dart': 5117,
   'lib/models/monster_codex/bestiary/bestiary_cr_two_to_four.dart': 4711,
