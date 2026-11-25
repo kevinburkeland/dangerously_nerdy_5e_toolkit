@@ -1,8 +1,8 @@
 # Cleanup slice 16 progress notes
 Status: IN PROGRESS
 Start heads: core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 240ee415462e6d975eae63ee8a04ad52b55677f8
-Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset cab04984d6a0812193a586271f6a2720f96c87db, app 7faeda3ed48008e1d8f696e8429621189be10446
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset cab04984d6a0812193a586271f6a2720f96c87db
+Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 3b241986df81cd6673f47bd874457aa56d937a20
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 6.1 6.2 7.1 7.2 7.3 7.4 7.5 8.1 9.1
 Mutation ids: R1 R2 R3 R4 R5 R6 R7 N1 E1 K1 H1 T1 T2 W1 M1 B1 U1 V1 P1
 
@@ -39,7 +39,7 @@ Fix 9.1: The level-up wizard is split
 - [x] Step 4 Healing Word, combat profile, DPR math: ruleset 7ea574148f6fca3c87dea6d690cc2452916b66c9 run 45678211821, app 37fd99e9bd9e1c4ecce2ebeca3136df0ff589947 run 45679755111
 - [x] Step 5 Typed catalog: ruleset cab04984d6a0812193a586271f6a2720f96c87db run 45680245259, app 4bc4ce992ee0693ab089d4fc78d186691d11e96b run 45681612653
 - [x] Step 6 Builder and level-up goldens: app 7faeda3ed48008e1d8f696e8429621189be10446 run 45684377247
-- [ ] Step 7 Builder and level-up rules into the ruleset
+- [x] Step 7 Builder and level-up rules into the ruleset: ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd run 45685871897, app 3b241986df81cd6673f47bd874457aa56d937a20 run 45714960177
 - [ ] Step 8 Character builder split
 - [ ] Step 9 Level-up wizard split
 - [ ] Step 10 Mutations and report
@@ -62,6 +62,11 @@ Fix 4.3 done: [DPR turn math lives in the ruleset] Added computeAttackOddsWithBu
 Fix 5.1 done: [The catalog contract has no dynamic] Replaced all dynamic types in Dnd5eCatalog with CatalogFeat, CatalogMagicItem, and Object?, removed dynamic casts in CharacterEvaluationEngine, added catalog_no_dynamic_bar_test.dart in ruleset, updated AppDnd5eCatalog to return typed views and fail loud on unsupported addSpellsData shapes, lowered app kDynamicCeiling from 1041 to 1036, and verified all goldens and full Shard 0 (832 tests) unedited.
 Fix 6.1 done: [Builder goldens for every class in both editions] Added character_builder_goldens_test.dart and 26-build fixture builder_goldens.json (all 12 SRD classes in 2014 and 2024 plus 2 flexible origin builds) with zero lib/ changes; confirmed 2024 Paladin has no spells step yet.
 Fix 6.2 done: [Level-up characterization for every class in both editions] Added level_up_goldens_test.dart and 96-case fixture level_up_goldens.json (all 12 SRD classes in both editions at 1->2 through 4->5) with zero lib/ changes; recorded 6 preview-vs-confirm HP diffs (Draconic Bloodline Sorcerer +1 HP/level) and 0 casting-modifier diffs.
+Fix 7.1 done: [One caster profile for builder and level-up] Added ClassSpellcasterProfile/resolveClassSpellcasterProfile in ruleset, fixed getMaxSpellTierForClass full/half-caster caps caught by the 560-case app law (class_spellcaster_profile_law_test.dart), deleted builder/wizard caster copies, and updated only 2024_paladin in builder_goldens.json in its own commit (adding level-1 spells step).
+Fix 7.2 done: [Ability score increases and origin bonuses live in the ruleset] Added computeEffectiveAsiBonusDelta/applyAbilityScoreIncreases (max 20) and computeOriginAbilityBonuses (2014 fixed+flexible, 2024 +2/+1 and +1/+1/+1) in ruleset, wired CharacterProgressionEngine, CharacterBuilderScreen, and LevelUpWizardDialog.
+Fix 7.3 done: [Level-up hit points come from the ruleset] Added computeLevelUpHpGain (min 1) with exhaustive 640-case law in ruleset, wired CharacterProgressionEngine.computeMaxHp and LevelUpWizardDialog._effectiveHpGain.
+Fix 7.4 done: [The level-up class and subclass lists come from the class library] Deleted _availableClasses and _subclassesByClass from LevelUpWizardDialog, built class/subclass lists from SrdClassesLibrary and CharacterProgressionEngine.getMulticlassPrerequisites(), and added no_hardcoded_srd_class_slugs_bar_test.dart.
+Fix 7.5 done: [The builder's finalize keeps only UI] Moved CharacterDraft assembly out of _finalizeCreatedCharacter into CharacterBuilderController.buildFinalizedDraft; builder screen finalize keeps only UI validation, save, navigation, and SnackBar.
 
 ## Mutation branches
 None
@@ -74,7 +79,7 @@ b96a148e3077c9003a38bf6a956e5510e107542a red run 45668172861
 Start of run: app repo had uncommitted modification to party_active_character_banner.dart and an untracked directory under test; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
 
 ## Next
-Complete Step 7 app side: re-pin vtt_ruleset_dnd5e to 38fd11fc8f0022b091731b4f46524d27f51ca1eb (already green on CI), write Step 7 rule inventory and app caster-profile law + SRD class-slug source bar, migrate builder and level-up wizard to ruleset functions (Fixes 7.1-7.5), update only 2024 Paladin in builder_goldens.json in its own commit, push and verify CI green.
+Begin Step 8 (character builder split, no behaviour change): split lib/screens/character_builder_screen.dart (5,888 lines -> <800 lines) into focused widgets under lib/widgets/character_builder/ (all <800 lines), remove it from big_file_ratchet_test.dart, refresh codebase_map.md, verify moves check, goldens, Fix 7.4 bar, legacy load law, and build_web.sh.
 
 ## Open issues and deviations
 Fix 1.3: running the new ticked-step run-id check on existing notes failed on two older closed files (cleanup_slice_14_progress.md line 41 and cleanup_slice_15_progress.md line 39). Added FROZEN_TICKED_STEP_RUN_NOTES for those two files rather than weakening the rule for in-progress or future complete files, verified by NS78.
