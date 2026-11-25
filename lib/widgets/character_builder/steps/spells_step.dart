@@ -98,8 +98,7 @@ class BuilderSpellsStep extends StatelessWidget {
     
 
     // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
-    final castingAbility =
-        casterProfile.castingAbility ?? AbilityType.charisma;
+    const castingAbility = AbilityType.charisma;
     final curBackground = selectedBackground != null
         ? SrdBackgroundsLibrary.findBySlug(selectedBackground!)
         : null;
