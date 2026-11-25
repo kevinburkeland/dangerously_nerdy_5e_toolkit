@@ -5,7 +5,6 @@ import '../../../models/dm_screen_data.dart';
 import '../../../models/dpr/dpr_models.dart';
 import 'arena_attack_resolver.dart';
 import 'arena_cantrip_resolver.dart';
-import 'arena_challenge_rating_validator.dart';
 import 'arena_combat_context.dart';
 import 'arena_legendary_action_resolver.dart';
 import 'arena_spellcasting_ai.dart';
@@ -252,7 +251,6 @@ class ArenaSimulationRunner {
     ArenaEnvironment environment = ArenaEnvironment.colosseum,
     int maxRounds = 50,
   }) {
-    validateArenaCombatantsChallengeRatings([...initialTeamA, ...initialTeamB]);
     // Clone combatants to avoid mutating original presets
     final combatants = [
       ...initialTeamA.map((c) => c.clone()),
@@ -369,7 +367,6 @@ class ArenaSimulationRunner {
     int iterations = 500,
     int maxRounds = 50,
   }) {
-    validateArenaCombatantsChallengeRatings([...teamA, ...teamB]);
     final stopwatch = Stopwatch()..start();
 
     int teamAWins = 0;
