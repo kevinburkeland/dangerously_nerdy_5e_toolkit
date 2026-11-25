@@ -28,12 +28,18 @@ class DprCalculatorEngine {
     };
   }
 
-  /// Calculates the effective attack bonus including flat buffs and expected buff dice (like Bless).
-  static double calculateEffectiveAttackBonus(DprAttackAction attack) {
+  /// Calculates the flat attack bonus excluding buff dice (used with [computeAttackOddsWithBuffDie]).
+  static double _calculateBaseAttackBonus(DprAttackAction attack) {
     var bonus =
         attack.attackBonus.toDouble() + attack.attackBuffFlat.toDouble();
     if (attack.hasArchery) bonus += 2.0;
     if (attack.gwmMode == GwmMode.v2014PowerAttack) bonus -= 5.0;
+    return bonus;
+  }
+
+  /// Calculates the effective attack bonus including flat buffs and expected buff dice (like Bless).
+  static double calculateEffectiveAttackBonus(DprAttackAction attack) {
+    var bonus = _calculateBaseAttackBonus(attack);
     if (attack.attackBuffDiceSides > 0) {
       bonus +=
           (attack.attackBuffDiceSides + 1.0) / 2.0; // e.g. +2.5 for Bless (1d4)
@@ -166,15 +172,30 @@ class DprCalculatorEngine {
     }
 
     // Standard attack roll actions (to-hit vs target AC)
-    final effBonus = calculateEffectiveAttackBonus(attack);
+    final baseBonus = _calculateBaseAttackBonus(attack);
     final luck = hasHalflingLuck || attack.hasHalflingLuck;
-    final odds = computeAttackOdds(
-      attackBonus: effBonus,
+    final odds = computeAttackOddsWithBuffDie(
+      attackBonus: baseBonus,
       targetAc: targetAc,
+      buffDieSides: attack.attackBuffDiceSides,
       critThreshold: attack.critThreshold,
       mode: _toRollMode(advantage),
       rerollOnes: luck,
     );
+    return _buildAttackPointFromOdds(
+      attack,
+      targetAc,
+      odds,
+      proficiencyBonus: proficiencyBonus,
+    );
+  }
+
+  static DprPoint _buildAttackPointFromOdds(
+    DprAttackAction attack,
+    int targetAc,
+    AttackOdds odds, {
+    required int proficiencyBonus,
+  }) {
     final totalHitChance = odds.hit;
     final critChance = odds.crit;
     final regularHitChance = odds.regularHit;
@@ -258,26 +279,91 @@ class DprCalculatorEngine {
     double primaryDamageOnCrit = 0.0;
     double primaryDamageOnMiss = 0.0;
 
-    final hitChances = <double>[];
-    final critChances = <double>[];
-
-    AdvantageType currentAdv = baseAdv;
+    final baseAttackOddsForSneak = <AttackOdds>[];
+    var priorVexHitProbability = 0.0;
 
     for (int i = 0; i < profile.attacks.length; i++) {
       final attack = profile.attacks[i];
+      final singleAttack = attack.copyWith(attacksPerRound: 1);
+      final isUtility =
+          singleAttack.deliveryType == DprActionDeliveryType.utility ||
+              (singleAttack.diceCount == 0 &&
+                  singleAttack.secondaryDiceCount == 0 &&
+                  singleAttack.damageBonus == 0 &&
+                  singleAttack.secondaryDamageBonus == 0 &&
+                  !singleAttack.hasDueling &&
+                  !singleAttack.hasThrownWeapon &&
+                  singleAttack.gwmMode == GwmMode.none);
+      final isAttackRoll = !isUtility &&
+          singleAttack.deliveryType != DprActionDeliveryType.savingThrow;
 
       for (int count = 0; count < attack.attacksPerRound; count++) {
-        final pt = calculateSingleAttackDpr(
-          attack.copyWith(attacksPerRound: 1),
-          targetAc,
-          currentAdv,
-          proficiencyBonus: profile.proficiencyBonus,
-          hasHalflingLuck: profile.hasHalflingLuck,
-        );
+        final DprPoint pt;
+        if (isAttackRoll) {
+          final baseBonus = _calculateBaseAttackBonus(singleAttack);
+          final luck = profile.hasHalflingLuck || singleAttack.hasHalflingLuck;
+          final baseOdds = computeAttackOddsWithBuffDie(
+            attackBonus: baseBonus,
+            targetAc: targetAc,
+            buffDieSides: singleAttack.attackBuffDiceSides,
+            critThreshold: singleAttack.critThreshold,
+            mode: _toRollMode(baseAdv),
+            rerollOnes: luck,
+          );
+          baseAttackOddsForSneak.add(baseOdds);
+
+          final AttackOdds effectiveOdds;
+          if (priorVexHitProbability > 0.0 && baseAdv == AdvantageType.normal) {
+            final advOdds = computeAttackOddsWithBuffDie(
+              attackBonus: baseBonus,
+              targetAc: targetAc,
+              buffDieSides: singleAttack.attackBuffDiceSides,
+              critThreshold: singleAttack.critThreshold,
+              mode: D20RollMode.advantage,
+              rerollOnes: luck,
+            );
+            effectiveOdds = computeVexConditionalOdds(
+              priorHitProbability: priorVexHitProbability,
+              oddsWithAdvantage: advOdds,
+              oddsWithoutVex: baseOdds,
+            );
+          } else {
+            effectiveOdds = baseOdds;
+          }
+
+          pt = _buildAttackPointFromOdds(
+            singleAttack,
+            targetAc,
+            effectiveOdds,
+            proficiencyBonus: profile.proficiencyBonus,
+          );
+
+          // 2024 Vex Mastery: Hitting grants Advantage on the subsequent attack
+          // with probability equal to this attack's hit chance.
+          if (attack.weaponMastery == WeaponMastery.vex &&
+              baseAdv == AdvantageType.normal) {
+            priorVexHitProbability = effectiveOdds.hit;
+          } else {
+            priorVexHitProbability = 0.0;
+          }
+        } else {
+          pt = calculateSingleAttackDpr(
+            singleAttack,
+            targetAc,
+            baseAdv,
+            proficiencyBonus: profile.proficiencyBonus,
+            hasHalflingLuck: profile.hasHalflingLuck,
+          );
+          baseAttackOddsForSneak.add(AttackOdds(
+            hit: pt.hitChance,
+            crit: pt.critChance,
+            regularHit: math.max(0.0, pt.hitChance - pt.critChance),
+            miss: math.max(0.0, 1.0 - pt.hitChance),
+          ));
+          priorVexHitProbability = 0.0;
+        }
 
         totalDpr += pt.dpr;
-        hitChances.add(pt.hitChance);
-        critChances.add(pt.critChance);
 
         if (i == 0 && count == 0) {
           primaryHitChance = pt.hitChance;
@@ -286,32 +372,19 @@ class DprCalculatorEngine {
           primaryDamageOnCrit = pt.expectedDamageOnCrit;
           primaryDamageOnMiss = pt.expectedDamageOnMiss;
         }
-
-        // 2024 Vex Mastery: Hitting grants Advantage on the subsequent attack
-        if (attack.weaponMastery == WeaponMastery.vex &&
-            baseAdv == AdvantageType.normal) {
-          currentAdv = AdvantageType.advantage;
-        }
       }
     }
 
-    // Rogue Sneak Attack: Calculated accurately across all attacks in the turn with Crits
-    if (profile.sneakAttackDiceCount > 0 && hitChances.isNotEmpty) {
-      final probMissAll =
-          hitChances.fold<double>(1.0, (acc, p) => acc * (1.0 - p));
-      final probAtLeastOneHit = 1.0 - probMissAll;
-
-      final probNoCrit =
-          critChances.fold<double>(1.0, (acc, c) => acc * (1.0 - c));
-      final probAtLeastOneCrit = 1.0 - probNoCrit;
-
+    // Rogue Sneak Attack: Once per turn on the first hit (exact first-hit model).
+    // Conditioned on all prior attacks missing, no prior attack triggered Vex,
+    // so the base (non-Vex) attack odds govern Sneak Attack.
+    if (profile.sneakAttackDiceCount > 0 && baseAttackOddsForSneak.isNotEmpty) {
       final sneakDieEv = expectedDieValue(profile.sneakAttackDiceSides);
       final singleSneakDamage = profile.sneakAttackDiceCount * sneakDieEv;
-
-      // EV = [P(>=1 Hit) + P(>=1 Crit)] * SneakDamage
-      final sneakDpr =
-          (probAtLeastOneHit + probAtLeastOneCrit) * singleSneakDamage;
-      totalDpr += sneakDpr;
+      totalDpr += computeFirstHitSneakAttackExpectedDamage(
+        attackOdds: baseAttackOddsForSneak,
+        expectedSneakDamage: singleSneakDamage,
+      );
     }
 
     return DprPoint(

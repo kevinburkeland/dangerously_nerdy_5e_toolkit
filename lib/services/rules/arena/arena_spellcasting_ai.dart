@@ -4,6 +4,7 @@ import '../../../models/arena/arena_action_result.dart';
 import '../../../models/arena/arena_combatant.dart';
 import '../../../models/arena/arena_simulation_models.dart';
 import '../../../models/dm_screen_data.dart';
+import '../../../models/spellbook_data.dart';
 import 'arena_aoe_spell_resolver.dart';
 import 'arena_cantrip_resolver.dart';
 import 'arena_combat_context.dart';
@@ -83,7 +84,18 @@ class ArenaSpellcastingAi {
         final slotLvl = ctx.deductLowestSlot(attacker, 1)!;
         attacker.castBonusActionSpellThisTurn = true;
 
-        final healAmount = ctx.rollDice(slotLvl, 4) + attacker.spellAttackBonus;
+        final healSpell = SpellbookLibrary.getSpellById('spell_healing_word')!;
+        final healDetails = edition == DmRulesEdition.v2014
+            ? healSpell.rules2014
+            : healSpell.rules2024;
+        final scaling = healDetails.scalingFormula!;
+        final diceCount = scaling.baseDiceCount +
+            (slotLvl - healSpell.level) * scaling.dicePerSlotLevel;
+        final castingMod = scaling.addsAbilityMod
+            ? attacker.spellcastingAbilityModifier
+            : 0;
+        final healAmount =
+            max(0, ctx.rollDice(diceCount, scaling.diceSides) + castingMod);
         final actualHealed =
             min(healTarget.maxHp - healTarget.currentHp, healAmount);
         healTarget.currentHp += actualHealed;

@@ -669,5 +669,153 @@ void main() {
       final roundTripped = DprCombatantProfileSerialization.fromMap(serialized);
       expect(roundTripped.defaultAdvantage, AdvantageType.rollThreeKeepHighest);
     });
+
+    test('Fix 4.3: Bless (+5 vs AC 15, 1d4) uses face-by-face average 0.675', () {
+      const blessedAttack = DprAttackAction(
+        id: 'blessed_sword',
+        name: 'Blessed Longsword',
+        attackBonus: 5,
+        diceCount: 1,
+        diceSides: 8,
+        damageBonus: 3,
+        attackBuffDiceSides: 4,
+      );
+      final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+        blessedAttack,
+        15,
+        AdvantageType.normal,
+      );
+      expect(pt.hitChance, closeTo(0.675, 1e-12));
+      expect(pt.critChance, closeTo(0.05, 1e-12));
+    });
+
+    test('Fix 4.3: Vex conditional advantage weights attack 2 by attack 1 hit probability',
+        () {
+      const vexProfile = DprCombatantProfile(
+        id: 'vex_two_hit',
+        name: 'Vex Two-Hit',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        attacks: [
+          DprAttackAction(
+            id: 'rapier',
+            name: 'Rapier',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 4,
+            attacksPerRound: 2,
+            weaponMastery: WeaponMastery.vex,
+          ),
+        ],
+      );
+      const normalProfile = DprCombatantProfile(
+        id: 'normal_two_hit',
+        name: 'Normal Two-Hit',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        attacks: [
+          DprAttackAction(
+            id: 'rapier',
+            name: 'Rapier',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 4,
+            attacksPerRound: 2,
+          ),
+        ],
+      );
+      const alwaysAdvSecond = DprCombatantProfile(
+        id: 'always_adv_second',
+        name: 'Always Adv',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        defaultAdvantage: AdvantageType.advantage,
+        attacks: [
+          DprAttackAction(
+            id: 'rapier',
+            name: 'Rapier',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 4,
+            attacksPerRound: 1,
+          ),
+        ],
+      );
+
+      final vexPt = DprCalculatorEngine.calculateProfileDpr(vexProfile, 15);
+      final normalPt =
+          DprCalculatorEngine.calculateProfileDpr(normalProfile, 15);
+      final oneNormal = DprCalculatorEngine.calculateSingleAttackDpr(
+        normalProfile.attacks.first.copyWith(attacksPerRound: 1),
+        15,
+        AdvantageType.normal,
+      );
+      final oneAdv =
+          DprCalculatorEngine.calculateProfileDpr(alwaysAdvSecond, 15);
+
+      // Exact: atk1 normal + atk2 weighted by p1 = 0.65
+      final expectedDpr =
+          oneNormal.dpr + 0.65 * oneAdv.dpr + 0.35 * oneNormal.dpr;
+      expect(vexPt.dpr, closeTo(expectedDpr, 1e-12));
+      expect(vexPt.dpr, greaterThan(normalPt.dpr));
+      expect(vexPt.dpr, lessThan(oneNormal.dpr + oneAdv.dpr));
+    });
+
+    test('Fix 4.3: multi-attack Sneak Attack uses exact first-hit model', () {
+      const twoAttackRogue = DprCombatantProfile(
+        id: 'two_attack_rogue',
+        name: 'Two-Attack Rogue',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        sneakAttackDiceCount: 3,
+        sneakAttackDiceSides: 6, // EV = 10.5
+        attacks: [
+          DprAttackAction(
+            id: 'shortsword',
+            name: 'Shortsword',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 6,
+            damageBonus: 4,
+            attacksPerRound: 2,
+          ),
+        ],
+      );
+      const noSneak = DprCombatantProfile(
+        id: 'two_attack_no_sneak',
+        name: 'Two-Attack No Sneak',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        attacks: [
+          DprAttackAction(
+            id: 'shortsword',
+            name: 'Shortsword',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 6,
+            damageBonus: 4,
+            attacksPerRound: 2,
+          ),
+        ],
+      );
+
+      final withSneak =
+          DprCalculatorEngine.calculateProfileDpr(twoAttackRogue, 15);
+      final withoutSneak =
+          DprCalculatorEngine.calculateProfileDpr(noSneak, 15);
+      final sneakAdded = withSneak.dpr - withoutSneak.dpr;
+
+      // Hit = 0.65, crit = 0.05, reg = 0.60, miss = 0.35.
+      // First-hit EV = (0.60*10.5 + 0.05*21.0) + 0.35*(0.60*10.5 + 0.05*21.0) = 1.35 * 7.35 = 9.9225
+      expect(sneakAdded, closeTo(9.9225, 1e-12));
+    });
   });
 }

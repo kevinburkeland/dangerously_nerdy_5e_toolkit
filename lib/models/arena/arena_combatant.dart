@@ -225,6 +225,11 @@ class ArenaCombatant {
   /// Effective AC accounting for active reaction bonuses (e.g. Shield spell +5 AC).
   int get effectiveAc => ac + temporaryAcBonus;
 
+  /// Derives the combatant's spellcasting ability modifier from [spellSaveDc]
+  /// and its challenge-rating proficiency bonus (`DC = 8 + PB + mod`).
+  int get spellcastingAbilityModifier =>
+      spellSaveDc - 8 - proficiencyBonusForChallengeRating(monster.challengeRating);
+
   bool get isSpellcaster =>
       knownSpellIds.isNotEmpty || maxSpellSlots.isNotEmpty;
   bool get hasAvailableSlots => currentSpellSlots.values.any((v) => v > 0);

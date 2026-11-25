@@ -139,12 +139,26 @@ class MonsterItem {
   List<CreatureAction> get reactions => sourceStatBlock.reactions;
   int? get xp => sourceStatBlock.xp;
 
-  /// Retrieves the pre-calculated, strongly typed [MonsterCombatProfile] for the specified rules edition.
+  static Expando<Map<DmRulesEdition, MonsterCombatProfile>>
+      _combatProfileCache =
+      Expando<Map<DmRulesEdition, MonsterCombatProfile>>(
+          'MonsterItem.combatProfile');
+
+  /// Lazily builds and caches one strongly typed [MonsterCombatProfile] per
+  /// [DmRulesEdition] for this immutable [MonsterItem] instance.
   MonsterCombatProfile getCombatProfile(
       [DmRulesEdition edition = DmRulesEdition.v2024]) {
-    return MonsterCombatProfile.fromStatBlock(
-      getStatBlock(edition),
-      challengeRating: challengeRating,
+    var byEdition = _combatProfileCache[this];
+    if (byEdition == null) {
+      byEdition = <DmRulesEdition, MonsterCombatProfile>{};
+      _combatProfileCache[this] = byEdition;
+    }
+    return byEdition.putIfAbsent(
+      edition,
+      () => MonsterCombatProfile.fromStatBlock(
+        getStatBlock(edition),
+        challengeRating: challengeRating,
+      ),
     );
   }
 
@@ -152,6 +166,9 @@ class MonsterItem {
 
   static void clearCaches() {
     _dprCache.clear();
+    _combatProfileCache =
+        Expando<Map<DmRulesEdition, MonsterCombatProfile>>(
+            'MonsterItem.combatProfile');
   }
 
   double calculateBaselineDpr([

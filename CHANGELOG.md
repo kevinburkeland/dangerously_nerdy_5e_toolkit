@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-25
+- Cleanup slice 16: Re-pin vtt_ruleset_dnd5e to 7ea574148f6fca3c87dea6d690cc2452916b66c9, fix Arena Healing Word to use bundled edition dice and spellcasting ability modifier, cache MonsterItem.getCombatProfile per edition, and delegate DPR buff-die, Vex, and first-hit Sneak Attack math to ruleset with updated Bless golden rows (Fixes 4.1-4.3).
 - Cleanup slice 16: Tighten host-role caller spy to assert each caller's own isHost value and expand DmDashboardScreen (4 -> 17 tests) and PartyRoomScreen (4 -> 14 tests) characterization suites (Fixes 3.1-3.3).
 - Cleanup slice 16: Re-pin vtt_ruleset_dnd5e to 6f797efb0f7b916032eccfcf1e40e7441f01ddd8, migrate all app numeric challenge-rating readers (MonsterItem, SrdMonsterCrBands, MinionStatBlock) to parseChallengeRating with a source bar, and refuse out-of-range challenge ratings before arena matches with InvalidArenaChallengeRatingException and ArenaSimulatorScreen SnackBar feedback (Fixes 2.2, 2.3).
 - Cleanup slice 16: Retire cs15 mutation branches, bump Flutter constraint to 3.50.1, require green run ids on every ticked step SHA in check_notes_shas.py (NS74-NS78), add FlutterError.onError compliance bar and rewrite characterization tests to use tester.takeException(), and verify 14-day dependency look-ahead (Fixes 1.1-1.5).
