@@ -93,13 +93,35 @@ class _FakeActiveMapController extends Fake implements ActiveMapController {
 
 class _RecordingRoomSessionStarter extends Fake implements RoomSessionStarter {
   final List<bool> recordedIsHost = <bool>[];
+  final List<({String caller, bool isHost})> recordedStarts =
+      <({String caller, bool isHost})>[];
   final RoomSyncOrchestrator? _orchestrator;
 
   _RecordingRoomSessionStarter([this._orchestrator]);
 
+  static String _classifyCaller(StackTrace st) {
+    final frames = st.toString();
+    if (frames.contains('party_room_screen.dart')) {
+      return 'party_room_screen';
+    }
+    if (frames.contains('room_banner_widget.dart')) {
+      return 'room_banner_widget';
+    }
+    if (frames.contains('dice_room_service.dart')) {
+      return 'dice_room_service';
+    }
+    return 'other';
+  }
+
+  List<bool> isHostCallsFor(String caller) => recordedStarts
+      .where((entry) => entry.caller == caller)
+      .map((entry) => entry.isHost)
+      .toList();
+
   @override
   void start({required bool isHost}) {
     recordedIsHost.add(isHost);
+    recordedStarts.add((caller: _classifyCaller(StackTrace.current), isHost: isHost));
     _orchestrator?.startSynchronization(isHost: isHost);
   }
 }
@@ -391,7 +413,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(spyStarter.recordedIsHost, contains(true));
+      final calls = spyStarter.isHostCallsFor('party_room_screen');
+      expect(calls, isNotEmpty,
+          reason: 'PartyRoomScreen must invoke RoomSessionStarter.start');
+      expect(calls, everyElement(isTrue),
+          reason: 'PartyRoomScreen must pass isHost: true for a host membership');
     });
 
     testWidgets('RoomBannerWidget passes isHost: true for a host membership',
@@ -409,14 +435,22 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(spyStarter.recordedIsHost, contains(true));
+      final calls = spyStarter.isHostCallsFor('room_banner_widget');
+      expect(calls, isNotEmpty,
+          reason: 'RoomBannerWidget must invoke RoomSessionStarter.start');
+      expect(calls, everyElement(isTrue),
+          reason: 'RoomBannerWidget must pass isHost: true for a host membership');
     });
 
     test('DiceRoomService passes isHost: true for a host membership', () async {
       diceService.joinRoom('HOST-ROOM', 'DM', remember: false);
       await Future<void>.delayed(const Duration(milliseconds: 20));
 
-      expect(spyStarter.recordedIsHost, contains(true));
+      final calls = spyStarter.isHostCallsFor('dice_room_service');
+      expect(calls, isNotEmpty,
+          reason: 'DiceRoomService must invoke RoomSessionStarter.start');
+      expect(calls, everyElement(isTrue),
+          reason: 'DiceRoomService must pass isHost: true for a host membership');
     });
   });
 }

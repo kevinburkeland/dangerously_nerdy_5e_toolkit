@@ -13,9 +13,12 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_c
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_loot_item.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/party_room_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,6 +26,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
+import 'package:vtt_engine_core/models/party_purse.dart';
+import 'package:vtt_engine_core/models/room_roll.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
@@ -92,12 +97,16 @@ Character _makeHero(String id, String name) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final harness = HiveTestHarness();
+  late DiceRoomService testDiceService;
+  late CampaignRegistryService testRegistry;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await harness.setUpInMemory();
     AppServices.reset();
     sl.reset();
+    testRegistry = CampaignRegistryService.newInstance();
+    CampaignRegistryService.instance = testRegistry;
     sl.registerSingleton<IRoomDocumentPort>(RecordingRoomDocumentPort());
     final repId = ReplicaId('party_room_char_replica');
     sl.registerSingleton<ReplicaId>(repId);
@@ -114,6 +123,7 @@ void main() {
     final transport = _CharTransport();
     sl.registerSingleton<IP2pTransportPort>(transport);
     final diceService = createBoundTestDiceRoomService();
+    testDiceService = diceService;
     final orchestrator = RoomSyncOrchestrator(
       replicaId: repId,
       transportPort: transport,
@@ -158,12 +168,14 @@ void main() {
     final partyService = PartyRoomService.newInstance(
       replicaId: repId,
       clock: clock,
+      registry: testRegistry,
       diceRoomService: diceService,
     );
     PartyRoomService.setCustomInstanceForTesting(partyService);
     addTearDown(() async {
       orchestrator.stopSynchronization();
       PartyRoomService.resetCustomInstanceForTesting();
+      CampaignRegistryService.resetInstanceForTesting();
       campRepo.dispose();
       sl.reset();
       await harness.tearDown();
@@ -383,6 +395,506 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Healing Elixir'), findsOneWidget);
       expect(find.textContaining('Silk Rope'), findsOneWidget);
+    });
+  });
+
+  group('Fix 3.3: PartyRoomScreen full interaction characterization', () {
+    Future<PartyRoomService> seedRichRoom({bool isHost = true}) async {
+      final hero = _makeHero('hero_aria', 'Aria');
+      await CharacterPersistenceService().saveCharacter(hero);
+
+      final partyService = PartyRoomService();
+      await partyService.createCampaign(
+        campaignName: 'Starfall Keep',
+        playerName: 'Aria',
+        customRoomCode: 'RICH01',
+      );
+      if (!isHost) {
+        await testRegistry.saveMembership(
+          CampaignMembership(
+            roomCode: 'RICH01',
+            campaignName: 'Starfall Keep',
+            role: CampaignRole.player,
+            lastPlayed: DateTime.utc(2026, 11, 1),
+          ),
+        );
+      }
+      await partyService.linkCharacterToCampaign(
+        roomCode: 'RICH01',
+        character: hero,
+        existingRosterName: 'Aria',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: 'RICH01',
+        characterName: 'Bram',
+        playerName: 'Aria',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: 'RICH01',
+        characterName: 'Cora',
+        playerName: 'Aria',
+      );
+      final replica = sl<ReplicaId>();
+      await partyService.updateMemberPurse(
+        roomCode: 'RICH01',
+        characterName: 'Aria',
+        newPurse: const PartyPurse.empty().modifyCoin('gp', 50, replicaId: replica),
+        performedBy: 'Aria',
+      );
+      await partyService.updateMemberPurse(
+        roomCode: 'RICH01',
+        characterName: 'Bram',
+        newPurse: const PartyPurse.empty().modifyCoin('gp', 25, replicaId: replica),
+        performedBy: 'Aria',
+      );
+      await partyService.updateMemberPurse(
+        roomCode: 'RICH01',
+        characterName: 'Cora',
+        newPurse: const PartyPurse.empty().modifyCoin('gp', 10, replicaId: replica),
+        performedBy: 'Aria',
+      );
+      await partyService.depositCoins(
+        roomCode: 'RICH01',
+        playerName: 'Aria',
+        gp: 100,
+        sp: 20,
+      );
+
+      // 3 active loot items: 1 unclaimed, 1 claimed by Aria, 1 assigned to Bram
+      await partyService.addLootItem(
+        roomCode: 'RICH01',
+        playerName: 'Aria',
+        item: PartyLootItem(
+          id: 'loot_chalice',
+          name: 'Silver Chalice',
+          category: 'treasure',
+          count: 1,
+          gpValue: 150,
+          createdAt: DateTime.utc(2026, 11, 1, 10, 0),
+          expiresAt: DateTime.utc(2027, 11, 1),
+        ),
+      );
+      await partyService.addLootItem(
+        roomCode: 'RICH01',
+        playerName: 'Aria',
+        item: PartyLootItem(
+          id: 'loot_sword',
+          name: 'Radiant Longsword',
+          category: 'magicItem',
+          count: 1,
+          gpValue: 500,
+          claimedByPlayer: 'Aria',
+          createdAt: DateTime.utc(2026, 11, 1, 10, 1),
+          expiresAt: DateTime.utc(2027, 11, 1),
+        ),
+      );
+      await partyService.addLootItem(
+        roomCode: 'RICH01',
+        playerName: 'Aria',
+        item: PartyLootItem(
+          id: 'loot_cloak',
+          name: 'Cloak of Protection',
+          category: 'magicItem',
+          count: 1,
+          gpValue: 350,
+          claimedByPlayer: 'Bram',
+          createdAt: DateTime.utc(2026, 11, 1, 10, 2),
+          expiresAt: DateTime.utc(2027, 11, 1),
+        ),
+      );
+
+      // 2 trashed items
+      await partyService.addLootItem(
+        roomCode: 'RICH01',
+        playerName: 'Aria',
+        item: PartyLootItem(
+          id: 'loot_trash_1',
+          name: 'Cracked Wand',
+          category: 'magicItem',
+          count: 1,
+          gpValue: 40,
+          createdAt: DateTime.utc(2026, 11, 1, 10, 3),
+          expiresAt: DateTime.utc(2027, 11, 1),
+        ),
+      );
+      await partyService.archiveLootItem(
+        roomCode: 'RICH01',
+        lootId: 'loot_trash_1',
+        playerName: 'Aria',
+      );
+      await partyService.addLootItem(
+        roomCode: 'RICH01',
+        playerName: 'Aria',
+        item: PartyLootItem(
+          id: 'loot_trash_2',
+          name: 'Rusty Dagger',
+          category: 'weapon',
+          count: 1,
+          gpValue: 2,
+          createdAt: DateTime.utc(2026, 11, 1, 10, 4),
+          expiresAt: DateTime.utc(2027, 11, 1),
+        ),
+      );
+      await partyService.archiveLootItem(
+        roomCode: 'RICH01',
+        lootId: 'loot_trash_2',
+        playerName: 'Aria',
+      );
+
+      // 5 dice rolls via the bound DiceRoomService (within 24h window)
+      testDiceService.joinRoom('RICH01', 'Aria', remember: false);
+      final now = DateTime.now();
+      for (var i = 1; i <= 5; i++) {
+        await testDiceService.broadcastRoll(
+          RoomRoll(
+            id: 'roll_$i',
+            roomCode: 'RICH01',
+            playerName: i.isOdd ? 'Aria' : 'Bram',
+            formulaString: '1d20+$i',
+            total: 10 + i,
+            individualRolls: [10],
+            details: ['Roll #$i'],
+            isCrit: false,
+            isFumble: false,
+            timestamp: now.subtract(Duration(minutes: 10 - i)),
+          ),
+        );
+      }
+
+      return partyService;
+    }
+
+    Widget buildRichRoomApp(PartyRoomService partyService) {
+      return MaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
+        home: PartyRoomScreen(
+          roomCode: 'RICH01',
+          initialPlayerName: 'Aria',
+          partyService: partyService,
+          registry: testRegistry,
+          diceService: testDiceService,
+        ),
+      );
+    }
+
+    void expectNoNonOverflowExceptions(WidgetTester tester) {
+      final errors = <Object>[];
+      for (Object? ex = tester.takeException();
+          ex != null;
+          ex = tester.takeException()) {
+        errors.add(ex);
+      }
+      expect(
+        errors.where((e) {
+          final msg = e.toString();
+          return !msg.contains('RenderFlex overflowed') &&
+              !RegExp(r'Multiple exceptions \(\d+\) were detected').hasMatch(msg);
+        }),
+        isEmpty,
+      );
+    }
+
+    Finder vaultScrollable() => find.descendant(
+          of: find.byType(TabBarView),
+          matching: find.byType(Scrollable),
+        ).first;
+
+    testWidgets(
+      'rich room displays vault, dice feed, history, and trash tabs with purses, banner, and item order',
+      (tester) async {
+        tester.view.physicalSize = const Size(1280, 1800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        final partyService = await seedRichRoom();
+        await tester.pumpWidget(buildRichRoomApp(partyService));
+        await tester.pumpAndSettle();
+
+        // Header & active character banner
+        expect(find.text('Starfall Keep'), findsOneWidget);
+        expect(find.textContaining('RICH01'), findsWidgets);
+        expect(find.text('Aria'), findsWidgets);
+        expect(find.text('Sheet'), findsOneWidget);
+
+        // Vault tab: member purses & party purse
+        expect(find.textContaining('50 GP'), findsWidgets);
+        expect(find.textContaining('25 GP'), findsWidgets);
+        expect(find.textContaining('10 GP'), findsWidgets);
+        expect(find.textContaining('100'), findsWidgets);
+
+        await tester.scrollUntilVisible(
+          find.text('Silver Chalice'),
+          200,
+          scrollable: vaultScrollable(),
+        );
+        expect(find.text('Silver Chalice'), findsOneWidget);
+        expect(find.text('Radiant Longsword'), findsOneWidget);
+        expect(find.text('Cloak of Protection'), findsOneWidget);
+        expect(find.text('In Vault (Unclaimed)'), findsOneWidget);
+        expect(find.text('Claimed by You'), findsOneWidget);
+        expect(find.text('Claimed: Bram'), findsOneWidget);
+
+        // Dice Feed tab
+        await tester.tap(find.text('Dice Feed'));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('1d20+1'), findsOneWidget);
+        expect(find.textContaining('1d20+5'), findsOneWidget);
+
+        // History & Trash tab -> Event Audit Log
+        await tester.tap(find.byType(Tab).at(2));
+        await tester.pumpAndSettle();
+        expect(find.text('Event Audit Log'), findsOneWidget);
+        expect(find.text('Vault Trash & Restore'), findsOneWidget);
+
+        // Switch to Vault Trash & Restore sub-tab
+        await tester.tap(find.text('Vault Trash & Restore'));
+        await tester.pumpAndSettle();
+        // Trigger local broadcast emission once Trash StreamBuilder is mounted
+        // (known broadcast-before-subscribe timing in PartyHistoryAndTrashTab).
+        partyService.streamLoot('RICH01', includeArchived: true);
+        await tester.pumpAndSettle();
+        expect(find.text('Cracked Wand'), findsOneWidget);
+        expect(find.text('Rusty Dagger'), findsOneWidget);
+        expect(find.text('Restore'), findsNWidgets(2));
+        expectNoNonOverflowExceptions(tester);
+      },
+    );
+
+    testWidgets('copy room code shows confirmation snackbar', (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.copy).first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.textContaining('RICH01'), findsWidgets);
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('open and cancel leave campaign dialog', (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom(isHost: false);
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Leave Campaign'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Leave Campaign'), findsWidgets);
+      expect(find.text('Cancel'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('open and cancel delete campaign dialog', (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert).first);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Delete Campaign'));
+      await tester.tap(find.text('Delete Campaign'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Delete Permanently'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('member coin change updates member purse in fake service and UI', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      final memberMenus = find.descendant(
+        of: find.byType(TabBarView),
+        matching: find.byIcon(Icons.more_vert),
+      );
+      await tester.tap(memberMenus.first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Deposit Coins').last);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.enterText(find.byType(TextField).at(1), '15');
+      await tester.tap(find.text('Deposit Coins').last);
+      await tester.pumpAndSettle();
+
+      final session = partyService.getCachedSession('RICH01');
+      expect(session!.getMemberPurse('Aria').gp, 65);
+      expect(find.textContaining('65 GP'), findsWidgets);
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('party coin change updates party reserve purse in fake service and UI', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Deposit Coins'),
+        200,
+        scrollable: vaultScrollable(),
+      );
+      await tester.tap(find.text('Deposit Coins').first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.enterText(find.byType(TextField).at(1), '25');
+      await tester.tap(find.text('Deposit').last);
+      await tester.pumpAndSettle();
+
+      final session = partyService.getCachedSession('RICH01');
+      expect(session!.partyPurse.gp, 125);
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('claim one loot item updates claim state in fake service and UI', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Claim'),
+        200,
+        scrollable: vaultScrollable(),
+      );
+      await tester.tap(find.text('Claim').first);
+      await tester.pumpAndSettle();
+
+      final items = await partyService.streamLoot('RICH01').first;
+      final chalice = items.firstWhere((i) => i.id == 'loot_chalice');
+      expect(chalice.claimedByPlayer, 'Aria');
+      expect(find.text('In Vault (Unclaimed)'), findsNothing);
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('assign one loot item assigns to chosen roster member in fake service and UI', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.byTooltip('Assign to Character...').first,
+        200,
+        scrollable: vaultScrollable(),
+      );
+      await tester.tap(find.byTooltip('Assign to Character...').first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.tap(find.text('Cora').last);
+      await tester.pumpAndSettle();
+
+      final items = await partyService.streamLoot('RICH01').first;
+      expect(items.any((i) => i.claimedByPlayer == 'Cora'), isTrue);
+      expect(find.text('Claimed: Cora'), findsOneWidget);
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('restore one trashed item restores the chosen item and keeps the other archived', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Loot & Trash Log'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Vault Trash & Restore'));
+      await tester.pumpAndSettle();
+      partyService.streamLoot('RICH01', includeArchived: true);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cracked Wand'), findsOneWidget);
+      expect(find.text('Rusty Dagger'), findsOneWidget);
+
+      final wandTile = find.ancestor(
+        of: find.text('Cracked Wand'),
+        matching: find.byType(ListTile),
+      );
+      await tester.tap(find.descendant(of: wandTile, matching: find.text('Restore')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Restored "Cracked Wand" to party vault!'), findsOneWidget);
+      final allLoot = await partyService.streamLoot('RICH01', includeArchived: true).first;
+      final wand = allLoot.firstWhere((i) => i.id == 'loot_trash_1');
+      final dagger = allLoot.firstWhere((i) => i.id == 'loot_trash_2');
+      expect(wand.isArchived, isFalse, reason: 'Cracked Wand must be restored');
+      expect(dagger.isArchived, isTrue, reason: 'Rusty Dagger must remain archived');
+      expectNoNonOverflowExceptions(tester);
+    });
+
+    testWidgets('switch tabs and back preserves vault filter keep-alive state', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final partyService = await seedRichRoom();
+      await tester.pumpWidget(buildRichRoomApp(partyService));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.textContaining('Magic ('),
+        200,
+        scrollable: vaultScrollable(),
+      );
+      await tester.tap(find.textContaining('Magic (').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Silver Chalice'), findsNothing);
+      expect(find.text('Radiant Longsword'), findsOneWidget);
+
+      await tester.tap(find.text('Dice Feed'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Loot & Trash Log'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Party Vault'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Silver Chalice'), findsNothing);
+      expect(find.text('Radiant Longsword'), findsOneWidget);
+      expectNoNonOverflowExceptions(tester);
     });
   });
 }
