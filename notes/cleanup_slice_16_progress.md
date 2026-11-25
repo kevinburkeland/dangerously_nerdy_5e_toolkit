@@ -1,7 +1,7 @@
 # Cleanup slice 16 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 240ee415462e6d975eae63ee8a04ad52b55677f8
-Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app eb697ceff606b1802ce908338660bb2a5bfa6379
+Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 62c36e8365d766adc4ac288df5865b23a96908fb
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 6.1 6.2 7.1 7.2 7.3 7.4 7.5 8.1 9.1
 Mutation ids: R1 R2 R3 R4 R5 R6 R7 N1 E1 K1 H1 T1 T2 W1 M1 B1 U1 V1 P1
@@ -42,7 +42,7 @@ Fix 9.1: The level-up wizard is split
 - [x] Step 7 Builder and level-up rules into the ruleset: ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd run 45685871897, app 3b241986df81cd6673f47bd874457aa56d937a20 run 45714960177
 - [x] Step 8 Character builder split: app 99e013728fdfe43078f1606c802d6be696a38579 run 45718178077
 - [x] Step 9 Level-up wizard split: app eb697ceff606b1802ce908338660bb2a5bfa6379 run 45720681103
-- [ ] Step 10 Mutations and report
+- [x] Step 10 Mutations and report: app 62c36e8365d766adc4ac288df5865b23a96908fb run 45722870469
 
 ## Fix checklist
 Fix 1.1 done: [Retire cs15] Retired all 16 cs15 mutation branches across core, ruleset, and app with archive commits, tags, and manifests.
@@ -71,7 +71,25 @@ Fix 8.1 done: [The character builder screen is split] Split lib/screens/characte
 Fix 9.1 done: [The level-up wizard is split] Split lib/widgets/character_builder/level_up_wizard_dialog.dart (4,046 -> 188 lines) into 10 focused modules under lib/widgets/character_builder/level_up/ (all under 725 lines, max 721, zero part/part of, keeping LevelUpWizardDialog and show(...) signatures identical), removed level_up_wizard_dialog.dart from big_file_ratchet_test.dart (32 files on allowlist), refreshed codebase_map.md, and verified moves check, all 96 level-up goldens, Fix 7.4 bar, legacy load law, compliance ratchets, and build_web.sh.
 
 ## Mutation branches
-None
+mutation/cs16-r1 cd124df5850b0adf5b5f331f46fa2e8be640b7a2
+mutation/cs16-r2 d2de01d38642acd623a5b3c2d895462523038136
+mutation/cs16-r3 d3b02b053516d2969aef21b191ccdc503feecc58
+mutation/cs16-r4 488f2419f4c641d5c29e6f87fe04cb7b7c687d46
+mutation/cs16-r5 360e6e9833f741b3c7077f71c6b015503c2be4a1
+mutation/cs16-r6 6eb920a38fcd6b7f6ee5d0fc1fa97204d6a6d03e
+mutation/cs16-r7 73f144064c90397cb9f66706e6b8f974789e7089
+mutation/cs16-n1 613a70e6f17e95abdebf3c05a334398c09e71c2a
+mutation/cs16-e1 34b8c71a78def5bc686853bd7a552da1267a6897
+mutation/cs16-k1 cd7bf654e9c771101c6a8d990767db4e1c5245e9
+mutation/cs16-h1 f6e8b6366714d5b6940698130f7a228dfe33b342
+mutation/cs16-t1 a13c4d50ac1d1f3c547222e83fb37824d490f7ca
+mutation/cs16-t2 b6373abc9f2a130bea16bc4a174b6077d990a41e
+mutation/cs16-w1 9e55e42ad2ae25dd8b1afca28a0d05e53e0f3065
+mutation/cs16-m1 a3b5edc96b1b05d1dc694f89526f8cd2faa7a61e
+mutation/cs16-b1 d0e72a694d3d3ee3766989065429c181643528de
+mutation/cs16-u1 02f1e5a91208955a47e33e7002d4204486ad6b58
+mutation/cs16-v1 9fde5629452dc2ac7ac2ee5789065ec3d972c84a
+mutation/cs16-p1 6e7a4e0a1307092a407318dfb4a5b04c2d0602b4
 
 ## Red runs on main
 b96a148e3077c9003a38bf6a956e5510e107542a red run 45668172861
@@ -81,12 +99,13 @@ b96a148e3077c9003a38bf6a956e5510e107542a red run 45668172861
 Start of run: app repo had uncommitted modification to party_active_character_banner.dart and an untracked directory under test; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
 
 ## Next
-Begin Step 10 (mutations, exit checks, final report): finish app mutations (N1, E1, K1, H1, T1, T2, W1, M1, B1, U1, V1, P1; ruleset R1-R7 already pushed), run full app exit checks (4 local shards, legacy load law, scripts, emulator rules, web build), trigger dependencies.yml workflow_dispatch on all three repos, set notes Status to COMPLETE, and write the 17-section report.
+None — Cleanup slice 16 is COMPLETE.
 
 ## Open issues and deviations
 Fix 1.3: running the new ticked-step run-id check on existing notes failed on two older closed files (cleanup_slice_14_progress.md line 41 and cleanup_slice_15_progress.md line 39). Added FROZEN_TICKED_STEP_RUN_NOTES for those two files rather than weakening the rule for in-progress or future complete files, verified by NS78.
 Fix 1.2/1.5: core and ruleset had no packages behind on 2026-12-07; on the 14-day look-ahead (2026-12-09) both reported coverage 1.16.1 behind 1.16.2, which was upgraded locally via dart pub upgrade (pubspec.lock is gitignored in both library repos).
 Fix 2.2: where parseChallengeRating returns null, app callers (MonsterItem, SrdMonsterCrBands, MinionStatBlock) keep today's invented default of 0 (out of scope for this slice). The source bar also caught two additional inline regex CR readers in minion_stat_block.dart (crValue and glyphCrTier), which were migrated to parseChallengeRating.
 Fix 3.3: observed a real pre-existing defect in PartyHistoryAndTrashTab (not fixed per Step 3 no-lib-edits rule): build() calls streamLoot(includeArchived: true) before the second TabBarView tab mounts, so the initial microtask snapshot broadcasts before StreamBuilder subscribes; the characterization test pins current behavior by re-triggering streamLoot once the Trash tab is mounted.
+Step 10 P1: initial run of mutation P1 was not caught because builder_golden_harness.dart did not record spellsSubtitle on the spells step. Fixed on main in 62c36e8365d766adc4ac288df5865b23a96908fb run 45722870469 by recording spellsSubtitle in builder_golden_harness.dart and adding the 14 spellsSubtitle lines to builder_goldens.json; P1 then failed cleanly on 2014_cleric.spellsSubtitle.
 Run 45668172861 cause: docs_truth_test.dart DT2 rejected non-existent path in Resets section; fixed by 0edd2f1cfb464c74fa88782ab0fc84231206326b
 Run 45671260957 cause: stale codebase_map.md after adding arena_challenge_rating_validator.dart and ArenaCombatantCard calling canFly/canSwim on CR 31 before match start; fixed by 9d1873640ec36d6d3a1821974793c9849ba40224
