@@ -26,7 +26,7 @@ class BuilderBasicsStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Step 1: Character Identity & Edition',
+        Text('Step 1: Character Identity',
             style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
         const SizedBox(height: 6),
