@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
 import '../../models/dm_screen_data.dart';
+import 'arena/arena_challenge_rating_validator.dart';
 import 'arena/arena_combat_context.dart';
 import 'arena/arena_simulation_runner.dart';
 
@@ -51,7 +52,8 @@ Future<ArenaMonteCarloResult> runArenaMonteCarloAsync({
   int iterations = 500,
   int maxRounds = 50,
   int? seed,
-}) {
+}) async {
+  validateArenaCombatantsChallengeRatings([...teamA, ...teamB]);
   final payload = _ArenaMonteCarloPayload(
     teamA: teamA.map((c) => c.clone()).toList(),
     teamB: teamB.map((c) => c.clone()).toList(),
@@ -74,7 +76,8 @@ Future<ArenaSimulationResult> simulateArenaMatchAsync({
   ArenaEnvironment environment = ArenaEnvironment.colosseum,
   int maxRounds = 50,
   int? seed,
-}) {
+}) async {
+  validateArenaCombatantsChallengeRatings([...initialTeamA, ...initialTeamB]);
   final payload = _ArenaMatchSimulationPayload(
     teamA: initialTeamA.map((c) => c.clone()).toList(),
     teamB: initialTeamB.map((c) => c.clone()).toList(),

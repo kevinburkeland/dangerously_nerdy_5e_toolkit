@@ -202,34 +202,13 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
     return CreatureType.beast;
   }
 
-  double get crValue {
-    final clean = crDisplay.replaceAll(RegExp(r'[^0-9/]'), '');
-    if (clean.isEmpty) return 0;
-    if (clean.contains('/')) {
-      final parts = clean.split('/');
-      if (parts.length == 2) {
-        final num = double.tryParse(parts[0]) ?? 0;
-        final den = double.tryParse(parts[1]) ?? 1;
-        return den == 0 ? 0 : num / den;
-      }
-    }
-    return double.tryParse(clean) ?? 0;
-  }
+  double get crValue => parseChallengeRating(crDisplay) ?? 0;
 
   int get glyphCrTier {
-    final clean = crDisplay.replaceAll(RegExp(r'[^0-9/]'), '');
-    if (clean.contains('/') ||
-        clean == '0' ||
-        clean == '1' ||
-        clean == '2' ||
-        clean == '3' ||
-        clean == '4') {
-      return 1;
-    }
-    final num = int.tryParse(clean) ?? 1;
-    if (num <= 4) return 1;
-    if (num <= 10) return 2;
-    if (num <= 16) return 3;
+    final cr = crValue;
+    if (cr <= 4) return 1;
+    if (cr <= 10) return 2;
+    if (cr <= 16) return 3;
     return 4;
   }
 

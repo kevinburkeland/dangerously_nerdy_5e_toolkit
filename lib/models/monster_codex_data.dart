@@ -116,7 +116,7 @@ class MonsterItem {
   String get crDisplay => sourceStatBlock.crDisplay;
   bool get isHomebrew => sourcePresetId == 'homebrew';
   double get challengeRating =>
-      _parseChallengeRating(sourceStatBlock.crDisplay);
+      parseChallengeRating(sourceStatBlock.crDisplay) ?? 0;
   int get ac => sourceStatBlock.ac;
   int get hp => sourceStatBlock.maxHp;
   String get speed => sourceStatBlock.speed;
@@ -309,7 +309,7 @@ class MonsterItem {
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
     final sb = getStatBlock(edition);
-    final crVal = _parseChallengeRating(sb.crDisplay);
+    final crVal = parseChallengeRating(sb.crDisplay) ?? 0;
 
     if (typeFilter != null &&
         sb.typeDisplay.toLowerCase() != typeFilter.toLowerCase()) {
@@ -332,22 +332,6 @@ class MonsterItem {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return true;
     return _getCorpus(edition).contains(trimmed.toLowerCase());
-  }
-
-  static double _parseChallengeRating(String crDisplay) {
-    final cleaned = crDisplay.replaceAll(RegExp(r'[^0-9/]'), '');
-    if (cleaned.isEmpty) return 0;
-
-    if (cleaned.contains('/')) {
-      final pieces = cleaned.split('/');
-      if (pieces.length != 2) return 0;
-      final numerator = double.tryParse(pieces[0]) ?? 0;
-      final denominator = double.tryParse(pieces[1]) ?? 1;
-      if (denominator == 0) return 0;
-      return numerator / denominator;
-    }
-
-    return double.tryParse(cleaned) ?? 0;
   }
 }
 
@@ -604,7 +588,7 @@ class MonsterCodexLibrary {
 /// Extension mapping domain Monster to MinionStatBlock and MonsterItem for cross-toolkit usage.
 extension MonsterHomebrewExt on Monster {
   MinionStatBlock toMinionStatBlock() {
-    final parsedCr = MonsterItem._parseChallengeRating(challengeRating);
+    final parsedCr = parseChallengeRating(challengeRating) ?? 0;
     final crStr = challengeRating.trim().toLowerCase().startsWith('cr')
         ? challengeRating.trim()
         : 'CR $challengeRating';

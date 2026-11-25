@@ -11,6 +11,7 @@ import '../models/monster_codex_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
+import '../services/rules/arena/arena_challenge_rating_validator.dart';
 import '../services/rules/arena_combat_engine.dart';
 import '../widgets/arena/arena_clash_stage.dart';
 import '../widgets/arena/arena_combat_log_view.dart';
@@ -23,10 +24,14 @@ import '../widgets/fx/critical_effect_overlay.dart';
 /// Monster Fighting Arena Screen under Tools for Nerds.
 class ArenaSimulatorScreen extends StatefulWidget {
   final DmRulesEdition? initialEdition;
+  final List<ArenaCombatant>? initialTeamA;
+  final List<ArenaCombatant>? initialTeamB;
 
   const ArenaSimulatorScreen({
     super.key,
     this.initialEdition,
+    this.initialTeamA,
+    this.initialTeamB,
   });
 
   @override
@@ -74,8 +79,21 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     super.didChangeDependencies();
     if (!_hasLoadedInitialPreset) {
       _hasLoadedInitialPreset = true;
-      _loadPreset(
-          ArenaPresetMatchup.defaultPresets.first, _resolveEdition(context));
+      if (widget.initialTeamA != null || widget.initialTeamB != null) {
+        if (widget.initialTeamA != null) {
+          _teamA
+            ..clear()
+            ..addAll(widget.initialTeamA!);
+        }
+        if (widget.initialTeamB != null) {
+          _teamB
+            ..clear()
+            ..addAll(widget.initialTeamB!);
+        }
+      } else {
+        _loadPreset(
+            ArenaPresetMatchup.defaultPresets.first, _resolveEdition(context));
+      }
     }
   }
 
@@ -244,6 +262,15 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       return;
     }
 
+    try {
+      validateArenaCombatantsChallengeRatings([..._teamA, ..._teamB]);
+    } on InvalidArenaChallengeRatingException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+      return;
+    }
+
     _playbackTimer?.cancel();
 
     // Reset & clone all fighters
@@ -393,13 +420,21 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     _playbackTimer?.cancel();
     final edition = _resolveEdition(context);
 
-    final simResult = _engine.simulateMatch(
-      initialTeamA: _teamA,
-      initialTeamB: _teamB,
-      strategy: _strategy,
-      edition: edition,
-      environment: _environment,
-    );
+    final ArenaSimulationResult simResult;
+    try {
+      simResult = _engine.simulateMatch(
+        initialTeamA: _teamA,
+        initialTeamB: _teamB,
+        strategy: _strategy,
+        edition: edition,
+        environment: _environment,
+      );
+    } on InvalidArenaChallengeRatingException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+      return;
+    }
 
     setState(() {
       _activeCombatants = simResult.finalCombatants;
@@ -617,6 +652,15 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
         const SnackBar(
             content: Text(
                 'Add monsters to both teams to calculate win probabilities!')),
+      );
+      return;
+    }
+
+    try {
+      validateArenaCombatantsChallengeRatings([..._teamA, ..._teamB]);
+    } on InvalidArenaChallengeRatingException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
       );
       return;
     }

@@ -12,6 +12,9 @@ import 'arena/arena_legendary_action_resolver.dart';
 import 'arena/arena_simulation_runner.dart';
 import 'arena_combat_engine_async.dart';
 
+export 'arena/arena_challenge_rating_validator.dart'
+    show InvalidArenaChallengeRatingException;
+
 /// Comprehensive 5e Combat Resolution & Simulation Engine for the Monster Fighting Arena.
 class ArenaCombatEngine {
   final ArenaCombatContext _ctx;
