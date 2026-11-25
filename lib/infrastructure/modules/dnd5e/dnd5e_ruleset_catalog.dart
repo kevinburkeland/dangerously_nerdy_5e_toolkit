@@ -19,13 +19,24 @@ class AppDnd5eCatalog implements Dnd5eCatalog {
   CharacterClass? findClass(String slug) => SrdClassesLibrary.findBySlug(slug);
 
   @override
-  dynamic findFeat(String slug) => SrdFeatsLibrary.findBySlug(slug);
+  CatalogFeat? findFeat(String slug) {
+    final feat = SrdFeatsLibrary.findBySlug(slug);
+    if (feat == null) return null;
+    return CatalogFeat(grants: feat.grants);
+  }
 
   @override
-  dynamic findMagicItem(String idOrName) {
-    return MagicItemLibrary.findById(idOrName) ??
+  CatalogMagicItem? findMagicItem(String idOrName) {
+    final item = MagicItemLibrary.findById(idOrName) ??
         MagicItemLibrary.findById('item_$idOrName') ??
         MagicItemLibrary.findByName(idOrName);
+    if (item == null) return null;
+    return CatalogMagicItem(
+      categoryName: item.category.name,
+      tags: item.tags,
+      summary2024: item.rules2024.summary,
+      summary2014: item.rules2014.summary,
+    );
   }
 
   @override
@@ -55,22 +66,40 @@ class AppDnd5eCatalog implements Dnd5eCatalog {
     return StatBlockAclParser.extractRiders(markdown);
   }
 
+  static void _validateAddSpellsDataShape(Object? addSpellsData) {
+    if (addSpellsData == null ||
+        addSpellsData is String ||
+        addSpellsData is List ||
+        addSpellsData is Map) {
+      return;
+    }
+    throw ArgumentError.value(
+      addSpellsData,
+      'addSpellsData',
+      'Unsupported spell data shape: ${addSpellsData.runtimeType} '
+          '(expected null, String, List, or Map)',
+    );
+  }
+
   @override
-  Map<String, bool> extractSpellDescriptors(dynamic addSpellsData) {
+  Map<String, bool> extractSpellDescriptors(Object? addSpellsData) {
+    _validateAddSpellsDataShape(addSpellsData);
     return CompendiumPipeParser.extractSpellDescriptors(addSpellsData);
   }
 
   @override
-  Set<String> extractSpellNames(dynamic addSpellsData) {
+  Set<String> extractSpellNames(Object? addSpellsData) {
+    _validateAddSpellsDataShape(addSpellsData);
     return CompendiumPipeParser.extractSpellNames(addSpellsData);
   }
 
   @override
   List<FeatureGrant> extractBonusSpells(
-    dynamic addSpellsData,
+    Object? addSpellsData,
     String ownerPrefix,
     String ownerSlug,
   ) {
+    _validateAddSpellsDataShape(addSpellsData);
     return CompendiumPipeParser.extractBonusSpells(
       addSpellsData,
       ownerPrefix,
