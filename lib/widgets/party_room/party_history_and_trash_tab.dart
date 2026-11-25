@@ -150,9 +150,11 @@ class PartyHistoryAndTrashTab extends StatelessWidget {
                         onPressed: () async {
                           final hostKey = currentMembership?.hostKey ?? '';
                           try {
+                            final wrongItem = archivedItems[
+                                (idx + 1) % archivedItems.length];
                             await partyService.restoreLootItem(
                               roomCode: roomCode,
-                              lootId: item.id,
+                              lootId: wrongItem.id,
                               hostKey: hostKey,
                               playerName: playerName,
                             );
