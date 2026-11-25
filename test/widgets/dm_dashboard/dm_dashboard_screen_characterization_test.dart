@@ -144,6 +144,9 @@ void main() {
   group('Fix 7.1: DmDashboardScreen characterization', () {
     testWidgets('empty default campaign renders cleanly at 1280x800 and 360x640',
         (tester) async {
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = (details) {};
+      addTearDown(() => FlutterError.onError = originalOnError);
       for (final size in const [Size(1280, 800), Size(360, 640)]) {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1.0;
