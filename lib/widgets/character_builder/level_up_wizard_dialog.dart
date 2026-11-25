@@ -93,137 +93,57 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
   // Animation controller for dice roll
   late AnimationController _diceAnimController;
 
-  static const List<Map<String, String>> _availableClasses = [
-    {
-      'slug': 'barbarian',
-      'name': 'Barbarian',
-      'hitDie': 'd12',
-      'prereq': 'STR 13'
-    },
-    {'slug': 'bard', 'name': 'Bard', 'hitDie': 'd8', 'prereq': 'CHA 13'},
-    {'slug': 'cleric', 'name': 'Cleric', 'hitDie': 'd8', 'prereq': 'WIS 13'},
-    {'slug': 'druid', 'name': 'Druid', 'hitDie': 'd8', 'prereq': 'WIS 13'},
-    {
-      'slug': 'fighter',
-      'name': 'Fighter',
-      'hitDie': 'd10',
-      'prereq': 'STR 13 or DEX 13'
-    },
-    {
-      'slug': 'monk',
-      'name': 'Monk',
-      'hitDie': 'd8',
-      'prereq': 'DEX 13 & WIS 13'
-    },
-    {
-      'slug': 'paladin',
-      'name': 'Paladin',
-      'hitDie': 'd10',
-      'prereq': 'STR 13 & CHA 13'
-    },
-    {
-      'slug': 'ranger',
-      'name': 'Ranger',
-      'hitDie': 'd10',
-      'prereq': 'DEX 13 & WIS 13'
-    },
-    {'slug': 'rogue', 'name': 'Rogue', 'hitDie': 'd8', 'prereq': 'DEX 13'},
-    {
-      'slug': 'sorcerer',
-      'name': 'Sorcerer',
-      'hitDie': 'd6',
-      'prereq': 'CHA 13'
-    },
-    {'slug': 'warlock', 'name': 'Warlock', 'hitDie': 'd8', 'prereq': 'CHA 13'},
-    {'slug': 'wizard', 'name': 'Wizard', 'hitDie': 'd6', 'prereq': 'INT 13'},
-  ];
+  static String _formatMulticlassPrerequisite(String classSlug) {
+    final options =
+        CharacterProgressionEngine.getMulticlassPrerequisites()[
+            classSlug.toLowerCase()];
+    if (options == null || options.isEmpty) return 'None';
+    return options
+        .map((req) => req.entries
+            .map((e) => '${e.key.shortName.toUpperCase()} ${e.value}')
+            .join(' & '))
+        .join(' or ');
+  }
 
-  static const Map<String, List<Map<String, String>>> _subclassesByClass = {
-    'fighter': [
-      {
-        'slug': 'champion',
-        'name': 'Champion',
-        'desc': 'Improved Critical & physical mastery'
-      },
-    ],
-    'wizard': [
-      {
-        'slug': 'school_of_evocation',
-        'name': 'School of Evocation',
-        'desc': 'Sculpt Spells & destructive blasts'
-      },
-    ],
-    'rogue': [
-      {
-        'slug': 'thief',
-        'name': 'Thief',
-        'desc': 'Fast Hands & Supreme Sneak mobility'
-      },
-    ],
-    'cleric': [
-      {
-        'slug': 'life_domain',
-        'name': 'Life Domain',
-        'desc': 'Disciple of Life empowered healing'
-      },
-    ],
-    'paladin': [
-      {
-        'slug': 'oath_of_devotion',
-        'name': 'Oath of Devotion',
-        'desc': 'Sacred Weapon & Aura of Devotion'
-      },
-    ],
-    'barbarian': [
-      {
-        'slug': 'berserker',
-        'name': 'Path of the Berserker',
-        'desc': 'Frenzy bonus attacks & Mindless Rage'
-      },
-    ],
-    'bard': [
-      {
-        'slug': 'college_of_lore',
-        'name': 'College of Lore',
-        'desc': 'Cutting Words & Additional Magical Secrets'
-      },
-    ],
-    'druid': [
-      {
-        'slug': 'circle_of_the_land',
-        'name': 'Circle of the Land',
-        'desc': 'Natural Recovery & biome bonus spells'
-      },
-    ],
-    'monk': [
-      {
-        'slug': 'way_of_the_open_hand',
-        'name': 'Way of the Open Hand',
-        'desc': 'Flurry of Blows knockdowns & push techniques'
-      },
-    ],
-    'ranger': [
-      {
-        'slug': 'hunter',
-        'name': 'Hunter',
-        'desc': 'Colossus Slayer & defensive tactics'
-      },
-    ],
-    'sorcerer': [
-      {
-        'slug': 'draconic_bloodline',
-        'name': 'Draconic Bloodline',
-        'desc': 'Dragon ancestor armor, HP & elemental affinity'
-      },
-    ],
-    'warlock': [
-      {
-        'slug': 'the_fiend',
-        'name': 'The Fiend',
-        'desc': 'Dark One\'s Blessing temp HP & Hellfire'
-      },
-    ],
-  };
+  List<CharacterClass> get _availableClasses => [
+        ...SrdClassesLibrary.baseClasses,
+        ...SrdClassesLibrary.customClasses,
+      ];
+
+  Map<AbilityType, int> get _pendingAsiIncreases {
+    if (!_isAsiEligible || !_isAsiSelected) return const {};
+    if (_isAsiPlusTwo) return {_asiSingleAbility: 2};
+    final increases = <AbilityType, int>{};
+    increases[_asiDualAbility1] = (increases[_asiDualAbility1] ?? 0) + 1;
+    increases[_asiDualAbility2] = (increases[_asiDualAbility2] ?? 0) + 1;
+    return increases;
+  }
+
+  AbilityScores get _effectiveScoresWithPendingAsi {
+    final increases = _pendingAsiIncreases;
+    if (increases.isEmpty) return widget.character.rawAbilityScores;
+    final maxOverrides = <AbilityType, int>{
+      for (final ab in increases.keys)
+        ab: widget.character.getAbilityScoreMaximum(ab),
+    };
+    return applyAbilityScoreIncreases(
+      currentScores: widget.character.rawAbilityScores,
+      increases: increases,
+      maximumScoreOverrides: maxOverrides,
+    );
+  }
+
+  ClassSpellcasterProfile get _casterProfile {
+    final edition = widget.character.id.ruleset == RulesetVersion.v2024
+        ? RulesetEdition.v2024
+        : RulesetEdition.v2014;
+    return resolveClassSpellcasterProfile(
+      classSlug: _selectedClassSlug,
+      classLevel: _targetClassNewLevel,
+      subclassSlug: _effectiveSubclassSlug,
+      edition: edition,
+    );
+  }
 
   List<Feat> get _availableFeats {
     final allFeats =
@@ -409,25 +329,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
         );
   }
 
-  int get _conModifier {
-    var con = widget.character.baseScores.constitution +
-        widget.character.bonusScores.constitution;
-    if (_isAsiEligible && _isAsiSelected) {
-      if (_isAsiPlusTwo && _asiSingleAbility == AbilityType.constitution) {
-        con += 2;
-      } else if (!_isAsiPlusTwo &&
-          (_asiDualAbility1 == AbilityType.constitution ||
-              _asiDualAbility2 == AbilityType.constitution)) {
-        con += 1;
-      }
-    }
-    return con.dndModifier;
-  }
+  int get _conModifier => _effectiveScoresWithPendingAsi.constitution.dndModifier;
 
-  int get _effectiveHpGain {
-    final base = _useFixedAverage ? _fixedAverageHp : _rolledHp;
-    return math.max(1, base + _conModifier);
-  }
+  int get _effectiveHpGain => computeLevelUpHpGain(
+        hitDie: _currentHitDie,
+        constitutionModifier: _conModifier,
+        useFixedAverage: _useFixedAverage,
+        rolledValue: _useFixedAverage ? null : _rolledHp.clamp(1, _hitDieSides),
+      );
 
   void _rollHitPoints() {
     setState(() => _isRolling = true);
@@ -530,9 +439,6 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
         for (final s in customCls.subclasses) {
           subs.add({'slug': s.id.slug, 'name': s.name});
         }
-      }
-      if (subs.isEmpty) {
-        subs.addAll(_subclassesByClass[_selectedClassSlug] ?? []);
       }
       final sub = subs.firstWhere((s) => s['slug'] == _selectedSubclass,
           orElse: () =>
@@ -870,14 +776,16 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
             ),
           ),
           items: _availableClasses.map((cls) {
+            final slug = cls.id.slug;
             final isCurrent = widget.character.progression.classes
-                .any((c) => c.classRef.slug.toLowerCase() == cls['slug']);
+                .any((c) => c.classRef.slug.toLowerCase() == slug.toLowerCase());
+            final prereq = _formatMulticlassPrerequisite(slug);
             final label =
-                '${cls['name']} (${cls['hitDie']}) ${isCurrent ? "— Current" : "— Multiclass (Req: ${cls['prereq']})"}';
+                '${cls.name} (${cls.hitDie}) ${isCurrent ? "— Current" : "— Multiclass (Req: $prereq)"}';
             final classType =
-                DndClassType.tryParse(cls['slug']) ?? DndClassType.fighter;
+                DndClassType.tryParse(slug) ?? DndClassType.fighter;
             return DropdownMenuItem(
-              value: cls['slug'],
+              value: slug,
               child: Row(
                 children: [
                   DndGlyph.classFeature(
@@ -1240,9 +1148,6 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
               .firstWhere((l) => l.trim().isNotEmpty, orElse: () => s.name),
         });
       }
-    }
-    if (availableSubs.isEmpty) {
-      availableSubs.addAll(_subclassesByClass[_selectedClassSlug] ?? []);
     }
     final needsSubclass = _isSubclassMilestone && availableSubs.isNotEmpty;
     final decisions = customCls?.getDecisionsForLevel(_targetClassNewLevel,
@@ -2243,71 +2148,24 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
   }
 
   int _getCastingModifier(String classSlug) {
-    final slug = classSlug.toLowerCase();
-    AbilityType ability = AbilityType.intelligence;
-    if (['cleric', 'druid', 'ranger'].contains(slug)) {
-      ability = AbilityType.wisdom;
-    } else if (['bard', 'sorcerer', 'warlock', 'paladin'].contains(slug)) {
-      ability = AbilityType.charisma;
-    }
-
-    var score = widget.character.baseScores.getScore(ability) +
-        widget.character.bonusScores.getScore(ability);
-    if (_isAsiEligible && _isAsiSelected) {
-      if (_isAsiPlusTwo && _asiSingleAbility == ability) {
-        score += 2;
-      } else if (!_isAsiPlusTwo &&
-          (_asiDualAbility1 == ability || _asiDualAbility2 == ability)) {
-        score += 1;
-      }
-    }
-    return score.dndModifier;
+    final edition = widget.character.id.ruleset == RulesetVersion.v2024
+        ? RulesetEdition.v2024
+        : RulesetEdition.v2014;
+    final profile = resolveClassSpellcasterProfile(
+      classSlug: classSlug,
+      classLevel: _targetClassNewLevel,
+      subclassSlug: _effectiveSubclassSlug,
+      edition: edition,
+    );
+    final ability = profile.castingAbility ?? AbilityType.intelligence;
+    return _effectiveScoresWithPendingAsi.getScore(ability).dndModifier;
   }
 
-  int get _maxAccessibleSpellLevel {
-    final slug = _selectedClassSlug.toLowerCase();
-    final lvl = _targetClassNewLevel;
-    if (['wizard', 'cleric', 'druid', 'bard', 'sorcerer'].contains(slug)) {
-      return ((lvl + 1) ~/ 2).clamp(1, 9);
-    }
-    if (slug == 'warlock') {
-      return ((lvl + 1) ~/ 2).clamp(1, 5);
-    }
-    if (['paladin', 'ranger'].contains(slug)) {
-      if (lvl < 2) {
-        return (widget.character.id.ruleset == RulesetVersion.v2024) ? 1 : 0;
-      }
-      return ((lvl + 3) ~/ 4).clamp(1, 5);
-    }
-    final effSub = _effectiveSubclassSlug?.toLowerCase() ?? '';
-    if (effSub.contains('eldritch_knight') ||
-        effSub.contains('arcane_trickster')) {
-      if (lvl < 3) return 0;
-      return ((lvl + 1) ~/ 6 + 1).clamp(1, 4);
-    }
-    return 0;
-  }
+  int get _maxAccessibleSpellLevel => _casterProfile.highestSpellLevel;
 
-  bool get _isSpellcaster => _maxAccessibleSpellLevel > 0;
+  bool get _isSpellcaster => _casterProfile.isSpellcaster;
 
-  SpellClass? get _targetSpellClass {
-    final effSub = _effectiveSubclassSlug?.toLowerCase() ?? '';
-    if (effSub.contains('eldritch_knight') ||
-        effSub.contains('arcane_trickster')) {
-      return SpellClass.wizard;
-    }
-    return switch (_selectedClassSlug.toLowerCase()) {
-      'wizard' => SpellClass.wizard,
-      'cleric' => SpellClass.cleric,
-      'druid' => SpellClass.druid,
-      'bard' => SpellClass.bard,
-      'sorcerer' => SpellClass.sorcerer,
-      'warlock' => SpellClass.warlock,
-      'ranger' => SpellClass.ranger,
-      'paladin' => SpellClass.paladin,
-      _ => null,
-    };
-  }
+  SpellClass? get _targetSpellClass => _casterProfile.spellList;
 
   // --------------------------------------------------------------------------
   // STEP 5: SPELLS
@@ -2497,14 +2355,9 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
     final maxAllowedNewCantrips = math.max(
         gainedCantripsProgression, limits.maxCantrips - curCantripsCount);
 
-    final effSub = _effectiveSubclassSlug?.toLowerCase() ?? '';
     final isWizard = _selectedClassSlug.toLowerCase() == 'wizard';
-    final isSpontaneous = ['sorcerer', 'bard', 'warlock']
-            .contains(_selectedClassSlug.toLowerCase()) ||
-        (_selectedClassSlug.toLowerCase() == 'ranger' &&
-            edition == DmRulesEdition.v2014) ||
-        effSub.contains('eldritch_knight') ||
-        effSub.contains('arcane_trickster');
+    final isSpontaneous =
+        limits.maxSpellsKnown > 0 && limits.maxSpellsPrepared == 0;
 
     int maxAllowedNewSpells;
     if (isWizard) {
@@ -2955,48 +2808,24 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog>
                     });
                   },
                 ),
-                const SizedBox(width: 6),
-                if (limits.allowedMagicalSecretClasses
-                    .contains(SpellClass.wizard))
-                  ChoiceChip(
-                    label: const Text('Wizard'),
-                    selected: _selectedSpellListSource == SpellClass.wizard,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedSpellListSource =
-                            selected ? SpellClass.wizard : null;
-                        _showAllSpellListsForSecrets = false;
-                      });
-                    },
-                  ),
-                const SizedBox(width: 6),
-                if (limits.allowedMagicalSecretClasses
-                    .contains(SpellClass.cleric))
-                  ChoiceChip(
-                    label: const Text('Cleric'),
-                    selected: _selectedSpellListSource == SpellClass.cleric,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedSpellListSource =
-                            selected ? SpellClass.cleric : null;
-                        _showAllSpellListsForSecrets = false;
-                      });
-                    },
-                  ),
-                const SizedBox(width: 6),
-                if (limits.allowedMagicalSecretClasses
-                    .contains(SpellClass.druid))
-                  ChoiceChip(
-                    label: const Text('Druid'),
-                    selected: _selectedSpellListSource == SpellClass.druid,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedSpellListSource =
-                            selected ? SpellClass.druid : null;
-                        _showAllSpellListsForSecrets = false;
-                      });
-                    },
-                  ),
+                for (final sc in const [
+                  SpellClass.wizard,
+                  SpellClass.cleric,
+                  SpellClass.druid,
+                ])
+                  if (limits.allowedMagicalSecretClasses.contains(sc)) ...[
+                    const SizedBox(width: 6),
+                    ChoiceChip(
+                      label: Text(sc.label),
+                      selected: _selectedSpellListSource == sc,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedSpellListSource = selected ? sc : null;
+                          _showAllSpellListsForSecrets = false;
+                        });
+                      },
+                    ),
+                  ],
                 const SizedBox(width: 6),
                 if (limits.allowedMagicalSecretClasses.length > 4 ||
                     edition == DmRulesEdition.v2014)

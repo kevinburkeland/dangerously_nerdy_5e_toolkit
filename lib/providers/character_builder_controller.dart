@@ -1,13 +1,19 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
-import '../models/domain/core_types.dart';
-import '../models/domain/character_models.dart';
 import '../models/domain/character_draft.dart';
+import '../models/domain/homebrew_extended_entities.dart';
 import '../models/characters/srd_backgrounds_library.dart';
+import '../models/characters/srd_classes_library.dart';
+import '../models/characters/srd_equipment_library.dart';
+import '../models/characters/srd_feats_library.dart';
 import '../models/characters/srd_species_library.dart';
+import '../models/characters/subclass_spells_library.dart';
+import '../models/party/party_purse.dart';
+import '../models/spellbook_data.dart';
 import '../services/rules/character_factory.dart';
 import '../services/rules/character_validation_engine.dart';
+import '../services/rules/skill_trait_resolver.dart';
 
 /// State manager for 5e Character Builder attribute generation, consumable resource pools,
 /// progression validation, skill overlap refunds, and character draft state.
@@ -651,5 +657,354 @@ class CharacterBuilderController extends ChangeNotifier {
       default:
         return const AbilityScores.standardArray();
     }
+  }
+
+  /// Assembles and returns the finalized [CharacterDraft] from all builder
+  /// selections so the screen's finalize handler stays purely UI-focused (Fix 7.5).
+  CharacterDraft buildFinalizedDraft({
+    required String rawName,
+    required RulesetVersion ruleset,
+    required String speciesSlug,
+    String? subraceSlug,
+    required String classSlug,
+    required String backgroundSlug,
+    String? selectedSubclassSlug,
+    String? selectedFeatSlug,
+    AbilityType? selectedFeatAbility,
+    SkillType? selectedFeatSkill,
+    SkillType? selectedFeatExpertise,
+    String? selectedFeatOption,
+    required Set<SkillType> selectedClassSkills,
+    required Set<SkillType> compensatorySkillPicks,
+    required Set<SkillType> speciesBonusSkillPicks,
+    required Set<String> selectedCantripIds,
+    required Set<String> selectedSpellIds,
+    String? startingEquipmentPresetId,
+    required Map<String, List<String>> selectedFeatureOptions,
+    required Set<AbilityType> variantHumanBonuses,
+    required AbilityType backgroundPrimaryBonus,
+    required AbilityType backgroundSecondaryBonus,
+    required List<String> languages,
+    required List<String> toolProficiencies,
+  }) {
+    final curClass =
+        SrdClassesLibrary.findBySlug(classSlug, ruleset: ruleset)!;
+    final curSpecies = SrdSpeciesLibrary.findBySlug(speciesSlug)!;
+    final curBackground = SrdBackgroundsLibrary.findBySlug(backgroundSlug)!;
+    final is2024 = ruleset == RulesetVersion.v2024;
+    final edition = is2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014;
+
+    // Resolve class saves
+    final saveProficiencies = curClass.savingThrows.map((s) {
+      return AbilityType.values.firstWhere(
+        (a) =>
+            a.name.toLowerCase() == s.toLowerCase() ||
+            a.shortName.toLowerCase() == s.toLowerCase(),
+        orElse: () => AbilityType.strength,
+      );
+    }).toSet();
+
+    // Map skill proficiencies using SkillTraitResolver
+    final skillReport = SkillTraitResolver.resolveSkills(
+      speciesSlug: speciesSlug,
+      subraceSlug: subraceSlug,
+      backgroundSlug: backgroundSlug,
+      classSlug: curClass.id.slug,
+      requestedClassSkills: selectedClassSkills,
+      compensatoryPicks: compensatorySkillPicks,
+      speciesBonusSkills: speciesBonusSkillPicks,
+      edition: edition,
+    );
+    final skillMap = Map<SkillType, SkillProficiencyLevel>.from(
+        skillReport.resolvedProficiencies);
+    for (final sk in speciesBonusSkillPicks) {
+      skillMap[sk] = SkillProficiencyLevel.proficient;
+    }
+    for (final sk in _bonusReplacementSkills) {
+      skillMap[sk] = SkillProficiencyLevel.proficient;
+    }
+    for (final s in curBackground.skillProficiencies) {
+      final clean = s
+          .toLowerCase()
+          .replaceAll(' ', '')
+          .replaceAll('_', '')
+          .replaceAll('-', '');
+      for (final st in SkillType.values) {
+        if (st.name.toLowerCase() == clean ||
+            st.displayName.toLowerCase().replaceAll(' ', '') == clean) {
+          skillMap[st] = SkillProficiencyLevel.proficient;
+          break;
+        }
+      }
+    }
+
+    // Starting equipment and purse from chosen SRD package
+    final classPackages =
+        SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
+    final selectedPkg = (startingEquipmentPresetId != null
+            ? SrdEquipmentLibrary.findPackageById(startingEquipmentPresetId)
+            : null) ??
+        classPackages.first;
+    final equipRequests =
+        List<StartingEquipmentItemRequest>.from(selectedPkg.items);
+    final startingPurse = PartyPurse(gp: selectedPkg.startingGold);
+
+    final hasFeat = is2024 || curSpecies.grantsBonusFeat;
+    final cantripRefs = selectedCantripIds.map((id) {
+      final spell = SpellbookLibrary.getSpellById(id);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: id,
+        displayName: spell?.name ?? id,
+      );
+    }).toList();
+
+    final allSelectedSpells = List<String>.from(selectedSpellIds);
+    final autoGrantedSubclassSpells =
+        SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: curClass.id.slug,
+      subclassSlug: selectedSubclassSlug,
+      classLevel: 1,
+      edition: edition,
+    );
+    for (final s in autoGrantedSubclassSpells) {
+      if (!allSelectedSpells.contains(s.id)) {
+        allSelectedSpells.add(s.id);
+      }
+    }
+
+    final innateSpells = SkillTraitResolver.getInnateSpeciesSpells(
+      speciesSlug: curSpecies.id.slug,
+      subraceSlug: subraceSlug,
+      totalCharacterLevel: 1,
+      edition: edition,
+    );
+    for (final isp in innateSpells) {
+      if (isp.isCantrip) {
+        if (!cantripRefs.any((c) => c.slug == isp.spellRef.slug)) {
+          cantripRefs.add(isp.spellRef);
+        }
+      } else {
+        if (!allSelectedSpells.contains(isp.spellRef.slug)) {
+          allSelectedSpells.add(isp.spellRef.slug);
+        }
+      }
+    }
+
+    final spellRefs = allSelectedSpells.map((id) {
+      final spell = SpellbookLibrary.getSpellById(id);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: id,
+        displayName: spell?.name ?? id,
+      );
+    }).toList();
+
+    final curSubrace = subraceSlug != null
+        ? SrdSpeciesLibrary.findSubraceBySlug(subraceSlug)
+        : null;
+    final hasSubraceAbilities = curSubrace != null &&
+        (curSubrace.fixedAbilityBonuses2014.isNotEmpty ||
+            curSubrace.flexibleAbilityChoiceCount > 0);
+    var finalBonusScores = computeOriginAbilityBonuses(
+      edition: is2024 ? RulesetEdition.v2024 : RulesetEdition.v2014,
+      fixedBonuses2014: hasSubraceAbilities
+          ? curSubrace.fixedAbilityBonuses2014
+          : curSpecies.fixedAbilityBonuses2014,
+      flexibleChoiceCount2014: hasSubraceAbilities
+          ? curSubrace.flexibleAbilityChoiceCount
+          : curSpecies.flexibleAbilityChoiceCount,
+      flexibleBonusValue2014: hasSubraceAbilities
+          ? curSubrace.flexibleAbilityBonusValue
+          : curSpecies.flexibleAbilityBonusValue,
+      flexibleChoices2014: variantHumanBonuses,
+      backgroundPrimary2024: backgroundPrimaryBonus,
+      backgroundSecondary2024: backgroundSecondaryBonus,
+    );
+    final finalSaveProficiencies = Set<AbilityType>.from(saveProficiencies);
+
+    if (hasFeat && selectedFeatSlug != null) {
+      final feat = SrdFeatsLibrary.findBySlug(selectedFeatSlug) ??
+          SrdFeatsLibrary.allFeats
+              .where((f) => f.id.slug == selectedFeatSlug)
+              .firstOrNull;
+      if (feat != null && feat.hasAbilityScoreIncrease) {
+        final chosenAbility = selectedFeatAbility ??
+            (feat.selectableAbilities.isNotEmpty
+                ? feat.selectableAbilities.first
+                : null);
+        if (chosenAbility != null) {
+          final amt = feat.statIncreaseAmount;
+          switch (chosenAbility) {
+            case AbilityType.strength:
+              finalBonusScores = finalBonusScores.copyWith(
+                  strength: finalBonusScores.strength + amt);
+            case AbilityType.dexterity:
+              finalBonusScores = finalBonusScores.copyWith(
+                  dexterity: finalBonusScores.dexterity + amt);
+            case AbilityType.constitution:
+              finalBonusScores = finalBonusScores.copyWith(
+                  constitution: finalBonusScores.constitution + amt);
+            case AbilityType.intelligence:
+              finalBonusScores = finalBonusScores.copyWith(
+                  intelligence: finalBonusScores.intelligence + amt);
+            case AbilityType.wisdom:
+              finalBonusScores = finalBonusScores.copyWith(
+                  wisdom: finalBonusScores.wisdom + amt);
+            case AbilityType.charisma:
+              finalBonusScores = finalBonusScores.copyWith(
+                  charisma: finalBonusScores.charisma + amt);
+          }
+          if (feat.grantsSavingThrowProficiency) {
+            finalSaveProficiencies.add(chosenAbility);
+          }
+        }
+      }
+      if (feat != null) {
+        if (feat.hasSkillProficiencyChoice && selectedFeatSkill != null) {
+          skillMap[selectedFeatSkill] = SkillProficiencyLevel.proficient;
+        }
+        if (feat.hasExpertiseChoice) {
+          final eligible = <SkillType>{
+            ...selectedClassSkills,
+            ...speciesBonusSkillPicks,
+            ...compensatorySkillPicks,
+            ?selectedFeatSkill,
+          };
+          final finalExp = eligible.contains(selectedFeatExpertise)
+              ? selectedFeatExpertise
+              : (selectedFeatSkill ??
+                  (eligible.isNotEmpty ? eligible.first : null));
+          if (finalExp != null) {
+            skillMap[finalExp] = SkillProficiencyLevel.expertise;
+          }
+        }
+      }
+    }
+
+    EntityReference<DomainEntity>? startingSubclassRef;
+    if (curClass.getSubclassLevel(ruleset) == 1 &&
+        curClass.subclasses.isNotEmpty) {
+      final chosenSubSlug =
+          selectedSubclassSlug ?? curClass.subclasses.first.id.slug;
+      final sub = curClass.subclasses.firstWhere(
+        (s) => s.id.slug == chosenSubSlug,
+        orElse: () => curClass.subclasses.first,
+      );
+      startingSubclassRef = EntityReference<DomainEntity>(
+        refType: EntityType.subclass,
+        slug: sub.id.slug,
+        displayName: sub.name,
+        customProperties: {
+          'featuresMarkdown': sub.featuresMarkdown,
+          'classSlug': sub.classSlug,
+          'shortName': sub.shortName,
+          'grants': sub.grants.map((g) => g.toMap()).toList(),
+          ...sub.customProperties,
+        },
+      );
+    }
+
+    final draft = _draft;
+    draft.characterName =
+        rawName.trim().isEmpty ? 'Adventurer' : rawName.trim();
+    draft.rulesEdition = edition;
+    draft.speciesRef = EntityReference(
+      refType: EntityType.species,
+      slug: curSpecies.id.slug,
+      displayName: curSpecies.name,
+      customProperties: {
+        if (curSpecies.flexibleAbilityPool != null)
+          'flexibleAbilityPool': curSpecies.flexibleAbilityPool,
+        if (curSpecies.flexibleAbilityChoiceCount > 0)
+          'flexibleAbilityCount': curSpecies.flexibleAbilityChoiceCount,
+        if (curSpecies.flexibleAbilityBonus > 0)
+          'flexibleAbilityBonus': curSpecies.flexibleAbilityBonus,
+        if (curSpecies.fixedAbilityBonuses2014.isNotEmpty)
+          'fixedAbilityBonuses': curSpecies.fixedAbilityBonuses2014,
+      },
+    );
+    if (subraceSlug != null) {
+      final chosenSub = SrdSpeciesLibrary.findSubraceBySlug(subraceSlug) ??
+          (curSpecies.subraces.isNotEmpty
+              ? curSpecies.subraces.firstWhere(
+                  (s) => s.id.slug == subraceSlug,
+                  orElse: () => curSpecies.subraces.first)
+              : null);
+      if (chosenSub != null) {
+        draft.subraceRef = EntityReference(
+          refType: EntityType.species,
+          slug: chosenSub.id.slug,
+          displayName: chosenSub.name,
+          customProperties: {
+            if (chosenSub.flexibleAbilityPool != null)
+              'flexibleAbilityPool': chosenSub.flexibleAbilityPool,
+            if (chosenSub.flexibleAbilityCount > 0)
+              'flexibleAbilityCount': chosenSub.flexibleAbilityCount,
+            if (chosenSub.flexibleAbilityBonus > 0)
+              'flexibleAbilityBonus': chosenSub.flexibleAbilityBonus,
+            if (chosenSub.fixedAbilityBonuses.isNotEmpty)
+              'fixedAbilityBonuses': chosenSub.fixedAbilityBonuses,
+          },
+        );
+      } else {
+        draft.subraceRef = null;
+      }
+    } else {
+      draft.subraceRef = null;
+    }
+    draft.pendingFlexibleAbilityChoices = variantHumanBonuses.toList();
+    final bgProps = Map<String, dynamic>.from(curBackground.customProperties);
+    if (curBackground.skillProficiencies.isNotEmpty) {
+      bgProps['skillProficiencies'] = curBackground.skillProficiencies;
+      bgProps['skills'] = curBackground.skillProficiencies;
+    }
+    if (curBackground.toolProficiencies.isNotEmpty) {
+      bgProps['toolProficiencies'] = curBackground.toolProficiencies;
+    }
+    if (curBackground.languages.isNotEmpty) {
+      bgProps['languages'] = curBackground.languages;
+    }
+    draft.backgroundRef = EntityReference(
+      refType: EntityType.background,
+      slug: curBackground.id.slug,
+      displayName: curBackground.name,
+      customProperties: bgProps,
+    );
+    draft.startingClassRef = EntityReference(
+      refType: EntityType.classDefinition,
+      slug: curClass.id.slug,
+      displayName: curClass.name,
+    );
+    draft.startingClassHitDie = curClass.hitDie;
+    draft.baseScores = effectiveBaseScores;
+    draft.bonusScores = finalBonusScores;
+    draft.savingThrowProficiencies = finalSaveProficiencies;
+    draft.selectedSkills = skillMap;
+    draft.originFeats = [
+      if (hasFeat && selectedFeatSlug != null)
+        EntityReference(
+          refType: EntityType.feat,
+          slug: selectedFeatSlug,
+          displayName:
+              SrdFeatsLibrary.findBySlug(selectedFeatSlug)?.name ?? 'Feat',
+        ),
+    ];
+    draft.startingEquipment = equipRequests;
+    draft.startingPurse = startingPurse;
+    draft.takesStartingWealth = selectedPkg.id.startsWith('starting_wealth_');
+    draft.cantrips = cantripRefs;
+    draft.spellsKnown = spellRefs;
+    draft.spellsPrepared = spellRefs;
+    draft.startingSubclassRef = startingSubclassRef;
+    final finalFeatureOptions =
+        Map<String, List<String>>.from(selectedFeatureOptions);
+    if (hasFeat && selectedFeatSlug != null && selectedFeatOption != null) {
+      finalFeatureOptions['feat-$selectedFeatSlug'] = [selectedFeatOption];
+    }
+    draft.selectedFeatureOptions = finalFeatureOptions;
+    draft.languages = languages;
+    draft.toolProficiencies = toolProficiencies;
+    return draft;
   }
 }

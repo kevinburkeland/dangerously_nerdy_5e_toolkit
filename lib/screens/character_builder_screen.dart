@@ -10,7 +10,6 @@ import '../models/characters/srd_proficiencies_library.dart';
 import '../models/characters/subclass_spells_library.dart';
 import '../models/magic_items/magic_item_library.dart';
 import '../models/domain/homebrew_extended_entities.dart';
-import '../models/party/party_purse.dart';
 import '../models/spellbook_data.dart';
 import '../services/haptic_service.dart';
 import '../services/repository/layered_priority_repository.dart';
@@ -1191,45 +1190,21 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  bool _isSpellcasterClass(String? classSlug, RulesetVersion ruleset) {
-    if (classSlug == null) return false;
-    final slug = classSlug.toLowerCase();
-    if (slug == 'wizard' ||
-        slug == 'cleric' ||
-        slug == 'druid' ||
-        slug == 'bard' ||
-        slug == 'sorcerer' ||
-        slug == 'warlock') {
-      return true;
+  ClassSpellcasterProfile _resolveSelectedCasterProfile(
+    String? classSlug,
+    RulesetVersion ruleset,
+  ) {
+    if (classSlug == null) {
+      return const ClassSpellcasterProfile.nonCaster();
     }
-    if (ruleset == RulesetVersion.v2024 && slug == 'ranger') {
-      return true;
-    }
-    return false;
-  }
-
-  SpellClass? _findSpellClass(String? slug) {
-    if (slug == null) return null;
-    return switch (slug.toLowerCase()) {
-      'wizard' => SpellClass.wizard,
-      'cleric' => SpellClass.cleric,
-      'druid' => SpellClass.druid,
-      'bard' => SpellClass.bard,
-      'sorcerer' => SpellClass.sorcerer,
-      'warlock' => SpellClass.warlock,
-      'ranger' => SpellClass.ranger,
-      'paladin' => SpellClass.paladin,
-      _ => null,
-    };
-  }
-
-  AbilityType _getCastingAbility(String? slug) {
-    if (slug == null) return AbilityType.charisma;
-    return switch (slug.toLowerCase()) {
-      'wizard' => AbilityType.intelligence,
-      'cleric' || 'druid' || 'ranger' => AbilityType.wisdom,
-      _ => AbilityType.charisma,
-    };
+    final edition = ruleset == RulesetVersion.v2024
+        ? RulesetEdition.v2024
+        : RulesetEdition.v2014;
+    return resolveClassSpellcasterProfile(
+      classSlug: classSlug,
+      classLevel: 1,
+      edition: edition,
+    );
   }
 
   List<String> _getWizardStepTypes() {
@@ -1244,7 +1219,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ? SrdClassesLibrary.findBySlug(_selectedClass!,
             ruleset: _selectedRuleset)
         : null;
-    final isCaster = _isSpellcasterClass(_selectedClass, _selectedRuleset);
+    final isCaster =
+        _resolveSelectedCasterProfile(_selectedClass, _selectedRuleset)
+            .isSpellcaster;
     final hasSubclass = curClass != null &&
         curClass.getSubclassLevel(_selectedRuleset) == 1 &&
         curClass.subclasses.isNotEmpty;
@@ -4334,7 +4311,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final edition = _selectedRuleset == RulesetVersion.v2024
         ? DmRulesEdition.v2024
         : DmRulesEdition.v2014;
-    final spellClass = _findSpellClass(curClass.id.slug);
+    final casterProfile =
+        _resolveSelectedCasterProfile(curClass.id.slug, _selectedRuleset);
+    final spellClass = casterProfile.spellList;
     final curSpecies = _selectedSpecies != null
         ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)
         : null;
@@ -4380,7 +4359,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final stepNumber = _getWizardStepTypes().indexOf('spells') + 1;
 
     // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
-    final castingAbility = _getCastingAbility(curClass.id.slug);
+    final castingAbility =
+        casterProfile.castingAbility ?? AbilityType.charisma;
     final curBackground = _selectedBackground != null
         ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!)
         : null;
@@ -5255,74 +5235,32 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       Race? curSpecies, Background? curBackground, RulesetVersion ruleset,
       {Subrace? curSubrace}) {
     if (ruleset == RulesetVersion.v2014) {
-      if (curSpecies == null && curSubrace == null)
+      if (curSpecies == null && curSubrace == null) {
         return const AbilityScores.zero();
-
-      final bool hasSubraceAbilities = curSubrace != null &&
+      }
+      final hasSubraceAbilities = curSubrace != null &&
           (curSubrace.fixedAbilityBonuses2014.isNotEmpty ||
               curSubrace.flexibleAbilityChoiceCount > 0);
-
-      final fixed = hasSubraceAbilities
-          ? Map<String, int>.from(curSubrace.fixedAbilityBonuses2014)
-          : (curSpecies != null
-              ? Map<String, int>.from(curSpecies.fixedAbilityBonuses2014)
-              : <String, int>{});
-
-      final flexibleCount = hasSubraceAbilities
-          ? curSubrace.flexibleAbilityChoiceCount
-          : (curSpecies?.flexibleAbilityChoiceCount ?? 0);
-
-      final flexibleBonus = hasSubraceAbilities
-          ? curSubrace.flexibleAbilityBonusValue
-          : (curSpecies?.flexibleAbilityBonusValue ?? 0);
-
-      int str = fixed['strength'] ?? 0;
-      int dex = fixed['dexterity'] ?? 0;
-      int con = fixed['constitution'] ?? 0;
-      int intl = fixed['intelligence'] ?? 0;
-      int wis = fixed['wisdom'] ?? 0;
-      int cha = fixed['charisma'] ?? 0;
-
-      if (flexibleCount > 0) {
-        final activePicks = _variantHumanBonuses.take(flexibleCount).toSet();
-        if (activePicks.contains(AbilityType.strength)) str += flexibleBonus;
-        if (activePicks.contains(AbilityType.dexterity)) dex += flexibleBonus;
-        if (activePicks.contains(AbilityType.constitution))
-          con += flexibleBonus;
-        if (activePicks.contains(AbilityType.intelligence))
-          intl += flexibleBonus;
-        if (activePicks.contains(AbilityType.wisdom)) wis += flexibleBonus;
-        if (activePicks.contains(AbilityType.charisma)) cha += flexibleBonus;
-      }
-
-      return AbilityScores(
-        strength: str,
-        dexterity: dex,
-        constitution: con,
-        intelligence: intl,
-        wisdom: wis,
-        charisma: cha,
-      );
-    } else {
-      // 2024 rules: +2 to chosen primary, +1 to secondary
-      if (curBackground == null) return const AbilityScores.zero();
-      return AbilityScores(
-        strength: (_backgroundPrimaryBonus == AbilityType.strength ? 2 : 0) +
-            (_backgroundSecondaryBonus == AbilityType.strength ? 1 : 0),
-        dexterity: (_backgroundPrimaryBonus == AbilityType.dexterity ? 2 : 0) +
-            (_backgroundSecondaryBonus == AbilityType.dexterity ? 1 : 0),
-        constitution:
-            (_backgroundPrimaryBonus == AbilityType.constitution ? 2 : 0) +
-                (_backgroundSecondaryBonus == AbilityType.constitution ? 1 : 0),
-        intelligence:
-            (_backgroundPrimaryBonus == AbilityType.intelligence ? 2 : 0) +
-                (_backgroundSecondaryBonus == AbilityType.intelligence ? 1 : 0),
-        wisdom: (_backgroundPrimaryBonus == AbilityType.wisdom ? 2 : 0) +
-            (_backgroundSecondaryBonus == AbilityType.wisdom ? 1 : 0),
-        charisma: (_backgroundPrimaryBonus == AbilityType.charisma ? 2 : 0) +
-            (_backgroundSecondaryBonus == AbilityType.charisma ? 1 : 0),
+      return computeOriginAbilityBonuses(
+        edition: RulesetEdition.v2014,
+        fixedBonuses2014: hasSubraceAbilities
+            ? curSubrace.fixedAbilityBonuses2014
+            : (curSpecies?.fixedAbilityBonuses2014 ?? const {}),
+        flexibleChoiceCount2014: hasSubraceAbilities
+            ? curSubrace.flexibleAbilityChoiceCount
+            : (curSpecies?.flexibleAbilityChoiceCount ?? 0),
+        flexibleBonusValue2014: hasSubraceAbilities
+            ? curSubrace.flexibleAbilityBonusValue
+            : (curSpecies?.flexibleAbilityBonusValue ?? 0),
+        flexibleChoices2014: _variantHumanBonuses,
       );
     }
+    if (curBackground == null) return const AbilityScores.zero();
+    return computeOriginAbilityBonuses(
+      edition: RulesetEdition.v2024,
+      backgroundPrimary2024: _backgroundPrimaryBonus,
+      backgroundSecondary2024: _backgroundSecondaryBonus,
+    );
   }
 
   void _finalizeCreatedCharacter() {
@@ -5335,323 +5273,32 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       return;
     }
 
-    final curClass = SrdClassesLibrary.findBySlug(_selectedClass!,
-        ruleset: _selectedRuleset)!;
-    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies!)!;
-    final curBackground =
-        SrdBackgroundsLibrary.findBySlug(_selectedBackground!)!;
-
-    // Resolve class saves
-    final saveProficiencies = curClass.savingThrows.map((s) {
-      final match = AbilityType.values.firstWhere(
-        (a) =>
-            a.name.toLowerCase() == s.toLowerCase() ||
-            a.shortName.toLowerCase() == s.toLowerCase(),
-        orElse: () => AbilityType.strength,
-      );
-      return match;
-    }).toSet();
-
-    // Map skill proficiencies using SkillTraitResolver
-    final skillReport = SkillTraitResolver.resolveSkills(
-      speciesSlug: _selectedSpecies,
+    final draft = _abilityScoreController.buildFinalizedDraft(
+      rawName: _nameController.text,
+      ruleset: _selectedRuleset,
+      speciesSlug: _selectedSpecies!,
       subraceSlug: _selectedSubrace,
-      backgroundSlug: _selectedBackground,
-      classSlug: curClass.id.slug,
-      requestedClassSkills: _wizardSelectedSkills,
-      compensatoryPicks: _compensatorySkillPicks,
-      speciesBonusSkills: _speciesBonusSkillPicks,
-      edition: _selectedRuleset == RulesetVersion.v2024
-          ? DmRulesEdition.v2024
-          : DmRulesEdition.v2014,
+      classSlug: _selectedClass!,
+      backgroundSlug: _selectedBackground!,
+      selectedSubclassSlug: _wizardSelectedSubclass,
+      selectedFeatSlug: _selectedFeat,
+      selectedFeatAbility: _selectedFeatAbility,
+      selectedFeatSkill: _selectedFeatSkill,
+      selectedFeatExpertise: _selectedFeatExpertise,
+      selectedFeatOption: _selectedFeatOption,
+      selectedClassSkills: _wizardSelectedSkills,
+      compensatorySkillPicks: _compensatorySkillPicks,
+      speciesBonusSkillPicks: _speciesBonusSkillPicks,
+      selectedCantripIds: _selectedWizardCantrips,
+      selectedSpellIds: _selectedWizardSpells,
+      startingEquipmentPresetId: _selectedStartingEquipmentPreset,
+      selectedFeatureOptions: _wizardSelectedFeatureOptions,
+      variantHumanBonuses: _variantHumanBonuses,
+      backgroundPrimaryBonus: _backgroundPrimaryBonus,
+      backgroundSecondaryBonus: _backgroundSecondaryBonus,
+      languages: _allBuilderLanguages.toList(),
+      toolProficiencies: _allBuilderTools.toList(),
     );
-    final skillMap = Map<SkillType, SkillProficiencyLevel>.from(
-        skillReport.resolvedProficiencies);
-    for (final sk in _speciesBonusSkillPicks) {
-      skillMap[sk] = SkillProficiencyLevel.proficient;
-    }
-    for (final sk in _abilityScoreController.bonusReplacementSkills) {
-      skillMap[sk] = SkillProficiencyLevel.proficient;
-    }
-    for (final s in curBackground.skillProficiencies) {
-      final clean = s
-          .toLowerCase()
-          .replaceAll(' ', '')
-          .replaceAll('_', '')
-          .replaceAll('-', '');
-      for (final st in SkillType.values) {
-        if (st.name.toLowerCase() == clean ||
-            st.displayName.toLowerCase().replaceAll(' ', '') == clean) {
-          skillMap[st] = SkillProficiencyLevel.proficient;
-          break;
-        }
-      }
-    }
-
-    // Starting equipment and purse from chosen SRD package
-    final classPackages =
-        SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
-    final selectedPkg = (_selectedStartingEquipmentPreset != null
-            ? SrdEquipmentLibrary.findPackageById(
-                _selectedStartingEquipmentPreset!)
-            : null) ??
-        classPackages.first;
-    final equipRequests =
-        List<StartingEquipmentItemRequest>.from(selectedPkg.items);
-    final startingPurse = PartyPurse(gp: selectedPkg.startingGold);
-
-    final is2024 = _selectedRuleset == RulesetVersion.v2024;
-    final hasFeat = is2024 || curSpecies.grantsBonusFeat;
-    final cantripRefs = _selectedWizardCantrips.map((id) {
-      final spell = SpellbookLibrary.getSpellById(id);
-      return EntityReference<Spell>(
-        refType: EntityType.spell,
-        slug: id,
-        displayName: spell?.name ?? id,
-      );
-    }).toList();
-
-    final allSelectedSpells = List<String>.from(_selectedWizardSpells);
-    final autoGrantedSubclassSpells =
-        SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
-      classSlug: curClass.id.slug,
-      subclassSlug: _wizardSelectedSubclass,
-      classLevel: 1,
-      edition: _selectedRuleset == RulesetVersion.v2024
-          ? DmRulesEdition.v2024
-          : DmRulesEdition.v2014,
-    );
-    for (final s in autoGrantedSubclassSpells) {
-      if (!allSelectedSpells.contains(s.id)) {
-        allSelectedSpells.add(s.id);
-      }
-    }
-
-    // Auto-grant innate species & subrace cantrips and spells
-    final innateSpells = SkillTraitResolver.getInnateSpeciesSpells(
-      speciesSlug: curSpecies.id.slug,
-      subraceSlug: _selectedSubrace,
-      totalCharacterLevel: 1,
-      edition: _selectedRuleset == RulesetVersion.v2024
-          ? DmRulesEdition.v2024
-          : DmRulesEdition.v2014,
-    );
-    for (final isp in innateSpells) {
-      if (isp.isCantrip) {
-        if (!cantripRefs.any((c) => c.slug == isp.spellRef.slug)) {
-          cantripRefs.add(isp.spellRef);
-        }
-      } else {
-        if (!allSelectedSpells.contains(isp.spellRef.slug)) {
-          allSelectedSpells.add(isp.spellRef.slug);
-        }
-      }
-    }
-
-    final spellRefs = allSelectedSpells.map((id) {
-      final spell = SpellbookLibrary.getSpellById(id);
-      return EntityReference<Spell>(
-        refType: EntityType.spell,
-        slug: id,
-        displayName: spell?.name ?? id,
-      );
-    }).toList();
-
-    final curSubrace = _selectedSubrace != null
-        ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!)
-        : null;
-    final calculatedBonuses = _calculateBonusScores(
-        curSpecies, curBackground, _selectedRuleset,
-        curSubrace: curSubrace);
-    var finalBonusScores = calculatedBonuses;
-    final finalSaveProficiencies = Set<AbilityType>.from(saveProficiencies);
-
-    if (hasFeat && _selectedFeat != null) {
-      final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!) ??
-          SrdFeatsLibrary.allFeats
-              .where((f) => f.id.slug == _selectedFeat!)
-              .firstOrNull;
-      if (feat != null && feat.hasAbilityScoreIncrease) {
-        final chosenAbility = _selectedFeatAbility ??
-            (feat.selectableAbilities.isNotEmpty
-                ? feat.selectableAbilities.first
-                : null);
-        if (chosenAbility != null) {
-          final amt = feat.statIncreaseAmount;
-          switch (chosenAbility) {
-            case AbilityType.strength:
-              finalBonusScores = finalBonusScores.copyWith(
-                  strength: finalBonusScores.strength + amt);
-            case AbilityType.dexterity:
-              finalBonusScores = finalBonusScores.copyWith(
-                  dexterity: finalBonusScores.dexterity + amt);
-            case AbilityType.constitution:
-              finalBonusScores = finalBonusScores.copyWith(
-                  constitution: finalBonusScores.constitution + amt);
-            case AbilityType.intelligence:
-              finalBonusScores = finalBonusScores.copyWith(
-                  intelligence: finalBonusScores.intelligence + amt);
-            case AbilityType.wisdom:
-              finalBonusScores = finalBonusScores.copyWith(
-                  wisdom: finalBonusScores.wisdom + amt);
-            case AbilityType.charisma:
-              finalBonusScores = finalBonusScores.copyWith(
-                  charisma: finalBonusScores.charisma + amt);
-          }
-          if (feat.grantsSavingThrowProficiency) {
-            finalSaveProficiencies.add(chosenAbility);
-          }
-        }
-      }
-      if (feat != null) {
-        if (feat.hasSkillProficiencyChoice && _selectedFeatSkill != null) {
-          skillMap[_selectedFeatSkill!] = SkillProficiencyLevel.proficient;
-        }
-        if (feat.hasExpertiseChoice) {
-          final eligible = <SkillType>{
-            ..._wizardSelectedSkills,
-            ..._speciesBonusSkillPicks,
-            ..._compensatorySkillPicks,
-            ?_selectedFeatSkill,
-          };
-          final finalExp = eligible.contains(_selectedFeatExpertise)
-              ? _selectedFeatExpertise
-              : (_selectedFeatSkill ??
-                  (eligible.isNotEmpty ? eligible.first : null));
-          if (finalExp != null) {
-            skillMap[finalExp] = SkillProficiencyLevel.expertise;
-          }
-        }
-      }
-    }
-
-    EntityReference<DomainEntity>? startingSubclassRef;
-    if (curClass.getSubclassLevel(_selectedRuleset) == 1 &&
-        curClass.subclasses.isNotEmpty) {
-      final chosenSubSlug =
-          _wizardSelectedSubclass ?? curClass.subclasses.first.id.slug;
-      final sub = curClass.subclasses.firstWhere(
-        (s) => s.id.slug == chosenSubSlug,
-        orElse: () => curClass.subclasses.first,
-      );
-      startingSubclassRef = EntityReference<DomainEntity>(
-        refType: EntityType.subclass,
-        slug: sub.id.slug,
-        displayName: sub.name,
-        customProperties: {
-          'featuresMarkdown': sub.featuresMarkdown,
-          'classSlug': sub.classSlug,
-          'shortName': sub.shortName,
-          'grants': sub.grants.map((g) => g.toMap()).toList(),
-          ...sub.customProperties,
-        },
-      );
-    }
-
-    final draft = _abilityScoreController.draft;
-    draft.characterName = _nameController.text.trim().isEmpty
-        ? 'Adventurer'
-        : _nameController.text.trim();
-    draft.rulesEdition = _selectedRuleset == RulesetVersion.v2014
-        ? DmRulesEdition.v2014
-        : DmRulesEdition.v2024;
-    draft.speciesRef = EntityReference(
-      refType: EntityType.species,
-      slug: curSpecies.id.slug,
-      displayName: curSpecies.name,
-      customProperties: {
-        if (curSpecies.flexibleAbilityPool != null)
-          'flexibleAbilityPool': curSpecies.flexibleAbilityPool,
-        if (curSpecies.flexibleAbilityChoiceCount > 0)
-          'flexibleAbilityCount': curSpecies.flexibleAbilityChoiceCount,
-        if (curSpecies.flexibleAbilityBonus > 0)
-          'flexibleAbilityBonus': curSpecies.flexibleAbilityBonus,
-        if (curSpecies.fixedAbilityBonuses2014.isNotEmpty)
-          'fixedAbilityBonuses': curSpecies.fixedAbilityBonuses2014,
-      },
-    );
-    if (_selectedSubrace != null) {
-      final chosenSub =
-          SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) ??
-              (curSpecies.subraces.isNotEmpty
-                  ? curSpecies.subraces.firstWhere(
-                      (s) => s.id.slug == _selectedSubrace,
-                      orElse: () => curSpecies.subraces.first)
-                  : null);
-      if (chosenSub != null) {
-        draft.subraceRef = EntityReference(
-          refType: EntityType.species,
-          slug: chosenSub.id.slug,
-          displayName: chosenSub.name,
-          customProperties: {
-            if (chosenSub.flexibleAbilityPool != null)
-              'flexibleAbilityPool': chosenSub.flexibleAbilityPool,
-            if (chosenSub.flexibleAbilityCount > 0)
-              'flexibleAbilityCount': chosenSub.flexibleAbilityCount,
-            if (chosenSub.flexibleAbilityBonus > 0)
-              'flexibleAbilityBonus': chosenSub.flexibleAbilityBonus,
-            if (chosenSub.fixedAbilityBonuses.isNotEmpty)
-              'fixedAbilityBonuses': chosenSub.fixedAbilityBonuses,
-          },
-        );
-      } else {
-        draft.subraceRef = null;
-      }
-    } else {
-      draft.subraceRef = null;
-    }
-    draft.pendingFlexibleAbilityChoices = _variantHumanBonuses.toList();
-    final bgProps = Map<String, dynamic>.from(curBackground.customProperties);
-    if (curBackground.skillProficiencies.isNotEmpty) {
-      bgProps['skillProficiencies'] = curBackground.skillProficiencies;
-      bgProps['skills'] = curBackground.skillProficiencies;
-    }
-    if (curBackground.toolProficiencies.isNotEmpty) {
-      bgProps['toolProficiencies'] = curBackground.toolProficiencies;
-    }
-    if (curBackground.languages.isNotEmpty) {
-      bgProps['languages'] = curBackground.languages;
-    }
-    draft.backgroundRef = EntityReference(
-      refType: EntityType.background,
-      slug: curBackground.id.slug,
-      displayName: curBackground.name,
-      customProperties: bgProps,
-    );
-    draft.startingClassRef = EntityReference(
-      refType: EntityType.classDefinition,
-      slug: curClass.id.slug,
-      displayName: curClass.name,
-    );
-    draft.startingClassHitDie = curClass.hitDie;
-    draft.baseScores = _wizardBaseScores;
-    draft.bonusScores = finalBonusScores;
-    draft.savingThrowProficiencies = finalSaveProficiencies;
-    draft.selectedSkills = skillMap;
-    draft.originFeats = [
-      if (hasFeat && _selectedFeat != null)
-        EntityReference(
-          refType: EntityType.feat,
-          slug: _selectedFeat!,
-          displayName:
-              SrdFeatsLibrary.findBySlug(_selectedFeat!)?.name ?? 'Feat',
-        ),
-    ];
-    draft.startingEquipment = equipRequests;
-    draft.startingPurse = startingPurse;
-    draft.takesStartingWealth = selectedPkg.id.startsWith('starting_wealth_');
-    draft.cantrips = cantripRefs;
-    draft.spellsKnown = spellRefs;
-    draft.spellsPrepared = spellRefs;
-    draft.startingSubclassRef = startingSubclassRef;
-    final finalFeatureOptions =
-        Map<String, List<String>>.from(_wizardSelectedFeatureOptions);
-    if (hasFeat && _selectedFeat != null && _selectedFeatOption != null) {
-      finalFeatureOptions['feat-$_selectedFeat'] = [_selectedFeatOption!];
-    }
-    draft.selectedFeatureOptions = finalFeatureOptions;
-    draft.languages = _allBuilderLanguages.toList();
-    draft.toolProficiencies = _allBuilderTools.toList();
 
     final newChar = CharacterFactory.buildFromDraft(draft);
     _persistenceService.saveCharacter(newChar).then((_) async {
