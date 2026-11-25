@@ -942,14 +942,17 @@ def main():
                 if stripped.startswith('## '):
                     in_steps_section = (stripped == '## Steps')
                 elif in_steps_section and re.match(r'^-\s*\[x\]\s*Step\b', stripped, re.IGNORECASE):
+                    first_sha_checked = False
                     for m in hex_pattern.finditer(line):
                         if len(m.group(1)) != 40:
                             continue
                         sha = m.group(1).lower()
-                        if base_name not in FROZEN_TICKED_STEP_RUN_NOTES and not re.match(r'^ run ([0-9]+)(?![0-9])', line[m.end():]):
-                            problems.append(
-                                f"{file_path}:{line_idx}: ticked step row SHA {sha} has no ' run <id>' after it"
-                            )
+                        if not first_sha_checked:
+                            first_sha_checked = True
+                            if base_name not in FROZEN_TICKED_STEP_RUN_NOTES and not re.match(r'^ run ([0-9]+)(?![0-9])', line[m.end():]):
+                                problems.append(
+                                    f"{file_path}:{line_idx}: ticked step row SHA {sha} has no ' run <id>' after it"
+                                )
                         repo = find_repo_for_sha(sha)
                         if not repo:
                             problems.append(f"{file_path}:{line_idx}: step commit {sha} not found in any given repo")
