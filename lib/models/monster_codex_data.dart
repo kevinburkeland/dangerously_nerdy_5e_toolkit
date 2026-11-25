@@ -148,17 +148,10 @@ class MonsterItem {
   /// [DmRulesEdition] for this immutable [MonsterItem] instance.
   MonsterCombatProfile getCombatProfile(
       [DmRulesEdition edition = DmRulesEdition.v2024]) {
-    var byEdition = _combatProfileCache[this];
-    if (byEdition == null) {
-      byEdition = <DmRulesEdition, MonsterCombatProfile>{};
-      _combatProfileCache[this] = byEdition;
-    }
-    return byEdition.putIfAbsent(
-      edition,
-      () => MonsterCombatProfile.fromStatBlock(
-        getStatBlock(edition),
-        challengeRating: challengeRating,
-      ),
+    _combatProfileCache[this];
+    return MonsterCombatProfile.fromStatBlock(
+      getStatBlock(edition),
+      challengeRating: challengeRating,
     );
   }
 
