@@ -112,7 +112,7 @@ class LevelUpDialogHeader extends StatelessWidget {
   String _getStepTitle(int step) {
     switch (step) {
       case 0:
-        return 'Step 1 of 6: Target Class & Multiclass Rules';
+        return 'Step 1 of 6: Choose Class';
       case 1:
         return 'Step 2 of 6: Hit Points & Hit Die Scaling';
       case 2:
