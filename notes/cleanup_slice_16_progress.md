@@ -1,7 +1,7 @@
 # Cleanup slice 16 progress notes
 Status: IN PROGRESS
 Start heads: core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 240ee415462e6d975eae63ee8a04ad52b55677f8
-Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset 6f797efb0f7b916032eccfcf1e40e7441f01ddd8, app 5773d0fba87d64d13f64469cfdd3c1af4372356c
+Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset 6f797efb0f7b916032eccfcf1e40e7441f01ddd8, app a05013272c52dcbd071c71cc2618d9cdef120de1
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 6f797efb0f7b916032eccfcf1e40e7441f01ddd8
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 6.1 6.2 7.1 7.2 7.3 7.4 7.5 8.1 9.1
 Mutation ids: R1 R2 R3 R4 R5 R6 R7 N1 E1 K1 H1 T1 T2 W1 M1 B1 U1 V1 P1
@@ -35,7 +35,7 @@ Fix 9.1: The level-up wizard is split
 ## Steps
 - [x] Step 1 Retire, bumps, notes bar, onError bar, look-ahead: core 090797a2687d97eeebdbfae606f562520f139a3f run 45666926094, ruleset e0bf5539e4daa62feb8bff9b3922cc257d94e5fc run 45666931630, app eb65a148071d555a47af6d9aab838f9ddd12baf9 run 45666937058
 - [x] Step 2 Challenge rating reader: ruleset 6f797efb0f7b916032eccfcf1e40e7441f01ddd8 run 45668453921, app 5773d0fba87d64d13f64469cfdd3c1af4372356c run 45672912183
-- [ ] Step 3 Caller and characterization tests
+- [x] Step 3 Caller and characterization tests: app a05013272c52dcbd071c71cc2618d9cdef120de1 run 45677314012
 - [ ] Step 4 Healing Word, combat profile, DPR math
 - [ ] Step 5 Typed catalog
 - [ ] Step 6 Builder and level-up goldens
@@ -53,6 +53,9 @@ Fix 1.5 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead (
 Fix 2.1 done: [One challenge-rating reader in the ruleset] Added parseChallengeRating(String) in vtt-ruleset-dnd5e combat_rules.dart with 600-seed and fixed-case laws in parse_challenge_rating_law_test.dart.
 Fix 2.2 done: [Every app challenge-rating reader uses it] Deleted MonsterItem._parseChallengeRating and SrdMonsterCrBands._parseChallengeRating, migrated MonsterItem, SrdMonsterCrBands, and MinionStatBlock crValue/glyphCrTier to parseChallengeRating, added challenge_rating_reader_source_bar_test.dart and homebrew CR 30 XP-tail arena test.
 Fix 2.3 done: [The arena refuses a challenge rating it cannot use before the match] Added InvalidArenaChallengeRatingException and validateArenaCombatantsChallengeRatings in arena_challenge_rating_validator.dart, wired all four arena entry points and ArenaSimulatorScreen SnackBar feedback, guarded ArenaCombatantCard setup badges, and verified with engine and widget tests.
+Fix 3.1 done: [Each room-start caller is tested on its own call] Updated _RecordingRoomSessionStarter in host_role_session_lifecycle_test.dart to tag each startSynchronization call by caller via StackTrace.current and assert everyElement(isTrue) per caller; verified all three controls fail on their own comparison.
+Fix 3.2 done: [DM dashboard characterization covers every listed interaction] Expanded dm_dashboard_screen_characterization_test.dart from 4 to 17 tests covering 1280x800 and 360x640 layouts, turn advance/rewind, initiative reroll, damage/heal exact HP, condition toggle, character HP, spell slot, minion HP, purse coin, edition switch, and all inline dialogs with zero lib/ changes.
+Fix 3.3 done: [Party room characterization covers every listed interaction] Expanded party_room_screen_characterization_test.dart from 4 to 14 tests covering 1280x800 and 360x640 layouts, copy code snackbar, leave/delete dialog cancel, member/party coin changes, claim, assign, restore specific trashed item leaving the other archived, and tab switch keep-alive with zero lib/ changes.
 
 ## Mutation branches
 None
@@ -65,11 +68,12 @@ b96a148e3077c9003a38bf6a956e5510e107542a red run 45668172861
 Start of run: app repo had uncommitted modification to party_active_character_banner.dart and an untracked directory under test; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
 
 ## Next
-Begin Step 3 by tightening the host-role caller spy and expanding the DM dashboard and party room characterization test suites without modifying any library code.
+Complete Step 4: verify ruleset Fix 4.3 CI green, then implement app Fix 4.1 (Healing Word dice + spellcasting ability modifier), Fix 4.2 (per-edition MonsterCombatProfile caching), and Fix 4.3 (wire DprCalculatorEngine to ruleset turn-odds functions and regenerate dpr_golden.json in its own commit).
 
 ## Open issues and deviations
 Fix 1.3: running the new ticked-step run-id check on existing notes failed on two older closed files (cleanup_slice_14_progress.md line 41 and cleanup_slice_15_progress.md line 39). Added FROZEN_TICKED_STEP_RUN_NOTES for those two files rather than weakening the rule for in-progress or future complete files, verified by NS78.
 Fix 1.2/1.5: core and ruleset had no packages behind on 2026-12-07; on the 14-day look-ahead (2026-12-09) both reported coverage 1.16.1 behind 1.16.2, which was upgraded locally via dart pub upgrade (pubspec.lock is gitignored in both library repos).
 Fix 2.2: where parseChallengeRating returns null, app callers (MonsterItem, SrdMonsterCrBands, MinionStatBlock) keep today's invented default of 0 (out of scope for this slice). The source bar also caught two additional inline regex CR readers in minion_stat_block.dart (crValue and glyphCrTier), which were migrated to parseChallengeRating.
+Fix 3.3: observed a real pre-existing defect in PartyHistoryAndTrashTab (not fixed per Step 3 no-lib-edits rule): build() calls streamLoot(includeArchived: true) before the second TabBarView tab mounts, so the initial microtask snapshot broadcasts before StreamBuilder subscribes; the characterization test pins current behavior by re-triggering streamLoot once the Trash tab is mounted.
 Run 45668172861 cause: docs_truth_test.dart DT2 rejected non-existent path in Resets section; fixed by 0edd2f1cfb464c74fa88782ab0fc84231206326b
 Run 45671260957 cause: stale codebase_map.md after adding arena_challenge_rating_validator.dart and ArenaCombatantCard calling canFly/canSwim on CR 31 before match start; fixed by 9d1873640ec36d6d3a1821974793c9849ba40224
