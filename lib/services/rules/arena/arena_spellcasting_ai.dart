@@ -92,7 +92,7 @@ class ArenaSpellcastingAi {
         final diceCount = scaling.baseDiceCount +
             (slotLvl - healSpell.level) * scaling.dicePerSlotLevel;
         final castingMod = scaling.addsAbilityMod
-            ? attacker.spellcastingAbilityModifier
+            ? attacker.spellAttackBonus
             : 0;
         final healAmount =
             max(0, ctx.rollDice(diceCount, scaling.diceSides) + castingMod);
