@@ -100,6 +100,7 @@ void main() {
       var groupA = 0; // crit threshold < 20 and face needed to hit > threshold
       var groupB = 0; // save needed face <= 1 or > 20
       var groupC = 0; // value was clamped at 0.9975 (Halfling Luck on hit when needed <= 2)
+      var groupD = 0; // Fix 4.3: Bless buff-die rows (bonus == 2.5) now use face-by-face average
       final outside = <String>[];
 
       for (var i = 0; i < oldAtk.length; i++) {
@@ -122,10 +123,12 @@ void main() {
         // Group (c): old code computed baseSingleHitP = (21 - needed.clamp(2, 20)) / 20;
         // with Halfling Luck and needed <= 2, that yields 0.95 + 0.05 * 0.95 = 0.9975.
         final inC = luck && needed <= 2;
+        final inD = bonus == 2.5;
 
         if (inA) groupA++;
         if (inC) groupC++;
-        if (!inA && !inC) {
+        if (inD) groupD++;
+        if (!inA && !inC && !inD) {
           outside.add('ATK[$i]: bonus=$bonus ac=$ac thr=$thr luck=$luck old=${o['hit']}/${o['dpr']} new=${n['hit']}/${n['dpr']}');
         }
       }
@@ -147,8 +150,8 @@ void main() {
         }
       }
 
-      stdout.writeln('DPR golden diff counts: groupA=$groupA, groupB=$groupB, groupC=$groupC, outside=${outside.length}');
-      expect(outside, isEmpty, reason: 'Changed rows outside (a),(b),(c):\n${outside.take(10).join('\n')}');
+      stdout.writeln('DPR golden diff counts: groupA=$groupA, groupB=$groupB, groupC=$groupC, groupD=$groupD, outside=${outside.length}');
+      expect(outside, isEmpty, reason: 'Changed rows outside (a),(b),(c),(d):\n${outside.take(10).join('\n')}');
     });
   });
 }
