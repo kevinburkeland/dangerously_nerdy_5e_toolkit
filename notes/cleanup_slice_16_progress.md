@@ -55,7 +55,7 @@ Fix 1.5 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead (
 None
 
 ## Red runs on main
-None
+b96a148e3077c9003a38bf6a956e5510e107542a red run 45668172861
 
 ## Resets
 Start of run: app repo had uncommitted modification to party_active_character_banner.dart and an untracked directory under test; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
@@ -66,3 +66,4 @@ Begin Step 2 by adding the challenge-rating reader and seeded laws in the rulese
 ## Open issues and deviations
 Fix 1.3: running the new ticked-step run-id check on existing notes failed on two older closed files (cleanup_slice_14_progress.md line 41 and cleanup_slice_15_progress.md line 39). Added FROZEN_TICKED_STEP_RUN_NOTES for those two files rather than weakening the rule for in-progress or future complete files, verified by NS78.
 Fix 1.2/1.5: core and ruleset had no packages behind on 2026-12-07; on the 14-day look-ahead (2026-12-09) both reported coverage 1.16.1 behind 1.16.2, which was upgraded locally via dart pub upgrade (pubspec.lock is gitignored in both library repos).
+Run 45668172861 cause: docs_truth_test.dart DT2 rejected non-existent path in Resets section; fixed by 0edd2f1cfb464c74fa88782ab0fc84231206326b
