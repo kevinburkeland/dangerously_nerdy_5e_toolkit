@@ -211,28 +211,32 @@ void main() {
         customRoomCode: 'NARRW1',
       );
 
-      final errors = <FlutterErrorDetails>[];
-      final prevOnError = FlutterError.onError;
-      FlutterError.onError = (details) => errors.add(details);
-      try {
-        await tester.pumpWidget(MaterialApp(
-          theme: ThemeData.dark(useMaterial3: true),
-          home: PartyRoomScreen(
-            roomCode: 'NARRW1',
-            initialPlayerName: 'Aria',
-            partyService: partyService,
-          ),
-        ));
-        await tester.pumpAndSettle();
-      } finally {
-        FlutterError.onError = prevOnError;
+      final errors = <Object>[];
+      await tester.pumpWidget(MaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
+        home: PartyRoomScreen(
+          roomCode: 'NARRW1',
+          initialPlayerName: 'Aria',
+          partyService: partyService,
+        ),
+      ));
+      for (Object? ex = tester.takeException();
+          ex != null;
+          ex = tester.takeException()) {
+        errors.add(ex);
+      }
+      await tester.pumpAndSettle();
+      for (Object? ex = tester.takeException();
+          ex != null;
+          ex = tester.takeException()) {
+        errors.add(ex);
       }
 
       expect(find.byType(PartyRoomScreen), findsOneWidget);
       expect(find.textContaining('NARRW1'), findsWidgets);
       expect(
         errors.where(
-          (e) => !e.exceptionAsString().contains('RenderFlex overflowed'),
+          (e) => !e.toString().contains('RenderFlex overflowed'),
         ),
         isEmpty,
       );

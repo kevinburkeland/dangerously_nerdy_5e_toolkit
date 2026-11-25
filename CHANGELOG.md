@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-25
+- Cleanup slice 16: Retire cs15 mutation branches, bump Flutter constraint to 3.50.1, require green run ids on every ticked step SHA in check_notes_shas.py (NS74-NS78), add FlutterError.onError compliance bar and rewrite characterization tests to use tester.takeException(), and verify 14-day dependency look-ahead (Fixes 1.1-1.5).
+
 ## 2026-11-24
 - Cleanup slice 15: Add PartyRoomScreen characterization tests, split lib/screens/party_room_screen.dart (2,401 -> 759 lines) into 7 files under lib/widgets/party_room/ (all under 500 lines) keeping all service-locator calls in party_room_screen.dart, and remove party_room_screen.dart from big_file_ratchet_test.dart (Fixes 8.1, 8.2).
 - Cleanup slice 15: Add DmDashboardScreen characterization tests, remove all 12 .isRegistered fallbacks and runtime replica creation from DmDashboardController and DmDashboardScreen (emptying kExpectedIsRegisteredCounts and lowering sl/defaults ceilings to 37/44), split dm_dashboard_screen.dart into 7 files under lib/widgets/dm_dashboard/ (all under 800 lines), and remove dm_dashboard_screen.dart from big_file_ratchet_test.dart (Fixes 7.1-7.3).

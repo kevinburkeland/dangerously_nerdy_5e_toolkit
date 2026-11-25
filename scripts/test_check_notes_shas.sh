@@ -2379,5 +2379,261 @@ EOF
   fi
 )
 
-echo "All notes SHA check self-tests passed (NS1 - NS73)."
+# NS74 (Fix 1.3a guard): a ticked step row whose only SHA is followed by run <id> of a green run of that SHA passes.
+(
+  repo="$TMP_DIR/repo_ns74"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+  echo "step1" > "$repo/s1.txt" && git -C "$repo" add s1.txt && git -C "$repo" commit -m "step 1" >/dev/null
+  sha_step1=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress_ns74.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_step1 run 800074
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_step1"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800074"
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS74 expected pass for ticked step row with green run, got: $out" >&2; exit 1; }
+)
+
+# NS75 (Fix 1.3b): a ticked step row with a second 40-char SHA that has no run <id> after it fails, naming the line and the SHA.
+(
+  repo="$TMP_DIR/repo_ns75"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+  echo "step1a" > "$repo/s1a.txt" && git -C "$repo" add s1a.txt && git -C "$repo" commit -m "step 1a" >/dev/null
+  sha_step1a=$(git -C "$repo" rev-parse HEAD)
+  echo "step1b" > "$repo/s1b.txt" && git -C "$repo" add s1b.txt && git -C "$repo" commit -m "step 1b" >/dev/null
+  sha_step1b=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress_ns75.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_step1a run 800075 (Fix 7.1); Fixes 7.2-7.3 landed in $sha_step1b
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_step1a"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800075"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: NS75 expected failure for bare second SHA on ticked step row, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out" != *"$notes:11:"* ]] || [[ "$out" != *"$sha_step1b"* ]]; then
+    echo "FAIL: NS75 expected output to name line 11 and SHA $sha_step1b, got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS76 (Fix 1.3c): a ticked step row whose second SHA carries a red run fails, naming the run and its conclusion.
+(
+  repo="$TMP_DIR/repo_ns76"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+  echo "step1a" > "$repo/s1a.txt" && git -C "$repo" add s1a.txt && git -C "$repo" commit -m "step 1a" >/dev/null
+  sha_step1a=$(git -C "$repo" rev-parse HEAD)
+  echo "step1b" > "$repo/s1b.txt" && git -C "$repo" add s1b.txt && git -C "$repo" commit -m "step 1b" >/dev/null
+  sha_step1b=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress_ns76.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_step1a run 800076, test-repo $sha_step1b run 800077
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+  echo '{"head_sha": "'"$sha_step1a"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800076"
+  echo '{"head_sha": "'"$sha_step1b"'", "conclusion": "failure"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800077"
+
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  if [ "$rc" -eq 0 ]; then
+    echo "FAIL: NS76 expected failure for red second run on ticked step row, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out" != *"800077"* ]] || [[ "$out" != *"failure"* ]]; then
+    echo "FAIL: NS76 expected output to name run 800077 and conclusion failure, got: $out" >&2
+    exit 1
+  fi
+)
+
+# NS77 (Fix 1.3d guard): an unticked step row with a bare SHA is not affected.
+(
+  repo="$TMP_DIR/repo_ns77"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+  echo "step1" > "$repo/s1.txt" && git -C "$repo" add s1.txt && git -C "$repo" commit -m "step 1" >/dev/null
+  sha_step1=$(git -C "$repo" rev-parse HEAD)
+
+  notes="$repo/progress_ns77.md"
+  cat << EOF > "$notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [ ] Step 1 Test step: pending $sha_step1
+
+## Fix checklist
+Fix 1.1 not done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Next.
+
+## Open issues and deviations
+None
+EOF
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS77 expected pass for unticked step row with bare SHA, got: $out" >&2; exit 1; }
+)
+
+# NS78 (Fix 1.3 frozen closed slice): frozen cleanup_slice_15_progress.md with bare second SHA passes, while a non-frozen COMPLETE file with a bare second SHA still fails.
+(
+  repo="$TMP_DIR/repo_ns78"
+  setup_repo "$repo"
+  sha_start=$(git -C "$repo" rev-parse HEAD)
+  echo "step1a" > "$repo/s1a.txt" && git -C "$repo" add s1a.txt && git -C "$repo" commit -m "step 1a" >/dev/null
+  sha_step1a=$(git -C "$repo" rev-parse HEAD)
+  echo "step1b" > "$repo/s1b.txt" && git -C "$repo" add s1b.txt && git -C "$repo" commit -m "step 1b" >/dev/null
+  sha_step1b=$(git -C "$repo" rev-parse HEAD)
+  echo '{"head_sha": "'"$sha_step1a"'", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/800078"
+
+  frozen_notes="$repo/cleanup_slice_15_progress.md"
+  cat << EOF > "$frozen_notes"
+# Progress
+Status: IN PROGRESS
+Start heads: test-repo $sha_start
+Fix ids: 1.1
+Mutation ids: A1
+
+## Fix titles
+Fix 1.1: Test fix
+
+## Steps
+- [x] Step 1 Test step: test-repo $sha_step1a run 800078 (Fix 7.1); Fixes 7.2-7.3 landed in $sha_step1b
+
+## Fix checklist
+Fix 1.1 done: [Test fix] text
+
+## Mutation branches
+None
+
+## Red runs on main
+None
+
+## Next
+Done.
+
+## Open issues and deviations
+None
+EOF
+
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$frozen_notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL: NS78 expected pass for frozen cleanup_slice_15_progress.md, got: $out" >&2; exit 1; }
+
+  nonfrozen_notes="$repo/cleanup_slice_16_progress.md"
+  cp "$frozen_notes" "$nonfrozen_notes"
+  set +e
+  out2=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$nonfrozen_notes" 2>&1)
+  rc2=$?
+  set -e
+  if [ "$rc2" -eq 0 ]; then
+    echo "FAIL: NS78 expected failure for non-frozen cleanup_slice_16_progress.md, got exit 0" >&2
+    exit 1
+  fi
+  if [[ "$out2" != *"$sha_step1b"* ]]; then
+    echo "FAIL: NS78 expected output to name bare SHA $sha_step1b, got: $out2" >&2
+    exit 1
+  fi
+)
+
+echo "All notes SHA check self-tests passed (NS1 - NS78)."
 

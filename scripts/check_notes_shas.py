@@ -82,6 +82,13 @@ FROZEN_STEP_ROW_ANCESTOR_NOTES = {
     'test_progress_ns57.md',
 }
 
+# Frozen notes that existed before Cleanup slice 16 (exempt from Fix 1.3 ticked step row run-id requirement)
+# Slice 14 Step 6 and Slice 15 Step 7 rows carry a second bare SHA without ' run <id>'.
+FROZEN_TICKED_STEP_RUN_NOTES = {
+    'cleanup_slice_14_progress.md',
+    'cleanup_slice_15_progress.md',
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Check commit SHAs and CI run IDs in notes files.')
@@ -935,8 +942,14 @@ def main():
                 if stripped.startswith('## '):
                     in_steps_section = (stripped == '## Steps')
                 elif in_steps_section and re.match(r'^-\s*\[x\]\s*Step\b', stripped, re.IGNORECASE):
-                    step_shas = [m.group(1).lower() for m in hex_pattern.finditer(line) if len(m.group(1)) == 40]
-                    for sha in step_shas:
+                    for m in hex_pattern.finditer(line):
+                        if len(m.group(1)) != 40:
+                            continue
+                        sha = m.group(1).lower()
+                        if base_name not in FROZEN_TICKED_STEP_RUN_NOTES and not re.match(r'^ run ([0-9]+)(?![0-9])', line[m.end():]):
+                            problems.append(
+                                f"{file_path}:{line_idx}: ticked step row SHA {sha} has no ' run <id>' after it"
+                            )
                         repo = find_repo_for_sha(sha)
                         if not repo:
                             problems.append(f"{file_path}:{line_idx}: step commit {sha} not found in any given repo")
