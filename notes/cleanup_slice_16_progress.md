@@ -1,7 +1,7 @@
 # Cleanup slice 16 progress notes
 Status: IN PROGRESS
 Start heads: core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 240ee415462e6d975eae63ee8a04ad52b55677f8
-Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 99e013728fdfe43078f1606c802d6be696a38579
+Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app eb697ceff606b1802ce908338660bb2a5bfa6379
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 6.1 6.2 7.1 7.2 7.3 7.4 7.5 8.1 9.1
 Mutation ids: R1 R2 R3 R4 R5 R6 R7 N1 E1 K1 H1 T1 T2 W1 M1 B1 U1 V1 P1
@@ -41,7 +41,7 @@ Fix 9.1: The level-up wizard is split
 - [x] Step 6 Builder and level-up goldens: app 7faeda3ed48008e1d8f696e8429621189be10446 run 45684377247
 - [x] Step 7 Builder and level-up rules into the ruleset: ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd run 45685871897, app 3b241986df81cd6673f47bd874457aa56d937a20 run 45714960177
 - [x] Step 8 Character builder split: app 99e013728fdfe43078f1606c802d6be696a38579 run 45718178077
-- [ ] Step 9 Level-up wizard split
+- [x] Step 9 Level-up wizard split: app eb697ceff606b1802ce908338660bb2a5bfa6379 run 45720681103
 - [ ] Step 10 Mutations and report
 
 ## Fix checklist
@@ -68,6 +68,7 @@ Fix 7.3 done: [Level-up hit points come from the ruleset] Added computeLevelUpHp
 Fix 7.4 done: [The level-up class and subclass lists come from the class library] Deleted _availableClasses and _subclassesByClass from LevelUpWizardDialog, built class/subclass lists from SrdClassesLibrary and CharacterProgressionEngine.getMulticlassPrerequisites(), and added no_hardcoded_srd_class_slugs_bar_test.dart.
 Fix 7.5 done: [The builder's finalize keeps only UI] Moved CharacterDraft assembly out of _finalizeCreatedCharacter into CharacterBuilderController.buildFinalizedDraft; builder screen finalize keeps only UI validation, save, navigation, and SnackBar.
 Fix 8.1 done: [The character builder screen is split] Split lib/screens/character_builder_screen.dart (5,888 -> 486 lines) into 18 focused modules under lib/widgets/character_builder/views/ and lib/widgets/character_builder/steps/ (all under 800 lines, max 791, zero part/part of, keeping sl<ReplicaId>() in character_builder_screen.dart), removed character_builder_screen.dart from big_file_ratchet_test.dart (33 files on allowlist), refreshed codebase_map.md, and verified moves check, all 26 builder goldens, legacy load law, compliance ratchets, and build_web.sh.
+Fix 9.1 done: [The level-up wizard is split] Split lib/widgets/character_builder/level_up_wizard_dialog.dart (4,046 -> 188 lines) into 10 focused modules under lib/widgets/character_builder/level_up/ (all under 725 lines, max 721, zero part/part of, keeping LevelUpWizardDialog and show(...) signatures identical), removed level_up_wizard_dialog.dart from big_file_ratchet_test.dart (32 files on allowlist), refreshed codebase_map.md, and verified moves check, all 96 level-up goldens, Fix 7.4 bar, legacy load law, compliance ratchets, and build_web.sh.
 
 ## Mutation branches
 None
@@ -80,7 +81,7 @@ b96a148e3077c9003a38bf6a956e5510e107542a red run 45668172861
 Start of run: app repo had uncommitted modification to party_active_character_banner.dart and an untracked directory under test; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
 
 ## Next
-Begin Step 9 (level-up wizard split, no behaviour change): split lib/widgets/character_builder/level_up_wizard_dialog.dart (4,046 lines -> <800 lines) into focused widgets under lib/widgets/character_builder/ (all <800 lines), keeping LevelUpWizardDialog and show(...) signatures identical, remove it from big_file_ratchet_test.dart, refresh codebase_map.md, verify moves check, all 96 level-up goldens, Fix 7.4 bar, legacy load law, compliance ratchets, and build_web.sh.
+Begin Step 10 (mutations, exit checks, final report): finish app mutations (N1, E1, K1, H1, T1, T2, W1, M1, B1, U1, V1, P1; ruleset R1-R7 already pushed), run full app exit checks (4 local shards, legacy load law, scripts, emulator rules, web build), trigger dependencies.yml workflow_dispatch on all three repos, set notes Status to COMPLETE, and write the 17-section report.
 
 ## Open issues and deviations
 Fix 1.3: running the new ticked-step run-id check on existing notes failed on two older closed files (cleanup_slice_14_progress.md line 41 and cleanup_slice_15_progress.md line 39). Added FROZEN_TICKED_STEP_RUN_NOTES for those two files rather than weakening the rule for in-progress or future complete files, verified by NS78.
