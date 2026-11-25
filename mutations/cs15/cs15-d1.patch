@@ -1,0 +1,189 @@
+From be58c67606771f04b51b5f4f18200e848e88b832 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 24 Nov 2026 15:07:15 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20d1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../disperse_loot_dialog.dart                 | 121 ++++++++----------
+ 1 file changed, 50 insertions(+), 71 deletions(-)
+
+diff --git a/lib/widgets/party/campaign_dialogs/disperse_loot_dialog.dart b/lib/widgets/party/campaign_dialogs/disperse_loot_dialog.dart
+index 21d6d268..893508d5 100644
+--- a/lib/widgets/party/campaign_dialogs/disperse_loot_dialog.dart
++++ b/lib/widgets/party/campaign_dialogs/disperse_loot_dialog.dart
+@@ -242,13 +242,11 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
+           ),
+         ],
+       ),
+-      content: SizedBox(
+-        width: double.maxFinite,
+-        child: SingleChildScrollView(
+-          child: Column(
+-            mainAxisSize: MainAxisSize.min,
+-            crossAxisAlignment: CrossAxisAlignment.start,
+-            children: [
++      content: SingleChildScrollView(
++        child: Column(
++          mainAxisSize: MainAxisSize.min,
++          crossAxisAlignment: CrossAxisAlignment.start,
++          children: [
+             // Campaign selector if multiple
+             if (memberships.length > 1) ...[
+               const Text('Destination Campaign:',
+@@ -292,12 +290,9 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
+               child: Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 children: [
+-                  const Flexible(
+-                    child: Text('Total to Disperse:',
+-                        style: TextStyle(
+-                            fontWeight: FontWeight.bold, fontSize: 13)),
+-                  ),
+-                  const SizedBox(width: 8),
++                  const Text('Total to Disperse:',
++                      style:
++                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                   Text(
+                     '~${(widget.purse.totalGpEquivalent + (_includeLiquidated ? widget.liquidatedGemsAndArtGp : 0)).toStringAsFixed(1)} GP',
+                     style: const TextStyle(
+@@ -350,12 +345,10 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
+             Row(
+               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+               children: [
+-                Expanded(
+-                  child: Text(
+-                    'Party Member Recipients (${_selectedRecipients.length}):',
+-                    style: const TextStyle(
+-                        fontWeight: FontWeight.bold, fontSize: 12.5),
+-                  ),
++                Text(
++                  'Party Member Recipients (${_selectedRecipients.length}):',
++                  style: const TextStyle(
++                      fontWeight: FontWeight.bold, fontSize: 12.5),
+                 ),
+                 TextButton(
+                   onPressed: () {
+@@ -392,31 +385,30 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
+             else
+               ConstrainedBox(
+                 constraints: const BoxConstraints(maxHeight: 180),
+-                child: SingleChildScrollView(
+-                  child: Column(
+-                    mainAxisSize: MainAxisSize.min,
+-                    children: [
+-                      for (final name in candidates)
+-                        CheckboxListTile(
+-                          value: _selectedRecipients.contains(name),
+-                          onChanged: (val) {
+-                            setState(() {
+-                              if (val == true) {
+-                                _selectedRecipients.add(name);
+-                              } else {
+-                                _selectedRecipients.remove(name);
+-                              }
+-                            });
+-                          },
+-                          title: Text(name,
+-                              style: const TextStyle(fontSize: 12.5)),
+-                          controlAffinity: ListTileControlAffinity.leading,
+-                          contentPadding:
+-                              const EdgeInsets.symmetric(horizontal: 4),
+-                          dense: true,
+-                        ),
+-                    ],
+-                  ),
++                child: ListView.builder(
++                  shrinkWrap: true,
++                  itemCount: candidates.length,
++                  itemBuilder: (context, idx) {
++                    final name = candidates[idx];
++                    final isChecked = _selectedRecipients.contains(name);
++
++                    return CheckboxListTile(
++                      value: isChecked,
++                      onChanged: (val) {
++                        setState(() {
++                          if (val == true) {
++                            _selectedRecipients.add(name);
++                          } else {
++                            _selectedRecipients.remove(name);
++                          }
++                        });
++                      },
++                      title: Text(name, style: const TextStyle(fontSize: 12.5)),
++                      controlAffinity: ListTileControlAffinity.leading,
++                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
++                      dense: true,
++                    );
++                  },
+                 ),
+               ),
+ 
+@@ -444,38 +436,26 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     children: [
+-                      const Flexible(
+-                        child: Text('Each Character Gets:',
+-                            style: TextStyle(fontSize: 12)),
+-                      ),
+-                      const SizedBox(width: 8),
+-                      Flexible(
+-                        child: Text(perShareText,
+-                            textAlign: TextAlign.end,
+-                            style: const TextStyle(
+-                                fontSize: 12,
+-                                fontWeight: FontWeight.bold,
+-                                color: Colors.amber)),
+-                      ),
++                      const Text('Each Character Gets:',
++                          style: TextStyle(fontSize: 12)),
++                      Text(perShareText,
++                          style: const TextStyle(
++                              fontSize: 12,
++                              fontWeight: FontWeight.bold,
++                              color: Colors.amber)),
+                     ],
+                   ),
+                   const SizedBox(height: 2),
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     children: [
+-                      const Flexible(
+-                        child: Text('Party Reserve Gets:',
+-                            style: TextStyle(fontSize: 12)),
+-                      ),
+-                      const SizedBox(width: 8),
+-                      Flexible(
+-                        child: Text(reserveText,
+-                            textAlign: TextAlign.end,
+-                            style: const TextStyle(
+-                                fontSize: 12,
+-                                fontWeight: FontWeight.bold,
+-                                color: Colors.blueAccent)),
+-                      ),
++                      const Text('Party Reserve Gets:',
++                          style: TextStyle(fontSize: 12)),
++                      Text(reserveText,
++                          style: const TextStyle(
++                              fontSize: 12,
++                              fontWeight: FontWeight.bold,
++                              color: Colors.blueAccent)),
+                     ],
+                   ),
+                 ],
+@@ -483,7 +463,6 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
+             ),
+           ],
+         ),
+-        ),
+       ),
+       actions: [
+         TextButton(
+-- 
+2.55.0
+

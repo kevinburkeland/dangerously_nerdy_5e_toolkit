@@ -1,0 +1,29 @@
+From 608a9bb9ca3ca53b8d9c419376d9035759407bca Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 24 Nov 2026 15:19:38 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20s2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/widgets/party_room/party_vault_tab.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/widgets/party_room/party_vault_tab.dart b/lib/widgets/party_room/party_vault_tab.dart
+index 4c5cc256..5d931f07 100644
+--- a/lib/widgets/party_room/party_vault_tab.dart
++++ b/lib/widgets/party_room/party_vault_tab.dart
+@@ -75,7 +75,7 @@ class PartyVaultTab extends StatelessWidget {
+             return item.category == 'magicItem';
+           if (selectedCategoryFilter == 'gem_art')
+             return item.category == 'gem' || item.category == 'art';
+-          if (selectedCategoryFilter == 'gear')
++          if (selectedCategoryFilter == 'broken_gear')
+             return item.category == 'gear' || item.category == 'currency';
+           if (selectedCategoryFilter == 'claimed') return item.isClaimed;
+           if (selectedCategoryFilter == 'unclaimed') return !item.isClaimed;
+-- 
+2.55.0
+

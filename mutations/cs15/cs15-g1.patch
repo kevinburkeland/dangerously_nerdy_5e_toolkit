@@ -1,0 +1,29 @@
+From 2bf8e3c5cb3d79495c8d4f40f2848666742d7e7c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 24 Nov 2026 15:08:46 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20g1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/rules/arena/arena_attack_resolver.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/rules/arena/arena_attack_resolver.dart b/lib/services/rules/arena/arena_attack_resolver.dart
+index d7fafffd..cde020b3 100644
+--- a/lib/services/rules/arena/arena_attack_resolver.dart
++++ b/lib/services/rules/arena/arena_attack_resolver.dart
+@@ -434,7 +434,7 @@ class ArenaAttackResolver {
+         rng: ctx.rng,
+         isCrit: isCrit,
+         edition: edition,
+-        damageModifier: (raw) => ctx.applyDefensiveModifiers(
++        damageModifier: (raw) => 1 + ctx.applyDefensiveModifiers(
+           raw,
+           attack.damageType,
+           defender,
+-- 
+2.55.0
+

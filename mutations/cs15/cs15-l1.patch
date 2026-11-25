@@ -1,0 +1,30 @@
+From f971a997f680bb39731d2a9da53d4e34084f373a Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 24 Nov 2026 15:07:26 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20l1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../party/campaign_dialogs/create_campaign_dialog.dart      | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/lib/widgets/party/campaign_dialogs/create_campaign_dialog.dart b/lib/widgets/party/campaign_dialogs/create_campaign_dialog.dart
+index e3e3975f..eef20a02 100644
+--- a/lib/widgets/party/campaign_dialogs/create_campaign_dialog.dart
++++ b/lib/widgets/party/campaign_dialogs/create_campaign_dialog.dart
+@@ -178,3 +178,9 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
+ }
+ 
+ /// Dialog to explicitly Join an Existing Campaign Room
++
++class UncoveredTestCampaignDialog extends StatelessWidget {
++  const UncoveredTestCampaignDialog({super.key});
++  @override
++  Widget build(BuildContext context) => const SizedBox.shrink();
++}
+-- 
+2.55.0
+

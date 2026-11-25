@@ -1,0 +1,32 @@
+From 442d413965bd4b9e8f23990289c1ea3ac5519810 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Tue, 24 Nov 2026 15:09:05 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20p1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/rules/arena/arena_combat_context.dart | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/services/rules/arena/arena_combat_context.dart b/lib/services/rules/arena/arena_combat_context.dart
+index 3b3f183a..a224fa18 100644
+--- a/lib/services/rules/arena/arena_combat_context.dart
++++ b/lib/services/rules/arena/arena_combat_context.dart
+@@ -260,9 +260,10 @@ class ArenaCombatContext {
+ 
+   /// Default DC calculation when not explicit (8 + proficiency + ability modifier).
+   int computeDefaultSaveDc(ArenaCombatant attacker, DmRulesEdition edition) {
+-    final pb = proficiencyBonusForChallengeRating(
++    final rawPb = proficiencyBonusForChallengeRating(
+       attacker.monster.challengeRating,
+     );
++    final pb = rawPb > 6 ? 6 : rawPb;
+     final sb = attacker.getStatBlock(edition);
+     final mod = max(sb.conMod, max(sb.strMod, sb.chaMod));
+     return computeSaveDc(proficiencyBonus: pb, abilityModifier: mod);
+-- 
+2.55.0
+
