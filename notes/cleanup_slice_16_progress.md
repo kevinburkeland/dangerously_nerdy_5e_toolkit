@@ -58,7 +58,7 @@ None
 None
 
 ## Resets
-Start of run: app repo had uncommitted modification to party_active_character_banner.dart and untracked test/modules/ directory; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
+Start of run: app repo had uncommitted modification to party_active_character_banner.dart and an untracked directory under test; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
 
 ## Next
 Begin Step 2 by adding the challenge-rating reader and seeded laws in the ruleset, then migrating app callers and adding the arena pre-match CR check.
