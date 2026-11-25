@@ -191,7 +191,9 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          if (combatant.canFly(edition))
+                          if (combatant.monster.challengeRating >= 0 &&
+                              combatant.monster.challengeRating <= 30 &&
+                              combatant.canFly(edition))
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 4, vertical: 1),
@@ -208,7 +210,9 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          if (combatant.canSwim(edition))
+                          if (combatant.monster.challengeRating >= 0 &&
+                              combatant.monster.challengeRating <= 30 &&
+                              combatant.canSwim(edition))
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 4, vertical: 1),
