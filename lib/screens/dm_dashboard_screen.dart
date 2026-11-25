@@ -278,7 +278,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
         _controller.combatEncounterService.applyParticipantDamageOrHeal(
       participants: _activeProfile!.roomState.activeEncounterList,
       participantId: participantId,
-      delta: delta,
+      delta: delta > 0 ? delta - 1 : delta,
     );
     _updateEncounter(updated);
   }
