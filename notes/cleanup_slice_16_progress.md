@@ -1,8 +1,8 @@
 # Cleanup slice 16 progress notes
 Status: IN PROGRESS
 Start heads: core 73007473fedbaaeb2778776dcbe55fc127c4ce79, ruleset 5ec366a49af9cc274560ba677e3ae1b8af736c7e, app 240ee415462e6d975eae63ee8a04ad52b55677f8
-Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset 6f797efb0f7b916032eccfcf1e40e7441f01ddd8, app a05013272c52dcbd071c71cc2618d9cdef120de1
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 6f797efb0f7b916032eccfcf1e40e7441f01ddd8
+Last pushed heads (CI green): core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset 7ea574148f6fca3c87dea6d690cc2452916b66c9, app 37fd99e9bd9e1c4ecce2ebeca3136df0ff589947
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 7ea574148f6fca3c87dea6d690cc2452916b66c9
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 3.3 4.1 4.2 4.3 5.1 6.1 6.2 7.1 7.2 7.3 7.4 7.5 8.1 9.1
 Mutation ids: R1 R2 R3 R4 R5 R6 R7 N1 E1 K1 H1 T1 T2 W1 M1 B1 U1 V1 P1
 
@@ -36,7 +36,7 @@ Fix 9.1: The level-up wizard is split
 - [x] Step 1 Retire, bumps, notes bar, onError bar, look-ahead: core 090797a2687d97eeebdbfae606f562520f139a3f run 45666926094, ruleset e0bf5539e4daa62feb8bff9b3922cc257d94e5fc run 45666931630, app eb65a148071d555a47af6d9aab838f9ddd12baf9 run 45666937058
 - [x] Step 2 Challenge rating reader: ruleset 6f797efb0f7b916032eccfcf1e40e7441f01ddd8 run 45668453921, app 5773d0fba87d64d13f64469cfdd3c1af4372356c run 45672912183
 - [x] Step 3 Caller and characterization tests: app a05013272c52dcbd071c71cc2618d9cdef120de1 run 45677314012
-- [ ] Step 4 Healing Word, combat profile, DPR math
+- [x] Step 4 Healing Word, combat profile, DPR math: ruleset 7ea574148f6fca3c87dea6d690cc2452916b66c9 run 45678211821, app 37fd99e9bd9e1c4ecce2ebeca3136df0ff589947 run 45679755111
 - [ ] Step 5 Typed catalog
 - [ ] Step 6 Builder and level-up goldens
 - [ ] Step 7 Builder and level-up rules into the ruleset
@@ -56,6 +56,9 @@ Fix 2.3 done: [The arena refuses a challenge rating it cannot use before the mat
 Fix 3.1 done: [Each room-start caller is tested on its own call] Updated _RecordingRoomSessionStarter in host_role_session_lifecycle_test.dart to tag each startSynchronization call by caller via StackTrace.current and assert everyElement(isTrue) per caller; verified all three controls fail on their own comparison.
 Fix 3.2 done: [DM dashboard characterization covers every listed interaction] Expanded dm_dashboard_screen_characterization_test.dart from 4 to 17 tests covering 1280x800 and 360x640 layouts, turn advance/rewind, initiative reroll, damage/heal exact HP, condition toggle, character HP, spell slot, minion HP, purse coin, edition switch, and all inline dialogs with zero lib/ changes.
 Fix 3.3 done: [Party room characterization covers every listed interaction] Expanded party_room_screen_characterization_test.dart from 4 to 14 tests covering 1280x800 and 360x640 layouts, copy code snackbar, leave/delete dialog cancel, member/party coin changes, claim, assign, restore specific trashed item leaving the other archived, and tab switch keep-alive with zero lib/ changes.
+Fix 4.1 done: [Healing Word heals by the spell and the spellcasting modifier] Derived ArenaCombatant.spellcastingAbilityModifier from spellSaveDc and CR proficiency bonus, wired ArenaSpellcastingAi to read bundled Healing Word edition dice from SpellbookLibrary, verified 2014/2024 slots 1 and 2, and confirmed all arena match goldens remain byte-identical.
+Fix 4.2 done: [A monster's combat profile is built once per edition] Verified MonsterItem and MinionStatBlock are const/final immutable, cached MonsterItem.getCombatProfile per edition via Expando, updated doc comment, and verified identical caching and field-by-field parity.
+Fix 4.3 done: [DPR turn math lives in the ruleset] Added computeAttackOddsWithBuffDie, computeVexConditionalOdds, and computeFirstHitSneakAttackExpectedDamage with exact grid laws and 60-turn x 200k-trial Monte Carlo cross-check (plus wrong-formula failure control), wired DprCalculatorEngine, and regenerated dpr_golden.json in its own commit (360 Bless rows changed, 0 non-Bless or save rows changed).
 
 ## Mutation branches
 None
@@ -68,7 +71,7 @@ b96a148e3077c9003a38bf6a956e5510e107542a red run 45668172861
 Start of run: app repo had uncommitted modification to party_active_character_banner.dart and an untracked directory under test; saved diff to step_0_interrupted.diff and reset app working tree to origin/main before Step 1.
 
 ## Next
-Complete Step 4: verify ruleset Fix 4.3 CI green, then implement app Fix 4.1 (Healing Word dice + spellcasting ability modifier), Fix 4.2 (per-edition MonsterCombatProfile caching), and Fix 4.3 (wire DprCalculatorEngine to ruleset turn-odds functions and regenerate dpr_golden.json in its own commit).
+Complete Step 5 app side: re-pin vtt_ruleset_dnd5e to cab04984d6a0812193a586271f6a2720f96c87db (already green on CI), update AppDnd5eCatalog to return CatalogFeat/CatalogMagicItem and fail loudly on unknown addSpellsData shapes, verify character_map_goldens, ui_values, evaluation tests, and legacy load law, push and verify CI green.
 
 ## Open issues and deviations
 Fix 1.3: running the new ticked-step run-id check on existing notes failed on two older closed files (cleanup_slice_14_progress.md line 41 and cleanup_slice_15_progress.md line 39). Added FROZEN_TICKED_STEP_RUN_NOTES for those two files rather than weakening the rule for in-progress or future complete files, verified by NS78.
