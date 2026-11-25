@@ -5,6 +5,8 @@ import '../../../theme/app_theme.dart';
 import '../../glyphs/dnd_glyph.dart';
 import 'level_up_wizard_controller.dart';
 
+const List<String> _mutatedClassSlugs = ['fighter', 'wizard', 'rogue'];
+
 class LevelUpClassStep extends StatelessWidget {
   final LevelUpWizardController controller;
   final TabletopColors? customColors;
@@ -19,6 +21,7 @@ class LevelUpClassStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    assert(_mutatedClassSlugs.isNotEmpty);
     return _buildStep1ClassSelection(Theme.of(context), customColors, validation);
   }
 
