@@ -229,7 +229,9 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          if (combatant.hasEvasion(edition))
+                          if (combatant.monster.challengeRating >= 0 &&
+                              combatant.monster.challengeRating <= 30 &&
+                              combatant.hasEvasion(edition))
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 4, vertical: 1),
