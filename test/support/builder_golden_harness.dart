@@ -216,6 +216,7 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
 
   final guidedSteps = <String>[];
   final visibleStepTitles = <String>[];
+  String? spellsSubtitle;
 
   for (var guard = 0; guard < 15; guard++) {
     final step = _detectCurrentBuilderStep(tester);
@@ -320,8 +321,17 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
         }
 
       case 'spells':
-        // Spells step allows advancing with 0 or selected spells; keep deterministic default.
-        break;
+        // Record the displayed casting-ability/prepared-limit subtitle so casting-ability regressions are caught.
+        for (final el in find.byType(Text).evaluate()) {
+          final data = (el.widget as Text).data;
+          if (data != null &&
+              (data.startsWith('Prepared limit:') ||
+                  data.startsWith('Spells known limit:') ||
+                  data.startsWith('A Level 1 Wizard must choose'))) {
+            spellsSubtitle = data;
+            break;
+          }
+        }
 
       case 'equipment':
         // First equipment package is auto-selected by default.
@@ -351,6 +361,7 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
           'backgroundSlug': spec.backgroundSlug,
           'guidedSteps': guidedSteps,
           'visibleStepTitles': visibleStepTitles,
+          'spellsSubtitle': ?spellsSubtitle,
           'character': normalizeCharacterMap(created.toMap()),
         };
     }

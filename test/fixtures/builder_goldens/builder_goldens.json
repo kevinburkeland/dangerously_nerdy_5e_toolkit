@@ -392,6 +392,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "Spells known limit: 4 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 13,
@@ -783,6 +784,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
+      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 18,
@@ -1196,6 +1198,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 15,
@@ -3534,6 +3537,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
+      "spellsSubtitle": "Spells known limit: 2 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 15,
@@ -3933,6 +3937,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
+      "spellsSubtitle": "Spells known limit: 2 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 13,
@@ -4339,6 +4344,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "A Level 1 Wizard must choose exactly 6 1st-level spells to scribe into their spellbook.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 12,
@@ -5436,6 +5442,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "Spells known limit: 4 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 13,
@@ -5825,6 +5832,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
+      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 18,
@@ -6200,6 +6208,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
+      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 15,
@@ -7355,6 +7364,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "Prepared limit: Level 1 + CHA mod (-1) = 1 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 18,
@@ -7739,6 +7749,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 16,
@@ -8540,6 +8551,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "Spells known limit: 2 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 12,
@@ -8923,6 +8935,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
+      "spellsSubtitle": "Spells known limit: 2 spells.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 13,
@@ -9319,6 +9332,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
+      "spellsSubtitle": "A Level 1 Wizard must choose exactly 6 1st-level spells to scribe into their spellbook.",
       "character": {
         "allocatedSpells": {},
         "armorClass": 12,
