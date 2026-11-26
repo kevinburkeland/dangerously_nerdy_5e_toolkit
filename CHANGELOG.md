@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-26
+- Cleanup slice 17: Retire 12 cs16 mutation branches, add per-case runner and no-token stub to test_check_notes_shas.sh (NS79-NS82), document why tester.takeException() cannot unpack Multiple exceptions batches under the FlutterError.onError bar, and upgrade dart_webrtc (1.9.0) and webrtc_interface (1.6.0) for 14-day look-ahead (Fixes 1.1, 1.2, 1.4).
+
 ## 2026-11-25
 - Cleanup slice 16: Split lib/widgets/character_builder/level_up_wizard_dialog.dart (4,046 -> 188 lines) into 10 focused modules under lib/widgets/character_builder/level_up/ (all under 725 lines, zero part/part of, keeping LevelUpWizardDialog and show(...) signatures identical) and remove level_up_wizard_dialog.dart from big_file_ratchet_test.dart (Fix 9.1).
 - Cleanup slice 16: Split lib/screens/character_builder_screen.dart (5,888 -> 486 lines) into 18 focused modules under lib/widgets/character_builder/views/ and lib/widgets/character_builder/steps/ (all under 800 lines, zero part/part of, keeping sl<ReplicaId>() in character_builder_screen.dart) and remove character_builder_screen.dart from big_file_ratchet_test.dart (Fix 8.1).
