@@ -1,0 +1,41 @@
+{
+  "storedJsonList": [
+    "{\"id\":{\"slug\":\"hb-solar-flare\",\"ruleset\":\"homebrew\"},\"name\":\"Solar Flare\",\"level\":3,\"school\":\"evocation\",\"castingTime\":{\"cost\":1,\"actionType\":\"action\",\"triggerCondition\":null},\"duration\":{\"type\":\"timed\",\"durationSeconds\":60,\"requiresConcentration\":true,\"rawText\":\"Concentration, up to 1 minute\"},\"range\":\"120 feet\",\"rangeDistanceFeet\":0,\"rangeType\":\"ranged\",\"components\":{\"v\":true,\"s\":true,\"m\":true,\"materialDescription\":\"a pinch of sunstone dust\",\"materialCostGp\":0,\"consumesMaterial\":false},\"descriptionMarkdown\":\"A burst of radiant fire erupts in a 20-foot sphere.\",\"higherLevelsMarkdown\":\"When cast using a 4th-level slot or higher, damage increases by 1d6.\",\"damageMath\":[{\"diceFormula\":\"6d6\",\"damageType\":\"radiant\",\"isAttackRoll\":false,\"requiresSave\":true,\"scalingFormula\":\"+1d6 per slot above 3rd\"}],\"relatedEntityRefs\":[],\"classes\":[\"Wizard\",\"Cleric\"],\"customProperties\":{\"classes\":[\"Wizard\",\"Cleric\"],\"ritual\":true,\"savingThrow\":[\"dexterity\"],\"areaTags\":[\"S\"],\"miscTags\":[\"SGT\"],\"source\":\"HB-SOLAR\"}}",
+    "{\"id\":{\"slug\":\"hb-quiet-spark\",\"ruleset\":\"homebrew\"},\"name\":\"Quiet Spark\",\"level\":0,\"school\":\"conjuration\",\"castingTime\":{\"cost\":1,\"actionType\":\"bonusAction\",\"triggerCondition\":null},\"duration\":{\"type\":\"instantaneous\",\"durationSeconds\":0,\"requiresConcentration\":false,\"rawText\":null},\"range\":\"30 feet\",\"rangeDistanceFeet\":0,\"rangeType\":\"ranged\",\"components\":{\"v\":true,\"s\":false,\"m\":false,\"materialDescription\":null,\"materialCostGp\":0,\"consumesMaterial\":false},\"descriptionMarkdown\":\"Creates a tiny silent spark.\",\"higherLevelsMarkdown\":null,\"damageMath\":[],\"relatedEntityRefs\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-chrono-step\",\"ruleset\":\"homebrew\"},\"name\":\"Chrono Step\",\"level\":2,\"school\":\"chronomancy\",\"castingTime\":{\"cost\":1,\"actionType\":\"reaction\",\"triggerCondition\":null},\"duration\":{\"type\":\"special\",\"durationSeconds\":0,\"requiresConcentration\":false,\"rawText\":null},\"range\":\"Self\",\"rangeDistanceFeet\":0,\"rangeType\":\"ranged\",\"components\":{\"v\":true,\"s\":true,\"m\":false,\"materialDescription\":null,\"materialCostGp\":0,\"consumesMaterial\":false},\"descriptionMarkdown\":\"Step briefly sideways in time.\",\"higherLevelsMarkdown\":null,\"damageMath\":[],\"relatedEntityRefs\":[],\"customProperties\":{\"meta\":{\"ritual\":false},\"savingThrow\":\"wisdom\"}}",
+    "{\"id\":{\"slug\":\"hb-astral-weave\",\"ruleset\":\"homebrew\"},\"name\":\"Astral Weave\",\"level\":4,\"school\":\"abjuration\",\"castingTime\":{\"cost\":1,\"actionType\":\"action\",\"triggerCondition\":null},\"duration\":{\"type\":\"permanent\",\"durationSeconds\":0,\"requiresConcentration\":false,\"rawText\":null},\"range\":\"60 feet\",\"rangeDistanceFeet\":0,\"rangeType\":\"ranged\",\"components\":{\"v\":true,\"s\":true,\"m\":false,\"materialDescription\":null,\"materialCostGp\":0,\"consumesMaterial\":false},\"descriptionMarkdown\":\"Weaves a protective veil of starlight.\",\"higherLevelsMarkdown\":null,\"damageMath\":[],\"relatedEntityRefs\":[],\"classes\":{\"fromClassList\":[{\"name\":\"Bard\",\"source\":\"SRD\"}],\"fromClassListVariant\":[{\"name\":\"Sorcerer\",\"source\":\"SRD\"}],\"fromSubclass\":[{\"class\":{\"name\":\"Druid\",\"source\":\"SRD\"},\"subclass\":{\"name\":\"Land\"}}]},\"customProperties\":{\"classes\":{\"fromClassList\":[{\"name\":\"Bard\",\"source\":\"SRD\"}],\"fromClassListVariant\":[{\"name\":\"Sorcerer\",\"source\":\"SRD\"}],\"fromSubclass\":[{\"class\":{\"name\":\"Druid\",\"source\":\"SRD\"},\"subclass\":{\"name\":\"Land\"}}]}}}",
+    "{\"id\":{\"slug\":\"hb-nested-ward\",\"ruleset\":\"homebrew\"},\"name\":\"Nested Ward\",\"level\":1,\"school\":\"abjuration\",\"castingTime\":{\"cost\":1,\"actionType\":\"action\",\"triggerCondition\":null},\"duration\":{\"type\":\"timed\",\"durationSeconds\":600,\"requiresConcentration\":false,\"rawText\":null},\"range\":\"Touch\",\"rangeDistanceFeet\":0,\"rangeType\":\"ranged\",\"components\":{\"v\":true,\"s\":false,\"m\":false,\"materialDescription\":null,\"materialCostGp\":0,\"consumesMaterial\":false},\"descriptionMarkdown\":\"Wards a touched creature.\",\"higherLevelsMarkdown\":null,\"damageMath\":[],\"relatedEntityRefs\":[],\"customProperties\":{\"customProperties\":{\"classes\":[\"Paladin\",\"Warlock\"]}}}"
+  ],
+  "rawPayloads": [
+    {
+      "name": "Solar Flare",
+      "source": "HB",
+      "level": 3,
+      "school": "evocation"
+    },
+    {
+      "name": "Quiet Spark",
+      "source": "HB",
+      "level": 0,
+      "school": "conjuration"
+    },
+    {
+      "name": "Chrono Step",
+      "source": "HB",
+      "level": 2,
+      "school": "chronomancy"
+    },
+    {
+      "name": "Astral Weave",
+      "source": "HB",
+      "level": 4,
+      "school": "abjuration"
+    },
+    {
+      "name": "Nested Ward",
+      "source": "HB",
+      "level": 1,
+      "school": "abjuration"
+    }
+  ]
+}

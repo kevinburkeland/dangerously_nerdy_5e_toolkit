@@ -1,0 +1,104 @@
+{
+  "storedJsonList": [
+    "{\"id\":{\"slug\":\"hb-item-weapon\",\"ruleset\":\"homebrew\"},\"name\":\"Sunblade Prototype\",\"itemType\":\"Weapon (longsword)\",\"rarity\":\"rare\",\"requiresAttunement\":true,\"descriptionMarkdown\":\"# Heading\\nA gleaming radiant blade.\\nSecond line.\",\"grants\":[],\"customProperties\":{\"cost\":\"2500 gp\",\"rawJson\":{\"reqAttune\":\"by a paladin\"}}}",
+    "{\"id\":{\"slug\":\"hb-item-armor\",\"ruleset\":\"homebrew\"},\"name\":\"Mithral Scale\",\"itemType\":\"Armor (medium)\",\"rarity\":\"uncommon\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"Lightweight interwoven scales.\",\"grants\":[],\"customProperties\":{\"cost\":\"400 gp\"}}",
+    "{\"id\":{\"slug\":\"hb-item-potion\",\"ruleset\":\"homebrew\"},\"name\":\"Elixir of Clarity\",\"itemType\":\"Potion\",\"rarity\":\"common\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"Clears the mind for 1 hour.\",\"grants\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-item-ring\",\"ruleset\":\"homebrew\"},\"name\":\"Ring of Echoes\",\"itemType\":\"Ring\",\"rarity\":\"very rare\",\"requiresAttunement\":true,\"descriptionMarkdown\":\"Repeats the last spoken spell.\",\"grants\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-item-rod\",\"ruleset\":\"homebrew\"},\"name\":\"Rod of Steadiness\",\"itemType\":\"Rod\",\"rarity\":\"legendary\",\"requiresAttunement\":true,\"descriptionMarkdown\":\"Grants unshakeable footing.\",\"grants\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-item-scroll\",\"ruleset\":\"homebrew\"},\"name\":\"Scroll of Dawn\",\"itemType\":\"Scroll\",\"rarity\":\"uncommon\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"Contains a written incantation.\",\"grants\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-item-staff\",\"ruleset\":\"homebrew\"},\"name\":\"Staff of Tides\",\"itemType\":\"Staff\",\"rarity\":\"artifact\",\"requiresAttunement\":true,\"descriptionMarkdown\":\"Commands ocean currents.\",\"grants\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-item-wand\",\"ruleset\":\"homebrew\"},\"name\":\"Wand of Sparks\",\"itemType\":\"Wand\",\"rarity\":\"common\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"Emits harmless sparks.\",\"grants\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-item-gem\",\"ruleset\":\"homebrew\"},\"name\":\"Star Sapphire Gem\",\"itemType\":\"Gemstone\",\"rarity\":\"none\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"A finely cut star sapphire.\",\"grants\":[],\"customProperties\":{\"cost\":\"500 gp\"}}",
+    "{\"id\":{\"slug\":\"hb-item-art\",\"ruleset\":\"homebrew\"},\"name\":\"Gilded Chalice\",\"itemType\":\"Art Object\",\"rarity\":\"none\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"An ornate silver chalice.\",\"grants\":[],\"customProperties\":{\"cost\":\"250 gp\"}}",
+    "{\"id\":{\"slug\":\"hb-item-cartographer\",\"ruleset\":\"homebrew\"},\"name\":\"Master Cartographer's Kit\",\"itemType\":\"Cartographer's Tools\",\"rarity\":\"none\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"Quills, ink, compass, and parchment.\",\"grants\":[],\"customProperties\":{\"cost\":\"15 gp\"}}",
+    "{\"id\":{\"slug\":\"hb-item-trinket\",\"ruleset\":\"homebrew\"},\"name\":\"Brass Compass Trinket\",\"itemType\":\"Trinket\",\"rarity\":\"none\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"Always points toward the nearest tavern.\",\"grants\":[],\"customProperties\":{}}",
+    "{\"id\":{\"slug\":\"hb-item-gear\",\"ruleset\":\"homebrew\"},\"name\":\"Climber Harness\",\"itemType\":\"Adventuring Gear\",\"rarity\":\"none\",\"requiresAttunement\":false,\"descriptionMarkdown\":\"Sturdy hemp climbing harness.\",\"grants\":[],\"customProperties\":{\"cost\":\"25 gp\"}}",
+    "{\"id\":{\"slug\":\"hb-item-wondrous\",\"ruleset\":\"homebrew\"},\"name\":\"Cloak of Mist\",\"itemType\":\"Wondrous Item\",\"rarity\":\"rare\",\"requiresAttunement\":true,\"descriptionMarkdown\":\"Shrouds the wearer in faint mist.\",\"grants\":[],\"customProperties\":{}}"
+  ],
+  "rawPayloads": [
+    {
+      "name": "Sunblade Prototype",
+      "source": "HB",
+      "type": "Weapon (longsword)",
+      "rarity": "rare"
+    },
+    {
+      "name": "Mithral Scale",
+      "source": "HB",
+      "type": "Armor (medium)",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Elixir of Clarity",
+      "source": "HB",
+      "type": "Potion",
+      "rarity": "common"
+    },
+    {
+      "name": "Ring of Echoes",
+      "source": "HB",
+      "type": "Ring",
+      "rarity": "very rare"
+    },
+    {
+      "name": "Rod of Steadiness",
+      "source": "HB",
+      "type": "Rod",
+      "rarity": "legendary"
+    },
+    {
+      "name": "Scroll of Dawn",
+      "source": "HB",
+      "type": "Scroll",
+      "rarity": "uncommon"
+    },
+    {
+      "name": "Staff of Tides",
+      "source": "HB",
+      "type": "Staff",
+      "rarity": "artifact"
+    },
+    {
+      "name": "Wand of Sparks",
+      "source": "HB",
+      "type": "Wand",
+      "rarity": "common"
+    },
+    {
+      "name": "Star Sapphire Gem",
+      "source": "HB",
+      "type": "Gemstone",
+      "rarity": "none"
+    },
+    {
+      "name": "Gilded Chalice",
+      "source": "HB",
+      "type": "Art Object",
+      "rarity": "none"
+    },
+    {
+      "name": "Master Cartographer's Kit",
+      "source": "HB",
+      "type": "Cartographer's Tools",
+      "rarity": "none"
+    },
+    {
+      "name": "Brass Compass Trinket",
+      "source": "HB",
+      "type": "Trinket",
+      "rarity": "none"
+    },
+    {
+      "name": "Climber Harness",
+      "source": "HB",
+      "type": "Adventuring Gear",
+      "rarity": "none"
+    },
+    {
+      "name": "Cloak of Mist",
+      "source": "HB",
+      "type": "Wondrous Item",
+      "rarity": "rare"
+    }
+  ]
+}

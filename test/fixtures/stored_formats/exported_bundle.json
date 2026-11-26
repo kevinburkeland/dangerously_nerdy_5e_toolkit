@@ -1,0 +1,489 @@
+{
+  "schemaVersion": 1,
+  "appVersion": "1.0.0",
+  "exportedAt": "2026-01-01T00:00:00.000Z",
+  "bundleName": "Step 4 Raw Export Bundle",
+  "author": "Test Harness",
+  "spells": [
+    {
+      "id": {
+        "slug": "hb-solar-flare",
+        "ruleset": "homebrew"
+      },
+      "name": "Solar Flare",
+      "level": 3,
+      "school": "evocation",
+      "castingTime": {
+        "cost": 1,
+        "actionType": "action",
+        "triggerCondition": null
+      },
+      "duration": {
+        "type": "timed",
+        "durationSeconds": 60,
+        "requiresConcentration": true,
+        "rawText": "Concentration, up to 1 minute"
+      },
+      "range": "120 feet",
+      "rangeDistanceFeet": 120,
+      "rangeType": "ranged",
+      "components": {
+        "v": true,
+        "s": true,
+        "m": true,
+        "materialDescription": "a pinch of sunstone dust",
+        "materialCostGp": 0,
+        "consumesMaterial": false
+      },
+      "descriptionMarkdown": "A burst of radiant fire erupts in a 20-foot sphere.",
+      "higherLevelsMarkdown": "When cast using a 4th-level slot or higher, damage increases by 1d6.",
+      "damageMath": [
+        {
+          "diceFormula": "6d6",
+          "damageType": "radiant",
+          "isAttackRoll": false,
+          "requiresSave": true,
+          "scalingFormula": "+1d6 per slot above 3rd"
+        }
+      ],
+      "relatedEntityRefs": [],
+      "classes": [
+        "Wizard",
+        "Cleric"
+      ],
+      "customProperties": {
+        "classes": [
+          "Wizard",
+          "Cleric"
+        ],
+        "ritual": true,
+        "savingThrow": [
+          "dexterity"
+        ],
+        "areaTags": [
+          "S"
+        ],
+        "miscTags": [
+          "SGT"
+        ],
+        "source": "HB-SOLAR"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-quiet-spark",
+        "ruleset": "homebrew"
+      },
+      "name": "Quiet Spark",
+      "level": 0,
+      "school": "conjuration",
+      "castingTime": {
+        "cost": 1,
+        "actionType": "bonusAction",
+        "triggerCondition": null
+      },
+      "duration": {
+        "type": "instantaneous",
+        "durationSeconds": 0,
+        "requiresConcentration": false,
+        "rawText": null
+      },
+      "range": "30 feet",
+      "rangeDistanceFeet": 30,
+      "rangeType": "ranged",
+      "components": {
+        "v": true,
+        "s": false,
+        "m": false,
+        "materialDescription": null,
+        "materialCostGp": 0,
+        "consumesMaterial": false
+      },
+      "descriptionMarkdown": "Creates a tiny silent spark.",
+      "higherLevelsMarkdown": null,
+      "damageMath": [],
+      "relatedEntityRefs": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-chrono-step",
+        "ruleset": "homebrew"
+      },
+      "name": "Chrono Step",
+      "level": 2,
+      "school": "chronomancy",
+      "castingTime": {
+        "cost": 1,
+        "actionType": "reaction",
+        "triggerCondition": null
+      },
+      "duration": {
+        "type": "special",
+        "durationSeconds": 0,
+        "requiresConcentration": false,
+        "rawText": null
+      },
+      "range": "Self",
+      "rangeDistanceFeet": 0,
+      "rangeType": "self",
+      "components": {
+        "v": true,
+        "s": true,
+        "m": false,
+        "materialDescription": null,
+        "materialCostGp": 0,
+        "consumesMaterial": false
+      },
+      "descriptionMarkdown": "Step briefly sideways in time.",
+      "higherLevelsMarkdown": null,
+      "damageMath": [],
+      "relatedEntityRefs": [],
+      "customProperties": {
+        "meta": {
+          "ritual": false
+        },
+        "savingThrow": "wisdom"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-astral-weave",
+        "ruleset": "homebrew"
+      },
+      "name": "Astral Weave",
+      "level": 4,
+      "school": "abjuration",
+      "castingTime": {
+        "cost": 1,
+        "actionType": "action",
+        "triggerCondition": null
+      },
+      "duration": {
+        "type": "permanent",
+        "durationSeconds": 0,
+        "requiresConcentration": false,
+        "rawText": null
+      },
+      "range": "60 feet",
+      "rangeDistanceFeet": 60,
+      "rangeType": "ranged",
+      "components": {
+        "v": true,
+        "s": true,
+        "m": false,
+        "materialDescription": null,
+        "materialCostGp": 0,
+        "consumesMaterial": false
+      },
+      "descriptionMarkdown": "Weaves a protective veil of starlight.",
+      "higherLevelsMarkdown": null,
+      "damageMath": [],
+      "relatedEntityRefs": [],
+      "classes": {
+        "fromClassList": [
+          {
+            "name": "Bard",
+            "source": "SRD"
+          }
+        ],
+        "fromClassListVariant": [
+          {
+            "name": "Sorcerer",
+            "source": "SRD"
+          }
+        ],
+        "fromSubclass": [
+          {
+            "class": {
+              "name": "Druid",
+              "source": "SRD"
+            },
+            "subclass": {
+              "name": "Land"
+            }
+          }
+        ]
+      },
+      "customProperties": {
+        "classes": {
+          "fromClassList": [
+            {
+              "name": "Bard",
+              "source": "SRD"
+            }
+          ],
+          "fromClassListVariant": [
+            {
+              "name": "Sorcerer",
+              "source": "SRD"
+            }
+          ],
+          "fromSubclass": [
+            {
+              "class": {
+                "name": "Druid",
+                "source": "SRD"
+              },
+              "subclass": {
+                "name": "Land"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-nested-ward",
+        "ruleset": "homebrew"
+      },
+      "name": "Nested Ward",
+      "level": 1,
+      "school": "abjuration",
+      "castingTime": {
+        "cost": 1,
+        "actionType": "action",
+        "triggerCondition": null
+      },
+      "duration": {
+        "type": "timed",
+        "durationSeconds": 600,
+        "requiresConcentration": false,
+        "rawText": null
+      },
+      "range": "Touch",
+      "rangeDistanceFeet": 0,
+      "rangeType": "touch",
+      "components": {
+        "v": true,
+        "s": false,
+        "m": false,
+        "materialDescription": null,
+        "materialCostGp": 0,
+        "consumesMaterial": false
+      },
+      "descriptionMarkdown": "Wards a touched creature.",
+      "higherLevelsMarkdown": null,
+      "damageMath": [],
+      "relatedEntityRefs": [],
+      "classes": [
+        "Paladin",
+        "Warlock"
+      ],
+      "customProperties": {
+        "classes": [
+          "Paladin",
+          "Warlock"
+        ]
+      }
+    }
+  ],
+  "monsters": [],
+  "items": [
+    {
+      "id": {
+        "slug": "hb-item-weapon",
+        "ruleset": "homebrew"
+      },
+      "name": "Sunblade Prototype",
+      "itemType": "Weapon (longsword)",
+      "rarity": "rare",
+      "requiresAttunement": true,
+      "descriptionMarkdown": "# Heading\nA gleaming radiant blade.\nSecond line.",
+      "grants": [],
+      "customProperties": {
+        "cost": "2500 gp",
+        "rawJson": {
+          "reqAttune": "by a paladin"
+        }
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-item-armor",
+        "ruleset": "homebrew"
+      },
+      "name": "Mithral Scale",
+      "itemType": "Armor (medium)",
+      "rarity": "uncommon",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "Lightweight interwoven scales.",
+      "grants": [],
+      "customProperties": {
+        "cost": "400 gp"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-item-potion",
+        "ruleset": "homebrew"
+      },
+      "name": "Elixir of Clarity",
+      "itemType": "Potion",
+      "rarity": "common",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "Clears the mind for 1 hour.",
+      "grants": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-item-ring",
+        "ruleset": "homebrew"
+      },
+      "name": "Ring of Echoes",
+      "itemType": "Ring",
+      "rarity": "very rare",
+      "requiresAttunement": true,
+      "descriptionMarkdown": "Repeats the last spoken spell.",
+      "grants": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-item-rod",
+        "ruleset": "homebrew"
+      },
+      "name": "Rod of Steadiness",
+      "itemType": "Rod",
+      "rarity": "legendary",
+      "requiresAttunement": true,
+      "descriptionMarkdown": "Grants unshakeable footing.",
+      "grants": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-item-scroll",
+        "ruleset": "homebrew"
+      },
+      "name": "Scroll of Dawn",
+      "itemType": "Scroll",
+      "rarity": "uncommon",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "Contains a written incantation.",
+      "grants": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-item-staff",
+        "ruleset": "homebrew"
+      },
+      "name": "Staff of Tides",
+      "itemType": "Staff",
+      "rarity": "artifact",
+      "requiresAttunement": true,
+      "descriptionMarkdown": "Commands ocean currents.",
+      "grants": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-item-wand",
+        "ruleset": "homebrew"
+      },
+      "name": "Wand of Sparks",
+      "itemType": "Wand",
+      "rarity": "common",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "Emits harmless sparks.",
+      "grants": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-item-gem",
+        "ruleset": "homebrew"
+      },
+      "name": "Star Sapphire Gem",
+      "itemType": "Gemstone",
+      "rarity": "none",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "A finely cut star sapphire.",
+      "grants": [],
+      "customProperties": {
+        "cost": "500 gp"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-item-art",
+        "ruleset": "homebrew"
+      },
+      "name": "Gilded Chalice",
+      "itemType": "Art Object",
+      "rarity": "none",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "An ornate silver chalice.",
+      "grants": [],
+      "customProperties": {
+        "cost": "250 gp"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-item-cartographer",
+        "ruleset": "homebrew"
+      },
+      "name": "Master Cartographer's Kit",
+      "itemType": "Cartographer's Tools",
+      "rarity": "none",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "Quills, ink, compass, and parchment.",
+      "grants": [],
+      "customProperties": {
+        "cost": "15 gp"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-item-trinket",
+        "ruleset": "homebrew"
+      },
+      "name": "Brass Compass Trinket",
+      "itemType": "Trinket",
+      "rarity": "none",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "Always points toward the nearest tavern.",
+      "grants": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-item-gear",
+        "ruleset": "homebrew"
+      },
+      "name": "Climber Harness",
+      "itemType": "Adventuring Gear",
+      "rarity": "none",
+      "requiresAttunement": false,
+      "descriptionMarkdown": "Sturdy hemp climbing harness.",
+      "grants": [],
+      "customProperties": {
+        "cost": "25 gp"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-item-wondrous",
+        "ruleset": "homebrew"
+      },
+      "name": "Cloak of Mist",
+      "itemType": "Wondrous Item",
+      "rarity": "rare",
+      "requiresAttunement": true,
+      "descriptionMarkdown": "Shrouds the wearer in faint mist.",
+      "grants": [],
+      "customProperties": {}
+    }
+  ],
+  "classes": [],
+  "subclasses": [],
+  "races": [],
+  "subraces": [],
+  "backgrounds": [],
+  "feats": [],
+  "otherEntries": []
+}
