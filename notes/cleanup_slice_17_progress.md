@@ -1,8 +1,8 @@
 # Cleanup slice 17 progress notes
 Status: IN PROGRESS
 Start heads: core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 6fb83f24ffbc9a0efd44e182536a878d976d8136
-Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 8509bb5edece484f2649b0a2b511f30966a26dd6, app 2078f70adfc7ccb8212ef65a564ca71620ca5cf7
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 8509bb5edece484f2649b0a2b511f30966a26dd6
+Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0, app a190f42b6405e11d1adfdc840b188de2a3694975
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0
 Fix ids: 1.1 1.2 1.3 1.4 2.1 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 6.2 6.3 7.1 8.1 8.2
 Mutation ids: R1 R2 R3 R4 R5 N1 X1 G1 C1 C2 S1 B1 Y1 H1 H2 H3
 
@@ -34,7 +34,7 @@ Fix 8.2: The homebrew service is a shell under 800 lines
 - [x] Step 3 Spell counts and homebrew casters: ruleset 8e809ccf779f5749145109e4b6fbca8c0d577f41 run 45890258911, app d1bf0d9ea77077dab84278974aa49f2f08721cb7 run 45891772454
 - [x] Step 4 Catalog, stored-format and homebrew pins: app e3f941e62313f623e7c7b508a3a706b20ec7e229 run 45893848977
 - [x] Step 5 One item model: ruleset 8509bb5edece484f2649b0a2b511f30966a26dd6 run 45895492155, app 2078f70adfc7ccb8212ef65a564ca71620ca5cf7 run 45898829284
-- [ ] Step 6 One spell model
+- [x] Step 6 One spell model: ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0 run 45900271783, app a190f42b6405e11d1adfdc840b188de2a3694975 run 45902447861
 - [ ] Step 7 Homebrew storage and mappers out
 - [ ] Step 8 Homebrew sync, bundles and re-parsing out
 - [ ] Step 9 Mutations and report
@@ -54,6 +54,9 @@ Fix 4.3 done: [The homebrew service's public behaviour is pinned] Added homebrew
 Fix 5.1 done: [One item model] Moved EquipmentItem with pure-Dart ItemCategory, ItemRarity, ItemEditionDetails, and edition fields into vtt_ruleset_dnd5e, migrated all bundled item catalogs and ItemPresentation registry via idempotent tool/migrate_bundled_items.py, and deleted the app item model and equipmentItemToMagicItem.
 Fix 5.2 done: [Item rules are data, not guesses from names] Emitted item rules customProperties statically into bundled EquipmentItem data, deleted SrdEquipmentLibrary._mapItemToEquipmentItem, and added no_regex_item_rules_bar_test.dart.
 Fix 5.3 done: [Old stored items load into the one model] Added pre-slice-17 EquipmentItem.fromMap legacy hydration backed by equipment_item_law_test.dart and verified stored_format_load_law_test.dart passes with unchanged fixtures.
+Fix 6.1 done: [One spell model] Moved Spell with SpellEditionDetails, typed schoolEnum (preserving unknown homebrew schools), and edition fields into vtt_ruleset_dnd5e, migrated all bundled spells via idempotent tool/migrate_bundled_spells.py, and deleted SpellItem, app SpellEditionDetails, and spellToSpellItem.
+Fix 6.2 done: [Old stored spells load into the one model] Added pre-slice-17 Spell.fromMap legacy hydration backed by spell_law_test.dart and verified stored_format_load_law_test.dart passes with unchanged fixtures.
+Fix 6.3 done: [No second model for a spell or an item] Added no_second_spell_or_item_model_bar_test.dart reading canonical Spell and EquipmentItem fields from vtt_ruleset_dnd5e via package_config.json.
 
 ## Mutation branches
 None
@@ -67,7 +70,7 @@ f6a2c64aa796e22b3de8807f9a6ac207826b4fde red run 45901741063
 None
 
 ## Next
-Implement Step 6 (One spell model): push unified Spell with SpellEditionDetails and pre-slice-17 fromMap compatibility in vtt-ruleset-dnd5e, re-pin ruleset in the app, migrate bundled spell catalogs via an idempotent generator, delete SpellItem and spellToSpellItem, and add the no-second-model source bar.
+Implement Step 7 (Homebrew storage and mappers out — app, no behaviour change): extract generic HomebrewCategoryStore<T>, raw payload storage helpers, and compendium-to-RollableTable/DmReferenceItem mappers under lib/services/persistence/homebrew/, keeping HomebrewPersistenceService path, class, singleton, and every public signature unchanged.
 
 ## Open issues and deviations
 - Fix 1.3 stopped per prompt instruction ("if the batch can't be unpacked, say why and stop this fix"): in Flutter's TestWidgetsFlutterBinding._runTest (binding.dart), a second FlutterError.onError overwrites _pendingExceptionDetails with a FlutterErrorDetails whose exception is a plain String ('Multiple exceptions (N) were detected...') with no list field, and test/infrastructure/compliance/no_flutter_error_on_error_override_bar_test.dart forbids assigning FlutterError.onError in any file under test/.
