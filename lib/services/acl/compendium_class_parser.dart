@@ -166,6 +166,21 @@ class CompendiumClassParser {
       }
     }
 
+    CasterProgression? casterProgression;
+    final rawCasterProg = raw['casterProgression']?.toString().trim();
+    if (rawCasterProg != null && rawCasterProg.isNotEmpty) {
+      casterProgression = CasterProgression.tryParse(rawCasterProg);
+      if (casterProgression == null) {
+        LoggingService().logNonFatal(
+          FormatException(
+            'Unknown casterProgression "$rawCasterProg" on class "$name"',
+          ),
+          StackTrace.current,
+          reason: 'CompendiumClassParser.parseClass',
+        );
+      }
+    }
+
     return CharacterClass(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
@@ -175,6 +190,7 @@ class CompendiumClassParser {
       armorProficiencies: armorProficiencies,
       weaponProficiencies: weaponProficiencies,
       spellcastingAbility: raw['spellcastingAbility']?.toString(),
+      casterProgression: casterProgression,
       featuresMarkdown: featuresMarkdown,
       subclasses: subclasses,
       subclassSelectionLevel: subclassSelectionLevel,
@@ -355,6 +371,7 @@ class CompendiumClassParser {
     'savingThrows',
     'primaryAbility',
     'spellcastingAbility',
+    'casterProgression',
     'classFeatures',
     'features',
     'entries',

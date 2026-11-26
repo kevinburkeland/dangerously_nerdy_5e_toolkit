@@ -151,11 +151,17 @@ class LevelUpWizardController extends ChangeNotifier {
     final edition = character.id.ruleset == RulesetVersion.v2024
         ? RulesetEdition.v2024
         : RulesetEdition.v2014;
+    final cls = SrdClassesLibrary.findBySlug(
+      selectedClassSlug,
+      ruleset: character.id.ruleset,
+    );
     return resolveClassSpellcasterProfile(
       classSlug: selectedClassSlug,
       classLevel: targetClassNewLevel,
       subclassSlug: effectiveSubclassSlug,
       edition: edition,
+      fallbackCastingAbility: cls?.parsedSpellcastingAbility,
+      casterProgression: cls?.casterProgression,
     );
   }
 
@@ -433,13 +439,20 @@ class LevelUpWizardController extends ChangeNotifier {
     final edition = character.id.ruleset == RulesetVersion.v2024
         ? RulesetEdition.v2024
         : RulesetEdition.v2014;
+    final cls = SrdClassesLibrary.findBySlug(
+      classSlug,
+      ruleset: character.id.ruleset,
+    );
     final profile = resolveClassSpellcasterProfile(
       classSlug: classSlug,
       classLevel: targetClassNewLevel,
       subclassSlug: effectiveSubclassSlug,
       edition: edition,
+      fallbackCastingAbility: cls?.parsedSpellcastingAbility,
+      casterProgression: cls?.casterProgression,
     );
-    final ability = profile.castingAbility ?? AbilityType.intelligence;
+    final ability = profile.castingAbility;
+    if (ability == null) return 0;
     return effectiveScoresWithPendingAsi.getScore(ability).dndModifier;
   }
 

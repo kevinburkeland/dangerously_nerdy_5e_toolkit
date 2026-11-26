@@ -105,10 +105,13 @@ ClassSpellcasterProfile resolveBuilderCasterProfile(
   final edition = ruleset == RulesetVersion.v2024
       ? RulesetEdition.v2024
       : RulesetEdition.v2014;
+  final cls = SrdClassesLibrary.findBySlug(classSlug, ruleset: ruleset);
   return resolveClassSpellcasterProfile(
     classSlug: classSlug,
     classLevel: 1,
     edition: edition,
+    fallbackCastingAbility: cls?.parsedSpellcastingAbility,
+    casterProgression: cls?.casterProgression,
   );
 }
 

@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-26
+- Cleanup slice 17: Re-pin vtt_ruleset_dnd5e to 8e809ccf779f5749145109e4b6fbca8c0d577f41, show 2024 class-table prepared subtitle in BuilderSpellsStep, add typed CasterProgression and parsedSpellcastingAbility to CharacterClass and CompendiumClassParser, wire homebrew casters into builder and level-up without fallback abilities, and regenerate named spell-count builder and level-up goldens (Fixes 3.1-3.3).
 - Cleanup slice 17: Add 14 high-casting-ability spell-picking builds (with casting ability 16 via manual entry, spells-held guard, and build/step names in step-finder errors) to character_builder_goldens_test.dart and builder_goldens.json with zero lib/ changes (Fix 2.1).
 - Cleanup slice 17: Retire 12 cs16 mutation branches, add per-case runner and no-token stub to test_check_notes_shas.sh (NS79-NS82), document why tester.takeException() cannot unpack Multiple exceptions batches under the FlutterError.onError bar, and upgrade dart_webrtc (1.9.0) and webrtc_interface (1.6.0) for 14-day look-ahead (Fixes 1.1, 1.2, 1.4).
 

@@ -98,8 +98,10 @@ class BuilderSpellsStep extends StatelessWidget {
     
 
     // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
-    final castingAbility =
-        casterProfile.castingAbility ?? AbilityType.charisma;
+    final castingAbility = casterProfile.castingAbility;
+    if (castingAbility == null) {
+      return const SizedBox.shrink();
+    }
     final curBackground = selectedBackground != null
         ? SrdBackgroundsLibrary.findBySlug(selectedBackground!)
         : null;
@@ -133,7 +135,9 @@ class BuilderSpellsStep extends StatelessWidget {
     final spellsSubtitle = isWizard
         ? 'A Level 1 Wizard must choose exactly 6 1st-level spells to scribe into their spellbook.'
         : (limits.maxSpellsPrepared > 0
-            ? 'Prepared limit: Level 1 + ${castingAbility.shortName} mod (${castingMod >= 0 ? "+$castingMod" : "$castingMod"}) = $maxSpells spells.'
+            ? (selectedRuleset == RulesetVersion.v2024
+                ? 'Prepared limit (2024 class table): $maxSpells spells.'
+                : 'Prepared limit: Level 1 + ${castingAbility.shortName} mod (${castingMod >= 0 ? "+$castingMod" : "$castingMod"}) = $maxSpells spells.')
             : 'Spells known limit: $maxSpells spells.');
 
     final alwaysPreparedSpells =

@@ -438,6 +438,7 @@ class CharacterClass extends DomainEntity {
   final List<String> armorProficiencies;
   final List<String> weaponProficiencies;
   final String? spellcastingAbility;
+  final CasterProgression? casterProgression;
   final String featuresMarkdown;
   final List<Subclass> subclasses;
   final int subclassSelectionLevel;
@@ -455,6 +456,7 @@ class CharacterClass extends DomainEntity {
     this.armorProficiencies = const [],
     this.weaponProficiencies = const [],
     this.spellcastingAbility,
+    this.casterProgression,
     this.featuresMarkdown = '',
     this.subclasses = const [],
     this.subclassSelectionLevel = 3,
@@ -462,6 +464,19 @@ class CharacterClass extends DomainEntity {
     this.grants = const [],
     this.customProperties = const {},
   });
+
+  /// Parses [spellcastingAbility] (full name or 3-letter abbreviation) once in
+  /// the model rather than duplicating string parsing in widgets.
+  AbilityType? get parsedSpellcastingAbility {
+    final raw = spellcastingAbility?.trim().toLowerCase();
+    if (raw == null || raw.isEmpty) return null;
+    for (final ab in AbilityType.values) {
+      if (ab.name.toLowerCase() == raw || ab.shortName.toLowerCase() == raw) {
+        return ab;
+      }
+    }
+    return null;
+  }
 
   @override
   EntityType get entityType => EntityType.classDefinition;
@@ -657,6 +672,8 @@ class CharacterClass extends DomainEntity {
         'armorProficiencies': armorProficiencies,
         'weaponProficiencies': weaponProficiencies,
         'spellcastingAbility': spellcastingAbility,
+        if (casterProgression != null)
+          'casterProgression': casterProgression!.name,
         'featuresMarkdown': featuresMarkdown,
         'subclasses': subclasses.map((s) => s.toMap()).toList(),
         'subclassSelectionLevel': subclassSelectionLevel,
@@ -700,6 +717,8 @@ class CharacterClass extends DomainEntity {
           .map((e) => e.toString())
           .toList(),
       spellcastingAbility: map['spellcastingAbility']?.toString(),
+      casterProgression:
+          CasterProgression.tryParse(map['casterProgression']?.toString()),
       featuresMarkdown: map['featuresMarkdown']?.toString() ?? '',
       subclasses: (map['subclasses'] as List? ?? [])
           .whereType<Map>()
@@ -726,6 +745,7 @@ class CharacterClass extends DomainEntity {
     List<String>? armorProficiencies,
     List<String>? weaponProficiencies,
     String? spellcastingAbility,
+    CasterProgression? casterProgression,
     String? featuresMarkdown,
     List<Subclass>? subclasses,
     int? subclassSelectionLevel,
@@ -742,6 +762,7 @@ class CharacterClass extends DomainEntity {
       armorProficiencies: armorProficiencies ?? this.armorProficiencies,
       weaponProficiencies: weaponProficiencies ?? this.weaponProficiencies,
       spellcastingAbility: spellcastingAbility ?? this.spellcastingAbility,
+      casterProgression: casterProgression ?? this.casterProgression,
       featuresMarkdown: featuresMarkdown ?? this.featuresMarkdown,
       subclasses: subclasses ?? this.subclasses,
       subclassSelectionLevel:
