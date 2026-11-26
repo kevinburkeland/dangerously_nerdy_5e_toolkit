@@ -85,8 +85,6 @@ Set<String> extractClassFieldNames(String source, String className) {
 }
 
 Directory _findRulesetLibDir() {
-  final sibling = Directory('../vtt-ruleset-dnd5e/lib');
-  if (sibling.existsSync()) return sibling;
   final configFile = File('.dart_tool/package_config.json');
   final text = configFile.readAsStringSync();
   final m = RegExp(
