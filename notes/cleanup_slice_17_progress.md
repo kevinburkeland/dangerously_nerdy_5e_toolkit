@@ -1,8 +1,8 @@
 # Cleanup slice 17 progress notes
 Status: IN PROGRESS
 Start heads: core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 6fb83f24ffbc9a0efd44e182536a878d976d8136
-Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 8e809ccf779f5749145109e4b6fbca8c0d577f41, app e3f941e62313f623e7c7b508a3a706b20ec7e229
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 8e809ccf779f5749145109e4b6fbca8c0d577f41
+Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 8509bb5edece484f2649b0a2b511f30966a26dd6, app 2078f70adfc7ccb8212ef65a564ca71620ca5cf7
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 8509bb5edece484f2649b0a2b511f30966a26dd6
 Fix ids: 1.1 1.2 1.3 1.4 2.1 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 6.2 6.3 7.1 8.1 8.2
 Mutation ids: R1 R2 R3 R4 R5 N1 X1 G1 C1 C2 S1 B1 Y1 H1 H2 H3
 
@@ -33,7 +33,7 @@ Fix 8.2: The homebrew service is a shell under 800 lines
 - [x] Step 2 Builder goldens with spell picks: app b26f30e68e9b2345310a4364ec7cec9d21b4de03 run 45888489939
 - [x] Step 3 Spell counts and homebrew casters: ruleset 8e809ccf779f5749145109e4b6fbca8c0d577f41 run 45890258911, app d1bf0d9ea77077dab84278974aa49f2f08721cb7 run 45891772454
 - [x] Step 4 Catalog, stored-format and homebrew pins: app e3f941e62313f623e7c7b508a3a706b20ec7e229 run 45893848977
-- [ ] Step 5 One item model
+- [x] Step 5 One item model: ruleset 8509bb5edece484f2649b0a2b511f30966a26dd6 run 45895492155, app 2078f70adfc7ccb8212ef65a564ca71620ca5cf7 run 45898829284
 - [ ] Step 6 One spell model
 - [ ] Step 7 Homebrew storage and mappers out
 - [ ] Step 8 Homebrew sync, bundles and re-parsing out
@@ -51,6 +51,9 @@ Fix 3.3 done: [The named golden changes for spell counts] Regenerated builder_go
 Fix 4.1 done: [The bundled spell and item catalog is pinned] Added catalog_goldens_test.dart, catalog_golden_serializer.dart, and bundled spell, item, lookup, and item rules-view golden fixtures.
 Fix 4.2 done: [Stored homebrew, backup and bundle formats are pinned] Added stored_format_load_law_test.dart and stored-format fixtures for homebrew spells and items, both bundle formats, app backup, DM backup, and expected loaded values.
 Fix 4.3 done: [The homebrew service's public behaviour is pinned] Added homebrew_persistence_characterization_test.dart covering save, get, delete, sync, bundle export and import, clearing, re-parsing, and batch save across all homebrew kinds.
+Fix 5.1 done: [One item model] Moved EquipmentItem with pure-Dart ItemCategory, ItemRarity, ItemEditionDetails, and edition fields into vtt_ruleset_dnd5e, migrated all bundled item catalogs and ItemPresentation registry via idempotent tool/migrate_bundled_items.py, and deleted the app item model and equipmentItemToMagicItem.
+Fix 5.2 done: [Item rules are data, not guesses from names] Emitted item rules customProperties statically into bundled EquipmentItem data, deleted SrdEquipmentLibrary._mapItemToEquipmentItem, and added no_regex_item_rules_bar_test.dart.
+Fix 5.3 done: [Old stored items load into the one model] Added pre-slice-17 EquipmentItem.fromMap legacy hydration backed by equipment_item_law_test.dart and verified stored_format_load_law_test.dart passes with unchanged fixtures.
 
 ## Mutation branches
 None
@@ -63,7 +66,7 @@ bfd9c9b7a324777a92448f18dedfbf892ea2f0b6 red run 45897875536
 None
 
 ## Next
-Implement Step 5 (One item model): expand EquipmentItem in vtt-ruleset-dnd5e with pure-Dart ItemCategory, ItemRarity, ItemEditionDetails, edition fields, and pre-slice-17 fromMap compatibility with round-trip and legacy laws; re-pin ruleset in the app; migrate bundled items and presentation registry via a committed generator; delete MagicItem, _mapItemToEquipmentItem, and equipmentItemToMagicItem; add the no-regex-item-rules source bar.
+Implement Step 6 (One spell model): push unified Spell with SpellEditionDetails and pre-slice-17 fromMap compatibility in vtt-ruleset-dnd5e, re-pin ruleset in the app, migrate bundled spell catalogs via an idempotent generator, delete SpellItem and spellToSpellItem, and add the no-second-model source bar.
 
 ## Open issues and deviations
 - Fix 1.3 stopped per prompt instruction ("if the batch can't be unpacked, say why and stop this fix"): in Flutter's TestWidgetsFlutterBinding._runTest (binding.dart), a second FlutterError.onError overwrites _pendingExceptionDetails with a FlutterErrorDetails whose exception is a plain String ('Multiple exceptions (N) were detected...') with no list field, and test/infrastructure/compliance/no_flutter_error_on_error_override_bar_test.dart forbids assigning FlutterError.onError in any file under test/.
