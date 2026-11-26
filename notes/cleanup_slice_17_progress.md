@@ -61,6 +61,7 @@ None
 ## Red runs on main
 55ac01c0068b82addb63f880371add21e9a9e8ef red run 45897009974
 bfd9c9b7a324777a92448f18dedfbf892ea2f0b6 red run 45897875536
+f6a2c64aa796e22b3de8807f9a6ac207826b4fde red run 45901741063
 
 ## Resets
 None
@@ -73,3 +74,4 @@ Implement Step 6 (One spell model): push unified Spell with SpellEditionDetails 
 - Fix 1.4: on 2026-11-26, the 14-day look-ahead (2026-12-10) flagged dart_webrtc (1.8.2 -> 1.9.0) and webrtc_interface (1.5.1 -> 1.6.0) as newly behind in the app; upgraded both in pubspec.lock.
 Run 45897009974 cause: docs_truth_test.dart found stale item type name in codebase_map.md and dynamic_ratchet_test.dart required lowering kDynamicCeiling from 1036 to 1035; fixed by bfd9c9b7a324777a92448f18dedfbf892ea2f0b6
 Run 45897875536 cause: NS73 caught an undisclosed earlier red run before Step 5 progress notes were updated; fixed by 0fda247c82fca61d2cf6bdcdac3dc129d409a7ab
+Run 45901741063 cause: sibling_repo_reference_source_bar_test.dart flagged sibling fallback path in no_second_spell_or_item_model_bar_test.dart; fixed by 9bf34d048da3fcf4f94e16d3f4f4bc7fa821ef40
