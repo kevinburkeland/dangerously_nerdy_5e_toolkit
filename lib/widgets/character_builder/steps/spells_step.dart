@@ -136,7 +136,7 @@ class BuilderSpellsStep extends StatelessWidget {
         ? 'A Level 1 Wizard must choose exactly 6 1st-level spells to scribe into their spellbook.'
         : (limits.maxSpellsPrepared > 0
             ? (selectedRuleset == RulesetVersion.v2024
-                ? 'Prepared limit (2024 class table): $maxSpells spells.'
+                ? 'Prepared limit: $maxSpells spells (2024 class table).'
                 : 'Prepared limit: Level 1 + ${castingAbility.shortName} mod (${castingMod >= 0 ? "+$castingMod" : "$castingMod"}) = $maxSpells spells.')
             : 'Spells known limit: $maxSpells spells.');
 
