@@ -10758,7 +10758,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 3,
-      "spellQuotaText": "Quota for Level 5: 0/8 New Leveled Spell(s), 0/3 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 5: 0/9 New Leveled Spell(s), 0/3 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -10946,7 +10946,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 1,
-      "spellQuotaText": "Quota for Level 2: 0/4 New Leveled Spell(s), 0/3 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 2: 0/5 New Leveled Spell(s), 0/3 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -11124,7 +11124,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 3: 0/5 New Leveled Spell(s), 0/3 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 3: 0/6 New Leveled Spell(s), 0/3 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -11304,7 +11304,7 @@
       "conPlusTwoHpGainShown": 8,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 4: 0/6 New Leveled Spell(s), 0/4 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 4: 0/7 New Leveled Spell(s), 0/4 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -11579,7 +11579,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 3,
-      "spellQuotaText": "Quota for Level 5: 0/7 New Leveled Spell(s), 0/4 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 5: 0/9 New Leveled Spell(s), 0/4 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -11903,7 +11903,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 1,
-      "spellQuotaText": "Quota for Level 2: 0/4 New Leveled Spell(s), 0/2 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 2: 0/5 New Leveled Spell(s), 0/2 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -12093,7 +12093,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 3: 0/5 New Leveled Spell(s), 0/2 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 3: 0/6 New Leveled Spell(s), 0/2 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -12273,7 +12273,7 @@
       "conPlusTwoHpGainShown": 8,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 4: 0/6 New Leveled Spell(s), 0/3 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 4: 0/7 New Leveled Spell(s), 0/3 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -12459,7 +12459,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 3,
-      "spellQuotaText": "Quota for Level 5: 0/7 New Leveled Spell(s), 0/3 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 5: 0/9 New Leveled Spell(s), 0/3 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -14519,7 +14519,7 @@
       "conPlusTwoHpGainShown": 9,
       "hpGainAfterConfirm": 8,
       "highestSpellLevelShown": 1,
-      "spellQuotaText": "Quota for Level 4: 0/4 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
+      "spellQuotaText": "Quota for Level 4: 0/5 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -14750,7 +14750,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 8,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 5: 0/5 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
+      "spellQuotaText": "Quota for Level 5: 0/6 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -15025,7 +15025,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 8,
       "highestSpellLevelShown": 1,
-      "spellQuotaText": "Quota for Level 2: 0/3 New Leveled Spell(s), 0/2 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 2: 0/3 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -15210,7 +15210,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 8,
       "highestSpellLevelShown": 1,
-      "spellQuotaText": "Quota for Level 3: 0/4 New Leveled Spell(s), 0/2 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 3: 0/4 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -15400,7 +15400,7 @@
       "conPlusTwoHpGainShown": 9,
       "hpGainAfterConfirm": 8,
       "highestSpellLevelShown": 1,
-      "spellQuotaText": "Quota for Level 4: 0/4 New Leveled Spell(s), 0/2 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 4: 0/5 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -15584,7 +15584,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 8,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 5: 0/5 New Leveled Spell(s), 0/2 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 5: 0/6 New Leveled Spell(s), 0 New Cantrips allowed (0/0 already known).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -16495,7 +16495,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 6,
       "highestSpellLevelShown": 1,
-      "spellQuotaText": "Quota for Level 2: 0/3 New Leveled Spell(s), 0/4 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 2: 0/4 New Leveled Spell(s), 0/4 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -16673,7 +16673,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 6,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 3: 0/4 New Leveled Spell(s), 0/4 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 3: 0/6 New Leveled Spell(s), 0/4 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -16853,7 +16853,7 @@
       "conPlusTwoHpGainShown": 7,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 2,
-      "spellQuotaText": "Quota for Level 4: 0/5 New Leveled Spell(s), 0/5 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 4: 0/7 New Leveled Spell(s), 0/5 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {
@@ -17039,7 +17039,7 @@
       "conPlusTwoHpGainShown": null,
       "hpGainAfterConfirm": 7,
       "highestSpellLevelShown": 3,
-      "spellQuotaText": "Quota for Level 5: 0/6 New Leveled Spell(s), 0/5 New Cantrip(s).",
+      "spellQuotaText": "Quota for Level 5: 0/9 New Leveled Spell(s), 0/5 New Cantrip(s).",
       "castingModifierShown": 2,
       "castingModifierImpliedByConfirmedDc": 2,
       "characterAfterConfirm": {

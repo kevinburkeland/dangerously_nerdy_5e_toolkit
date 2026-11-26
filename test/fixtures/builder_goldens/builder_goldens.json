@@ -8747,7 +8747,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
+      "spellsSubtitle": "Prepared limit: 4 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 18,
@@ -9123,7 +9123,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
+      "spellsSubtitle": "Prepared limit: 4 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 15,
@@ -10279,7 +10279,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + CHA mod (-1) = 1 spells.",
+      "spellsSubtitle": "Prepared limit: 2 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 18,
@@ -10664,7 +10664,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+0) = 1 spells.",
+      "spellsSubtitle": "Prepared limit: 2 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 16,
@@ -13457,7 +13457,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+3) = 4 spells.",
+      "spellsSubtitle": "Prepared limit: 4 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 16,
@@ -13932,7 +13932,7 @@
         "Step 8: Starting Equipment & Inventory (SRD)",
         "Step 9: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+3) = 4 spells.",
+      "spellsSubtitle": "Prepared limit: 4 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 13,
@@ -14438,7 +14438,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + CHA mod (+3) = 4 spells.",
+      "spellsSubtitle": "Prepared limit: 2 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 18,
@@ -14796,20 +14796,6 @@
             "refType": "spell",
             "rulesetPreferred": null,
             "slug": "spell_divine_smite"
-          },
-          {
-            "displayName": "Bless",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_bless"
-          },
-          {
-            "displayName": "Command",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_command"
           }
         ],
         "spellsPrepared": [
@@ -14826,20 +14812,6 @@
             "refType": "spell",
             "rulesetPreferred": null,
             "slug": "spell_divine_smite"
-          },
-          {
-            "displayName": "Bless",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_bless"
-          },
-          {
-            "displayName": "Command",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_command"
           }
         ],
         "tempHp": 0,
@@ -14859,14 +14831,12 @@
       "spellsHeaderText": "Select starting cantrips and 1st-level spells for Paladin (CHA mod: +3).",
       "cantripsCountText": "0 / 0 selected",
       "cantripsOfferedCount": 0,
-      "spellsCountText": "4 / 4 selected",
-      "spellsOfferedCount": 4,
+      "spellsCountText": "2 / 2 selected",
+      "spellsOfferedCount": 2,
       "pickedCantrips": [],
       "pickedSpells": [
         "Cure Wounds",
-        "Divine Smite",
-        "Bless",
-        "Command"
+        "Divine Smite"
       ]
     },
     "2024_ranger_spells": {
@@ -14896,7 +14866,7 @@
         "Step 7: Starting Equipment & Inventory (SRD)",
         "Step 8: Review & Finalize"
       ],
-      "spellsSubtitle": "Prepared limit: Level 1 + WIS mod (+3) = 4 spells.",
+      "spellsSubtitle": "Prepared limit: 2 spells (2024 class table).",
       "character": {
         "allocatedSpells": {},
         "armorClass": 14,
@@ -15255,20 +15225,6 @@
             "refType": "spell",
             "rulesetPreferred": null,
             "slug": "spell_hunters_mark"
-          },
-          {
-            "displayName": "Detect Magic",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_detect_magic"
-          },
-          {
-            "displayName": "Alarm",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_alarm"
           }
         ],
         "spellsPrepared": [
@@ -15285,20 +15241,6 @@
             "refType": "spell",
             "rulesetPreferred": null,
             "slug": "spell_hunters_mark"
-          },
-          {
-            "displayName": "Detect Magic",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_detect_magic"
-          },
-          {
-            "displayName": "Alarm",
-            "grantedSkills": [],
-            "refType": "spell",
-            "rulesetPreferred": null,
-            "slug": "spell_alarm"
           }
         ],
         "tempHp": 0,
@@ -15317,16 +15259,14 @@
       "castingAbilityScore": 16,
       "castingAbilityModifier": 3,
       "spellsHeaderText": "Select starting cantrips and 1st-level spells for Ranger (WIS mod: +3).",
-      "cantripsCountText": "0 / 2 selected",
-      "cantripsOfferedCount": 2,
-      "spellsCountText": "4 / 4 selected",
-      "spellsOfferedCount": 4,
+      "cantripsCountText": "0 / 0 selected",
+      "cantripsOfferedCount": 0,
+      "spellsCountText": "2 / 2 selected",
+      "spellsOfferedCount": 2,
       "pickedCantrips": [],
       "pickedSpells": [
         "Cure Wounds",
-        "Hunter's Mark",
-        "Detect Magic",
-        "Alarm"
+        "Hunter's Mark"
       ]
     },
     "2024_sorcerer_spells": {
