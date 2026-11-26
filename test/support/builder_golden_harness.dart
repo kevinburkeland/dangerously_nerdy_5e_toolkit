@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_species_libra
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/character_builder/steps/builder_step_order.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/character_header_banner.dart';
 import 'step6_normalizer.dart';
 
@@ -21,6 +22,9 @@ class BuilderGoldenSpec {
   final bool useFlexibleOrigin2014;
   final AbilityType? backgroundPrimaryBonus2024;
   final AbilityType? backgroundSecondaryBonus2024;
+  final AbilityType? manualBoostAbility;
+  final int manualBoostTargetScore;
+  final bool pickSpells;
 
   const BuilderGoldenSpec({
     required this.buildKey,
@@ -32,6 +36,9 @@ class BuilderGoldenSpec {
     this.useFlexibleOrigin2014 = false,
     this.backgroundPrimaryBonus2024,
     this.backgroundSecondaryBonus2024,
+    this.manualBoostAbility,
+    this.manualBoostTargetScore = 16,
+    this.pickSpells = false,
   });
 }
 
@@ -104,12 +111,35 @@ List<BuilderGoldenSpec> buildAllBuilderGoldenSpecs() {
         backgroundSecondaryBonus2024: AbilityType.wisdom,
       ));
     }
+
+    // Fix 2.1: High-casting-ability spell-picking builds for every SRD class
+    // that has a spells step at level 1 in this edition (resolved via the
+    // ruleset caster profile, never hardcoded by class name).
+    for (final cls in classes) {
+      final profile = resolveBuilderCasterProfile(cls.id.slug, ruleset);
+      if (profile.isSpellcaster && profile.castingAbility != null) {
+        specs.add(BuilderGoldenSpec(
+          buildKey: '${editionTag}_${cls.id.slug}_spells',
+          ruleset: ruleset,
+          classSlug: cls.id.slug,
+          speciesSlug: fixedSpecies.id.slug,
+          backgroundSlug: fixedBackground.id.slug,
+          manualBoostAbility: profile.castingAbility,
+          manualBoostTargetScore: 16,
+          pickSpells: true,
+        ));
+      }
+    }
   }
 
   return specs;
 }
 
-({String key, String title}) _detectCurrentBuilderStep(WidgetTester tester) {
+({String key, String title}) _detectCurrentBuilderStep(
+  WidgetTester tester, {
+  required String buildKey,
+  required String expectedStep,
+}) {
   String? firstMatchingText(bool Function(String) predicate) {
     for (final widget in tester.widgetList<Text>(find.byType(Text))) {
       final data = widget.data;
@@ -173,7 +203,10 @@ List<BuilderGoldenSpec> buildAllBuilderGoldenSpecs() {
       .whereType<String>()
       .take(25)
       .join(' | ');
-  throw StateError('Unable to detect current builder step. Visible: $visible');
+  throw StateError(
+    'Build $buildKey: unable to detect expected builder step "$expectedStep". '
+    'Visible: $visible',
+  );
 }
 
 Future<void> _scrollAndTap(WidgetTester tester, Finder finder) async {
@@ -217,9 +250,23 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
   final guidedSteps = <String>[];
   final visibleStepTitles = <String>[];
   String? spellsSubtitle;
+  String? spellsHeaderText;
+  String? cantripsCountText;
+  String? spellsCountText;
+  int? cantripsOfferedCount;
+  int? spellsOfferedCount;
+  List<String>? pickedCantrips;
+  List<String>? pickedSpells;
 
   for (var guard = 0; guard < 15; guard++) {
-    final step = _detectCurrentBuilderStep(tester);
+    final expectedStep = guidedSteps.isEmpty
+        ? 'basics'
+        : 'next step after ${guidedSteps.last}';
+    final step = _detectCurrentBuilderStep(
+      tester,
+      buildKey: spec.buildKey,
+      expectedStep: expectedStep,
+    );
     guidedSteps.add(step.key);
     visibleStepTitles.add(step.title);
 
@@ -271,7 +318,17 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
         }
 
       case 'scores':
-        if (tester.any(find.text('Auto-Assign'))) {
+        if (spec.manualBoostAbility != null) {
+          // Set the casting ability to manualBoostTargetScore (>= 15) via Manual Entry
+          // ('Enter Own'), where each ability starts at 10 in AbilityType.values order.
+          await _scrollAndTap(tester, find.text('Enter Own'));
+          final tapsNeeded = spec.manualBoostTargetScore - 10;
+          final addIcons = find.byIcon(Icons.add_circle_outline);
+          final targetBtn = addIcons.at(spec.manualBoostAbility!.index);
+          for (var i = 0; i < tapsNeeded; i++) {
+            await _scrollAndTap(tester, targetBtn);
+          }
+        } else if (tester.any(find.text('Auto-Assign'))) {
           await _scrollAndTap(tester, find.text('Auto-Assign'));
         }
         if (spec.useFlexibleOrigin2014) {
@@ -329,8 +386,61 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
                   data.startsWith('Spells known limit:') ||
                   data.startsWith('A Level 1 Wizard must choose'))) {
             spellsSubtitle = data;
-            break;
           }
+          if (data != null && data.startsWith('Select starting cantrips and 1st-level spells')) {
+            spellsHeaderText = data;
+          }
+        }
+
+        if (spec.pickSpells) {
+          // Pick the first N offered cantrips and 1st-level spells using the
+          // screen's own Select Recommended Spells button (which takes the first
+          // maxCantrips and first maxSpells in displayed order).
+          await _scrollAndTap(tester, find.text('Select Recommended Spells'));
+
+          // Read the exact count texts ('X / N selected') shown on screen.
+          final hasCantripsSection = tester.any(find.text('CANTRIPS (Level 0)'));
+          final countMatches = <({String text, int selected, int offered})>[];
+          final countRegex = RegExp(r'^(\d+)\s*/\s*(\d+)\s*selected$');
+          for (final el in find.byType(Text).evaluate()) {
+            final data = (el.widget as Text).data;
+            if (data == null) continue;
+            final m = countRegex.firstMatch(data.trim());
+            if (m != null) {
+              countMatches.add((
+                text: data.trim(),
+                selected: int.parse(m.group(1)!),
+                offered: int.parse(m.group(2)!),
+              ));
+            }
+          }
+          int cantripsSelectedCount = 0;
+          if (hasCantripsSection && countMatches.length >= 2) {
+            cantripsCountText = countMatches[0].text;
+            cantripsSelectedCount = countMatches[0].selected;
+            cantripsOfferedCount = countMatches[0].offered;
+            spellsCountText = countMatches[1].text;
+            spellsOfferedCount = countMatches[1].offered;
+          } else if (!hasCantripsSection && countMatches.isNotEmpty) {
+            cantripsCountText = '0 / 0 selected';
+            cantripsSelectedCount = 0;
+            cantripsOfferedCount = 0;
+            spellsCountText = countMatches[0].text;
+            spellsOfferedCount = countMatches[0].offered;
+          }
+
+          // Collect selected FilterChip labels in displayed order, partitioned
+          // into cantrips (first cantripsSelectedCount selected chips) and
+          // 1st-level spells (remaining selected chips).
+          final allSelectedChipLabels = <String>[];
+          for (final chip in tester.widgetList<FilterChip>(find.byType(FilterChip))) {
+            if (chip.selected && chip.label is Text) {
+              final label = (chip.label as Text).data;
+              if (label != null) allSelectedChipLabels.add(label);
+            }
+          }
+          pickedCantrips = allSelectedChipLabels.take(cantripsSelectedCount).toList();
+          pickedSpells = allSelectedChipLabels.skip(cantripsSelectedCount).toList();
         }
 
       case 'equipment':
@@ -352,7 +462,7 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
             .controller
             .character;
 
-        return {
+        final record = <String, dynamic>{
           'buildKey': spec.buildKey,
           'classSlug': spec.classSlug,
           'edition': spec.ruleset == RulesetVersion.v2014 ? 'v2014' : 'v2024',
@@ -364,6 +474,25 @@ Future<Map<String, dynamic>> runBuilderGoldenSpec(
           'spellsSubtitle': ?spellsSubtitle,
           'character': normalizeCharacterMap(created.toMap()),
         };
+
+        if (spec.pickSpells && spec.manualBoostAbility != null) {
+          final castingAb = spec.manualBoostAbility!;
+          final totalScores = created.baseScores.withBonus(created.bonusScores);
+          final effectiveScore = totalScores.getScore(castingAb);
+          final effectiveMod = totalScores.getModifier(castingAb);
+          record['castingAbility'] = castingAb.name;
+          record['castingAbilityScore'] = effectiveScore;
+          record['castingAbilityModifier'] = effectiveMod;
+          record['spellsHeaderText'] = spellsHeaderText;
+          record['cantripsCountText'] = cantripsCountText;
+          record['cantripsOfferedCount'] = cantripsOfferedCount;
+          record['spellsCountText'] = spellsCountText;
+          record['spellsOfferedCount'] = spellsOfferedCount;
+          record['pickedCantrips'] = pickedCantrips;
+          record['pickedSpells'] = pickedSpells;
+        }
+
+        return record;
     }
 
     // Advance to next step and scroll back to top so the next step title is visible
