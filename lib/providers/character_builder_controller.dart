@@ -768,8 +768,8 @@ class CharacterBuilderController extends ChangeNotifier {
       edition: edition,
     );
     for (final s in autoGrantedSubclassSpells) {
-      if (!allSelectedSpells.contains(s.id)) {
-        allSelectedSpells.add(s.id);
+      if (!allSelectedSpells.contains(s.id.slug)) {
+        allSelectedSpells.add(s.id.slug);
       }
     }
 

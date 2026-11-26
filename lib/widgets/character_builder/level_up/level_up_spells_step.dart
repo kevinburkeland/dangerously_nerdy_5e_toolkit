@@ -112,7 +112,7 @@ class LevelUpSpellsStep extends StatelessWidget {
       if (controller.spellSearchQuery.isEmpty) return true;
       final q = controller.spellSearchQuery.toLowerCase();
       return s.getName(edition).toLowerCase().contains(q) ||
-          s.id.toLowerCase().contains(q);
+          s.id.slug.toLowerCase().contains(q);
     }).toList();
 
     final existingCantripSlugs = <String>{};
@@ -122,7 +122,7 @@ class LevelUpSpellsStep extends StatelessWidget {
     }
     final availableCantrips = filtered.where((s) {
       if (s.level != 0) return false;
-      final id = s.id.toLowerCase().trim();
+      final id = s.id.slug.toLowerCase().trim();
       final name = s.getName(edition).toLowerCase().trim();
       return !existingCantripSlugs.contains(id) &&
           !existingCantripSlugs.contains(name);
@@ -146,13 +146,13 @@ class LevelUpSpellsStep extends StatelessWidget {
       existingKnownOrPrepared.add(s.displayName.toLowerCase().trim());
     }
     for (final s in alwaysPreparedSpells) {
-      existingKnownOrPrepared.add(s.id.toLowerCase().trim());
+      existingKnownOrPrepared.add(s.id.slug.toLowerCase().trim());
       existingKnownOrPrepared.add(s.getName(edition).toLowerCase().trim());
     }
 
     final availableLeveled = filtered.where((s) {
       if (s.level <= 0) return false;
-      final id = s.id.toLowerCase().trim();
+      final id = s.id.slug.toLowerCase().trim();
       final name = s.getName(edition).toLowerCase().trim();
       return !existingKnownOrPrepared.contains(id) &&
           !existingKnownOrPrepared.contains(name);
@@ -176,7 +176,7 @@ class LevelUpSpellsStep extends StatelessWidget {
     final availableMysticArcanumSpells = isMysticArcanumMilestone
         ? SpellbookLibrary.allSpells.where((s) {
             if (s.level != limits.mysticArcanumLevel) return false;
-            final id = s.id.toLowerCase().trim();
+            final id = s.id.slug.toLowerCase().trim();
             final name = s.getName(edition).toLowerCase().trim();
             if (existingKnownOrPrepared.contains(id) ||
                 existingKnownOrPrepared.contains(name)) {
@@ -192,13 +192,13 @@ class LevelUpSpellsStep extends StatelessWidget {
             );
             return isWarlock || isExpanded;
           }).toList()
-        : <SpellItem>[];
+        : <Spell>[];
 
     final filteredMysticArcanumSpells = availableMysticArcanumSpells.where((s) {
       if (controller.spellSearchQuery.isEmpty) return true;
       final q = controller.spellSearchQuery.toLowerCase();
       return s.getName(edition).toLowerCase().contains(q) ||
-          s.id.toLowerCase().contains(q);
+          s.id.slug.toLowerCase().contains(q);
     }).toList();
 
     final gainedCantripsProgression =
@@ -344,7 +344,7 @@ class LevelUpSpellsStep extends StatelessWidget {
                   children: alwaysPreparedSpells.map((s) {
                     return ActionChip(
                       avatar: DndGlyph.spell(
-                          school: s.school,
+                          school: s.resolvedSchool,
                           level: s.level,
                           size: 14,
                           isDarkMode: true),
@@ -616,10 +616,10 @@ class LevelUpSpellsStep extends StatelessWidget {
                       runSpacing: 8,
                       children: filteredMysticArcanumSpells.map((s) {
                         final isSelected =
-                            controller.selectedMysticArcanumSpellId == s.id;
+                            controller.selectedMysticArcanumSpellId == s.id.slug;
                         return ChoiceChip(
                           avatar: DndGlyph.spell(
-                            school: s.school,
+                            school: s.resolvedSchool,
                             level: s.level,
                             size: 16,
                             isDarkMode: true,
@@ -630,7 +630,7 @@ class LevelUpSpellsStep extends StatelessWidget {
                           onSelected: (selected) {
                             controller.mutate(() {
                               controller.selectedMysticArcanumSpellId =
-                                  selected ? s.id : null;
+                                  selected ? s.id.slug : null;
                             });
                           },
                         );

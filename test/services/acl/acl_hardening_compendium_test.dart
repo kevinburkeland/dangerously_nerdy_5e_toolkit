@@ -6,7 +6,6 @@ import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_monster_par
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_spell_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/entry_node_transformer.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
   group('Compendium ACL Hardening & Boot Sequence Verification', () {
@@ -26,9 +25,7 @@ void main() {
       );
 
       // Register into SpellbookLibrary (as done by HomebrewPersistenceService.syncToLibraries)
-      final spellItem =
-          HomebrewPersistenceService.spellToSpellItem(homebrewCantrip);
-      SpellbookLibrary.setHomebrewSpells([spellItem]);
+      SpellbookLibrary.setHomebrewSpells([homebrewCantrip]);
 
       expect(SpellbookLibrary.getSpellById('mystic-spark'), isNotNull);
       expect(SpellbookLibrary.getSpellById('mystic-spark')!.level, 0);

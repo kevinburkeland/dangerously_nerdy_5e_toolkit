@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
   group('Homebrew Backup Comprehensive Ingestion Tests', () {
@@ -161,8 +160,7 @@ void main() {
       final smiteSpell =
           result.spells.where((s) => s.name == 'Astral Smite').firstOrNull;
       expect(smiteSpell, isNotNull);
-      final spellItem =
-          HomebrewPersistenceService.spellToSpellItem(smiteSpell!);
+      final spellItem = smiteSpell!;
       expect(spellItem.rules2024.classes, contains(SpellClass.paladin));
     });
   });

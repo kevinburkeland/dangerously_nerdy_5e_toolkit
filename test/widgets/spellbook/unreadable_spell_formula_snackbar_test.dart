@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive_spell_tile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/spellbook/spell_card.dart';
@@ -135,11 +134,17 @@ void main() {
       character: _makeCaster(),
       persistenceService: _FakeRepo(),
     );
-    const badSpellItem = SpellItem(
-      id: 'bad-card-spell',
+    const badSpellItem = Spell(
+      id: EntityId(slug: 'bad-card-spell', ruleset: RulesetVersion.v2024),
       name: 'Broken Cantrip',
       level: 0,
-      school: SpellSchool.evocation,
+      school: 'evocation',
+      schoolEnum: SpellSchool.evocation,
+      castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+      duration: SpellDuration(type: DurationType.instantaneous),
+      range: '60 feet',
+      components: SpellComponents(v: true),
+      descriptionMarkdown: 'A cantrip with a bad formula.',
       rules2014: SpellEditionDetails(
         castingTime: '1 Action',
         range: '60 feet',
@@ -269,11 +274,17 @@ void main() {
       character: makeNonCaster(),
       persistenceService: _FakeRepo(),
     );
-    const modSpellItem = SpellItem(
-      id: 'mod-card-spell',
+    const modSpellItem = Spell(
+      id: EntityId(slug: 'mod-card-spell', ruleset: RulesetVersion.v2024),
       name: 'Mod Cantrip Card',
       level: 0,
-      school: SpellSchool.transmutation,
+      school: 'transmutation',
+      schoolEnum: SpellSchool.transmutation,
+      castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
+      duration: SpellDuration(type: DurationType.timed, durationSeconds: 60),
+      range: 'Touch',
+      components: SpellComponents(v: true),
+      descriptionMarkdown: 'A cantrip using mod.',
       rules2014: SpellEditionDetails(
         castingTime: '1 Bonus Action',
         range: 'Touch',

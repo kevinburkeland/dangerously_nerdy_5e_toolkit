@@ -19,8 +19,8 @@ class LevelUpSpellsLists extends StatelessWidget {
   final int curCantripsCount;
   final int maxAllowedNewCantrips;
   final int maxAllowedNewSpells;
-  final List<SpellItem> availableCantrips;
-  final List<SpellItem> availableLeveled;
+  final List<Spell> availableCantrips;
+  final List<Spell> availableLeveled;
 
   const LevelUpSpellsLists({
     super.key,
@@ -77,7 +77,7 @@ class LevelUpSpellsLists extends StatelessWidget {
                         return InputChip(
                           avatar: spell != null
                               ? DndGlyph.spell(
-                                  school: spell.school,
+                                  school: spell.resolvedSchool,
                                   level: spell.level,
                                   size: 16,
                                   isDarkMode: true,
@@ -118,7 +118,7 @@ class LevelUpSpellsLists extends StatelessWidget {
                       return InputChip(
                         avatar: spell != null
                             ? DndGlyph.spell(
-                                school: spell.school,
+                                school: spell.resolvedSchool,
                                 level: 0,
                                 size: 16,
                                 isDarkMode: true,
@@ -157,7 +157,7 @@ class LevelUpSpellsLists extends StatelessWidget {
                       return InputChip(
                         avatar: spell != null
                             ? DndGlyph.spell(
-                                school: spell.school,
+                                school: spell.resolvedSchool,
                                 level: spell.level,
                                 size: 16,
                                 isDarkMode: true,
@@ -266,7 +266,7 @@ class LevelUpSpellsLists extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: availableCantrips.map((c) {
-              final isChosen = controller.newCantrips.contains(c.id);
+              final isChosen = controller.newCantrips.contains(c.id.slug);
               return _buildSpellSelectionChip(
                 context: context,
                 spell: c,
@@ -289,9 +289,9 @@ class LevelUpSpellsLists extends StatelessWidget {
                       );
                       return;
                     }
-                    controller.mutate(() => controller.newCantrips.add(c.id));
+                    controller.mutate(() => controller.newCantrips.add(c.id.slug));
                   } else {
-                    controller.mutate(() => controller.newCantrips.remove(c.id));
+                    controller.mutate(() => controller.newCantrips.remove(c.id.slug));
                   }
                 },
               );
@@ -336,7 +336,7 @@ class LevelUpSpellsLists extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ...(() {
-            final spellsByLevel = <int, List<SpellItem>>{};
+            final spellsByLevel = <int, List<Spell>>{};
             for (final s in availableLeveled) {
               (spellsByLevel[s.level] ??= []).add(s);
             }
@@ -351,7 +351,7 @@ class LevelUpSpellsLists extends StatelessWidget {
                 _ => '${lvl}th-Level Spells',
               };
               final selectedAtThisLevel =
-                  levelSpells.where((s) => controller.newSpells.contains(s.id)).length;
+                  levelSpells.where((s) => controller.newSpells.contains(s.id.slug)).length;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -451,7 +451,7 @@ class LevelUpSpellsLists extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 6,
                         children: levelSpells.map((s) {
-                          final isChosen = controller.newSpells.contains(s.id);
+                          final isChosen = controller.newSpells.contains(s.id.slug);
                           return _buildSpellSelectionChip(
                             context: context,
                             spell: s,
@@ -475,9 +475,9 @@ class LevelUpSpellsLists extends StatelessWidget {
                                   );
                                   return;
                                 }
-                                controller.mutate(() => controller.newSpells.add(s.id));
+                                controller.mutate(() => controller.newSpells.add(s.id.slug));
                               } else {
-                                controller.mutate(() => controller.newSpells.remove(s.id));
+                                controller.mutate(() => controller.newSpells.remove(s.id.slug));
                               }
                             },
                           );
@@ -556,7 +556,7 @@ class LevelUpSpellsLists extends StatelessWidget {
 
   Widget _buildSpellSelectionChip({
     required BuildContext context,
-    required SpellItem spell,
+    required Spell spell,
     required bool isSelected,
     required Color accentColor,
     required DmRulesEdition edition,
@@ -601,7 +601,7 @@ class LevelUpSpellsLists extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DndGlyph.spell(
-                      school: spell.school,
+                      school: spell.resolvedSchool,
                       level: spell.level,
                       size: 16,
                       isDarkMode: isDark,
@@ -636,7 +636,7 @@ class LevelUpSpellsLists extends StatelessWidget {
             Tooltip(
               message: 'Spell info: ${spell.getName(edition)}',
               child: InkWell(
-                key: Key('spell_info_btn_${spell.id}'),
+                key: Key('spell_info_btn_${spell.id.slug}'),
                 borderRadius:
                     const BorderRadius.horizontal(right: Radius.circular(8)),
                 onTap: () {

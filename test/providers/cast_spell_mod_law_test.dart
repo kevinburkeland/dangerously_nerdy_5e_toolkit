@@ -127,7 +127,7 @@ Character _makeFighterNonCaster(RulesetEdition edition) => Character(
       ),
     );
 
-Spell _domainSpellFromItem(SpellItem item, DmRulesEdition edition) {
+Spell _domainSpellFromItem(Spell item, DmRulesEdition edition) {
   final rules = item.getRules(edition);
   final rf = rules.rollFormula;
   final hasFormula =
@@ -138,7 +138,7 @@ Spell _domainSpellFromItem(SpellItem item, DmRulesEdition edition) {
 
   return Spell(
     id: EntityId(
-      slug: item.id,
+      slug: item.id.slug,
       ruleset: edition == DmRulesEdition.v2024
           ? RulesetVersion.v2024
           : RulesetVersion.v2014,

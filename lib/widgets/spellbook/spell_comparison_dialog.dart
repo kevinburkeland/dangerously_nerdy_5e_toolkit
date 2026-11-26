@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
+import '../../presentation/visual/visual_ui.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
-import '../../presentation/visual/visual_ui.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
@@ -11,7 +11,7 @@ import '../glyphs/dnd_glyph.dart';
 
 /// Interactive modal comparing 2014 RAW spell mechanics vs 2024 Revised rules side-by-side.
 class SpellComparisonDialog extends StatefulWidget {
-  final SpellItem spell;
+  final Spell spell;
   final DmRulesEdition initialEdition;
   final bool isPinned;
   final VoidCallback onTogglePin;
@@ -26,7 +26,7 @@ class SpellComparisonDialog extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    required SpellItem spell,
+    required Spell spell,
     DmRulesEdition? edition,
     required bool isPinned,
     required VoidCallback onTogglePin,
@@ -59,7 +59,7 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
     super.initState();
     _pinned = widget.isPinned;
     _activeEdition = widget.initialEdition;
-    final existing = _fluffService.getUserNotes('spell', widget.spell.id) ?? '';
+    final existing = _fluffService.getUserNotes('spell', widget.spell.id.slug) ?? '';
     _notesController = TextEditingController(text: existing);
   }
 
@@ -81,7 +81,7 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final spell = widget.spell;
-    final schoolColor = spell.school.getLegibleColor(isDark);
+    final schoolColor = spell.resolvedSchool.getLegibleColor(isDark);
     final currentRules = spell.getRules(_activeEdition);
     final currentSchool = spell.getSchool(_activeEdition);
     final showDualView = _showDiff && spell.isChangedIn2024;
@@ -302,7 +302,7 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                     // Lore & Caster Notes
                     Builder(
                       builder: (context) {
-                        final slug = spell.id;
+                        final slug = spell.id.slug;
                         final importedFluff =
                             _fluffService.getFluff('spell', slug);
 
@@ -443,7 +443,7 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
 
           // Metadata Grid
           _buildMetaRow(context, 'School',
-              (rules.schoolOverride ?? widget.spell.school).label, accentColor),
+              (rules.schoolOverride ?? widget.spell.resolvedSchool).label, accentColor),
           _buildMetaRow(
               context, 'Casting Time', rules.castingTime, accentColor),
           _buildMetaRow(context, 'Range', rules.range, accentColor),

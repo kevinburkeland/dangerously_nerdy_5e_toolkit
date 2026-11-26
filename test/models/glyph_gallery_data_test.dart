@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/glyph_gallery_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_tokens.dart';
 
 void main() {
   group('GlyphGalleryData — Structural Integrity', () {
@@ -88,7 +88,7 @@ void main() {
         // spell getter throws if SpellbookLibrary.getSpellById returns null
         expect(() => entry.spell, returnsNormally,
             reason: 'Broken spellId reference: ${entry.spellId}');
-        expect(entry.spell.id, equals(entry.spellId));
+        expect(entry.spell.id.slug, equals(entry.spellId));
       }
     });
 

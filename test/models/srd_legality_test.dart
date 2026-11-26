@@ -372,7 +372,7 @@ void main() {
 
       for (final spell in spells) {
         final lowerName = spell.name.toLowerCase();
-        final lowerId = spell.id.toLowerCase();
+        final lowerId = spell.id.slug.toLowerCase();
         final lowerDiff = (spell.diffSummary ?? '').toLowerCase();
 
         for (final forbidden in forbiddenProductIdentity) {

@@ -11,7 +11,7 @@ import 'spell_upcast_sheet.dart';
 
 /// Modular, interactive card presenting an individual SRD spell.
 class SpellCard extends StatelessWidget {
-  final SpellItem spell;
+  final Spell spell;
   final DmRulesEdition edition;
   final bool isPinned;
   final VoidCallback onTogglePin;
@@ -38,14 +38,14 @@ class SpellCard extends StatelessWidget {
     final rules = spell.getRules(edition);
     return Spell(
       id: EntityId(
-        slug: spell.id,
+        slug: spell.id.slug,
         ruleset: edition == DmRulesEdition.v2024
             ? RulesetVersion.v2024
             : RulesetVersion.v2014,
       ),
       name: spell.getName(edition),
       level: spell.level,
-      school: (rules.schoolOverride ?? spell.school).name,
+      school: (rules.schoolOverride ?? spell.resolvedSchool).name,
       castingTime: CastingTime(
         cost: 1,
         actionType: ActionType.action,

@@ -156,7 +156,7 @@ class StatBlockAclParser {
     if (spellCorpus.isNotEmpty) {
       for (final spell in SpellbookLibrary.allSpells) {
         if (_containsSpell(spellCorpus, spell.name)) {
-          knownSpells.add(spell.id);
+          knownSpells.add(spell.id.slug);
         }
       }
     }

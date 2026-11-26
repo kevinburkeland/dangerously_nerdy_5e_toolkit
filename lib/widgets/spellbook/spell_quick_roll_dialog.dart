@@ -10,7 +10,7 @@ import '../glyphs/dnd_glyph.dart';
 /// Interactive modal for quick-rolling spells with dynamic upcast slots,
 /// cantrip character-level tiers, and ability modifier resolution.
 class SpellQuickRollDialog extends StatefulWidget {
-  final SpellItem spell;
+  final Spell spell;
   final DmRulesEdition edition;
   final void Function(SpellRollResult result, String spellName, int castLevel)?
       onRollCompleted;
@@ -24,7 +24,7 @@ class SpellQuickRollDialog extends StatefulWidget {
 
   static Future<SpellRollResult?> show(
     BuildContext context, {
-    required SpellItem spell,
+    required Spell spell,
     required DmRulesEdition edition,
     void Function(SpellRollResult result, String spellName, int castLevel)?
         onRollCompleted,

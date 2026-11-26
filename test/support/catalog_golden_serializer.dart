@@ -28,17 +28,17 @@ Map<String, dynamic> serializeSpellEditionDetails(SpellEditionDetails d) => {
       'reactionTrigger': d.reactionTrigger,
     };
 
-Map<String, dynamic> serializeSpellForCatalogGolden(SpellItem s) {
+Map<String, dynamic> serializeSpellForCatalogGolden(Spell s) {
   final r14 = s.getRules(DmRulesEdition.v2014);
   final r24 = s.getRules(DmRulesEdition.v2024);
   final nameQ = s.name.split(' ').first;
   return {
-    'id': s.id,
+    'id': s.id.slug,
     'name': s.name,
     'name2014': s.name2014,
     'name2024': s.name2024,
     'level': s.level,
-    'school': s.school.name,
+    'school': s.resolvedSchool.name,
     'levelLabel': s.levelLabel,
     'fullTypeLabel': s.fullTypeLabel,
     'isChangedIn2024': s.isChangedIn2024,
@@ -124,7 +124,7 @@ Map<String, dynamic> buildSpellCatalogGoldenMap() {
   SpellbookLibrary.setHomebrewSpells(const []);
   final entries = <String, dynamic>{};
   for (final s in SpellbookLibrary.srdSpells) {
-    entries[s.id] = serializeSpellForCatalogGolden(s);
+    entries[s.id.slug] = serializeSpellForCatalogGolden(s);
   }
   return {
     'count': entries.length,
@@ -151,14 +151,14 @@ Map<String, dynamic> buildCatalogLookupsGoldenMap() {
   final spellById = <String, String?>{};
   final spellByName = <String, String?>{};
   for (final s in SpellbookLibrary.srdSpells) {
-    spellById[s.id] = SpellbookLibrary.getSpellById(s.id)?.id;
-    spellByName[s.name] = SpellbookLibrary.getSpellByName(s.name)?.id;
+    spellById[s.id.slug] = SpellbookLibrary.getSpellById(s.id.slug)?.id.slug;
+    spellByName[s.name] = SpellbookLibrary.getSpellByName(s.name)?.id.slug;
   }
 
   final spellsByLevel = <String, List<String>>{};
   for (var lvl = 0; lvl <= 9; lvl++) {
     spellsByLevel['$lvl'] =
-        SpellbookLibrary.getSpellsByLevel(lvl).map((s) => s.id).toList();
+        SpellbookLibrary.getSpellsByLevel(lvl).map((s) => s.id.slug).toList();
   }
 
   final spellsByClass2014 = <String, List<String>>{};
@@ -167,11 +167,11 @@ Map<String, dynamic> buildCatalogLookupsGoldenMap() {
     spellsByClass2014[cls.name] = SpellbookLibrary.getSpellsByClass(
       cls,
       edition: DmRulesEdition.v2014,
-    ).map((s) => s.id).toList();
+    ).map((s) => s.id.slug).toList();
     spellsByClass2024[cls.name] = SpellbookLibrary.getSpellsByClass(
       cls,
       edition: DmRulesEdition.v2024,
-    ).map((s) => s.id).toList();
+    ).map((s) => s.id.slug).toList();
   }
 
   final itemById = <String, String?>{};
@@ -196,7 +196,7 @@ Map<String, dynamic> buildCatalogLookupsGoldenMap() {
   return {
     'spellbook': {
       'changedIds':
-          SpellbookLibrary.getChangedSpells().map((s) => s.id).toList(),
+          SpellbookLibrary.getChangedSpells().map((s) => s.id.slug).toList(),
       'byIdCount': spellById.length,
       'byIdMismatches': spellById.entries
           .where((e) => e.value != e.key)

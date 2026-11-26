@@ -10,7 +10,7 @@ export 'level_8_spells.dart';
 export 'level_9_spells.dart';
 
 /// Aggregated high-level spells list (Levels 6–9) for backwards-compatibility.
-const List<SpellItem> srdHighLevelSpells = [
+const List<Spell> srdHighLevelSpells = [
   ...srdLevel6Spells,
   ...srdLevel7Spells,
   ...srdLevel8Spells,

@@ -3,7 +3,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 
 List<String> validateSpellDiceFormulas(
-  List<SpellItem> spells,
+  List<Spell> spells,
   List<DmRulesEdition> editions,
 ) {
   final problems = <String>[];
@@ -73,11 +73,17 @@ void main() {
         rollFormula: '4d6 fire',
       );
 
-      const badSpell = SpellItem(
-        id: 'bad_test_spell',
+      const badSpell = Spell(
+        id: EntityId(slug: 'bad_test_spell', ruleset: RulesetVersion.v2024),
         name: 'Bad Fire Spell',
         level: 1,
-        school: SpellSchool.evocation,
+        school: 'evocation',
+        schoolEnum: SpellSchool.evocation,
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '60 feet',
+        components: SpellComponents(v: true, s: true),
+        descriptionMarkdown: 'Bad fire spell.',
         rules2014: syntheticDetails,
         rules2024: syntheticDetails,
       );

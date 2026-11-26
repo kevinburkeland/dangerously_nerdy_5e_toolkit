@@ -596,7 +596,7 @@ class LevelUpWizardController extends ChangeNotifier {
       final spell = SpellbookLibrary.getSpellById(c);
       return EntityReference<Spell>(
         refType: EntityType.spell,
-        slug: spell?.id ?? c.toLowerCase().replaceAll(' ', '_'),
+        slug: spell?.id.slug ?? c.toLowerCase().replaceAll(' ', '_'),
         displayName: spell?.getName(edition) ?? c,
       );
     }).toList();
@@ -610,8 +610,8 @@ class LevelUpWizardController extends ChangeNotifier {
       edition: edition,
     );
     for (final s in alwaysPrepared) {
-      if (!allSpellsList.contains(s.id)) {
-        allSpellsList.add(s.id);
+      if (!allSpellsList.contains(s.id.slug)) {
+        allSpellsList.add(s.id.slug);
       }
     }
 
@@ -619,7 +619,7 @@ class LevelUpWizardController extends ChangeNotifier {
       final spell = SpellbookLibrary.getSpellById(s);
       return EntityReference<Spell>(
         refType: EntityType.spell,
-        slug: spell?.id ?? s.toLowerCase().replaceAll(' ', '_'),
+        slug: spell?.id.slug ?? s.toLowerCase().replaceAll(' ', '_'),
         displayName: spell?.getName(edition) ?? s,
       );
     }).toList();
@@ -630,7 +630,7 @@ class LevelUpWizardController extends ChangeNotifier {
                 SpellbookLibrary.getSpellById(selectedMysticArcanumSpellId!);
             return EntityReference<Spell>(
               refType: EntityType.spell,
-              slug: s?.id ??
+              slug: s?.id.slug ??
                   selectedMysticArcanumSpellId!
                       .toLowerCase()
                       .replaceAll(' ', '_'),

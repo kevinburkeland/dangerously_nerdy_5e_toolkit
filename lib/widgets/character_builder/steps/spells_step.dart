@@ -89,7 +89,7 @@ class BuilderSpellsStep extends StatelessWidget {
       final isClassSpell = rules.classes.contains(spellClass);
       final isExpanded = SubclassSpellsLibrary.isExpandedSpell(
               curClass.id.slug, wizardSelectedSubclass, s, edition) ||
-          speciesBonusSpells.contains(s.id.toLowerCase());
+          speciesBonusSpells.contains(s.id.slug.toLowerCase());
       return isClassSpell || isExpanded;
     }).toList();
 
@@ -152,8 +152,8 @@ class BuilderSpellsStep extends StatelessWidget {
       if (spellSearchQuery.isEmpty) return true;
       final q = spellSearchQuery.toLowerCase();
       final nameMatches = c.getName(edition).toLowerCase().contains(q);
-      final idMatches = c.id.toLowerCase().contains(q);
-      final schoolMatches = c.school.name.toLowerCase().contains(q);
+      final idMatches = c.id.slug.toLowerCase().contains(q);
+      final schoolMatches = c.resolvedSchool.name.toLowerCase().contains(q);
       final tagsMatch = c.tags.any((t) => t.toLowerCase().contains(q));
       final summaryMatch = c.diffSummary?.toLowerCase().contains(q) ?? false;
       return nameMatches ||
@@ -167,8 +167,8 @@ class BuilderSpellsStep extends StatelessWidget {
       if (spellSearchQuery.isEmpty) return true;
       final q = spellSearchQuery.toLowerCase();
       final nameMatches = s.getName(edition).toLowerCase().contains(q);
-      final idMatches = s.id.toLowerCase().contains(q);
-      final schoolMatches = s.school.name.toLowerCase().contains(q);
+      final idMatches = s.id.slug.toLowerCase().contains(q);
+      final schoolMatches = s.resolvedSchool.name.toLowerCase().contains(q);
       final tagsMatch = s.tags.any((t) => t.toLowerCase().contains(q));
       final summaryMatch = s.diffSummary?.toLowerCase().contains(q) ?? false;
       return nameMatches ||
@@ -226,7 +226,7 @@ class BuilderSpellsStep extends StatelessWidget {
                     return Chip(
                       visualDensity: VisualDensity.compact,
                       avatar: DndGlyph.spell(
-                        school: s.school,
+                        school: s.resolvedSchool,
                         level: s.level,
                         size: 16,
                         isDarkMode: true,
@@ -260,11 +260,11 @@ class BuilderSpellsStep extends StatelessWidget {
                 selectedWizardSpells.clear();
                 if (cantrips.isNotEmpty && maxCantrips > 0) {
                   selectedWizardCantrips
-                      .addAll(cantrips.take(maxCantrips).map((c) => c.id));
+                      .addAll(cantrips.take(maxCantrips).map((c) => c.id.slug));
                 }
                 if (level1Spells.isNotEmpty && maxSpells > 0) {
                   selectedWizardSpells
-                      .addAll(level1Spells.take(maxSpells).map((s) => s.id));
+                      .addAll(level1Spells.take(maxSpells).map((s) => s.id.slug));
                 }
               });
             },
@@ -350,14 +350,14 @@ class BuilderSpellsStep extends StatelessWidget {
                       runSpacing: 8,
                       children: filteredCantrips.map((c) {
                         final isSelected =
-                            selectedWizardCantrips.contains(c.id);
+                            selectedWizardCantrips.contains(c.id.slug);
                         return FilterChip(
                           selected: isSelected,
                           selectedColor:
                               Colors.purpleAccent.withValues(alpha: 0.3),
                           label: Text(c.getName(edition)),
                           avatar: DndGlyph.spell(
-                            school: c.school,
+                            school: c.resolvedSchool,
                             level: 0,
                             size: 16,
                             isDarkMode: true,
@@ -368,7 +368,7 @@ class BuilderSpellsStep extends StatelessWidget {
                               if (selected) {
                                 if (selectedWizardCantrips.length <
                                     maxCantrips) {
-                                  selectedWizardCantrips.add(c.id);
+                                  selectedWizardCantrips.add(c.id.slug);
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -379,7 +379,7 @@ class BuilderSpellsStep extends StatelessWidget {
                                   );
                                 }
                               } else {
-                                selectedWizardCantrips.remove(c.id);
+                                selectedWizardCantrips.remove(c.id.slug);
                               }
                             });
                           },
@@ -442,13 +442,13 @@ class BuilderSpellsStep extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: filteredLevel1Spells.map((s) {
-                      final isSelected = selectedWizardSpells.contains(s.id);
+                      final isSelected = selectedWizardSpells.contains(s.id.slug);
                       return FilterChip(
                         selected: isSelected,
                         selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
                         label: Text(s.getName(edition)),
                         avatar: DndGlyph.spell(
-                          school: s.school,
+                          school: s.resolvedSchool,
                           level: 1,
                           size: 16,
                           isDarkMode: true,
@@ -458,7 +458,7 @@ class BuilderSpellsStep extends StatelessWidget {
                           onMutateState(() {
                             if (selected) {
                               if (selectedWizardSpells.length < maxSpells) {
-                                selectedWizardSpells.add(s.id);
+                                selectedWizardSpells.add(s.id.slug);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -469,7 +469,7 @@ class BuilderSpellsStep extends StatelessWidget {
                                 );
                               }
                             } else {
-                              selectedWizardSpells.remove(s.id);
+                              selectedWizardSpells.remove(s.id.slug);
                             }
                           });
                         },

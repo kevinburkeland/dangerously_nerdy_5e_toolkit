@@ -160,7 +160,7 @@ class SubclassSpellsLibrary {
 
   /// Evaluates a compendium-style filter expression (e.g. `level=0|class=Cleric`, `school=I;N`)
   /// against registered spells in [SpellbookLibrary.allSpells].
-  static List<SpellItem> resolveFilterSpells(String filterString,
+  static List<Spell> resolveFilterSpells(String filterString,
       [DmRulesEdition? edition]) {
     final clauses = filterString.split('|');
     int? targetLevel;
@@ -265,7 +265,7 @@ class SubclassSpellsLibrary {
       if (targetLevels != null && !targetLevels.contains(spell.level))
         return false;
 
-      if (targetSchools != null && !targetSchools.contains(spell.school))
+      if (targetSchools != null && !targetSchools.contains(spell.resolvedSchool))
         return false;
 
       if (requiresRitual &&
@@ -276,7 +276,7 @@ class SubclassSpellsLibrary {
 
       if (targetSources != null) {
         final sources = targetSources;
-        final lowerId = spell.id.toLowerCase();
+        final lowerId = spell.id.slug.toLowerCase();
         final matchesSource = spell.tags.any((t) {
               final lt = t.toLowerCase();
               final stripped = lt.startsWith('source:') ? lt.substring(7) : lt;
@@ -367,7 +367,7 @@ class SubclassSpellsLibrary {
           final matching = resolveFilterSpells(filter);
           for (final s in matching) {
             results.add(s.name.toLowerCase());
-            results.add(s.id.toLowerCase());
+            results.add(s.id.slug.toLowerCase());
           }
         }
       }
@@ -380,7 +380,7 @@ class SubclassSpellsLibrary {
   static bool isExpandedSpell(
     String classSlug,
     String? subclassSlug,
-    SpellItem spell,
+    Spell spell,
     DmRulesEdition edition,
   ) {
     if (subclassSlug == null || subclassSlug.isEmpty) return false;
@@ -402,7 +402,7 @@ class SubclassSpellsLibrary {
     if (expanded.isEmpty) return false;
 
     final spellName = spell.getName(edition).toLowerCase();
-    final spellId = spell.id.toLowerCase();
+    final spellId = spell.id.slug.toLowerCase();
     if (expanded.contains(spellName) || expanded.contains(spellId)) return true;
 
     final cleanName = spellName.replaceAll(RegExp(r'[^a-z0-9]'), '');
@@ -440,7 +440,7 @@ class SubclassSpellsLibrary {
   }
 
   /// Returns the list of auto-granted [SpellItem]s for a given class, subclass, and class level.
-  static List<SpellItem> getAlwaysPreparedSpellsForLevel({
+  static List<Spell> getAlwaysPreparedSpellsForLevel({
     required String classSlug,
     required String? subclassSlug,
     required int classLevel,

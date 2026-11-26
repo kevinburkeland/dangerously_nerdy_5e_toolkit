@@ -1,15 +1,13 @@
 import '../spellbook_data.dart';
 
-const List<SpellItem> srdLevel7Spells = [
-  SpellItem(
-    id: 'spell_divine_word',
-    name: 'Divine Word',
-    level: 7,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Utters a word imbued with divine power as a Bonus Action that blinds, deafens, stuns, or instantly kills creatures based on current HP, and banishes extraplanar creatures.',
-    tags: [
+const List<Spell> srdLevel7Spells = [
+  Spell(
+    id: EntityId(slug: 'spell_divine_word', ruleset: RulesetVersion.v2024), name: 'Divine Word',
+    level: 7, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '30 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'Divine word inflicts Deafened (<=50 HP), Blinded (<=40 HP), Stunned (<=30 HP), or instant death (<=20 HP) on failed Charisma save. Banishes extraplanar creatures.',
+    isChangedIn2024: false, diffSummary: 'Utters a word imbued with divine power as a Bonus Action that blinds, deafens, stuns, or instantly kills creatures based on current HP, and banishes extraplanar creatures.', tags: [
       'divine',
       'bonus-action',
       'debuff',
@@ -43,15 +41,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_fire_storm',
-    name: 'Fire Storm',
-    level: 7,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a storm of sheet flame consisting of up to ten 10-foot cubes dealing 7d10 fire damage on Dexterity save.',
-    tags: ['fire', 'aoe', 'selective-shape', 'evocation', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_fire_storm', ruleset: RulesetVersion.v2024), name: 'Fire Storm',
+    level: 7, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '150 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Roaring storm of up to ten 10-ft cubes dealing 7d10 Fire damage on Dexterity save (half on success). Plant life can be selectively spared.',
+    isChangedIn2024: false, diffSummary: 'Creates a storm of sheet flame consisting of up to ten 10-foot cubes dealing 7d10 fire damage on Dexterity save.', tags: ['fire', 'aoe', 'selective-shape', 'evocation', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '150 feet',
@@ -82,15 +78,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_plane_shift',
-    name: 'Plane Shift',
-    level: 7,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Transports you and up to eight willing creatures to another plane of existence, or banishes an unwilling creature on a melee spell attack & Charisma save.',
-    tags: ['planar-travel', 'teleport', 'banishment', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_plane_shift', ruleset: RulesetVersion.v2024), name: 'Plane Shift',
+    level: 7, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'attuned forked metal rod worth 250 gp'),
+    descriptionMarkdown: 'Transports you and up to 8 willing creatures to another plane, or banishes an unwilling foe on melee spell attack and failed Charisma save.',
+    isChangedIn2024: false, diffSummary: 'Transports you and up to eight willing creatures to another plane of existence, or banishes an unwilling creature on a melee spell attack & Charisma save.', tags: ['planar-travel', 'teleport', 'banishment', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Touch',
@@ -140,15 +134,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_regenerate',
-    name: 'Regenerate',
-    level: 7,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Restores 4d8 + 15 Hit Points instantly, causes target to regain 1 HP at the start of each of its turns for 1 hour, and regrows severed body parts in 2 minutes.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_regenerate', ruleset: RulesetVersion.v2024), name: 'Regenerate',
+    level: 7, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a prayer wheel and holy water'),
+    descriptionMarkdown: 'Target heals 4d8 + 15 HP immediately and 1 HP at the start of every turn for 1 hour. Regrows severed limbs in 2 minutes.',
+    isChangedIn2024: false, diffSummary: 'Restores 4d8 + 15 Hit Points instantly, causes target to regain 1 HP at the start of each of its turns for 1 hour, and regrows severed body parts in 2 minutes.', tags: [
       'healing',
       'regeneration',
       'severed-limbs',
@@ -189,15 +181,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_resurrection',
-    name: 'Resurrection',
-    level: 7,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary:
-        'Restores life to a creature that has been dead for no longer than a century, closing all mortal wounds and restoring missing body parts.',
-    tags: ['revive', 'resurrection', 'costly-component', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_resurrection', ruleset: RulesetVersion.v2024), name: 'Resurrection',
+    level: 7, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'diamond worth 1,000 gp, consumed'),
+    descriptionMarkdown: 'Brings a creature dead up to 100 years back to life at full HP, curing poisons, diseases, and regenerating lost body parts.',
+    isChangedIn2024: false, diffSummary: 'Restores life to a creature that has been dead for no longer than a century, closing all mortal wounds and restoring missing body parts.', tags: ['revive', 'resurrection', 'costly-component', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 hour',
       range: 'Touch',
@@ -234,19 +224,16 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_conjure_celestial',
-    name: 'Conjure Celestial',
-    level: 7,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Summons a celestial being of CR 4 or lower (such as a Couatl) in 2014, redesigned into a radiant burst pillar in 2024.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_conjure_celestial', ruleset: RulesetVersion.v2024), name: 'Conjure Celestial',
+    level: 7, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: '90 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You conjure a column of divine light (10-ft radius, 40-ft high). Deals 4d12 Radiant damage on failed Dexterity save (half on success) or heals allies entering the light.', higherLevelsMarkdown: 'Damage and healing increase by 1d12 per slot level above 7th.',
+    isChangedIn2024: true, diffSummary: 'Summons a celestial being of CR 4 or lower (such as a Couatl) in 2014, redesigned into a radiant burst pillar in 2024.', diffHighlights: [
       '2014: Summons a CR 4 Celestial statblock (or CR 5 with 9th level slot) with 1 minute casting time and Concentration up to 1 hour.',
       '2024: 1 Action, Concentration up to 10 minutes. Conjures a 10-foot-radius cylinder of radiant divine light dealing radiant damage and healing allies.',
-    ],
-    tags: ['celestial', 'summon', 'concentration', 'level 7'],
+    ], tags: ['celestial', 'summon', 'concentration', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 minute',
       range: '90 feet',
@@ -279,15 +266,13 @@ const List<SpellItem> srdLevel7Spells = [
           'Damage and healing increase by 1d12 per slot level above 7th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_symbol',
-    name: 'Symbol',
-    level: 7,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Inscribes a deadly magical glyph triggering one of eight debilitating effects (Death, Discord, Fear, Hopelessness, Insanity, Pain, Sleep, Stunning) in a 60-foot sphere.',
-    tags: ['glyph', 'trap', 'abjuration', 'costly-component', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_symbol', ruleset: RulesetVersion.v2024), name: 'Symbol',
+    level: 7, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.permanent, durationSeconds: 0, requiresConcentration: false, rawText: 'Until dispelled or triggered'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'diamond and opal dust worth 1,000 gp, consumed'),
+    descriptionMarkdown: 'Creates an arcane ward triggering catastrophic area effects (Death, Pain, Stun, Insanity, Discord, Sleep, Fear, or Hopelessness) in a 60-ft radius.',
+    isChangedIn2024: false, diffSummary: 'Inscribes a deadly magical glyph triggering one of eight debilitating effects (Death, Discord, Fear, Hopelessness, Insanity, Pain, Sleep, Stunning) in a 60-foot sphere.', tags: ['glyph', 'trap', 'abjuration', 'costly-component', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 minute',
       range: 'Touch',
@@ -323,15 +308,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_teleport',
-    name: 'Teleport',
-    level: 7,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Instantly transports you and up to eight willing creatures to any destination you designate on the same plane.',
-    tags: ['teleport', 'long-range', 'conjuration', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_teleport', ruleset: RulesetVersion.v2024), name: 'Teleport',
+    level: 7, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '10 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'Instantly transports you and up to 8 willing creatures or 1 object to a known destination on the same plane.',
+    isChangedIn2024: false, diffSummary: 'Instantly transports you and up to eight willing creatures to any destination you designate on the same plane.', tags: ['teleport', 'long-range', 'conjuration', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '10 feet',
@@ -353,19 +336,16 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_forcecage',
-    name: 'Forcecage',
-    level: 7,
-    school: SpellSchool.evocation,
-    isChangedIn2024: true,
-    diffSummary:
-        'Creates an invisible cube or cage of force trapping creatures without an initial saving throw (requires Concentration and consumes ruby dust in 2024).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_forcecage', ruleset: RulesetVersion.v2024), name: 'Forcecage',
+    level: 7, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: '100 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'ruby dust worth 1,500 gp, consumed by the spell'),
+    descriptionMarkdown: 'An invisible cube of force traps creatures without initial save. Requires Concentration and consumes material component.',
+    isChangedIn2024: true, diffSummary: 'Creates an invisible cube or cage of force trapping creatures without an initial saving throw (requires Concentration and consumes ruby dust in 2024).', diffHighlights: [
       '2014: 1 Action, 1 hour duration (NO CONCENTRATION). 1,500 gp ruby dust NOT consumed. No initial save.',
       '2024: 1 Action, Concentration up to 1 hour. Consumes 1,500 gp ruby dust. Trapped creatures must make Charisma saves to teleport out.',
-    ],
-    tags: ['force', 'trap', 'no-save', 'concentration', 'evocation', 'level 7'],
+    ], tags: ['force', 'trap', 'no-save', 'concentration', 'evocation', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '100 feet',
@@ -401,15 +381,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_delayed_blast_fireball',
-    name: 'Delayed Blast Fireball',
-    level: 7,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a glowing yellow bead dealing 12d6 fire damage, increasing by 1d6 for every round delayed up to 1 minute (+10d6 max).',
-    tags: ['fire', 'trap', 'delayed-damage', 'concentration', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_delayed_blast_fireball', ruleset: RulesetVersion.v2024), name: 'Delayed Blast Fireball',
+    level: 7, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '150 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'bat guano and pitch'),
+    descriptionMarkdown: 'Glowing bead deals 12d6 Fire damage in 20-ft radius (+1d6 per turn concentrated) on Dexterity save.', higherLevelsMarkdown: 'Base damage increases by 1d6 per slot level above 7th.',
+    isChangedIn2024: false, diffSummary: 'Creates a glowing yellow bead dealing 12d6 fire damage, increasing by 1d6 for every round delayed up to 1 minute (+10d6 max).', tags: ['fire', 'trap', 'delayed-damage', 'concentration', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '150 feet',
@@ -450,15 +428,13 @@ const List<SpellItem> srdLevel7Spells = [
       higherLevels: 'Base damage increases by 1d6 per slot level above 7th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_finger_of_death',
-    name: 'Finger of Death',
-    level: 7,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary:
-        'Sends negative energy through a creature dealing 7d8 + 30 necrotic damage on Constitution save; a slain humanoid rises as a permanent Zombie under your command.',
-    tags: ['necrotic', 'zombie', 'single-target', 'high-damage', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_finger_of_death', ruleset: RulesetVersion.v2024), name: 'Finger of Death',
+    level: 7, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Deals 7d8 + 30 Necrotic damage on failed Constitution save (half on success). A humanoid killed rises as a permanently commanded Zombie.',
+    isChangedIn2024: false, diffSummary: 'Sends negative energy through a creature dealing 7d8 + 30 necrotic damage on Constitution save; a slain humanoid rises as a permanent Zombie under your command.', tags: ['necrotic', 'zombie', 'single-target', 'high-damage', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -491,15 +467,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_prismatic_spray',
-    name: 'Prismatic Spray',
-    level: 7,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Unleashes eight multicolored rays in a 60-foot cone dealing 10d6 damage of various types (Fire, Acid, Lightning, Poison, Cold) or inflicting Petrification/Planar Banishment.',
-    tags: ['prismatic', 'cone', 'random-effects', 'evocation', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_prismatic_spray', ruleset: RulesetVersion.v2024), name: 'Prismatic Spray',
+    level: 7, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Self (60-foot cone)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Fires a 60-ft rainbow cone inflicting diverse elemental damage (10d6) or petrification/banishment based on d8 roll.',
+    isChangedIn2024: false, diffSummary: 'Unleashes eight multicolored rays in a 60-foot cone dealing 10d6 damage of various types (Fire, Acid, Lightning, Poison, Cold) or inflicting Petrification/Planar Banishment.', tags: ['prismatic', 'cone', 'random-effects', 'evocation', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self (60-foot cone)',
@@ -529,15 +503,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_reverse_gravity',
-    name: 'Reverse Gravity',
-    level: 7,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Reverses gravity in a 50-foot radius, 100-foot high cylinder, causing creatures and objects to fall upward and take falling damage when reversed.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_reverse_gravity', ruleset: RulesetVersion.v2024), name: 'Reverse Gravity',
+    level: 7, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '100 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a lodestone and iron shavings'),
+    descriptionMarkdown: 'Reverses gravity in a 50-ft radius, 100-ft high cylinder, dropping creatures upward into the air or ceiling.',
+    isChangedIn2024: false, diffSummary: 'Reverses gravity in a 50-foot radius, 100-foot high cylinder, causing creatures and objects to fall upward and take falling damage when reversed.', tags: [
       'gravity',
       'aoe',
       'control',
@@ -574,15 +546,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_simulacrum',
-    name: 'Simulacrum',
-    level: 7,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates an illusory duplicate of one beast or humanoid with half max HP, all statistics, spell slots, and actions.',
-    tags: ['clone', 'duplicate', 'costly-component', 'illusion', 'level 7'],
+  Spell(
+    id: EntityId(slug: 'spell_simulacrum', ruleset: RulesetVersion.v2024), name: 'Simulacrum',
+    level: 7, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.permanent, durationSeconds: 0, requiresConcentration: false, rawText: 'Until dispelled'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'snow, hair clippings, and ruby dust worth 1,500 gp, consumed'),
+    descriptionMarkdown: 'Creates an exact magical duplicate of a creature with half its HP that obeys your mental commands.',
+    isChangedIn2024: false, diffSummary: 'Creates an illusory duplicate of one beast or humanoid with half max HP, all statistics, spell slots, and actions.', tags: ['clone', 'duplicate', 'costly-component', 'illusion', 'level 7'],
     rules2014: SpellEditionDetails(
       castingTime: '12 hours',
       range: 'Touch',
@@ -619,15 +589,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_etherealness',
-    name: 'Etherealness',
-    level: 7,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Steps into the Border Ethereal for up to 8 hours, allowing you to move through solid objects and perceive the Material Plane as ghostly shades.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_etherealness', ruleset: RulesetVersion.v2024), name: 'Etherealness',
+    level: 7, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 28800, requiresConcentration: false, rawText: '8 hours'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You step into the Border Ethereal. You remain in the Border Ethereal for the duration, moving through solid objects and creatures on the Material Plane at will.', higherLevelsMarkdown: 'Slot 8th: Target up to 3 willing creatures. Slot 9th: Target up to 5 willing creatures.',
+    isChangedIn2024: false, diffSummary: 'Steps into the Border Ethereal for up to 8 hours, allowing you to move through solid objects and perceive the Material Plane as ghostly shades.', tags: [
       'ethereal',
       'phasing',
       'stealth',
@@ -672,15 +640,13 @@ const List<SpellItem> srdLevel7Spells = [
           'Slot 8th: Target up to 3 willing creatures. Slot 9th: Target up to 5 willing creatures.',
     ),
   ),
-  SpellItem(
-    id: 'spell_magnificent_mansion',
-    name: 'Magnificent Mansion',
-    level: 7,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Conjures an extradimensional grand mansion containing up to 50 rooms, 100 spectral servants, and a sumptuous 9-course banquet for up to 100 people for 24 hours.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_magnificent_mansion', ruleset: RulesetVersion.v2024), name: 'Magnificent Mansion',
+    level: 7, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 86400, requiresConcentration: false, rawText: '24 hours'),
+    range: '300 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a miniature portal carved from ivory, a small piece of polished marble, and a tiny silver spoon, each worth at least 5 gp'),
+    descriptionMarkdown: 'You conjure an extradimensional dwelling in range that lasts for the duration. You choose where its portal appears. The portal is a 5-foot-wide, 10-foot-high door.\n\nYou and any creatures you designate can enter the mansion as long as the portal remains open. The place has up to 50 rooms, is clean and warm, and contains 100 near-transparent spectral servants and enough food to serve a nine-course banquet for up to 100 people.',
+    isChangedIn2024: false, diffSummary: 'Conjures an extradimensional grand mansion containing up to 50 rooms, 100 spectral servants, and a sumptuous 9-course banquet for up to 100 people for 24 hours.', tags: [
       'shelter',
       'extradimensional',
       'safe-rest',
@@ -727,15 +693,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_mirage_arcane',
-    name: 'Mirage Arcane',
-    level: 7,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Makes terrain up to 1 square mile look, sound, smell, and even physically feel like another terrain (with real tactile structures, water, and difficult terrain) for 10 days.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_mirage_arcane', ruleset: RulesetVersion.v2024), name: 'Mirage Arcane',
+    level: 7, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 864000, requiresConcentration: false, rawText: '10 days'),
+    range: 'Sight (1 square mile)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You make terrain in an area up to 1 square mile look, sound, smell, and even feel like some other sort of terrain. Open fields can become a swamp, hill, or crevassed wasteland; a pond can become a meadow.\n\nThe terrain’s tactile elements are physically real: you can climb illusory trees, walk on illusory bridges, and drown in illusory water. Creatures with truesight see the true terrain superimposed on the illusion.',
+    isChangedIn2024: false, diffSummary: 'Makes terrain up to 1 square mile look, sound, smell, and even physically feel like another terrain (with real tactile structures, water, and difficult terrain) for 10 days.', tags: [
       'terrain',
       'illusion-tangible',
       'huge-area',
@@ -768,15 +732,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_project_image',
-    name: 'Project Image',
-    level: 7,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates an illusory copy of yourself at any spot within 500 miles that you have seen before for up to 1 day. See and hear through it and speak with your voice.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_project_image', ruleset: RulesetVersion.v2024), name: 'Project Image',
+    level: 7, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 86400, requiresConcentration: true, rawText: 'Concentration, up to 1 day'),
+    range: '500 miles', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a small replica of you worth at least 5 gp'),
+    descriptionMarkdown: 'You create an illusory copy of yourself that lasts for the duration. The copy can appear at any location within range that you have seen before, regardless of intervening obstacles.\n\nYou can see through its eyes and hear through its ears as if you were in its space. On your turn as a bonus action, you can switch from using its senses to using your own, or back again. Physical interaction reveals it as an illusion.',
+    isChangedIn2024: false, diffSummary: 'Creates an illusory copy of yourself at any spot within 500 miles that you have seen before for up to 1 day. See and hear through it and speak with your voice.', tags: [
       'astral-duplicate',
       'long-range-avatar',
       'illusion',
@@ -823,15 +785,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_sequester',
-    name: 'Sequester',
-    level: 7,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Touch a willing creature or object to make it completely invisible, undetectable to divination and scrying, and in suspended animation indefinitely until a specified condition is met. Costly component.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_sequester', ruleset: RulesetVersion.v2024), name: 'Sequester',
+    level: 7, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.permanent, durationSeconds: 0, requiresConcentration: false, rawText: 'Until dispelled'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a powder composed of diamond, emerald, ruby, and sapphire dust worth at least 5,000 gp, which the spell consumes'),
+    descriptionMarkdown: 'By means of this spell, a willing creature or an object is hidden away, safe from all detection for the duration. Upon casting the spell and touching the target, it becomes invisible and can’t be targeted by divination magic or perceived through scrying sensors.\n\nIf the target is a creature, it falls into a state of suspended animation. Time ceases to flow for it, and it doesn’t grow older. You can set a condition for the spell to end (such as a time period or a specific event).',
+    isChangedIn2024: false, diffSummary: 'Touch a willing creature or object to make it completely invisible, undetectable to divination and scrying, and in suspended animation indefinitely until a specified condition is met. Costly component.', tags: [
       'hide',
       'suspended-animation',
       'permanent-until-triggered',
@@ -877,15 +837,13 @@ const List<SpellItem> srdLevel7Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_arcane_sword',
-    name: 'Arcane Sword',
-    level: 7,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a hovering sword-shaped plane of force: make melee spell attacks on cast and as a Bonus Action on subsequent turns dealing 3d10 force damage. Costly component (250 gp platinum sword).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_arcane_sword', ruleset: RulesetVersion.v2024), name: 'Arcane Sword',
+    level: 7, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a miniature platinum sword with a grip and pommel of copper and zinc, worth 250 gp'),
+    descriptionMarkdown: 'You create a sword-shaped plane of force that hovers within range. It lasts for the duration.\n\nWhen the sword appears, you make a melee spell attack against a target of your choice within 5 feet of the sword. On a hit, the target takes 3d10 force damage. Until the spell ends, you can use a bonus action on each of your turns to move the sword up to 20 feet to a spot you can see and repeat this attack.',
+    isChangedIn2024: false, diffSummary: 'Creates a hovering sword-shaped plane of force: make melee spell attacks on cast and as a Bonus Action on subsequent turns dealing 3d10 force damage. Costly component (250 gp platinum sword).', tags: [
       'force-blade',
       'bonus-action-attack',
       'force-damage',

@@ -1,19 +1,16 @@
 import '../spellbook_data.dart';
 
-const List<SpellItem> srdLevel4Spells = [
-  SpellItem(
-    id: 'spell_polymorph',
-    name: 'Polymorph',
-    level: 4,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: true,
-    diffSummary:
-        'Changed from giving a fresh full pool of Beast HP into giving Temporary Hit Points based on the new form.',
-    diffHighlights: [
+const List<Spell> srdLevel4Spells = [
+  Spell(
+    id: EntityId(slug: 'spell_polymorph', ruleset: RulesetVersion.v2024), name: 'Polymorph',
+    level: 4, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a caterpillar cocoon'),
+    descriptionMarkdown: 'This spell transforms a creature you can see within range into a Beast of equal or lower Challenge Rating.\n\nAn unwilling creature must make a Wisdom saving throw to resist.\n\nThe target gains Temporary Hit Points equal to the Beast form’s Hit Points. When the Temporary Hit Points drop to 0, the spell ends and the creature reverts to its true form.',
+    isChangedIn2024: true, diffSummary: 'Changed from giving a fresh full pool of Beast HP into giving Temporary Hit Points based on the new form.', diffHighlights: [
       '2014: Target takes on the beast’s full HP. Damage dealt first reduces the beast’s HP; excess damage carries over to the original form. Acted as a massive second health bar.',
       '2024: Target gains Temporary Hit Points equal to the Beast form’s HP. When those temporary HP run out or the spell ends, the form reverts.',
-    ],
-    tags: ['transmutation', 'beast', 'temp-hp', 'major-rebalance', 'level 4'],
+    ], tags: ['transmutation', 'beast', 'temp-hp', 'major-rebalance', 'level 4'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -58,19 +55,16 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_banishment',
-    name: 'Banishment',
-    level: 4,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Banished creatures now get a repeated saving throw at the end of each of their turns, preventing single-failed-save permanent combat removals.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_banishment', ruleset: RulesetVersion.v2024), name: 'Banishment',
+    level: 4, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'an item distasteful to the target'),
+    descriptionMarkdown: 'You attempt to send one creature within range to another plane of existence. The target must make a Charisma saving throw or be banished.\n\nWhile banished, the target is Incapacitated. At the end of each of its turns, the target can repeat the save, ending the spell on a success.\n\nIf the spell lasts the full 1 minute and the creature is not native to this plane, it remains on its home plane.', higherLevelsMarkdown: 'Target one additional creature for each slot level above 4th.',
+    isChangedIn2024: true, diffSummary: 'Banished creatures now get a repeated saving throw at the end of each of their turns, preventing single-failed-save permanent combat removals.', diffHighlights: [
       '2014: Single Charisma save. If failed, banished for full 1-minute concentration. If native to another plane and spell lasts full minute, permanently banished.',
       '2024: Banished target can repeat the Charisma saving throw at the end of each of its turns, ending the spell early on a success.',
-    ],
-    tags: ['abjuration', 'banish', 'charisma-save', 'concentration', 'level 4'],
+    ], tags: ['abjuration', 'banish', 'charisma-save', 'concentration', 'level 4'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -120,15 +114,13 @@ const List<SpellItem> srdLevel4Spells = [
           'Target one additional creature for each slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_dimension_door',
-    name: 'Dimension Door',
-    level: 4,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Teleports you and up to one willing creature of your size or smaller up to 500 feet to any location you can describe or visualize.',
-    tags: ['teleport', 'escape', 'mobility', 'conjuration', 'level 4'],
+  Spell(
+    id: EntityId(slug: 'spell_dimension_door', ruleset: RulesetVersion.v2024), name: 'Dimension Door',
+    level: 4, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '500 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'You teleport yourself and up to one willing creature up to 500 feet to any spot you can see, visualize, or specify by distance and direction.',
+    isChangedIn2024: false, diffSummary: 'Teleports you and up to one willing creature of your size or smaller up to 500 feet to any location you can describe or visualize.', tags: ['teleport', 'escape', 'mobility', 'conjuration', 'level 4'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '500 feet',
@@ -161,15 +153,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_greater_invisibility',
-    name: 'Greater Invisibility',
-    level: 4,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Superior invisibility that does NOT end when the target attacks or casts spells.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_greater_invisibility', ruleset: RulesetVersion.v2024), name: 'Greater Invisibility',
+    level: 4, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A creature you touch gains the Invisible condition until the spell ends. It remains invisible even while attacking or casting spells.',
+    isChangedIn2024: false, diffSummary: 'Superior invisibility that does NOT end when the target attacks or casts spells.', tags: [
       'invisible',
       'stealth',
       'combat',
@@ -201,15 +191,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_wall_of_fire',
-    name: 'Wall of Fire',
-    level: 4,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a blazing wall of fire up to 60 ft long or 20 ft ring dealing 5d8 fire damage on Dexterity save (+1d8 per higher slot).',
-    tags: ['fire', 'wall', 'aoe', 'concentration', 'evocation', 'level 4'],
+  Spell(
+    id: EntityId(slug: 'spell_wall_of_fire', ruleset: RulesetVersion.v2024), name: 'Wall of Fire',
+    level: 4, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a small piece of phosphorus'),
+    descriptionMarkdown: 'You create a wall of fire up to 60 feet long or a 20-foot ring. Deals 5d8 Fire damage on creation and to creatures ending turns near its heat.', higherLevelsMarkdown: 'Damage increases by 1d8 for each slot level above 4th.',
+    isChangedIn2024: false, diffSummary: 'Creates a blazing wall of fire up to 60 ft long or 20 ft ring dealing 5d8 fire damage on Dexterity save (+1d8 per higher slot).', tags: ['fire', 'wall', 'aoe', 'concentration', 'evocation', 'level 4'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -252,19 +240,16 @@ const List<SpellItem> srdLevel4Spells = [
       higherLevels: 'Damage increases by 1d8 for each slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_conjure_minor_elementals',
-    name: 'Conjure Minor Elementals',
-    level: 4,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Complete redesign: Instead of summoning 1-8 small elementals (like Mephits), it creates a personal elemental shroud that adds 2d8 elemental damage to all your attacks (+2d8 per upcast slot).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_conjure_minor_elementals', ruleset: RulesetVersion.v2024), name: 'Conjure Minor Elementals',
+    level: 4, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: 'Self (15-foot emanation)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You summon spirits of nature that flit around you in a 15-foot Emanation.\n\nUntil the spell ends, any attack roll you make deals an extra 2d8 damage of a type chosen from Acid, Cold, Fire, or Lightning on a hit.\n\nThe area within the emanation is also Difficult Terrain for your enemies.', higherLevelsMarkdown: 'When cast using a 5th-level slot or higher, the extra damage increases by 2d8 for each slot level above 4th.',
+    isChangedIn2024: true, diffSummary: 'Complete redesign: Instead of summoning 1-8 small elementals (like Mephits), it creates a personal elemental shroud that adds 2d8 elemental damage to all your attacks (+2d8 per upcast slot).', diffHighlights: [
       '2014: 1 minute casting time, Concentration (1 hr). Summons 1-8 minor elementals (e.g. 8 steam mephits).',
       '2024: 1 Action casting time, Concentration (10 min). Creates a 15-ft emanation of swirling spirits around you. Whenever you hit with an attack roll, you deal an extra 2d8 damage of chosen elemental type (+2d8 per slot level above 4th).',
-    ],
-    tags: ['elemental', 'buff', 'emanation', 'redesign', 'level 4'],
+    ], tags: ['elemental', 'buff', 'emanation', 'redesign', 'level 4'],
     rules2014: SpellEditionDetails(
       castingTime: '1 minute',
       range: '90 feet',
@@ -300,19 +285,16 @@ const List<SpellItem> srdLevel4Spells = [
           'When cast using a 5th-level slot or higher, the extra damage increases by 2d8 for each slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_conjure_woodland_beings',
-    name: 'Conjure Woodland Beings',
-    level: 4,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Complete redesign: Replaces the 8-Pixie polymorph army exploit with a 10-ft aura dealing 5d8 force/radiant damage and enabling Disengage.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_conjure_woodland_beings', ruleset: RulesetVersion.v2024), name: 'Conjure Woodland Beings',
+    level: 4, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: 'Self (10-foot emanation)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a sprig of holly'),
+    descriptionMarkdown: 'You summon fey spirits that flit around you in a 10-foot Emanation.\n\nWhen a creature hostile to you enters the emanation for the first time on a turn or ends its turn there, it must make a Wisdom saving throw, taking 5d8 Force damage on a failed save, or half as much on a successful one.\n\nYou can also take the Disengage action as a Bonus Action while the spell is active.', higherLevelsMarkdown: 'Damage increases by 1d8 for each slot level above 4th.',
+    isChangedIn2024: true, diffSummary: 'Complete redesign: Replaces the 8-Pixie polymorph army exploit with a 10-ft aura dealing 5d8 force/radiant damage and enabling Disengage.', diffHighlights: [
       '2014: 1 Action, Concentration (1 hr). Summons 1-8 fey creatures (CR 2 down to 8 Pixies with individual spell slots).',
       '2024: 1 Action, Concentration (10 min). Creates a 10-ft emanation that deals 5d8 Force damage on failed Wisdom save (+1d8 per slot level above 4th) and lets you Disengage as a Bonus Action.',
-    ],
-    tags: ['fey', 'emanation', 'druid', 'ranger', 'redesign', 'level 4'],
+    ], tags: ['fey', 'emanation', 'druid', 'ranger', 'redesign', 'level 4'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -351,15 +333,13 @@ const List<SpellItem> srdLevel4Spells = [
       higherLevels: 'Damage increases by 1d8 for each slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_giant_insect',
-    name: 'Giant Insect',
-    level: 4,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: true,
-    diffSummary:
-        'Standardized into a single versatile Giant Insect companion stat block with customizable traits (Centipede, Spider, Wasp, Scorpion).',
-    tags: ['insect', 'transmutation', 'druid', 'level 4'],
+  Spell(
+    id: EntityId(slug: 'spell_giant_insect', ruleset: RulesetVersion.v2024), name: 'Giant Insect',
+    level: 4, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You transform an insect within range into a Large Giant Insect.\n\nThe creature uses the Giant Insect stat block and takes on traits of a Centipede, Spider, Wasp, or Scorpion.\n\nIt is friendly to you and obeys your verbal commands.', higherLevelsMarkdown: 'Using higher spell slots increases the creature’s AC, HP, and damage bonuses.',
+    isChangedIn2024: true, diffSummary: 'Standardized into a single versatile Giant Insect companion stat block with customizable traits (Centipede, Spider, Wasp, Scorpion).', tags: ['insect', 'transmutation', 'druid', 'level 4'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '30 feet',
@@ -389,15 +369,13 @@ const List<SpellItem> srdLevel4Spells = [
           'Using higher spell slots increases the creature’s AC, HP, and damage bonuses.',
     ),
   ),
-  SpellItem(
-    id: 'spell_death_ward',
-    name: 'Death Ward',
-    level: 4,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Protects a creature from death for 8 hours without concentration: drops to 1 HP instead of 0 HP on first lethal instance, or negates instant-death effects.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_death_ward', ruleset: RulesetVersion.v2024), name: 'Death Ward',
+    level: 4, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 28800, requiresConcentration: false, rawText: '8 hours'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Prevents target from dropping to 0 HP (drops to 1 HP instead) or negates an instant-death effect for 8 hours.',
+    isChangedIn2024: false, diffSummary: 'Protects a creature from death for 8 hours without concentration: drops to 1 HP instead of 0 HP on first lethal instance, or negates instant-death effects.', tags: [
       'buff',
       'anti-death',
       'cheat-death',
@@ -431,15 +409,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_divination',
-    name: 'Divination',
-    level: 4,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Offers a sacrifice to contact a deity, receiving a cryptic or direct omen concerning a specific goal, event, or activity occurring within 7 days.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_divination', ruleset: RulesetVersion.v2024), name: 'Divination',
+    level: 4, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'incense and offering worth 25 gp, consumed'),
+    descriptionMarkdown: 'Contacts deity for an omen or truthful answer regarding events in the next 7 days.',
+    isChangedIn2024: false, diffSummary: 'Offers a sacrifice to contact a deity, receiving a cryptic or direct omen concerning a specific goal, event, or activity occurring within 7 days.', tags: [
       'ritual',
       'omen',
       'future-sight',
@@ -486,15 +462,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_guardian_of_faith',
-    name: 'Guardian of Faith',
-    level: 4,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Summons a Large spectral guardian occupying a 10-foot space for 8 hours without concentration that strikes hostile creatures for 20 radiant damage (up to 60 total).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_guardian_of_faith', ruleset: RulesetVersion.v2024), name: 'Guardian of Faith',
+    level: 4, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 28800, requiresConcentration: false, rawText: '8 hours'),
+    range: '30 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'Spectral guardian deals 20 Radiant damage on failed Dexterity save (10 on success) to enemies approaching within 10 ft; lasts 8 hours or 60 total damage.',
+    isChangedIn2024: false, diffSummary: 'Summons a Large spectral guardian occupying a 10-foot space for 8 hours without concentration that strikes hostile creatures for 20 radiant damage (up to 60 total).', tags: [
       'summon',
       'ward',
       'radiant',
@@ -533,15 +507,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_freedom_of_movement',
-    name: 'Freedom of Movement',
-    level: 4,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Grants immunity to paralyzed/restrained conditions, difficult terrain, and movement penalties from water/spells for 1 hour without concentration.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_freedom_of_movement', ruleset: RulesetVersion.v2024), name: 'Freedom of Movement',
+    level: 4, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'leather strap'),
+    descriptionMarkdown: 'Target ignores Difficult Terrain, immunity to Paralyzed and Restrained conditions, and escapes grapples/restraints for 5 ft of movement.',
+    isChangedIn2024: false, diffSummary: 'Grants immunity to paralyzed/restrained conditions, difficult terrain, and movement penalties from water/spells for 1 hour without concentration.', tags: [
       'buff',
       'movement',
       'paralyze-immunity',
@@ -591,15 +563,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_blight',
-    name: 'Blight',
-    level: 4,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary:
-        'Drains moisture and vitality dealing 8d8 necrotic damage on Constitution save (maximizes damage against nonmagical plants).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_blight', ruleset: RulesetVersion.v2024), name: 'Blight',
+    level: 4, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Deals 8d8 Necrotic damage on failed Constitution save (maximized vs plants).', higherLevelsMarkdown: 'Damage increases by 1d8 per slot level above 4th.',
+    isChangedIn2024: false, diffSummary: 'Drains moisture and vitality dealing 8d8 necrotic damage on Constitution save (maximizes damage against nonmagical plants).', tags: [
       'necrotic',
       'single-target',
       'plant-killer',
@@ -653,15 +623,13 @@ const List<SpellItem> srdLevel4Spells = [
       higherLevels: 'Damage increases by 1d8 per slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_ice_storm',
-    name: 'Ice Storm',
-    level: 4,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'A hail of rock-hard ice pounds down in a 20-foot radius, 40-foot high cylinder dealing 2d8 bludgeoning and 4d6 cold damage and creating difficult terrain.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_ice_storm', ruleset: RulesetVersion.v2024), name: 'Ice Storm',
+    level: 4, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '300 feet (20-foot radius cylinder)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'dust and water drops'),
+    descriptionMarkdown: 'A hail of rock-hard ice pounds to the ground in a 20-foot-radius, 40-foot-high cylinder. Each creature in the cylinder takes 2d8 bludgeoning damage and 4d6 cold damage on a failed Dexterity save (half on success). The ground becomes difficult terrain until end of next turn.', higherLevelsMarkdown: 'The bludgeoning damage increases by 1d8 for each slot level above 4th.',
+    isChangedIn2024: false, diffSummary: 'A hail of rock-hard ice pounds down in a 20-foot radius, 40-foot high cylinder dealing 2d8 bludgeoning and 4d6 cold damage and creating difficult terrain.', tags: [
       'ice',
       'cold',
       'bludgeoning',
@@ -705,15 +673,13 @@ const List<SpellItem> srdLevel4Spells = [
           'The bludgeoning damage increases by 1d8 for each slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_black_tentacles',
-    name: 'Black Tentacles',
-    level: 4,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Squirming black tentacles fill a 20-foot square turning it into difficult terrain: deals 3d6 bludgeoning damage and restrains creatures failing Dexterity save (+3d6 bludgeoning each turn restrained).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_black_tentacles', ruleset: RulesetVersion.v2024), name: 'Black Tentacles',
+    level: 4, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '90 feet (20-foot square)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a piece of tentacle from a giant octopus or giant squid'),
+    descriptionMarkdown: 'Squirming, ebony tentacles fill a 20-foot square on ground that you can see within range. For the duration, these tentacles turn the ground into difficult terrain.\n\nWhen a creature enters the affected area for the first time on a turn or starts its turn there, the creature must succeed on a Dexterity saving throw or take 3d6 bludgeoning damage and be restrained by the tentacles until the spell ends. A creature that starts its turn in the area and is already restrained takes 3d6 bludgeoning damage.',
+    isChangedIn2024: false, diffSummary: 'Squirming black tentacles fill a 20-foot square turning it into difficult terrain: deals 3d6 bludgeoning damage and restrains creatures failing Dexterity save (+3d6 bludgeoning each turn restrained).', tags: [
       'restrain',
       'hazard',
       'difficult-terrain',
@@ -760,15 +726,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_confusion',
-    name: 'Confusion',
-    level: 4,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Assaults minds in a 10-foot-radius sphere on failed Wisdom save: d10 roll determines erratic behavior each turn (wander, do nothing, attack nearest creature, or act normally).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_confusion', ruleset: RulesetVersion.v2024), name: 'Confusion',
+    level: 4, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '90 feet (10-foot-radius sphere)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'three nut shells'),
+    descriptionMarkdown: 'This spell assaults and twists creatures’ minds, spawning delusions and uncontrolled actions. Each creature in a 10-foot-radius sphere must succeed on a Wisdom saving throw when you cast this spell or be affected by it.\n\nAn affected target can’t take reactions and must roll a d10 at the start of each of its turns: 1 (move random direction), 2-6 (do nothing), 7-8 (melee attack random creature), 9-10 (act normally). Repeat save at end of each turn.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 5th level or higher, the radius of the sphere increases by 5 feet for each slot level above 4th.',
+    isChangedIn2024: false, diffSummary: 'Assaults minds in a 10-foot-radius sphere on failed Wisdom save: d10 roll determines erratic behavior each turn (wander, do nothing, attack nearest creature, or act normally).', tags: [
       'control',
       'confusion',
       'aoe',
@@ -823,15 +787,13 @@ const List<SpellItem> srdLevel4Spells = [
           'When you cast this spell using a spell slot of 5th level or higher, the radius of the sphere increases by 5 feet for each slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_fire_shield',
-    name: 'Fire Shield',
-    level: 4,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Wreathes yourself in Warm Flames (Cold resistance) or Chill Flames (Fire resistance). Deals 2d8 damage of opposing type whenever a creature hits you with a melee attack within 5 feet. Non-concentration.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_fire_shield', ruleset: RulesetVersion.v2024), name: 'Fire Shield',
+    level: 4, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: false, rawText: '10 minutes'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a bit of phosphorus or a firefly'),
+    descriptionMarkdown: 'Thin and wispy flames wreathe your body for the duration, shedding bright light in a 10-foot radius. You can choose Warm Shield (grants cold resistance and deals 2d8 fire damage to attackers) or Chill Shield (grants fire resistance and deals 2d8 cold damage to attackers).\n\nWhenever a creature within 5 feet of you hits you with a melee attack, the shield erupts with flame dealing 2d8 damage to the attacker.',
+    isChangedIn2024: false, diffSummary: 'Wreathes yourself in Warm Flames (Cold resistance) or Chill Flames (Fire resistance). Deals 2d8 damage of opposing type whenever a creature hits you with a melee attack within 5 feet. Non-concentration.', tags: [
       'retaliation',
       'resistance',
       'fire',
@@ -873,15 +835,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_phantasmal_killer',
-    name: 'Phantasmal Killer',
-    level: 4,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Taps into nightmares to create an illusion visible only to the target: target becomes frightened on failed Wisdom save, taking 4d10 psychic damage at the end of each turn until saved.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_phantasmal_killer', ruleset: RulesetVersion.v2024), name: 'Phantasmal Killer',
+    level: 4, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You tap into the nightmares of a creature you can see within range and create an illusory manifestation of its deepest fears, visible only to it. The target must make a Wisdom saving throw. On a failed save, the target becomes frightened for the duration.\n\nAt the end of each of the target’s turns, the target must succeed on a Wisdom saving throw or take 4d10 psychic damage. On a successful save, the spell ends.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 5th level or higher, the damage increases by 1d10 for each slot level above 4th.',
+    isChangedIn2024: false, diffSummary: 'Taps into nightmares to create an illusion visible only to the target: target becomes frightened on failed Wisdom save, taking 4d10 psychic damage at the end of each turn until saved.', tags: [
       'fear',
       'psychic',
       'nightmare',
@@ -930,15 +890,13 @@ const List<SpellItem> srdLevel4Spells = [
           'When you cast this spell using a spell slot of 5th level or higher, the damage increases by 1d10 for each slot level above 4th.',
     ),
   ),
-  SpellItem(
-    id: 'spell_resilient_sphere',
-    name: 'Resilient Sphere',
-    level: 4,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Encloses a Large or smaller creature in an impenetrable shimmering sphere of force for 1 minute on failed Dexterity save (immune to all damage and effects from outside, cannot be passed through).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_resilient_sphere', ruleset: RulesetVersion.v2024), name: 'Resilient Sphere',
+    level: 4, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a hemispherical piece of clear crystal and a matching hemispherical piece of gum arabic'),
+    descriptionMarkdown: 'A sphere of shimmering force encloses a creature or object of Large size or smaller within range. An unwilling creature must make a Dexterity saving throw. On a failed save, the creature is enclosed for the duration.\n\nNothing—not physical objects, energy, or other spell effects—can pass through the barrier, in or out, though a creature in the sphere can breathe there. The sphere is immune to all damage, and a creature or object inside can’t be damaged by attacks or effects originating from, or passing through, the outside.',
+    isChangedIn2024: false, diffSummary: 'Encloses a Large or smaller creature in an impenetrable shimmering sphere of force for 1 minute on failed Dexterity save (immune to all damage and effects from outside, cannot be passed through).', tags: [
       'invulnerable',
       'barrier',
       'containment',
@@ -980,15 +938,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_stoneskin',
-    name: 'Stoneskin',
-    level: 4,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Touch a willing creature to turn its flesh as hard as stone, granting Resistance to nonmagical bludgeoning, piercing, and slashing damage.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_stoneskin', ruleset: RulesetVersion.v2024), name: 'Stoneskin',
+    level: 4, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'diamond dust worth at least 100 gp, which the spell consumes'),
+    descriptionMarkdown: 'This spell turns the flesh of a willing creature you touch as hard as stone. Until the spell ends, the target has resistance to nonmagical bludgeoning, piercing, and slashing damage.',
+    isChangedIn2024: false, diffSummary: 'Touch a willing creature to turn its flesh as hard as stone, granting Resistance to nonmagical bludgeoning, piercing, and slashing damage.', tags: [
       'resistance',
       'physical-defense',
       'costly-component',
@@ -1047,15 +1003,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_arcane_eye',
-    name: 'Arcane Eye',
-    level: 4,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates an invisible, floating eye with 30-foot darkvision for 1 hour. Mentally move the eye up to 30 feet as an Action through any opening as small as 1 inch in diameter.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_arcane_eye', ruleset: RulesetVersion.v2024), name: 'Arcane Eye',
+    level: 4, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a bit of bat fur'),
+    descriptionMarkdown: 'You create an invisible, magical eye within range that hovers in the air for the duration. You mentally receive visual information from the eye, which has normal vision and darkvision out to 30 feet.\n\nAs an action, you can move the eye up to 30 feet in any direction. There is no limit to how far away from you the eye can move, but it can’t enter another plane of existence. A solid barrier blocks the eye’s movement, but the eye can pass through an opening as small as 1 inch in diameter.',
+    isChangedIn2024: false, diffSummary: 'Creates an invisible, floating eye with 30-foot darkvision for 1 hour. Mentally move the eye up to 30 feet as an Action through any opening as small as 1 inch in diameter.', tags: [
       'scouting',
       'sensor',
       'invisible-eye',
@@ -1092,15 +1046,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_control_water',
-    name: 'Control Water',
-    level: 4,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Control water in a 100-foot cube for up to 10 minutes: Flood (raise level 20 ft), Part Water (trench 20 ft wide), Redirect Flow, or Whirlpool (5d8 bludgeoning & trapped).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_control_water', ruleset: RulesetVersion.v2024), name: 'Control Water',
+    level: 4, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: '300 feet (100-foot cube)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a drop of water and a pinch of dust'),
+    descriptionMarkdown: 'Until the spell ends, you control any freestanding water inside an area you choose that is a cube up to 100 feet on a side.\n\nModes: Flood (causes water level to rise by up to 20 feet), Part Water (creates a trench through the water up to 20 feet wide), Redirect Flow (directs moving water in any direction), Whirlpool (creates a 25-foot-radius vortex dealing 5d8 bludgeoning damage).',
+    isChangedIn2024: false, diffSummary: 'Control water in a 100-foot cube for up to 10 minutes: Flood (raise level 20 ft), Part Water (trench 20 ft wide), Redirect Flow, or Whirlpool (5d8 bludgeoning & trapped).', tags: [
       'water-manipulation',
       'flood',
       'part-water',
@@ -1141,15 +1093,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_dominate_beast',
-    name: 'Dominate Beast',
-    level: 4,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Telepathically control a beast on failed Wisdom save: target is charmed and takes only actions you choose (Advantage on save if fighting you).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_dominate_beast', ruleset: RulesetVersion.v2024), name: 'Dominate Beast',
+    level: 4, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You attempt to beguile a beast that you can see within range. It must succeed on a Wisdom saving throw or be charmed by you for the duration (with advantage if fighting you).\n\nWhile the beast is charmed, you have a telepathic link with it and can issue commands that it does its best to obey. You can specify a simple course of action or take total and precise control of the target.', higherLevelsMarkdown: '5th level: up to 10 minutes. 6th level: up to 1 hour. 7th level or higher: up to 8 hours.',
+    isChangedIn2024: false, diffSummary: 'Telepathically control a beast on failed Wisdom save: target is charmed and takes only actions you choose (Advantage on save if fighting you).', tags: [
       'control',
       'mind-control',
       'beast',
@@ -1190,15 +1140,13 @@ const List<SpellItem> srdLevel4Spells = [
           '5th level: up to 10 minutes. 6th level: up to 1 hour. 7th level or higher: up to 8 hours.',
     ),
   ),
-  SpellItem(
-    id: 'spell_locate_creature',
-    name: 'Locate Creature',
-    level: 4,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Sense the direction to a specific or general creature within 1,000 feet of you as long as running water at least 10 feet wide does not block the path.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_locate_creature', ruleset: RulesetVersion.v2024), name: 'Locate Creature',
+    level: 4, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: 'Self (1,000 feet)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a bit of hound fur'),
+    descriptionMarkdown: 'Describe or name a creature that is familiar to you. You sense the direction to the creature’s location, as long as that creature is within 1,000 feet of you. If the creature is in motion, you know the direction of its movement.\n\nThis spell can locate a specific creature known to you, or the nearest creature of a specific kind. The spell can’t locate a creature if running water at least 10 feet wide blocks a direct path between you and the creature.',
+    isChangedIn2024: false, diffSummary: 'Sense the direction to a specific or general creature within 1,000 feet of you as long as running water at least 10 feet wide does not block the path.', tags: [
       'locate',
       'tracking',
       'search',
@@ -1255,15 +1203,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_stone_shape',
-    name: 'Stone Shape',
-    level: 4,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Touch a stone object or section of stone no more than 5 feet in any dimension and shape it into any form suited to your purpose (doorway, coffer, weapon, or idol).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_stone_shape', ruleset: RulesetVersion.v2024), name: 'Stone Shape',
+    level: 4, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'soft clay to be worked into roughly the desired shape'),
+    descriptionMarkdown: 'You touch a stone object of Medium size or smaller or a section of stone no more than 5 feet in any dimension and form it into any shape that suits your purpose.\n\nSo, for example, you could shape a large rock into a weapon, idol, or coffer, or make a small passage through a stone wall, as long as the wall is less than 5 feet thick. You could also shape a stone door or its frame to seal the door shut.',
+    isChangedIn2024: false, diffSummary: 'Touch a stone object or section of stone no more than 5 feet in any dimension and shape it into any form suited to your purpose (doorway, coffer, weapon, or idol).', tags: [
       'utility',
       'stone-craft',
       'breach',
@@ -1300,15 +1246,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_fabricate',
-    name: 'Fabricate',
-    level: 4,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Convert raw materials into products of the same material in 10 minutes (raw wood into bridge, hemp into rope, linen into clothes). Non-magical only.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_fabricate', ruleset: RulesetVersion.v2024), name: 'Fabricate',
+    level: 4, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You convert raw materials into products of the same material. For example, you can fabricate a wooden bridge from a clump of trees, a rope from a patch of hemp, and clothes from flax or wool.\n\nChoose raw materials that you can see within range. You can fabricate a Large or smaller object (contained within a 10-foot cube). You also need the appropriate artisan’s tools proficiency to craft items requiring a high degree of craftsmanship (such as jewelry, weapons, or armor).',
+    isChangedIn2024: false, diffSummary: 'Convert raw materials into products of the same material in 10 minutes (raw wood into bridge, hemp into rope, linen into clothes). Non-magical only.', tags: [
       'crafting',
       'construction',
       'utility',
@@ -1339,15 +1283,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_private_sanctum',
-    name: 'Private Sanctum',
-    level: 4,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Wards a 100-foot cubic area for 24 hours against sensors, divination, teleportation, planar travel, and sound/vision from outside. Casting daily for 1 year makes it permanent.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_private_sanctum', ruleset: RulesetVersion.v2024), name: 'Private Sanctum',
+    level: 4, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 86400, requiresConcentration: false, rawText: '24 hours'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a thin sheet of lead, a piece of opaque glass, a wad of cotton or cloth, and powdered chrysolite'),
+    descriptionMarkdown: 'You make a perimeter around an area within range (up to 100 feet on a side) impenetrable to sensors and scrying. Sound can’t pass through the barrier, sensors can’t appear inside, targets inside can’t be targeted by divination, and teleportation or planar travel into/out of the area fails.\n\nCasting this spell on the same spot every day for a year makes this effect permanent.',
+    isChangedIn2024: false, diffSummary: 'Wards a 100-foot cubic area for 24 hours against sensors, divination, teleportation, planar travel, and sound/vision from outside. Casting daily for 1 year makes it permanent.', tags: [
       'ward',
       'anti-scrying',
       'teleport-block',
@@ -1385,15 +1327,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_compulsion',
-    name: 'Compulsion',
-    level: 4,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creatures within 30 feet make Wisdom saves: on failed save, on each of your turns as a Bonus Action you can designate a direction and force affected creatures to use all their movement moving that way.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_compulsion', ruleset: RulesetVersion.v2024), name: 'Compulsion',
+    level: 4, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Creatures of your choice that you can see within range and that can hear you must make a Wisdom saving throw. A target automatically succeeds on this save if it can’t be charmed.\n\nUntil the spell ends, you can use a bonus action on each of your turns to designate a direction. Each affected target must use as much of its movement as possible to move in that direction on its next turn.',
+    isChangedIn2024: false, diffSummary: 'Creatures within 30 feet make Wisdom saves: on failed save, on each of your turns as a Bonus Action you can designate a direction and force affected creatures to use all their movement moving that way.', tags: [
       'forced-movement',
       'crowd-control',
       'mind-control',
@@ -1429,15 +1369,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_faithful_hound',
-    name: 'Faithful Hound',
-    level: 4,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Conjures a phantom watchdog for 8 hours: sees invisible creatures, barks when Small or larger creatures approach within 30 feet, and attacks hostile creatures within 5 feet dealing 4d8 piercing damage.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_faithful_hound', ruleset: RulesetVersion.v2024), name: 'Faithful Hound',
+    level: 4, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 28800, requiresConcentration: false, rawText: '8 hours'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a tiny silver whistle, a piece of bone, and a thread'),
+    descriptionMarkdown: 'You conjure a phantom watchdog in an unoccupied space that you can see within range, where it remains for the duration.\n\nThe hound is invisible to all creatures except you and can’t be harmed. When a Small or larger creature comes within 30 feet of it without speaking a password that you specify, the hound starts barking loudly. It sees invisible creatures and can see into the Ethereal Plane.\n\nAt the start of each of your turns, the hound attempts to bite one creature hostile to you within 5 feet of it (+8 to hit, 4d8 piercing damage on a hit).',
+    isChangedIn2024: false, diffSummary: 'Conjures a phantom watchdog for 8 hours: sees invisible creatures, barks when Small or larger creatures approach within 30 feet, and attacks hostile creatures within 5 feet dealing 4d8 piercing damage.', tags: [
       'guard-dog',
       'sentry',
       'anti-invisibility',
@@ -1480,15 +1418,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_hallucinatory_terrain',
-    name: 'Hallucinatory Terrain',
-    level: 4,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Make natural terrain in a 150-foot cube look, sound, and smell like some other sort of natural terrain for 24 hours.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_hallucinatory_terrain', ruleset: RulesetVersion.v2024), name: 'Hallucinatory Terrain',
+    level: 4, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 86400, requiresConcentration: false, rawText: '24 hours'),
+    range: '300 feet (150-foot cube)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a stone, a twig, and a bit of green plant'),
+    descriptionMarkdown: 'You make natural terrain in a 150-foot cube look, sound, and smell like some other sort of natural terrain. Open fields can become a swamp, hill, or crevassed wasteland; a pond can become a meadow.\n\nManufactured structures and equipment are not disguised. Physical interaction reveals the illusion.',
+    isChangedIn2024: false, diffSummary: 'Make natural terrain in a 150-foot cube look, sound, and smell like some other sort of natural terrain for 24 hours.', tags: [
       'terrain',
       'illusion',
       'camouflage',
@@ -1536,15 +1472,13 @@ const List<SpellItem> srdLevel4Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_secret_chest',
-    name: 'Secret Chest',
-    level: 4,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Hide an exquisite chest (up to 12 cubic feet, 300 lbs) in the Ethereal Plane for up to 60 days using a Tiny replica. Costly components (5,050 gp total).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_secret_chest', ruleset: RulesetVersion.v2024), name: 'Secret Chest',
+    level: 4, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.permanent, durationSeconds: 0, requiresConcentration: false, rawText: 'Until dispelled (up to 60 days safe)'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'an exquisite chest, 3 feet by 2 feet by 2 feet, constructed from rare materials worth at least 5,000 gp, and a Tiny replica made from the same materials worth at least 50 gp'),
+    descriptionMarkdown: 'You hide a chest, and all its contents, on the Ethereal Plane. You must touch the chest and the miniature replica that serves as a material component for the spell.\n\nWhile the chest remains on the Ethereal Plane, you can use an action and touch the replica to recall the chest to an unoccupied space on the ground within 5 feet of you.',
+    isChangedIn2024: false, diffSummary: 'Hide an exquisite chest (up to 12 cubic feet, 300 lbs) in the Ethereal Plane for up to 60 days using a Tiny replica. Costly components (5,050 gp total).', tags: [
       'vault',
       'storage',
       'ethereal-cache',

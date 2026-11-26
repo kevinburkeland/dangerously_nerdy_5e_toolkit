@@ -13,7 +13,7 @@ class GlyphSpellEntry implements GlyphRenderable {
     required this.summary,
   });
 
-  SpellItem get spell {
+  Spell get spell {
     final found = SpellbookLibrary.getSpellById(spellId);
     if (found == null) {
       throw StateError('Unknown spell id for glyph gallery: $spellId');

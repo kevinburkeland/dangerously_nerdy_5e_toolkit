@@ -169,18 +169,18 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   }
 
   void _showCompareDialog(
-      BuildContext context, SpellItem spell, DmRulesEdition edition) {
+      BuildContext context, Spell spell, DmRulesEdition edition) {
     SpellComparisonDialog.show(
       context,
       spell: spell,
       edition: edition,
-      isPinned: _getPinnedIds(context).contains(spell.id),
-      onTogglePin: () => _togglePinSpell(context, spell.id),
+      isPinned: _getPinnedIds(context).contains(spell.id.slug),
+      onTogglePin: () => _togglePinSpell(context, spell.id.slug),
     );
   }
 
   void _openQuickRollDialog(
-      BuildContext context, SpellItem spell, DmRulesEdition edition) {
+      BuildContext context, Spell spell, DmRulesEdition edition) {
     SpellQuickRollDialog.show(
       context,
       spell: spell,
@@ -237,14 +237,14 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     // Filter spells based on search, view mode, and sheet filters
     final filteredSpells = allSpells.where((spell) {
       if (_viewMode == SpellbookViewMode.mySpellbook &&
-          !pinnedIds.contains(spell.id)) {
+          !pinnedIds.contains(spell.id.slug)) {
         return false;
       }
       if (_viewMode == SpellbookViewMode.revisions2024 &&
           !spell.isChangedIn2024) {
         return false;
       }
-      if (_showOnlyPinned && !pinnedIds.contains(spell.id)) {
+      if (_showOnlyPinned && !pinnedIds.contains(spell.id.slug)) {
         return false;
       }
       return spell.matches(
@@ -261,9 +261,9 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
 
     // Grouping for "All Spells" view mode
     final pinnedSpellsInResults =
-        filteredSpells.where((s) => pinnedIds.contains(s.id)).toList();
+        filteredSpells.where((s) => pinnedIds.contains(s.id.slug)).toList();
     final otherSpellsInResults =
-        filteredSpells.where((s) => !pinnedIds.contains(s.id)).toList();
+        filteredSpells.where((s) => !pinnedIds.contains(s.id.slug)).toList();
 
     final activeFilterCount = _getActiveFilterCount();
     final isDark = theme.brightness == Brightness.dark;
@@ -521,7 +521,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
 
   List<Widget> _buildGroupedLevelSlivers(
     BuildContext context,
-    List<SpellItem> spells,
+    List<Spell> spells,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
@@ -615,17 +615,17 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
 
   Widget _buildSliverSpellCards(
     BuildContext context,
-    List<SpellItem> spells,
+    List<Spell> spells,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    return SliverResponsiveCardGrid<SpellItem>(
+    return SliverResponsiveCardGrid<Spell>(
       items: spells,
       itemBuilder: (context, spell) => SpellCard(
         spell: spell,
         edition: edition,
-        isPinned: pinnedIds.contains(spell.id),
-        onTogglePin: () => _togglePinSpell(context, spell.id),
+        isPinned: pinnedIds.contains(spell.id.slug),
+        onTogglePin: () => _togglePinSpell(context, spell.id.slug),
         onTap: () => _showCompareDialog(context, spell, edition),
         onOpenQuickRoll: () => _openQuickRollDialog(context, spell, edition),
         onQuickRoll: _performSpellRoll,

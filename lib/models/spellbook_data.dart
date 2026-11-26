@@ -26,75 +26,17 @@ extension SpellClassVisualExtension on SpellClass {
       };
 }
 
-/// Detailed rules information for a specific rules edition of a spell.
-class SpellEditionDetails {
-  final SpellSchool? schoolOverride;
-  final String castingTime;
-  final String range;
-  final String
-      components; // e.g. "V, S, M (a tiny ball of bat guano and pitch)"
-  final SpellMaterialComponent? materialDetails;
-  final String duration;
-  final bool concentration;
-  final bool ritual;
-  final List<String> description;
-  final String? higherLevels;
-  final List<SpellClass> classes;
-  final String? rollFormula; // e.g. "8d6" or "2d8 + mod"
-  final SpellScalingFormula? scalingFormula;
-  final String? damageOrHealType; // e.g. "Fire", "Healing", "Radiant"
-  final String? savingThrow; // e.g. "Dexterity", "Wisdom"
-  final String? reactionTrigger;
-
-  const SpellEditionDetails({
-    this.schoolOverride,
-    required this.castingTime,
-    required this.range,
-    required this.components,
-    this.materialDetails,
-    required this.duration,
-    this.concentration = false,
-    this.ritual = false,
-    required this.description,
-    this.higherLevels,
-    required this.classes,
-    this.rollFormula,
-    this.scalingFormula,
-    this.damageOrHealType,
-    this.savingThrow,
-    this.reactionTrigger,
-  });
-}
-
-/// Represents an SRD Spell with 2014 & 2024 comparison metadata and rules definitions.
-class SpellItem {
-  final String id;
-  final String name;
-  final String? name2014;
-  final String? name2024;
-  final int level; // 0 = Cantrip, 1-9 = Spell Level
-  final SpellSchool school;
-  final SpellEditionDetails rules2014;
-  final SpellEditionDetails rules2024;
-  final bool isChangedIn2024;
-  final String? diffSummary;
-  final List<String> diffHighlights;
-  final List<String> tags;
-
-  const SpellItem({
-    required this.id,
-    required this.name,
-    this.name2014,
-    this.name2024,
-    required this.level,
-    required this.school,
-    required this.rules2014,
-    required this.rules2024,
-    this.isChangedIn2024 = false,
-    this.diffSummary,
-    this.diffHighlights = const [],
-    this.tags = const [],
-  });
+/// UI, search, label, and glyph presentation helpers for [Spell].
+extension SpellUi on Spell {
+  /// Resolves the typed [SpellSchool] for UI rendering, preserving unknown
+  /// homebrew school strings in [school] while falling back to evocation only
+  /// when a typed school icon/color is required.
+  SpellSchool get resolvedSchool =>
+      schoolEnum ??
+      SpellSchool.values.firstWhere(
+        (s) => s.name.toLowerCase() == school.toLowerCase(),
+        orElse: () => SpellSchool.evocation,
+      );
 
   String getName(DmRulesEdition edition) {
     if (edition == DmRulesEdition.v2014 && name2014 != null) return name2014!;
@@ -107,7 +49,7 @@ class SpellItem {
   }
 
   SpellSchool getSchool(DmRulesEdition edition) {
-    return getRules(edition).schoolOverride ?? school;
+    return getRules(edition).schoolOverride ?? resolvedSchool;
   }
 
   String get levelLabel => switch (level) {
@@ -118,14 +60,14 @@ class SpellItem {
         _ => '${level}th Level',
       };
 
-  String get fullTypeLabel => '$levelLabel ${school.label}';
+  String get fullTypeLabel => '$levelLabel ${resolvedSchool.label}';
 
   String getFullTypeLabel(DmRulesEdition edition) =>
       '$levelLabel ${getSchool(edition).label}';
 
   String _getCorpus(DmRulesEdition edition) {
     final currentRules = getRules(edition);
-    final effectiveSchool = currentRules.schoolOverride ?? school;
+    final effectiveSchool = currentRules.schoolOverride ?? resolvedSchool;
     final buffer = StringBuffer()
       ..write('$name ')
       ..write('${name2014 ?? ""} ')
@@ -164,7 +106,7 @@ class SpellItem {
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
     final currentRules = getRules(edition);
-    final effectiveSchool = currentRules.schoolOverride ?? school;
+    final effectiveSchool = currentRules.schoolOverride ?? resolvedSchool;
 
     if (schoolFilter != null && effectiveSchool != schoolFilter) {
       return false;
@@ -194,7 +136,8 @@ class SpellItem {
   }
 
   /// Dynamic action rings for DndGlyph HUD rendering conforming to the Glyph Style Guide.
-  List<ActionTraitRing> getGlyphActionRings(DmRulesEdition edition) {
+  List<ActionTraitRing> getGlyphActionRings(
+      [DmRulesEdition edition = DmRulesEdition.v2024]) {
     final rings = <ActionTraitRing>[];
     final rules = getRules(edition);
 
@@ -392,15 +335,15 @@ class SpellItem {
 class SpellbookLibrary {
   SpellbookLibrary._();
 
-  static List<SpellItem> _customSpells = const [];
+  static List<Spell> _customSpells = const [];
 
   /// Sets user-created / imported homebrew spells to be included in the library.
-  static void setHomebrewSpells(List<SpellItem> spells) {
+  static void setHomebrewSpells(List<Spell> spells) {
     _customSpells = List.unmodifiable(spells);
   }
 
   /// Canonical SRD spells.
-  static const List<SpellItem> srdSpells = [
+  static const List<Spell> srdSpells = [
     ...srdCantrips,
     ...srdLevel1Spells,
     ...srdLevel2Spells,
@@ -411,12 +354,12 @@ class SpellbookLibrary {
   ];
 
   /// All registered spells including canonical SRD and active homebrew.
-  static List<SpellItem> get allSpells => [
+  static List<Spell> get allSpells => [
         ...srdSpells,
         ..._customSpells,
       ];
 
-  static SpellItem? getSpellById(String id) {
+  static Spell? getSpellById(String id) {
     final lower = id.trim().toLowerCase();
     final stripped = lower.startsWith('spell_') ? lower.substring(6) : lower;
     final hyphenated = stripped.replaceAll('_', '-');
@@ -424,7 +367,7 @@ class SpellbookLibrary {
 
     try {
       return allSpells.firstWhere((s) {
-        final sId = s.id.toLowerCase();
+        final sId = s.id.slug.toLowerCase();
         if (sId == lower) return true;
         final sStripped = sId.startsWith('spell_') ? sId.substring(6) : sId;
         return sStripped == stripped ||
@@ -438,7 +381,7 @@ class SpellbookLibrary {
     }
   }
 
-  static SpellItem? getSpellByName(String name) {
+  static Spell? getSpellByName(String name) {
     final lower = name.trim().toLowerCase();
     try {
       return allSpells.firstWhere((s) => s.name.toLowerCase() == lower);
@@ -448,7 +391,7 @@ class SpellbookLibrary {
   }
 
   /// Flexible lookup for a spell by name, slug, id, or normalized punctuation.
-  static SpellItem? findSpell(String query) {
+  static Spell? findSpell(String query) {
     final lower = query.trim().toLowerCase();
     if (lower.isEmpty) return null;
     final direct = getSpellByName(lower) ?? getSpellById(lower);
@@ -460,20 +403,21 @@ class SpellbookLibrary {
     return allSpells.where((s) {
       final sClean = s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
       if (sClean == noPunct) return true;
-      final sIdClean = s.id.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final sIdClean =
+          s.id.slug.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
       return sIdClean == noPunct || sIdClean == 'spell$noPunct';
     }).firstOrNull;
   }
 
-  static List<SpellItem> getChangedSpells() {
+  static List<Spell> getChangedSpells() {
     return allSpells.where((s) => s.isChangedIn2024).toList();
   }
 
-  static List<SpellItem> getSpellsByLevel(int level) {
+  static List<Spell> getSpellsByLevel(int level) {
     return allSpells.where((s) => s.level == level).toList();
   }
 
-  static List<SpellItem> getSpellsByClass(SpellClass cls,
+  static List<Spell> getSpellsByClass(SpellClass cls,
       {DmRulesEdition edition = DmRulesEdition.v2024}) {
     return allSpells
         .where((s) => s.getRules(edition).classes.contains(cls))

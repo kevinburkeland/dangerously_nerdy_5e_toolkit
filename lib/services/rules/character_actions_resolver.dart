@@ -180,7 +180,7 @@ class CharacterActionsResolver {
             : (isReaction ? ActionType.reaction : ActionType.action),
         category: CombatActionCategory.spell,
         subtitle:
-            '${item?.level == 0 ? "Cantrip" : "Level ${item?.level ?? 1}"} • ${item?.school.displayName ?? "Magic"}',
+            '${item?.level == 0 ? "Cantrip" : "Level ${item?.level ?? 1}"} • ${item?.resolvedSchool.displayName ?? "Magic"}',
         description: rules != null && rules.description.isNotEmpty
             ? rules.description.first
             : s.displayName,

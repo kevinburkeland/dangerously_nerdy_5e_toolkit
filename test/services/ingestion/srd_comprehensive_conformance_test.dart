@@ -38,7 +38,7 @@ void main() {
     // 1. DOMAIN ADAPTERS FOR SRD ENTITIES
     // =========================================================================
 
-    Spell convertSpell(SpellItem item, DmRulesEdition edition) {
+    Spell convertSpell(Spell item, DmRulesEdition edition) {
       final rules = item.getRules(edition);
       final ruleset = edition == DmRulesEdition.v2024
           ? RulesetVersion.v2024

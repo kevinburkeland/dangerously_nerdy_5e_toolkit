@@ -11,7 +11,6 @@ import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_bundle.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_spell_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/homebrew_merge_resolver.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
   group('CompendiumClassParser Spell & Grant Extraction Tests', () {
@@ -413,10 +412,9 @@ void main() {
       expect(spell.customProperties['classes'],
           containsAll(['Sorcerer', 'Wizard']));
 
-      final item = HomebrewPersistenceService.spellToSpellItem(spell);
-      expect(item.rules2014.classes,
+      expect(spell.rules2014.classes,
           containsAll([SpellClass.sorcerer, SpellClass.wizard]));
-      expect(item.rules2024.classes,
+      expect(spell.rules2024.classes,
           containsAll([SpellClass.sorcerer, SpellClass.wizard]));
     });
 
@@ -447,9 +445,8 @@ void main() {
       final spellParser = CompendiumSpellParser();
       final parsed = spellParser.parseSpell(rawSpell);
 
-      final item = HomebrewPersistenceService.spellToSpellItem(parsed);
       expect(
-          item.rules2014.classes,
+          parsed.rules2014.classes,
           containsAll(
               [SpellClass.sorcerer, SpellClass.ranger, SpellClass.cleric]));
     });
@@ -477,10 +474,9 @@ void main() {
           spell.customProperties['classes'], containsAll(['Druid', 'Cleric']));
       expect(spell.customProperties['page'], 100);
 
-      final item = HomebrewPersistenceService.spellToSpellItem(spell);
-      expect(item.rules2014.classes,
+      expect(spell.rules2014.classes,
           containsAll([SpellClass.druid, SpellClass.cleric]));
-      expect(item.rules2014.ritual, isTrue);
+      expect(spell.rules2014.ritual, isTrue);
     });
 
     test(

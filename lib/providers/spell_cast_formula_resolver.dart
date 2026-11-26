@@ -1,5 +1,4 @@
 import '../models/dm_screen_data.dart' show DmRulesEdition;
-import '../models/domain/character_models.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../models/spellbook_data.dart'
     show SpellScalingFormula, SpellbookLibrary;

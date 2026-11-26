@@ -121,11 +121,11 @@ Character _makeNonCaster(RulesetEdition edition) => Character(
       ),
     );
 
-Spell _domainSpellFromItem(SpellItem item, DmRulesEdition edition) {
+Spell _domainSpellFromItem(Spell item, DmRulesEdition edition) {
   final rules = item.getRules(edition);
   return Spell(
     id: EntityId(
-      slug: item.id,
+      slug: item.id.slug,
       ruleset: edition == DmRulesEdition.v2024
           ? RulesetVersion.v2024
           : RulesetVersion.v2014,
@@ -189,7 +189,7 @@ void main() {
       'characterizes castSpell for WIS 16 Cleric and non-spellcaster on all bundled mod spells (both editions, base and +1 level)',
       () async {
         // Collect every bundled spell with 'mod' in rollFormula in either edition.
-        final cases = <(SpellItem, DmRulesEdition, String)>[];
+        final cases = <(Spell, DmRulesEdition, String)>[];
         for (final item in SpellbookLibrary.srdSpells) {
           for (final dmEd in const [DmRulesEdition.v2014, DmRulesEdition.v2024]) {
             final rf = item.getRules(dmEd).rollFormula;

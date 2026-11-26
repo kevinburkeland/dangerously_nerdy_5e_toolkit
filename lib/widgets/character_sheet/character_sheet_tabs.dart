@@ -2109,14 +2109,14 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
     final domainSpell = spellItem != null
         ? Spell(
             id: EntityId(
-              slug: spellItem.id,
+              slug: spellItem.id.slug,
               ruleset: edition == DmRulesEdition.v2024
                   ? RulesetVersion.v2024
                   : RulesetVersion.v2014,
             ),
             name: spellName,
             level: spellItem.level,
-            school: (rules?.schoolOverride ?? spellItem.school).name,
+            school: (rules?.schoolOverride ?? spellItem.resolvedSchool).name,
             castingTime: CastingTime(
               cost: 1,
               actionType: ActionType.action,
@@ -2261,7 +2261,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
               if (searchQuery.isNotEmpty) {
                 final q = searchQuery.toLowerCase();
                 return s.getName(edition).toLowerCase().contains(q) ||
-                    s.id.toLowerCase().contains(q);
+                    s.id.slug.toLowerCase().contains(q);
               }
               return true;
             }).toList();
@@ -2334,8 +2334,8 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                         final spell = allSpells[idx];
                         final isCantrip = spell.level == 0;
                         final isAlreadyAdded = isCantrip
-                            ? existingCantripSlugs.contains(spell.id)
-                            : existingKnownSlugs.contains(spell.id);
+                            ? existingCantripSlugs.contains(spell.id.slug)
+                            : existingKnownSlugs.contains(spell.id.slug);
 
                         return ListTile(
                           dense: true,
@@ -2350,7 +2350,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text(
-                              '${spell.levelLabel} • ${spell.school.name}'),
+                              '${spell.levelLabel} • ${spell.resolvedSchool.name}'),
                           trailing: isAlreadyAdded
                               ? const Chip(
                                   label: Text('Added',
@@ -2367,7 +2367,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                     HapticService.selectionTick(context);
                                     final spellRef = EntityReference<Spell>(
                                       refType: EntityType.spell,
-                                      slug: spell.id,
+                                      slug: spell.id.slug,
                                       displayName: spell.getName(edition),
                                     );
                                     widget.controller.addSpell(

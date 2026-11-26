@@ -58,7 +58,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
   final TextEditingController _spellSearchController = TextEditingController();
   String _spellSearchQuery = '';
   int? _spellLevelFilter;
-  List<SpellItem> _allClassSpells = [];
+  List<Spell> _allClassSpells = [];
   final Map<String, String> _spellToSubclassMap = {};
   bool _hasSpells = false;
 
@@ -107,11 +107,11 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
 
     final baseSpells = spellClass != null
         ? SpellbookLibrary.getSpellsByClass(spellClass, edition: edition)
-        : <SpellItem>[];
+        : <Spell>[];
 
-    final allSpellsMap = <String, SpellItem>{};
+    final allSpellsMap = <String, Spell>{};
     for (final s in baseSpells) {
-      allSpellsMap[s.id.toLowerCase()] = s;
+      allSpellsMap[s.id.slug.toLowerCase()] = s;
     }
 
     // Include subclass bonus spells
@@ -140,8 +140,8 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
         final clean = bName.trim().toLowerCase();
         final found = SpellbookLibrary.findSpell(clean);
         if (found != null) {
-          allSpellsMap[found.id.toLowerCase()] = found;
-          _spellToSubclassMap[found.id.toLowerCase()] = sub.name;
+          allSpellsMap[found.id.slug.toLowerCase()] = found;
+          _spellToSubclassMap[found.id.slug.toLowerCase()] = sub.name;
         }
       }
     }
@@ -831,7 +831,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
                     (SettingsScope.maybeOf(context)
                             ?.settings
                             .pinnedSpellIds
-                            .contains(foundSpell.id) ??
+                            .contains(foundSpell.id.slug) ??
                         false);
 
                 return ActionChip(
@@ -860,7 +860,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
                         isPinned: isPinned,
                         onTogglePin: () {
                           SettingsScope.maybeOf(context)
-                              ?.togglePinSpell(foundSpell.id);
+                              ?.togglePinSpell(foundSpell.id.slug);
                         },
                       );
                     } else {
@@ -892,14 +892,14 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
         final query = _spellSearchQuery.toLowerCase();
         final matchesName = s.name.toLowerCase().contains(query);
         final matchesSchool = s.school.label.toLowerCase().contains(query);
-        final sub = _spellToSubclassMap[s.id.toLowerCase()];
+        final sub = _spellToSubclassMap[s.id.slug.toLowerCase()];
         final matchesSub = sub != null && sub.toLowerCase().contains(query);
         if (!matchesName && !matchesSchool && !matchesSub) return false;
       }
 
       if (_spellLevelFilter != null) {
         if (_spellLevelFilter == -1) {
-          if (!_spellToSubclassMap.containsKey(s.id.toLowerCase()))
+          if (!_spellToSubclassMap.containsKey(s.id.slug.toLowerCase()))
             return false;
         } else if (s.level != _spellLevelFilter) {
           return false;
@@ -1034,14 +1034,14 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
                   separatorBuilder: (_, _) => const SizedBox(height: 6),
                   itemBuilder: (context, idx) {
                     final spell = filtered[idx];
-                    final subName = _spellToSubclassMap[spell.id.toLowerCase()];
+                    final subName = _spellToSubclassMap[spell.id.slug.toLowerCase()];
                     final rules = spell.getRules(resolvedEdition);
                     final isPinned = SettingsScope.maybeOf(context)
                             ?.settings
                             .pinnedSpellIds
-                            .contains(spell.id) ??
+                            .contains(spell.id.slug) ??
                         false;
-                    final isHomebrew = spell.id.startsWith('custom_') ||
+                    final isHomebrew = spell.id.slug.startsWith('custom_') ||
                         spell.tags.contains('homebrew');
 
                     return Material(
@@ -1054,7 +1054,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog>
                             isPinned: isPinned,
                             onTogglePin: () {
                               SettingsScope.maybeOf(context)
-                                  ?.togglePinSpell(spell.id);
+                                  ?.togglePinSpell(spell.id.slug);
                             },
                           );
                         },

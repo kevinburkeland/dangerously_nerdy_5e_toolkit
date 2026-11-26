@@ -751,11 +751,18 @@ void main() {
     test(
         '16. SubclassSpellsLibrary resolveFilterSpells matches custom source filter and spell tags',
         () {
-      const astralSpell = SpellItem(
-        id: 'chrono-shift',
+      const astralSpell = Spell(
+        id: EntityId(slug: 'chrono-shift', ruleset: RulesetVersion.homebrew),
         name: 'Chrono Shift',
         level: 5,
-        school: SpellSchool.transmutation,
+        school: 'transmutation',
+        schoolEnum: SpellSchool.transmutation,
+        castingTime: CastingTime(cost: 1, actionType: ActionType.reaction),
+        duration: SpellDuration(type: DurationType.timed, durationSeconds: 6),
+        range: '120 feet',
+        components: SpellComponents(v: true, s: true),
+        descriptionMarkdown:
+            'You target the triggering creature and shift it across space.',
         rules2014: SpellEditionDetails(
           castingTime: '1 reaction',
           range: '120 feet',
@@ -779,11 +786,17 @@ void main() {
         tags: ['astral', 'source:astral_tome'],
       );
 
-      const normalSpell = SpellItem(
-        id: 'custom-spark',
+      const normalSpell = Spell(
+        id: EntityId(slug: 'custom-spark', ruleset: RulesetVersion.homebrew),
         name: 'Custom Spark',
         level: 1,
-        school: SpellSchool.evocation,
+        school: 'evocation',
+        schoolEnum: SpellSchool.evocation,
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '30 feet',
+        components: SpellComponents(v: true, s: true),
+        descriptionMarkdown: 'A burst of sparks.',
         rules2014: SpellEditionDetails(
           castingTime: '1 action',
           range: '30 feet',
@@ -809,8 +822,8 @@ void main() {
       final matched =
           SubclassSpellsLibrary.resolveFilterSpells('source=astral_tome');
 
-      expect(matched.map((s) => s.id), contains('chrono-shift'));
-      expect(matched.map((s) => s.id), isNot(contains('custom-spark')));
+      expect(matched.map((s) => s.id.slug), contains('chrono-shift'));
+      expect(matched.map((s) => s.id.slug), isNot(contains('custom-spark')));
     });
 
     test(

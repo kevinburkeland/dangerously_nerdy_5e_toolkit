@@ -238,7 +238,7 @@ class CompendiumSpellParser {
       customProperties['miscTags'] = raw['miscTags'];
     }
 
-    return Spell(
+    final rawSpellMap = Spell(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       level: level,
@@ -255,7 +255,11 @@ class CompendiumSpellParser {
       damageMath: damageMath,
       relatedEntityRefs: transformed.extractedRefs,
       customProperties: customProperties,
-    );
+    ).toMap()
+      ..remove('rules2014')
+      ..remove('rules2024')
+      ..remove('schoolEnum');
+    return Spell.fromMap(rawSpellMap);
   }
 
   static const Set<String> _standardSpellKeys = {
@@ -643,7 +647,7 @@ class CompendiumSpellParser {
     if (classes.isEmpty) {
       final srdMatch = SpellbookLibrary.allSpells
           .where(
-              (s) => s.name.toLowerCase() == name.toLowerCase() || s.id == slug)
+              (s) => s.name.toLowerCase() == name.toLowerCase() || s.id.slug == slug)
           .firstOrNull;
       if (srdMatch != null) {
         final srdClasses = (ruleset == RulesetVersion.v2024

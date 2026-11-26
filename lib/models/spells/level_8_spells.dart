@@ -1,15 +1,13 @@
 import '../spellbook_data.dart';
 
-const List<SpellItem> srdLevel8Spells = [
-  SpellItem(
-    id: 'spell_holy_aura',
-    name: 'Holy Aura',
-    level: 8,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Divine radiance envelops allies within 30 feet, granting advantage on all saving throws, imposing disadvantage on incoming attacks, and blinding fiends/undead on hit.',
-    tags: [
+const List<Spell> srdLevel8Spells = [
+  Spell(
+    id: EntityId(slug: 'spell_holy_aura', ruleset: RulesetVersion.v2024), name: 'Holy Aura',
+    level: 8, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: 'Self (30-foot radius)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'holy reliquary worth 1,000 gp'),
+    descriptionMarkdown: 'Grants Advantage on all saving throws and Disadvantage to enemy attacks within 30 ft. Blinds Fiends/Undead that make melee hits on failed Constitution save.',
+    isChangedIn2024: false, diffSummary: 'Divine radiance envelops allies within 30 feet, granting advantage on all saving throws, imposing disadvantage on incoming attacks, and blinding fiends/undead on hit.', tags: [
       'aura',
       'divine',
       'advantage-saves',
@@ -58,15 +56,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_earthquake',
-    name: 'Earthquake',
-    level: 8,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates an intense seismic tremor in a 100-foot radius, tearing fissures, toppling structures, knocking creatures prone, and breaking concentration automatically.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_earthquake', ruleset: RulesetVersion.v2024), name: 'Earthquake',
+    level: 8, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '500 feet (100-foot radius)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'dirt, rock, clay'),
+    descriptionMarkdown: 'Massive 100-ft radius quake knocks targets Prone on Dexterity save, creates fissures, and deals 50 Bludgeoning damage per round to buildings.',
+    isChangedIn2024: false, diffSummary: 'Creates an intense seismic tremor in a 100-foot radius, tearing fissures, toppling structures, knocking creatures prone, and breaking concentration automatically.', tags: [
       'earthquake',
       'aoe',
       'structural-damage',
@@ -105,15 +101,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_control_weather',
-    name: 'Control Weather',
-    level: 8,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Takes control of the weather within a 5-mile radius for up to 8 hours, altering precipitation, temperature, and wind speed stage-by-stage.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_control_weather', ruleset: RulesetVersion.v2024), name: 'Control Weather',
+    level: 8, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 28800, requiresConcentration: true, rawText: 'Concentration, up to 8 hours'),
+    range: 'Self (5-mile radius)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'incense, earth, wood, water'),
+    descriptionMarkdown: 'Alters precipitation, temperature, and wind across a 5-mile radius for 8 hours.',
+    isChangedIn2024: false, diffSummary: 'Takes control of the weather within a 5-mile radius for up to 8 hours, altering precipitation, temperature, and wind speed stage-by-stage.', tags: [
       'weather',
       'environment',
       'large-scale',
@@ -149,15 +143,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_antimagic_field',
-    name: 'Antimagic Field',
-    level: 8,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a 10-foot invisible sphere around you where all magic, spells, summons, and magical properties of items are suppressed.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_antimagic_field', ruleset: RulesetVersion.v2024), name: 'Antimagic Field',
+    level: 8, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: 'Self (10-foot-radius sphere)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'powdered iron'),
+    descriptionMarkdown: '10-foot sphere suppresses all spells, magic items, and summon effects.',
+    isChangedIn2024: false, diffSummary: 'Creates a 10-foot invisible sphere around you where all magic, spells, summons, and magical properties of items are suppressed.', tags: [
       'anti-magic',
       'suppression',
       'aura',
@@ -191,15 +183,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_sunburst',
-    name: 'Sunburst',
-    level: 8,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Brilliant sunlight flashes in a massive 60-foot radius sphere dealing 12d6 radiant damage and blinding targets on failed Constitution save.',
-    tags: ['radiant', 'sunlight', 'blind', 'aoe', 'evocation', 'level 8'],
+  Spell(
+    id: EntityId(slug: 'spell_sunburst', ruleset: RulesetVersion.v2024), name: 'Sunburst',
+    level: 8, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '150 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'sunstone'),
+    descriptionMarkdown: 'Deals 12d6 Radiant damage and Blinded in a 60-ft radius on failed Constitution save.',
+    isChangedIn2024: false, diffSummary: 'Brilliant sunlight flashes in a massive 60-foot radius sphere dealing 12d6 radiant damage and blinding targets on failed Constitution save.', tags: ['radiant', 'sunlight', 'blind', 'aoe', 'evocation', 'level 8'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '150 feet',
@@ -241,15 +231,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_dominate_monster',
-    name: 'Dominate Monster',
-    level: 8,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Telepathically controls any creature on a failed Wisdom save, commanding it to take specific actions or taking total control of its turns.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_dominate_monster', ruleset: RulesetVersion.v2024), name: 'Dominate Monster',
+    level: 8, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Telepathically commands any creature on a failed Wisdom save.', higherLevelsMarkdown: 'Concentration up to 8 hours at 9th level.',
+    isChangedIn2024: false, diffSummary: 'Telepathically controls any creature on a failed Wisdom save, commanding it to take specific actions or taking total control of its turns.', tags: [
       'charm',
       'mind-control',
       'dominate',
@@ -296,20 +284,17 @@ const List<SpellItem> srdLevel8Spells = [
       higherLevels: 'Concentration up to 8 hours at 9th level.',
     ),
   ),
-  SpellItem(
-    id: 'spell_feeblemind',
-    name: 'Feeblemind',
+  Spell(
+    id: EntityId(slug: 'spell_feeblemind', ruleset: RulesetVersion.v2024), name: 'Feeblemind',
     name2024: 'Befuddle',
-    level: 8,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: true,
-    diffSummary:
-        'Deals 4d6 psychic damage and shatters the target’s mind (renamed to Befuddle in 2024, setting INT/CHA to 1 and stripping spellcasting/communication for 30 days).',
-    diffHighlights: [
+    level: 8, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous (30 days recovery cycle)'),
+    range: '150 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'mineral spheres'),
+    descriptionMarkdown: 'Renamed Befuddle. Deals 4d6 Psychic damage and prevents spellcasting and language understanding on failed Intelligence save.',
+    isChangedIn2024: true, diffSummary: 'Deals 4d6 psychic damage and shatters the target’s mind (renamed to Befuddle in 2024, setting INT/CHA to 1 and stripping spellcasting/communication for 30 days).', diffHighlights: [
       '2014: Named Feeblemind. Target’s Intelligence and Charisma scores become 1. The creature can’t cast spells, activate magic items, understand language, or communicate. Repeats save every 30 days.',
       '2024: Renamed Befuddle. Target takes 4d6 Psychic damage and cannot cast spells or take Bonus Actions for 30 days on failed Intelligence save.',
-    ],
-    tags: ['psychic', 'mind-break', 'anti-caster', 'enchantment', 'level 8'],
+    ], tags: ['psychic', 'mind-break', 'anti-caster', 'enchantment', 'level 8'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '150 feet',
@@ -351,15 +336,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_maze',
-    name: 'Maze',
-    level: 8,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Banishes a creature to a labyrinthine demiplane without an initial saving throw; escaping requires a DC 20 Intelligence check as an Action.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_maze', ruleset: RulesetVersion.v2024), name: 'Maze',
+    level: 8, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Banishes target to an extradimensional maze with no initial save; requires DC 20 Intelligence check to escape.',
+    isChangedIn2024: false, diffSummary: 'Banishes a creature to a labyrinthine demiplane without an initial saving throw; escaping requires a DC 20 Intelligence check as an Action.', tags: [
       'banish',
       'labyrinth',
       'no-save',
@@ -391,15 +374,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_mind_blank',
-    name: 'Mind Blank',
-    level: 8,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Grants immunity to psychic damage, divination spells, mind-reading, and the charmed condition for 24 hours without concentration.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_mind_blank', ruleset: RulesetVersion.v2024), name: 'Mind Blank',
+    level: 8, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 86400, requiresConcentration: false, rawText: '24 hours'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Target gains 24-hour total immunity to Psychic damage, mind reading, divination spying, and the Charmed condition.',
+    isChangedIn2024: false, diffSummary: 'Grants immunity to psychic damage, divination spells, mind-reading, and the charmed condition for 24 hours without concentration.', tags: [
       'immunity',
       'psychic-immunity',
       'charm-immunity',
@@ -430,15 +411,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_power_word_stun',
-    name: 'Power Word Stun',
-    level: 8,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Utters a word of power that instantly stuns a creature with 150 Hit Points or fewer (no initial save).',
-    tags: ['stun', 'no-save', 'power-word', 'enchantment', 'level 8'],
+  Spell(
+    id: EntityId(slug: 'spell_power_word_stun', ruleset: RulesetVersion.v2024), name: 'Power Word Stun',
+    level: 8, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'Instantly Stuns a target with 150 HP or fewer (repeats Constitution save at the end of each turn).',
+    isChangedIn2024: false, diffSummary: 'Utters a word of power that instantly stuns a creature with 150 Hit Points or fewer (no initial save).', tags: ['stun', 'no-save', 'power-word', 'enchantment', 'level 8'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -472,15 +451,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_clone',
-    name: 'Clone',
-    level: 8,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary:
-        'Grows an inert duplicate of a living creature in a vessel over 120 days that receives the creature’s soul upon death, providing true immortality.',
-    tags: ['clone', 'immortality', 'necromancy', 'costly-component', 'level 8'],
+  Spell(
+    id: EntityId(slug: 'spell_clone', ruleset: RulesetVersion.v2024), name: 'Clone',
+    level: 8, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a diamond worth at least 1,000 gp and at least 1 cubic inch of flesh, plus a vessel worth at least 2,000 gp'),
+    descriptionMarkdown: 'Grows an inert duplicate of a living creature that takes 120 days to mature. When the original creature dies, its soul instantly transfers to the clone if free and willing.',
+    isChangedIn2024: false, diffSummary: 'Grows an inert duplicate of a living creature in a vessel over 120 days that receives the creature’s soul upon death, providing true immortality.', tags: ['clone', 'immortality', 'necromancy', 'costly-component', 'level 8'],
     rules2014: SpellEditionDetails(
       castingTime: '1 hour',
       range: 'Touch',
@@ -518,15 +495,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_demiplane',
-    name: 'Demiplane',
-    level: 8,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a shadowy door on a flat solid surface that leads to a 30-foot empty cubic extradimensional demiplane (or connects to a previously created demiplane) for 1 hour.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_demiplane', ruleset: RulesetVersion.v2024), name: 'Demiplane',
+    level: 8, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: '60 feet', components: SpellComponents(v: false, s: true, m: false),
+    descriptionMarkdown: 'You create a shadowy door on a flat solid surface that you can see within range. The door is large enough to admit Medium creatures easily. When opened, the door leads to a demiplane that appears to be an empty room 30 feet in each dimension, made of wood or stone.\n\nWhen the spell ends, the door disappears, and any creatures or objects inside remain trapped there.\n\nEach time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell.',
+    isChangedIn2024: false, diffSummary: 'Creates a shadowy door on a flat solid surface that leads to a 30-foot empty cubic extradimensional demiplane (or connects to a previously created demiplane) for 1 hour.', tags: [
       'extradimensional',
       'storage',
       'secret-base',
@@ -560,15 +535,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_incendiary_cloud',
-    name: 'Incendiary Cloud',
-    level: 8,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'A swirling cloud of white-hot embers spreads in a 20-foot-radius sphere dealing 10d8 fire damage on Dexterity save and moving 10 feet away each turn. Concentration.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_incendiary_cloud', ruleset: RulesetVersion.v2024), name: 'Incendiary Cloud',
+    level: 8, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '150 feet (20-foot-radius sphere)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A swirling cloud of smoke shot with white-hot embers appears in a 20-foot-radius sphere centered on a point within range. The cloud heavily obscures its area.\n\nA creature takes 10d8 fire damage when it enters the spell’s area for the first time on a turn or starts its turn there (Dexterity save for half). At the start of each of your turns, the cloud moves 10 feet directly away from you.',
+    isChangedIn2024: false, diffSummary: 'A swirling cloud of white-hot embers spreads in a 20-foot-radius sphere dealing 10d8 fire damage on Dexterity save and moving 10 feet away each turn. Concentration.', tags: [
       'fire',
       'cloud',
       'aoe',
@@ -610,15 +583,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_animal_shapes',
-    name: 'Animal Shapes',
-    level: 8,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Transform up to any number of willing creatures into Large or smaller beasts of CR 4 or lower for up to 24 hours. Can transform them into new beast forms as an Action.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_animal_shapes', ruleset: RulesetVersion.v2024), name: 'Animal Shapes',
+    level: 8, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 86400, requiresConcentration: true, rawText: 'Concentration, up to 24 hours'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A magic mist radiates from you, transforming up to any number of willing creatures you can see within range into beasts. You choose the form of each creature: Large or smaller beast of challenge rating 4 or lower.\n\nOn subsequent turns, you can use your action to transform affected creatures into new forms. The target’s game statistics are replaced by the statistics of the chosen beast.',
+    isChangedIn2024: false, diffSummary: 'Transform up to any number of willing creatures into Large or smaller beasts of CR 4 or lower for up to 24 hours. Can transform them into new beast forms as an Action.', tags: [
       'mass-polymorph',
       'army-buff',
       'beasts',
@@ -652,15 +623,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_antipathy_sympathy',
-    name: 'Antipathy/Sympathy',
-    level: 8,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Attracts (Sympathy) or repels (Antipathy) a specific kind of intelligent creature from a target object or creature for 10 days on failed Wisdom save.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_antipathy_sympathy', ruleset: RulesetVersion.v2024), name: 'Antipathy/Sympathy',
+    level: 8, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 864000, requiresConcentration: false, rawText: '10 days'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'either a lump of alum soaked in vinegar for antipathy, or a drop of honey for sympathy'),
+    descriptionMarkdown: 'This spell attracts or repels creatures of your choice. You target something within range, either a Huge or smaller object or creature or an area within 200 feet.\n\nAntipathy: Causes creatures of the chosen kind to feel an urge to leave the area and avoid the target (frightened on failed Wisdom save).\n\nSympathy: Causes creatures of the chosen kind to feel an overwhelming urge to approach the target and remain within 60 feet of it.',
+    isChangedIn2024: false, diffSummary: 'Attracts (Sympathy) or repels (Antipathy) a specific kind of intelligent creature from a target object or creature for 10 days on failed Wisdom save.', tags: [
       'repel',
       'attract',
       'area-denial',
@@ -703,15 +672,13 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_tsunami',
-    name: 'Tsunami',
-    level: 8,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Conjures a wall of water up to 300 feet long, 300 feet high, and 50 feet thick that moves away from you dealing 6d10 bludgeoning damage and dragging creatures along.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_tsunami', ruleset: RulesetVersion.v2024), name: 'Tsunami',
+    level: 8, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 36, requiresConcentration: true, rawText: 'Concentration, up to 6 rounds'),
+    range: 'Sight', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A wall of water springs into existence at a point you choose within range (up to 300 feet long, 300 feet high, and 50 feet thick).\n\nWhen the wall appears, each creature within its area must make a Strength saving throw, taking 6d10 bludgeoning damage on a failed save, or half on success. At the start of each of your turns, the wall moves 50 feet away from you, dragging caught creatures with it and dealing damage.',
+    isChangedIn2024: false, diffSummary: 'Conjures a wall of water up to 300 feet long, 300 feet high, and 50 feet thick that moves away from you dealing 6d10 bludgeoning damage and dragging creatures along.', tags: [
       'massive-water-wall',
       'bludgeoning',
       'forced-movement',

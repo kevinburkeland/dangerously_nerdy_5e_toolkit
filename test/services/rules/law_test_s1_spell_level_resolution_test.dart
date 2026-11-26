@@ -24,7 +24,7 @@ void main() {
             'spells': [
               EntityReference<Spell>.empty(
                 refType: EntityType.spell,
-                slug: spell.id,
+                slug: spell.id.slug,
                 displayName: spell.name,
               ),
             ],

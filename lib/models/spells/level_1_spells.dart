@@ -1,19 +1,16 @@
 import '../spellbook_data.dart';
 
-const List<SpellItem> srdLevel1Spells = [
-  SpellItem(
-    id: 'spell_cure_wounds',
-    name: 'Cure Wounds',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Massive healing buff: Base healing increased from 1d8 + modifier to 2d8 + modifier, scaling by +2d8 per slot level.',
-    diffHighlights: [
+const List<Spell> srdLevel1Spells = [
+  Spell(
+    id: EntityId(slug: 'spell_cure_wounds', ruleset: RulesetVersion.v2024), name: 'Cure Wounds',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A creature you touch regains a number of Hit Points equal to 2d8 + your spellcasting ability modifier.\n\nThis spell has no effect on Constructs or Undead.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, the healing increases by 2d8 for each slot level above 1st.',
+    isChangedIn2024: true, diffSummary: 'Massive healing buff: Base healing increased from 1d8 + modifier to 2d8 + modifier, scaling by +2d8 per slot level.', diffHighlights: [
       '2014: Heals 1d8 + spellcasting ability modifier. +1d8 per slot level above 1st. (Evocation)',
       '2024: Heals 2d8 + spellcasting ability modifier. +2d8 per slot level above 1st. (Abjuration)',
-    ],
-    tags: ['healing', 'support', 'buffed', 'level 1'],
+    ], tags: ['healing', 'support', 'buffed', 'level 1'],
     rules2014: SpellEditionDetails(
       schoolOverride: SpellSchool.evocation,
       castingTime: '1 Action',
@@ -69,19 +66,16 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, the healing increases by 2d8 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_healing_word',
-    name: 'Healing Word',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Healing doubled: Base healing increased from 1d4 + modifier to 2d4 + modifier, scaling by +2d4 per slot level.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_healing_word', ruleset: RulesetVersion.v2024), name: 'Healing Word',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'A creature of your choice that you can see within range regains Hit Points equal to 2d4 + your spellcasting ability modifier.\n\nThis spell has no effect on Constructs or Undead.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, the healing increases by 2d4 for each slot level above 1st.',
+    isChangedIn2024: true, diffSummary: 'Healing doubled: Base healing increased from 1d4 + modifier to 2d4 + modifier, scaling by +2d4 per slot level.', diffHighlights: [
       '2014: Bonus Action, 60 ft range. Heals 1d4 + modifier (+1d4 per slot above 1st). (Evocation)',
       '2024: Bonus Action, 60 ft range. Heals 2d4 + modifier (+2d4 per slot above 1st). (Abjuration)',
-    ],
-    tags: ['healing', 'bonus action', 'ranged', 'buffed', 'level 1'],
+    ], tags: ['healing', 'bonus action', 'ranged', 'buffed', 'level 1'],
     rules2014: SpellEditionDetails(
       schoolOverride: SpellSchool.evocation,
       castingTime: '1 Bonus Action',
@@ -125,19 +119,16 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, the healing increases by 2d4 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_divine_smite',
-    name: 'Divine Smite',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: true,
-    diffSummary:
-        'Changed from a free class feature applied on hit into a 1st-level Bonus Action spell with Verbal component.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_divine_smite', ruleset: RulesetVersion.v2024), name: 'Divine Smite',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Self', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'As you strike, your weapon bursts with divine radiance. The target takes an extra 2d8 Radiant damage from the attack.\n\nThe damage increases by 1d8 for each slot level above 1st. The extra damage increases by 1d8 if the target is a Fiend or an Undead.', higherLevelsMarkdown: 'Using a higher spell slot increases damage by 1d8 for each slot level above 1st.',
+    isChangedIn2024: true, diffSummary: 'Changed from a free class feature applied on hit into a 1st-level Bonus Action spell with Verbal component.', diffHighlights: [
       '2014: Class Feature (not a spell). When you hit with a melee weapon attack, expend a spell slot to deal 2d8 radiant (+1d8 per slot above 1st, +1d8 vs undead/fiends). No action cost, cannot be counterspelled.',
       '2024: 1st-level Spell. Casting time 1 Bonus Action immediately after hitting a target with a melee weapon or unarmed strike. Can be Counterspelled, consumes Bonus Action, prevents casting another level 1+ spell on that turn.',
-    ],
-    tags: ['paladin', 'smite', 'radiant', 'bonus action', 'nerfed', 'level 1'],
+    ], tags: ['paladin', 'smite', 'radiant', 'bonus action', 'nerfed', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: 'No Action (Upon hitting with melee weapon)',
       range: 'Self',
@@ -172,19 +163,16 @@ const List<SpellItem> srdLevel1Spells = [
           'Using a higher spell slot increases damage by 1d8 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_hunters_mark',
-    name: "Hunter's Mark",
-    level: 1,
-    school: SpellSchool.divination,
-    isChangedIn2024: true,
-    diffSummary:
-        'Damage changed from weapon-attacks-only to any attack hit, and ranger class features enhance it at higher levels.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_hunters_mark', ruleset: RulesetVersion.v2024), name: "Hunter's Mark",
+    level: 1, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: '90 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'You mystically mark a creature as your quarry. Until the spell ends, you deal an extra 1d6 Force damage to the target whenever you hit it with an attack roll.\n\nYou also have Advantage on any Wisdom (Perception) or Wisdom (Survival) check you make to find the quarry.\n\nIf the target drops to 0 Hit Points before the spell ends, you can use a Bonus Action to move the mark to a new creature within range.', higherLevelsMarkdown: 'When cast with a 3rd- or 4th-level slot, duration is up to 8 hours. With a 5th-level slot or higher, duration is up to 24 hours.',
+    isChangedIn2024: true, diffSummary: 'Damage changed from weapon-attacks-only to any attack hit, and ranger class features enhance it at higher levels.', diffHighlights: [
       '2014: 1 Bonus Action, Concentration (up to 1 hr). Deals 1d6 extra weapon damage when you hit with a weapon attack. Move to new target with Bonus Action when target drops to 0 HP.',
       '2024: 1 Bonus Action, Concentration (up to 1 hr). Deals 1d6 Force damage (or extra damage) whenever you hit the target with ANY attack roll. Directly keyed to Ranger core progression.',
-    ],
-    tags: ['ranger', 'mark', 'damage', 'tracking', 'level 1'],
+    ], tags: ['ranger', 'mark', 'damage', 'tracking', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Bonus Action',
       range: '90 feet',
@@ -220,15 +208,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When cast with a 3rd- or 4th-level slot, duration is up to 8 hours. With a 5th-level slot or higher, duration is up to 24 hours.',
     ),
   ),
-  SpellItem(
-    id: 'spell_shield',
-    name: 'Shield',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Remains the staple +5 AC reaction spell that completely nullifies Magic Missile.',
-    tags: ['defense', 'ac', 'reaction', 'abjuration', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_shield', ruleset: RulesetVersion.v2024), name: 'Shield',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.reaction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 6, requiresConcentration: false, rawText: '1 round'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'An invisible barrier of magical force appears and protects you.\n\nUntil the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from Magic Missile.',
+    isChangedIn2024: false, diffSummary: 'Remains the staple +5 AC reaction spell that completely nullifies Magic Missile.', tags: ['defense', 'ac', 'reaction', 'abjuration', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime:
           '1 Reaction, which you take when you are hit by an attack roll or targeted by the Magic Missile spell',
@@ -258,15 +244,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_magic_missile',
-    name: 'Magic Missile',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates 3 glowing darts of magical force that unerringly hit targets for 1d4 + 1 force damage each (+1 dart per higher slot).',
-    tags: ['force', 'damage', 'auto-hit', 'evocation', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_magic_missile', ruleset: RulesetVersion.v2024), name: 'Magic Missile',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range.\n\nA dart deals 1d4 + 1 force damage to its target. The darts all strike simultaneously, and you can direct them to hit one creature or several.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, the spell creates one more dart for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Creates 3 glowing darts of magical force that unerringly hit targets for 1d4 + 1 force damage each (+1 dart per higher slot).', tags: ['force', 'damage', 'auto-hit', 'evocation', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -302,15 +286,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, the spell creates one more dart for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_guiding_bolt',
-    name: 'Guiding Bolt',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Deals 4d8 radiant damage on hit and grants Advantage on the next attack roll made against the target.',
-    tags: ['radiant', 'attack', 'advantage', 'cleric', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_guiding_bolt', ruleset: RulesetVersion.v2024), name: 'Guiding Bolt',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 6, requiresConcentration: false, rawText: '1 round'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target.\n\nOn a hit, the target takes 4d8 radiant damage, and the next attack roll made against this target before the end of your next turn has advantage, thanks to the mystical dim light glittering on the target until then.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Deals 4d8 radiant damage on hit and grants Advantage on the next attack roll made against the target.', tags: ['radiant', 'attack', 'advantage', 'cleric', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -346,15 +328,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_bless',
-    name: 'Bless',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Blesses up to three creatures, adding +1d4 to all their attack rolls and saving throws.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_bless', ruleset: RulesetVersion.v2024), name: 'Bless',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a sprinkling of holy water'),
+    descriptionMarkdown: 'You bless up to three creatures of your choice within range.\n\nWhenever a target makes an attack roll or a saving throw before the spell ends, the target can roll a d4 and add the number rolled to the attack roll or saving throw.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Blesses up to three creatures, adding +1d4 to all their attack rolls and saving throws.', tags: [
       'buff',
       'support',
       'attack-bonus',
@@ -395,15 +375,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_mage_armor',
-    name: 'Mage Armor',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Touches a willing unarmored creature to set its base AC to 13 + Dexterity modifier for 8 hours.',
-    tags: ['defense', 'ac', 'abjuration', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_mage_armor', ruleset: RulesetVersion.v2024), name: 'Mage Armor',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 28800, requiresConcentration: false, rawText: '8 hours'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a piece of cured leather'),
+    descriptionMarkdown: 'You touch a willing creature who isn’t wearing armor, and a protective magical force surrounds it until the spell ends.\n\nThe target’s base AC becomes 13 + its Dexterity modifier. The spell ends if the target dons armor or if you dismiss the spell as an action.',
+    isChangedIn2024: false, diffSummary: 'Touches a willing unarmored creature to set its base AC to 13 + Dexterity modifier for 8 hours.', tags: ['defense', 'ac', 'abjuration', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Touch',
@@ -431,15 +409,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_thunderwave',
-    name: 'Thunderwave',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Deals 2d8 thunder damage and pushes creatures 10 feet away in a 15-foot cube on failed Constitution save.',
-    tags: ['thunder', 'aoe', 'push', 'evocation', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_thunderwave', ruleset: RulesetVersion.v2024), name: 'Thunderwave',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Self (15-foot cube)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A wave of thunderous force sweeps out from you. Each creature in a 15-foot cube originating from you must make a Constitution saving throw.\n\nOn a failed save, a creature takes 2d8 thunder damage and is pushed 10 feet away from you. On a successful save, the creature takes half as much damage and isn’t pushed.\n\nUnsecured objects in the area are automatically pushed 10 feet away, and the spell emits a thunderous boom audible out to 300 feet.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Deals 2d8 thunder damage and pushes creatures 10 feet away in a 15-foot cube on failed Constitution save.', tags: ['thunder', 'aoe', 'push', 'evocation', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self (15-foot cube)',
@@ -489,15 +465,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_find_familiar',
-    name: 'Find Familiar',
-    level: 1,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Summons a loyal celestial, fey, or fiend spirit taking the form of an animal companion (modernized stat block in 2024).',
-    tags: ['minion', 'companion', 'ritual', 'conjuration', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_find_familiar', ruleset: RulesetVersion.v2024), name: 'Find Familiar',
+    level: 1, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '10 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: '10 gp worth of charcoal, incense, and herbs consumed in a brass brazier'),
+    descriptionMarkdown: 'You gain the service of a familiar spirit that takes the form of an animal and obeys your commands. It can deliver touch spells and share its senses.',
+    isChangedIn2024: true, diffSummary: 'Summons a loyal celestial, fey, or fiend spirit taking the form of an animal companion (modernized stat block in 2024).', tags: ['minion', 'companion', 'ritual', 'conjuration', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 hour',
       ritual: true,
@@ -539,15 +513,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_inflict_wounds',
-    name: 'Inflict Wounds',
-    level: 1,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary:
-        'Make a melee spell attack dealing 3d10 necrotic damage on a hit.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_inflict_wounds', ruleset: RulesetVersion.v2024), name: 'Inflict Wounds',
+    level: 1, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Melee spell attack dealing 3d10 Necrotic damage on a hit.', higherLevelsMarkdown: 'Damage increases by 1d10 for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Make a melee spell attack dealing 3d10 necrotic damage on a hit.', tags: [
       'necrotic',
       'melee-spell-attack',
       'high-damage',
@@ -587,15 +559,13 @@ const List<SpellItem> srdLevel1Spells = [
       higherLevels: 'Damage increases by 1d10 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_command',
-    name: 'Command',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Speaks a one-word command (Approach, Drop, Flee, Grovel, Halt) that the target must obey on its next turn on failed Wisdom save.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_command', ruleset: RulesetVersion.v2024), name: 'Command',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 6, requiresConcentration: false, rawText: '1 round'),
+    range: '60 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'Target obeys a 1-word command on its turn on failed Wisdom save.', higherLevelsMarkdown: 'Target +1 creature per slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Speaks a one-word command (Approach, Drop, Flee, Grovel, Halt) that the target must obey on its next turn on failed Wisdom save.', tags: [
       'control',
       'enchantment',
       'wisdom-save',
@@ -629,15 +599,13 @@ const List<SpellItem> srdLevel1Spells = [
       higherLevels: 'Target +1 creature per slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_bane',
-    name: 'Bane',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Up to three creatures must subtract 1d4 from attack rolls and saving throws on failed Charisma save.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_bane', ruleset: RulesetVersion.v2024), name: 'Bane',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a drop of blood'),
+    descriptionMarkdown: 'Forces up to 3 targets to subtract 1d4 from attack rolls and saving throws on failed Charisma save.', higherLevelsMarkdown: 'Target +1 creature per slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Up to three creatures must subtract 1d4 from attack rolls and saving throws on failed Charisma save.', tags: [
       'debuff',
       'save-penalty',
       'attack-penalty',
@@ -676,15 +644,13 @@ const List<SpellItem> srdLevel1Spells = [
       higherLevels: 'Target +1 creature per slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_sanctuary',
-    name: 'Sanctuary',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Wards a creature: any enemy attacking or targeting it with a harmful spell must pass a Wisdom save or lose the attack or choose a new target.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_sanctuary', ruleset: RulesetVersion.v2024), name: 'Sanctuary',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'small silver mirror'),
+    descriptionMarkdown: 'Enemies must pass a Wisdom save to target the warded creature with attacks or harmful spells.',
+    isChangedIn2024: false, diffSummary: 'Wards a creature: any enemy attacking or targeting it with a harmful spell must pass a Wisdom save or lose the attack or choose a new target.', tags: [
       'ward',
       'defense',
       'bonus-action',
@@ -719,15 +685,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_shield_of_faith',
-    name: 'Shield of Faith',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'A shimmering field appears and surrounds a creature of your choice within range, granting it a +2 bonus to AC.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_shield_of_faith', ruleset: RulesetVersion.v2024), name: 'Shield of Faith',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'parchment with holy text'),
+    descriptionMarkdown: 'Grants +2 bonus to AC to target creature for up to 10 minutes.',
+    isChangedIn2024: false, diffSummary: 'A shimmering field appears and surrounds a creature of your choice within range, granting it a +2 bonus to AC.', tags: [
       'buff',
       'ac-bonus',
       'bonus-action',
@@ -764,15 +728,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_detect_magic',
-    name: 'Detect Magic',
-    level: 1,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Senses the presence of magic within 30 feet and reveals the school of magic of any active aura.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_detect_magic', ruleset: RulesetVersion.v2024), name: 'Detect Magic',
+    level: 1, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: 'Self (30-foot radius)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Detects magical presence and schools within 30 feet.',
+    isChangedIn2024: false, diffSummary: 'Senses the presence of magic within 30 feet and reveals the school of magic of any active aura.', tags: [
       'utility',
       'detect',
       'ritual',
@@ -821,15 +783,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_burning_hands',
-    name: 'Burning Hands',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'A thin sheet of flames erupts from outstretched fingertips dealing 3d6 fire damage in a 15-foot cone on Dexterity save.',
-    tags: ['fire', 'aoe', 'cone', 'evocation', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_burning_hands', ruleset: RulesetVersion.v2024), name: 'Burning Hands',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Self (15-foot cone)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: '15-foot cone deals 3d6 Fire damage on failed Dexterity save (half on success).', higherLevelsMarkdown: 'Damage increases by 1d6 per slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'A thin sheet of flames erupts from outstretched fingertips dealing 3d6 fire damage in a 15-foot cone on Dexterity save.', tags: ['fire', 'aoe', 'cone', 'evocation', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self (15-foot cone)',
@@ -863,15 +823,13 @@ const List<SpellItem> srdLevel1Spells = [
       higherLevels: 'Damage increases by 1d6 per slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_faerie_fire',
-    name: 'Faerie Fire',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Outlines objects and creatures in a 20-foot cube with colorful light on failed Dexterity save; attack rolls against them have advantage.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_faerie_fire', ruleset: RulesetVersion.v2024), name: 'Faerie Fire',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '60 feet (20-foot cube)', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'Outlines creatures in 20-ft cube in light, giving Advantage on attacks against them and negating Invisibility.',
+    isChangedIn2024: false, diffSummary: 'Outlines objects and creatures in a 20-foot cube with colorful light on failed Dexterity save; attack rolls against them have advantage.', tags: [
       'advantage-attacks',
       'invisibility-counter',
       'aoe',
@@ -903,15 +861,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_feather_fall',
-    name: 'Feather Fall',
-    level: 1,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Reaction spell when falling: slows rate of descent of up to 5 falling creatures to 60 feet per round and negates fall damage.',
-    tags: ['reaction', 'save-from-fall', 'transmutation', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_feather_fall', ruleset: RulesetVersion.v2024), name: 'Feather Fall',
+    level: 1, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.reaction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: '60 feet', components: SpellComponents(v: true, s: false, m: true, materialDescription: 'a small feather or piece of down'),
+    descriptionMarkdown: 'Choose up to five falling creatures within range. A falling creature’s rate of descent slows to 60 feet per round until the spell ends. If the creature lands before the spell ends, it takes no falling damage and can land on its feet.',
+    isChangedIn2024: false, diffSummary: 'Reaction spell when falling: slows rate of descent of up to 5 falling creatures to 60 feet per round and negates fall damage.', tags: ['reaction', 'save-from-fall', 'transmutation', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Reaction',
       range: '60 feet',
@@ -939,15 +895,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_alarm',
-    name: 'Alarm',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Wards a door, window, or 20-foot cube area with an audible bell or mental ping whenever a Tiny or larger creature touches or enters the warded area without speaking the password.',
-    tags: ['ward', 'security', 'ritual', 'abjuration', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_alarm', ruleset: RulesetVersion.v2024), name: 'Alarm',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 28800, requiresConcentration: false, rawText: '8 hours'),
+    range: '30 feet (20-foot cube)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a tiny bell and a piece of fine silver wire'),
+    descriptionMarkdown: 'You set an alarm against unwanted intrusion. Choose a door, a window, or an area within range that is no larger than a 20-foot cube.\n\nUntil the spell ends, an alarm alerts you whenever a Tiny or larger creature touches or enters the warded area. You designate creatures that won’t set off the alarm. You choose whether the alarm is mental or audible.',
+    isChangedIn2024: false, diffSummary: 'Wards a door, window, or 20-foot cube area with an audible bell or mental ping whenever a Tiny or larger creature touches or enters the warded area without speaking the password.', tags: ['ward', 'security', 'ritual', 'abjuration', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 minute',
       range: '30 feet (20-foot cube)',
@@ -977,15 +931,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_charm_person',
-    name: 'Charm Person',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Charms a humanoid on failed Wisdom save with Advantage if you or your companions are fighting it. The charmed target regards you as a friendly acquaintance.',
-    tags: ['charm', 'social', 'save', 'enchantment', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_charm_person', ruleset: RulesetVersion.v2024), name: 'Charm Person',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You attempt to charm a humanoid you can see within range. It must make a Wisdom saving throw, and does so with advantage if you or your companions are fighting it. If it fails, it is charmed by you until the spell ends or until you or your companions do anything harmful to it.\n\nThe charmed creature regards you as a friendly acquaintance. When the spell ends, the creature knows it was charmed by you.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Charms a humanoid on failed Wisdom save with Advantage if you or your companions are fighting it. The charmed target regards you as a friendly acquaintance.', tags: ['charm', 'social', 'save', 'enchantment', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '30 feet',
@@ -1027,15 +979,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_color_spray',
-    name: 'Color Spray',
-    level: 1,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'A dazzling array of flashing, colored light springs from your hand blinding creatures in a 15-foot cone in ascending order of current hit points (6d10 total HP affected).',
-    tags: ['blind', 'aoe', 'illusion', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_color_spray', ruleset: RulesetVersion.v2024), name: 'Color Spray',
+    level: 1, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 6, requiresConcentration: false, rawText: '1 round'),
+    range: 'Self (15-foot cone)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a pinch of powder or sand that is colored red, yellow, and blue'),
+    descriptionMarkdown: 'A dazzling array of flashing, colored light springs from your hand. Roll 6d10; the total is how many hit points of creatures this spell can affect.\n\nCreatures in a 15-foot cone originating from you are affected in ascending order of their current hit points. Each creature is blinded until the spell ends.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d10 for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'A dazzling array of flashing, colored light springs from your hand blinding creatures in a 15-foot cone in ascending order of current hit points (6d10 total HP affected).', tags: ['blind', 'aoe', 'illusion', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self (15-foot cone)',
@@ -1077,15 +1027,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d10 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_comprehend_languages',
-    name: 'Comprehend Languages',
-    level: 1,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Understand the literal meaning of any spoken language you hear or written language you touch for 1 hour.',
-    tags: ['language', 'translation', 'ritual', 'divination', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_comprehend_languages', ruleset: RulesetVersion.v2024), name: 'Comprehend Languages',
+    level: 1, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a pinch of soot and salt'),
+    descriptionMarkdown: 'For the duration, you understand the literal meaning of any spoken language that you hear. You also understand any written language that you see, but you must be touching the surface on which the words are written.',
+    isChangedIn2024: false, diffSummary: 'Understand the literal meaning of any spoken language you hear or written language you touch for 1 hour.', tags: ['language', 'translation', 'ritual', 'divination', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self',
@@ -1121,15 +1069,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_detect_evil_and_good',
-    name: 'Detect Evil and Good',
-    level: 1,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Detect whether there is an aberration, celestial, elemental, fey, fiend, or undead within 30 feet, as well as consecrated or desecrated ground.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_detect_evil_and_good', ruleset: RulesetVersion.v2024), name: 'Detect Evil and Good',
+    level: 1, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'For the duration, you know if there is an aberration, celestial, elemental, fey, fiend, or undead within 30 feet of you, as well as where the creature is located. Similarly, you know if there is a place or object within 30 feet of you that has been magically consecrated or desecrated.',
+    isChangedIn2024: false, diffSummary: 'Detect whether there is an aberration, celestial, elemental, fey, fiend, or undead within 30 feet, as well as consecrated or desecrated ground.', tags: [
       'detection',
       'divine',
       'concentration',
@@ -1161,15 +1107,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_disguise_self',
-    name: 'Disguise Self',
-    level: 1,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Magically disguise your appearance, clothes, weapons, and belongings (including height by 1 foot) for 1 hour.',
-    tags: ['disguise', 'stealth', 'illusion', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_disguise_self', ruleset: RulesetVersion.v2024), name: 'Disguise Self',
+    level: 1, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You make yourself—including your clothing, armor, weapons, and other belongings on your person—look different until the spell ends or until you use your action to dismiss it. You can seem 1 foot shorter or taller and can appear thin, fat, or in between.\n\nPhysical interaction reveals the illusion. A creature can use its action to inspect you and succeed on an Investigation check against your spell save DC to see through the disguise.',
+    isChangedIn2024: false, diffSummary: 'Magically disguise your appearance, clothes, weapons, and belongings (including height by 1 foot) for 1 hour.', tags: ['disguise', 'stealth', 'illusion', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self',
@@ -1193,15 +1137,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_entangle',
-    name: 'Entangle',
-    level: 1,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Grasping plants sprout in a 20-foot square, restraining creatures that fail a Strength save and making the area difficult terrain.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_entangle', ruleset: RulesetVersion.v2024), name: 'Entangle',
+    level: 1, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '90 feet (20-foot square)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Grasping weeds and vines sprout from the ground in a 20-foot square starting from a point within range. For the duration, these plants turn the ground in the area into difficult terrain.\n\nA creature in the area when you cast the spell must succeed on a Strength saving throw or be restrained by the entangling plants until the spell ends. A creature restrained by the plants can use its action to make a Strength check against your spell save DC to break free.',
+    isChangedIn2024: false, diffSummary: 'Grasping plants sprout in a 20-foot square, restraining creatures that fail a Strength save and making the area difficult terrain.', tags: [
       'restrain',
       'aoe',
       'nature',
@@ -1237,15 +1179,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_expeditious_retreat',
-    name: 'Expeditious Retreat',
-    level: 1,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Take the Dash action as a Bonus Action when cast, and as a Bonus Action on subsequent turns for the duration.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_expeditious_retreat', ruleset: RulesetVersion.v2024), name: 'Expeditious Retreat',
+    level: 1, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'This spell allows you to move at an incredible pace. When you cast this spell, and then as a bonus action on each of your turns until the spell ends, you can take the Dash action.',
+    isChangedIn2024: false, diffSummary: 'Take the Dash action as a Bonus Action when cast, and as a Bonus Action on subsequent turns for the duration.', tags: [
       'mobility',
       'dash',
       'bonus-action',
@@ -1276,15 +1216,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_false_life',
-    name: 'False Life',
-    level: 1,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary:
-        'Bolster yourself with a necromantic facsimile of life, gaining 1d4 + 4 temporary hit points (+5 temp HP per higher slot level).',
-    tags: ['temp-hp', 'buff', 'survivability', 'necromancy', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_false_life', ruleset: RulesetVersion.v2024), name: 'False Life',
+    level: 1, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a small amount of alcohol or distilled spirits'),
+    descriptionMarkdown: 'Bolstering yourself with a necromantic facsimile of life, you gain 1d4 + 4 temporary hit points for the duration.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, you gain 5 additional temporary hit points for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Bolster yourself with a necromantic facsimile of life, gaining 1d4 + 4 temporary hit points (+5 temp HP per higher slot level).', tags: ['temp-hp', 'buff', 'survivability', 'necromancy', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self',
@@ -1318,15 +1256,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, you gain 5 additional temporary hit points for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_fog_cloud',
-    name: 'Fog Cloud',
-    level: 1,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a 20-foot-radius sphere of dense fog that heavily obscures the area (+20-ft radius per slot level above 1st).',
-    tags: ['obscure', 'fog', 'aoe', 'concentration', 'conjuration', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_fog_cloud', ruleset: RulesetVersion.v2024), name: 'Fog Cloud',
+    level: 1, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: true, rawText: 'Concentration, up to 1 hour'),
+    range: '120 feet (20-foot-radius sphere)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You create a 20-foot-radius sphere of fog centered on a point within range. The sphere spreads around corners, and its area is heavily obscured. It lasts for the duration or until a wind of moderate or greater speed (at least 10 mph) disperses it.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, the radius of the fog increases by 20 feet for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Creates a 20-foot-radius sphere of dense fog that heavily obscures the area (+20-ft radius per slot level above 1st).', tags: ['obscure', 'fog', 'aoe', 'concentration', 'conjuration', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet (20-foot-radius sphere)',
@@ -1364,15 +1300,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, the radius of the fog increases by 20 feet for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_goodberry',
-    name: 'Goodberry',
-    level: 1,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates up to ten infused berries. Eating a berry restores 1 Hit Point and provides enough nourishment to sustain a creature for one day.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_goodberry', ruleset: RulesetVersion.v2024), name: 'Goodberry',
+    level: 1, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous (berries last 24 hours)'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a sprig of mistletoe'),
+    descriptionMarkdown: 'Up to ten berries appear in your hand and are infused with magic for the duration. A creature can use its action to eat one berry. Eating a berry restores 1 hit point, and the berry provides enough nourishment to sustain a creature for one day.\n\nThe berries lose their potency if they have not been consumed within 24 hours of the casting of this spell.',
+    isChangedIn2024: false, diffSummary: 'Creates up to ten infused berries. Eating a berry restores 1 Hit Point and provides enough nourishment to sustain a creature for one day.', tags: [
       'healing',
       'food',
       'survival',
@@ -1410,15 +1344,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_grease',
-    name: 'Grease',
-    level: 1,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Slick grease covers a 10-foot square turning it into difficult terrain. Creatures entering or ending turns in the area must succeed on a Dexterity save or fall prone.',
-    tags: ['prone', 'hazard', 'difficult-terrain', 'conjuration', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_grease', ruleset: RulesetVersion.v2024), name: 'Grease',
+    level: 1, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: '60 feet (10-foot square)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a bit of pork rind or butter'),
+    descriptionMarkdown: 'Slick grease covers the ground in a 10-foot square centered on a point within range and turns it into difficult terrain for the duration.\n\nWhen the grease appears, each creature standing in its area must succeed on a Dexterity saving throw or fall prone. A creature that enters the area or ends its turn there must also succeed on a Dexterity saving throw or fall prone.',
+    isChangedIn2024: false, diffSummary: 'Slick grease covers a 10-foot square turning it into difficult terrain. Creatures entering or ending turns in the area must succeed on a Dexterity save or fall prone.', tags: ['prone', 'hazard', 'difficult-terrain', 'conjuration', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet (10-foot square)',
@@ -1448,15 +1380,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_hellish_rebuke',
-    name: 'Hellish Rebuke',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Reaction to taking damage: lash out with hellish flames dealing 2d10 fire damage on failed Dexterity save (half on success).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_hellish_rebuke', ruleset: RulesetVersion.v2024), name: 'Hellish Rebuke',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.reaction), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You point your finger, and the creature that damaged you is momentarily surrounded by hellish flames. The creature must make a Dexterity saving throw. It takes 2d10 fire damage on a failed save, or half as much damage on a successful one.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d10 for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Reaction to taking damage: lash out with hellish flames dealing 2d10 fire damage on failed Dexterity save (half on success).', tags: [
       'reaction',
       'fire',
       'retaliation',
@@ -1503,15 +1433,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d10 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_hideous_laughter',
-    name: 'Hideous Laughter',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Target with Intelligence 4 or higher perceives everything as hilarious on failed Wisdom save: falls prone, becomes incapacitated, and cannot stand up.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_hideous_laughter', ruleset: RulesetVersion.v2024), name: 'Hideous Laughter',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'tiny tarts and a feather'),
+    descriptionMarkdown: 'A creature of your choice that you can see within range perceives everything as hilariously funny and falls into fits of laughter if this spell affects it. The target must succeed on a Wisdom saving throw or fall prone, becoming incapacitated and unable to stand up for the duration.\n\nA creature with an Intelligence score of 4 or less isn’t affected. At the end of each of its turns, and each time it takes damage, the target can make another Wisdom saving throw (with advantage if triggered by damage) to end the spell.',
+    isChangedIn2024: false, diffSummary: 'Target with Intelligence 4 or higher perceives everything as hilarious on failed Wisdom save: falls prone, becomes incapacitated, and cannot stand up.', tags: [
       'incapacitated',
       'prone',
       'control',
@@ -1552,15 +1480,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_identify',
-    name: 'Identify',
-    level: 1,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Touch an object to learn its magical properties, how to use them, if it requires attunement, how many charges it has, and what spells are currently affecting it.',
-    tags: ['identify', 'magic-items', 'ritual', 'divination', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_identify', ruleset: RulesetVersion.v2024), name: 'Identify',
+    level: 1, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a pearl worth at least 100 gp and an owl feather'),
+    descriptionMarkdown: 'You choose one object that you must touch throughout the casting of the spell. If it is a magic item or some other magic-imbued object, you learn its properties and how to use them, whether it requires attunement to use, and how many charges it has, if any.\n\nYou learn whether any spells are affecting the item and what they are. If the item was created by a spell, you learn which spell created it.',
+    isChangedIn2024: false, diffSummary: 'Touch an object to learn its magical properties, how to use them, if it requires attunement, how many charges it has, and what spells are currently affecting it.', tags: ['identify', 'magic-items', 'ritual', 'divination', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 minute',
       range: 'Touch',
@@ -1598,15 +1524,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_sleep',
-    name: 'Sleep',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Sends 5d8 hit points worth of creatures into a magical slumber in a 20-foot radius in ascending order of current HP (+2d8 per higher slot level).',
-    tags: ['sleep', 'unconscious', 'aoe', 'enchantment', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_sleep', ruleset: RulesetVersion.v2024), name: 'Sleep',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: '90 feet (20-foot-radius sphere)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a pinch of fine sand, rose petals, or a cricket'),
+    descriptionMarkdown: 'This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect.\n\nCreatures within 20 feet of a point you choose are affected in ascending order of their current hit points (ignoring unconscious creatures). Each creature affected falls unconscious until the spell ends, the sleeper takes damage, or someone uses an action to shake or slap the sleeper awake.\n\nUndead and creatures immune to being charmed aren’t affected by this spell.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d8 for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Sends 5d8 hit points worth of creatures into a magical slumber in a 20-foot radius in ascending order of current HP (+2d8 per higher slot level).', tags: ['sleep', 'unconscious', 'aoe', 'enchantment', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '90 feet (20-foot-radius sphere)',
@@ -1648,15 +1572,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d8 for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_protection_from_evil_and_good',
-    name: 'Protection from Evil and Good',
-    level: 1,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Wards a willing creature against aberrations, celestials, elementals, fey, fiends, and undead: attacks against target have Disadvantage and target cannot be charmed, frightened, or possessed.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_protection_from_evil_and_good', ruleset: RulesetVersion.v2024), name: 'Protection from Evil and Good',
+    level: 1, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'holy water or powdered silver and iron, which the spell consumes'),
+    descriptionMarkdown: 'Until the spell ends, one willing creature you touch is protected against aberrations, celestials, elementals, fey, fiends, and undead.\n\nCreatures of those types have disadvantage on attack rolls against the target. The target also can’t be charmed, frightened, or possessed by them.',
+    isChangedIn2024: false, diffSummary: 'Wards a willing creature against aberrations, celestials, elementals, fey, fiends, and undead: attacks against target have Disadvantage and target cannot be charmed, frightened, or possessed.', tags: [
       'ward',
       'defense',
       'concentration',
@@ -1714,15 +1636,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_unseen_servant',
-    name: 'Unseen Servant',
-    level: 1,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates an invisible, mindless, shapeless force that performs simple physical tasks at your command for 1 hour (AC 10, 1 HP, Strength 2).',
-    tags: ['minion', 'utility', 'servant', 'ritual', 'conjuration', 'level 1'],
+  Spell(
+    id: EntityId(slug: 'spell_unseen_servant', ruleset: RulesetVersion.v2024), name: 'Unseen Servant',
+    level: 1, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a piece of string and a bit of wood'),
+    descriptionMarkdown: 'This spell creates an invisible, mindless, shapeless, Medium force that performs simple tasks at your command until the spell ends. The servant springs into existence in an unoccupied space on the ground within range. It has AC 10, 1 hit point, and a Strength of 2, and it can’t attack.\n\nOnce on each of your turns as a bonus action, you can mentally command the servant to move up to 15 feet and interact with an object (fetch things, clean, mend, fold clothes, light fires, serve food, and pour wine).',
+    isChangedIn2024: false, diffSummary: 'Creates an invisible, mindless, shapeless force that performs simple physical tasks at your command for 1 hour (AC 10, 1 HP, Strength 2).', tags: ['minion', 'utility', 'servant', 'ritual', 'conjuration', 'level 1'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -1752,15 +1672,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_create_or_destroy_water',
-    name: 'Create or Destroy Water',
-    level: 1,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates up to 10 gallons of clean water in an open container, causes rain in a 30-foot cube, destroys 10 gallons of water, or eliminates fog in a 30-foot cube.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_create_or_destroy_water', ruleset: RulesetVersion.v2024), name: 'Create or Destroy Water',
+    level: 1, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a drop of water if creating water, or a few grains of sand if destroying it'),
+    descriptionMarkdown: 'You either create or destroy water.\n\nCreate Water: You create up to 10 gallons of clean water within range in an open container. Alternatively, the water falls as rain in a 30-foot cube, extinguishing exposed flames in the area.\n\nDestroy Water: You destroy up to 10 gallons of water in an open container within range. Alternatively, you destroy fog in a 30-foot cube within range.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, you create or destroy 10 additional gallons of water, or the size of the cube increases by 5 feet, for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Creates up to 10 gallons of clean water in an open container, causes rain in a 30-foot cube, destroys 10 gallons of water, or eliminates fog in a 30-foot cube.', tags: [
       'utility',
       'water',
       'rain',
@@ -1805,15 +1723,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, you create or destroy 10 additional gallons of water, or the size of the cube increases by 5 feet, for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_heroism',
-    name: 'Heroism',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'A willing creature becomes immune to being frightened and gains temporary hit points equal to your spellcasting modifier at the start of each of its turns.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_heroism', ruleset: RulesetVersion.v2024), name: 'Heroism',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A willing creature you touch is imbued with bravery. Until the spell ends, the creature is immune to being frightened and gains temporary hit points equal to your spellcasting ability modifier at the start of each of its turns. When the spell ends, the target loses any remaining temporary hit points from this spell.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'A willing creature becomes immune to being frightened and gains temporary hit points equal to your spellcasting modifier at the start of each of its turns.', tags: [
       'buff',
       'fear-immunity',
       'temp-hp',
@@ -1852,15 +1768,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_longstrider',
-    name: 'Longstrider',
-    level: 1,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Touch a creature to increase its speed by 10 feet for 1 hour. Non-concentration.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_longstrider', ruleset: RulesetVersion.v2024), name: 'Longstrider',
+    level: 1, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a pinch of dirt'),
+    descriptionMarkdown: 'You touch a creature. The target’s speed increases by 10 feet until the spell ends.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Touch a creature to increase its speed by 10 feet for 1 hour. Non-concentration.', tags: [
       'speed',
       'buff',
       'mobility',
@@ -1909,15 +1823,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_speak_with_animals',
-    name: 'Speak with Animals',
-    level: 1,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Gain the ability to comprehend and verbally communicate with beasts for 10 minutes (knowledge, mood, and simple favors). Ritual spell.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_speak_with_animals', ruleset: RulesetVersion.v2024), name: 'Speak with Animals',
+    level: 1, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: false, rawText: '10 minutes'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You gain the ability to comprehend and verbally communicate with beasts for the duration. The knowledge and awareness of many beasts is limited by their intelligence, but at minimum, beasts can give you information about nearby locations and monsters, including whatever they have perceived within the past day.',
+    isChangedIn2024: false, diffSummary: 'Gain the ability to comprehend and verbally communicate with beasts for 10 minutes (knowledge, mood, and simple favors). Ritual spell.', tags: [
       'animals',
       'communication',
       'social',
@@ -1951,15 +1863,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_animal_friendship',
-    name: 'Animal Friendship',
-    level: 1,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: false,
-    diffSummary:
-        'Charms a beast with Intelligence less than 4 on failed Wisdom save for 24 hours (Advantage if fighting you).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_animal_friendship', ruleset: RulesetVersion.v2024), name: 'Animal Friendship',
+    level: 1, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 86400, requiresConcentration: false, rawText: '24 hours'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a morsel of food'),
+    descriptionMarkdown: 'This spell lets you convince a beast that you mean it no harm. Choose a beast that you can see within range. It must see and hear you. If the beast’s Intelligence is 4 or higher, the spell fails.\n\nOtherwise, the beast must succeed on a Wisdom saving throw or be charmed by you for the spell’s duration. If you or one of your companions harms the target, the spell ends.', higherLevelsMarkdown: 'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional beast for each slot level above 1st.',
+    isChangedIn2024: false, diffSummary: 'Charms a beast with Intelligence less than 4 on failed Wisdom save for 24 hours (Advantage if fighting you).', tags: [
       'beast',
       'charm',
       'nature',
@@ -2001,15 +1911,13 @@ const List<SpellItem> srdLevel1Spells = [
           'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional beast for each slot level above 1st.',
     ),
   ),
-  SpellItem(
-    id: 'spell_detect_poison_and_disease',
-    name: 'Detect Poison and Disease',
-    level: 1,
-    school: SpellSchool.divination,
-    isChangedIn2024: false,
-    diffSummary:
-        'Senses the presence and location of poisons, poisonous creatures, and diseases within 30 feet for 10 minutes. Ritual spell.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_detect_poison_and_disease', ruleset: RulesetVersion.v2024), name: 'Detect Poison and Disease',
+    level: 1, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a yew leaf'),
+    descriptionMarkdown: 'For the duration, you can sense the presence and location of poisons, poisonous creatures, and diseases within 30 feet of you. You also identify the kind of poison, poisonous creature, or disease in each case.',
+    isChangedIn2024: false, diffSummary: 'Senses the presence and location of poisons, poisonous creatures, and diseases within 30 feet for 10 minutes. Ritual spell.', tags: [
       'detection',
       'poison',
       'disease',
@@ -2058,15 +1966,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_divine_favor',
-    name: 'Divine Favor',
-    level: 1,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Your weapon attacks deal an extra 1d4 radiant damage on a hit for 1 minute as a Bonus Action.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_divine_favor', ruleset: RulesetVersion.v2024), name: 'Divine Favor',
+    level: 1, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Your prayer empowers you with divine radiance. Until the spell ends, your weapon attacks deal an extra 1d4 radiant damage on a hit.',
+    isChangedIn2024: false, diffSummary: 'Your weapon attacks deal an extra 1d4 radiant damage on a hit for 1 minute as a Bonus Action.', tags: [
       'weapon-buff',
       'radiant',
       'bonus-action',
@@ -2102,15 +2008,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_floating_disk',
-    name: 'Floating Disk',
-    level: 1,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a 3-foot-diameter horizontal plane of force that can hold up to 500 lbs and follows 20 feet behind you for 1 hour. Ritual spell.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_floating_disk', ruleset: RulesetVersion.v2024), name: 'Floating Disk',
+    level: 1, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a drop of mercury'),
+    descriptionMarkdown: 'This spell creates a circular, horizontal plane of force, 3 feet in diameter and 1 inch thick, that floats 3 feet above the ground in an unoccupied space of your choice that you can see within range.\n\nThe disk remains for the duration, and can hold up to 500 pounds. It follows behind you, remaining within 20 feet of you at all times.',
+    isChangedIn2024: false, diffSummary: 'Creates a 3-foot-diameter horizontal plane of force that can hold up to 500 lbs and follows 20 feet behind you for 1 hour. Ritual spell.', tags: [
       'transport',
       'loot-carrier',
       'force-disk',
@@ -2146,14 +2050,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_jump',
-    name: 'Jump',
-    level: 1,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary: 'Touch a creature to triple its jump distance for 1 minute.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_jump', ruleset: RulesetVersion.v2024), name: 'Jump',
+    level: 1, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a grasshopper’s hind leg'),
+    descriptionMarkdown: 'You touch a creature. The creature’s jump distance is tripled until the spell ends.',
+    isChangedIn2024: false, diffSummary: 'Touch a creature to triple its jump distance for 1 minute.', tags: [
       'mobility',
       'jump',
       'athletics',
@@ -2199,15 +2102,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_purify_food_and_drink',
-    name: 'Purify Food and Drink',
-    level: 1,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'All nonmagical food and drink within a 5-foot-radius sphere is purified and freed of poison and disease. Ritual spell.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_purify_food_and_drink', ruleset: RulesetVersion.v2024), name: 'Purify Food and Drink',
+    level: 1, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '10 feet (5-foot-radius sphere)', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'All nonmagical food and drink within a 5-foot-radius sphere centered on a point of your choice within range is purified and rendered free of poison and disease.',
+    isChangedIn2024: false, diffSummary: 'All nonmagical food and drink within a 5-foot-radius sphere is purified and freed of poison and disease. Ritual spell.', tags: [
       'survival',
       'cleanse-poison',
       'food',
@@ -2241,15 +2142,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_illusory_script',
-    name: 'Illusory Script',
-    level: 1,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Write on parchment so that the text appears as your intended hidden message only to specifically designated creatures for 10 days. To others, it appears in an unintelligible or different script. Costly component. Ritual spell.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_illusory_script', ruleset: RulesetVersion.v2024), name: 'Illusory Script',
+    level: 1, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 864000, requiresConcentration: false, rawText: '10 days'),
+    range: 'Touch', components: SpellComponents(v: false, s: true, m: true, materialDescription: 'a lead-based ink worth at least 10 gp, which the spell consumes'),
+    descriptionMarkdown: 'You write on parchment, paper, or some other suitable writing material and imbue it with a potent illusion that lasts for the duration.\n\nTo you and any creatures you designate when you cast the spell, the writing appears normal. To all others, the writing appears as if written in an unknown or magical script, or you can cause it to appear as an entirely different message.',
+    isChangedIn2024: false, diffSummary: 'Write on parchment so that the text appears as your intended hidden message only to specifically designated creatures for 10 days. To others, it appears in an unintelligible or different script. Costly component. Ritual spell.', tags: [
       'cipher',
       'secret-message',
       'deception',
@@ -2300,15 +2199,13 @@ const List<SpellItem> srdLevel1Spells = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_silent_image',
-    name: 'Silent Image',
-    level: 1,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates an image of an object, creature, or phenomenon in a 15-foot cube with purely visual effects. Move the image as an Action.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_silent_image', ruleset: RulesetVersion.v2024), name: 'Silent Image',
+    level: 1, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: true, rawText: 'Concentration, up to 10 minutes'),
+    range: '60 feet (15-foot cube)', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'a bit of fleece'),
+    descriptionMarkdown: 'You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 15-foot cube. The image appears at a spot within range and lasts for the duration. The image is purely visual; it isn’t accompanied by sound, smell, or other sensory effects.\n\nAs an action, you can move the image to any spot within range. Physical interaction with the image reveals it to be an illusion.',
+    isChangedIn2024: false, diffSummary: 'Creates an image of an object, creature, or phenomenon in a 15-foot cube with purely visual effects. Move the image as an Action.', tags: [
       'illusion',
       'visual',
       'distraction',

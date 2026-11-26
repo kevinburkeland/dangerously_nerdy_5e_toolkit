@@ -126,7 +126,7 @@ class SrdEquivalenceIndex {
     final spellSlugs = <String>{};
     final spellNames = <String>{};
     for (final s in SpellbookLibrary.srdSpells) {
-      final sSlug = s.id.toLowerCase().trim();
+      final sSlug = s.id.slug.toLowerCase().trim();
       final normName = _slugify(s.name);
       spellSlugs.add(sSlug);
       spellSlugs.add(sSlug.replaceAll(RegExp(r'[-_]'), ''));

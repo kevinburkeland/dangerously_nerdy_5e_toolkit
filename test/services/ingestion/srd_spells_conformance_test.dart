@@ -55,7 +55,7 @@ void main() {
       );
     }
 
-    Spell convertToDomainSpell(SpellItem item, DmRulesEdition edition) {
+    Spell convertToDomainSpell(Spell item, DmRulesEdition edition) {
       final rules = item.getRules(edition);
       final ruleset = edition == DmRulesEdition.v2024
           ? RulesetVersion.v2024

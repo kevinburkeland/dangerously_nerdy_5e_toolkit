@@ -33,8 +33,8 @@ void main() {
       for (final s in illusionNecromancy) {
         expect(s.level, 1);
         expect(
-          s.school == SpellSchool.illusion ||
-              s.school == SpellSchool.necromancy,
+          s.resolvedSchool == SpellSchool.illusion ||
+              s.resolvedSchool == SpellSchool.necromancy,
           isTrue,
         );
       }

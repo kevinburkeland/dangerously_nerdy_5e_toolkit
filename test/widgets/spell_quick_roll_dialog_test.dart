@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/spellbook/spell_quick_roll_dialog.dart';
 
 void main() {
@@ -18,11 +17,17 @@ void main() {
         rollFormula: '2d6 fire',
       );
 
-      const testSpell = SpellItem(
-        id: 'test_bad_roll_spell',
+      const testSpell = Spell(
+        id: EntityId(slug: 'test_bad_roll_spell', ruleset: RulesetVersion.v2024),
         name: 'Invalid Roll Spell',
         level: 1,
-        school: SpellSchool.evocation,
+        school: 'evocation',
+        schoolEnum: SpellSchool.evocation,
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '60 feet',
+        components: SpellComponents(v: true, s: true),
+        descriptionMarkdown: 'Invalid roll spell.',
         rules2014: badDetails,
         rules2024: badDetails,
       );

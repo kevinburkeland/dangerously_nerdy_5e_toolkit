@@ -39,7 +39,7 @@ class SummonPreset {
   });
 
   /// Canonical source spell from the SRD Spellbook, if applicable.
-  SpellItem? get sourceSpell =>
+  Spell? get sourceSpell =>
       spellId != null ? SpellbookLibrary.getSpellById(spellId!) : null;
 
   /// Effective stat blocks combining canonical SRD monsters and applicable custom Homebrew creatures.
@@ -114,7 +114,7 @@ class SummonPreset {
 extension SummonPresetGlyphExt on SummonPreset {
   SpellSchool get glyphSchool {
     final spell = sourceSpell;
-    if (spell != null) return spell.school;
+    if (spell != null) return spell.resolvedSchool;
 
     final lower = levelDisplay.toLowerCase() + name.toLowerCase();
     if (lower.contains('abjuration')) return SpellSchool.abjuration;

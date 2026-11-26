@@ -1,20 +1,17 @@
 import '../spellbook_data.dart';
 
-const List<SpellItem> srdCantrips = [
-  SpellItem(
-    id: 'spell_true_strike',
-    name: 'True Strike',
-    level: 0,
-    school: SpellSchool.divination,
-    isChangedIn2024: true,
-    diffSummary:
-        'Completely redesigned: Now makes an immediate weapon attack using your spellcasting modifier for attack and damage, dealing radiant damage.',
-    diffHighlights: [
+const List<Spell> srdCantrips = [
+  Spell(
+    id: EntityId(slug: 'spell_true_strike', ruleset: RulesetVersion.v2024), name: 'True Strike',
+    level: 0, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Self', components: SpellComponents(v: false, s: true, m: true, materialDescription: 'a weapon with which you have proficiency and that is worth at least 1 CP'),
+    descriptionMarkdown: 'Guided by a flash of magical insight, you make one attack with the weapon used in the spell’s casting.\n\nThe attack uses your spellcasting ability modifier instead of Strength or Dexterity for the attack and damage rolls.\n\nOn a hit, the target suffers the weapon attack’s normal effects, and the damage dealt by the weapon is Radiant damage instead of its normal damage type.\n\nCantrip Upgrade: The attack deals an extra 1d6 Radiant damage at 5th level, 2d6 at 11th level, and 3d6 at 17th level.',
+    isChangedIn2024: true, diffSummary: 'Completely redesigned: Now makes an immediate weapon attack using your spellcasting modifier for attack and damage, dealing radiant damage.', diffHighlights: [
       '2014: 1 Action, Concentration (1 round), grants advantage on your NEXT turn’s first attack roll.',
       '2024: 1 Action, Instantaneous. Immediately make a weapon attack using your spellcasting ability for attack & damage rolls (deals Radiant damage). Damage scales with +1d6 Radiant at 5th, 11th, and 17th level.',
       'Now available to Bards, Sorcerers, Warlocks, and Wizards.',
-    ],
-    tags: ['attack', 'weapon', 'radiant', 'cantrip', 'redesign'],
+    ], tags: ['attack', 'weapon', 'radiant', 'cantrip', 'redesign'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '30 feet',
@@ -55,19 +52,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_blade_ward',
-    name: 'Blade Ward',
-    level: 0,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Changed from an Action granting weapon resistance for 1 round to a Reaction/Concentration spell subtracting 1d4 from enemy attack rolls.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_blade_ward', ruleset: RulesetVersion.v2024), name: 'Blade Ward',
+    level: 0, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.reaction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You trace a shimmering ward in the air. The target creature subtracts 1d4 from the triggering attack roll and any attack rolls it makes against you or other creatures while the spell lasts.',
+    isChangedIn2024: true, diffSummary: 'Changed from an Action granting weapon resistance for 1 round to a Reaction/Concentration spell subtracting 1d4 from enemy attack rolls.', diffHighlights: [
       '2014: 1 Action, Self, 1 round duration. Grants resistance to bludgeoning, piercing, and slashing damage from weapon attacks until the end of your next turn.',
       '2024: 1 Reaction (when an enemy within 30 ft attacks you/ally) or 1 Action Concentration (1 minute). Subtracted 1d4 from the attacker’s d20 roll.',
-    ],
-    tags: ['defense', 'ward', 'cantrip', 'reaction', 'abjuration'],
+    ], tags: ['defense', 'ward', 'cantrip', 'reaction', 'abjuration'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self',
@@ -105,19 +99,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_guidance',
-    name: 'Guidance',
-    level: 0,
-    school: SpellSchool.divination,
-    isChangedIn2024: true,
-    diffSummary:
-        'Now cast as a Reaction within 30 feet when an ally fails an ability check, instead of pre-casting via Touch as an Action.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_guidance', ruleset: RulesetVersion.v2024), name: 'Guidance',
+    level: 0, school: 'divination', schoolEnum: SpellSchool.divination,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.reaction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You channel divine guidance to aid a creature. The target rolls 1d4 and adds the number rolled to the check, potentially turning failure into success.\n\nA creature can benefit from this spell only once per hour.',
+    isChangedIn2024: true, diffSummary: 'Now cast as a Reaction within 30 feet when an ally fails an ability check, instead of pre-casting via Touch as an Action.', diffHighlights: [
       '2014: 1 Action, Touch, Concentration up to 1 min. Target adds 1d4 to one ability check of its choice before the spell ends.',
       '2024: 1 Reaction (or Action), Range 30 ft, Concentration up to 1 min. Can be triggered when a creature fails an ability check to add 1d4 potentially turning failure into success. Once used, a creature is immune for 1 hour.',
-    ],
-    tags: ['support', 'buff', 'ability check', 'reaction', 'cantrip'],
+    ], tags: ['support', 'buff', 'ability check', 'reaction', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Touch',
@@ -146,19 +137,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_friends',
-    name: 'Friends',
-    level: 0,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: true,
-    diffSummary:
-        'No longer causes the target to automatically become hostile after the duration expires.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_friends', ruleset: RulesetVersion.v2024), name: 'Friends',
+    level: 0, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '10 feet', components: SpellComponents(v: false, s: true, m: true, materialDescription: 'a piece of makeup'),
+    descriptionMarkdown: 'One creature of your choice within range must make a Wisdom saving throw. On a failed save, the target has the Charmed condition for the duration.\n\nWhile charmed, the target is friendly to you and regards you as a trusted friend. When the spell ends, the creature knows you charmed it, but does not automatically become violent.',
+    isChangedIn2024: true, diffSummary: 'No longer causes the target to automatically become hostile after the duration expires.', diffHighlights: [
       '2014: Gives advantage on Charisma checks against one non-hostile creature. When the spell ends, the creature realizes it was magically influenced and becomes hostile.',
       '2024: Target makes a Wisdom save; on failure, target gains the Charmed condition for the duration. When it ends, target does not automatically become hostile unless provoked.',
-    ],
-    tags: ['social', 'charm', 'enchantment', 'cantrip'],
+    ], tags: ['social', 'charm', 'enchantment', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self',
@@ -199,19 +187,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_shocking_grasp',
-    name: 'Shocking Grasp',
-    level: 0,
-    school: SpellSchool.evocation,
-    isChangedIn2024: true,
-    diffSummary:
-        'Removes the target’s ability to make Opportunity Attacks instead of completely stripping all Reactions.',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_shocking_grasp', ruleset: RulesetVersion.v2024), name: 'Shocking Grasp',
+    level: 0, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Lightning springs from your hand to deliver a shock. Make a melee spell attack against the target. You have Advantage if the target is wearing metal armor.\n\nOn a hit, the target takes 1d8 Lightning damage, and it can’t make Opportunity Attacks until the start of its next turn.\n\nCantrip Upgrade: Damage increases by 1d8 at 5th (2d8), 11th (3d8), and 17th (4d8) levels.',
+    isChangedIn2024: true, diffSummary: 'Removes the target’s ability to make Opportunity Attacks instead of completely stripping all Reactions.', diffHighlights: [
       '2014: On hit, target takes 1d8 lightning damage and CANNOT TAKE REACTIONS until the start of its next turn. Advantage if target is wearing armor made of metal.',
       '2024: On hit, target takes 1d8 lightning damage and CANNOT MAKE OPPORTUNITY ATTACKS until the start of its next turn. Gives tactical disengage while preserving non-opportunity reactions like Counterspell or Shield.',
-    ],
-    tags: ['melee', 'lightning', 'reaction-denial', 'cantrip', 'evocation'],
+    ], tags: ['melee', 'lightning', 'reaction-denial', 'cantrip', 'evocation'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Touch',
@@ -241,15 +226,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_eldritch_blast',
-    name: 'Eldritch Blast',
-    level: 0,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Remains the staple 1d10 force damage cantrip with scaling beam count at 5th, 11th, and 17th levels.',
-    tags: ['force', 'ranged', 'beams', 'cantrip', 'warlock'],
+  Spell(
+    id: EntityId(slug: 'spell_eldritch_blast', ruleset: RulesetVersion.v2024), name: 'Eldritch Blast',
+    level: 0, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A beam of crackling energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 force damage.\n\nThe spell creates more than one beam when you reach higher levels: two beams at 5th level, three beams at 11th level, and four beams at 17th level.',
+    isChangedIn2024: false, diffSummary: 'Remains the staple 1d10 force damage cantrip with scaling beam count at 5th, 11th, and 17th levels.', tags: ['force', 'ranged', 'beams', 'cantrip', 'warlock'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -277,15 +260,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_fire_bolt',
-    name: 'Fire Bolt',
-    level: 0,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Ranged spell attack dealing 1d10 fire damage that can ignite flammable objects.',
-    tags: ['fire', 'ranged', 'attack', 'damage', 'cantrip'],
+  Spell(
+    id: EntityId(slug: 'spell_fire_bolt', ruleset: RulesetVersion.v2024), name: 'Fire Bolt',
+    level: 0, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 fire damage.\n\nA flammable object hit by this spell ignites if it isn’t being worn or carried.\n\nCantrip Upgrade: Damage increases by 1d10 at 5th level (2d10), 11th level (3d10), and 17th level (4d10).',
+    isChangedIn2024: false, diffSummary: 'Ranged spell attack dealing 1d10 fire damage that can ignite flammable objects.', tags: ['fire', 'ranged', 'attack', 'damage', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -315,15 +296,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_ray_of_frost',
-    name: 'Ray of Frost',
-    level: 0,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Ranged spell attack dealing 1d8 cold damage and reducing target movement speed by 10 feet.',
-    tags: ['cold', 'slow', 'ranged', 'damage', 'cantrip'],
+  Spell(
+    id: EntityId(slug: 'spell_ray_of_frost', ruleset: RulesetVersion.v2024), name: 'Ray of Frost',
+    level: 0, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target.\n\nOn a hit, it takes 1d8 cold damage, and its speed is reduced by 10 feet until the start of your next turn.\n\nCantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
+    isChangedIn2024: false, diffSummary: 'Ranged spell attack dealing 1d8 cold damage and reducing target movement speed by 10 feet.', tags: ['cold', 'slow', 'ranged', 'damage', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -353,15 +332,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_sacred_flame',
-    name: 'Sacred Flame',
-    level: 0,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Deals 1d8 radiant damage on Dexterity save, ignoring the benefits of cover.',
-    tags: ['radiant', 'cleric', 'save', 'ignores-cover', 'cantrip'],
+  Spell(
+    id: EntityId(slug: 'spell_sacred_flame', ruleset: RulesetVersion.v2024), name: 'Sacred Flame',
+    level: 0, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage.\n\nThe target gains no benefit from cover for this saving throw.\n\nCantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
+    isChangedIn2024: false, diffSummary: 'Deals 1d8 radiant damage on Dexterity save, ignoring the benefits of cover.', tags: ['radiant', 'cleric', 'save', 'ignores-cover', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -393,19 +370,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_vicious_mockery',
-    name: 'Vicious Mockery',
-    level: 0,
-    school: SpellSchool.enchantment,
-    isChangedIn2024: true,
-    diffSummary:
-        'Deals psychic damage on Wisdom save and imposes Disadvantage on the target’s next attack roll (buffed to 1d6 damage in 2024).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_vicious_mockery', ruleset: RulesetVersion.v2024), name: 'Vicious Mockery',
+    level: 0, school: 'enchantment', schoolEnum: SpellSchool.enchantment,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'You unleash a string of insults at a creature you can see within range. If the target can hear you, it must make a Wisdom saving throw.\n\nOn a failed save, it takes 1d6 Psychic damage and has Disadvantage on the next attack roll it makes before the end of its next turn.\n\nCantrip Upgrade: Damage increases by 1d6 at 5th level (2d6), 11th level (3d6), and 17th level (4d6).',
+    isChangedIn2024: true, diffSummary: 'Deals psychic damage on Wisdom save and imposes Disadvantage on the target’s next attack roll (buffed to 1d6 damage in 2024).', diffHighlights: [
       '2014: Deals 1d4 Psychic damage on failed Wisdom save.',
       '2024: Damage buffed from 1d4 to 1d6 Psychic damage.',
-    ],
-    tags: ['psychic', 'bard', 'debuff', 'disadvantage', 'cantrip'],
+    ], tags: ['psychic', 'bard', 'debuff', 'disadvantage', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -436,15 +410,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_mage_hand',
-    name: 'Mage Hand',
-    level: 0,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a spectral, floating hand that can manipulate objects up to 10 pounds within 30 feet.',
-    tags: ['utility', 'spectral', 'manipulation', 'cantrip'],
+  Spell(
+    id: EntityId(slug: 'spell_mage_hand', ruleset: RulesetVersion.v2024), name: 'Mage Hand',
+    level: 0, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action.\n\nYou can use your action to control the hand (manipulate an object, open an unlocked door/container, stow or retrieve an item). The hand can’t attack, activate magic items, or carry more than 10 pounds.',
+    isChangedIn2024: false, diffSummary: 'Creates a spectral, floating hand that can manipulate objects up to 10 pounds within 30 feet.', tags: ['utility', 'spectral', 'manipulation', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '30 feet',
@@ -478,15 +450,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_minor_illusion',
-    name: 'Minor Illusion',
-    level: 0,
-    school: SpellSchool.illusion,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates a sound or an image of an object within a 5-foot cube for 1 minute.',
-    tags: ['illusion', 'utility', 'sound', 'image', 'cantrip'],
+  Spell(
+    id: EntityId(slug: 'spell_minor_illusion', ruleset: RulesetVersion.v2024), name: 'Minor Illusion',
+    level: 0, school: 'illusion', schoolEnum: SpellSchool.illusion,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: '30 feet', components: SpellComponents(v: false, s: true, m: true, materialDescription: 'a bit of fleece'),
+    descriptionMarkdown: 'You create a sound or an image of an object within range that lasts for the duration.\n\nIf you create a sound, its volume can range from a whisper to a scream. If you create an image of an object, it must no larger than a 5-foot cube and cannot create light, sound, smell, or any other sensory effect.\n\nPhysical interaction with the image reveals it to be an illusion. An Investigation check against your Spell Save DC also reveals it.',
+    isChangedIn2024: false, diffSummary: 'Creates a sound or an image of an object within a 5-foot cube for 1 minute.', tags: ['illusion', 'utility', 'sound', 'image', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '30 feet',
@@ -524,15 +494,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_prestidigitation',
-    name: 'Prestidigitation',
-    level: 0,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'The staple minor magical trick cantrip: sensory effects, lighting/snuffing flames, cleaning, heating/flavoring, and minor trinkets.',
-    tags: ['utility', 'tricks', 'roleplay', 'flavor', 'cantrip'],
+  Spell(
+    id: EntityId(slug: 'spell_prestidigitation', ruleset: RulesetVersion.v2024), name: 'Prestidigitation',
+    level: 0, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: 'Up to 1 hour'),
+    range: '10 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'This spell is a minor magical trick that novice spellcasters use for practice.\n\nYou create an instantaneous harmless sensory effect, instantaneously light or snuff a candle/torch/campfire, clean or soil an object no larger than 1 cubic foot, chill/warm/flavor up to 1 cubic foot of nonliving material for 1 hour, or create a nonmagical trinket or illusory image that can fit in your hand until the end of your next turn.',
+    isChangedIn2024: false, diffSummary: 'The staple minor magical trick cantrip: sensory effects, lighting/snuffing flames, cleaning, heating/flavoring, and minor trinkets.', tags: ['utility', 'tricks', 'roleplay', 'flavor', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '10 feet',
@@ -566,15 +534,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_light',
-    name: 'Light',
-    level: 0,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Touches one object to make it shine bright light in a 20-foot radius and dim light for an additional 20 feet for 1 hour.',
-    tags: ['utility', 'light', 'vision', 'cantrip', 'evocation'],
+  Spell(
+    id: EntityId(slug: 'spell_light', ruleset: RulesetVersion.v2024), name: 'Light',
+    level: 0, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600, requiresConcentration: false, rawText: '1 hour'),
+    range: 'Touch', components: SpellComponents(v: true, s: false, m: true, materialDescription: 'a firefly'),
+    descriptionMarkdown: 'An object you touch sheds bright light in a 20-foot radius and dim light for an additional 20 feet for 1 hour.',
+    isChangedIn2024: false, diffSummary: 'Touches one object to make it shine bright light in a 20-foot radius and dim light for an additional 20 feet for 1 hour.', tags: ['utility', 'light', 'vision', 'cantrip', 'evocation'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Touch',
@@ -611,15 +577,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_mending',
-    name: 'Mending',
-    level: 0,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Repairs a single break or tear in an object you touch (up to 1 foot in any dimension) over 1 minute.',
-    tags: ['utility', 'repair', 'cantrip', 'transmutation'],
+  Spell(
+    id: EntityId(slug: 'spell_mending', ruleset: RulesetVersion.v2024), name: 'Mending',
+    level: 0, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'two lodestones'),
+    descriptionMarkdown: 'Repairs a single break or tear in an object you touch, leaving no trace of the former damage.',
+    isChangedIn2024: false, diffSummary: 'Repairs a single break or tear in an object you touch (up to 1 foot in any dimension) over 1 minute.', tags: ['utility', 'repair', 'cantrip', 'transmutation'],
     rules2014: SpellEditionDetails(
       castingTime: '1 minute',
       range: 'Touch',
@@ -655,19 +619,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_resistance',
-    name: 'Resistance',
-    level: 0,
-    school: SpellSchool.abjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Touch a willing creature to add 1d4 to a saving throw (changed to a reaction when a creature fails a save in 2024).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_resistance', ruleset: RulesetVersion.v2024), name: 'Resistance',
+    level: 0, school: 'abjuration', schoolEnum: SpellSchool.abjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.reaction), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You grant a surge of resilience to a creature within 30 feet that fails a save, adding 1d4 to the total.',
+    isChangedIn2024: true, diffSummary: 'Touch a willing creature to add 1d4 to a saving throw (changed to a reaction when a creature fails a save in 2024).', diffHighlights: [
       '2014: 1 Action, Concentration up to 1 minute. Target adds 1d4 to one saving throw of its choice before the spell ends.',
       '2024: 1 Reaction (when a creature you can see within 30 ft fails a saving throw). Target adds 1d4 to the roll, potentially turning failure into success.',
-    ],
-    tags: ['buff', 'save-bonus', 'abjuration', 'cantrip'],
+    ], tags: ['buff', 'save-bonus', 'abjuration', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Touch',
@@ -692,19 +653,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_spare_the_dying',
-    name: 'Spare the Dying',
-    level: 0,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: true,
-    diffSummary:
-        'Stabilizes a dying creature at 0 HP (buffed to 15-foot range with range scaling in 2024).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_spare_the_dying', ruleset: RulesetVersion.v2024), name: 'Spare the Dying',
+    level: 0, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '15 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You stabilize a creature with 0 Hit Points within 15 feet. The range increases to 30 ft at level 5, 45 ft at level 11, and 60 ft at level 17.',
+    isChangedIn2024: true, diffSummary: 'Stabilizes a dying creature at 0 HP (buffed to 15-foot range with range scaling in 2024).', diffHighlights: [
       '2014: Touch range, 1 Action. Stabilizes a living creature at 0 hit points.',
       '2024: 15-foot range, 1 Action. Range increases by 15 feet at levels 5, 11, and 17 (up to 60 ft).',
-    ],
-    tags: ['stabilize', 'healing', 'cleric', 'cantrip', 'necromancy'],
+    ], tags: ['stabilize', 'healing', 'cleric', 'cantrip', 'necromancy'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Touch',
@@ -726,15 +684,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_thaumaturgy',
-    name: 'Thaumaturgy',
-    level: 0,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Manifests minor divine supernatural wonders (booming voice, flickering flames, tremors, ominous sounds, opening/closing doors).',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_thaumaturgy', ruleset: RulesetVersion.v2024), name: 'Thaumaturgy',
+    level: 0, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: 'Up to 1 minute'),
+    range: '30 feet', components: SpellComponents(v: true, s: false, m: false),
+    descriptionMarkdown: 'Creates supernatural manifestations: booming voice, flickering lights, ground tremors, eerie whispers, or snapping open/closed doors.',
+    isChangedIn2024: false, diffSummary: 'Manifests minor divine supernatural wonders (booming voice, flickering flames, tremors, ominous sounds, opening/closing doors).', tags: [
       'utility',
       'divine',
       'roleplay',
@@ -763,19 +719,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_chill_touch',
-    name: 'Chill Touch',
-    level: 0,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: true,
-    diffSummary:
-        'Deals 1d10 necrotic damage and prevents healing for 1 round (changed to a melee spell attack with d10 scaling in 2024).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_chill_touch', ruleset: RulesetVersion.v2024), name: 'Chill Touch',
+    level: 0, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 6, requiresConcentration: false, rawText: '1 round'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Make a melee spell attack dealing 1d10 Necrotic damage. The target cannot regain Hit Points until the start of your next turn.',
+    isChangedIn2024: true, diffSummary: 'Deals 1d10 necrotic damage and prevents healing for 1 round (changed to a melee spell attack with d10 scaling in 2024).', diffHighlights: [
       '2014: Ranged spell attack (120 ft), deals 1d8 Necrotic damage. Target cannot regain hit points until your next turn.',
       '2024: Melee spell attack (Touch), deals 1d10 Necrotic damage and prevents healing until the start of your next turn.',
-    ],
-    tags: ['necrotic', 'anti-heal', 'attack', 'cantrip', 'necromancy'],
+    ], tags: ['necrotic', 'anti-heal', 'attack', 'cantrip', 'necromancy'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -801,15 +754,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_dancing_lights',
-    name: 'Dancing Lights',
-    level: 0,
-    school: SpellSchool.evocation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Creates up to four torch-like glowing orbs of light within 120 feet that you can move as a Bonus Action.',
-    tags: ['utility', 'light', 'concentration', 'cantrip', 'evocation'],
+  Spell(
+    id: EntityId(slug: 'spell_dancing_lights', ruleset: RulesetVersion.v2024), name: 'Dancing Lights',
+    level: 0, school: 'evocation', schoolEnum: SpellSchool.evocation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: true, rawText: 'Concentration, up to 1 minute'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'glowworm or phosphorus'),
+    descriptionMarkdown: 'Conjures 4 glowing orbs of light within 120 feet that can be repositioned with a Bonus Action.',
+    isChangedIn2024: false, diffSummary: 'Creates up to four torch-like glowing orbs of light within 120 feet that you can move as a Bonus Action.', tags: ['utility', 'light', 'concentration', 'cantrip', 'evocation'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -837,15 +788,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_message',
-    name: 'Message',
-    level: 0,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Whispers a message to a creature within 120 feet that only they can hear, and they can reply in a whisper.',
-    tags: ['communication', 'stealth', 'cantrip', 'transmutation'],
+  Spell(
+    id: EntityId(slug: 'spell_message', ruleset: RulesetVersion.v2024), name: 'Message',
+    level: 0, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.timed, durationSeconds: 6, requiresConcentration: false, rawText: '1 round'),
+    range: '120 feet', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'copper wire'),
+    descriptionMarkdown: 'Sends a private whispered tele-vocal message to a creature within 120 ft, allowing an immediate whispered reply.',
+    isChangedIn2024: false, diffSummary: 'Whispers a message to a creature within 120 feet that only they can hear, and they can reply in a whisper.', tags: ['communication', 'stealth', 'cantrip', 'transmutation'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '120 feet',
@@ -870,19 +819,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_shillelagh',
-    name: 'Shillelagh',
-    level: 0,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: true,
-    diffSummary:
-        'Imbues a club or quarterstaff with nature’s magic to use spellcasting modifier for attack/damage and deal 1d8 force/bludgeoning damage (scales die size in 2024).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_shillelagh', ruleset: RulesetVersion.v2024), name: 'Shillelagh',
+    level: 0, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 60, requiresConcentration: false, rawText: '1 minute'),
+    range: 'Touch', components: SpellComponents(v: true, s: true, m: true, materialDescription: 'mistletoe leaf and club/quarterstaff'),
+    descriptionMarkdown: 'Imbues your wooden weapon with spellcasting attack/damage modifiers. Deals Force or Bludgeoning damage with scaling die sizes (1d10 at 5th, 1d12 at 11th, 2d6 at 17th level).',
+    isChangedIn2024: true, diffSummary: 'Imbues a club or quarterstaff with nature’s magic to use spellcasting modifier for attack/damage and deal 1d8 force/bludgeoning damage (scales die size in 2024).', diffHighlights: [
       '2014: Bonus Action, Touch. Weapon die becomes 1d8 bludgeoning using Wisdom for attack & damage.',
       '2024: Bonus Action, Touch. Can deal Force damage. Damage die scales to 1d10 at lvl 5, 1d12 at lvl 11, and 2d6 at lvl 17.',
-    ],
-    tags: ['weapon', 'druid', 'bonus-action', 'cantrip', 'transmutation'],
+    ], tags: ['weapon', 'druid', 'bonus-action', 'cantrip', 'transmutation'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Bonus Action',
       range: 'Touch',
@@ -912,19 +858,16 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_produce_flame',
-    name: 'Produce Flame',
-    level: 0,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: true,
-    diffSummary:
-        'Flickering flame appears in hand shedding light and can be hurled as a spell attack dealing 1d8 fire damage (Bonus Action to cast in 2024).',
-    diffHighlights: [
+  Spell(
+    id: EntityId(slug: 'spell_produce_flame', ruleset: RulesetVersion.v2024), name: 'Produce Flame',
+    level: 0, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction), duration: SpellDuration(type: DurationType.timed, durationSeconds: 600, requiresConcentration: false, rawText: '10 minutes'),
+    range: 'Self', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Creates a hand flame as a Bonus Action shedding light. Can be hurled up to 60 feet to deal 1d8 Fire damage.',
+    isChangedIn2024: true, diffSummary: 'Flickering flame appears in hand shedding light and can be hurled as a spell attack dealing 1d8 fire damage (Bonus Action to cast in 2024).', diffHighlights: [
       '2014: 1 Action, Self, 10 minutes. Hurl flame up to 30 feet as an action.',
       '2024: 1 Bonus Action, Self, 10 minutes. Range increased to 60 feet when hurled as an action.',
-    ],
-    tags: ['fire', 'light', 'druid', 'cantrip', 'conjuration'],
+    ], tags: ['fire', 'light', 'druid', 'cantrip', 'conjuration'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: 'Self',
@@ -950,15 +893,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_acid_splash',
-    name: 'Acid Splash',
-    level: 0,
-    school: SpellSchool.conjuration,
-    isChangedIn2024: false,
-    diffSummary:
-        'Hurls a bubble of acid affecting one creature (or two within 5 feet) dealing 1d6 acid damage on failed Dexterity save.',
-    tags: ['acid', 'aoe', 'save', 'sorcerer', 'wizard', 'cantrip'],
+  Spell(
+    id: EntityId(slug: 'spell_acid_splash', ruleset: RulesetVersion.v2024), name: 'Acid Splash',
+    level: 0, school: 'conjuration', schoolEnum: SpellSchool.conjuration,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '60 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You hurl a bubble of acid. Choose one creature within range, or choose two creatures within range that are within 5 feet of each other. A target must succeed on a Dexterity saving throw or take 1d6 acid damage.\n\nCantrip Upgrade: Damage increases by 1d6 at 5th level (2d6), 11th level (3d6), and 17th level (4d6).',
+    isChangedIn2024: false, diffSummary: 'Hurls a bubble of acid affecting one creature (or two within 5 feet) dealing 1d6 acid damage on failed Dexterity save.', tags: ['acid', 'aoe', 'save', 'sorcerer', 'wizard', 'cantrip'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '60 feet',
@@ -988,15 +929,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_poison_spray',
-    name: 'Poison Spray',
-    level: 0,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary:
-        'Projects a puff of noxious gas dealing 1d12 poison damage to a creature within 10 feet on failed Constitution save.',
-    tags: [
+  Spell(
+    id: EntityId(slug: 'spell_poison_spray', ruleset: RulesetVersion.v2024), name: 'Poison Spray',
+    level: 0, school: 'necromancy', schoolEnum: SpellSchool.necromancy,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '10 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'You extend your hand toward a creature you can see within range and project a puff of noxious gas from your palm. The creature must succeed on a Constitution saving throw or take 1d12 poison damage.\n\nCantrip Upgrade: Damage increases by 1d12 at 5th level (2d12), 11th level (3d12), and 17th level (4d12).',
+    isChangedIn2024: false, diffSummary: 'Projects a puff of noxious gas dealing 1d12 poison damage to a creature within 10 feet on failed Constitution save.', tags: [
       'poison',
       'save',
       'druid',
@@ -1044,15 +983,13 @@ const List<SpellItem> srdCantrips = [
       ],
     ),
   ),
-  SpellItem(
-    id: 'spell_druidcraft',
-    name: 'Druidcraft',
-    level: 0,
-    school: SpellSchool.transmutation,
-    isChangedIn2024: false,
-    diffSummary:
-        'Primal sensory tricks: forecast weather for 24 hours, bloom flowers, spark sensory breeze/odors, or light/snuff small candles and campfires.',
-    tags: ['druid', 'nature', 'utility', 'weather', 'cantrip', 'transmutation'],
+  Spell(
+    id: EntityId(slug: 'spell_druidcraft', ruleset: RulesetVersion.v2024), name: 'Druidcraft',
+    level: 0, school: 'transmutation', schoolEnum: SpellSchool.transmutation,
+    castingTime: CastingTime(cost: 1, actionType: ActionType.action), duration: SpellDuration(type: DurationType.instantaneous, durationSeconds: 0, requiresConcentration: false, rawText: 'Instantaneous'),
+    range: '30 feet', components: SpellComponents(v: true, s: true, m: false),
+    descriptionMarkdown: 'Whispering to the spirits of nature, you create one of the following effects: a tiny sensory forecast of tomorrow’s weather, instantly making a flower blossom or leaf sprout, creating a harmless sensory effect (falling leaves, odor of skunk, breeze), or lighting/snuffing a candle, torch, or small campfire.',
+    isChangedIn2024: false, diffSummary: 'Primal sensory tricks: forecast weather for 24 hours, bloom flowers, spark sensory breeze/odors, or light/snuff small candles and campfires.', tags: ['druid', 'nature', 'utility', 'weather', 'cantrip', 'transmutation'],
     rules2014: SpellEditionDetails(
       castingTime: '1 Action',
       range: '30 feet',

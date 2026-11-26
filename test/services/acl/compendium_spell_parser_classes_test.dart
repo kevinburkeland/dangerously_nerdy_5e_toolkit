@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_spell_parser.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
   group('CompendiumSpellParser Classes and Damage Inference Tests', () {
@@ -61,7 +60,7 @@ void main() {
       expect(spell.damageMath.first.scalingFormula, contains('1d8'));
 
       // Verify conversion to SpellItem
-      final spellItem = HomebrewPersistenceService.spellToSpellItem(spell);
+      final spellItem = spell;
       expect(
           spellItem.rules2024.classes,
           containsAll(
@@ -105,7 +104,7 @@ void main() {
       expect(spell.damageMath.first.damageType, equals(DamageType.force));
 
       // Verify conversion to SpellItem retains Warlock
-      final spellItem = HomebrewPersistenceService.spellToSpellItem(spell);
+      final spellItem = spell;
       expect(spellItem.rules2024.classes, contains(SpellClass.warlock));
     });
   });

@@ -9,7 +9,7 @@ void main() {
       final spells = SpellbookLibrary.allSpells;
       expect(spells.isNotEmpty, isTrue);
 
-      final schools = spells.map((s) => s.school).toSet();
+      final schools = spells.map((s) => s.resolvedSchool).toSet();
       expect(schools.contains(SpellSchool.abjuration), isTrue);
       expect(schools.contains(SpellSchool.divination), isTrue);
       expect(schools.contains(SpellSchool.evocation), isTrue);
@@ -130,8 +130,8 @@ void main() {
       expect(cantrips.every((s) => s.level == 0), isTrue);
 
       final wizardSpells = SpellbookLibrary.getSpellsByClass(SpellClass.wizard);
-      expect(wizardSpells.any((s) => s.id == 'spell_fireball'), isTrue);
-      expect(wizardSpells.any((s) => s.id == 'spell_wish'), isTrue);
+      expect(wizardSpells.any((s) => s.id.slug == 'spell_fireball'), isTrue);
+      expect(wizardSpells.any((s) => s.id.slug == 'spell_wish'), isTrue);
     });
 
     test('Summon presets link directly to SpellbookLibrary source spells', () {
@@ -139,7 +139,7 @@ void main() {
           SpellbookLibrary.getSpellById('spell_animate_objects');
       expect(animateObjectsSpell, isNotNull);
       expect(animateObjectsSpell!.level, 5);
-      expect(animateObjectsSpell.school, SpellSchool.transmutation);
+      expect(animateObjectsSpell.resolvedSchool, SpellSchool.transmutation);
 
       final conjureAnimalsSpell =
           SpellbookLibrary.getSpellById('spell_conjure_animals');
@@ -149,7 +149,7 @@ void main() {
       final animateDeadSpell =
           SpellbookLibrary.getSpellById('spell_animate_dead');
       expect(animateDeadSpell, isNotNull);
-      expect(animateDeadSpell!.school, SpellSchool.necromancy);
+      expect(animateDeadSpell!.resolvedSchool, SpellSchool.necromancy);
     });
 
     test('Glyph rings only appear for explicit AoE or recharge mechanics', () {
