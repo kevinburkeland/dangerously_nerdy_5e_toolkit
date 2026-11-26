@@ -465,17 +465,11 @@ class CharacterClass extends DomainEntity {
     this.customProperties = const {},
   });
 
-  /// Parses [spellcastingAbility] (full name or 3-letter abbreviation) once in
-  /// the model rather than duplicating string parsing in widgets.
+  /// Parses [spellcastingAbility] (full or 3-letter) once in the model.
   AbilityType? get parsedSpellcastingAbility {
     final raw = spellcastingAbility?.trim().toLowerCase();
     if (raw == null || raw.isEmpty) return null;
-    for (final ab in AbilityType.values) {
-      if (ab.name.toLowerCase() == raw || ab.shortName.toLowerCase() == raw) {
-        return ab;
-      }
-    }
-    return null;
+    return AbilityType.values.where((ab) => ab.name.toLowerCase() == raw || ab.shortName.toLowerCase() == raw).firstOrNull;
   }
 
   @override
@@ -520,31 +514,10 @@ class CharacterClass extends DomainEntity {
 
     // Archetype fallbacks for known classes to prevent accidental pollution by all 18 skills
     List<SkillType>? archetypeFallback;
-    if (cleanSlug.contains('warrior sidekick') ||
-        cleanSlug == 'warrior-sidekick' ||
-        cleanName.contains('warrior sidekick')) {
-      archetypeFallback = const [
-        SkillType.acrobatics,
-        SkillType.animalHandling,
-        SkillType.athletics,
-        SkillType.intimidation,
-        SkillType.nature,
-        SkillType.perception,
-        SkillType.survival,
-      ];
-    } else if (cleanSlug.contains('spellcaster sidekick') ||
-        cleanSlug == 'spellcaster-sidekick' ||
-        cleanName.contains('spellcaster sidekick')) {
-      archetypeFallback = const [
-        SkillType.arcana,
-        SkillType.history,
-        SkillType.insight,
-        SkillType.investigation,
-        SkillType.medicine,
-        SkillType.performance,
-        SkillType.religion,
-        SkillType.survival,
-      ];
+    if (cleanSlug.contains('warrior sidekick') || cleanSlug == 'warrior-sidekick' || cleanName.contains('warrior sidekick')) {
+      archetypeFallback = const [SkillType.acrobatics, SkillType.animalHandling, SkillType.athletics, SkillType.intimidation, SkillType.nature, SkillType.perception, SkillType.survival];
+    } else if (cleanSlug.contains('spellcaster sidekick') || cleanSlug == 'spellcaster-sidekick' || cleanName.contains('spellcaster sidekick')) {
+      archetypeFallback = const [SkillType.arcana, SkillType.history, SkillType.insight, SkillType.investigation, SkillType.medicine, SkillType.performance, SkillType.religion, SkillType.survival];
     }
 
     final rawList = customProperties['allowedSkills'];
