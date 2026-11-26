@@ -1,8 +1,8 @@
 # Cleanup slice 17 progress notes
 Status: IN PROGRESS
 Start heads: core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 6fb83f24ffbc9a0efd44e182536a878d976d8136
-Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 99adbcec6cc09d1f93f9481bae717613ded52a4d, app b26f30e68e9b2345310a4364ec7cec9d21b4de03
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd
+Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 8e809ccf779f5749145109e4b6fbca8c0d577f41, app d1bf0d9ea77077dab84278974aa49f2f08721cb7
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 8e809ccf779f5749145109e4b6fbca8c0d577f41
 Fix ids: 1.1 1.2 1.3 1.4 2.1 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 6.2 6.3 7.1 8.1 8.2
 Mutation ids: R1 R2 R3 R4 R5 N1 X1 G1 C1 C2 S1 B1 Y1 H1 H2 H3
 
@@ -31,7 +31,7 @@ Fix 8.2: The homebrew service is a shell under 800 lines
 ## Steps
 - [x] Step 1 Retire, self-test runner, exception batches, look-ahead: core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd run 45885865321, ruleset 99adbcec6cc09d1f93f9481bae717613ded52a4d run 45885877003, app c6976b621ead2de9e0cb647fdd02cc2e502f425a run 45886234842
 - [x] Step 2 Builder goldens with spell picks: app b26f30e68e9b2345310a4364ec7cec9d21b4de03 run 45888489939
-- [ ] Step 3 Spell counts and homebrew casters
+- [x] Step 3 Spell counts and homebrew casters: ruleset 8e809ccf779f5749145109e4b6fbca8c0d577f41 run 45890258911, app d1bf0d9ea77077dab84278974aa49f2f08721cb7 run 45891772454
 - [ ] Step 4 Catalog, stored-format and homebrew pins
 - [ ] Step 5 One item model
 - [ ] Step 6 One spell model
@@ -45,6 +45,9 @@ Fix 1.2 done: [Every self-test case runs without a token and can run alone] Adde
 Fix 1.3 not done: [Characterization tests unpack exception batches] Stopped per prompt instruction because TestWidgetsFlutterBinding._runTest replaces _pendingExceptionDetails with a plain String holding no list field, and no_flutter_error_on_error_override_bar_test.dart forbids assigning FlutterError.onError in test files.
 Fix 1.4 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead in all three repos; upgraded dart_webrtc and webrtc_interface in app pubspec.lock so look-ahead passes.
 Fix 2.1 done: [Builder goldens pick spells with a high casting ability] Added high-casting-ability spell-picking builds, spells-held guard, and named step-finder errors in builder_golden_harness.dart, character_builder_goldens_test.dart, and builder_goldens.json.
+Fix 3.1 done: [Spell counts come from the SRD class tables in both editions] Aligned 2024 getLimitsForClass and prepared-limit messages with SRD 5.2.1 tables in spell_allocation_validator.dart and spells_step.dart, backed by srd_spell_counts_law_test.dart.
+Fix 3.2 done: [Homebrew caster classes use their own ability and progression] Added CasterProgression to class_spellcaster_profile.dart, CharacterClass, and CompendiumClassParser, wired into builder_step_order.dart and level_up_wizard_controller.dart without fallback abilities, backed by homebrew_caster_progression_law_test.dart and homebrew_caster_progression_test.dart.
+Fix 3.3 done: [The named golden changes for spell counts] Regenerated builder_goldens.json and level_up_goldens.json in a dedicated commit with only spell-count, count-text, and picked-spell changes.
 
 ## Mutation branches
 None
@@ -56,7 +59,7 @@ None
 None
 
 ## Next
-Implement Step 3 in the ruleset (SRD spell-count tables for both editions and typed caster progression for homebrew casters), re-pin the app, wire homebrew caster progression, and regenerate the named builder and level-up goldens.
+Implement Step 4 in the app (tests and fixtures only): pin the bundled spell and item catalog and rules view, pin stored homebrew, backup, and bundle formats with a load law, and add the homebrew persistence characterization suite.
 
 ## Open issues and deviations
 - Fix 1.3 stopped per prompt instruction ("if the batch can't be unpacked, say why and stop this fix"): in Flutter's TestWidgetsFlutterBinding._runTest (binding.dart), a second FlutterError.onError overwrites _pendingExceptionDetails with a FlutterErrorDetails whose exception is a plain String ('Multiple exceptions (N) were detected...') with no list field, and test/infrastructure/compliance/no_flutter_error_on_error_override_bar_test.dart forbids assigning FlutterError.onError in any file under test/.
