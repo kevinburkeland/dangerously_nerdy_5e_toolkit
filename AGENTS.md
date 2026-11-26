@@ -22,7 +22,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── models/                         # D&D 5e domain models & compatibility re-exports
 │   │   ├── characters/                 # Character, CharacterClass, Subclass, Background, Species, Feat, HitDice
 │   │   ├── spells/                     # Spell, SpellSchool, SpellComponent, SpellSlot
-│   │   ├── magic_items/                # MagicItem, ItemRarity, ItemCategory, AttunementRequirement
+│   │   ├── magic_items/                # EquipmentItem UI extensions, ItemPresentation, MagicItemLibrary
 │   │   ├── monster_codex/              # Monster, MonsterAction, MonsterTrait, CreatureSize
 │   │   ├── party/                      # CampaignSession, SharedCharacter
 │   │   ├── arena/                      # ArenaCombatant, ClashSimulationResult
