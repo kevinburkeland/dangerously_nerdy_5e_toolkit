@@ -2,249 +2,247 @@ import '../magic_item_data.dart';
 
 /// Complete catalog of canonical SRD 5.1 / 5.2 nonmagical adventuring gear, equipment, and tools.
 class SrdAdventuringGear {
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // =========================================================================
     // 1. CONTAINERS & STORAGE
     // =========================================================================
-    MagicItem(
-      id: 'backpack',
-      name: 'Backpack',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'backpack', ruleset: RulesetVersion.v2024), name: 'Backpack',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Holds 1 cubic foot or 30 pounds of gear. You can strap items like a bedroll or rope to the outside.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Holds 1 cubic foot or 30 pounds of gear. You can strap items like a bedroll or rope to the outside.',
+        description:
+            'A standard leather or canvas backpack designed for carrying adventuring supplies across dungeons and wilderness.',
+        properties: [
+          'Capacity: 1 cubic foot / 30 pounds.',
+          'Weight: 5 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Holds 1 cubic foot or 30 pounds of gear. You can strap items like a bedroll or rope to the outside.',
+        description:
+            'A standard leather or canvas backpack designed for carrying adventuring supplies across dungeons and wilderness.',
+        properties: [
+          'Capacity: 1 cubic foot / 30 pounds.',
+          'Weight: 5 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
       tags: ['gear', 'container', 'storage', 'equipment'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'storage', 'equipment'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'barrel', ruleset: RulesetVersion.v2024), name: 'Barrel',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds 40 gallons of liquid or 4 cubic feet of solid cargo.',
       rules2014: ItemEditionDetails(
-        summary:
-            'Holds 1 cubic foot or 30 pounds of gear. You can strap items like a bedroll or rope to the outside.',
+        summary: 'Holds 40 gallons of liquid or 4 cubic feet of solid cargo.',
         description:
-            'A standard leather or canvas backpack designed for carrying adventuring supplies across dungeons and wilderness.',
+            'A sturdy wooden cask bound with iron hoops, used for transporting ale, water, oil, and foodstuffs.',
         properties: [
-          'Capacity: 1 cubic foot / 30 pounds.',
-          'Weight: 5 lbs.',
+          'Capacity: 40 gallons liquid / 4 cubic feet solid.',
+          'Weight: 70 lbs.',
           'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary:
-            'Holds 1 cubic foot or 30 pounds of gear. You can strap items like a bedroll or rope to the outside.',
+        summary: 'Holds 40 gallons of liquid or 4 cubic feet of solid cargo.',
         description:
-            'A standard leather or canvas backpack designed for carrying adventuring supplies across dungeons and wilderness.',
+            'A sturdy wooden cask bound with iron hoops, used for transporting ale, water, oil, and foodstuffs.',
         properties: [
-          'Capacity: 1 cubic foot / 30 pounds.',
-          'Weight: 5 lbs.',
+          'Capacity: 40 gallons liquid / 4 cubic feet solid.',
+          'Weight: 70 lbs.',
           'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'barrel',
-      name: 'Barrel',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'storage', 'liquid'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'storage', 'liquid'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'basket', ruleset: RulesetVersion.v2024), name: 'Basket',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds 2 cubic feet or 40 pounds of gear.',
       rules2014: ItemEditionDetails(
-        summary: 'Holds 40 gallons of liquid or 4 cubic feet of solid cargo.',
+        summary: 'Holds 2 cubic feet or 40 pounds of gear.',
         description:
-            'A sturdy wooden cask bound with iron hoops, used for transporting ale, water, oil, and foodstuffs.',
+            'A woven wicker or reed basket with sturdy handles for foraging and marketplace provisioning.',
         properties: [
-          'Capacity: 40 gallons liquid / 4 cubic feet solid.',
-          'Weight: 70 lbs.',
-          'Cost: 2 gp.',
+          'Capacity: 2 cubic feet / 40 pounds.',
+          'Weight: 2 lbs.',
+          'Cost: 4 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Holds 40 gallons of liquid or 4 cubic feet of solid cargo.',
+        summary: 'Holds 2 cubic feet or 40 pounds of gear.',
         description:
-            'A sturdy wooden cask bound with iron hoops, used for transporting ale, water, oil, and foodstuffs.',
+            'A woven wicker or reed basket with sturdy handles for foraging and marketplace provisioning.',
         properties: [
-          'Capacity: 40 gallons liquid / 4 cubic feet solid.',
-          'Weight: 70 lbs.',
-          'Cost: 2 gp.',
+          'Capacity: 2 cubic feet / 40 pounds.',
+          'Weight: 2 lbs.',
+          'Cost: 4 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'basket',
-      name: 'Basket',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'storage'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'storage'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'bottle_glass', ruleset: RulesetVersion.v2024), name: 'Bottle, Glass',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds 1½ pints of liquid, corked with wax-sealed stopper.',
       rules2014: ItemEditionDetails(
-        summary: 'Holds 2 cubic feet or 40 pounds of gear.',
+        summary: 'Holds 1½ pints of liquid, corked with wax-sealed stopper.',
         description:
-            'A woven wicker or reed basket with sturdy handles for foraging and marketplace provisioning.',
+            'A thick glass bottle suitable for storing wine, potions, distilled essences, or holy reagents.',
         properties: [
-          'Capacity: 2 cubic feet / 40 pounds.',
+          'Capacity: 1½ pints liquid.',
           'Weight: 2 lbs.',
-          'Cost: 4 sp.',
+          'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Holds 2 cubic feet or 40 pounds of gear.',
+        summary: 'Holds 1½ pints of liquid, corked with wax-sealed stopper.',
         description:
-            'A woven wicker or reed basket with sturdy handles for foraging and marketplace provisioning.',
+            'A thick glass bottle suitable for storing wine, potions, distilled essences, or holy reagents.',
         properties: [
-          'Capacity: 2 cubic feet / 40 pounds.',
+          'Capacity: 1½ pints liquid.',
           'Weight: 2 lbs.',
-          'Cost: 4 sp.',
+          'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'bottle_glass',
-      name: 'Bottle, Glass',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'liquid'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'liquid'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'bucket', ruleset: RulesetVersion.v2024), name: 'Bucket',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds 3 gallons of liquid or ½ cubic foot of solid matter.',
       rules2014: ItemEditionDetails(
-        summary: 'Holds 1½ pints of liquid, corked with wax-sealed stopper.',
+        summary: 'Holds 3 gallons of liquid or ½ cubic foot of solid matter.',
         description:
-            'A thick glass bottle suitable for storing wine, potions, distilled essences, or holy reagents.',
+            'A wooden pail with a rope or metal bail handle for drawing water and clearing bilges.',
         properties: [
-          'Capacity: 1½ pints liquid.',
+          'Capacity: 3 gallons liquid / ½ cubic foot.',
           'Weight: 2 lbs.',
-          'Cost: 2 gp.',
+          'Cost: 5 cp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Holds 1½ pints of liquid, corked with wax-sealed stopper.',
+        summary: 'Holds 3 gallons of liquid or ½ cubic foot of solid matter.',
         description:
-            'A thick glass bottle suitable for storing wine, potions, distilled essences, or holy reagents.',
+            'A wooden pail with a rope or metal bail handle for drawing water and clearing bilges.',
         properties: [
-          'Capacity: 1½ pints liquid.',
+          'Capacity: 3 gallons liquid / ½ cubic foot.',
           'Weight: 2 lbs.',
-          'Cost: 2 gp.',
+          'Cost: 5 cp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'bucket',
-      name: 'Bucket',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'liquid', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'liquid', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'case_crossbow_bolt', ruleset: RulesetVersion.v2024), name: 'Case, Crossbow Bolt',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds up to 20 crossbow bolts securely in a rigid leather container.',
       rules2014: ItemEditionDetails(
-        summary: 'Holds 3 gallons of liquid or ½ cubic foot of solid matter.',
+        summary:
+            'Holds up to 20 crossbow bolts securely in a rigid leather container.',
         description:
-            'A wooden pail with a rope or metal bail handle for drawing water and clearing bilges.',
+            'A hard-molded leather cylindrical case with a snug cap to protect bolts from moisture and damage.',
         properties: [
-          'Capacity: 3 gallons liquid / ½ cubic foot.',
-          'Weight: 2 lbs.',
-          'Cost: 5 cp.',
+          'Capacity: 20 bolts.',
+          'Weight: 1 lb.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Holds 3 gallons of liquid or ½ cubic foot of solid matter.',
+        summary:
+            'Holds up to 20 crossbow bolts securely in a rigid leather container.',
         description:
-            'A wooden pail with a rope or metal bail handle for drawing water and clearing bilges.',
+            'A hard-molded leather cylindrical case with a snug cap to protect bolts from moisture and damage.',
         properties: [
-          'Capacity: 3 gallons liquid / ½ cubic foot.',
-          'Weight: 2 lbs.',
-          'Cost: 5 cp.',
+          'Capacity: 20 bolts.',
+          'Weight: 1 lb.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'case_crossbow_bolt',
-      name: 'Case, Crossbow Bolt',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'ammunition'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'ammunition'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'case_map_scroll', ruleset: RulesetVersion.v2024), name: 'Case, Map or Scroll',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds up to 10 rolled-up sheets of paper or 5 rolled-up sheets of parchment.',
       rules2014: ItemEditionDetails(
         summary:
-            'Holds up to 20 crossbow bolts securely in a rigid leather container.',
+            'Holds up to 10 rolled-up sheets of paper or 5 rolled-up sheets of parchment.',
         description:
-            'A hard-molded leather cylindrical case with a snug cap to protect bolts from moisture and damage.',
+            'A watertight cylindrical leather or wooden tube with a screw cap for safeguarding documents.',
         properties: [
-          'Capacity: 20 bolts.',
+          'Capacity: 10 rolled paper or 5 parchment sheets.',
           'Weight: 1 lb.',
           'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Holds up to 20 crossbow bolts securely in a rigid leather container.',
+            'Holds up to 10 rolled-up sheets of paper or 5 rolled-up sheets of parchment.',
         description:
-            'A hard-molded leather cylindrical case with a snug cap to protect bolts from moisture and damage.',
+            'A watertight cylindrical leather or wooden tube with a screw cap for safeguarding documents.',
         properties: [
-          'Capacity: 20 bolts.',
+          'Capacity: 10 rolled paper or 5 parchment sheets.',
           'Weight: 1 lb.',
           'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'case_map_scroll',
-      name: 'Case, Map or Scroll',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'scrolls', 'maps'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'scrolls', 'maps'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'chest', ruleset: RulesetVersion.v2024), name: 'Chest',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds 12 cubic feet or 300 pounds of gear. Reinforced with iron bands.',
       rules2014: ItemEditionDetails(
         summary:
-            'Holds up to 10 rolled-up sheets of paper or 5 rolled-up sheets of parchment.',
+            'Holds 12 cubic feet or 300 pounds of gear. Reinforced with iron bands.',
         description:
-            'A watertight cylindrical leather or wooden tube with a screw cap for safeguarding documents.',
+            'A heavy wooden chest with iron corners, hasp, and side handles for secure dungeon and camp storage.',
         properties: [
-          'Capacity: 10 rolled paper or 5 parchment sheets.',
-          'Weight: 1 lb.',
-          'Cost: 1 gp.',
+          'Capacity: 12 cubic feet / 300 pounds.',
+          'Weight: 25 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Holds up to 10 rolled-up sheets of paper or 5 rolled-up sheets of parchment.',
+            'Holds 12 cubic feet or 300 pounds of gear. Reinforced with iron bands.',
         description:
-            'A watertight cylindrical leather or wooden tube with a screw cap for safeguarding documents.',
+            'A heavy wooden chest with iron corners, hasp, and side handles for secure dungeon and camp storage.',
         properties: [
-          'Capacity: 10 rolled paper or 5 parchment sheets.',
-          'Weight: 1 lb.',
-          'Cost: 1 gp.',
+          'Capacity: 12 cubic feet / 300 pounds.',
+          'Weight: 25 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'chest',
-      name: 'Chest',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'storage', 'heavy'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Holds 12 cubic feet or 300 pounds of gear. Reinforced with iron bands.',
-        description:
-            'A heavy wooden chest with iron corners, hasp, and side handles for secure dungeon and camp storage.',
-        properties: [
-          'Capacity: 12 cubic feet / 300 pounds.',
-          'Weight: 25 lbs.',
-          'Cost: 5 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Holds 12 cubic feet or 300 pounds of gear. Reinforced with iron bands.',
-        description:
-            'A heavy wooden chest with iron corners, hasp, and side handles for secure dungeon and camp storage.',
-        properties: [
-          'Capacity: 12 cubic feet / 300 pounds.',
-          'Weight: 25 lbs.',
-          'Cost: 5 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'storage', 'heavy'] },
     ),
-    MagicItem(
-      id: 'flask_tankard',
-      name: 'Flask or Tankard',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'flask_tankard', ruleset: RulesetVersion.v2024), name: 'Flask or Tankard',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'container', 'liquid'],
+      descriptionMarkdown: 'Holds 1 pint of liquid.',
       rules2014: ItemEditionDetails(
         summary: 'Holds 1 pint of liquid.',
         description:
@@ -265,14 +263,14 @@ class SrdAdventuringGear {
           'Cost: 2 cp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'jug_pitcher',
-      name: 'Jug or Pitcher',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'liquid'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'liquid'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'jug_pitcher', ruleset: RulesetVersion.v2024), name: 'Jug or Pitcher',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds 1 gallon of liquid.',
       rules2014: ItemEditionDetails(
         summary: 'Holds 1 gallon of liquid.',
         description:
@@ -293,160 +291,160 @@ class SrdAdventuringGear {
           'Cost: 2 cp.',
         ],
       ),
+      tags: ['gear', 'container', 'liquid'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'liquid'] },
     ),
-    MagicItem(
-      id: 'pot_iron',
-      name: 'Pot, Iron',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'pot_iron', ruleset: RulesetVersion.v2024), name: 'Pot, Iron',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Holds 1 gallon of liquid for campfire cooking and boiling water.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Holds 1 gallon of liquid for campfire cooking and boiling water.',
+        description:
+            'A heavy cast-iron cooking vessel with a lid and hanging handle.',
+        properties: [
+          'Capacity: 1 gallon.',
+          'Weight: 10 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Holds 1 gallon of liquid for campfire cooking and boiling water.',
+        description:
+            'A heavy cast-iron cooking vessel with a lid and hanging handle.',
+        properties: [
+          'Capacity: 1 gallon.',
+          'Weight: 10 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
       tags: ['gear', 'container', 'cooking', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'cooking', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'pouch', ruleset: RulesetVersion.v2024), name: 'Pouch',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds ⅕ cubic foot or up to 6 pounds of small items or coins (approx. 300 coins).',
       rules2014: ItemEditionDetails(
         summary:
-            'Holds 1 gallon of liquid for campfire cooking and boiling water.',
+            'Holds ⅕ cubic foot or up to 6 pounds of small items or coins (approx. 300 coins).',
         description:
-            'A heavy cast-iron cooking vessel with a lid and hanging handle.',
+            'A cloth or leather pouch that fastens with a drawstring and secures to a belt.',
         properties: [
-          'Capacity: 1 gallon.',
-          'Weight: 10 lbs.',
-          'Cost: 2 gp.',
+          'Capacity: ⅕ cubic foot / 6 lbs / 300 coins.',
+          'Weight: 1 lb.',
+          'Cost: 5 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Holds 1 gallon of liquid for campfire cooking and boiling water.',
+            'Holds ⅕ cubic foot or up to 6 pounds of small items or coins (approx. 300 coins).',
         description:
-            'A heavy cast-iron cooking vessel with a lid and hanging handle.',
+            'A cloth or leather pouch that fastens with a drawstring and secures to a belt.',
         properties: [
-          'Capacity: 1 gallon.',
-          'Weight: 10 lbs.',
-          'Cost: 2 gp.',
+          'Capacity: ⅕ cubic foot / 6 lbs / 300 coins.',
+          'Weight: 1 lb.',
+          'Cost: 5 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'pouch',
-      name: 'Pouch',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'storage', 'coins'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'storage', 'coins'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'quiver', ruleset: RulesetVersion.v2024), name: 'Quiver',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds up to 20 arrows comfortably over the shoulder or on the hip.',
       rules2014: ItemEditionDetails(
         summary:
-            'Holds ⅕ cubic foot or up to 6 pounds of small items or coins (approx. 300 coins).',
+            'Holds up to 20 arrows comfortably over the shoulder or on the hip.',
         description:
-            'A cloth or leather pouch that fastens with a drawstring and secures to a belt.',
+            'A leather case contoured to allow quick draw of archery arrows in combat.',
         properties: [
-          'Capacity: ⅕ cubic foot / 6 lbs / 300 coins.',
+          'Capacity: 20 arrows.',
           'Weight: 1 lb.',
-          'Cost: 5 sp.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Holds ⅕ cubic foot or up to 6 pounds of small items or coins (approx. 300 coins).',
+            'Holds up to 20 arrows comfortably over the shoulder or on the hip.',
         description:
-            'A cloth or leather pouch that fastens with a drawstring and secures to a belt.',
+            'A leather case contoured to allow quick draw of archery arrows in combat.',
         properties: [
-          'Capacity: ⅕ cubic foot / 6 lbs / 300 coins.',
+          'Capacity: 20 arrows.',
           'Weight: 1 lb.',
-          'Cost: 5 sp.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'quiver',
-      name: 'Quiver',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'ammunition', 'bow'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'ammunition', 'bow'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'sack', ruleset: RulesetVersion.v2024), name: 'Sack',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds 1 cubic foot or 30 pounds of gear.',
       rules2014: ItemEditionDetails(
-        summary:
-            'Holds up to 20 arrows comfortably over the shoulder or on the hip.',
-        description:
-            'A leather case contoured to allow quick draw of archery arrows in combat.',
+        summary: 'Holds 1 cubic foot or 30 pounds of gear.',
+        description: 'A simple burlap or canvas sack tied off with twine.',
         properties: [
-          'Capacity: 20 arrows.',
-          'Weight: 1 lb.',
-          'Cost: 1 gp.',
+          'Capacity: 1 cubic foot / 30 pounds.',
+          'Weight: ½ lb.',
+          'Cost: 1 cp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary:
-            'Holds up to 20 arrows comfortably over the shoulder or on the hip.',
-        description:
-            'A leather case contoured to allow quick draw of archery arrows in combat.',
+        summary: 'Holds 1 cubic foot or 30 pounds of gear.',
+        description: 'A simple burlap or canvas sack tied off with twine.',
         properties: [
-          'Capacity: 20 arrows.',
-          'Weight: 1 lb.',
-          'Cost: 1 gp.',
+          'Capacity: 1 cubic foot / 30 pounds.',
+          'Weight: ½ lb.',
+          'Cost: 1 cp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'sack',
-      name: 'Sack',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'storage'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'storage'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'vial', ruleset: RulesetVersion.v2024), name: 'Vial',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Holds up to 4 ounces of liquid, suitable for poisons, acids, or holy water.',
       rules2014: ItemEditionDetails(
-        summary: 'Holds 1 cubic foot or 30 pounds of gear.',
-        description: 'A simple burlap or canvas sack tied off with twine.',
+        summary:
+            'Holds up to 4 ounces of liquid, suitable for poisons, acids, or holy water.',
+        description:
+            'A small glass or crystal cylindrical tube with a wax seal.',
         properties: [
-          'Capacity: 1 cubic foot / 30 pounds.',
-          'Weight: ½ lb.',
-          'Cost: 1 cp.',
+          'Capacity: 4 fluid ounces.',
+          'Weight: negligible.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Holds 1 cubic foot or 30 pounds of gear.',
-        description: 'A simple burlap or canvas sack tied off with twine.',
+        summary:
+            'Holds up to 4 ounces of liquid, suitable for poisons, acids, or holy water.',
+        description:
+            'A small glass or crystal cylindrical tube with a wax seal.',
         properties: [
-          'Capacity: 1 cubic foot / 30 pounds.',
-          'Weight: ½ lb.',
-          'Cost: 1 cp.',
+          'Capacity: 4 fluid ounces.',
+          'Weight: negligible.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'vial',
-      name: 'Vial',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'container', 'liquid'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Holds up to 4 ounces of liquid, suitable for poisons, acids, or holy water.',
-        description:
-            'A small glass or crystal cylindrical tube with a wax seal.',
-        properties: [
-          'Capacity: 4 fluid ounces.',
-          'Weight: negligible.',
-          'Cost: 1 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Holds up to 4 ounces of liquid, suitable for poisons, acids, or holy water.',
-        description:
-            'A small glass or crystal cylindrical tube with a wax seal.',
-        properties: [
-          'Capacity: 4 fluid ounces.',
-          'Weight: negligible.',
-          'Cost: 1 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'liquid'] },
     ),
-    MagicItem(
-      id: 'waterskin',
-      name: 'Waterskin',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'waterskin', ruleset: RulesetVersion.v2024), name: 'Waterskin',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'container', 'survival'],
+      descriptionMarkdown: 'Holds 4 pints (half a gallon) of liquid.',
       rules2014: ItemEditionDetails(
         summary: 'Holds 4 pints (half a gallon) of liquid.',
         description: 'A leather bladder with a wooden plug and shoulder strap.',
@@ -465,80 +463,78 @@ class SrdAdventuringGear {
           'Cost: 2 sp.',
         ],
       ),
+      tags: ['gear', 'container', 'survival'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'container', 'survival'] },
     ),
 
     // =========================================================================
     // 2. ADVENTURING UTILITY, SURVIVAL & EXPLORATION
     // =========================================================================
-    MagicItem(
-      id: 'abacus',
-      name: 'Abacus',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'abacus', ruleset: RulesetVersion.v2024), name: 'Abacus',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Standard wooden counting frame with beads for rapid bookkeeping and mathematical calculation.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Standard wooden counting frame with beads for rapid bookkeeping and mathematical calculation.',
+        description:
+            'A framed calculating device widely used by merchants, tax collectors, and scholars.',
+        properties: [
+          'Weight: 2 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Standard wooden counting frame with beads for rapid bookkeeping and mathematical calculation.',
+        description:
+            'A framed calculating device widely used by merchants, tax collectors, and scholars.',
+        properties: [
+          'Weight: 2 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
       tags: ['gear', 'calculation', 'mercantile'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'calculation', 'mercantile'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'acid_vial', ruleset: RulesetVersion.v2024), name: 'Acid (Vial)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Improvised ranged attack (range 20 ft). On hit, deals 2d6 acid damage.',
       rules2014: ItemEditionDetails(
         summary:
-            'Standard wooden counting frame with beads for rapid bookkeeping and mathematical calculation.',
-        description:
-            'A framed calculating device widely used by merchants, tax collectors, and scholars.',
+            'Improvised ranged attack (range 20 ft). On hit, deals 2d6 acid damage.',
+        description: 'A concentrated vial of highly caustic dissolving acid.',
+        activation: '1 Action',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 2 gp.',
+          'Ranged Improvised Weapon (20 ft).',
+          'Deals 2d6 acid damage on hit.',
+          'Weight: 1 lb.',
+          'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Standard wooden counting frame with beads for rapid bookkeeping and mathematical calculation.',
-        description:
-            'A framed calculating device widely used by merchants, tax collectors, and scholars.',
+            'Improvised ranged attack (range 20 ft). On hit, deals 2d6 acid damage.',
+        description: 'A concentrated vial of highly caustic dissolving acid.',
+        activation: '1 Action',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 2 gp.',
+          'Ranged Improvised Weapon (20 ft).',
+          'Deals 2d6 acid damage on hit.',
+          'Weight: 1 lb.',
+          'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'acid_vial',
-      name: 'Acid (Vial)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'acid', 'corrosive', 'combat', 'utility'],
-      damageAccent: DamageAccent.acid,
-      rules2014: ItemEditionDetails(
-        summary:
-            'Improvised ranged attack (range 20 ft). On hit, deals 2d6 acid damage.',
-        description: 'A concentrated vial of highly caustic dissolving acid.',
-        activation: '1 Action',
-        properties: [
-          'Ranged Improvised Weapon (20 ft).',
-          'Deals 2d6 acid damage on hit.',
-          'Weight: 1 lb.',
-          'Cost: 25 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Improvised ranged attack (range 20 ft). On hit, deals 2d6 acid damage.',
-        description: 'A concentrated vial of highly caustic dissolving acid.',
-        activation: '1 Action',
-        properties: [
-          'Ranged Improvised Weapon (20 ft).',
-          'Deals 2d6 acid damage on hit.',
-          'Weight: 1 lb.',
-          'Cost: 25 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'acid', 'corrosive', 'combat', 'utility'] },
     ),
-    MagicItem(
-      id: 'alchemists_fire',
-      name: 'Alchemist\'s Fire (Flask)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'alchemists_fire', ruleset: RulesetVersion.v2024), name: 'Alchemist\'s Fire (Flask)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'fire', 'combustible', 'combat'],
-      damageAccent: DamageAccent.fire,
+      descriptionMarkdown: 'Ranged attack (20 ft). On hit, target takes 1d4 fire damage at start of each turn until extinguished with a DC 10 Dex check.',
       rules2014: ItemEditionDetails(
         summary:
             'Ranged attack (20 ft). On hit, target takes 1d4 fire damage at start of each of its turns until extinguished with a DC 10 Dex check.',
@@ -565,224 +561,222 @@ class SrdAdventuringGear {
           'Cost: 50 gp.',
         ],
       ),
+      tags: ['gear', 'fire', 'combustible', 'combat'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'fire', 'combustible', 'combat'] },
     ),
-    MagicItem(
-      id: 'antitoxin',
-      name: 'Antitoxin (Vial)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'antitoxin', ruleset: RulesetVersion.v2024), name: 'Antitoxin (Vial)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Drinking this provides Advantage on saving throws against poison for 1 hour.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Drinking this provides Advantage on saving throws against poison for 1 hour.',
+        description:
+            'A bitter herbal distillation that neutralizes toxins and venom.',
+        activation: '1 Action',
+        properties: [
+          'Advantage on saving throws against poison for 1 hour.',
+          'Weight: negligible.',
+          'Cost: 50 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Drinking this provides Advantage on saving throws against poison for 1 hour.',
+        description:
+            'A bitter herbal distillation that neutralizes toxins and venom.',
+        activation: '1 Action',
+        properties: [
+          'Advantage on saving throws against poison for 1 hour.',
+          'Weight: negligible.',
+          'Cost: 50 gp.',
+        ],
+      ),
       tags: ['gear', 'poison', 'medicine', 'defense'],
-      damageAccent: DamageAccent.poison,
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'poison', 'medicine', 'defense'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'ball_bearings', ruleset: RulesetVersion.v2024), name: 'Ball Bearings (Bag of 1,000)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cover a 10-foot square. Moving through at normal speed requires a DC 10 Dexterity save or fall Prone.',
       rules2014: ItemEditionDetails(
         summary:
-            'Drinking this provides Advantage on saving throws against poison for 1 hour.',
+            'Cover a 10-foot square. Moving through at normal speed requires a DC 10 Dexterity save or fall Prone.',
         description:
-            'A bitter herbal distillation that neutralizes toxins and venom.',
+            'A pouch of 1,000 miniature metal spheres to create slick hazards.',
         activation: '1 Action',
         properties: [
-          'Advantage on saving throws against poison for 1 hour.',
-          'Weight: negligible.',
-          'Cost: 50 gp.',
+          'Covers 10-foot square area.',
+          'DC 10 Dexterity saving throw or fall Prone.',
+          'Weight: 2 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Drinking this provides Advantage on saving throws against poison for 1 hour.',
+            'Cover a 10-foot square. Moving through at normal speed requires a DC 10 Dexterity save or fall Prone.',
         description:
-            'A bitter herbal distillation that neutralizes toxins and venom.',
+            'A pouch of 1,000 miniature metal spheres to create slick hazards.',
         activation: '1 Action',
         properties: [
-          'Advantage on saving throws against poison for 1 hour.',
-          'Weight: negligible.',
-          'Cost: 50 gp.',
+          'Covers 10-foot square area.',
+          'DC 10 Dexterity saving throw or fall Prone.',
+          'Weight: 2 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'ball_bearings',
-      name: 'Ball Bearings (Bag of 1,000)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'hazard', 'control', 'prone'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'hazard', 'control', 'prone'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'bedroll', ruleset: RulesetVersion.v2024), name: 'Bedroll',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Comfortable padded sleeping roll for taking short and long rests in the wild.',
       rules2014: ItemEditionDetails(
         summary:
-            'Cover a 10-foot square. Moving through at normal speed requires a DC 10 Dexterity save or fall Prone.',
+            'Comfortable padded sleeping roll for taking short and long rests in the wild.',
         description:
-            'A pouch of 1,000 miniature metal spheres to create slick hazards.',
-        activation: '1 Action',
+            'A quilted blanket and waterproof ground cloth rolled together with leather straps.',
         properties: [
-          'Covers 10-foot square area.',
-          'DC 10 Dexterity saving throw or fall Prone.',
-          'Weight: 2 lbs.',
+          'Weight: 7 lbs.',
           'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Cover a 10-foot square. Moving through at normal speed requires a DC 10 Dexterity save or fall Prone.',
+            'Comfortable padded sleeping roll for taking short and long rests in the wild.',
         description:
-            'A pouch of 1,000 miniature metal spheres to create slick hazards.',
-        activation: '1 Action',
+            'A quilted blanket and waterproof ground cloth rolled together with leather straps.',
         properties: [
-          'Covers 10-foot square area.',
-          'DC 10 Dexterity saving throw or fall Prone.',
-          'Weight: 2 lbs.',
+          'Weight: 7 lbs.',
           'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'bedroll',
-      name: 'Bedroll',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'camp', 'rest', 'equipment'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'camp', 'rest', 'equipment'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'bell', ruleset: RulesetVersion.v2024), name: 'Bell',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Small brass bell used for tripwire traps, camp alarms, or summoning calls.',
       rules2014: ItemEditionDetails(
         summary:
-            'Comfortable padded sleeping roll for taking short and long rests in the wild.',
+            'Small brass bell used for tripwire traps, camp alarms, or summoning calls.',
         description:
-            'A quilted blanket and waterproof ground cloth rolled together with leather straps.',
+            'A resonant metal bell that rings cleanly across quiet dungeon corridors.',
         properties: [
-          'Weight: 7 lbs.',
+          'Weight: negligible.',
           'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Comfortable padded sleeping roll for taking short and long rests in the wild.',
+            'Small brass bell used for tripwire traps, camp alarms, or summoning calls.',
         description:
-            'A quilted blanket and waterproof ground cloth rolled together with leather straps.',
+            'A resonant metal bell that rings cleanly across quiet dungeon corridors.',
         properties: [
-          'Weight: 7 lbs.',
+          'Weight: negligible.',
           'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'bell',
-      name: 'Bell',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'alarm', 'signal', 'sound'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'alarm', 'signal', 'sound'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'blanket', ruleset: RulesetVersion.v2024), name: 'Blanket',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Thick woven wool blanket for insulation against hypothermia and cold environments.',
       rules2014: ItemEditionDetails(
         summary:
-            'Small brass bell used for tripwire traps, camp alarms, or summoning calls.',
+            'Thick woven wool blanket for insulation against hypothermia and cold environments.',
         description:
-            'A resonant metal bell that rings cleanly across quiet dungeon corridors.',
+            'A durable wool blanket providing warmth during harsh wilderness expeditions.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 1 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 5 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Small brass bell used for tripwire traps, camp alarms, or summoning calls.',
+            'Thick woven wool blanket for insulation against hypothermia and cold environments.',
         description:
-            'A resonant metal bell that rings cleanly across quiet dungeon corridors.',
+            'A durable wool blanket providing warmth during harsh wilderness expeditions.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 1 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 5 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'blanket',
-      name: 'Blanket',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'warmth', 'camp', 'survival'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'warmth', 'camp', 'survival'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'block_and_tackle', ruleset: RulesetVersion.v2024), name: 'Block and Tackle',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Pulleys and tackle allowing a creature to hoist up to 4 times the weight it can normally lift.',
       rules2014: ItemEditionDetails(
         summary:
-            'Thick woven wool blanket for insulation against hypothermia and cold environments.',
+            'Pulleys and tackle allowing a creature to hoist up to 4 times the weight it can normally lift.',
         description:
-            'A durable wool blanket providing warmth during harsh wilderness expeditions.',
+            'A system of grooved wheels and cable blocks for heavy architectural and salvage work.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 5 sp.',
+          'Multiplies lifting capacity by 4.',
+          'Weight: 5 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Thick woven wool blanket for insulation against hypothermia and cold environments.',
+            'Pulleys and tackle allowing a creature to hoist up to 4 times the weight it can normally lift.',
         description:
-            'A durable wool blanket providing warmth during harsh wilderness expeditions.',
+            'A system of grooved wheels and cable blocks for heavy architectural and salvage work.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 5 sp.',
+          'Multiplies lifting capacity by 4.',
+          'Weight: 5 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'block_and_tackle',
-      name: 'Block and Tackle',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'utility', 'lifting', 'engineering'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'utility', 'lifting', 'engineering'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'book', ruleset: RulesetVersion.v2024), name: 'Book',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'A bound volume containing poetry, history, religious scriptures, or technical treatises.',
       rules2014: ItemEditionDetails(
         summary:
-            'Pulleys and tackle allowing a creature to hoist up to 4 times the weight it can normally lift.',
+            'A bound volume containing poetry, history, religious scriptures, or technical treatises.',
         description:
-            'A system of grooved wheels and cable blocks for heavy architectural and salvage work.',
+            'A leather-bound folio containing illuminated parchment or paper pages.',
         properties: [
-          'Multiplies lifting capacity by 4.',
           'Weight: 5 lbs.',
-          'Cost: 1 gp.',
+          'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Pulleys and tackle allowing a creature to hoist up to 4 times the weight it can normally lift.',
+            'A bound volume containing poetry, history, religious scriptures, or technical treatises.',
         description:
-            'A system of grooved wheels and cable blocks for heavy architectural and salvage work.',
+            'A leather-bound folio containing illuminated parchment or paper pages.',
         properties: [
-          'Multiplies lifting capacity by 4.',
           'Weight: 5 lbs.',
-          'Cost: 1 gp.',
+          'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'book',
-      name: 'Book',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'scholarship', 'history', 'lore'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'A bound volume containing poetry, history, religious scriptures, or technical treatises.',
-        description:
-            'A leather-bound folio containing illuminated parchment or paper pages.',
-        properties: [
-          'Weight: 5 lbs.',
-          'Cost: 25 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'A bound volume containing poetry, history, religious scriptures, or technical treatises.',
-        description:
-            'A leather-bound folio containing illuminated parchment or paper pages.',
-        properties: [
-          'Weight: 5 lbs.',
-          'Cost: 25 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'scholarship', 'history', 'lore'] },
     ),
-    MagicItem(
-      id: 'caltrops',
-      name: 'Caltrops (Bag of 20)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'caltrops', ruleset: RulesetVersion.v2024), name: 'Caltrops (Bag of 20)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'hazard', 'control', 'piercing'],
-      damageAccent: DamageAccent.piercing,
+      descriptionMarkdown: 'Covers a 5-foot square. Entering creature must succeed on DC 15 Dex save or take 1 piercing damage and speed reduced by 10 ft until healed.',
       rules2014: ItemEditionDetails(
         summary:
             'Covers a 5-foot square. Entering creature must succeed on DC 15 Dex save or take 1 piercing damage and speed reduced by 10 ft until healed.',
@@ -809,161 +803,160 @@ class SrdAdventuringGear {
           'Cost: 1 gp.',
         ],
       ),
+      tags: ['gear', 'hazard', 'control', 'piercing'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'hazard', 'control', 'piercing'] },
     ),
-    MagicItem(
-      id: 'candle',
-      name: 'Candle',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'candle', ruleset: RulesetVersion.v2024), name: 'Candle',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Burns for 1 hour, shedding bright light in a 5-foot radius and dim light for an additional 5 feet.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Burns for 1 hour, shedding bright light in a 5-foot radius and dim light for an additional 5 feet.',
+        description: 'A standard tallow or beeswax candle.',
+        properties: [
+          'Bright light: 5-ft radius; Dim light: additional 5 ft.',
+          'Burns for 1 hour.',
+          'Weight: negligible.',
+          'Cost: 1 cp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Burns for 1 hour, shedding bright light in a 5-foot radius and dim light for an additional 5 feet.',
+        description: 'A standard tallow or beeswax candle.',
+        properties: [
+          'Bright light: 5-ft radius; Dim light: additional 5 ft.',
+          'Burns for 1 hour.',
+          'Weight: negligible.',
+          'Cost: 1 cp.',
+        ],
+      ),
       tags: ['gear', 'light', 'fire', 'utility'],
-      damageAccent: DamageAccent.fire,
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'light', 'fire', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'chain_10ft', ruleset: RulesetVersion.v2024), name: 'Chain (10 Feet)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '10-foot iron chain. Has AC 19, 10 hit points, and burst DC 20 Strength.',
       rules2014: ItemEditionDetails(
         summary:
-            'Burns for 1 hour, shedding bright light in a 5-foot radius and dim light for an additional 5 feet.',
-        description: 'A standard tallow or beeswax candle.',
+            '10-foot iron chain. Has AC 19, 10 hit points, and burst DC 20 Strength.',
+        description:
+            'Heavy welded iron links used to bind prisoners, secure portcullises, and anchor vehicles.',
         properties: [
-          'Bright light: 5-ft radius; Dim light: additional 5 ft.',
-          'Burns for 1 hour.',
-          'Weight: negligible.',
-          'Cost: 1 cp.',
+          'AC: 19; HP: 10; Burst DC: 20 Strength.',
+          'Weight: 10 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Burns for 1 hour, shedding bright light in a 5-foot radius and dim light for an additional 5 feet.',
-        description: 'A standard tallow or beeswax candle.',
+            '10-foot iron chain. Has AC 19, 10 hit points, and burst DC 20 Strength.',
+        description:
+            'Heavy welded iron links used to bind prisoners, secure portcullises, and anchor vehicles.',
         properties: [
-          'Bright light: 5-ft radius; Dim light: additional 5 ft.',
-          'Burns for 1 hour.',
-          'Weight: negligible.',
-          'Cost: 1 cp.',
+          'AC: 19; HP: 10; Burst DC: 20 Strength.',
+          'Weight: 10 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'chain_10ft',
-      name: 'Chain (10 Feet)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'restraint', 'utility', 'metal'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'restraint', 'utility', 'metal'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'chalk', ruleset: RulesetVersion.v2024), name: 'Chalk (1 Piece)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Used to draw symbols, directional markers, and dungeon path codes on stone and wood.',
       rules2014: ItemEditionDetails(
         summary:
-            '10-foot iron chain. Has AC 19, 10 hit points, and burst DC 20 Strength.',
-        description:
-            'Heavy welded iron links used to bind prisoners, secure portcullises, and anchor vehicles.',
+            'Used to draw symbols, directional markers, and dungeon path codes on stone and wood.',
+        description: 'A stick of soft limestone or calcium carbonate.',
         properties: [
-          'AC: 19; HP: 10; Burst DC: 20 Strength.',
-          'Weight: 10 lbs.',
-          'Cost: 5 gp.',
+          'Weight: negligible.',
+          'Cost: 1 cp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            '10-foot iron chain. Has AC 19, 10 hit points, and burst DC 20 Strength.',
-        description:
-            'Heavy welded iron links used to bind prisoners, secure portcullises, and anchor vehicles.',
+            'Used to draw symbols, directional markers, and dungeon path codes on stone and wood.',
+        description: 'A stick of soft limestone or calcium carbonate.',
         properties: [
-          'AC: 19; HP: 10; Burst DC: 20 Strength.',
-          'Weight: 10 lbs.',
-          'Cost: 5 gp.',
+          'Weight: negligible.',
+          'Cost: 1 cp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'chalk',
-      name: 'Chalk (1 Piece)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'marking', 'navigation', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'marking', 'navigation', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'climbers_kit', ruleset: RulesetVersion.v2024), name: 'Climber\'s Kit',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes pitons, boot tips, gloves, and harness. Allows anchoring oneself so a fall drops no more than 25 feet.',
       rules2014: ItemEditionDetails(
         summary:
-            'Used to draw symbols, directional markers, and dungeon path codes on stone and wood.',
-        description: 'A stick of soft limestone or calcium carbonate.',
+            'Includes pitons, boot tips, gloves, and harness. Allows anchoring oneself so a fall drops no more than 25 feet.',
+        description:
+            'Specialized ascender gear and safety anchors for scaling sheer cliff faces.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 1 cp.',
+          'Prevents falling more than 25 feet while anchored.',
+          'Weight: 12 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Used to draw symbols, directional markers, and dungeon path codes on stone and wood.',
-        description: 'A stick of soft limestone or calcium carbonate.',
+            'Includes pitons, boot tips, gloves, and harness. Allows anchoring oneself so a fall drops no more than 25 feet.',
+        description:
+            'Specialized ascender gear and safety anchors for scaling sheer cliff faces.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 1 cp.',
+          'Prevents falling more than 25 feet while anchored.',
+          'Weight: 12 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'climbers_kit',
-      name: 'Climber\'s Kit',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'climbing', 'safety', 'harness'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'climbing', 'safety', 'harness'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'component_pouch', ruleset: RulesetVersion.v2024), name: 'Component Pouch',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Waterproof belt pouch compartmentalized to hold all non-costly spell material components.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes pitons, boot tips, gloves, and harness. Allows anchoring oneself so a fall drops no more than 25 feet.',
+            'Waterproof belt pouch compartmentalized to hold all non-costly spell material components.',
         description:
-            'Specialized ascender gear and safety anchors for scaling sheer cliff faces.',
+            'A multi-pocketed leather pouch holding pinches of sulfur, feathers, bat fur, and other spell reagents.',
         properties: [
-          'Prevents falling more than 25 feet while anchored.',
-          'Weight: 12 lbs.',
+          'Provides all material components lacking a gp cost.',
+          'Weight: 2 lbs.',
           'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes pitons, boot tips, gloves, and harness. Allows anchoring oneself so a fall drops no more than 25 feet.',
+            'Waterproof belt pouch compartmentalized to hold all non-costly spell material components.',
         description:
-            'Specialized ascender gear and safety anchors for scaling sheer cliff faces.',
+            'A multi-pocketed leather pouch holding pinches of sulfur, feathers, bat fur, and other spell reagents.',
         properties: [
-          'Prevents falling more than 25 feet while anchored.',
-          'Weight: 12 lbs.',
+          'Provides all material components lacking a gp cost.',
+          'Weight: 2 lbs.',
           'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'component_pouch',
-      name: 'Component Pouch',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'spellcasting', 'arcane', 'divine', 'focus'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Waterproof belt pouch compartmentalized to hold all non-costly spell material components.',
-        description:
-            'A multi-pocketed leather pouch holding pinches of sulfur, feathers, bat fur, and other spell reagents.',
-        properties: [
-          'Provides all material components lacking a gp cost.',
-          'Weight: 2 lbs.',
-          'Cost: 25 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Waterproof belt pouch compartmentalized to hold all non-costly spell material components.',
-        description:
-            'A multi-pocketed leather pouch holding pinches of sulfur, feathers, bat fur, and other spell reagents.',
-        properties: [
-          'Provides all material components lacking a gp cost.',
-          'Weight: 2 lbs.',
-          'Cost: 25 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'spellcasting', 'arcane', 'divine', 'focus'] },
     ),
-    MagicItem(
-      id: 'crowbar',
-      name: 'Crowbar',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'crowbar', ruleset: RulesetVersion.v2024), name: 'Crowbar',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'tool', 'utility', 'leverage'],
+      descriptionMarkdown: 'Grants Advantage on Strength (Athletics) checks where leverage is applicable.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants Advantage on Strength checks where the crowbar\'s leverage can be applied.',
@@ -986,15 +979,14 @@ class SrdAdventuringGear {
           'Cost: 2 gp.',
         ],
       ),
+      tags: ['gear', 'tool', 'utility', 'leverage'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'tool', 'utility', 'leverage'] },
     ),
-    MagicItem(
-      id: 'druidic_focus',
-      name:
-          'Druidic Focus (Sprig of Mistletoe / Totem / Wooden Staff / Yew Wand)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'druidic_focus', ruleset: RulesetVersion.v2024), name: 'Druidic Focus (Sprig of Mistletoe / Totem / Wooden Staff / Yew Wand)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'focus', 'druid', 'nature', 'spellcasting'],
+      descriptionMarkdown: 'A special nature focus used to channel druid spells without non-costly components.',
       rules2014: ItemEditionDetails(
         summary:
             'A special nature focus (sprig of mistletoe, totem, wooden staff, or yew wand) used to channel druid spells.',
@@ -1017,126 +1009,124 @@ class SrdAdventuringGear {
           'Cost: 1–10 gp.',
         ],
       ),
+      tags: ['gear', 'focus', 'druid', 'nature', 'spellcasting'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'focus', 'druid', 'nature', 'spellcasting'] },
     ),
-    MagicItem(
-      id: 'fishing_tackle',
-      name: 'Fishing Tackle',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'fishing_tackle', ruleset: RulesetVersion.v2024), name: 'Fishing Tackle',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Includes a wooden rod, silken line, cork bobbers, steel hooks, lead sinkers, and bait lures.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Includes a wooden rod, silken line, cork bobbers, steel hooks, lead sinkers, and bait lures.',
+        description:
+            'A complete kit for harvesting fish in wilderness rivers, lakes, and oceans during travel.',
+        properties: [
+          'Weight: 4 lbs.',
+          'Cost: 1 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Includes a wooden rod, silken line, cork bobbers, steel hooks, lead sinkers, and bait lures.',
+        description:
+            'A complete kit for harvesting fish in wilderness rivers, lakes, and oceans during travel.',
+        properties: [
+          'Weight: 4 lbs.',
+          'Cost: 1 gp.',
+        ],
+      ),
       tags: ['gear', 'survival', 'food', 'foraging'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'survival', 'food', 'foraging'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'grappling_hook', ruleset: RulesetVersion.v2024), name: 'Grappling Hook',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Four-pronged iron hook tied to a rope to secure climbs over walls and ledges.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes a wooden rod, silken line, cork bobbers, steel hooks, lead sinkers, and bait lures.',
+            'Four-pronged iron hook tied to a rope to secure climbs over walls and ledges.',
         description:
-            'A complete kit for harvesting fish in wilderness rivers, lakes, and oceans during travel.',
+            'An anchor hook forged of resilient iron, essential for scale ascents and securing rope lines.',
         properties: [
           'Weight: 4 lbs.',
-          'Cost: 1 gp.',
+          'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes a wooden rod, silken line, cork bobbers, steel hooks, lead sinkers, and bait lures.',
+            'Four-pronged iron hook tied to a rope to secure climbs over walls and ledges.',
         description:
-            'A complete kit for harvesting fish in wilderness rivers, lakes, and oceans during travel.',
+            'An anchor hook forged of resilient iron, essential for scale ascents and securing rope lines.',
         properties: [
           'Weight: 4 lbs.',
-          'Cost: 1 gp.',
+          'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'grappling_hook',
-      name: 'Grappling Hook',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'climbing', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'climbing', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'hammer', ruleset: RulesetVersion.v2024), name: 'Hammer',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'One-handed utility hammer for driving iron spikes and carpentry work.',
       rules2014: ItemEditionDetails(
         summary:
-            'Four-pronged iron hook tied to a rope to secure climbs over walls and ledges.',
+            'One-handed utility hammer for driving iron spikes and carpentry work.',
         description:
-            'An anchor hook forged of resilient iron, essential for scale ascents and securing rope lines.',
+            'A flat-headed tool designed for driving pitons and iron spikes.',
         properties: [
-          'Weight: 4 lbs.',
-          'Cost: 2 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Four-pronged iron hook tied to a rope to secure climbs over walls and ledges.',
+            'One-handed utility hammer for driving iron spikes and carpentry work.',
         description:
-            'An anchor hook forged of resilient iron, essential for scale ascents and securing rope lines.',
+            'A flat-headed tool designed for driving pitons and iron spikes.',
         properties: [
-          'Weight: 4 lbs.',
-          'Cost: 2 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'hammer',
-      name: 'Hammer',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'tool', 'construction', 'bludgeoning'],
-      damageAccent: DamageAccent.bludgeoning,
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'tool', 'construction', 'bludgeoning'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'hammer_sledge', ruleset: RulesetVersion.v2024), name: 'Hammer, Sledge',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Heavy two-handed sledgehammer for demolition, breaking stone, and shattering locks.',
       rules2014: ItemEditionDetails(
         summary:
-            'One-handed utility hammer for driving iron spikes and carpentry work.',
-        description:
-            'A flat-headed tool designed for driving pitons and iron spikes.',
+            'Heavy two-handed sledgehammer for demolition, breaking stone, and shattering locks.',
+        description: 'A massive iron hammerhead mounted on a long wooden haft.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 1 gp.',
+          'Weight: 10 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'One-handed utility hammer for driving iron spikes and carpentry work.',
-        description:
-            'A flat-headed tool designed for driving pitons and iron spikes.',
+            'Heavy two-handed sledgehammer for demolition, breaking stone, and shattering locks.',
+        description: 'A massive iron hammerhead mounted on a long wooden haft.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 1 gp.',
+          'Weight: 10 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'hammer_sledge',
-      name: 'Hammer, Sledge',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'tool', 'demolition', 'heavy', 'bludgeoning'],
-      damageAccent: DamageAccent.bludgeoning,
-      rules2014: ItemEditionDetails(
-        summary:
-            'Heavy two-handed sledgehammer for demolition, breaking stone, and shattering locks.',
-        description: 'A massive iron hammerhead mounted on a long wooden haft.',
-        properties: [
-          'Weight: 10 lbs.',
-          'Cost: 2 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Heavy two-handed sledgehammer for demolition, breaking stone, and shattering locks.',
-        description: 'A massive iron hammerhead mounted on a long wooden haft.',
-        properties: [
-          'Weight: 10 lbs.',
-          'Cost: 2 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'tool', 'demolition', 'heavy', 'bludgeoning'] },
     ),
-    MagicItem(
-      id: 'healers_kit',
-      name: 'Healer\'s Kit',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'healers_kit', ruleset: RulesetVersion.v2024), name: 'Healer\'s Kit',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'healing', 'stabilize', 'medical', 'sustain'],
+      descriptionMarkdown: 'Contains 10 uses. As an action, expend 1 use to stabilize a dying creature without making a Medicine check.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 10 uses. As an action, expend 1 use to stabilize a dying creature without making a Medicine check.',
@@ -1163,226 +1153,224 @@ class SrdAdventuringGear {
           'Cost: 5 gp.',
         ],
       ),
+      tags: ['gear', 'healing', 'stabilize', 'medical', 'sustain'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'healing', 'stabilize', 'medical', 'sustain'] },
     ),
-    MagicItem(
-      id: 'holy_water',
-      name: 'Holy Water (Flask)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'holy_water', ruleset: RulesetVersion.v2024), name: 'Holy Water (Flask)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Improvised ranged attack (range 20 ft). On hit against a Fiend or Undead, deals 2d6 radiant damage.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Improvised ranged attack (range 20 ft). On hit against a Fiend or Undead, deals 2d6 radiant damage.',
+        description:
+            'Water blessed by a cleric or paladin through a ritual in a consecrated sanctuary.',
+        activation: '1 Action',
+        properties: [
+          'Ranged Improvised Weapon Attack (20 ft).',
+          'Deals 2d6 radiant damage against Fiends and Undead.',
+          'Weight: 1 lb.',
+          'Cost: 25 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Improvised ranged attack (range 20 ft). On hit against a Fiend or Undead, deals 2d6 radiant damage.',
+        description:
+            'Water blessed by a cleric or paladin through a ritual in a consecrated sanctuary.',
+        activation: '1 Action',
+        properties: [
+          'Ranged Improvised Weapon Attack (20 ft).',
+          'Deals 2d6 radiant damage against Fiends and Undead.',
+          'Weight: 1 lb.',
+          'Cost: 25 gp.',
+        ],
+      ),
       tags: ['gear', 'radiant', 'undead', 'fiend', 'combat'],
-      damageAccent: DamageAccent.radiant,
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'radiant', 'undead', 'fiend', 'combat'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'hourglass', ruleset: RulesetVersion.v2024), name: 'Hourglass',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Standard sand timer measuring one exact hour of elapsed duration.',
       rules2014: ItemEditionDetails(
         summary:
-            'Improvised ranged attack (range 20 ft). On hit against a Fiend or Undead, deals 2d6 radiant damage.',
+            'Standard sand timer measuring one exact hour of elapsed duration.',
         description:
-            'Water blessed by a cleric or paladin through a ritual in a consecrated sanctuary.',
-        activation: '1 Action',
+            'Two connected glass bulbs filled with fine measured sand in a protective brass or wooden frame.',
         properties: [
-          'Ranged Improvised Weapon Attack (20 ft).',
-          'Deals 2d6 radiant damage against Fiends and Undead.',
           'Weight: 1 lb.',
           'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Improvised ranged attack (range 20 ft). On hit against a Fiend or Undead, deals 2d6 radiant damage.',
+            'Standard sand timer measuring one exact hour of elapsed duration.',
         description:
-            'Water blessed by a cleric or paladin through a ritual in a consecrated sanctuary.',
-        activation: '1 Action',
+            'Two connected glass bulbs filled with fine measured sand in a protective brass or wooden frame.',
         properties: [
-          'Ranged Improvised Weapon Attack (20 ft).',
-          'Deals 2d6 radiant damage against Fiends and Undead.',
           'Weight: 1 lb.',
           'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'hourglass',
-      name: 'Hourglass',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'time', 'navigation', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'time', 'navigation', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'hunting_trap', ruleset: RulesetVersion.v2024), name: 'Hunting Trap',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Stepping on the trap requires a DC 13 Dex save or take 1d4 piercing damage and stop moving until escaping with a DC 13 Str check.',
       rules2014: ItemEditionDetails(
         summary:
-            'Standard sand timer measuring one exact hour of elapsed duration.',
+            'Stepping on the trap requires a DC 13 Dex save or take 1d4 piercing damage and stop moving until escaping with a DC 13 Str check.',
         description:
-            'Two connected glass bulbs filled with fine measured sand in a protective brass or wooden frame.',
+            'A heavy spring-loaded iron jaw anchored by a chain to a spike.',
+        activation: '1 Action',
         properties: [
-          'Weight: 1 lb.',
-          'Cost: 25 gp.',
+          'DC 13 Dexterity save or 1d4 piercing damage and immobilized.',
+          'Escape requires DC 13 Strength check.',
+          'Weight: 25 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Standard sand timer measuring one exact hour of elapsed duration.',
+            'Stepping on the trap requires a DC 13 Dex save or take 1d4 piercing damage and stop moving until escaping with a DC 13 Str check.',
         description:
-            'Two connected glass bulbs filled with fine measured sand in a protective brass or wooden frame.',
+            'A heavy spring-loaded iron jaw anchored by a chain to a spike.',
+        activation: '1 Action',
         properties: [
-          'Weight: 1 lb.',
-          'Cost: 25 gp.',
+          'DC 13 Dexterity save or 1d4 piercing damage and immobilized.',
+          'Escape requires DC 13 Strength check.',
+          'Weight: 25 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'hunting_trap',
-      name: 'Hunting Trap',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'trap', 'restrain', 'control', 'piercing'],
-      damageAccent: DamageAccent.piercing,
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'trap', 'restrain', 'control', 'piercing'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'ink_bottle', ruleset: RulesetVersion.v2024), name: 'Ink (1 Ounce Bottle)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1 ounce bottle of black or dark sepia ink for scribing scrolls, maps, and spellbook pages.',
       rules2014: ItemEditionDetails(
         summary:
-            'Stepping on the trap requires a DC 13 Dex save or take 1d4 piercing damage and stop moving until escaping with a DC 13 Str check.',
+            '1 ounce bottle of black or dark sepia ink for scribing scrolls, maps, and spellbook pages.',
         description:
-            'A heavy spring-loaded iron jaw anchored by a chain to a spike.',
-        activation: '1 Action',
+            'High-grade gall or carbon ink stored in a stoppered glass vial.',
         properties: [
-          'DC 13 Dexterity save or 1d4 piercing damage and immobilized.',
-          'Escape requires DC 13 Strength check.',
-          'Weight: 25 lbs.',
-          'Cost: 5 gp.',
+          'Weight: negligible.',
+          'Cost: 10 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Stepping on the trap requires a DC 13 Dex save or take 1d4 piercing damage and stop moving until escaping with a DC 13 Str check.',
+            '1 ounce bottle of black or dark sepia ink for scribing scrolls, maps, and spellbook pages.',
         description:
-            'A heavy spring-loaded iron jaw anchored by a chain to a spike.',
-        activation: '1 Action',
+            'High-grade gall or carbon ink stored in a stoppered glass vial.',
         properties: [
-          'DC 13 Dexterity save or 1d4 piercing damage and immobilized.',
-          'Escape requires DC 13 Strength check.',
-          'Weight: 25 lbs.',
-          'Cost: 5 gp.',
+          'Weight: negligible.',
+          'Cost: 10 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'ink_bottle',
-      name: 'Ink (1 Ounce Bottle)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'writing', 'scrolls', 'spellbook'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'writing', 'scrolls', 'spellbook'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'ink_pen', ruleset: RulesetVersion.v2024), name: 'Ink Pen',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Quill or dip pen with a carved wooden or metal nib for writing with ink.',
       rules2014: ItemEditionDetails(
         summary:
-            '1 ounce bottle of black or dark sepia ink for scribing scrolls, maps, and spellbook pages.',
+            'Quill or dip pen with a carved wooden or metal nib for writing with ink.',
         description:
-            'High-grade gall or carbon ink stored in a stoppered glass vial.',
+            'A sturdy writing pen for cartography, legal contracts, and arcane study.',
         properties: [
           'Weight: negligible.',
-          'Cost: 10 gp.',
+          'Cost: 2 cp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            '1 ounce bottle of black or dark sepia ink for scribing scrolls, maps, and spellbook pages.',
+            'Quill or dip pen with a carved wooden or metal nib for writing with ink.',
         description:
-            'High-grade gall or carbon ink stored in a stoppered glass vial.',
+            'A sturdy writing pen for cartography, legal contracts, and arcane study.',
         properties: [
           'Weight: negligible.',
-          'Cost: 10 gp.',
+          'Cost: 2 cp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'ink_pen',
-      name: 'Ink Pen',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'writing', 'scholarship'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'writing', 'scholarship'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'ladder_10ft', ruleset: RulesetVersion.v2024), name: 'Ladder (10-Foot)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '10-foot wooden ladder with reinforced rungs.',
       rules2014: ItemEditionDetails(
-        summary:
-            'Quill or dip pen with a carved wooden or metal nib for writing with ink.',
+        summary: '10-foot wooden ladder with reinforced rungs.',
         description:
-            'A sturdy writing pen for cartography, legal contracts, and arcane study.',
+            'A simple timber ladder for scaling roofs, dungeon drop-offs, and pit traps.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 2 cp.',
+          'Height: 10 feet.',
+          'Weight: 25 lbs.',
+          'Cost: 1 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary:
-            'Quill or dip pen with a carved wooden or metal nib for writing with ink.',
+        summary: '10-foot wooden ladder with reinforced rungs.',
         description:
-            'A sturdy writing pen for cartography, legal contracts, and arcane study.',
+            'A simple timber ladder for scaling roofs, dungeon drop-offs, and pit traps.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 2 cp.',
+          'Height: 10 feet.',
+          'Weight: 25 lbs.',
+          'Cost: 1 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'ladder_10ft',
-      name: 'Ladder (10-Foot)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'climbing', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'climbing', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'lamp', ruleset: RulesetVersion.v2024), name: 'Lamp',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Casts bright light in a 15-foot radius and dim light for an additional 30 feet for 6 hours on 1 flask of oil.',
       rules2014: ItemEditionDetails(
-        summary: '10-foot wooden ladder with reinforced rungs.',
-        description:
-            'A simple timber ladder for scaling roofs, dungeon drop-offs, and pit traps.',
+        summary:
+            'Casts bright light in a 15-foot radius and dim light for an additional 30 feet for 6 hours on 1 flask of oil.',
+        description: 'A small clay or brass oil lamp with a wick spout.',
         properties: [
-          'Height: 10 feet.',
-          'Weight: 25 lbs.',
-          'Cost: 1 sp.',
+          'Bright light: 15-ft radius; Dim light: additional 30 ft.',
+          'Burns for 6 hours on 1 flask of oil.',
+          'Weight: 1 lb.',
+          'Cost: 5 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
-        summary: '10-foot wooden ladder with reinforced rungs.',
-        description:
-            'A simple timber ladder for scaling roofs, dungeon drop-offs, and pit traps.',
+        summary:
+            'Casts bright light in a 15-foot radius and dim light for an additional 30 feet for 6 hours on 1 flask of oil.',
+        description: 'A small clay or brass oil lamp with a wick spout.',
         properties: [
-          'Height: 10 feet.',
-          'Weight: 25 lbs.',
-          'Cost: 1 sp.',
+          'Bright light: 15-ft radius; Dim light: additional 30 ft.',
+          'Burns for 6 hours on 1 flask of oil.',
+          'Weight: 1 lb.',
+          'Cost: 5 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'lamp',
-      name: 'Lamp',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'light', 'oil', 'vision'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Casts bright light in a 15-foot radius and dim light for an additional 30 feet for 6 hours on 1 flask of oil.',
-        description: 'A small clay or brass oil lamp with a wick spout.',
-        properties: [
-          'Bright light: 15-ft radius; Dim light: additional 30 ft.',
-          'Burns for 6 hours on 1 flask of oil.',
-          'Weight: 1 lb.',
-          'Cost: 5 sp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Casts bright light in a 15-foot radius and dim light for an additional 30 feet for 6 hours on 1 flask of oil.',
-        description: 'A small clay or brass oil lamp with a wick spout.',
-        properties: [
-          'Bright light: 15-ft radius; Dim light: additional 30 ft.',
-          'Burns for 6 hours on 1 flask of oil.',
-          'Weight: 1 lb.',
-          'Cost: 5 sp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'light', 'oil', 'vision'] },
     ),
-    MagicItem(
-      id: 'bullseye_lantern',
-      name: 'Lantern, Bullseye',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'bullseye_lantern', ruleset: RulesetVersion.v2024), name: 'Lantern, Bullseye',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'light', 'vision', 'exploration'],
+      descriptionMarkdown: 'Casts bright light in a 60-foot cone and dim light for an additional 60 feet for 6 hours on 1 flask of oil.',
       rules2014: ItemEditionDetails(
         summary:
             'Casts bright light in a 60-foot cone and dim light for an additional 60 feet for 6 hours on 1 flask of oil.',
@@ -1407,14 +1395,14 @@ class SrdAdventuringGear {
           'Cost: 10 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'hooded_lantern',
-      name: 'Lantern, Hooded',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'light', 'vision', 'exploration'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'light', 'vision', 'exploration'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'hooded_lantern', ruleset: RulesetVersion.v2024), name: 'Lantern, Hooded',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Casts bright light in a 30-foot radius and dim light for an additional 30 feet for 6 hours on 1 flask of oil.',
       rules2014: ItemEditionDetails(
         summary:
             'Casts bright light in a 30-foot radius and dim light for an additional 30 feet for 6 hours on 1 flask of oil.',
@@ -1439,14 +1427,14 @@ class SrdAdventuringGear {
           'Cost: 5 gp.',
         ],
       ),
+      tags: ['gear', 'light', 'vision', 'exploration'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'light', 'vision', 'exploration'] },
     ),
-    MagicItem(
-      id: 'lock',
-      name: 'Lock',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'lock', ruleset: RulesetVersion.v2024), name: 'Lock',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'security', 'locks', 'doors'],
+      descriptionMarkdown: 'Comes with a key. Opening without key requires a DC 15 Dexterity (Sleight of Hand) check using Thieves\' Tools.',
       rules2014: ItemEditionDetails(
         summary:
             'Comes with a key. Opening without key requires a DC 15 Thieves\' Tools check.',
@@ -1467,15 +1455,14 @@ class SrdAdventuringGear {
           'Cost: 10 gp.',
         ],
       ),
+      tags: ['gear', 'security', 'locks', 'doors'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'security', 'locks', 'doors'] },
     ),
-    MagicItem(
-      id: 'magnifying_glass',
-      name: 'Magnifying Glass',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'magnifying_glass', ruleset: RulesetVersion.v2024), name: 'Magnifying Glass',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'investigation', 'optical', 'fire'],
-      damageAccent: DamageAccent.fire,
+      descriptionMarkdown: 'Grants Advantage on ability checks made to inspect small or detailed objects. Can start a fire under bright sunlight.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants Advantage on ability checks made to appraise or inspect small or detailed items. Can light tinder in direct sunlight.',
@@ -1499,101 +1486,100 @@ class SrdAdventuringGear {
           'Cost: 100 gp.',
         ],
       ),
+      tags: ['gear', 'investigation', 'optical', 'fire'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'investigation', 'optical', 'fire'] },
     ),
-    MagicItem(
-      id: 'manacles',
-      name: 'Manacles',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'manacles', ruleset: RulesetVersion.v2024), name: 'Manacles',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Binds a Small or Medium creature. Escaping requires DC 20 Dex check; breaking requires DC 20 Str check; picking requires DC 15 Thieves\' Tools.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Binds a Small or Medium creature. Escaping requires DC 20 Dex check; breaking requires DC 20 Str check; picking requires DC 15 Thieves\' Tools.',
+        description:
+            'A pair of hinged iron wrist shackles connected by welded chain links.',
+        properties: [
+          'Escape DC: 20 Dexterity; Break DC: 20 Strength; Pick DC: 15 Thieves\' Tools.',
+          'Weight: 6 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Binds a Small or Medium creature. Escaping requires DC 20 Dex check; breaking requires DC 20 Str check; picking requires DC 15 Thieves\' Tools.',
+        description:
+            'A pair of hinged iron wrist shackles connected by welded chain links.',
+        properties: [
+          'Escape DC: 20 Dexterity; Break DC: 20 Strength; Pick DC: 15 Thieves\' Tools.',
+          'Weight: 6 lbs.',
+          'Cost: 2 gp.',
+        ],
+      ),
       tags: ['gear', 'restraint', 'security', 'control'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'restraint', 'security', 'control'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'mess_kit', ruleset: RulesetVersion.v2024), name: 'Mess Kit',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Contains a cup and simple cutlery. The box clamps together to store the pieces and can serve as a cooking pan.',
       rules2014: ItemEditionDetails(
         summary:
-            'Binds a Small or Medium creature. Escaping requires DC 20 Dex check; breaking requires DC 20 Str check; picking requires DC 15 Thieves\' Tools.',
+            'Contains a cup and simple cutlery. The box clamps together to store the pieces and can serve as a cooking pan.',
         description:
-            'A pair of hinged iron wrist shackles connected by welded chain links.',
+            'A nesting metal container holding a plate, bowl, cup, fork, and spoon.',
         properties: [
-          'Escape DC: 20 Dexterity; Break DC: 20 Strength; Pick DC: 15 Thieves\' Tools.',
-          'Weight: 6 lbs.',
-          'Cost: 2 gp.',
+          'Weight: 1 lb.',
+          'Cost: 2 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Binds a Small or Medium creature. Escaping requires DC 20 Dex check; breaking requires DC 20 Str check; picking requires DC 15 Thieves\' Tools.',
+            'Contains a cup and simple cutlery. The box clamps together to store the pieces and can serve as a cooking pan.',
         description:
-            'A pair of hinged iron wrist shackles connected by welded chain links.',
+            'A nesting metal container holding a plate, bowl, cup, fork, and spoon.',
         properties: [
-          'Escape DC: 20 Dexterity; Break DC: 20 Strength; Pick DC: 15 Thieves\' Tools.',
-          'Weight: 6 lbs.',
-          'Cost: 2 gp.',
+          'Weight: 1 lb.',
+          'Cost: 2 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'mess_kit',
-      name: 'Mess Kit',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'camp', 'dining', 'survival'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'camp', 'dining', 'survival'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'mirror_steel', ruleset: RulesetVersion.v2024), name: 'Mirror, Steel',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Polished steel reflective hand mirror used for looking around corners or signaling over long distances.',
       rules2014: ItemEditionDetails(
         summary:
-            'Contains a cup and simple cutlery. The box clamps together to store the pieces and can serve as a cooking pan.',
+            'Polished steel reflective hand mirror used for looking around corners or signaling over long distances.',
         description:
-            'A nesting metal container holding a plate, bowl, cup, fork, and spoon.',
+            'A polished metal plate that does not shatter like glass when struck.',
         properties: [
-          'Weight: 1 lb.',
-          'Cost: 2 sp.',
+          'Weight: ½ lb.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Contains a cup and simple cutlery. The box clamps together to store the pieces and can serve as a cooking pan.',
+            'Polished steel reflective hand mirror used for looking around corners or signaling over long distances.',
         description:
-            'A nesting metal container holding a plate, bowl, cup, fork, and spoon.',
+            'A polished metal plate that does not shatter like glass when struck.',
         properties: [
-          'Weight: 1 lb.',
-          'Cost: 2 sp.',
+          'Weight: ½ lb.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'mirror_steel',
-      name: 'Mirror, Steel',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'scouting', 'signaling', 'optical'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Polished steel reflective hand mirror used for looking around corners or signaling over long distances.',
-        description:
-            'A polished metal plate that does not shatter like glass when struck.',
-        properties: [
-          'Weight: ½ lb.',
-          'Cost: 5 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Polished steel reflective hand mirror used for looking around corners or signaling over long distances.',
-        description:
-            'A polished metal plate that does not shatter like glass when struck.',
-        properties: [
-          'Weight: ½ lb.',
-          'Cost: 5 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'scouting', 'signaling', 'optical'] },
     ),
-    MagicItem(
-      id: 'oil_flask',
-      name: 'Oil (Flask)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'oil_flask', ruleset: RulesetVersion.v2024), name: 'Oil (Flask)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'fire', 'fuel', 'combat', 'utility'],
-      damageAccent: DamageAccent.fire,
+      descriptionMarkdown: 'Used as fuel for lanterns (6 hrs) or splashed as a ranged attack (20 ft) to add 5 fire damage when ignited.',
       rules2014: ItemEditionDetails(
         summary:
             'Used as fuel for lanterns (6 hrs) or splashed as a ranged attack (20 ft) to add 5 fire damage when ignited.',
@@ -1622,152 +1608,150 @@ class SrdAdventuringGear {
           'Cost: 1 sp.',
         ],
       ),
+      tags: ['gear', 'fire', 'fuel', 'combat', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'fire', 'fuel', 'combat', 'utility'] },
     ),
-    MagicItem(
-      id: 'paper_sheet',
-      name: 'Paper (One Sheet)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'paper_sheet', ruleset: RulesetVersion.v2024), name: 'Paper (One Sheet)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'A single leaf of rag or wood pulp paper suitable for maps, letters, and rubbings.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'A single leaf of rag or wood pulp paper suitable for maps, letters, and rubbings.',
+        description: 'Smooth pressed paper for scribing and drawing.',
+        properties: [
+          'Weight: negligible.',
+          'Cost: 2 sp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'A single leaf of rag or wood pulp paper suitable for maps, letters, and rubbings.',
+        description: 'Smooth pressed paper for scribing and drawing.',
+        properties: [
+          'Weight: negligible.',
+          'Cost: 2 sp.',
+        ],
+      ),
       tags: ['gear', 'writing', 'maps', 'letters'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'writing', 'maps', 'letters'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'parchment_sheet', ruleset: RulesetVersion.v2024), name: 'Parchment (One Sheet)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Treated animal skin parchment, durable and weather-resistant for magical scrolls and official edicts.',
       rules2014: ItemEditionDetails(
         summary:
-            'A single leaf of rag or wood pulp paper suitable for maps, letters, and rubbings.',
-        description: 'Smooth pressed paper for scribing and drawing.',
+            'Treated animal skin parchment, durable and weather-resistant for magical scrolls and official edicts.',
+        description:
+            'A durable sheet of scraped and treated calf or sheep vellum.',
         properties: [
           'Weight: negligible.',
-          'Cost: 2 sp.',
+          'Cost: 1 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'A single leaf of rag or wood pulp paper suitable for maps, letters, and rubbings.',
-        description: 'Smooth pressed paper for scribing and drawing.',
+            'Treated animal skin parchment, durable and weather-resistant for magical scrolls and official edicts.',
+        description:
+            'A durable sheet of scraped and treated calf or sheep vellum.',
         properties: [
           'Weight: negligible.',
-          'Cost: 2 sp.',
+          'Cost: 1 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'parchment_sheet',
-      name: 'Parchment (One Sheet)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'writing', 'scrolls', 'documents'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'writing', 'scrolls', 'documents'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'perfume_vial', ruleset: RulesetVersion.v2024), name: 'Perfume (Vial)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Aromatic essential oils providing sweet fragrance to mask dungeon stench or impress nobility.',
       rules2014: ItemEditionDetails(
         summary:
-            'Treated animal skin parchment, durable and weather-resistant for magical scrolls and official edicts.',
+            'Aromatic essential oils providing sweet fragrance to mask dungeon stench or impress nobility.',
         description:
-            'A durable sheet of scraped and treated calf or sheep vellum.',
+            'A decorative cut-crystal vial of distilled floral essence.',
         properties: [
           'Weight: negligible.',
-          'Cost: 1 sp.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Treated animal skin parchment, durable and weather-resistant for magical scrolls and official edicts.',
+            'Aromatic essential oils providing sweet fragrance to mask dungeon stench or impress nobility.',
         description:
-            'A durable sheet of scraped and treated calf or sheep vellum.',
+            'A decorative cut-crystal vial of distilled floral essence.',
         properties: [
           'Weight: negligible.',
-          'Cost: 1 sp.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'perfume_vial',
-      name: 'Perfume (Vial)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'social', 'aristocracy'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'social', 'aristocracy'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'pick_miners', ruleset: RulesetVersion.v2024), name: 'Pick, Miner\'s',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Two-handed pick for breaking through subterranean rock, masonry, and mineral veins.',
       rules2014: ItemEditionDetails(
         summary:
-            'Aromatic essential oils providing sweet fragrance to mask dungeon stench or impress nobility.',
-        description:
-            'A decorative cut-crystal vial of distilled floral essence.',
+            'Two-handed pick for breaking through subterranean rock, masonry, and mineral veins.',
+        description: 'A heavy pointed iron pick head fitted to an ash haft.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 5 gp.',
+          'Weight: 10 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Aromatic essential oils providing sweet fragrance to mask dungeon stench or impress nobility.',
-        description:
-            'A decorative cut-crystal vial of distilled floral essence.',
+            'Two-handed pick for breaking through subterranean rock, masonry, and mineral veins.',
+        description: 'A heavy pointed iron pick head fitted to an ash haft.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 5 gp.',
+          'Weight: 10 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'pick_miners',
-      name: 'Pick, Miner\'s',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'mining', 'tool', 'excavation', 'piercing'],
-      damageAccent: DamageAccent.piercing,
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'mining', 'tool', 'excavation', 'piercing'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'piton', ruleset: RulesetVersion.v2024), name: 'Piton',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Iron spike with an eyelet for passing rope through during climbing or spiking doors shut.',
       rules2014: ItemEditionDetails(
         summary:
-            'Two-handed pick for breaking through subterranean rock, masonry, and mineral veins.',
-        description: 'A heavy pointed iron pick head fitted to an ash haft.',
+            'Iron spike with an eyelet for passing rope through during climbing or spiking doors shut.',
+        description:
+            'A forged steel spike driven into rock crevices to create rope anchor points.',
         properties: [
-          'Weight: 10 lbs.',
-          'Cost: 2 gp.',
+          'Weight: ¼ lb.',
+          'Cost: 5 cp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Two-handed pick for breaking through subterranean rock, masonry, and mineral veins.',
-        description: 'A heavy pointed iron pick head fitted to an ash haft.',
+            'Iron spike with an eyelet for passing rope through during climbing or spiking doors shut.',
+        description:
+            'A forged steel spike driven into rock crevices to create rope anchor points.',
         properties: [
-          'Weight: 10 lbs.',
-          'Cost: 2 gp.',
+          'Weight: ¼ lb.',
+          'Cost: 5 cp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'piton',
-      name: 'Piton',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'climbing', 'anchors', 'iron'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Iron spike with an eyelet for passing rope through during climbing or spiking doors shut.',
-        description:
-            'A forged steel spike driven into rock crevices to create rope anchor points.',
-        properties: [
-          'Weight: ¼ lb.',
-          'Cost: 5 cp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Iron spike with an eyelet for passing rope through during climbing or spiking doors shut.',
-        description:
-            'A forged steel spike driven into rock crevices to create rope anchor points.',
-        properties: [
-          'Weight: ¼ lb.',
-          'Cost: 5 cp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'climbing', 'anchors', 'iron'] },
     ),
-    MagicItem(
-      id: 'poison_basic',
-      name: 'Poison, Basic (Vial)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'poison_basic', ruleset: RulesetVersion.v2024), name: 'Poison, Basic (Vial)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'poison', 'combat', 'coating'],
-      damageAccent: DamageAccent.poison,
+      descriptionMarkdown: 'Applied to one slashing/piercing weapon or up to 3 pieces of ammunition. Hit creature must succeed on DC 10 Constitution save or take 1d4 poison damage.',
       rules2014: ItemEditionDetails(
         summary:
             'Applied to one slashing/piercing weapon or up to 3 pieces of ammunition. Hit creature must succeed on DC 10 Constitution save or take 1d4 poison damage.',
@@ -1794,14 +1778,14 @@ class SrdAdventuringGear {
           'Cost: 100 gp.',
         ],
       ),
+      tags: ['gear', 'poison', 'combat', 'coating'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'poison', 'combat', 'coating'] },
     ),
-    MagicItem(
-      id: 'pole_10ft',
-      name: 'Pole (10-Foot)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'pole_10ft', ruleset: RulesetVersion.v2024), name: 'Pole (10-Foot)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'traps', 'utility', 'dungeon'],
+      descriptionMarkdown: 'A 10-foot wooden pole used for probing suspicious floor tiles, testing water depth, and triggering pressure plates.',
       rules2014: ItemEditionDetails(
         summary:
             'A 10-foot wooden pole used for probing suspicious floor tiles, testing water depth, and triggering pressure plates.',
@@ -1822,14 +1806,14 @@ class SrdAdventuringGear {
           'Cost: 5 cp.',
         ],
       ),
+      tags: ['gear', 'traps', 'utility', 'dungeon'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'traps', 'utility', 'dungeon'] },
     ),
-    MagicItem(
-      id: 'ram_portable',
-      name: 'Ram, Portable',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'ram_portable', ruleset: RulesetVersion.v2024), name: 'Ram, Portable',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'breaching', 'doors', 'demolition'],
+      descriptionMarkdown: 'Grants +4 bonus on Strength checks to break down doors. Another character can assist to grant Advantage.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants +4 bonus on Strength checks to break down doors. Another character can assist to grant Advantage.',
@@ -1853,359 +1837,358 @@ class SrdAdventuringGear {
           'Cost: 4 gp.',
         ],
       ),
+      tags: ['gear', 'breaching', 'doors', 'demolition'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'breaching', 'doors', 'demolition'] },
     ),
-    MagicItem(
-      id: 'rations',
-      name: 'Rations (1 Day)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'rations', ruleset: RulesetVersion.v2024), name: 'Rations (1 Day)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Compact dry food suitable for extended travel, including jerky, dried fruit, hardtack, and nuts.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Compact dry food suitable for extended travel, including jerky, dried fruit, hardtack, and nuts.',
+        description:
+            'One day\'s worth of preserved survival sustenance for a Medium creature.',
+        properties: [
+          'Weight: 2 lbs.',
+          'Cost: 5 sp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Compact dry food suitable for extended travel, including jerky, dried fruit, hardtack, and nuts.',
+        description:
+            'One day\'s worth of preserved survival sustenance for a Medium creature.',
+        properties: [
+          'Weight: 2 lbs.',
+          'Cost: 5 sp.',
+        ],
+      ),
       tags: ['gear', 'food', 'survival'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'food', 'survival'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'rope_hempen', ruleset: RulesetVersion.v2024), name: 'Rope, Hempen (50 Feet)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '50-foot natural hemp rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
       rules2014: ItemEditionDetails(
         summary:
-            'Compact dry food suitable for extended travel, including jerky, dried fruit, hardtack, and nuts.',
+            '50-foot natural hemp rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
         description:
-            'One day\'s worth of preserved survival sustenance for a Medium creature.',
+            'Standard braided natural hemp cordage for all climbing, hauling, and binding needs.',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 5 sp.',
+          'Length: 50 feet.',
+          'HP: 2; Burst DC: 17 Strength.',
+          'Weight: 10 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Compact dry food suitable for extended travel, including jerky, dried fruit, hardtack, and nuts.',
+            '50-foot natural hemp rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
         description:
-            'One day\'s worth of preserved survival sustenance for a Medium creature.',
+            'Standard braided natural hemp cordage for all climbing, hauling, and binding needs.',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 5 sp.',
+          'Length: 50 feet.',
+          'HP: 2; Burst DC: 17 Strength.',
+          'Weight: 10 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'rope_hempen',
-      name: 'Rope, Hempen (50 Feet)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'rope', 'climbing', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'rope', 'climbing', 'utility'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'rope_silk', ruleset: RulesetVersion.v2024), name: 'Rope, Silk (50 Feet)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '50-foot lightweight braided silk rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
       rules2014: ItemEditionDetails(
         summary:
-            '50-foot natural hemp rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
+            '50-foot lightweight braided silk rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
         description:
-            'Standard braided natural hemp cordage for all climbing, hauling, and binding needs.',
+            'Strong, supple rope woven from spider or silkworm thread, much lighter than hempen rope.',
         properties: [
           'Length: 50 feet.',
           'HP: 2; Burst DC: 17 Strength.',
-          'Weight: 10 lbs.',
-          'Cost: 1 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            '50-foot natural hemp rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
+            '50-foot lightweight braided silk rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
         description:
-            'Standard braided natural hemp cordage for all climbing, hauling, and binding needs.',
+            'Strong, supple rope woven from spider or silkworm thread, much lighter than hempen rope.',
         properties: [
           'Length: 50 feet.',
           'HP: 2; Burst DC: 17 Strength.',
-          'Weight: 10 lbs.',
-          'Cost: 1 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'rope_silk',
-      name: 'Rope, Silk (50 Feet)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'utility', 'climbing', 'restraint'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'utility', 'climbing', 'restraint'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'scale_merchants', ruleset: RulesetVersion.v2024), name: 'Scale, Merchant\'s',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Balanced brass balance scale with precise counterweights for measuring precious metals and gems.',
       rules2014: ItemEditionDetails(
         summary:
-            '50-foot lightweight braided silk rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
+            'Balanced brass balance scale with precise counterweights for measuring precious metals and gems.',
         description:
-            'Strong, supple rope woven from spider or silkworm thread, much lighter than hempen rope.',
+            'A calibrated balance scale essential for trade and banking.',
         properties: [
-          'Length: 50 feet.',
-          'HP: 2; Burst DC: 17 Strength.',
-          'Weight: 5 lbs.',
-          'Cost: 10 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            '50-foot lightweight braided silk rope. Has 2 hit points and can be burst with a DC 17 Strength check.',
+            'Balanced brass balance scale with precise counterweights for measuring precious metals and gems.',
         description:
-            'Strong, supple rope woven from spider or silkworm thread, much lighter than hempen rope.',
+            'A calibrated balance scale essential for trade and banking.',
         properties: [
-          'Length: 50 feet.',
-          'HP: 2; Burst DC: 17 Strength.',
-          'Weight: 5 lbs.',
-          'Cost: 10 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'scale_merchants',
-      name: 'Scale, Merchant\'s',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'trade', 'measurement', 'coins'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'trade', 'measurement', 'coins'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'sealing_wax', ruleset: RulesetVersion.v2024), name: 'Sealing Wax',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Stick of red or black resin wax for sealing letters and identifying tampered documents.',
       rules2014: ItemEditionDetails(
         summary:
-            'Balanced brass balance scale with precise counterweights for measuring precious metals and gems.',
+            'Stick of red or black resin wax for sealing letters and identifying tampered documents.',
         description:
-            'A calibrated balance scale essential for trade and banking.',
+            'High-adhesion wax melted by flame and impressed with a signet ring.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 5 gp.',
+          'Weight: negligible.',
+          'Cost: 5 sp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Balanced brass balance scale with precise counterweights for measuring precious metals and gems.',
+            'Stick of red or black resin wax for sealing letters and identifying tampered documents.',
         description:
-            'A calibrated balance scale essential for trade and banking.',
+            'High-adhesion wax melted by flame and impressed with a signet ring.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 5 gp.',
+          'Weight: negligible.',
+          'Cost: 5 sp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'sealing_wax',
-      name: 'Sealing Wax',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'writing', 'security', 'letters'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'writing', 'security', 'letters'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'shovel', ruleset: RulesetVersion.v2024), name: 'Shovel',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Sturdy steel-bladed spade with a wooden handle for digging trenches and unearthing burial vaults.',
       rules2014: ItemEditionDetails(
         summary:
-            'Stick of red or black resin wax for sealing letters and identifying tampered documents.',
-        description:
-            'High-adhesion wax melted by flame and impressed with a signet ring.',
+            'Sturdy steel-bladed spade with a wooden handle for digging trenches and unearthing burial vaults.',
+        description: 'A standard excavation tool.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 5 sp.',
+          'Weight: 5 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Stick of red or black resin wax for sealing letters and identifying tampered documents.',
-        description:
-            'High-adhesion wax melted by flame and impressed with a signet ring.',
+            'Sturdy steel-bladed spade with a wooden handle for digging trenches and unearthing burial vaults.',
+        description: 'A standard excavation tool.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 5 sp.',
+          'Weight: 5 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'shovel',
-      name: 'Shovel',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'excavation', 'tool'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'excavation', 'tool'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'signal_whistle', ruleset: RulesetVersion.v2024), name: 'Signal Whistle',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Produces a piercing high-pitched blast audible up to a quarter mile away.',
       rules2014: ItemEditionDetails(
         summary:
-            'Sturdy steel-bladed spade with a wooden handle for digging trenches and unearthing burial vaults.',
-        description: 'A standard excavation tool.',
+            'Produces a piercing high-pitched blast audible up to a quarter mile away.',
+        description: 'A small brass whistle on a neck lanyard.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 2 gp.',
+          'Weight: negligible.',
+          'Cost: 5 cp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Sturdy steel-bladed spade with a wooden handle for digging trenches and unearthing burial vaults.',
-        description: 'A standard excavation tool.',
+            'Produces a piercing high-pitched blast audible up to a quarter mile away.',
+        description: 'A small brass whistle on a neck lanyard.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 2 gp.',
+          'Weight: negligible.',
+          'Cost: 5 cp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'signal_whistle',
-      name: 'Signal Whistle',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'signaling', 'sound', 'scouting'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'signaling', 'sound', 'scouting'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'signet_ring', ruleset: RulesetVersion.v2024), name: 'Signet Ring',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Engraved with the heraldic crest of a noble house, guild, or sovereign order.',
       rules2014: ItemEditionDetails(
         summary:
-            'Produces a piercing high-pitched blast audible up to a quarter mile away.',
-        description: 'A small brass whistle on a neck lanyard.',
+            'Engraved with the heraldic crest of a noble house, guild, or sovereign order.',
+        description:
+            'A gold or silver ring with an intaglio crest for stamping heated sealing wax.',
         properties: [
           'Weight: negligible.',
-          'Cost: 5 cp.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Produces a piercing high-pitched blast audible up to a quarter mile away.',
-        description: 'A small brass whistle on a neck lanyard.',
+            'Engraved with the heraldic crest of a noble house, guild, or sovereign order.',
+        description:
+            'A gold or silver ring with an intaglio crest for stamping heated sealing wax.',
         properties: [
           'Weight: negligible.',
-          'Cost: 5 cp.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'signet_ring',
-      name: 'Signet Ring',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'nobility', 'identification', 'letters'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'nobility', 'identification', 'letters'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'spellbook', ruleset: RulesetVersion.v2024), name: 'Spellbook',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Essential for wizards. A leather-bound tome holding 100 blank vellum pages for scribing spells.',
       rules2014: ItemEditionDetails(
         summary:
-            'Engraved with the heraldic crest of a noble house, guild, or sovereign order.',
+            'Essential for wizards. A leather-bound tome holding 100 blank vellum pages for scribing spells.',
         description:
-            'A gold or silver ring with an intaglio crest for stamping heated sealing wax.',
+            'A wizard\'s grimoire bound with protective metal corner-caps and a locking clasp.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 5 gp.',
+          'Holds 100 pages for spell transcription.',
+          'Weight: 3 lbs.',
+          'Cost: 50 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Engraved with the heraldic crest of a noble house, guild, or sovereign order.',
+            'Essential for wizards. A leather-bound tome holding 100 blank vellum pages for scribing spells.',
         description:
-            'A gold or silver ring with an intaglio crest for stamping heated sealing wax.',
+            'A wizard\'s grimoire bound with protective metal corner-caps and a locking clasp.',
         properties: [
-          'Weight: negligible.',
-          'Cost: 5 gp.',
+          'Holds 100 pages for spell transcription.',
+          'Weight: 3 lbs.',
+          'Cost: 50 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'spellbook',
-      name: 'Spellbook',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'wizard', 'arcane', 'spells', 'grimoire'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'wizard', 'arcane', 'spells', 'grimoire'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'spikes_iron', ruleset: RulesetVersion.v2024), name: 'Spikes, Iron (10)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Ten heavy iron spikes for wedging dungeon doors open or closed and securing leverage points.',
       rules2014: ItemEditionDetails(
         summary:
-            'Essential for wizards. A leather-bound tome holding 100 blank vellum pages for scribing spells.',
-        description:
-            'A wizard\'s grimoire bound with protective metal corner-caps and a locking clasp.',
+            'Ten heavy iron spikes for wedging dungeon doors open or closed and securing leverage points.',
+        description: 'Solid forged wedge spikes driven with a hammer.',
         properties: [
-          'Holds 100 pages for spell transcription.',
-          'Weight: 3 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Essential for wizards. A leather-bound tome holding 100 blank vellum pages for scribing spells.',
-        description:
-            'A wizard\'s grimoire bound with protective metal corner-caps and a locking clasp.',
+            'Ten heavy iron spikes for wedging dungeon doors open or closed and securing leverage points.',
+        description: 'Solid forged wedge spikes driven with a hammer.',
         properties: [
-          'Holds 100 pages for spell transcription.',
-          'Weight: 3 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'spikes_iron',
-      name: 'Spikes, Iron (10)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'iron', 'dungeon', 'doors'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'iron', 'dungeon', 'doors'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'spyglass', ruleset: RulesetVersion.v2024), name: 'Spyglass',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Objects viewed through the spyglass are magnified to twice their size.',
       rules2014: ItemEditionDetails(
         summary:
-            'Ten heavy iron spikes for wedging dungeon doors open or closed and securing leverage points.',
-        description: 'Solid forged wedge spikes driven with a hammer.',
+            'Objects viewed through the spyglass are magnified to twice their size.',
+        description:
+            'A telescoping brass tube with polished glass lenses for naval navigation and long-range scouting.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 1 gp.',
+          '2x visual magnification.',
+          'Weight: 1 lb.',
+          'Cost: 1,000 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Ten heavy iron spikes for wedging dungeon doors open or closed and securing leverage points.',
-        description: 'Solid forged wedge spikes driven with a hammer.',
+            'Objects viewed through the spyglass are magnified to twice their size.',
+        description:
+            'A telescoping brass tube with polished glass lenses for naval navigation and long-range scouting.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 1 gp.',
+          '2x visual magnification.',
+          'Weight: 1 lb.',
+          'Cost: 1,000 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'spyglass',
-      name: 'Spyglass',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'vision', 'scouting', 'optical'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'vision', 'scouting', 'optical'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'tent_two_person', ruleset: RulesetVersion.v2024), name: 'Tent, Two-Person',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'A canvas shelter with collapsible wooden poles and stakes, sleeping up to two Medium creatures.',
       rules2014: ItemEditionDetails(
         summary:
-            'Objects viewed through the spyglass are magnified to twice their size.',
+            'A canvas shelter with collapsible wooden poles and stakes, sleeping up to two Medium creatures.',
         description:
-            'A telescoping brass tube with polished glass lenses for naval navigation and long-range scouting.',
+            'A weather-treated canvas tent providing shelter during long rests.',
         properties: [
-          '2x visual magnification.',
-          'Weight: 1 lb.',
-          'Cost: 1,000 gp.',
+          'Capacity: 2 Medium creatures.',
+          'Weight: 20 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Objects viewed through the spyglass are magnified to twice their size.',
+            'A canvas shelter with collapsible wooden poles and stakes, sleeping up to two Medium creatures.',
         description:
-            'A telescoping brass tube with polished glass lenses for naval navigation and long-range scouting.',
+            'A weather-treated canvas tent providing shelter during long rests.',
         properties: [
-          '2x visual magnification.',
-          'Weight: 1 lb.',
-          'Cost: 1,000 gp.',
+          'Capacity: 2 Medium creatures.',
+          'Weight: 20 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'tent_two_person',
-      name: 'Tent, Two-Person',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'shelter', 'camp', 'survival'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'A canvas shelter with collapsible wooden poles and stakes, sleeping up to two Medium creatures.',
-        description:
-            'A weather-treated canvas tent providing shelter during long rests.',
-        properties: [
-          'Capacity: 2 Medium creatures.',
-          'Weight: 20 lbs.',
-          'Cost: 2 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'A canvas shelter with collapsible wooden poles and stakes, sleeping up to two Medium creatures.',
-        description:
-            'A weather-treated canvas tent providing shelter during long rests.',
-        properties: [
-          'Capacity: 2 Medium creatures.',
-          'Weight: 20 lbs.',
-          'Cost: 2 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'shelter', 'camp', 'survival'] },
     ),
-    MagicItem(
-      id: 'tinderbox',
-      name: 'Tinderbox',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'tinderbox', ruleset: RulesetVersion.v2024), name: 'Tinderbox',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'fire', 'camp', 'utility'],
-      damageAccent: DamageAccent.fire,
+      descriptionMarkdown: 'Contains flint, fire steel, and dry tinder. Lighting a torch takes 1 action; lighting a campfire takes 1 minute.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains flint, fire steel, and dry tinder. Lighting a torch takes 1 action; lighting a campfire takes 1 minute.',
@@ -2230,47 +2213,46 @@ class SrdAdventuringGear {
           'Cost: 5 sp.',
         ],
       ),
+      tags: ['gear', 'fire', 'camp', 'utility'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'fire', 'camp', 'utility'] },
     ),
-    MagicItem(
-      id: 'torch',
-      name: 'Torch',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'torch', ruleset: RulesetVersion.v2024), name: 'Torch',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Burns for 1 hour, shedding bright light in a 20-foot radius and dim light for an additional 20 feet. Deals 1 fire damage on hit.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Burns for 1 hour, shedding bright light in a 20-foot radius and dim light for an additional 20 feet. Deals 1 fire damage on hit.',
+        description: 'A wooden rod wrapped in pitch-soaked cloth.',
+        properties: [
+          'Bright light: 20-ft radius; Dim light: additional 20 ft.',
+          'Burns for 1 hour.',
+          'Melee attack deals 1 fire damage.',
+          'Weight: 1 lb.',
+          'Cost: 1 cp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Burns for 1 hour, shedding bright light in a 20-foot radius and dim light for an additional 20 feet. Deals 1 fire damage on hit.',
+        description: 'A wooden rod wrapped in pitch-soaked cloth.',
+        properties: [
+          'Bright light: 20-ft radius; Dim light: additional 20 ft.',
+          'Burns for 1 hour.',
+          'Melee attack deals 1 fire damage.',
+          'Weight: 1 lb.',
+          'Cost: 1 cp.',
+        ],
+      ),
       tags: ['gear', 'light', 'fire', 'exploration'],
-      damageAccent: DamageAccent.fire,
-      rules2014: ItemEditionDetails(
-        summary:
-            'Burns for 1 hour, shedding bright light in a 20-foot radius and dim light for an additional 20 feet. Deals 1 fire damage on hit.',
-        description: 'A wooden rod wrapped in pitch-soaked cloth.',
-        properties: [
-          'Bright light: 20-ft radius; Dim light: additional 20 ft.',
-          'Burns for 1 hour.',
-          'Melee attack deals 1 fire damage.',
-          'Weight: 1 lb.',
-          'Cost: 1 cp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Burns for 1 hour, shedding bright light in a 20-foot radius and dim light for an additional 20 feet. Deals 1 fire damage on hit.',
-        description: 'A wooden rod wrapped in pitch-soaked cloth.',
-        properties: [
-          'Bright light: 20-ft radius; Dim light: additional 20 ft.',
-          'Burns for 1 hour.',
-          'Melee attack deals 1 fire damage.',
-          'Weight: 1 lb.',
-          'Cost: 1 cp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'light', 'fire', 'exploration'] },
     ),
-    MagicItem(
-      id: 'whetstone',
-      name: 'Whetstone',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'whetstone', ruleset: RulesetVersion.v2024), name: 'Whetstone',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'maintenance', 'weapons'],
+      descriptionMarkdown: 'Fine abrasive stone used to hone bladed weapons and remove burrs.',
       rules2014: ItemEditionDetails(
         summary:
             'Fine abrasive stone used to hone bladed weapons and remove burrs.',
@@ -2289,130 +2271,130 @@ class SrdAdventuringGear {
           'Cost: 1 cp.',
         ],
       ),
+      tags: ['gear', 'maintenance', 'weapons'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'maintenance', 'weapons'] },
     ),
 
     // =========================================================================
     // 3. CLOTHES & APPAREL
     // =========================================================================
-    MagicItem(
-      id: 'clothes_common',
-      name: 'Clothes, Common',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'clothes_common', ruleset: RulesetVersion.v2024), name: 'Clothes, Common',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Simple peasant or working-class garments consisting of a tunic, breeches, and cloth wrap.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Simple peasant or working-class garments consisting of a tunic, breeches, and cloth wrap.',
+        description:
+            'Homespun wool or linen clothing suitable for everyday farm or labor work.',
+        properties: [
+          'Weight: 3 lbs.',
+          'Cost: 5 sp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Simple peasant or working-class garments consisting of a tunic, breeches, and cloth wrap.',
+        description:
+            'Homespun wool or linen clothing suitable for everyday farm or labor work.',
+        properties: [
+          'Weight: 3 lbs.',
+          'Cost: 5 sp.',
+        ],
+      ),
       tags: ['gear', 'clothing', 'apparel'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'clothing', 'apparel'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'clothes_costume', ruleset: RulesetVersion.v2024), name: 'Clothes, Costume',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Theatrical clothing with vibrant colors, props, and exaggerated silhouettes for acting or disguise.',
       rules2014: ItemEditionDetails(
         summary:
-            'Simple peasant or working-class garments consisting of a tunic, breeches, and cloth wrap.',
+            'Theatrical clothing with vibrant colors, props, and exaggerated silhouettes for acting or disguise.',
         description:
-            'Homespun wool or linen clothing suitable for everyday farm or labor work.',
+            'Costume attire designed for stage actors, jesters, and disguise infiltration.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 5 sp.',
+          'Weight: 4 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Simple peasant or working-class garments consisting of a tunic, breeches, and cloth wrap.',
+            'Theatrical clothing with vibrant colors, props, and exaggerated silhouettes for acting or disguise.',
         description:
-            'Homespun wool or linen clothing suitable for everyday farm or labor work.',
+            'Costume attire designed for stage actors, jesters, and disguise infiltration.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 5 sp.',
+          'Weight: 4 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'clothes_costume',
-      name: 'Clothes, Costume',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'clothing', 'disguise', 'performance'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'clothing', 'disguise', 'performance'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'clothes_fine', ruleset: RulesetVersion.v2024), name: 'Clothes, Fine',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'High-fashion velvet, brocade, and silk apparel worn by aristocrats, diplomats, and wealthy merchants.',
       rules2014: ItemEditionDetails(
         summary:
-            'Theatrical clothing with vibrant colors, props, and exaggerated silhouettes for acting or disguise.',
+            'High-fashion velvet, brocade, and silk apparel worn by aristocrats, diplomats, and wealthy merchants.',
         description:
-            'Costume attire designed for stage actors, jesters, and disguise infiltration.',
+            'Tailored courtier garments adorned with embroidery and subtle filigree.',
         properties: [
-          'Weight: 4 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 6 lbs.',
+          'Cost: 15 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Theatrical clothing with vibrant colors, props, and exaggerated silhouettes for acting or disguise.',
+            'High-fashion velvet, brocade, and silk apparel worn by aristocrats, diplomats, and wealthy merchants.',
         description:
-            'Costume attire designed for stage actors, jesters, and disguise infiltration.',
+            'Tailored courtier garments adorned with embroidery and subtle filigree.',
         properties: [
-          'Weight: 4 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 6 lbs.',
+          'Cost: 15 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'clothes_fine',
-      name: 'Clothes, Fine',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'clothing', 'aristocracy', 'social'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'clothing', 'aristocracy', 'social'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'clothes_travelers', ruleset: RulesetVersion.v2024), name: 'Clothes, Traveler\'s',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Sturdy leather-reinforced boots, wool cloak, tunic, and trousers designed for long journeys in varied weather.',
       rules2014: ItemEditionDetails(
         summary:
-            'High-fashion velvet, brocade, and silk apparel worn by aristocrats, diplomats, and wealthy merchants.',
+            'Sturdy leather-reinforced boots, wool cloak, tunic, and trousers designed for long journeys in varied weather.',
         description:
-            'Tailored courtier garments adorned with embroidery and subtle filigree.',
+            'Comfortable, durable expedition wear resilient to trail mud and rain.',
         properties: [
-          'Weight: 6 lbs.',
-          'Cost: 15 gp.',
+          'Weight: 4 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'High-fashion velvet, brocade, and silk apparel worn by aristocrats, diplomats, and wealthy merchants.',
+            'Sturdy leather-reinforced boots, wool cloak, tunic, and trousers designed for long journeys in varied weather.',
         description:
-            'Tailored courtier garments adorned with embroidery and subtle filigree.',
+            'Comfortable, durable expedition wear resilient to trail mud and rain.',
         properties: [
-          'Weight: 6 lbs.',
-          'Cost: 15 gp.',
+          'Weight: 4 lbs.',
+          'Cost: 2 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'clothes_travelers',
-      name: 'Clothes, Traveler\'s',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['gear', 'clothing', 'travel', 'exploration'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Sturdy leather-reinforced boots, wool cloak, tunic, and trousers designed for long journeys in varied weather.',
-        description:
-            'Comfortable, durable expedition wear resilient to trail mud and rain.',
-        properties: [
-          'Weight: 4 lbs.',
-          'Cost: 2 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Sturdy leather-reinforced boots, wool cloak, tunic, and trousers designed for long journeys in varied weather.',
-        description:
-            'Comfortable, durable expedition wear resilient to trail mud and rain.',
-        properties: [
-          'Weight: 4 lbs.',
-          'Cost: 2 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'clothing', 'travel', 'exploration'] },
     ),
-    MagicItem(
-      id: 'robes',
-      name: 'Robes',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'robes', ruleset: RulesetVersion.v2024), name: 'Robes',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['gear', 'clothing', 'arcane', 'divine'],
+      descriptionMarkdown: 'Flowing ceremonial or scholarly vestments favored by wizards, monks, and clergy.',
       rules2014: ItemEditionDetails(
         summary:
             'Flowing ceremonial or scholarly vestments favored by wizards, monks, and clergy.',
@@ -2433,25 +2415,18 @@ class SrdAdventuringGear {
           'Cost: 1 gp.',
         ],
       ),
+      tags: ['gear', 'clothing', 'arcane', 'divine'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['gear', 'clothing', 'arcane', 'divine'] },
     ),
 
     // =========================================================================
     // 4. SPELLCASTING FOCI
     // =========================================================================
-    MagicItem(
-      id: 'arcane_focus_wand',
-      name: 'Arcane Focus (Wand / Crystal / Orb)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'arcane_focus_wand', ruleset: RulesetVersion.v2024), name: 'Arcane Focus (Wand / Crystal / Orb)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: [
-        'focus',
-        'spellcasting',
-        'arcane',
-        'wizard',
-        'sorcerer',
-        'warlock'
-      ],
+      descriptionMarkdown: 'A spellcasting focus designed to channel arcane spells, replacing non-costly material components.',
       rules2014: ItemEditionDetails(
         summary:
             'A special item designed to channel the power of arcane spells, substituting for non-costly material components.',
@@ -2474,15 +2449,21 @@ class SrdAdventuringGear {
           'Cost: 5–20 gp.',
         ],
       ),
+      tags: [
+        'focus',
+        'spellcasting',
+        'arcane',
+        'wizard',
+        'sorcerer',
+        'warlock'
+      ],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['focus', 'spellcasting', 'arcane', 'wizard', 'sorcerer', 'warlock'] },
     ),
-    MagicItem(
-      id: 'holy_symbol_amulet',
-      name: 'Holy Symbol (Amulet / Emblem / Reliquary)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'holy_symbol_amulet', ruleset: RulesetVersion.v2024), name: 'Holy Symbol (Amulet / Emblem / Reliquary)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['focus', 'spellcasting', 'divine', 'cleric', 'paladin'],
-      damageAccent: DamageAccent.radiant,
+      descriptionMarkdown: 'A representation of a deity or pantheon used as a divine spellcasting focus. Can be worn as an amulet or emblazoned on a shield.',
       rules2014: ItemEditionDetails(
         summary:
             'A representation of a deity or pantheon used as a divine spellcasting focus. Can be worn as an amulet or emblazoned on a shield.',
@@ -2507,18 +2488,18 @@ class SrdAdventuringGear {
           'Cost: 5 gp.',
         ],
       ),
+      tags: ['focus', 'spellcasting', 'divine', 'cleric', 'paladin'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['focus', 'spellcasting', 'divine', 'cleric', 'paladin'] },
     ),
 
     // =========================================================================
     // 5. TOOLS & KITS
     // =========================================================================
-    MagicItem(
-      id: 'thieves_tools',
-      name: 'Thieves\' Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'thieves_tools', ruleset: RulesetVersion.v2024), name: 'Thieves\' Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['tools', 'lockpicking', 'traps', 'dexterity'],
+      descriptionMarkdown: 'Allows adding proficiency bonus to Dexterity checks made with thieves\' tools to pick locks or disarm traps. Uses DC rules specified in the 2024 equipment chapter.',
       rules2014: ItemEditionDetails(
         summary:
             'Allows adding proficiency bonus to ability checks made to disarm traps or pick mechanical locks.',
@@ -2541,667 +2522,666 @@ class SrdAdventuringGear {
           'Cost: 25 gp.',
         ],
       ),
+      tags: ['tools', 'lockpicking', 'traps', 'dexterity'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'lockpicking', 'traps', 'dexterity'] },
     ),
-    MagicItem(
-      id: 'alchemists_supplies',
-      name: 'Alchemist\'s Supplies',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'alchemists_supplies', ruleset: RulesetVersion.v2024), name: 'Alchemist\'s Supplies',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
+      descriptionMarkdown: 'Includes glass beakers, stirring rods, mortar and pestle, and common chemical reagents for brewing and identification.',
+      rules2014: ItemEditionDetails(
+        summary:
+            'Includes glass beakers, stirring rods, mortar and pestle, and common chemical reagents for brewing and identification.',
+        description:
+            'A portable laboratory kit for synthesizing acids, alchemist\'s fire, and analyzing strange residues.',
+        properties: [
+          'Proficiency allows crafting alchemical items and identifying substances.',
+          'Weight: 8 lbs.',
+          'Cost: 50 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary:
+            'Includes glass beakers, stirring rods, mortar and pestle, and common chemical reagents for brewing and identification.',
+        description:
+            'A portable laboratory kit for synthesizing acids, alchemist\'s fire, and analyzing strange residues.',
+        properties: [
+          'Proficiency allows crafting alchemical items and identifying substances.',
+          'Weight: 8 lbs.',
+          'Cost: 50 gp.',
+        ],
+      ),
       tags: ['tools', 'crafting', 'alchemy', 'potions'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'alchemy', 'potions'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'brewers_supplies', ruleset: RulesetVersion.v2024), name: 'Brewer\'s Supplies',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes a siphon, hydrometer, hops, yeast, and kegging tubes for fermenting beer, cider, and spirits.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes glass beakers, stirring rods, mortar and pestle, and common chemical reagents for brewing and identification.',
+            'Includes a siphon, hydrometer, hops, yeast, and kegging tubes for fermenting beer, cider, and spirits.',
         description:
-            'A portable laboratory kit for synthesizing acids, alchemist\'s fire, and analyzing strange residues.',
+            'Equipment needed to brew quality ales, stouts, and purifying water supplies.',
         properties: [
-          'Proficiency allows crafting alchemical items and identifying substances.',
-          'Weight: 8 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 9 lbs.',
+          'Cost: 20 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes glass beakers, stirring rods, mortar and pestle, and common chemical reagents for brewing and identification.',
+            'Includes a siphon, hydrometer, hops, yeast, and kegging tubes for fermenting beer, cider, and spirits.',
         description:
-            'A portable laboratory kit for synthesizing acids, alchemist\'s fire, and analyzing strange residues.',
+            'Equipment needed to brew quality ales, stouts, and purifying water supplies.',
         properties: [
-          'Proficiency allows crafting alchemical items and identifying substances.',
-          'Weight: 8 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 9 lbs.',
+          'Cost: 20 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'brewers_supplies',
-      name: 'Brewer\'s Supplies',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'brewing', 'food'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'brewing', 'food'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'calligraphers_supplies', ruleset: RulesetVersion.v2024), name: 'Calligrapher\'s Supplies',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Specialized inks, gold leaf, varied nibs, and ruling stones for illuminating manuscripts and writing official scrolls.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes a siphon, hydrometer, hops, yeast, and kegging tubes for fermenting beer, cider, and spirits.',
+            'Specialized inks, gold leaf, varied nibs, and ruling stones for illuminating manuscripts and writing official scrolls.',
         description:
-            'Equipment needed to brew quality ales, stouts, and purifying water supplies.',
+            'Precision writing implements for creating beautiful calligraphy and copying scrolls.',
         properties: [
-          'Weight: 9 lbs.',
-          'Cost: 20 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes a siphon, hydrometer, hops, yeast, and kegging tubes for fermenting beer, cider, and spirits.',
+            'Specialized inks, gold leaf, varied nibs, and ruling stones for illuminating manuscripts and writing official scrolls.',
         description:
-            'Equipment needed to brew quality ales, stouts, and purifying water supplies.',
+            'Precision writing implements for creating beautiful calligraphy and copying scrolls.',
         properties: [
-          'Weight: 9 lbs.',
-          'Cost: 20 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'calligraphers_supplies',
-      name: 'Calligrapher\'s Supplies',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'writing', 'scrolls', 'artisan'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'writing', 'scrolls', 'artisan'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'carpenters_tools', ruleset: RulesetVersion.v2024), name: 'Carpenter\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes a saw, hammer, nails, adze, square, plane, and chisel for woodworking and building structures.',
       rules2014: ItemEditionDetails(
         summary:
-            'Specialized inks, gold leaf, varied nibs, and ruling stones for illuminating manuscripts and writing official scrolls.',
+            'Includes a saw, hammer, nails, adze, square, plane, and chisel for woodworking and building structures.',
         description:
-            'Precision writing implements for creating beautiful calligraphy and copying scrolls.',
+            'Essential kit for building barricades, bridges, doors, and timber repairs.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 10 gp.',
+          'Weight: 6 lbs.',
+          'Cost: 8 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Specialized inks, gold leaf, varied nibs, and ruling stones for illuminating manuscripts and writing official scrolls.',
+            'Includes a saw, hammer, nails, adze, square, plane, and chisel for woodworking and building structures.',
         description:
-            'Precision writing implements for creating beautiful calligraphy and copying scrolls.',
+            'Essential kit for building barricades, bridges, doors, and timber repairs.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 10 gp.',
+          'Weight: 6 lbs.',
+          'Cost: 8 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'carpenters_tools',
-      name: 'Carpenter\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'woodworking', 'construction'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'woodworking', 'construction'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'cartographers_tools', ruleset: RulesetVersion.v2024), name: 'Cartographer\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Compasses, fine calipers, inks, measuring cords, and parchment for drafting accurate dungeon and overland maps.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes a saw, hammer, nails, adze, square, plane, and chisel for woodworking and building structures.',
+            'Compasses, fine calipers, inks, measuring cords, and parchment for drafting accurate dungeon and overland maps.',
         description:
-            'Essential kit for building barricades, bridges, doors, and timber repairs.',
+            'Precision mapping instruments for surveying unexplored territory.',
         properties: [
           'Weight: 6 lbs.',
-          'Cost: 8 gp.',
+          'Cost: 15 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes a saw, hammer, nails, adze, square, plane, and chisel for woodworking and building structures.',
+            'Compasses, fine calipers, inks, measuring cords, and parchment for drafting accurate dungeon and overland maps.',
         description:
-            'Essential kit for building barricades, bridges, doors, and timber repairs.',
+            'Precision mapping instruments for surveying unexplored territory.',
         properties: [
           'Weight: 6 lbs.',
-          'Cost: 8 gp.',
+          'Cost: 15 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'cartographers_tools',
-      name: 'Cartographer\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'navigation', 'maps', 'exploration'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'navigation', 'maps', 'exploration'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'cobblers_tools', ruleset: RulesetVersion.v2024), name: 'Cobbler\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes a cobbler\'s last, awl, leather knives, thread, and replacement heel soles.',
       rules2014: ItemEditionDetails(
         summary:
-            'Compasses, fine calipers, inks, measuring cords, and parchment for drafting accurate dungeon and overland maps.',
+            'Includes a cobbler\'s last, awl, leather knives, thread, and replacement heel soles.',
         description:
-            'Precision mapping instruments for surveying unexplored territory.',
+            'Tools for repairing traveler\'s boots and crafting hidden boot-heel compartments.',
         properties: [
-          'Weight: 6 lbs.',
-          'Cost: 15 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Compasses, fine calipers, inks, measuring cords, and parchment for drafting accurate dungeon and overland maps.',
+            'Includes a cobbler\'s last, awl, leather knives, thread, and replacement heel soles.',
         description:
-            'Precision mapping instruments for surveying unexplored territory.',
+            'Tools for repairing traveler\'s boots and crafting hidden boot-heel compartments.',
         properties: [
-          'Weight: 6 lbs.',
-          'Cost: 15 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'cobblers_tools',
-      name: 'Cobbler\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'leather', 'boots'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'leather', 'boots'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'cooks_utensils', ruleset: RulesetVersion.v2024), name: 'Cook\'s Utensils',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes an iron pot, skillet, knives, seasoning vials, and stirring spoons for preparing nourishing meals.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes a cobbler\'s last, awl, leather knives, thread, and replacement heel soles.',
+            'Includes an iron pot, skillet, knives, seasoning vials, and stirring spoons for preparing nourishing meals.',
         description:
-            'Tools for repairing traveler\'s boots and crafting hidden boot-heel compartments.',
+            'Field cooking gear that turns foraged game into wholesome banquet meals during long rests.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 8 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes a cobbler\'s last, awl, leather knives, thread, and replacement heel soles.',
+            'Includes an iron pot, skillet, knives, seasoning vials, and stirring spoons for preparing nourishing meals.',
         description:
-            'Tools for repairing traveler\'s boots and crafting hidden boot-heel compartments.',
+            'Field cooking gear that turns foraged game into wholesome banquet meals during long rests.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 8 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'cooks_utensils',
-      name: 'Cook\'s Utensils',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'cooking', 'survival', 'camp', 'sustain'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'cooking', 'survival', 'camp', 'sustain'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'disguise_kit', ruleset: RulesetVersion.v2024), name: 'Disguise Kit',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes makeup, false hair, props, prosthetics, and costume jewelry for altering one\'s physical appearance.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes an iron pot, skillet, knives, seasoning vials, and stirring spoons for preparing nourishing meals.',
+            'Includes makeup, false hair, props, prosthetics, and costume jewelry for altering one\'s physical appearance.',
         description:
-            'Field cooking gear that turns foraged game into wholesome banquet meals during long rests.',
+            'Professional disguise cosmetics to impersonate guards, nobles, or commoners.',
         properties: [
-          'Weight: 8 lbs.',
-          'Cost: 1 gp.',
+          'Adds proficiency to checks made to create a visual disguise.',
+          'Weight: 3 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes an iron pot, skillet, knives, seasoning vials, and stirring spoons for preparing nourishing meals.',
+            'Includes makeup, false hair, props, prosthetics, and costume jewelry for altering one\'s physical appearance.',
         description:
-            'Field cooking gear that turns foraged game into wholesome banquet meals during long rests.',
+            'Professional disguise cosmetics to impersonate guards, nobles, or commoners.',
         properties: [
-          'Weight: 8 lbs.',
-          'Cost: 1 gp.',
+          'Adds proficiency to checks made to create a visual disguise.',
+          'Weight: 3 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'disguise_kit',
-      name: 'Disguise Kit',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'deception', 'disguise', 'stealth'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'deception', 'disguise', 'stealth'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'forgery_kit', ruleset: RulesetVersion.v2024), name: 'Forgery Kit',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes varied parchment blanks, specialty inks, wax seals, stamps, and fine pens for counterfeiting documents.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes makeup, false hair, props, prosthetics, and costume jewelry for altering one\'s physical appearance.',
+            'Includes varied parchment blanks, specialty inks, wax seals, stamps, and fine pens for counterfeiting documents.',
         description:
-            'Professional disguise cosmetics to impersonate guards, nobles, or commoners.',
+            'A discreet case with chemicals and tools for faking royal passes and signatures.',
         properties: [
-          'Adds proficiency to checks made to create a visual disguise.',
-          'Weight: 3 lbs.',
-          'Cost: 25 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 15 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes makeup, false hair, props, prosthetics, and costume jewelry for altering one\'s physical appearance.',
+            'Includes varied parchment blanks, specialty inks, wax seals, stamps, and fine pens for counterfeiting documents.',
         description:
-            'Professional disguise cosmetics to impersonate guards, nobles, or commoners.',
+            'A discreet case with chemicals and tools for faking royal passes and signatures.',
         properties: [
-          'Adds proficiency to checks made to create a visual disguise.',
-          'Weight: 3 lbs.',
-          'Cost: 25 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 15 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'forgery_kit',
-      name: 'Forgery Kit',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'deception', 'forgery', 'documents'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'deception', 'forgery', 'documents'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'gaming_set_dice', ruleset: RulesetVersion.v2024), name: 'Gaming Set (Dice Set / Playing Cards / Dragonchess)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Dice, playing cards, Dragonchess, or Three-Dragon Ante set for gambling and passing camp downtime.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes varied parchment blanks, specialty inks, wax seals, stamps, and fine pens for counterfeiting documents.',
+            'Dice, playing cards, Dragonchess, or Three-Dragon Ante set for gambling and passing camp downtime.',
         description:
-            'A discreet case with chemicals and tools for faking royal passes and signatures.',
+            'Recreational games popular across tavern halls and adventuring camps.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 15 gp.',
+          'Weight: negligible–½ lb.',
+          'Cost: 1 sp–1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes varied parchment blanks, specialty inks, wax seals, stamps, and fine pens for counterfeiting documents.',
+            'Dice, playing cards, Dragonchess, or Three-Dragon Ante set for gambling and passing camp downtime.',
         description:
-            'A discreet case with chemicals and tools for faking royal passes and signatures.',
+            'Recreational games popular across tavern halls and adventuring camps.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 15 gp.',
+          'Weight: negligible–½ lb.',
+          'Cost: 1 sp–1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'gaming_set_dice',
-      name: 'Gaming Set (Dice Set / Playing Cards / Dragonchess)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'gaming', 'social', 'tavern'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'gaming', 'social', 'tavern'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'glassblowers_tools', ruleset: RulesetVersion.v2024), name: 'Glassblower\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes a blowpipe, marver block, tongs, jacks, and shears for shaping molten glass into vials and lenses.',
       rules2014: ItemEditionDetails(
         summary:
-            'Dice, playing cards, Dragonchess, or Three-Dragon Ante set for gambling and passing camp downtime.',
+            'Includes a blowpipe, marver block, tongs, jacks, and shears for shaping molten glass into vials and lenses.',
         description:
-            'Recreational games popular across tavern halls and adventuring camps.',
+            'Equipment for crafting glass bottles, laboratory flasks, and optical mirrors.',
         properties: [
-          'Weight: negligible–½ lb.',
-          'Cost: 1 sp–1 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 30 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Dice, playing cards, Dragonchess, or Three-Dragon Ante set for gambling and passing camp downtime.',
+            'Includes a blowpipe, marver block, tongs, jacks, and shears for shaping molten glass into vials and lenses.',
         description:
-            'Recreational games popular across tavern halls and adventuring camps.',
+            'Equipment for crafting glass bottles, laboratory flasks, and optical mirrors.',
         properties: [
-          'Weight: negligible–½ lb.',
-          'Cost: 1 sp–1 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 30 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'glassblowers_tools',
-      name: 'Glassblower\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'glass', 'artisan'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'glass', 'artisan'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'herbalism_kit', ruleset: RulesetVersion.v2024), name: 'Herbalism Kit',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes pouches, clippers, mortar and pestle, and plant guides. Required for crafting Potions of Healing and Antitoxin.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes a blowpipe, marver block, tongs, jacks, and shears for shaping molten glass into vials and lenses.',
+            'Includes pouches, clippers, mortar and pestle, and plant guides. Required for crafting Potions of Healing and Antitoxin.',
         description:
-            'Equipment for crafting glass bottles, laboratory flasks, and optical mirrors.',
+            'Essential field botany equipment for harvesting medicinal herbs in the wild.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 30 gp.',
+          'Required for crafting Antitoxins and Potions of Healing.',
+          'Weight: 3 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes a blowpipe, marver block, tongs, jacks, and shears for shaping molten glass into vials and lenses.',
+            'Includes pouches, clippers, mortar and pestle, and plant guides. Required for crafting Potions of Healing and Antitoxin.',
         description:
-            'Equipment for crafting glass bottles, laboratory flasks, and optical mirrors.',
+            'Essential field botany equipment for harvesting medicinal herbs in the wild.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 30 gp.',
+          'Required for crafting Antitoxins and Potions of Healing.',
+          'Weight: 3 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'herbalism_kit',
-      name: 'Herbalism Kit',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'herbalism', 'potions', 'healing', 'sustain'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'herbalism', 'potions', 'healing', 'sustain'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'jewelers_tools', ruleset: RulesetVersion.v2024), name: 'Jeweler\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes small saws, files, pliers, tweezers, jeweler\'s loupe, and jewel clamps for gem-cutting and goldsmithing.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes pouches, clippers, mortar and pestle, and plant guides. Required for crafting Potions of Healing and Antitoxin.',
+            'Includes small saws, files, pliers, tweezers, jeweler\'s loupe, and jewel clamps for gem-cutting and goldsmithing.',
         description:
-            'Essential field botany equipment for harvesting medicinal herbs in the wild.',
+            'Precision gem-crafting instruments for setting precious stones and assessing jewel worth.',
         properties: [
-          'Required for crafting Antitoxins and Potions of Healing.',
-          'Weight: 3 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 2 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes pouches, clippers, mortar and pestle, and plant guides. Required for crafting Potions of Healing and Antitoxin.',
+            'Includes small saws, files, pliers, tweezers, jeweler\'s loupe, and jewel clamps for gem-cutting and goldsmithing.',
         description:
-            'Essential field botany equipment for harvesting medicinal herbs in the wild.',
+            'Precision gem-crafting instruments for setting precious stones and assessing jewel worth.',
         properties: [
-          'Required for crafting Antitoxins and Potions of Healing.',
-          'Weight: 3 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 2 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'jewelers_tools',
-      name: 'Jeweler\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'gems', 'jewelry'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'gems', 'jewelry'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'leatherworkers_tools', ruleset: RulesetVersion.v2024), name: 'Leatherworker\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes leather knives, punches, groover, stitching needles, and burnishers for making and repairing leather armor and bags.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes small saws, files, pliers, tweezers, jeweler\'s loupe, and jewel clamps for gem-cutting and goldsmithing.',
+            'Includes leather knives, punches, groover, stitching needles, and burnishers for making and repairing leather armor and bags.',
         description:
-            'Precision gem-crafting instruments for setting precious stones and assessing jewel worth.',
+            'Crafting kit for tanning hides, tailoring leather armor, and saddlery.',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 25 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes small saws, files, pliers, tweezers, jeweler\'s loupe, and jewel clamps for gem-cutting and goldsmithing.',
+            'Includes leather knives, punches, groover, stitching needles, and burnishers for making and repairing leather armor and bags.',
         description:
-            'Precision gem-crafting instruments for setting precious stones and assessing jewel worth.',
+            'Crafting kit for tanning hides, tailoring leather armor, and saddlery.',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 25 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 5 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'leatherworkers_tools',
-      name: 'Leatherworker\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'leather', 'armor'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'leather', 'armor'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 11, 'armorType': 'light' },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'masons_tools', ruleset: RulesetVersion.v2024), name: 'Mason\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes a trowel, stone hammer, chisels, plumb line, and level for stonecarving and stone wall analysis.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes leather knives, punches, groover, stitching needles, and burnishers for making and repairing leather armor and bags.',
+            'Includes a trowel, stone hammer, chisels, plumb line, and level for stonecarving and stone wall analysis.',
         description:
-            'Crafting kit for tanning hides, tailoring leather armor, and saddlery.',
+            'Tools for inspecting ancient stone architecture and carving masonry passages.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 8 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes leather knives, punches, groover, stitching needles, and burnishers for making and repairing leather armor and bags.',
+            'Includes a trowel, stone hammer, chisels, plumb line, and level for stonecarving and stone wall analysis.',
         description:
-            'Crafting kit for tanning hides, tailoring leather armor, and saddlery.',
+            'Tools for inspecting ancient stone architecture and carving masonry passages.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 5 gp.',
+          'Weight: 8 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'masons_tools',
-      name: 'Mason\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'stone', 'construction'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'stone', 'construction'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'musical_instrument_lute', ruleset: RulesetVersion.v2024), name: 'Musical Instrument (Lute / Flute / Drum / Horn / Lyre / Bagpipes)',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bards can use a musical instrument as a spellcasting focus for their bard spells.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes a trowel, stone hammer, chisels, plumb line, and level for stonecarving and stone wall analysis.',
+            'Bards can use a musical instrument as a spellcasting focus for their bard spells.',
         description:
-            'Tools for inspecting ancient stone architecture and carving masonry passages.',
+            'Masterwork instrument crafted from cured tonewoods, brass, or stretched vellum.',
         properties: [
-          'Weight: 8 lbs.',
-          'Cost: 10 gp.',
+          'Serves as a spellcasting focus for Bards.',
+          'Weight: 2–6 lbs.',
+          'Cost: 2–35 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes a trowel, stone hammer, chisels, plumb line, and level for stonecarving and stone wall analysis.',
+            'Bards can use a musical instrument as a spellcasting focus for their bard spells.',
         description:
-            'Tools for inspecting ancient stone architecture and carving masonry passages.',
+            'Masterwork instrument crafted from cured tonewoods, brass, or stretched vellum.',
         properties: [
-          'Weight: 8 lbs.',
-          'Cost: 10 gp.',
+          'Serves as a spellcasting focus for Bards.',
+          'Weight: 2–6 lbs.',
+          'Cost: 2–35 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'musical_instrument_lute',
-      name: 'Musical Instrument (Lute / Flute / Drum / Horn / Lyre / Bagpipes)',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'bard', 'music', 'performance', 'focus'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'bard', 'music', 'performance', 'focus'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'navigators_tools', ruleset: RulesetVersion.v2024), name: 'Navigator\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes a sextant, compass, calipers, astrolabe, and nautical charts for navigating on oceans and uncharted lands.',
       rules2014: ItemEditionDetails(
         summary:
-            'Bards can use a musical instrument as a spellcasting focus for their bard spells.',
+            'Includes a sextant, compass, calipers, astrolabe, and nautical charts for navigating on oceans and uncharted lands.',
         description:
-            'Masterwork instrument crafted from cured tonewoods, brass, or stretched vellum.',
+            'Essential navigational instruments for plotting coordinates by the sun and stars.',
         properties: [
-          'Serves as a spellcasting focus for Bards.',
-          'Weight: 2–6 lbs.',
-          'Cost: 2–35 gp.',
+          'Weight: 2 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Bards can use a musical instrument as a spellcasting focus for their bard spells.',
+            'Includes a sextant, compass, calipers, astrolabe, and nautical charts for navigating on oceans and uncharted lands.',
         description:
-            'Masterwork instrument crafted from cured tonewoods, brass, or stretched vellum.',
+            'Essential navigational instruments for plotting coordinates by the sun and stars.',
         properties: [
-          'Serves as a spellcasting focus for Bards.',
-          'Weight: 2–6 lbs.',
-          'Cost: 2–35 gp.',
+          'Weight: 2 lbs.',
+          'Cost: 25 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'navigators_tools',
-      name: 'Navigator\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'navigation', 'sea', 'exploration'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'navigation', 'sea', 'exploration'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'painters_supplies', ruleset: RulesetVersion.v2024), name: 'Painter\'s Supplies',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes an easel, brushes, canvas panels, palette, and pigment jars for portraiture and landscape depiction.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes a sextant, compass, calipers, astrolabe, and nautical charts for navigating on oceans and uncharted lands.',
+            'Includes an easel, brushes, canvas panels, palette, and pigment jars for portraiture and landscape depiction.',
         description:
-            'Essential navigational instruments for plotting coordinates by the sun and stars.',
+            'Fine art supplies for copying visual depictions and capturing likenesses.',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 25 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes a sextant, compass, calipers, astrolabe, and nautical charts for navigating on oceans and uncharted lands.',
+            'Includes an easel, brushes, canvas panels, palette, and pigment jars for portraiture and landscape depiction.',
         description:
-            'Essential navigational instruments for plotting coordinates by the sun and stars.',
+            'Fine art supplies for copying visual depictions and capturing likenesses.',
         properties: [
-          'Weight: 2 lbs.',
-          'Cost: 25 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'painters_supplies',
-      name: 'Painter\'s Supplies',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'art', 'canvas'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'art', 'canvas'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'poisoners_kit', ruleset: RulesetVersion.v2024), name: 'Poisoner\'s Kit',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes glass vials, mortar and pestle, pipettes, and toxic plant/mineral extracts for brewing poisons safely.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes an easel, brushes, canvas panels, palette, and pigment jars for portraiture and landscape depiction.',
+            'Includes glass vials, mortar and pestle, pipettes, and toxic plant/mineral extracts for brewing poisons safely.',
         description:
-            'Fine art supplies for copying visual depictions and capturing likenesses.',
+            'Specialized apparatus to distill venoms without poisoning oneself.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 10 gp.',
+          'Required for harvesting and brewing specialized poisons.',
+          'Weight: 2 lbs.',
+          'Cost: 50 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes an easel, brushes, canvas panels, palette, and pigment jars for portraiture and landscape depiction.',
+            'Includes glass vials, mortar and pestle, pipettes, and toxic plant/mineral extracts for brewing poisons safely.',
         description:
-            'Fine art supplies for copying visual depictions and capturing likenesses.',
+            'Specialized apparatus to distill venoms without poisoning oneself.',
         properties: [
-          'Weight: 5 lbs.',
-          'Cost: 10 gp.',
+          'Required for harvesting and brewing specialized poisons.',
+          'Weight: 2 lbs.',
+          'Cost: 50 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'poisoners_kit',
-      name: 'Poisoner\'s Kit',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'poison', 'alchemy', 'stealth'],
-      damageAccent: DamageAccent.poison,
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'poison', 'alchemy', 'stealth'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'potters_tools', ruleset: RulesetVersion.v2024), name: 'Potter\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes potter\'s ribs, scrapers, wire clay cutter, and trimming loops for shaping pottery vessels.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes glass vials, mortar and pestle, pipettes, and toxic plant/mineral extracts for brewing poisons safely.',
-        description:
-            'Specialized apparatus to distill venoms without poisoning oneself.',
+            'Includes potter\'s ribs, scrapers, wire clay cutter, and trimming loops for shaping pottery vessels.',
+        description: 'Tools for sculpting ceramic urns, jugs, and amphorae.',
         properties: [
-          'Required for harvesting and brewing specialized poisons.',
-          'Weight: 2 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes glass vials, mortar and pestle, pipettes, and toxic plant/mineral extracts for brewing poisons safely.',
-        description:
-            'Specialized apparatus to distill venoms without poisoning oneself.',
+            'Includes potter\'s ribs, scrapers, wire clay cutter, and trimming loops for shaping pottery vessels.',
+        description: 'Tools for sculpting ceramic urns, jugs, and amphorae.',
         properties: [
-          'Required for harvesting and brewing specialized poisons.',
-          'Weight: 2 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 3 lbs.',
+          'Cost: 10 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'potters_tools',
-      name: 'Potter\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'clay', 'ceramic'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'clay', 'ceramic'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'smiths_tools', ruleset: RulesetVersion.v2024), name: 'Smith\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes hammers, tongs, chisels, files, and aprons for forging and repairing metal weapons and armor at a forge.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes potter\'s ribs, scrapers, wire clay cutter, and trimming loops for shaping pottery vessels.',
-        description: 'Tools for sculpting ceramic urns, jugs, and amphorae.',
+            'Includes hammers, tongs, chisels, files, and aprons for forging and repairing metal weapons and armor at a forge.',
+        description:
+            'Heavy forge implements for blacksmithing and weapon repair.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 10 gp.',
+          'Weight: 8 lbs.',
+          'Cost: 20 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes potter\'s ribs, scrapers, wire clay cutter, and trimming loops for shaping pottery vessels.',
-        description: 'Tools for sculpting ceramic urns, jugs, and amphorae.',
+            'Includes hammers, tongs, chisels, files, and aprons for forging and repairing metal weapons and armor at a forge.',
+        description:
+            'Heavy forge implements for blacksmithing and weapon repair.',
         properties: [
-          'Weight: 3 lbs.',
-          'Cost: 10 gp.',
+          'Weight: 8 lbs.',
+          'Cost: 20 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'smiths_tools',
-      name: 'Smith\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'blacksmithing', 'metal', 'weapons', 'armor'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'blacksmithing', 'metal', 'weapons', 'armor'], 'defaultSlot': EquipmentSlot.armor },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'tinkers_tools', ruleset: RulesetVersion.v2024), name: 'Tinker\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes fine saws, pliers, solder, brazing tools, wire, and miniature gears for fixing small metal objects and clockwork.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes hammers, tongs, chisels, files, and aprons for forging and repairing metal weapons and armor at a forge.',
+            'Includes fine saws, pliers, solder, brazing tools, wire, and miniature gears for fixing small metal objects and clockwork.',
         description:
-            'Heavy forge implements for blacksmithing and weapon repair.',
+            'A versatile toolkit for repairing lanterns, pots, hinges, and clockwork mechanisms.',
         properties: [
-          'Weight: 8 lbs.',
-          'Cost: 20 gp.',
+          'Weight: 10 lbs.',
+          'Cost: 50 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes hammers, tongs, chisels, files, and aprons for forging and repairing metal weapons and armor at a forge.',
+            'Includes fine saws, pliers, solder, brazing tools, wire, and miniature gears for fixing small metal objects and clockwork.',
         description:
-            'Heavy forge implements for blacksmithing and weapon repair.',
+            'A versatile toolkit for repairing lanterns, pots, hinges, and clockwork mechanisms.',
         properties: [
-          'Weight: 8 lbs.',
-          'Cost: 20 gp.',
+          'Weight: 10 lbs.',
+          'Cost: 50 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'tinkers_tools',
-      name: 'Tinker\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'repair', 'devices', 'clockwork'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'repair', 'devices', 'clockwork'] },
+    ),
+    EquipmentItem(
+      id: EntityId(slug: 'weavers_tools', ruleset: RulesetVersion.v2024), name: 'Weaver\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Includes shuttles, combs, scissors, needles, and a portable lap loom for weaving textiles and repairing tapestries.',
       rules2014: ItemEditionDetails(
         summary:
-            'Includes fine saws, pliers, solder, brazing tools, wire, and miniature gears for fixing small metal objects and clockwork.',
+            'Includes shuttles, combs, scissors, needles, and a portable lap loom for weaving textiles and repairing tapestries.',
         description:
-            'A versatile toolkit for repairing lanterns, pots, hinges, and clockwork mechanisms.',
+            'Equipment for spinning yarn and repairing cloaks, ropes, and tents.',
         properties: [
-          'Weight: 10 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
       rules2024: ItemEditionDetails(
         summary:
-            'Includes fine saws, pliers, solder, brazing tools, wire, and miniature gears for fixing small metal objects and clockwork.',
+            'Includes shuttles, combs, scissors, needles, and a portable lap loom for weaving textiles and repairing tapestries.',
         description:
-            'A versatile toolkit for repairing lanterns, pots, hinges, and clockwork mechanisms.',
+            'Equipment for spinning yarn and repairing cloaks, ropes, and tents.',
         properties: [
-          'Weight: 10 lbs.',
-          'Cost: 50 gp.',
+          'Weight: 5 lbs.',
+          'Cost: 1 gp.',
         ],
       ),
-    ),
-    MagicItem(
-      id: 'weavers_tools',
-      name: 'Weaver\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
-      requiresAttunement: false,
       tags: ['tools', 'crafting', 'textiles', 'cloth'],
-      rules2014: ItemEditionDetails(
-        summary:
-            'Includes shuttles, combs, scissors, needles, and a portable lap loom for weaving textiles and repairing tapestries.',
-        description:
-            'Equipment for spinning yarn and repairing cloaks, ropes, and tents.',
-        properties: [
-          'Weight: 5 lbs.',
-          'Cost: 1 gp.',
-        ],
-      ),
-      rules2024: ItemEditionDetails(
-        summary:
-            'Includes shuttles, combs, scissors, needles, and a portable lap loom for weaving textiles and repairing tapestries.',
-        description:
-            'Equipment for spinning yarn and repairing cloaks, ropes, and tents.',
-        properties: [
-          'Weight: 5 lbs.',
-          'Cost: 1 gp.',
-        ],
-      ),
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'textiles', 'cloth'] },
     ),
-    MagicItem(
-      id: 'woodcarvers_tools',
-      name: 'Woodcarver\'s Tools',
-      category: ItemCategory.adventuringGear,
-      rarity: ItemRarity.nonmagical,
+    EquipmentItem(
+      id: EntityId(slug: 'woodcarvers_tools', ruleset: RulesetVersion.v2024), name: 'Woodcarver\'s Tools',
+      itemType: 'adventuringGear', category: ItemCategory.adventuringGear, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
       requiresAttunement: false,
-      tags: ['tools', 'crafting', 'woodcarving', 'arrows', 'wands'],
+      descriptionMarkdown: 'Includes whittling knives, gouges, rasps, and sandpaper for carving wooden icons, wands, and crafting arrows.',
       rules2014: ItemEditionDetails(
         summary:
             'Includes whittling knives, gouges, rasps, and sandpaper for carving wooden icons, wands, and crafting arrows.',
@@ -3222,6 +3202,8 @@ class SrdAdventuringGear {
           'Cost: 1 gp.',
         ],
       ),
+      tags: ['tools', 'crafting', 'woodcarving', 'arrows', 'wands'],
+      customProperties: { 'cost': null, 'category': 'adventuringGear', 'tags': ['tools', 'crafting', 'woodcarving', 'arrows', 'wands'] },
     ),
   ];
 }

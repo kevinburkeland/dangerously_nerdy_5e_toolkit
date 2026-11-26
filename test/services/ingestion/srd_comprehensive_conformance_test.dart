@@ -100,7 +100,7 @@ void main() {
       );
     }
 
-    EquipmentItem convertItem(MagicItem item, DmRulesEdition edition) {
+    EquipmentItem convertItem(EquipmentItem item, DmRulesEdition edition) {
       final ruleset = edition == DmRulesEdition.v2024
           ? RulesetVersion.v2024
           : RulesetVersion.v2014;
@@ -112,11 +112,13 @@ void main() {
         id: EntityId(slug: slugify(name), ruleset: ruleset),
         name: name,
         itemType: item.category.label,
-        rarity: item.rarity.name,
+        category: item.category,
+        rarity: item.rarityTier.name,
+        rarityTier: item.rarityTier,
         requiresAttunement: item.requiresAttunement,
         descriptionMarkdown: rules.description,
         customProperties: {
-          'legacyId': item.id,
+          'legacyId': item.id.slug,
           'category': item.category.label,
           'isChangedIn2024': item.isChangedIn2024,
         },

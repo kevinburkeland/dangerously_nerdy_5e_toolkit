@@ -4,19 +4,13 @@ import '../magic_item_data.dart';
 class SrdMagicRings {
   SrdMagicRings._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // Ring of Protection
-    MagicItem(
-      id: 'item_ring_of_protection',
-      name: 'Ring of Protection',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_protection', ruleset: RulesetVersion.v2024), name: 'Ring of Protection',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+1 to AC & Saving Throws'),
-      ],
+      descriptionMarkdown: 'You gain a +1 bonus to Armor Class and all saving throws while wearing this ring.',
       rules2014: ItemEditionDetails(
         summary:
             'You gain a +1 bonus to Armor Class and saving throws while wearing this ring.',
@@ -31,22 +25,16 @@ class SrdMagicRings {
             'You gain a +1 bonus to Armor Class and all saving throws while wearing this ring.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'ac', 'saving throws', 'defense'],
+      isChangedIn2024: false, tags: ['ring', 'ac', 'saving throws', 'defense'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'ac', 'saving throws', 'defense'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Spell Storing
-    MagicItem(
-      id: 'item_ring_of_spell_storing',
-      name: 'Ring of Spell Storing',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_spell_storing', ruleset: RulesetVersion.v2024), name: 'Ring of Spell Storing',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Store up to 5 Levels of Spells'),
-      ],
+      descriptionMarkdown: 'Stores up to 5 spell levels cast into the ring; wearer casts them with original caster\'s parameters or wearer\'s parameters.',
       rules2014: ItemEditionDetails(
         summary:
             'Holds up to 5 levels of spells that any creature can cast into the ring and the wearer can cast without spell slots.',
@@ -61,22 +49,16 @@ class SrdMagicRings {
             'Holds up to 5 levels of spells. Any creature can cast a spell of level 1–5 into the ring by touching it. While wearing it, you can cast any stored spell using its standard casting time.',
         activation: 'Matches stored spell',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'spell slot', 'utility', 'versatile'],
+      isChangedIn2024: false, tags: ['ring', 'spell slot', 'utility', 'versatile'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'spell slot', 'utility', 'versatile'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Invisibility
-    MagicItem(
-      id: 'item_ring_of_invisibility',
-      name: 'Ring of Invisibility',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_invisibility', ruleset: RulesetVersion.v2024), name: 'Ring of Invisibility',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action: Become Invisible (At Will) until Attack or Spell'),
-      ],
+      descriptionMarkdown: 'Action: gain Invisible condition at will. Ends if you make an attack roll, deal damage, cast a spell, or dismiss it.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, you can turn invisible as an action. Anything you are wearing or carrying is invisible with you. You remain invisible until the ring is removed, until you attack or cast a spell, or until you use a bonus action to become visible again.',
@@ -91,23 +73,16 @@ class SrdMagicRings {
             'While wearing this ring, use an Action to become Invisible. The condition ends if you attack, cast a spell, deal damage, or use a Bonus Action to end it.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'invisibility', 'stealth', 'legendary'],
+      isChangedIn2024: false, tags: ['ring', 'invisibility', 'stealth', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'invisibility', 'stealth', 'legendary'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Regeneration
-    MagicItem(
-      id: 'item_ring_of_regeneration',
-      name: 'Ring of Regeneration',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_regeneration', ruleset: RulesetVersion.v2024), name: 'Ring of Regeneration',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Regain 1d6 HP every 10 Minutes & Regrow Lost Limbs (1d6+1 Days)'),
-      ],
+      descriptionMarkdown: 'Regain 1d6 HP every 10 minutes (if above 0 HP) and regrow severed body parts over 1d6+1 days.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, you regain 1d6 hit points every 10 minutes if you have at least 1 hit point. If you lose a body part, the ring causes it to regrow in 1d6 + 1 days.',
@@ -122,23 +97,16 @@ class SrdMagicRings {
             'While you have at least 1 HP, regain 1d6 HP every 10 minutes and regrow lost body parts after 1d6 + 1 days.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'regeneration', 'healing', 'survival'],
+      isChangedIn2024: false, tags: ['ring', 'regeneration', 'healing', 'survival'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'regeneration', 'healing', 'survival'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Resistance
-    MagicItem(
-      id: 'item_ring_of_resistance',
-      name: 'Ring of Resistance',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_resistance', ruleset: RulesetVersion.v2024), name: 'Ring of Resistance',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Grants Resistance to 1 Damage Type (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, Thunder)'),
-      ],
+      descriptionMarkdown: 'Grants Resistance to one chosen damage type while worn.',
       rules2014: ItemEditionDetails(
         summary:
             'You have resistance to one damage type determined by the gem set in the ring (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, Thunder).',
@@ -152,23 +120,16 @@ class SrdMagicRings {
             'You have Resistance to one damage type (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, or Thunder) associated with the ring.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'resistance', 'defense', 'elemental'],
+      isChangedIn2024: false, tags: ['ring', 'resistance', 'defense', 'elemental'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'resistance', 'defense', 'elemental'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Free Action
-    MagicItem(
-      id: 'item_ring_of_free_action',
-      name: 'Ring of Free Action',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_free_action', ruleset: RulesetVersion.v2024), name: 'Ring of Free Action',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Ignore Difficult Terrain; Magic cannot reduce speed or cause Paralyzed/Restrained'),
-      ],
+      descriptionMarkdown: 'Ignore Difficult Terrain; immune to magical speed reduction and the Paralyzed and Restrained conditions caused by magic.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, difficult terrain doesn\'t cost you extra movement, and magic can neither reduce your speed nor cause you to be paralyzed or restrained.',
@@ -183,22 +144,16 @@ class SrdMagicRings {
             'Difficult terrain does not reduce your Speed. Magic cannot reduce your Speed, nor can magic inflict the Paralyzed or Restrained conditions on you.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'free action', 'movement', 'immunity', 'condition'],
+      isChangedIn2024: false, tags: ['ring', 'free action', 'movement', 'immunity', 'condition'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'free action', 'movement', 'immunity', 'condition'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Evasion
-    MagicItem(
-      id: 'item_ring_of_evasion',
-      name: 'Ring of Evasion',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_evasion', ruleset: RulesetVersion.v2024), name: 'Ring of Evasion',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Reaction: Succeed on Failed DEX Saving Throw (3 Charges)'),
-      ],
+      descriptionMarkdown: 'Reaction: expend 1 charge to turn a failed Dexterity saving throw into a success (3 charges, recharges on Long Rest).',
       rules2014: ItemEditionDetails(
         summary:
             'This ring has 3 charges. When you fail a Dexterity saving throw while wearing it, you can use your reaction to expend 1 charge to succeed instead.',
@@ -215,23 +170,16 @@ class SrdMagicRings {
         activation: '1 Reaction',
         charges: '3 charges (recharges 1d3 on Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'evasion', 'dexterity', 'saving throw', 'reaction'],
+      isChangedIn2024: false, tags: ['ring', 'evasion', 'dexterity', 'saving throw', 'reaction'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'evasion', 'dexterity', 'saving throw', 'reaction'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Feather Falling
-    MagicItem(
-      id: 'item_ring_of_feather_falling',
-      name: 'Ring of Feather Falling',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_feather_falling', ruleset: RulesetVersion.v2024), name: 'Ring of Feather Falling',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Reaction on Falling: Feather Fall (Descent 60 ft/round, 0 Fall Dmg)'),
-      ],
+      descriptionMarkdown: 'Falling speed automatically slows to 60 ft per round and you take no falling damage.',
       rules2014: ItemEditionDetails(
         summary:
             'When you fall while wearing this ring, you descend 60 feet per round and take no damage from falling.',
@@ -246,23 +194,16 @@ class SrdMagicRings {
             'While wearing this ring, when you fall, your descent slows to 60 feet per round and you take 0 damage from the fall.',
         activation: 'Passive on Falling',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'feather fall', 'falling', 'survival'],
+      isChangedIn2024: false, tags: ['ring', 'feather fall', 'falling', 'survival'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'feather fall', 'falling', 'survival'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Mind Shielding
-    MagicItem(
-      id: 'item_ring_of_mind_shielding',
-      name: 'Ring of Mind Shielding',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_mind_shielding', ruleset: RulesetVersion.v2024), name: 'Ring of Mind Shielding',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Immune to telepathy, mind reading & lie detection; Soul enters ring on death'),
-      ],
+      descriptionMarkdown: 'Immunity to telepathic intrusion, thought reading, and alignment/lie detection. Preserves soul upon death.',
       rules2014: ItemEditionDetails(
         summary:
             'You are immune to magic that allows other creatures to read your thoughts, determine if you are lying, or know your creature type. Can make the ring invisible.',
@@ -277,24 +218,16 @@ class SrdMagicRings {
             'Grants complete immunity to telepathic intrusions and thought-reading magic. You can turn the ring invisible at will. If you die, your soul can safely inhabit the ring.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'mind shielding', 'telepathy', 'soul', 'psychic'],
+      isChangedIn2024: false, tags: ['ring', 'mind shielding', 'telepathy', 'soul', 'psychic'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'mind shielding', 'telepathy', 'soul', 'psychic'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Shooting Stars
-    MagicItem(
-      id: 'item_ring_of_shooting_stars',
-      name: 'Ring of Shooting Stars',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_shooting_stars', ruleset: RulesetVersion.v2024), name: 'Ring of Shooting Stars',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.lightning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '6 Charges: Dancing Lights at will; Faerie Fire (1 charge); Ball Lightning 5d4 (2 charges); Shooting Stars 5d4 (1-3 charges)'),
-      ],
+      descriptionMarkdown: '6 charges: at-will Light spells, Faerie Fire, Ball Lightning, and Shooting Stars bursts.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 6 charges for Dancing Lights (at will in darkness), Faerie Fire, Ball Lightning (5d4 per ball), and Shooting Stars (5d4 per bead in 15-ft cube).',
@@ -313,23 +246,16 @@ class SrdMagicRings {
         charges: '6 charges (recharges 1d6 on Long Rest)',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'shooting stars', 'lightning', 'fire', 'aoe', 'charges'],
+      isChangedIn2024: false, tags: ['ring', 'shooting stars', 'lightning', 'fire', 'aoe', 'charges'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'shooting stars', 'lightning', 'fire', 'aoe', 'charges'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Telekinesis
-    MagicItem(
-      id: 'item_ring_of_telekinesis',
-      name: 'Ring of Telekinesis',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_telekinesis', ruleset: RulesetVersion.v2024), name: 'Ring of Telekinesis',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Cast Telekinesis at Will (Objects up to 1,000 lbs)'),
-      ],
+      descriptionMarkdown: 'Action: cast Telekinesis at will targeting unheld objects (up to 1,000 lbs).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, you can cast the Telekinesis spell at will, but you can target only objects that aren\'t being worn or carried.',
@@ -344,25 +270,16 @@ class SrdMagicRings {
             'Cast Telekinesis at will as an Action, targeting objects up to 1,000 pounds that aren\'t worn or carried.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'telekinesis', 'force', 'utility'],
+      isChangedIn2024: false, tags: ['ring', 'telekinesis', 'force', 'utility'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'telekinesis', 'force', 'utility'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of the Ram
-    MagicItem(
-      id: 'item_ring_of_the_ram',
-      name: 'Ring of the Ram',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_the_ram', ruleset: RulesetVersion.v2024), name: 'Ring of the Ram',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.force,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            damageType: DamageAccent.force,
-            label:
-                '3 Charges: Ram Attack (2d10 Force per charge, +7 to Hit, 60 ft Range & DC 15 Push 5 ft)'),
-      ],
+      descriptionMarkdown: '3 charges: make +7 ranged spell attack dealing 2d10 Force damage and pushing 5 ft per charge spent (up to 6d10 Force and 15 ft push).',
       rules2014: ItemEditionDetails(
         summary:
             'Has 3 charges: make a ranged spell attack (+7 bonus, 60 ft range) expending 1–3 charges. Deals 2d10 force damage per charge and pushes target 5 ft per charge (DC 15 Str save).',
@@ -380,22 +297,16 @@ class SrdMagicRings {
         charges: '3 charges (recharges 1d3 on Long Rest)',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'ram', 'force', 'push', 'damage'],
+      isChangedIn2024: false, tags: ['ring', 'ram', 'force', 'push', 'damage'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'ram', 'force', 'push', 'damage'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Three Wishes
-    MagicItem(
-      id: 'item_ring_of_three_wishes',
-      name: 'Ring of Three Wishes',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.legendary,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label:
-                'Contains 3 Wishes (Cast Wish as an Action; Becomes Nonmagical when Expended)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_three_wishes', ruleset: RulesetVersion.v2024), name: 'Ring of Three Wishes',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: expend 1 charge to cast Wish (3 charges total, non-rechargeable).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, you can use an action to expend 1 of its 3 charges to cast the Wish spell from it. Once the last charge is spent, the ring becomes a nonmagical ring.',
@@ -412,22 +323,16 @@ class SrdMagicRings {
         activation: '1 Action',
         charges: '3 charges (non-rechargeable)',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'wish', 'legendary', 'ultimate'],
+      isChangedIn2024: false, tags: ['ring', 'wish', 'legendary', 'ultimate'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'wish', 'legendary', 'ultimate'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Water Walking
-    MagicItem(
-      id: 'item_ring_of_water_walking',
-      name: 'Ring of Water Walking',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Stand on and Move Across Any Liquid Surface (Water, Acid, Mud, Snow, Quicksand, Lava)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_water_walking', ruleset: RulesetVersion.v2024), name: 'Ring of Water Walking',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Walk and run across all liquid surfaces as solid ground.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, you can stand on and move across any liquid surface (such as water, acid, mud, snow, quicksand, or lava) as if it were harmless solid ground.',
@@ -441,24 +346,16 @@ class SrdMagicRings {
             'While wearing this ring, you can move across liquids (water, acid, snow, lava) as if they were solid ground.',
         activation: 'Passive / Movement',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'water walking', 'liquids', 'utility'],
+      isChangedIn2024: false, tags: ['ring', 'water walking', 'liquids', 'utility'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'water walking', 'liquids', 'utility'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Warmth
-    MagicItem(
-      id: 'item_ring_of_warmth',
-      name: 'Ring of Warmth',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_warmth', ruleset: RulesetVersion.v2024), name: 'Ring of Warmth',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFEF4444),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to Cold Damage & Immune to Extreme Cold Environments (down to -50°F)'),
-      ],
+      descriptionMarkdown: 'Resistance to Cold damage; complete protection against Extreme Cold environments.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, you have resistance to cold damage. In addition, you and everything you wear and carry are unharmed by temperatures as low as -50 degrees Fahrenheit.',
@@ -473,23 +370,16 @@ class SrdMagicRings {
             'Grants Resistance to Cold damage and immunity to cold weather hazards down to -50°F.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'warmth', 'cold', 'resistance', 'survival'],
+      isChangedIn2024: false, tags: ['ring', 'warmth', 'cold', 'resistance', 'survival'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'warmth', 'cold', 'resistance', 'survival'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Animal Influence
-    MagicItem(
-      id: 'item_ring_of_animal_influence',
-      name: 'Ring of Animal Influence',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF10B981),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '3 Charges: Animal Friendship, Fear (Beasts), Speak with Animals'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_animal_influence', ruleset: RulesetVersion.v2024), name: 'Ring of Animal Influence',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast Animal Friendship, Fear (beasts), or Speak with Animals (3 charges).',
       rules2014: ItemEditionDetails(
         summary:
             '3 charges (recharges 1d3 daily at dawn). Cast Animal Friendship (DC 13), Fear (beasts only, DC 13), or Speak with Animals.',
@@ -504,23 +394,16 @@ class SrdMagicRings {
             'Allows casting nature spells to communicate with and charm beasts.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['ring', 'animal', 'beast', 'charm', 'druid', 'ranger'],
+      isChangedIn2024: false, tags: ['ring', 'animal', 'beast', 'charm', 'druid', 'ranger'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'animal', 'beast', 'charm', 'druid', 'ranger'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Djinni Summoning
-    MagicItem(
-      id: 'item_ring_of_djinni_summoning',
-      name: 'Ring of Djinni Summoning',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_djinni_summoning', ruleset: RulesetVersion.v2024), name: 'Ring of Djinni Summoning',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label:
-                'Action: Summon Djinni from Elemental Plane of Air for up to 1 Hour (1/Day)'),
-      ],
+      descriptionMarkdown: 'Action: summon allied Djinni for 1 hour. Friendly and follows verbal commands (1/Long Rest).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: summon a friendly Djinni from the Elemental Plane of Air for up to 1 hour (recharges daily at dawn).',
@@ -536,21 +419,15 @@ class SrdMagicRings {
         activation: '1 Action (1/Long Rest)',
       ),
       tags: ['ring', 'djinni', 'summon', 'elemental', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'djinni', 'summon', 'elemental', 'legendary'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Elemental Command
-    MagicItem(
-      id: 'item_ring_of_elemental_command',
-      name: 'Ring of Elemental Command (Air / Earth / Fire / Water)',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_elemental_command', ruleset: RulesetVersion.v2024), name: 'Ring of Elemental Command (Air / Earth / Fire / Water)',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label:
-                'Dominion over Chosen Element: 5 Charges for High-Tier Spells, Element Resistance & Flight/Swim'),
-      ],
+      descriptionMarkdown: '5 charges: elemental immunity/resistance, domination over planar creatures, and devastating elemental magic.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 5 charges. Grants advantage on attacks vs elementals of its type, resistance to matching element, and allows casting signature high-level elemental spells (Chain Lightning, Earthquake, Fire Storm, Wall of Ice, etc.).',
@@ -579,21 +456,15 @@ class SrdMagicRings {
         'water',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'elemental', 'command', 'fire', 'air', 'earth', 'water', 'legendary'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Jumping
-    MagicItem(
-      id: 'item_ring_of_jumping',
-      name: 'Ring of Jumping',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_jumping', ruleset: RulesetVersion.v2024), name: 'Ring of Jumping',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Bonus Action: Cast Jump on Yourself at Will (Triples Jump Distance)'),
-      ],
+      descriptionMarkdown: 'Bonus Action: cast Jump at will targeting self (triples jumping distances).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this ring, you can cast the Jump spell from it as a bonus action at will, but can target only yourself.',
@@ -609,21 +480,15 @@ class SrdMagicRings {
         activation: '1 Bonus Action',
       ),
       tags: ['ring', 'jump', 'mobility', 'athletics', 'utility'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'jump', 'mobility', 'athletics', 'utility'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Spell Turning
-    MagicItem(
-      id: 'item_ring_of_spell_turning',
-      name: 'Ring of Spell Turning',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_spell_turning', ruleset: RulesetVersion.v2024), name: 'Ring of Spell Turning',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Advantage on Saves vs Spells targeting only you • Natural 20 Save Reflects Spell back to Caster (up to 7th Level)'),
-      ],
+      descriptionMarkdown: 'Advantage on saves vs targeted spells; Natural 20 reflects spells up to 7th level back onto original caster.',
       rules2014: ItemEditionDetails(
         summary:
             'Advantage on saving throws against any spell that targets only you (not an area). If you roll a 20 on the save and the spell is 7th level or lower, the spell is reflected back onto the caster.',
@@ -639,19 +504,15 @@ class SrdMagicRings {
         activation: 'Passive on Save',
       ),
       tags: ['ring', 'spell turning', 'reflect', 'abjuration', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'spell turning', 'reflect', 'abjuration', 'legendary'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of Swimming
-    MagicItem(
-      id: 'item_ring_of_swimming',
-      name: 'Ring of Swimming',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Gain Swimming Speed of 40 Feet'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_swimming', ruleset: RulesetVersion.v2024), name: 'Ring of Swimming',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Grants Swim Speed of 40 feet.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a swimming speed of 40 feet while wearing this ring.',
@@ -666,21 +527,15 @@ class SrdMagicRings {
         activation: 'Passive',
       ),
       tags: ['ring', 'swimming', 'aquatic', 'mobility'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'swimming', 'aquatic', 'mobility'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
 
     // Ring of X-ray Vision
-    MagicItem(
-      id: 'item_ring_of_xray_vision',
-      name: 'Ring of X-ray Vision',
-      category: ItemCategory.ring,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ring_of_xray_vision', ruleset: RulesetVersion.v2024), name: 'Ring of X-ray Vision',
+      itemType: 'ring', category: ItemCategory.ring, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: See Through 1 ft Stone, 1 in Metal, 3 ft Wood/Dirt (30 ft Range, 1 Min; Exhaustion Risk on Reuse)'),
-      ],
+      descriptionMarkdown: 'Action: 30 ft X-ray vision through walls and doors for 1 minute. Con save against Exhaustion on repeated uses.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: gain X-ray vision for 1 minute up to 30 feet (penetrates 1 ft stone, 1 inch metal, 3 ft wood/dirt; blocked by lead). Each use past the first per rest requires DC 15 Con save or 1 level of exhaustion.',
@@ -698,6 +553,7 @@ class SrdMagicRings {
         savingThrowDc: 'DC 15 Constitution',
       ),
       tags: ['ring', 'xray vision', 'scouting', 'vision', 'investigation'],
+      customProperties: { 'cost': null, 'category': 'ring', 'tags': ['ring', 'xray vision', 'scouting', 'vision', 'investigation'], 'defaultSlot': EquipmentSlot.ring1 },
     ),
   ];
 }

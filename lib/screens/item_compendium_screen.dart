@@ -145,25 +145,25 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     );
   }
 
-  void _showItemDetails(MagicItem item, DmRulesEdition edition, bool isPinned) {
+  void _showItemDetails(EquipmentItem item, DmRulesEdition edition, bool isPinned) {
     HapticService.lightImpact(context);
     ItemDetailDialog.show(
       context,
       item: item,
       edition: edition,
       isPinned: isPinned,
-      onTogglePin: () => _togglePinItem(context, item.id),
+      onTogglePin: () => _togglePinItem(context, item.id.slug),
     );
   }
 
   void _showItemComparison(
-      MagicItem item, DmRulesEdition edition, bool isPinned) {
+      EquipmentItem item, DmRulesEdition edition, bool isPinned) {
     ItemComparisonDialog.show(
       context,
       item: item,
       edition: edition,
       isPinned: isPinned,
-      onTogglePin: () => _togglePinItem(context, item.id),
+      onTogglePin: () => _togglePinItem(context, item.id.slug),
     );
   }
 
@@ -184,14 +184,14 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     // Filter items based on search, view mode, and sheet filters
     final filteredItems = allItems.where((item) {
       if (_viewMode == ItemCompendiumViewMode.myReliquary &&
-          !pinnedIds.contains(item.id)) {
+          !pinnedIds.contains(item.id.slug)) {
         return false;
       }
       if (_viewMode == ItemCompendiumViewMode.revisions2024 &&
           !item.isChangedIn2024) {
         return false;
       }
-      if (_showOnlyPinned && !pinnedIds.contains(item.id)) {
+      if (_showOnlyPinned && !pinnedIds.contains(item.id.slug)) {
         return false;
       }
       return item.matches(
@@ -207,9 +207,9 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
 
     // Grouping for "All Items" view mode
     final pinnedItemsInResults =
-        filteredItems.where((item) => pinnedIds.contains(item.id)).toList();
+        filteredItems.where((item) => pinnedIds.contains(item.id.slug)).toList();
     final otherItemsInResults =
-        filteredItems.where((item) => !pinnedIds.contains(item.id)).toList();
+        filteredItems.where((item) => !pinnedIds.contains(item.id.slug)).toList();
 
     return CodexPageShell(
       headerConfig: CodexHeaderConfig(
@@ -480,7 +480,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
 
   List<Widget> _buildGroupedCategorySlivers(
     BuildContext context,
-    List<MagicItem> items,
+    List<EquipmentItem> items,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
@@ -489,7 +489,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     final slivers = <Widget>[];
 
     // Group items by category in predefined canonical order
-    final groupedByCategory = <ItemCategory, List<MagicItem>>{};
+    final groupedByCategory = <ItemCategory, List<EquipmentItem>>{};
     for (final cat in ItemCategory.values) {
       final inCat = items.where((i) => i.category == cat).toList();
       if (inCat.isNotEmpty) {
@@ -566,21 +566,21 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
 
   Widget _buildSliverItemCards(
     BuildContext context,
-    List<MagicItem> items,
+    List<EquipmentItem> items,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    return SliverResponsiveCardGrid<MagicItem>(
+    return SliverResponsiveCardGrid<EquipmentItem>(
       items: items,
       itemBuilder: (context, item) => ItemCard(
         item: item,
         edition: edition,
-        isPinned: pinnedIds.contains(item.id),
-        onTogglePin: () => _togglePinItem(context, item.id),
+        isPinned: pinnedIds.contains(item.id.slug),
+        onTogglePin: () => _togglePinItem(context, item.id.slug),
         onTap: () =>
-            _showItemDetails(item, edition, pinnedIds.contains(item.id)),
+            _showItemDetails(item, edition, pinnedIds.contains(item.id.slug)),
         onCompare: () =>
-            _showItemComparison(item, edition, pinnedIds.contains(item.id)),
+            _showItemComparison(item, edition, pinnedIds.contains(item.id.slug)),
       ),
     );
   }

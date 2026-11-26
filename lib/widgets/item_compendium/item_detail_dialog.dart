@@ -16,7 +16,7 @@ import '../glyphs/dnd_glyph.dart';
 /// Modal dialog showing full magic item details, properties, action traits, attunement rules,
 /// and complete 5e (2014 & 2024) downtime crafting parameters across dedicated tabs.
 class ItemDetailDialog extends StatefulWidget {
-  final MagicItem item;
+  final EquipmentItem item;
   final DmRulesEdition edition;
   final bool isPinned;
   final VoidCallback onTogglePin;
@@ -33,7 +33,7 @@ class ItemDetailDialog extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    required MagicItem item,
+    required EquipmentItem item,
     DmRulesEdition edition = DmRulesEdition.v2024,
     required bool isPinned,
     required VoidCallback onTogglePin,
@@ -81,7 +81,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
         HapticService.selectionTick(context);
       }
     });
-    final existing = _fluffService.getUserNotes('item', widget.item.id) ?? '';
+    final existing = _fluffService.getUserNotes('item', widget.item.id.slug) ?? '';
     _notesController = TextEditingController(text: existing);
   }
 
@@ -105,7 +105,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
     final isDark = theme.brightness == Brightness.dark;
     final item = widget.item;
     final rules = item.getRules(_activeEdition);
-    final rarityColor = item.rarity.getLegibleColor(isDark);
+    final rarityColor = item.rarityTier.getLegibleColor(isDark);
     final categoryColor = item.category.getLegibleColor(isDark);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final priceStr = item.getEffectivePrice(_activeEdition);
@@ -136,7 +136,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
               children: [
                 DndGlyph.item(
                   category: item.category,
-                  rarity: item.rarity,
+                  rarity: item.rarityTier,
                   requiresAttunement: item.requiresAttunement,
                   damageAccent:
                       item.getGlyphPrimaryDamageAccent(_activeEdition),
@@ -177,7 +177,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                               style: TextStyle(
                                   color: theme.colorScheme.outlineVariant)),
                           Text(
-                            item.rarity.displayName,
+                            item.rarityTier.displayName,
                             style: TextStyle(
                               fontSize: 12,
                               color: rarityColor,
@@ -345,7 +345,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
 
   Widget _buildRulesTab(
     BuildContext context,
-    MagicItem item,
+    EquipmentItem item,
     ItemEditionDetails rules,
     bool isDark,
     Color rarityColor,
@@ -376,7 +376,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                     color: priceColor),
                 _buildDetailRow('Category', item.category.displayName,
                     color: categoryColor),
-                _buildDetailRow('Rarity', item.rarity.displayName,
+                _buildDetailRow('Rarity', item.rarityTier.displayName,
                     color: rarityColor),
                 _buildDetailRow(
                   'Attunement',
@@ -524,7 +524,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
 
   Widget _buildCraftingTab(
     BuildContext context,
-    MagicItem item,
+    EquipmentItem item,
     ItemCraftingDetails crafting,
     bool isDark,
     Color rarityColor,
@@ -708,7 +708,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
 
   Widget _buildDiffsTab(
     BuildContext context,
-    MagicItem item,
+    EquipmentItem item,
     bool isDark,
     Color rarityColor,
   ) {
@@ -867,9 +867,9 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
   }
 
   Widget _buildLoreNotesTab(
-      BuildContext context, MagicItem item, Color accentColor) {
+      BuildContext context, EquipmentItem item, Color accentColor) {
     final theme = Theme.of(context);
-    final slug = item.id;
+    final slug = item.id.slug;
     final importedFluff = _fluffService.getFluff('item', slug);
 
     return SingleChildScrollView(
@@ -1033,7 +1033,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                             instanceId: 'temp',
                             itemRef: EntityReference(
                               refType: EntityType.equipment,
-                              slug: widget.item.id.replaceAll('_', '-'),
+                              slug: widget.item.id.slug.replaceAll('_', '-'),
                               displayName: widget.item.name,
                             ),
                             customProperties: {
@@ -1044,10 +1044,10 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                         );
                         final newInstance = InventoryItemInstance(
                           instanceId:
-                              'item-${widget.item.id}-${DateTime.now().millisecondsSinceEpoch}',
+                              'item-${widget.item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
                           itemRef: EntityReference(
                             refType: EntityType.equipment,
-                            slug: widget.item.id.replaceAll('_', '-'),
+                            slug: widget.item.id.slug.replaceAll('_', '-'),
                             displayName: widget.item.name,
                           ),
                           quantity: 1,
@@ -1055,7 +1055,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                           equippedSlot: resolvedSlot,
                           customProperties: {
                             'category': widget.item.category.name,
-                            'rarity': widget.item.rarity.name,
+                            'rarity': widget.item.rarityTier.name,
                             'tags': widget.item.tags,
                           },
                         );

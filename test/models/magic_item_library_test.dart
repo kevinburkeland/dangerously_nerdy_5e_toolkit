@@ -12,8 +12,8 @@ void main() {
       final seen = <String>{};
       final duplicates = <String>[];
       for (final item in MagicItemLibrary.allItems) {
-        if (!seen.add(item.id)) {
-          duplicates.add(item.id);
+        if (!seen.add(item.id.slug)) {
+          duplicates.add(item.id.slug);
         }
       }
       expect(duplicates, isEmpty,
@@ -30,7 +30,7 @@ void main() {
         expect(itemsInCat.length, greaterThanOrEqualTo(5),
             reason: 'Category ${cat.name} should have rich SRD coverage');
         for (final item in itemsInCat) {
-          expect(item.id, isNotEmpty);
+          expect(item.id.slug, isNotEmpty);
           expect(item.name, isNotEmpty);
           expect(item.rules2014.summary, isNotEmpty);
           expect(item.rules2024.summary, isNotEmpty);
@@ -61,7 +61,7 @@ void main() {
     test('verifies nonmagical items and specific armor/weapon types exist', () {
       final fullPlate = MagicItemLibrary.findById('armor_plate');
       expect(fullPlate, isNotNull);
-      expect(fullPlate!.rarity, equals(ItemRarity.nonmagical));
+      expect(fullPlate!.rarityTier, equals(ItemRarity.nonmagical));
 
       final platePlus3 = MagicItemLibrary.findById('plate_plus_3');
       expect(platePlus3, isNotNull);
@@ -176,7 +176,7 @@ void main() {
 
       final byName = MagicItemLibrary.findByName('staff of power');
       expect(byName, isNotNull);
-      expect(byName!.id, equals('item_staff_of_power'));
+      expect(byName!.id.slug, equals('item_staff_of_power'));
     });
 
     test('diffItems correctly extracts items with 2024 differences', () {
@@ -201,7 +201,7 @@ void main() {
 
       final flameTongue = MagicItemLibrary.findById('item_flame_tongue');
       expect(flameTongue, isNotNull);
-      expect(flameTongue!.rarity, equals(ItemRarity.rare));
+      expect(flameTongue!.rarityTier, equals(ItemRarity.rare));
       expect(flameTongue.isConsumable, isFalse);
       expect(flameTongue.getEffectivePrice(), equals('500–5,000 gp'));
     });

@@ -4,28 +4,13 @@ import '../magic_item_data.dart';
 class SrdMagicStaves {
   SrdMagicStaves._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // Staff of Power
-    MagicItem(
-      id: 'item_staff_of_power',
-      name: 'Staff of Power',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.veryRare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Sorcerer, Warlock, or Wizard',
-      damageAccent: DamageAccent.force,
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.melee,
-          damageType: DamageAccent.force,
-          label: '+2 Quarterstaff & +2 to AC, Saves & Spell Attacks',
-        ),
-        ActionTraitRing(
-          ringType: ActionRingType.recharge,
-          label:
-              '20 Charges (Cone of Cold, Fireball, Globe of Invulnerability, Lightning Bolt, Wall of Force)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_power', ruleset: RulesetVersion.v2024), name: 'Staff of Power',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: true, attunementRequirement: 'by a Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: '+2 staff with +2 to AC, Saves, and Spell Attacks; 20 charges that now scale with your own Spell Save DC.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 staff granting +2 to AC, saving throws, and spell attack rolls with 20 charges for high-tier spells and Retributive Strike.',
@@ -44,34 +29,18 @@ class SrdMagicStaves {
         charges: '20 charges (recharges 2d8 + 4 daily at dawn)',
         savingThrowDc: 'Your Spell Save DC or DC 17 (whichever is higher)',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'In 2024, spells cast from the staff use your own Spell Save DC if higher than DC 17.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'In 2024, spells cast from the staff use your own Spell Save DC if higher than DC 17.', diffHighlights: [
         '2024: Magic focus save DCs scale using your own Spell Save DC if higher than the staff\'s default DC 17.',
-      ],
-      tags: ['staff', 'wizard', 'sorcerer', 'warlock', 'power', 'charges'],
+      ], tags: ['staff', 'wizard', 'sorcerer', 'warlock', 'power', 'charges'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'wizard', 'sorcerer', 'warlock', 'power', 'charges'] },
     ),
 
     // Staff of the Magi
-    MagicItem(
-      id: 'item_staff_of_the_magi',
-      name: 'Staff of the Magi',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Sorcerer, Warlock, or Wizard',
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.melee,
-          label: '+2 Quarterstaff, +2 to Spell Attacks & Spell Absorption',
-        ),
-        ActionTraitRing(
-          ringType: ActionRingType.legendary,
-          label:
-              '50 Charges: Plane Shift, Telekinesis, Wall of Fire, Conjure Elemental, Ice Storm, Dispel Magic',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_the_magi', ruleset: RulesetVersion.v2024), name: 'Staff of the Magi',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'by a Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: '+2 staff and +2 to Spell Attacks; Spell Absorption reaction; 50 charges scaling with your own DC.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 quarterstaff, +2 to spell attack rolls, spell absorption, and 50 charges for casting world-shaking spells and devastating Retributive Strike.',
@@ -90,13 +59,9 @@ class SrdMagicStaves {
         charges: '50 charges (recharges 4d6 + 2 daily at dawn)',
         savingThrowDc: 'Your Spell Save DC or DC 17',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Staff spell DC scales with caster\'s own Spell Save DC in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Staff spell DC scales with caster\'s own Spell Save DC in 2024.', diffHighlights: [
         '2024: Scaled save DC and updated Plane Shift / Telekinesis rules.',
-      ],
-      tags: [
+      ], tags: [
         'staff',
         'magi',
         'legendary',
@@ -104,25 +69,15 @@ class SrdMagicStaves {
         'spellcaster',
         'absorption'
       ],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'magi', 'legendary', 'wizard', 'spellcaster', 'absorption'] },
     ),
 
     // Staff of Fire
-    MagicItem(
-      id: 'item_staff_of_fire',
-      name: 'Staff of Fire',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.veryRare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Druid, Sorcerer, Warlock, or Wizard',
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.reaction,
-          damageType: DamageAccent.fire,
-          label:
-              'Fire Resistance & 10 Charges (Burning Hands, Fireball, Wall of Fire)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_fire', ruleset: RulesetVersion.v2024), name: 'Staff of Fire',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: true, attunementRequirement: 'by a Druid, Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: 'Resistance to Fire damage; 10 charges for Burning Hands, Fireball, and Wall of Fire using your own Save DC.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants resistance to fire damage and 10 charges to cast Burning Hands, Fireball, and Wall of Fire.',
@@ -141,31 +96,18 @@ class SrdMagicStaves {
         charges: '10 charges (recharges 1d6 + 4 daily at dawn)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Staff spell DC scales with your own Spell Save DC in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Staff spell DC scales with your own Spell Save DC in 2024.', diffHighlights: [
         '2024: Scaled save DC.',
-      ],
-      tags: ['staff', 'fire', 'fireball', 'resistance'],
+      ], tags: ['staff', 'fire', 'fireball', 'resistance'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'fire', 'fireball', 'resistance'] },
     ),
 
     // Staff of Frost
-    MagicItem(
-      id: 'item_staff_of_frost',
-      name: 'Staff of Frost',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.veryRare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Druid, Sorcerer, Warlock, or Wizard',
-      damageAccent: DamageAccent.cold,
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.reaction,
-          damageType: DamageAccent.cold,
-          label:
-              'Cold Resistance & 10 Charges (Cone of Cold, Fog Cloud, Ice Storm, Wall of Ice)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_frost', ruleset: RulesetVersion.v2024), name: 'Staff of Frost',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: true, attunementRequirement: 'by a Druid, Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: 'Resistance to Cold damage; 10 charges for Cone of Cold, Fog Cloud, Ice Storm, and Wall of Ice.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants resistance to cold damage and 10 charges to cast Cone of Cold (5 charges), Fog Cloud (1 charge), Ice Storm (4 charges), and Wall of Ice (4 charges).',
@@ -184,28 +126,18 @@ class SrdMagicStaves {
         charges: '10 charges (recharges 1d6 + 4 daily at dawn)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Staff save DC scales with personal Spell Save DC in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Staff save DC scales with personal Spell Save DC in 2024.', diffHighlights: [
         '2024: Scaled save DC.',
-      ],
-      tags: ['staff', 'frost', 'cold', 'cone of cold', 'resistance'],
+      ], tags: ['staff', 'frost', 'cold', 'cone of cold', 'resistance'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'frost', 'cold', 'cone of cold', 'resistance'] },
     ),
 
     // Staff of Healing
-    MagicItem(
-      id: 'item_staff_of_healing',
-      name: 'Staff of Healing',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Bard, Cleric, or Druid',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '10 Charges: Cure Wounds, Lesser Restoration, Mass Cure Wounds'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_healing', ruleset: RulesetVersion.v2024), name: 'Staff of Healing',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Bard, Cleric, or Druid',
+      descriptionMarkdown: '10 charges for Cure Wounds (upgraded 2d8 per level in 2024), Lesser Restoration, and Mass Cure Wounds.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 10 charges to cast Cure Wounds (1-4 charges), Lesser Restoration (2 charges), and Mass Cure Wounds (5 charges).',
@@ -222,32 +154,18 @@ class SrdMagicStaves {
         activation: '1 Action',
         charges: '10 charges (recharges 1d6 + 4 daily at dawn)',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Cure Wounds cast through this staff heals 2d8 per level under 2024 spell revisions.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Cure Wounds cast through this staff heals 2d8 per level under 2024 spell revisions.', diffHighlights: [
         '2024: Cure Wounds heals 2d8 + mod (doubled from 1d8 in 2014).',
-      ],
-      tags: ['staff', 'healing', 'cleric', 'druid', 'bard'],
+      ], tags: ['staff', 'healing', 'cleric', 'druid', 'bard'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'healing', 'cleric', 'druid', 'bard'] },
     ),
 
     // Staff of the Woodlands
-    MagicItem(
-      id: 'item_staff_of_the_woodlands',
-      name: 'Staff of the Woodlands',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Druid',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+2 Quarterstaff & +2 to Spell Attacks'),
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '10 Charges: Awaken (Tree Summon), Wall of Thorns, Pass Without Trace'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_the_woodlands', ruleset: RulesetVersion.v2024), name: 'Staff of the Woodlands',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Druid',
+      descriptionMarkdown: '+2 Quarterstaff and +2 to Spell Attacks for Druids; at-will Pass Without Trace, 10 charges (Awaken companion, Wall of Thorns).',
       rules2014: ItemEditionDetails(
         summary:
             '+2 Quarterstaff, +2 to spell attacks, pass without trace at will, and 10 charges for Awaken, Wall of Thorns, Animal Friendship, etc.',
@@ -264,25 +182,16 @@ class SrdMagicStaves {
         activation: '1 Action',
         charges: '10 charges (recharges 1d6 + 4 daily at dawn)',
       ),
-      isChangedIn2024: false,
-      tags: ['staff', 'druid', 'summon', 'awaken', 'woodlands', 'nature'],
+      isChangedIn2024: false, tags: ['staff', 'druid', 'summon', 'awaken', 'woodlands', 'nature'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'druid', 'summon', 'awaken', 'woodlands', 'nature'] },
     ),
 
     // Staff of Charming
-    MagicItem(
-      id: 'item_staff_of_charming',
-      name: 'Staff of Charming',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement:
-          'by a Bard, Cleric, Druid, Sorcerer, Warlock, or Wizard',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '10 Charges: Charm Person, Command, Comprehend Languages; Reaction: Auto-Succeed vs Enchantment Save & Reflect Spell'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_charming', ruleset: RulesetVersion.v2024), name: 'Staff of Charming',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Bard, Cleric, Druid, Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: '10 charges for Charm Person and Command. Reaction to auto-succeed enchantment saves and reflect spells.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 10 charges to cast Charm Person, Command, or Comprehend Languages. When you fail a save against an enchantment spell targeting only you, turn the failure into a success, or expend 1 charge to redirect it to the caster.',
@@ -301,29 +210,18 @@ class SrdMagicStaves {
         charges: '10 charges (recharges 1d6 + 4 on Long Rest)',
         savingThrowDc: 'Your Spell Save DC or DC 13',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Scaled save DC in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Scaled save DC in 2024.', diffHighlights: [
         '2024: Scaled save DC.',
-      ],
-      tags: ['staff', 'charming', 'enchantment', 'reflect', 'spellcaster'],
+      ], tags: ['staff', 'charming', 'enchantment', 'reflect', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'charming', 'enchantment', 'reflect', 'spellcaster'] },
     ),
 
     // Staff of Striking
-    MagicItem(
-      id: 'item_staff_of_striking',
-      name: 'Staff of Striking',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_striking', ruleset: RulesetVersion.v2024), name: 'Staff of Striking',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.force,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            damageType: DamageAccent.force,
-            label:
-                '+3 Quarterstaff; Spend 1–3 Charges for +1d6 Force Damage per charge (up to +3d6)'),
-      ],
+      descriptionMarkdown: '+3 Quarterstaff with 10 charges; expend up to 3 charges on hit for +1d6 Force damage per charge.',
       rules2014: ItemEditionDetails(
         summary:
             '+3 quarterstaff with 10 charges. When you hit with a melee attack using it, you can expend up to 3 charges to deal an extra 1d6 force damage per charge.',
@@ -341,26 +239,16 @@ class SrdMagicStaves {
         charges: '10 charges (recharges 1d6 + 4 on Long Rest)',
         masteryProperties: 'Topple',
       ),
-      isChangedIn2024: false,
-      tags: ['staff', 'quarterstaff', 'force', 'damage', 'striking'],
+      isChangedIn2024: false, tags: ['staff', 'quarterstaff', 'force', 'damage', 'striking'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'quarterstaff', 'force', 'damage', 'striking'] },
     ),
 
     // Staff of Withering
-    MagicItem(
-      id: 'item_staff_of_withering',
-      name: 'Staff of Withering',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Cleric, Druid, or Warlock',
-      damageAccent: DamageAccent.necrotic,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            damageType: DamageAccent.necrotic,
-            label:
-                'Quarterstaff; Spend 1 Charge on Hit for +2d10 Necrotic (DC 15 CON Save or Disadvantage on STR/CON Checks)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_withering', ruleset: RulesetVersion.v2024), name: 'Staff of Withering',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Cleric, Druid, or Warlock',
+      descriptionMarkdown: '3 charges: +2d10 Necrotic damage on hit and disadvantage on Str/Con saves on failed DC 15 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             'Quarterstaff with 3 charges. When you hit with a melee attack, spend 1 charge: deals +2d10 necrotic damage and forces a DC 15 Con save or disadvantage on Str/Con checks for 1 hour.',
@@ -380,8 +268,7 @@ class SrdMagicStaves {
         savingThrowDc: 'Fixed DC 15',
         masteryProperties: 'Topple',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'staff',
         'withering',
         'necrotic',
@@ -390,22 +277,15 @@ class SrdMagicStaves {
         'druid',
         'warlock'
       ],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'withering', 'necrotic', 'debuff', 'cleric', 'druid', 'warlock'] },
     ),
 
     // Staff of the Python
-    MagicItem(
-      id: 'item_staff_of_the_python',
-      name: 'Staff of the Python',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.uncommon,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Cleric, Druid, or Warlock',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Throw Staff up to 10 ft to Transform into Giant Constrictor Snake'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_the_python', ruleset: RulesetVersion.v2024), name: 'Staff of the Python',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: true, attunementRequirement: 'by a Cleric, Druid, or Warlock',
+      descriptionMarkdown: 'Action: transform into a friendly Giant Constrictor Snake minion companion.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: throw staff up to 10 feet to transform into a Giant Constrictor Snake that obeys your commands. Bonus action to revert to staff.',
@@ -420,8 +300,7 @@ class SrdMagicStaves {
             'Throw staff up to 10 feet to animate a Giant Constrictor Snake that obeys verbal commands. Revert as a Bonus Action.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'staff',
         'python',
         'snake',
@@ -430,23 +309,15 @@ class SrdMagicStaves {
         'druid',
         'cleric'
       ],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'python', 'snake', 'summon', 'companion', 'druid', 'cleric'] },
     ),
 
     // Staff of Swarming Insects
-    MagicItem(
-      id: 'item_staff_of_swarming_insects',
-      name: 'Staff of Swarming Insects',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement:
-          'by a Bard, Cleric, Druid, Sorcerer, Warlock, or Wizard',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '10 Charges: Giant Insect (4 charges), Insect Plague (5 charges) • Action (1 charge): 30-ft Cloud of Heavy Obscurement & Half Cover'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_swarming_insects', ruleset: RulesetVersion.v2024), name: 'Staff of Swarming Insects',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Bard, Cleric, Druid, Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: '10 charges for Giant Insect, Insect Plague, and 30-ft obscuring swarm cloud (with half cover).',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 10 charges. Cast Giant Insect (4 charges) or Insect Plague (5 charges, save DC 15). Action (1 charge): create a 30-foot-radius swarm around you providing half cover and heavy obscurement to others.',
@@ -474,24 +345,15 @@ class SrdMagicStaves {
         'druid',
         'spellcaster'
       ],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'insects', 'plague', 'obscurement', 'cover', 'druid', 'spellcaster'] },
     ),
 
     // Staff of the Adder
-    MagicItem(
-      id: 'item_staff_of_the_adder',
-      name: 'Staff of the Adder',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.uncommon,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Cleric, Druid, or Warlock',
-      damageAccent: DamageAccent.poison,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            damageType: DamageAccent.poison,
-            label:
-                'Bonus Action: Snake Head animates for 1 Min • Melee Attack: 1d6 Piercing + 3d6 Poison (DC 15 CON Save)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_the_adder', ruleset: RulesetVersion.v2024), name: 'Staff of the Adder',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: true, attunementRequirement: 'by a Cleric, Druid, or Warlock',
+      descriptionMarkdown: 'Bonus Action: animate serpent head dealing 1d6 Piercing + 3d6 Poison damage on DC 15 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             'Bonus action: staff head turns into an animated serpent for 1 minute. Melee attack (+2 to hit, 5 ft reach) deals 1d6 piercing damage plus 3d6 poison damage on a failed DC 15 Constitution save.',
@@ -518,23 +380,15 @@ class SrdMagicStaves {
         'druid',
         'warlock'
       ],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'adder', 'snake', 'poison', 'venom', 'cleric', 'druid', 'warlock'] },
     ),
 
     // Staff of Thunder and Lightning
-    MagicItem(
-      id: 'item_staff_of_thunder_and_lightning',
-      name: 'Staff of Thunder and Lightning',
-      category: ItemCategory.staff,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_staff_of_thunder_and_lightning', ruleset: RulesetVersion.v2024), name: 'Staff of Thunder and Lightning',
+      itemType: 'staff', category: ItemCategory.staff, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.lightning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            damageType: DamageAccent.lightning,
-            label:
-                '+2 Quarterstaff • 5 Charges: Lightning (9d6), Thundercone (2d10 + Deafen), Lightning Strike (+2d6), Thunder Strike (+2d6 + Stun), Thunder & Lightning'),
-      ],
+      descriptionMarkdown: '+2 Quarterstaff with 5 charges: Lightning beam (9d6), Thundercone (2d10), Lightning Strike, Thunder Strike (Stun), or double Thunder and Lightning burst.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 quarterstaff with 5 charges (regains 1d5 daily at dawn) granting 5 distinct thunder and lightning powers.',
@@ -555,6 +409,7 @@ class SrdMagicStaves {
         masteryProperties: 'Topple',
       ),
       tags: ['staff', 'thunder', 'lightning', 'storm', 'stun', 'damage'],
+      customProperties: { 'cost': null, 'category': 'staff', 'tags': ['staff', 'thunder', 'lightning', 'storm', 'stun', 'damage'] },
     ),
   ];
 }

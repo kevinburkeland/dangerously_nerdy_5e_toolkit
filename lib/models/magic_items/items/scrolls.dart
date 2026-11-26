@@ -4,18 +4,13 @@ import '../magic_item_data.dart';
 class SrdMagicScrolls {
   SrdMagicScrolls._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // Spell Scroll (Cantrip)
-    MagicItem(
-      id: 'item_spell_scroll_cantrip',
-      name: 'Spell Scroll (Cantrip)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.common,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Cast Inscribed Cantrip (Save DC 13, +5 Attack)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_cantrip', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (Cantrip)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'common', rarityTier: ItemRarity.common,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast inscribed Cantrip. In 2024, anyone with Spellcasting or Pact Magic can use spell scrolls from any class list by succeeding on an Arcana check.',
       rules2014: ItemEditionDetails(
         summary:
             'A spell scroll bears the words of a single spell written in a mystical cipher. Reading the scroll casts the cantrip without components, and the scroll crumbles to dust.',
@@ -32,26 +27,18 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 13',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          '2024 rules allow cross-class scroll casting with an Arcana check.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: '2024 rules allow cross-class scroll casting with an Arcana check.', diffHighlights: [
         '2024: Cross-class scroll casting enabled via Arcana check.',
-      ],
-      tags: ['scroll', 'cantrip', 'spell scroll', 'consumable'],
+      ], tags: ['scroll', 'cantrip', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', 'cantrip', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (1st Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_1',
-      name: 'Spell Scroll (1st Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.common,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Cast 1st-Level Spell (Save DC 13, +5 Attack)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_1', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (1st Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'common', rarityTier: ItemRarity.common,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 1st-level spell. Cross-class scroll use with Arcana check.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 1st-level spell without material components. Consumed on use.',
@@ -68,25 +55,18 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 13',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Cross-class scroll rules in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Cross-class scroll rules in 2024.', diffHighlights: [
         '2024: Cross-class scroll casting.',
-      ],
-      tags: ['scroll', '1st level', 'spell scroll', 'consumable'],
+      ], tags: ['scroll', '1st level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '1st level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (2nd Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_2',
-      name: 'Spell Scroll (2nd Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Cast 2nd-Level Spell (Save DC 13, +5 Attack)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_2', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (2nd Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 2nd-level spell. Save DC uses your DC or DC 13.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 2nd-level spell without material components (Save DC 13, +5 Attack). Consumed on use.',
@@ -102,25 +82,18 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 13',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', diffHighlights: [
         '2024: Cross-class scroll casting.',
-      ],
-      tags: ['scroll', '2nd level', 'spell scroll', 'consumable'],
+      ], tags: ['scroll', '2nd level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '2nd level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (3rd Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_3',
-      name: 'Spell Scroll (3rd Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Cast 3rd-Level Spell (Save DC 15, +7 Attack)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_3', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (3rd Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 3rd-level spell. Save DC uses your DC or DC 15.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 3rd-level spell without material components (Save DC 15, +7 Attack). Consumed on use.',
@@ -136,25 +109,18 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', diffHighlights: [
         '2024: Cross-class scroll casting.',
-      ],
-      tags: ['scroll', '3rd level', 'spell scroll', 'consumable'],
+      ], tags: ['scroll', '3rd level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '3rd level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (4th Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_4',
-      name: 'Spell Scroll (4th Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Cast 4th-Level Spell (Save DC 15, +7 Attack)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_4', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (4th Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 4th-level spell. Save DC uses your DC or DC 15.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 4th-level spell without material components (Save DC 15, +7 Attack). Ability check DC 14 if above your spell slot level.',
@@ -169,25 +135,18 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', diffHighlights: [
         '2024: Cross-class scroll casting.',
-      ],
-      tags: ['scroll', '4th level', 'spell scroll', 'consumable'],
+      ], tags: ['scroll', '4th level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '4th level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (5th Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_5',
-      name: 'Spell Scroll (5th Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Cast 5th-Level Spell (Save DC 17, +9 Attack)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_5', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (5th Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 5th-level spell. Save DC uses your DC or DC 17.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 5th-level spell without material components (Save DC 17, +9 Attack). Ability check DC 15 if above your spell slot level.',
@@ -202,26 +161,18 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 17',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', diffHighlights: [
         '2024: Cross-class scroll casting.',
-      ],
-      tags: ['scroll', '5th level', 'spell scroll', 'consumable'],
+      ], tags: ['scroll', '5th level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '5th level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (6th Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_6',
-      name: 'Spell Scroll (6th Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Cast 6th-Level Spell (Save DC 17, +9 Attack; Chain Lightning, Disintegrate, Heal)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_6', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (6th Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 6th-level spell. Save DC uses your DC or DC 17.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 6th-level spell without material components (Save DC 17, +9 Attack). Ability check DC 16 if above your spell slot level.',
@@ -237,23 +188,16 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 17',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      tags: ['scroll', '6th level', 'spell scroll', 'consumable'],
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', tags: ['scroll', '6th level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '6th level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (7th Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_7',
-      name: 'Spell Scroll (7th Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Cast 7th-Level Spell (Save DC 18, +10 Attack; Plane Shift, Forcecage, Teleport)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_7', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (7th Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 7th-level spell. Save DC uses your DC or DC 18.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 7th-level spell without material components (Save DC 18, +10 Attack). Ability check DC 17 if above your spell slot level.',
@@ -269,23 +213,16 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 18',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      tags: ['scroll', '7th level', 'spell scroll', 'consumable'],
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', tags: ['scroll', '7th level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '7th level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (8th Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_8',
-      name: 'Spell Scroll (8th Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Cast 8th-Level Spell (Save DC 18, +10 Attack; Sunburst, Dominate Monster, Mind Blank)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_8', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (8th Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 8th-level spell. Save DC uses your DC or DC 18.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast 8th-level spell without material components (Save DC 18, +10 Attack). Ability check DC 18 if above your spell slot level.',
@@ -301,23 +238,16 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 18',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      tags: ['scroll', '8th level', 'spell scroll', 'consumable'],
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', tags: ['scroll', '8th level', 'spell scroll', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '8th level', 'spell scroll', 'consumable'] },
     ),
 
     // Spell Scroll (9th Level)
-    MagicItem(
-      id: 'item_spell_scroll_level_9',
-      name: 'Spell Scroll (9th Level)',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.legendary,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label:
-                'Action: Cast 9th-Level Spell (Save DC 19, +11 Attack; Wish, Meteor Swarm, True Polymorph)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_spell_scroll_level_9', ruleset: RulesetVersion.v2024), name: 'Spell Scroll (9th Level)',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cast 9th-level spell. Consumed upon casting.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast world-altering 9th-level spell without material components (Save DC 19, +11 Attack). Ability check DC 19 if below 9th level casting.',
@@ -333,12 +263,9 @@ class SrdMagicScrolls {
         activation: 'Matches Spell Casting Time',
         savingThrowDc: 'Your Spell Save DC or DC 19',
       ),
-      isChangedIn2024: true,
-      diffSummary: '2024 cross-class scroll mechanics.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: '2024 cross-class scroll mechanics.', diffHighlights: [
         '2024: Cross-class scroll casting.',
-      ],
-      tags: [
+      ], tags: [
         'scroll',
         '9th level',
         'legendary',
@@ -346,20 +273,15 @@ class SrdMagicScrolls {
         'meteor swarm',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', '9th level', 'legendary', 'wish', 'meteor swarm', 'consumable'] },
     ),
 
     // Scroll of Protection
-    MagicItem(
-      id: 'item_scroll_of_protection',
-      name: 'Scroll of Protection',
-      category: ItemCategory.scroll,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: 5-ft Radius Ward vs Chosen Creature Type for 5 Minutes'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_scroll_of_protection', ruleset: RulesetVersion.v2024), name: 'Scroll of Protection',
+      itemType: 'scroll', category: ItemCategory.scroll, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: 5-ft mobile ward barring chosen creature type and granting immunity to Charmed/Frightened/Possessed for 5 minutes.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: creates a 5-foot-radius barrier protecting against Aberrations, Beasts, Celestials, Elementals, Fey, Fiends, Plants, or Undead for 5 minutes.',
@@ -374,8 +296,7 @@ class SrdMagicScrolls {
             'Read as an Action to create a 5-foot protective aura centered on you that prevents designated creature types from entering or attacking inside for 5 minutes.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'scroll',
         'protection',
         'ward',
@@ -384,6 +305,7 @@ class SrdMagicScrolls {
         'undead',
         'aberration'
       ],
+      customProperties: { 'cost': null, 'category': 'scroll', 'tags': ['scroll', 'protection', 'ward', 'barrier', 'fiend', 'undead', 'aberration'] },
     ),
   ];
 }

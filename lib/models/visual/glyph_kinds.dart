@@ -1,10 +1,12 @@
-import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show SpellSchool;
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart'
+    show ItemCategory, ItemRarity, SpellSchool;
 
 import '../dm_screen_data.dart' show DmRulesEdition;
 import 'app_icon.dart';
 import 'argb.dart';
 
-export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show SpellSchool;
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart'
+    show ItemCategory, ItemRarity, SpellSchool;
 export 'app_icon.dart';
 export 'argb.dart';
 
@@ -188,48 +190,87 @@ enum CreatureType {
   }
 }
 
-/// 13 Item Classifications conforming to the Style Guide & SRD.
-enum ItemCategory {
-  weapon('Weapon', Argb(0xFFEF4444), Argb(0xFFFEF2F2), Argb(0xFF7F1D1D),
-      GlyphFrameShape.sharpDiamondShield),
-  armor('Armor & Shield', Argb(0xFF3B82F6), Argb(0xFFEFF6FF),
-      Argb(0xFF1E3A8A), GlyphFrameShape.heaterShield),
-  potion('Potion & Elixir', Argb(0xFF10B981), Argb(0xFFECFDF5),
-      Argb(0xFF064E3B), GlyphFrameShape.teardrop),
-  ring('Ring & Band', Argb(0xFFF59E0B), Argb(0xFFFFFBEB), Argb(0xFF78350F),
-      GlyphFrameShape.circle),
-  rod('Rod & Scepter', Argb(0xFFA855F7), Argb(0xFFFAF5FF), Argb(0xFF581C87),
-      GlyphFrameShape.heavySquare),
-  scroll('Scroll & Tome', Argb(0xFF0EA5E9), Argb(0xFFF0F9FF),
-      Argb(0xFF0C4A6E), GlyphFrameShape.filigreeOval),
-  staff('Staff & Focus', Argb(0xFF8B5CF6), Argb(0xFFF5F3FF),
-      Argb(0xFF4C1D95), GlyphFrameShape.heavyHex),
-  wand('Wand & Baton', Argb(0xFFF43F5E), Argb(0xFFFFF1F2), Argb(0xFF881337),
-      GlyphFrameShape.diamond),
-  wondrousItem('Wondrous Item', Argb(0xFFEC4899), Argb(0xFFFDF2F8),
-      Argb(0xFF831843), GlyphFrameShape.crest),
-  adventuringGear('Adventuring Gear', Argb(0xFF64748B), Argb(0xFFF8FAFC),
-      Argb(0xFF0F172A), GlyphFrameShape.heavyHex),
-  gemstone('Gemstone', Argb(0xFF06B6D4), Argb(0xFFECFEFF), Argb(0xFF164E63),
-      GlyphFrameShape.diamond),
-  artObject('Art Object', Argb(0xFFC084FC), Argb(0xFFFAF5FF),
-      Argb(0xFF581C87), GlyphFrameShape.crest),
-  trinket('Trinket', Argb(0xFF10B981), Argb(0xFFECFDF5), Argb(0xFF064E3B),
-      GlyphFrameShape.circle);
+/// Visual styling for the 13 Item Classifications conforming to the Style Guide & SRD.
+extension ItemCategoryVisuals on ItemCategory {
+  String get displayName => switch (this) {
+        ItemCategory.weapon => 'Weapon',
+        ItemCategory.armor => 'Armor & Shield',
+        ItemCategory.potion => 'Potion & Elixir',
+        ItemCategory.ring => 'Ring & Band',
+        ItemCategory.rod => 'Rod & Scepter',
+        ItemCategory.scroll => 'Scroll & Tome',
+        ItemCategory.staff => 'Staff & Focus',
+        ItemCategory.wand => 'Wand & Baton',
+        ItemCategory.wondrousItem => 'Wondrous Item',
+        ItemCategory.adventuringGear => 'Adventuring Gear',
+        ItemCategory.gemstone => 'Gemstone',
+        ItemCategory.artObject => 'Art Object',
+        ItemCategory.trinket => 'Trinket',
+      };
 
-  final String displayName;
-  final Argb primaryArgb;
-  final Argb lightFillArgb;
-  final Argb darkFillArgb;
-  final GlyphFrameShape frameShape;
+  Argb get primaryArgb => switch (this) {
+        ItemCategory.weapon => const Argb(0xFFEF4444),
+        ItemCategory.armor => const Argb(0xFF3B82F6),
+        ItemCategory.potion => const Argb(0xFF10B981),
+        ItemCategory.ring => const Argb(0xFFF59E0B),
+        ItemCategory.rod => const Argb(0xFFA855F7),
+        ItemCategory.scroll => const Argb(0xFF0EA5E9),
+        ItemCategory.staff => const Argb(0xFF8B5CF6),
+        ItemCategory.wand => const Argb(0xFFF43F5E),
+        ItemCategory.wondrousItem => const Argb(0xFFEC4899),
+        ItemCategory.adventuringGear => const Argb(0xFF64748B),
+        ItemCategory.gemstone => const Argb(0xFF06B6D4),
+        ItemCategory.artObject => const Argb(0xFFC084FC),
+        ItemCategory.trinket => const Argb(0xFF10B981),
+      };
 
-  const ItemCategory(
-    this.displayName,
-    this.primaryArgb,
-    this.lightFillArgb,
-    this.darkFillArgb,
-    this.frameShape,
-  );
+  Argb get lightFillArgb => switch (this) {
+        ItemCategory.weapon => const Argb(0xFFFEF2F2),
+        ItemCategory.armor => const Argb(0xFFEFF6FF),
+        ItemCategory.potion => const Argb(0xFFECFDF5),
+        ItemCategory.ring => const Argb(0xFFFFFBEB),
+        ItemCategory.rod => const Argb(0xFFFAF5FF),
+        ItemCategory.scroll => const Argb(0xFFF0F9FF),
+        ItemCategory.staff => const Argb(0xFFF5F3FF),
+        ItemCategory.wand => const Argb(0xFFFFF1F2),
+        ItemCategory.wondrousItem => const Argb(0xFFFDF2F8),
+        ItemCategory.adventuringGear => const Argb(0xFFF8FAFC),
+        ItemCategory.gemstone => const Argb(0xFFECFEFF),
+        ItemCategory.artObject => const Argb(0xFFFAF5FF),
+        ItemCategory.trinket => const Argb(0xFFECFDF5),
+      };
+
+  Argb get darkFillArgb => switch (this) {
+        ItemCategory.weapon => const Argb(0xFF7F1D1D),
+        ItemCategory.armor => const Argb(0xFF1E3A8A),
+        ItemCategory.potion => const Argb(0xFF064E3B),
+        ItemCategory.ring => const Argb(0xFF78350F),
+        ItemCategory.rod => const Argb(0xFF581C87),
+        ItemCategory.scroll => const Argb(0xFF0C4A6E),
+        ItemCategory.staff => const Argb(0xFF4C1D95),
+        ItemCategory.wand => const Argb(0xFF881337),
+        ItemCategory.wondrousItem => const Argb(0xFF831843),
+        ItemCategory.adventuringGear => const Argb(0xFF0F172A),
+        ItemCategory.gemstone => const Argb(0xFF164E63),
+        ItemCategory.artObject => const Argb(0xFF581C87),
+        ItemCategory.trinket => const Argb(0xFF064E3B),
+      };
+
+  GlyphFrameShape get frameShape => switch (this) {
+        ItemCategory.weapon => GlyphFrameShape.sharpDiamondShield,
+        ItemCategory.armor => GlyphFrameShape.heaterShield,
+        ItemCategory.potion => GlyphFrameShape.teardrop,
+        ItemCategory.ring => GlyphFrameShape.circle,
+        ItemCategory.rod => GlyphFrameShape.heavySquare,
+        ItemCategory.scroll => GlyphFrameShape.filigreeOval,
+        ItemCategory.staff => GlyphFrameShape.heavyHex,
+        ItemCategory.wand => GlyphFrameShape.diamond,
+        ItemCategory.wondrousItem => GlyphFrameShape.crest,
+        ItemCategory.adventuringGear => GlyphFrameShape.heavyHex,
+        ItemCategory.gemstone => GlyphFrameShape.diamond,
+        ItemCategory.artObject => GlyphFrameShape.crest,
+        ItemCategory.trinket => GlyphFrameShape.circle,
+      };
 
   Argb legibleArgb(bool isDarkMode) {
     if (!isDarkMode) {
@@ -285,21 +326,37 @@ enum ItemCategory {
       };
 }
 
-/// 7 Standard 5e Item Rarities.
-enum ItemRarity {
-  nonmagical('Nonmagical', Argb(0xFF64748B), 0),
-  common('Common', Argb(0xFF94A3B8), 0),
-  uncommon('Uncommon', Argb(0xFF22C55E), 1),
-  rare('Rare', Argb(0xFF3B82F6), 2),
-  veryRare('Very Rare', Argb(0xFFA855F7), 3),
-  legendary('Legendary', Argb(0xFFF59E0B), 4),
-  artifact('Artifact', Argb(0xFFEF4444), 5);
+/// Visual styling for the 7 Standard 5e Item Rarities.
+extension ItemRarityVisuals on ItemRarity {
+  String get displayName => switch (this) {
+        ItemRarity.nonmagical => 'Nonmagical',
+        ItemRarity.common => 'Common',
+        ItemRarity.uncommon => 'Uncommon',
+        ItemRarity.rare => 'Rare',
+        ItemRarity.veryRare => 'Very Rare',
+        ItemRarity.legendary => 'Legendary',
+        ItemRarity.artifact => 'Artifact',
+      };
 
-  final String displayName;
-  final Argb colorArgb;
-  final int tierLevel;
+  int get tierLevel => switch (this) {
+        ItemRarity.nonmagical => 0,
+        ItemRarity.common => 0,
+        ItemRarity.uncommon => 1,
+        ItemRarity.rare => 2,
+        ItemRarity.veryRare => 3,
+        ItemRarity.legendary => 4,
+        ItemRarity.artifact => 5,
+      };
 
-  const ItemRarity(this.displayName, this.colorArgb, this.tierLevel);
+  Argb get colorArgb => switch (this) {
+        ItemRarity.nonmagical => const Argb(0xFF64748B),
+        ItemRarity.common => const Argb(0xFF94A3B8),
+        ItemRarity.uncommon => const Argb(0xFF22C55E),
+        ItemRarity.rare => const Argb(0xFF3B82F6),
+        ItemRarity.veryRare => const Argb(0xFFA855F7),
+        ItemRarity.legendary => const Argb(0xFFF59E0B),
+        ItemRarity.artifact => const Argb(0xFFEF4444),
+      };
 
   Argb legibleArgb(bool isDarkMode) {
     if (!isDarkMode) {

@@ -11,7 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart'
     show DmRulesEdition;
 import 'package:dangerously_nerdy_5e_toolkit/models/glyph_gallery_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_data.dart'
-    show CurrencyCoinType;
+    show CurrencyCoinType, EquipmentItemUi;
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart'
     show MagicItemLibrary;
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
@@ -251,11 +251,11 @@ void main() {
     final prices = <String>{'1 cp', '1 sp', '1 ep', '1 gp', '1 pp'};
     for (final item in MagicItemLibrary.allItems) {
       if (item.glyphColor != null) {
-        actual['magic_item:${item.id}.glyphColor'] =
+        actual['magic_item:${item.id.slug}.glyphColor'] =
             _formatColor(item.glyphColor!);
       }
       if (item.effectiveGlyphColor != null) {
-        actual['magic_item:${item.id}.effectiveGlyphColor'] =
+        actual['magic_item:${item.id.slug}.effectiveGlyphColor'] =
             _formatColor(item.effectiveGlyphColor!);
       }
       if (item.cost != null && item.cost!.isNotEmpty) {

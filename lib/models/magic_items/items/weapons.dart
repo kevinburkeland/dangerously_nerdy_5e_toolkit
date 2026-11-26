@@ -5,21 +5,15 @@ import '../magic_item_data.dart';
 class SrdMagicWeapons {
   SrdMagicWeapons._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // =========================================================================
     // 1. STANDARD NONMAGICAL SIMPLE MELEE WEAPONS
     // =========================================================================
-    MagicItem(
-      id: 'weapon_club',
-      name: 'Club',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d4 Bludgeoning (Light) • 2024 Mastery: Slow'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_club', ruleset: RulesetVersion.v2024), name: 'Club',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d4 bludgeoning (Light). Weapon Mastery: Slow (reduce speed by 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary: '1d4 bludgeoning (Light). Simple one-handed wooden bludgeon.',
         description:
@@ -45,22 +39,14 @@ class SrdMagicWeapons {
           'Cost: 1 sp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Slow Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'light', 'bludgeoning', 'slow'],
+      isChangedIn2024: true, diffSummary: 'Gains the Slow Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'light', 'bludgeoning', 'slow'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'light', 'bludgeoning', 'slow'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_dagger',
-      name: 'Dagger',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '1d4 Piercing (Finesse, Light, Thrown 20/60) • 2024 Mastery: Nick'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_dagger', ruleset: RulesetVersion.v2024), name: 'Dagger',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d4 piercing. Weapon Mastery: Nick (extra offhand attack without Bonus Action).',
       rules2014: ItemEditionDetails(
         summary:
             '1d4 piercing (Finesse, Light, Thrown 20/60). Simple concealable weapon.',
@@ -86,21 +72,14 @@ class SrdMagicWeapons {
           'Cost: 2 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Nick Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'finesse', 'light', 'thrown', 'nick'],
+      isChangedIn2024: true, diffSummary: 'Gains the Nick Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'finesse', 'light', 'thrown', 'nick'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'finesse', 'light', 'thrown', 'nick'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_greatclub',
-      name: 'Greatclub',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 Bludgeoning (Two-Handed) • 2024 Mastery: Push'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_greatclub', ruleset: RulesetVersion.v2024), name: 'Greatclub',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 bludgeoning (Two-Handed). Weapon Mastery: Push (push target 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 bludgeoning (Two-Handed). Heavy two-handed wooden cudgel.',
@@ -126,21 +105,14 @@ class SrdMagicWeapons {
           'Cost: 2 sp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Push Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'two-handed', 'bludgeoning', 'push'],
+      isChangedIn2024: true, diffSummary: 'Gains the Push Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'two-handed', 'bludgeoning', 'push'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'two-handed', 'bludgeoning', 'push'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_handaxe',
-      name: 'Handaxe',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d6 Slashing (Light, Thrown 20/60) • 2024 Mastery: Vex'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_handaxe', ruleset: RulesetVersion.v2024), name: 'Handaxe',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 slashing. Weapon Mastery: Vex (Advantage on next attack against target on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 slashing (Light, Thrown 20/60). Compact hatchet for chopping or hurling.',
@@ -166,21 +138,14 @@ class SrdMagicWeapons {
           'Cost: 5 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Vex Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'light', 'thrown', 'slashing', 'vex'],
+      isChangedIn2024: true, diffSummary: 'Gains the Vex Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'light', 'thrown', 'slashing', 'vex'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'light', 'thrown', 'slashing', 'vex'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_javelin',
-      name: 'Javelin',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d6 Piercing (Thrown 30/120) • 2024 Mastery: Slow'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_javelin', ruleset: RulesetVersion.v2024), name: 'Javelin',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 piercing. Weapon Mastery: Slow (reduce speed by 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary: '1d6 piercing (Thrown 30/120). Long-range throwing spear.',
         description: 'A light spear designed specifically for ranged hurling.',
@@ -205,22 +170,14 @@ class SrdMagicWeapons {
           'Cost: 5 sp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Slow Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'thrown', 'piercing', 'slow'],
+      isChangedIn2024: true, diffSummary: 'Gains the Slow Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'thrown', 'piercing', 'slow'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'thrown', 'piercing', 'slow'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_light_hammer',
-      name: 'Light Hammer',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '1d4 Bludgeoning (Light, Thrown 20/60) • 2024 Mastery: Nick'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_light_hammer', ruleset: RulesetVersion.v2024), name: 'Light Hammer',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d4 bludgeoning. Weapon Mastery: Nick (extra offhand attack without Bonus Action).',
       rules2014: ItemEditionDetails(
         summary:
             '1d4 bludgeoning (Light, Thrown 20/60). Compact throwing hammer.',
@@ -247,9 +204,7 @@ class SrdMagicWeapons {
           'Cost: 2 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Nick Weapon Mastery property.',
-      tags: [
+      isChangedIn2024: true, diffSummary: 'Gains the Nick Weapon Mastery property.', tags: [
         'weapon',
         'simple',
         'melee',
@@ -258,18 +213,13 @@ class SrdMagicWeapons {
         'bludgeoning',
         'nick'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'light', 'thrown', 'bludgeoning', 'nick'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_mace',
-      name: 'Mace',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d6 Bludgeoning • 2024 Mastery: Sap'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_mace', ruleset: RulesetVersion.v2024), name: 'Mace',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 bludgeoning. Weapon Mastery: Sap (disadvantage on target\'s next attack roll on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 bludgeoning. Flanged iron head mounted on a reinforced shaft.',
@@ -289,21 +239,14 @@ class SrdMagicWeapons {
           'Cost: 5 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Sap Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'bludgeoning', 'sap'],
+      isChangedIn2024: true, diffSummary: 'Gains the Sap Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'bludgeoning', 'sap'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'bludgeoning', 'sap'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_quarterstaff',
-      name: 'Quarterstaff',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d6 (1d8 Versatile) Bludgeoning • 2024 Mastery: Topple'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_quarterstaff', ruleset: RulesetVersion.v2024), name: 'Quarterstaff',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 (Versatile 1d8) bludgeoning. Weapon Mastery: Topple (force CON save or knock target Prone).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 bludgeoning (Versatile 1d8). Simple hardwood staff favored by monks and wizards.',
@@ -329,21 +272,14 @@ class SrdMagicWeapons {
           'Cost: 2 sp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Topple Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'versatile', 'bludgeoning', 'topple'],
+      isChangedIn2024: true, diffSummary: 'Gains the Topple Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'versatile', 'bludgeoning', 'topple'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'versatile', 'bludgeoning', 'topple'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_sickle',
-      name: 'Sickle',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d4 Slashing (Light) • 2024 Mastery: Nick'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_sickle', ruleset: RulesetVersion.v2024), name: 'Sickle',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d4 slashing (Light). Weapon Mastery: Nick (extra offhand attack without Bonus Action).',
       rules2014: ItemEditionDetails(
         summary:
             '1d4 slashing (Light). Curved agricultural blade used by druids.',
@@ -369,22 +305,14 @@ class SrdMagicWeapons {
           'Cost: 1 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Nick Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'melee', 'light', 'slashing', 'nick'],
+      isChangedIn2024: true, diffSummary: 'Gains the Nick Weapon Mastery property.', tags: ['weapon', 'simple', 'melee', 'light', 'slashing', 'nick'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'light', 'slashing', 'nick'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_spear',
-      name: 'Spear',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '1d6 (1d8 Versatile) Piercing (Thrown 20/60) • 2024 Mastery: Sap'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_spear', ruleset: RulesetVersion.v2024), name: 'Spear',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 (Versatile 1d8) piercing. Weapon Mastery: Sap (disadvantage on target\'s next attack on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 piercing (Versatile 1d8, Thrown 20/60). Ancient simple spear.',
@@ -410,9 +338,7 @@ class SrdMagicWeapons {
           'Cost: 1 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Sap Weapon Mastery property.',
-      tags: [
+      isChangedIn2024: true, diffSummary: 'Gains the Sap Weapon Mastery property.', tags: [
         'weapon',
         'simple',
         'melee',
@@ -421,23 +347,17 @@ class SrdMagicWeapons {
         'piercing',
         'sap'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'melee', 'thrown', 'versatile', 'piercing', 'sap'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
 
     // =========================================================================
     // 2. STANDARD NONMAGICAL SIMPLE RANGED WEAPONS
     // =========================================================================
-    MagicItem(
-      id: 'weapon_light_crossbow',
-      name: 'Light Crossbow',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '1d8 Piercing (Ammunition 80/320, Loading, Two-Handed) • 2024 Mastery: Slow'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_light_crossbow', ruleset: RulesetVersion.v2024), name: 'Light Crossbow',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 piercing (Range 80/320). Weapon Mastery: Slow (reduce speed by 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 piercing (Ammunition 80/320, Loading, Two-Handed). Standard simple missile weapon.',
@@ -463,21 +383,14 @@ class SrdMagicWeapons {
           'Cost: 25 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Slow Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'ranged', 'loading', 'two-handed', 'slow'],
+      isChangedIn2024: true, diffSummary: 'Gains the Slow Weapon Mastery property.', tags: ['weapon', 'simple', 'ranged', 'loading', 'two-handed', 'slow'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'ranged', 'loading', 'two-handed', 'slow'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_dart',
-      name: 'Dart',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label: '1d4 Piercing (Finesse, Thrown 20/60) • 2024 Mastery: Vex'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_dart', ruleset: RulesetVersion.v2024), name: 'Dart',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d4 piercing. Weapon Mastery: Vex (Advantage on next attack roll against target on hit).',
       rules2014: ItemEditionDetails(
         summary: '1d4 piercing (Finesse, Thrown 20/60). Weighted missile dart.',
         description: 'A steel-tipped throwing dart with feathers.',
@@ -502,22 +415,14 @@ class SrdMagicWeapons {
           'Cost: 5 cp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Vex Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'ranged', 'finesse', 'thrown', 'vex'],
+      isChangedIn2024: true, diffSummary: 'Gains the Vex Weapon Mastery property.', tags: ['weapon', 'simple', 'ranged', 'finesse', 'thrown', 'vex'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'ranged', 'finesse', 'thrown', 'vex'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_shortbow',
-      name: 'Shortbow',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '1d6 Piercing (Ammunition 80/320, Two-Handed) • 2024 Mastery: Vex'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_shortbow', ruleset: RulesetVersion.v2024), name: 'Shortbow',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 piercing (Range 80/320). Weapon Mastery: Vex (Advantage on next attack roll against target on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 piercing (Ammunition 80/320, Two-Handed). Simple ranged bow.',
@@ -543,21 +448,14 @@ class SrdMagicWeapons {
           'Cost: 25 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Vex Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'ranged', 'two-handed', 'vex'],
+      isChangedIn2024: true, diffSummary: 'Gains the Vex Weapon Mastery property.', tags: ['weapon', 'simple', 'ranged', 'two-handed', 'vex'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'ranged', 'two-handed', 'vex'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_sling',
-      name: 'Sling',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label: '1d4 Bludgeoning (Ammunition 30/120) • 2024 Mastery: Slow'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_sling', ruleset: RulesetVersion.v2024), name: 'Sling',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d4 bludgeoning. Weapon Mastery: Slow (reduce speed by 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d4 bludgeoning (Ammunition 30/120). Leather strap for hurling lead bullets or stones.',
@@ -583,25 +481,18 @@ class SrdMagicWeapons {
           'Cost: 1 sp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Slow Weapon Mastery property.',
-      tags: ['weapon', 'simple', 'ranged', 'bludgeoning', 'slow'],
+      isChangedIn2024: true, diffSummary: 'Gains the Slow Weapon Mastery property.', tags: ['weapon', 'simple', 'ranged', 'bludgeoning', 'slow'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'simple', 'ranged', 'bludgeoning', 'slow'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
 
     // =========================================================================
     // 3. STANDARD NONMAGICAL MARTIAL MELEE WEAPONS
     // =========================================================================
-    MagicItem(
-      id: 'weapon_battleaxe',
-      name: 'Battleaxe',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 (1d10 Versatile) Slashing • 2024 Mastery: Topple'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_battleaxe', ruleset: RulesetVersion.v2024), name: 'Battleaxe',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 (Versatile 1d10) slashing. Weapon Mastery: Topple (force CON save or knock target Prone).',
       rules2014: ItemEditionDetails(
         summary: '1d8 slashing (Versatile 1d10). Iconic martial axe.',
         description:
@@ -627,21 +518,14 @@ class SrdMagicWeapons {
           'Cost: 10 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Topple Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'versatile', 'slashing', 'topple'],
+      isChangedIn2024: true, diffSummary: 'Gains the Topple Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'versatile', 'slashing', 'topple'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'versatile', 'slashing', 'topple'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_flail',
-      name: 'Flail',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 Bludgeoning • 2024 Mastery: Sap'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_flail', ruleset: RulesetVersion.v2024), name: 'Flail',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 bludgeoning. Weapon Mastery: Sap (disadvantage on target\'s next attack on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 bludgeoning. Spiked iron ball joined by a chain to a haft.',
@@ -661,22 +545,14 @@ class SrdMagicWeapons {
           'Cost: 10 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Sap Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'bludgeoning', 'sap'],
+      isChangedIn2024: true, diffSummary: 'Gains the Sap Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'bludgeoning', 'sap'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'bludgeoning', 'sap'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_glaive',
-      name: 'Glaive',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '1d10 Slashing (Heavy, Reach, Two-Handed) • 2024 Mastery: Graze'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_glaive', ruleset: RulesetVersion.v2024), name: 'Glaive',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d10 slashing (Heavy, Reach, Two-Handed). Weapon Mastery: Graze (deal ability modifier damage on miss).',
       rules2014: ItemEditionDetails(
         summary:
             '1d10 slashing (Heavy, Reach, Two-Handed). Long polearm with a single-edged curved blade.',
@@ -703,9 +579,7 @@ class SrdMagicWeapons {
           'Cost: 20 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Graze Weapon Mastery property.',
-      tags: [
+      isChangedIn2024: true, diffSummary: 'Gains the Graze Weapon Mastery property.', tags: [
         'weapon',
         'martial',
         'melee',
@@ -714,18 +588,13 @@ class SrdMagicWeapons {
         'two-handed',
         'graze'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'reach', 'heavy', 'two-handed', 'graze'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_greataxe',
-      name: 'Greataxe',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d12 Slashing (Heavy, Two-Handed) • 2024 Mastery: Cleave'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_greataxe', ruleset: RulesetVersion.v2024), name: 'Greataxe',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d12 slashing (Heavy, Two-Handed). Weapon Mastery: Cleave (extra attack on adjacent enemy on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d12 slashing (Heavy, Two-Handed). High-variance barbarian favorite.',
@@ -752,9 +621,7 @@ class SrdMagicWeapons {
           'Cost: 30 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Cleave Weapon Mastery property.',
-      tags: [
+      isChangedIn2024: true, diffSummary: 'Gains the Cleave Weapon Mastery property.', tags: [
         'weapon',
         'martial',
         'melee',
@@ -763,18 +630,13 @@ class SrdMagicWeapons {
         'slashing',
         'cleave'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'heavy', 'two-handed', 'slashing', 'cleave'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_greatsword',
-      name: 'Greatsword',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '2d6 Slashing (Heavy, Two-Handed) • 2024 Mastery: Graze'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_greatsword', ruleset: RulesetVersion.v2024), name: 'Greatsword',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '2d6 slashing (Heavy, Two-Handed). Weapon Mastery: Graze (deal ability modifier damage on a miss).',
       rules2014: ItemEditionDetails(
         summary:
             '2d6 slashing (Heavy, Two-Handed). Massive martial blade delivering devastating blows.',
@@ -801,12 +663,9 @@ class SrdMagicWeapons {
           'Cost: 50 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Graze Weapon Mastery property.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Gains the Graze Weapon Mastery property.', diffHighlights: [
         '2024: Graze guarantees ability modifier damage on a miss.'
-      ],
-      tags: [
+      ], tags: [
         'weapon',
         'martial',
         'melee',
@@ -815,19 +674,13 @@ class SrdMagicWeapons {
         'slashing',
         'graze'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'heavy', 'two-handed', 'slashing', 'graze'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_halberd',
-      name: 'Halberd',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '1d10 Slashing (Heavy, Reach, Two-Handed) • 2024 Mastery: Cleave'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_halberd', ruleset: RulesetVersion.v2024), name: 'Halberd',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d10 slashing (Heavy, Reach, Two-Handed). Weapon Mastery: Cleave (extra attack on adjacent enemy on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d10 slashing (Heavy, Reach, Two-Handed). Polearm combining axe blade and spear point with 10 ft reach.',
@@ -853,9 +706,7 @@ class SrdMagicWeapons {
           'Cost: 20 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Cleave Weapon Mastery property.',
-      tags: [
+      isChangedIn2024: true, diffSummary: 'Gains the Cleave Weapon Mastery property.', tags: [
         'weapon',
         'martial',
         'melee',
@@ -864,18 +715,13 @@ class SrdMagicWeapons {
         'two-handed',
         'cleave'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'reach', 'heavy', 'two-handed', 'cleave'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_lance',
-      name: 'Lance',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d12 Piercing (Reach, Special) • 2024 Mastery: Topple'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_lance', ruleset: RulesetVersion.v2024), name: 'Lance',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d12 piercing (Reach, Heavy, Two-Handed unless mounted). Weapon Mastery: Topple (force CON save or knock target Prone).',
       rules2014: ItemEditionDetails(
         summary:
             '1d12 piercing (Reach, Special). Heavy cavalry weapon with 10 ft reach; requires two hands when unmounted and imposes disadvantage within 5 ft.',
@@ -902,21 +748,14 @@ class SrdMagicWeapons {
           'Cost: 10 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Topple Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'reach', 'cavalry', 'topple'],
+      isChangedIn2024: true, diffSummary: 'Gains the Topple Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'reach', 'cavalry', 'topple'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'reach', 'cavalry', 'topple'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_longsword',
-      name: 'Longsword',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 (1d10 Versatile) Slashing • 2024 Mastery: Sap'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_longsword', ruleset: RulesetVersion.v2024), name: 'Longsword',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 slashing (Versatile 1d10). Weapon Mastery: Sap (disadvantage on target\'s next attack roll).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 slashing (Versatile 1d10). Standard martial melee weapon.',
@@ -943,25 +782,16 @@ class SrdMagicWeapons {
           'Cost: 15 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Sap Weapon Mastery property.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Gains the Sap Weapon Mastery property.', diffHighlights: [
         '2024: Sap imposes Disadvantage on target\'s next attack roll.'
-      ],
-      tags: ['weapon', 'martial', 'melee', 'versatile', 'slashing', 'sap'],
+      ], tags: ['weapon', 'martial', 'melee', 'versatile', 'slashing', 'sap'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'versatile', 'slashing', 'sap'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_maul',
-      name: 'Maul',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '2d6 Bludgeoning (Heavy, Two-Handed) • 2024 Mastery: Topple'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_maul', ruleset: RulesetVersion.v2024), name: 'Maul',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '2d6 bludgeoning (Heavy, Two-Handed). Weapon Mastery: Topple (force CON save or knock target Prone).',
       rules2014: ItemEditionDetails(
         summary:
             '2d6 bludgeoning (Heavy, Two-Handed). Heavy two-handed sledge designed to crush heavy armor.',
@@ -987,21 +817,14 @@ class SrdMagicWeapons {
           'Cost: 10 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Topple Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'heavy', 'two-handed', 'topple'],
+      isChangedIn2024: true, diffSummary: 'Gains the Topple Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'heavy', 'two-handed', 'topple'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'heavy', 'two-handed', 'topple'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_morningstar',
-      name: 'Morningstar',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 Piercing • 2024 Mastery: Sap'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_morningstar', ruleset: RulesetVersion.v2024), name: 'Morningstar',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 piercing. Weapon Mastery: Sap (disadvantage on target\'s next attack on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 piercing. Heavy spiked metal ball mounted solidly atop a reinforced club.',
@@ -1021,22 +844,14 @@ class SrdMagicWeapons {
           'Cost: 15 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Sap Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'piercing', 'sap'],
+      isChangedIn2024: true, diffSummary: 'Gains the Sap Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'piercing', 'sap'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'piercing', 'sap'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_pike',
-      name: 'Pike',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '1d10 Piercing (Heavy, Reach, Two-Handed) • 2024 Mastery: Push'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_pike', ruleset: RulesetVersion.v2024), name: 'Pike',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d10 piercing (Heavy, Reach, Two-Handed). Weapon Mastery: Push (push target 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d10 piercing (Heavy, Reach, Two-Handed). Extra-long spear with 10 ft reach for stopping charges.',
@@ -1062,9 +877,7 @@ class SrdMagicWeapons {
           'Cost: 5 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Push Weapon Mastery property.',
-      tags: [
+      isChangedIn2024: true, diffSummary: 'Gains the Push Weapon Mastery property.', tags: [
         'weapon',
         'martial',
         'melee',
@@ -1073,18 +886,13 @@ class SrdMagicWeapons {
         'two-handed',
         'push'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'reach', 'heavy', 'two-handed', 'push'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_rapier',
-      name: 'Rapier',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 Piercing (Finesse) • 2024 Mastery: Vex'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_rapier', ruleset: RulesetVersion.v2024), name: 'Rapier',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 piercing (Finesse). Weapon Mastery: Vex (Advantage on next attack roll against target on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 piercing (Finesse). The highest damage single-handed finesse martial weapon.',
@@ -1110,21 +918,14 @@ class SrdMagicWeapons {
           'Cost: 25 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Vex Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'finesse', 'vex'],
+      isChangedIn2024: true, diffSummary: 'Gains the Vex Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'finesse', 'vex'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'finesse', 'vex'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_scimitar',
-      name: 'Scimitar',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d6 Slashing (Finesse, Light) • 2024 Mastery: Nick'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_scimitar', ruleset: RulesetVersion.v2024), name: 'Scimitar',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 slashing (Finesse, Light). Weapon Mastery: Nick (extra offhand attack without Bonus Action cost).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 slashing (Finesse, Light). Curved martial blade for nimble dual-wielders.',
@@ -1150,21 +951,14 @@ class SrdMagicWeapons {
           'Cost: 25 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Nick Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'finesse', 'light', 'nick'],
+      isChangedIn2024: true, diffSummary: 'Gains the Nick Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'finesse', 'light', 'nick'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'finesse', 'light', 'nick'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_shortsword',
-      name: 'Shortsword',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d6 Piercing (Finesse, Light) • 2024 Mastery: Vex'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_shortsword', ruleset: RulesetVersion.v2024), name: 'Shortsword',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 piercing (Finesse, Light). Weapon Mastery: Vex (Advantage on next attack roll against target on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 piercing (Finesse, Light). Martial blade for two-weapon fighting and agile combatants.',
@@ -1190,22 +984,14 @@ class SrdMagicWeapons {
           'Cost: 10 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Vex Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'finesse', 'light', 'vex'],
+      isChangedIn2024: true, diffSummary: 'Gains the Vex Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'finesse', 'light', 'vex'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'finesse', 'light', 'vex'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_trident',
-      name: 'Trident',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '1d8 (1d10 Versatile) Piercing (Thrown 20/60) • 2024 Mastery: Topple'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_trident', ruleset: RulesetVersion.v2024), name: 'Trident',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 (Versatile 1d10) piercing (Buffed in 2024!). Weapon Mastery: Topple (force CON save or knock target Prone).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 piercing (Versatile 1d8, Thrown 20/60). Three-pronged martial spear.',
@@ -1232,26 +1018,17 @@ class SrdMagicWeapons {
           'Cost: 5 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Base damage increased from 1d6/1d8 to 1d8/1d10 in 2024, plus gains Topple mastery.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Base damage increased from 1d6/1d8 to 1d8/1d10 in 2024, plus gains Topple mastery.', diffHighlights: [
         '2024: Damage buffed to 1d8 (1d10 Versatile).',
         '2024: Gains Topple Weapon Mastery.'
-      ],
-      tags: ['weapon', 'martial', 'melee', 'thrown', 'versatile', 'topple'],
+      ], tags: ['weapon', 'martial', 'melee', 'thrown', 'versatile', 'topple'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'thrown', 'versatile', 'topple'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_war_pick',
-      name: 'War Pick',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 (1d10 Versatile 2024) Piercing • 2024 Mastery: Sap'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_war_pick', ruleset: RulesetVersion.v2024), name: 'War Pick',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 (Versatile 1d10 in 2024) piercing. Weapon Mastery: Sap (disadvantage on target\'s next attack on hit).',
       rules2014: ItemEditionDetails(
         summary: '1d8 piercing. Armor-piercing spiked military pick.',
         description:
@@ -1273,22 +1050,14 @@ class SrdMagicWeapons {
           'Cost: 5 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Gained Versatile (1d10) property in 2024 plus Sap Weapon Mastery.',
-      tags: ['weapon', 'martial', 'melee', 'versatile', 'piercing', 'sap'],
+      isChangedIn2024: true, diffSummary: 'Gained Versatile (1d10) property in 2024 plus Sap Weapon Mastery.', tags: ['weapon', 'martial', 'melee', 'versatile', 'piercing', 'sap'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'versatile', 'piercing', 'sap'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_warhammer',
-      name: 'Warhammer',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d8 (1d10 Versatile) Bludgeoning • 2024 Mastery: Push'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_warhammer', ruleset: RulesetVersion.v2024), name: 'Warhammer',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 bludgeoning (Versatile 1d10). Weapon Mastery: Push (push target up to 10 ft away on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 bludgeoning (Versatile 1d10). Solid martial blunt weapon.',
@@ -1315,21 +1084,14 @@ class SrdMagicWeapons {
           'Cost: 15 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Push Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'versatile', 'bludgeoning', 'push'],
+      isChangedIn2024: true, diffSummary: 'Gains the Push Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'versatile', 'bludgeoning', 'push'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'versatile', 'bludgeoning', 'push'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_whip',
-      name: 'Whip',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '1d4 Slashing (Finesse, Reach) • 2024 Mastery: Slow'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_whip', ruleset: RulesetVersion.v2024), name: 'Whip',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d4 slashing (Finesse, Reach). Weapon Mastery: Slow (reduce speed by 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d4 slashing (Finesse, Reach). One-handed reach finesse weapon.',
@@ -1356,26 +1118,18 @@ class SrdMagicWeapons {
           'Cost: 2 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Slow Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'melee', 'finesse', 'reach', 'slow'],
+      isChangedIn2024: true, diffSummary: 'Gains the Slow Weapon Mastery property.', tags: ['weapon', 'martial', 'melee', 'finesse', 'reach', 'slow'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'melee', 'finesse', 'reach', 'slow'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
 
     // =========================================================================
     // 4. STANDARD NONMAGICAL MARTIAL RANGED WEAPONS
     // =========================================================================
-    MagicItem(
-      id: 'weapon_blowgun',
-      name: 'Blowgun',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '1 Piercing (Ammunition 25/100, Loading) • 2024 Mastery: Vex'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_blowgun', ruleset: RulesetVersion.v2024), name: 'Blowgun',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1 piercing. Weapon Mastery: Vex (Advantage on next attack roll against target on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1 piercing (Ammunition 25/100, Loading). Silent tube for delivering poison needle darts.',
@@ -1402,22 +1156,14 @@ class SrdMagicWeapons {
           'Cost: 10 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Vex Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'ranged', 'loading', 'stealth', 'vex'],
+      isChangedIn2024: true, diffSummary: 'Gains the Vex Weapon Mastery property.', tags: ['weapon', 'martial', 'ranged', 'loading', 'stealth', 'vex'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'ranged', 'loading', 'stealth', 'vex'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_hand_crossbow',
-      name: 'Hand Crossbow',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '1d6 Piercing (Ammunition 30/120, Light, Loading) • 2024 Mastery: Vex'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_hand_crossbow', ruleset: RulesetVersion.v2024), name: 'Hand Crossbow',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d6 piercing. Weapon Mastery: Vex (Advantage on next attack roll against target on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d6 piercing (Ammunition 30/120, Light, Loading). One-handed crossbow designed for Crossbow Expert feats.',
@@ -1443,22 +1189,14 @@ class SrdMagicWeapons {
           'Cost: 75 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Vex Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'ranged', 'light', 'loading', 'vex'],
+      isChangedIn2024: true, diffSummary: 'Gains the Vex Weapon Mastery property.', tags: ['weapon', 'martial', 'ranged', 'light', 'loading', 'vex'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'ranged', 'light', 'loading', 'vex'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_heavy_crossbow',
-      name: 'Heavy Crossbow',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '1d10 Piercing (Ammunition 100/400, Heavy, Loading, Two-Handed) • 2024 Mastery: Push'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_heavy_crossbow', ruleset: RulesetVersion.v2024), name: 'Heavy Crossbow',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d10 piercing. Weapon Mastery: Push (push target up to 10 ft away on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d10 piercing (Ammunition 100/400, Heavy, Loading, Two-Handed). High-impact martial crossbow.',
@@ -1484,22 +1222,14 @@ class SrdMagicWeapons {
           'Cost: 50 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Push Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'ranged', 'heavy', 'loading', 'push'],
+      isChangedIn2024: true, diffSummary: 'Gains the Push Weapon Mastery property.', tags: ['weapon', 'martial', 'ranged', 'heavy', 'loading', 'push'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'ranged', 'heavy', 'loading', 'push'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_longbow',
-      name: 'Longbow',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '1d8 Piercing (Ammunition 150/600, Heavy, Two-Handed) • 2024 Mastery: Slow'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_longbow', ruleset: RulesetVersion.v2024), name: 'Longbow',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '1d8 piercing (Range 150/600). Weapon Mastery: Slow (reduce target speed by 10 ft on hit).',
       rules2014: ItemEditionDetails(
         summary:
             '1d8 piercing (Ammunition 150/600, Heavy, Two-Handed). Supreme long-range martial missile weapon.',
@@ -1525,21 +1255,14 @@ class SrdMagicWeapons {
           'Cost: 50 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Gains the Slow Weapon Mastery property.',
-      tags: ['weapon', 'martial', 'ranged', 'heavy', 'two-handed', 'slow'],
+      isChangedIn2024: true, diffSummary: 'Gains the Slow Weapon Mastery property.', tags: ['weapon', 'martial', 'ranged', 'heavy', 'two-handed', 'slow'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'ranged', 'heavy', 'two-handed', 'slow'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'weapon_net',
-      name: 'Net',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.nonmagical,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.control,
-            label: 'Thrown 5/15 • Restrains Large or Smaller Creature'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'weapon_net', ruleset: RulesetVersion.v2024), name: 'Net',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Special adventuring gear / weapon. Forces a DC 10 Dex save to avoid Restrained condition on target in 2024 equipment update.',
       rules2014: ItemEditionDetails(
         summary:
             'Special ranged weapon (Thrown 5/15). Hit Large or smaller creature is Restrained until freed (DC 10 Str check or 5 slashing damage to AC 10 net).',
@@ -1562,26 +1285,18 @@ class SrdMagicWeapons {
           'Cost: 1 gp'
         ],
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Updated in 2024 to function with DC saving throw mechanics.',
-      tags: ['weapon', 'martial', 'ranged', 'thrown', 'restrain', 'control'],
+      isChangedIn2024: true, diffSummary: 'Updated in 2024 to function with DC saving throw mechanics.', tags: ['weapon', 'martial', 'ranged', 'thrown', 'restrain', 'control'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'martial', 'ranged', 'thrown', 'restrain', 'control'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
 
     // =========================================================================
     // 5. SPECIFIC NAMED MAGIC WEAPONS (+1, +2, +3)
     // =========================================================================
-    MagicItem(
-      id: 'longsword_plus_1',
-      name: 'Longsword +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+1 Attack & Damage Rolls (1d8/1d10 Slashing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'longsword_plus_1', ruleset: RulesetVersion.v2024), name: 'Longsword +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic longsword.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic longsword.',
@@ -1606,18 +1321,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'sword', 'bonus', 'slashing'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'bonus', 'slashing'], 'attackBonus': 1, 'magicBonus': 1, 'bonusWeapon': 1, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'longsword_plus_2',
-      name: 'Longsword +2',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+2 Attack & Damage Rolls (1d8/1d10 Slashing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'longsword_plus_2', ruleset: RulesetVersion.v2024), name: 'Longsword +2',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +2 bonus to attack and damage rolls made with this magic longsword.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +2 bonus to attack and damage rolls made with this magic longsword.',
@@ -1642,18 +1352,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'sword', 'bonus', 'slashing'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'bonus', 'slashing'], 'attackBonus': 2, 'magicBonus': 2, 'bonusWeapon': 2, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'longsword_plus_3',
-      name: 'Longsword +3',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+3 Attack & Damage Rolls (1d8/1d10 Slashing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'longsword_plus_3', ruleset: RulesetVersion.v2024), name: 'Longsword +3',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +3 bonus to attack and damage rolls made with this magic longsword.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +3 bonus to attack and damage rolls made with this magic longsword.',
@@ -1678,18 +1383,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'sword', 'bonus', 'slashing'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'bonus', 'slashing'], 'attackBonus': 3, 'magicBonus': 3, 'bonusWeapon': 3, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'greatsword_plus_1',
-      name: 'Greatsword +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+1 Attack & Damage Rolls (2d6 Slashing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'greatsword_plus_1', ruleset: RulesetVersion.v2024), name: 'Greatsword +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic greatsword.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic greatsword.',
@@ -1714,18 +1414,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'sword', 'bonus', 'heavy', 'two-handed'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'bonus', 'heavy', 'two-handed'], 'attackBonus': 1, 'magicBonus': 1, 'bonusWeapon': 1, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'greatsword_plus_2',
-      name: 'Greatsword +2',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+2 Attack & Damage Rolls (2d6 Slashing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'greatsword_plus_2', ruleset: RulesetVersion.v2024), name: 'Greatsword +2',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +2 bonus to attack and damage rolls made with this magic greatsword.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +2 bonus to attack and damage rolls made with this magic greatsword.',
@@ -1750,18 +1445,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'sword', 'bonus', 'heavy', 'two-handed'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'bonus', 'heavy', 'two-handed'], 'attackBonus': 2, 'magicBonus': 2, 'bonusWeapon': 2, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'greatsword_plus_3',
-      name: 'Greatsword +3',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+3 Attack & Damage Rolls (2d6 Slashing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'greatsword_plus_3', ruleset: RulesetVersion.v2024), name: 'Greatsword +3',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +3 bonus to attack and damage rolls made with this magic greatsword.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +3 bonus to attack and damage rolls made with this magic greatsword.',
@@ -1786,19 +1476,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'sword', 'bonus', 'heavy', 'two-handed'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'bonus', 'heavy', 'two-handed'], 'attackBonus': 3, 'magicBonus': 3, 'bonusWeapon': 3, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'dagger_plus_1',
-      name: 'Dagger +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Attack & Damage Rolls (1d4 Piercing, Finesse, Light, Thrown 20/60)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'dagger_plus_1', ruleset: RulesetVersion.v2024), name: 'Dagger +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic dagger.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic dagger.',
@@ -1822,18 +1506,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'dagger', 'bonus', 'finesse', 'light'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'dagger', 'bonus', 'finesse', 'light'], 'attackBonus': 1, 'magicBonus': 1, 'bonusWeapon': 1, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'rapier_plus_1',
-      name: 'Rapier +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+1 Attack & Damage Rolls (1d8 Piercing, Finesse)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'rapier_plus_1', ruleset: RulesetVersion.v2024), name: 'Rapier +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic rapier.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic rapier.',
@@ -1857,18 +1536,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'rapier', 'bonus', 'finesse'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'rapier', 'bonus', 'finesse'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'rapier_plus_2',
-      name: 'Rapier +2',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+2 Attack & Damage Rolls (1d8 Piercing, Finesse)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'rapier_plus_2', ruleset: RulesetVersion.v2024), name: 'Rapier +2',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +2 bonus to attack and damage rolls made with this magic rapier.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +2 bonus to attack and damage rolls made with this magic rapier.',
@@ -1892,18 +1566,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'rapier', 'bonus', 'finesse'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'rapier', 'bonus', 'finesse'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'greataxe_plus_1',
-      name: 'Greataxe +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+1 Attack & Damage Rolls (1d12 Slashing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'greataxe_plus_1', ruleset: RulesetVersion.v2024), name: 'Greataxe +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic greataxe.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic greataxe.',
@@ -1927,19 +1596,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'axe', 'bonus', 'heavy', 'two-handed'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'axe', 'bonus', 'heavy', 'two-handed'], 'attackBonus': 1, 'magicBonus': 1, 'bonusWeapon': 1, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'longbow_plus_1',
-      name: 'Longbow +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '+1 Attack & Damage Rolls (1d8 Piercing, Ammunition 150/600)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'longbow_plus_1', ruleset: RulesetVersion.v2024), name: 'Longbow +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic longbow.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic longbow.',
@@ -1963,19 +1626,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'bow', 'bonus', 'ranged'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'bow', 'bonus', 'ranged'], 'attackBonus': 1, 'magicBonus': 1, 'bonusWeapon': 1, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'longbow_plus_2',
-      name: 'Longbow +2',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '+2 Attack & Damage Rolls (1d8 Piercing, Ammunition 150/600)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'longbow_plus_2', ruleset: RulesetVersion.v2024), name: 'Longbow +2',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +2 bonus to attack and damage rolls made with this magic longbow.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +2 bonus to attack and damage rolls made with this magic longbow.',
@@ -2000,19 +1657,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'bow', 'bonus', 'ranged'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'bow', 'bonus', 'ranged'], 'attackBonus': 2, 'magicBonus': 2, 'bonusWeapon': 2, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'heavy_crossbow_plus_1',
-      name: 'Heavy Crossbow +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                '+1 Attack & Damage Rolls (1d10 Piercing, Ammunition 100/400)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'heavy_crossbow_plus_1', ruleset: RulesetVersion.v2024), name: 'Heavy Crossbow +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic heavy crossbow.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic heavy crossbow.',
@@ -2037,16 +1688,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'crossbow', 'bonus', 'ranged'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'crossbow', 'bonus', 'ranged'], 'attackBonus': 1, 'magicBonus': 1, 'bonusWeapon': 1, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_weapon_plus_1',
-      name: 'Weapon +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee, label: '+1 Attack & Damage'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_weapon_plus_1', ruleset: RulesetVersion.v2024), name: 'Weapon +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic weapon and weapon mastery integration.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this magic weapon.',
@@ -2062,19 +1710,14 @@ class SrdMagicWeapons {
         activation: 'Passive',
         masteryProperties: 'Eligible for Weapon Mastery properties',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Interacts with 2024 Weapon Mastery properties.',
-      tags: ['weapon', 'bonus', 'simple', 'martial'],
+      isChangedIn2024: true, diffSummary: 'Interacts with 2024 Weapon Mastery properties.', tags: ['weapon', 'bonus', 'simple', 'martial'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'bonus', 'simple', 'martial'], 'attackBonus': 1, 'magicBonus': 1, 'bonusWeapon': 1, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_weapon_plus_2',
-      name: 'Weapon +2',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee, label: '+2 Attack & Damage'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_weapon_plus_2', ruleset: RulesetVersion.v2024), name: 'Weapon +2',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +2 bonus to attack and damage rolls made with this magic weapon and weapon mastery integration.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +2 bonus to attack and damage rolls made with this magic weapon.',
@@ -2090,19 +1733,14 @@ class SrdMagicWeapons {
         activation: 'Passive',
         masteryProperties: 'Eligible for Weapon Mastery properties',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Interacts with 2024 Weapon Mastery properties.',
-      tags: ['weapon', 'bonus', 'simple', 'martial'],
+      isChangedIn2024: true, diffSummary: 'Interacts with 2024 Weapon Mastery properties.', tags: ['weapon', 'bonus', 'simple', 'martial'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'bonus', 'simple', 'martial'], 'attackBonus': 2, 'magicBonus': 2, 'bonusWeapon': 2, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_weapon_plus_3',
-      name: 'Weapon +3',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee, label: '+3 Attack & Damage'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_weapon_plus_3', ruleset: RulesetVersion.v2024), name: 'Weapon +3',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +3 bonus to attack and damage rolls made with this magic weapon and weapon mastery integration.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +3 bonus to attack and damage rolls made with this magic weapon.',
@@ -2118,20 +1756,14 @@ class SrdMagicWeapons {
         activation: 'Passive',
         masteryProperties: 'Eligible for Weapon Mastery properties',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Interacts with 2024 Weapon Mastery properties.',
-      tags: ['weapon', 'bonus', 'simple', 'martial'],
+      isChangedIn2024: true, diffSummary: 'Interacts with 2024 Weapon Mastery properties.', tags: ['weapon', 'bonus', 'simple', 'martial'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'bonus', 'simple', 'martial'], 'attackBonus': 3, 'magicBonus': 3, 'bonusWeapon': 3, 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_ammunition_plus_1',
-      name: 'Ammunition +1',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label: '+1 Attack & Damage Rolls per Shot'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_ammunition_plus_1', ruleset: RulesetVersion.v2024), name: 'Ammunition +1',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to attack and damage rolls made with this magic ammunition. Stacks with magic weapons.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to attack and damage rolls made with this piece of magic ammunition. Once it hits a target, it is no longer magical.',
@@ -2153,17 +1785,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'ammunition', 'bonus', 'arrows', 'bolts'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'ammunition', 'bonus', 'arrows', 'bolts'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_ammunition_plus_2',
-      name: 'Ammunition +2',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label: '+2 Attack & Damage Rolls per Shot'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_ammunition_plus_2', ruleset: RulesetVersion.v2024), name: 'Ammunition +2',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +2 bonus to attack and damage rolls made with this magic ammunition.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +2 bonus to attack and damage rolls made with this magic ammunition. Once it hits, the magic is spent.',
@@ -2184,17 +1812,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'ammunition', 'bonus', 'arrows', 'bolts'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'ammunition', 'bonus', 'arrows', 'bolts'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_ammunition_plus_3',
-      name: 'Ammunition +3',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label: '+3 Attack & Damage Rolls per Shot'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_ammunition_plus_3', ruleset: RulesetVersion.v2024), name: 'Ammunition +3',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +3 bonus to attack and damage rolls made with this magic ammunition.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +3 bonus to attack and damage rolls made with this magic ammunition.',
@@ -2215,23 +1839,17 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'ammunition', 'bonus', 'arrows', 'bolts'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'ammunition', 'bonus', 'arrows', 'bolts'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
 
     // =========================================================================
     // 6. ICONIC CANONICAL SRD MAGIC WEAPONS
     // =========================================================================
-    MagicItem(
-      id: 'item_arrow_of_slaying',
-      name: 'Arrow of Slaying',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                'Designated Creature Type: DC 17 CON Save or Take 6d10 Extra Piercing Damage'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_arrow_of_slaying', ruleset: RulesetVersion.v2024), name: 'Arrow of Slaying',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Arrow dedicated to a creature type: DC 17 Con save or 6d10 extra piercing damage.',
       rules2014: ItemEditionDetails(
         summary:
             'An arrow of slaying is meant for a specific creature type. If a creature belonging to that type is hit, it must make a DC 17 Con save, taking an extra 6d10 piercing damage on a failure (half on success).',
@@ -2257,20 +1875,13 @@ class SrdMagicWeapons {
         ],
       ),
       tags: ['weapon', 'ammunition', 'slayer', 'critical', 'piercing'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'ammunition', 'slayer', 'critical', 'piercing'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_berserker_axe',
-      name: 'Berserker Axe',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_berserker_axe', ruleset: RulesetVersion.v2024), name: 'Berserker Axe',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Attack & Damage • +1 HP per Level • Cursed: Berserk on Damage (DC 15 WIS Save)'),
-      ],
+      descriptionMarkdown: '+1 axe giving +1 HP/level with berserk bloodlust curse on DC 15 Wis save.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 axe granting +1 hit point per level. Cursed: when taking damage in combat, must succeed on DC 15 Wis save or enter a homicidal berserk frenzy attacking nearest creature.',
@@ -2288,19 +1899,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 15 Wisdom',
       ),
       tags: ['weapon', 'axe', 'cursed', 'hp bonus', 'frenzy'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'axe', 'cursed', 'hp bonus', 'frenzy'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_dagger_of_venom',
-      name: 'Dagger of Venom',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.poison,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Dagger • Action: Coat in Poison (2d10 Poison & Poisoned Condition, DC 15 CON Save)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_dagger_of_venom', ruleset: RulesetVersion.v2024), name: 'Dagger of Venom',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 dagger; Action to coat in poison dealing 2d10 poison and Poisoned condition on DC 15 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 dagger. Action: coat the blade in black venom (1/day). Next hit within 1 min deals 2d10 poison damage and inflicts poisoned condition on DC 15 Con save.',
@@ -2317,22 +1922,14 @@ class SrdMagicWeapons {
         activation: '1 Action (1/Day)',
         savingThrowDc: 'DC 15 Constitution',
       ),
-      isChangedIn2024: false,
-      tags: ['weapon', 'dagger', 'poison', 'finesse', 'debuff'],
+      isChangedIn2024: false, tags: ['weapon', 'dagger', 'poison', 'finesse', 'debuff'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'dagger', 'poison', 'finesse', 'debuff'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_dancing_sword',
-      name: 'Dancing Sword',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_dancing_sword', ruleset: RulesetVersion.v2024), name: 'Dancing Sword',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Bonus Action: Toss into Air to Hover & Attack up to 30 ft (4 Attacks Duration)'),
-      ],
+      descriptionMarkdown: 'Bonus action to activate hover attack at 30 ft range for 4 strikes.',
       rules2014: ItemEditionDetails(
         summary:
             'Bonus action to speak command word: tosses sword up to 30 ft to hover and attack using your attack roll and ability modifier. Returns after 4 attacks.',
@@ -2348,20 +1945,13 @@ class SrdMagicWeapons {
         activation: '1 Bonus Action',
       ),
       tags: ['weapon', 'sword', 'telekinetic', 'hover', 'animated'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'telekinetic', 'hover', 'animated'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_defender',
-      name: 'Defender',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_defender', ruleset: RulesetVersion.v2024), name: 'Defender',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+3 Weapon • Allocate +1 to +3 Bonus to AC instead of Attack/Damage'),
-      ],
+      descriptionMarkdown: '+3 weapon with variable bonus allocation between offensive attack/damage and defensive AC.',
       rules2014: ItemEditionDetails(
         summary:
             '+3 weapon. The first time you attack with it on each turn, you can transfer some or all of the sword\'s +3 bonus to your AC until your next turn.',
@@ -2377,18 +1967,13 @@ class SrdMagicWeapons {
         activation: 'On Attack Choice',
       ),
       tags: ['weapon', 'sword', 'ac bonus', 'defense', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'ac bonus', 'defense', 'legendary'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_dragon_slayer',
-      name: 'Dragon Slayer',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: '+1 Attack & Damage • +3d6 Extra Damage vs Dragons'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_dragon_slayer', ruleset: RulesetVersion.v2024), name: 'Dragon Slayer',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 weapon; deals extra 3d6 damage against dragons.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 weapon. When you hit a dragon with this weapon, the dragon takes an extra 3d6 damage of the weapon\'s type.',
@@ -2402,22 +1987,14 @@ class SrdMagicWeapons {
             '+1 weapon dealing +3d6 extra weapon damage against creatures of the Dragon type.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['weapon', 'sword', 'dragon', 'slayer'],
+      isChangedIn2024: false, tags: ['weapon', 'sword', 'dragon', 'slayer'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'dragon', 'slayer'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_flame_tongue',
-      name: 'Flame Tongue',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_flame_tongue', ruleset: RulesetVersion.v2024), name: 'Flame Tongue',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Bonus Action: +2d6 Fire Damage on Hit • Bright Light 40 ft / Dim 40 ft'),
-      ],
+      descriptionMarkdown: 'Bonus action to ignite: deals extra 2d6 fire damage on hit and sheds bright light.',
       rules2014: ItemEditionDetails(
         summary:
             'Bonus action to ignite: deals extra 2d6 fire damage on hit and sheds bright light in a 40-foot radius.',
@@ -2432,22 +2009,14 @@ class SrdMagicWeapons {
             'Bonus action to speak command word, dealing +2d6 fire damage on hits while illuminated.',
         activation: '1 Bonus Action / Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['weapon', 'sword', 'fire', 'flame', 'damage rider'],
+      isChangedIn2024: false, tags: ['weapon', 'sword', 'fire', 'flame', 'damage rider'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'fire', 'flame', 'damage rider'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_frost_brand',
-      name: 'Frost Brand',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_frost_brand', ruleset: RulesetVersion.v2024), name: 'Frost Brand',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.cold,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1d6 Cold Damage on Hit, Fire Resistance & Reaction: Extinguish Nonmagical Flames 30 ft'),
-      ],
+      descriptionMarkdown: 'Deals extra 1d6 cold damage, grants Fire Resistance, and extinguishes flames in 30 ft.',
       rules2014: ItemEditionDetails(
         summary:
             'Deals extra 1d6 cold damage on hit, grants resistance to fire damage, and extinguishes nonmagical fires within 30 feet as an action.',
@@ -2462,21 +2031,14 @@ class SrdMagicWeapons {
             'Provides +1d6 cold damage, Fire Resistance, and action to snuff nonmagical fires.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['weapon', 'sword', 'cold', 'frost', 'fire resistance'],
+      isChangedIn2024: false, tags: ['weapon', 'sword', 'cold', 'frost', 'fire resistance'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'cold', 'frost', 'fire resistance'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_giant_slayer',
-      name: 'Giant Slayer',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Attack & Damage • +2d6 vs Giants & DC 15 STR Save or Fall Prone'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_giant_slayer', ruleset: RulesetVersion.v2024), name: 'Giant Slayer',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 weapon dealing +2d6 to giants and DC 15 Strength save or prone.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 weapon dealing extra 2d6 damage to giants and forcing a DC 15 Strength save or be knocked prone.',
@@ -2493,24 +2055,14 @@ class SrdMagicWeapons {
         activation: 'Passive',
         savingThrowDc: 'DC 15 Strength',
       ),
-      isChangedIn2024: false,
-      tags: ['weapon', 'giant', 'slayer', 'knockdown', 'prone'],
+      isChangedIn2024: false, tags: ['weapon', 'giant', 'slayer', 'knockdown', 'prone'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'giant', 'slayer', 'knockdown', 'prone'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_hammer_of_thunderbolts',
-      name: 'Hammer of Thunderbolts',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement:
-          'requires Gauntlets of Ogre Power & Belt of Giant Strength',
-      damageAccent: DamageAccent.thunder,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Attack & Damage (+4 Str cap to 30) • Thrown 20/60 Thunderclap: DC 17 CON Save or Stunned'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_hammer_of_thunderbolts', ruleset: RulesetVersion.v2024), name: 'Hammer of Thunderbolts',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'requires Gauntlets of Ogre Power & Belt of Giant Strength',
+      descriptionMarkdown: '+1 maul; +4 Strength up to 30; thrown thunderclap stuns on DC 17 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 maul granting +4 Strength (up to 30) if wearing Gauntlets of Ogre Power and Belt of Giant Strength. Ranged throw (20/60) emits a thunderclap forcing DC 17 Con save or stunned.',
@@ -2527,21 +2079,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 17 Constitution',
       ),
       tags: ['weapon', 'maul', 'thunder', 'strength 30', 'stun', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'maul', 'thunder', 'strength 30', 'stun', 'legendary'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_holy_avenger',
-      name: 'Holy Avenger',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Paladin',
-      damageAccent: DamageAccent.radiant,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+3 Attack & Damage • +2d10 Radiant vs Fiends/Undead • 10–30 ft Magic Resistance Aura'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_holy_avenger', ruleset: RulesetVersion.v2024), name: 'Holy Avenger',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'by a Paladin',
+      descriptionMarkdown: '+3 weapon (Paladin). Extra 2d10 radiant damage against fiends/undead; 10/30 ft aura granting Advantage on saves vs spells.',
       rules2014: ItemEditionDetails(
         summary:
             '+3 weapon (Paladin attunement). Extra 2d10 radiant damage against fiends and undead. Emits a 10-foot aura (30 ft at level 17) granting advantage on saving throws against spells and magical effects.',
@@ -2556,8 +2100,7 @@ class SrdMagicWeapons {
             '+3 weapon dealing +2d10 radiant vs fiends and undead with magic resistance aura for allies.',
         activation: 'Passive / Continuous Aura',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'weapon',
         'paladin',
         'holy',
@@ -2565,19 +2108,13 @@ class SrdMagicWeapons {
         'magic resistance',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'paladin', 'holy', 'radiant', 'magic resistance', 'legendary'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_javelin_of_lightning',
-      name: 'Javelin of Lightning',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.lightning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                'Action (1/Day): Transforms into 120-ft Lightning Bolt (4d6 Lightning, DC 13 DEX Save) + Target Hit'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_javelin_of_lightning', ruleset: RulesetVersion.v2024), name: 'Javelin of Lightning',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: 120-ft lightning bolt dealing 4d6 lightning (DC 13 Dex save) + weapon hit.',
       rules2014: ItemEditionDetails(
         summary:
             'Action (1/day): when thrown, transforms into a 5-ft wide, 120-ft line of lightning. Each creature in line makes DC 13 Dex save or takes 4d6 lightning (half on save), then target takes regular javelin damage + 4d6 lightning.',
@@ -2595,20 +2132,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 13 Dexterity',
       ),
       tags: ['weapon', 'javelin', 'lightning', 'aoe', 'thrown'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'javelin', 'lightning', 'aoe', 'thrown'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_luck_blade',
-      name: 'Luck Blade',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_luck_blade', ruleset: RulesetVersion.v2024), name: 'Luck Blade',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Attack/Damage & +1 to All Saves • Lucky Reroll (1/Day) • Contains 1d4 - 1 Wishes'),
-      ],
+      descriptionMarkdown: '+1 sword; +1 to all saves; 1/day reroll; holds Wish charges.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 sword granting +1 bonus to all saving throws. Reaction (1/day): reroll any attack, ability check, or save. Contains 1d4 - 1 charges of the Wish spell.',
@@ -2623,20 +2153,13 @@ class SrdMagicWeapons {
         activation: 'Passive / Reaction / Action',
       ),
       tags: ['weapon', 'sword', 'luck', 'wish', 'saving throws', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'luck', 'wish', 'saving throws', 'legendary'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_mace_of_disruption',
-      name: 'Mace of Disruption',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_mace_of_disruption', ruleset: RulesetVersion.v2024), name: 'Mace of Disruption',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.radiant,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+2d6 Radiant vs Fiends/Undead • DC 15 WIS Save if <= 25 HP or Destroyed Instantly • Frightens'),
-      ],
+      descriptionMarkdown: '+2d6 radiant vs fiends/undead; DC 15 Wis save or instant destruction if <= 25 HP.',
       rules2014: ItemEditionDetails(
         summary:
             'Deals extra 2d6 radiant damage to fiends and undead. If target has 25 HP or fewer after hit, must succeed on DC 15 Wis save or be destroyed instantly (or frightened until end of next turn). Sheds bright light 20 ft.',
@@ -2653,19 +2176,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 15 Wisdom',
       ),
       tags: ['weapon', 'mace', 'radiant', 'undead', 'fiend', 'execute'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'mace', 'radiant', 'undead', 'fiend', 'execute'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_mace_of_smiting',
-      name: 'Mace of Smiting',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.bludgeoning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Weapon (+3 vs Constructs) • Critical Hit vs Construct Deals +2d6 + 40 Damage'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_mace_of_smiting', ruleset: RulesetVersion.v2024), name: 'Mace of Smiting',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 mace (+3 vs constructs); bonus damage on critical hits vs constructs.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 mace (+3 against Constructs). On a critical hit against a Construct, deals an extra 2d6 bludgeoning damage plus 40 extra bludgeoning damage if the construct has 25 HP or fewer.',
@@ -2680,20 +2197,13 @@ class SrdMagicWeapons {
         activation: 'Passive',
       ),
       tags: ['weapon', 'mace', 'construct', 'critical hit', 'smiting'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'mace', 'construct', 'critical hit', 'smiting'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_mace_of_terror',
-      name: 'Mace of Terror',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_mace_of_terror', ruleset: RulesetVersion.v2024), name: 'Mace of Terror',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.psychic,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.control,
-            label:
-                'Action (3 Charges): 30-ft Terror Aura (DC 15 WIS Save or Frightened for 1 Min)'),
-      ],
+      descriptionMarkdown: 'Action: 30-ft terror aura imposing Frightened condition on DC 15 Wis save.',
       rules2014: ItemEditionDetails(
         summary:
             'Action (expend 1 of 3 charges): 30-foot aura forces each creature to make a DC 15 Wis save or become frightened of you for 1 minute (must dash away on turn).',
@@ -2711,21 +2221,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 15 Wisdom',
       ),
       tags: ['weapon', 'mace', 'fear', 'control', 'psychic'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'mace', 'fear', 'control', 'psychic'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_moonblade',
-      name: 'Moonblade',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement: 'by an Elf or Half-Elf of neutral good alignment',
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 to +3 Finesse Blade • Inherited Ancestral Runes (Crit Expansion, Spell Storing, Defender, Flash)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_moonblade', ruleset: RulesetVersion.v2024), name: 'Moonblade',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'by an Elf or Half-Elf of neutral good alignment',
+      descriptionMarkdown: 'Legendary elven hereditary heirloom with multiple customizable rune enhancements.',
       rules2014: ItemEditionDetails(
         summary:
             'Ancestral elven sword with 1d6 + 1 master runes chosen from a table, including bonuses (+1 to +3), finesse property, spell storing, Vorpal strikes, or summoning shadow warriors.',
@@ -2740,20 +2242,13 @@ class SrdMagicWeapons {
         activation: 'Passive',
       ),
       tags: ['weapon', 'sword', 'elf', 'ancestral', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'elf', 'ancestral', 'legendary'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_nine_lives_stealer',
-      name: 'Nine Lives Stealer',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_nine_lives_stealer', ruleset: RulesetVersion.v2024), name: 'Nine Lives Stealer',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.necrotic,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+2 Attack & Damage • Critical Hit vs <= 100 HP: DC 15 CON Save or Instantly Slain (9 Charges)'),
-      ],
+      descriptionMarkdown: '+2 sword; critical hit executes creatures under 100 HP on failed DC 15 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 sword with 1d8 + 1 life-stealing charges. When you score a critical hit against a creature that has fewer than 100 HP, it must succeed on a DC 15 Con save or be slain instantly.',
@@ -2771,20 +2266,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 15 Constitution',
       ),
       tags: ['weapon', 'sword', 'necrotic', 'execute', 'critical hit'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'necrotic', 'execute', 'critical hit'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_oathbow',
-      name: 'Oathbow',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_oathbow', ruleset: RulesetVersion.v2024), name: 'Oathbow',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                'Sworn Enemy: Advantage on Attack Rolls, Extra 3d6 Piercing, Ignores Partial Cover'),
-      ],
+      descriptionMarkdown: 'Sworn enemy mechanic: Advantage on attacks, +3d6 piercing damage, ignores cover.',
       rules2014: ItemEditionDetails(
         summary:
             'Whisper command to swear a sworn enemy: gain advantage on attacks against sworn enemy, deal extra 3d6 piercing damage, and ignore non-full cover.',
@@ -2799,22 +2287,14 @@ class SrdMagicWeapons {
             'Elven longbow designed for hunting sworn targets with persistent Advantage and bonus damage.',
         activation: 'On Attack Command Word',
       ),
-      isChangedIn2024: false,
-      tags: ['weapon', 'bow', 'ranged', 'oath', 'advantage', 'cover'],
+      isChangedIn2024: false, tags: ['weapon', 'bow', 'ranged', 'oath', 'advantage', 'cover'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'bow', 'ranged', 'oath', 'advantage', 'cover'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_scimitar_of_speed',
-      name: 'Scimitar of Speed',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_scimitar_of_speed', ruleset: RulesetVersion.v2024), name: 'Scimitar of Speed',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+2 Attack & Damage • Bonus Action: Make One Extra Melee Attack on Each Turn'),
-      ],
+      descriptionMarkdown: '+2 scimitar granting a dedicated Bonus Action melee attack each turn.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 scimitar. You can make one attack with it as a bonus action on each of your turns.',
@@ -2830,20 +2310,13 @@ class SrdMagicWeapons {
         activation: '1 Bonus Action / Passive',
       ),
       tags: ['weapon', 'scimitar', 'speed', 'bonus action attack', 'finesse'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'scimitar', 'speed', 'bonus action attack', 'finesse'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_sun_blade',
-      name: 'Sun Blade',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_sun_blade', ruleset: RulesetVersion.v2024), name: 'Sun Blade',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.radiant,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+2 Attack & Damage, 1d8 Radiant Damage (Finesse Longsword) • +1d8 vs Undead'),
-      ],
+      descriptionMarkdown: '+2 radiant blade with finesse property; extra 1d8 radiant vs undead.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 finesse longsword of pure radiant sunlight. Deals radiant damage instead of slashing, +1d8 extra radiant damage vs undead, and sheds sunlight.',
@@ -2858,22 +2331,14 @@ class SrdMagicWeapons {
             'Blade of pure sunlight dealing radiant damage with finesse, +1d8 radiant vs undead.',
         activation: '1 Bonus Action / Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['weapon', 'sword', 'radiant', 'sunlight', 'undead', 'finesse'],
+      isChangedIn2024: false, tags: ['weapon', 'sword', 'radiant', 'sunlight', 'undead', 'finesse'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'radiant', 'sunlight', 'undead', 'finesse'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_sword_of_life_stealing',
-      name: 'Sword of Life Stealing',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_sword_of_life_stealing', ruleset: RulesetVersion.v2024), name: 'Sword of Life Stealing',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.necrotic,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Natural 20: +10 Extra Necrotic Damage & Gain 10 Temporary Hit Points'),
-      ],
+      descriptionMarkdown: 'Natural 20 inflicts +10 necrotic damage and grants 10 Temp HP.',
       rules2014: ItemEditionDetails(
         summary:
             'When you roll a 20 on an attack roll made with this weapon, the target takes an extra 10 necrotic damage, and you gain 10 temporary hit points.',
@@ -2887,20 +2352,13 @@ class SrdMagicWeapons {
         activation: 'On Natural 20',
       ),
       tags: ['weapon', 'sword', 'necrotic', 'temp hp', 'lifesteal'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'necrotic', 'temp hp', 'lifesteal'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_sword_of_sharpness',
-      name: 'Sword of Sharpness',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_sword_of_sharpness', ruleset: RulesetVersion.v2024), name: 'Sword of Sharpness',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Max Object Damage • Natural 20: +14 Slashing Damage & D20 Sever Limb Roll'),
-      ],
+      descriptionMarkdown: 'Max damage to objects; natural 20 deals +14 slashing and chance to sever limbs.',
       rules2014: ItemEditionDetails(
         summary:
             'Deals maximum damage against objects. Natural 20 deals an extra 14 slashing damage, then roll another d20 (on an 18–20, severs one of the target\'s limbs). Sheds light 10/10 ft.',
@@ -2916,20 +2374,13 @@ class SrdMagicWeapons {
         activation: 'On Natural 20',
       ),
       tags: ['weapon', 'sword', 'sharpness', 'sever limb', 'sunder'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'sharpness', 'sever limb', 'sunder'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_sword_of_vengeance',
-      name: 'Sword of Vengeance',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_sword_of_vengeance', ruleset: RulesetVersion.v2024), name: 'Sword of Vengeance',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+1 Weapon • Cursed: Retaliate against Damaging Foes (DC 15 WIS Save)'),
-      ],
+      descriptionMarkdown: '+1 weapon with vengeful spirit curse on DC 15 Wis save.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 weapon. Cursed: you are unwilling to part with it. When damaged by a creature within 60 feet, must succeed on DC 15 Wis save or attack only that creature until it or you drop to 0 HP.',
@@ -2946,20 +2397,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 15 Wisdom',
       ),
       tags: ['weapon', 'sword', 'cursed', 'vengeance'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'cursed', 'vengeance'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_sword_of_wounding',
-      name: 'Sword of Wounding',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_sword_of_wounding', ruleset: RulesetVersion.v2024), name: 'Sword of Wounding',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.necrotic,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Wounds Cannot Heal Naturally • Start of Turn: 1d4 Necrotic Damage per Wound (DC 15 CON Save to End)'),
-      ],
+      descriptionMarkdown: 'Inflicts stacking bleeding wounds dealing 1d4 necrotic damage at turn start.',
       rules2014: ItemEditionDetails(
         summary:
             'Hit creature can\'t regain HP except by magical means. Start of each of its turns, takes 1d4 necrotic damage for each wound inflicted. Creature can make DC 15 Con save at turn end to stop all wounds.',
@@ -2977,20 +2421,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 15 Constitution',
       ),
       tags: ['weapon', 'sword', 'necrotic', 'bleed', 'wounding'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'necrotic', 'bleed', 'wounding'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_trident_of_fish_command',
-      name: 'Trident of Fish Command',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_trident_of_fish_command', ruleset: RulesetVersion.v2024), name: 'Trident of Fish Command',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      damageAccent: DamageAccent.piercing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.control,
-            label:
-                '3 Charges: Cast Dominate Beast (DC 15 WIS Save) on Beasts with Swimming Speed'),
-      ],
+      descriptionMarkdown: 'Cast Dominate Beast (DC 15) on swimming beasts using 3 charges.',
       rules2014: ItemEditionDetails(
         summary:
             'This trident has 3 charges. While holding it, you can use an action and expend 1 charge to cast Dominate Beast (DC 15 save) on a beast with a swimming speed. Regains 1d3 charges daily at dawn.',
@@ -3007,19 +2444,13 @@ class SrdMagicWeapons {
         savingThrowDc: 'DC 15 Wisdom',
       ),
       tags: ['weapon', 'trident', 'aquatic', 'dominate', 'beasts'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'trident', 'aquatic', 'dominate', 'beasts'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_vicious_weapon',
-      name: 'Vicious Weapon',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Critical Hit Deals an Extra 7 Damage of the Weapon\'s Type'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_vicious_weapon', ruleset: RulesetVersion.v2024), name: 'Vicious Weapon',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Critical hits deal an extra 7 flat weapon damage.',
       rules2014: ItemEditionDetails(
         summary:
             'When you roll a 20 on your attack roll with this magic weapon, the target takes an extra 7 damage of the weapon\'s type.',
@@ -3033,20 +2464,13 @@ class SrdMagicWeapons {
         activation: 'On Natural 20',
       ),
       tags: ['weapon', 'critical hit', 'damage rider'],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'critical hit', 'damage rider'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
-    MagicItem(
-      id: 'item_vorpal_sword',
-      name: 'Vorpal Sword',
-      category: ItemCategory.weapon,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_vorpal_sword', ruleset: RulesetVersion.v2024), name: 'Vorpal Sword',
+      itemType: 'weapon', category: ItemCategory.weapon, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                '+3 Attack & Damage • Natural 20 Instantly Decapitates Target (or +6d8 Slashing Damage)'),
-      ],
+      descriptionMarkdown: '+3 weapon; natural 20 decapitates creature or inflicts +6d8 slashing damage.',
       rules2014: ItemEditionDetails(
         summary:
             '+3 weapon that ignores slashing resistance. On a natural 20, cuts off one of the creature\'s heads (or deals extra 6d8 slashing if immune to decapitation).',
@@ -3061,8 +2485,7 @@ class SrdMagicWeapons {
             '+3 weapon that ignores slashing resistance and decapitates targets on Critical Hit.',
         activation: 'Passive / On Nat 20',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'weapon',
         'sword',
         'vorpal',
@@ -3070,6 +2493,7 @@ class SrdMagicWeapons {
         'critical hit',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'weapon', 'tags': ['weapon', 'sword', 'vorpal', 'decapitation', 'critical hit', 'legendary'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
   ];
 }

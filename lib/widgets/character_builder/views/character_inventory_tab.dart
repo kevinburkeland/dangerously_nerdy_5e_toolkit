@@ -272,7 +272,7 @@ class CharacterInventoryTab extends StatelessWidget {
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white)),
                                 subtitle: Text(
-                                  '${item.category.name.toUpperCase()} • ${item.rarity.name}${item.cost != null ? " • ${item.cost}" : ""}\n${item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary}',
+                                  '${item.category.name.toUpperCase()} • ${item.rarityTier.name}${item.cost != null ? " • ${item.cost}" : ""}\n${item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary}',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -293,7 +293,7 @@ class CharacterInventoryTab extends StatelessWidget {
                                         instanceId: 'temp',
                                         itemRef: EntityReference(
                                           refType: EntityType.equipment,
-                                          slug: item.id.replaceAll('_', '-'),
+                                          slug: item.id.slug.replaceAll('_', '-'),
                                           displayName: item.name,
                                         ),
                                         customProperties: {
@@ -304,10 +304,10 @@ class CharacterInventoryTab extends StatelessWidget {
                                     );
                                     final newInstance = InventoryItemInstance(
                                       instanceId:
-                                          'srd-${item.id}-${DateTime.now().millisecondsSinceEpoch}',
+                                          'srd-${item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
                                       itemRef: EntityReference(
                                         refType: EntityType.equipment,
-                                        slug: item.id.replaceAll('_', '-'),
+                                        slug: item.id.slug.replaceAll('_', '-'),
                                         displayName: item.name,
                                       ),
                                       quantity: 1,

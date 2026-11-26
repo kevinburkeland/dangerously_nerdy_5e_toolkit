@@ -179,11 +179,15 @@ void main() {
         description:
             '| d6 | Effect |\n|---|---|\n| 1 | Cast Fireball |\n| 2 | Cast Invisibility |',
       );
-      const customItem = MagicItem(
-        id: 'homebrew_item_wand',
+      const customItem = EquipmentItem(
+        id: EntityId(slug: 'homebrew_item_wand', ruleset: RulesetVersion.v2024),
         name: 'Wand of Wonders',
+        itemType: 'wand',
         category: ItemCategory.wand,
-        rarity: ItemRarity.rare,
+        rarity: 'rare',
+        rarityTier: ItemRarity.rare,
+        requiresAttunement: false,
+        descriptionMarkdown: '**Wand of Wonders.** A mysterious wand.',
         rules2014: details,
         rules2024: details,
       );
@@ -217,11 +221,15 @@ void main() {
         description:
             '### Arcane Matrix\n| d6 | Effect |\n|---|---|\n| 1 | Cast Fireball |\n| 2 | Cast Invisibility |',
       );
-      const customItem = MagicItem(
-        id: 'homebrew_item_wand',
+      const customItem = EquipmentItem(
+        id: EntityId(slug: 'homebrew_item_wand', ruleset: RulesetVersion.v2024),
         name: 'Wand of Wonders',
+        itemType: 'wand',
         category: ItemCategory.wand,
-        rarity: ItemRarity.rare,
+        rarity: 'rare',
+        rarityTier: ItemRarity.rare,
+        requiresAttunement: false,
+        descriptionMarkdown: '**Wand of Wonders.** A mysterious wand.',
         rules2014: details,
         rules2024: details,
       );

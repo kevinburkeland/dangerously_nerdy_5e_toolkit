@@ -660,7 +660,7 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
                                         SettingsScope.maybeOf(context)
                                                 ?.settings
                                                 .pinnedItemIds
-                                                .contains(item.id) ??
+                                                .contains(item.id.slug) ??
                                             false;
 
                                     ItemDetailDialog.show(
@@ -669,7 +669,7 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
                                       isPinned: isPinned,
                                       onTogglePin: () {
                                         SettingsScope.maybeOf(context)
-                                            ?.togglePinItem(item.id);
+                                            ?.togglePinItem(item.id.slug);
                                       },
                                     );
                                   }

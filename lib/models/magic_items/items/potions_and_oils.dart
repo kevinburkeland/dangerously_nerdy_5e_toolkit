@@ -4,19 +4,13 @@ import '../magic_item_data.dart';
 class SrdPotionsAndOils {
   SrdPotionsAndOils._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // Potion of Healing (Common)
-    MagicItem(
-      id: 'item_potion_of_healing',
-      name: 'Potion of Healing',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.common,
-      damageAccent: DamageAccent.radiant,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action (or Bonus Action 2024): Regain 2d4 + 2 HP'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_healing', ruleset: RulesetVersion.v2024), name: 'Potion of Healing',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'common', rarityTier: ItemRarity.common,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink (or Action to administer to another creature): regain 2d4 + 2 HP.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: drink this magical red fluid to regain 2d4 + 2 hit points (or administer to an unconscious creature).',
@@ -31,26 +25,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action or administer to another creature as an Action to restore 2d4 + 2 Hit Points.',
         activation: '1 Bonus Action (Self) / 1 Action (Other)',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'In 2024, drinking a potion yourself is now a Bonus Action (administering to another is an Action).',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'In 2024, drinking a potion yourself is now a Bonus Action (administering to another is an Action).', diffHighlights: [
         '2024: Consuming a potion is streamlined to a Bonus Action.',
-      ],
-      tags: ['potion', 'healing', 'hp', 'consumable'],
+      ], tags: ['potion', 'healing', 'hp', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'healing', 'hp', 'consumable'] },
     ),
 
     // Potion of Greater Healing
-    MagicItem(
-      id: 'item_potion_of_greater_healing',
-      name: 'Potion of Greater Healing',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.radiant,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain, label: 'Regain 4d4 + 4 HP'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_greater_healing', ruleset: RulesetVersion.v2024), name: 'Potion of Greater Healing',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink (or Action to administer): regain 4d4 + 4 HP.',
       rules2014: ItemEditionDetails(
         summary: 'You regain 4d4 + 4 hit points when you drink this potion.',
         description:
@@ -64,25 +50,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action or administer to another creature as an Action to restore 4d4 + 4 Hit Points.',
         activation: '1 Bonus Action (Self) / 1 Action (Other)',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'healing', 'hp', 'consumable'],
+      ], tags: ['potion', 'healing', 'hp', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'healing', 'hp', 'consumable'] },
     ),
 
     // Potion of Superior Healing
-    MagicItem(
-      id: 'item_potion_of_superior_healing',
-      name: 'Potion of Superior Healing',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.radiant,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain, label: 'Regain 8d4 + 8 HP'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_superior_healing', ruleset: RulesetVersion.v2024), name: 'Potion of Superior Healing',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: regain 8d4 + 8 HP.',
       rules2014: ItemEditionDetails(
         summary: 'You regain 8d4 + 8 hit points when you drink this potion.',
         description:
@@ -95,25 +74,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action or administer to another creature as an Action to restore 8d4 + 8 Hit Points.',
         activation: '1 Bonus Action (Self) / 1 Action (Other)',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'healing', 'hp', 'consumable'],
+      ], tags: ['potion', 'healing', 'hp', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'healing', 'hp', 'consumable'] },
     ),
 
     // Potion of Supreme Healing
-    MagicItem(
-      id: 'item_potion_of_supreme_healing',
-      name: 'Potion of Supreme Healing',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.veryRare,
-      damageAccent: DamageAccent.radiant,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain, label: 'Regain 10d4 + 20 HP'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_supreme_healing', ruleset: RulesetVersion.v2024), name: 'Potion of Supreme Healing',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: regain 10d4 + 20 HP.',
       rules2014: ItemEditionDetails(
         summary: 'You regain 10d4 + 20 hit points when you drink this potion.',
         description:
@@ -126,26 +98,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action or administer to another creature as an Action to restore 10d4 + 20 Hit Points.',
         activation: '1 Bonus Action (Self) / 1 Action (Other)',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'healing', 'hp', 'consumable'],
+      ], tags: ['potion', 'healing', 'hp', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'healing', 'hp', 'consumable'] },
     ),
 
     // Potion of Giant Strength
-    MagicItem(
-      id: 'item_potion_of_giant_strength',
-      name: 'Potion of Giant Strength',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Strength Score changes to 21, 23, 25, 27, or 29 for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_giant_strength', ruleset: RulesetVersion.v2024), name: 'Potion of Giant Strength',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Strength becomes 21–29 for 1 hour (Hill Uncommon to Storm Legendary).',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, your Strength score changes for 1 hour based on giant kind (Hill 21, Frost/Stone 23, Fire 25, Cloud 27, Storm 29).',
@@ -160,26 +124,18 @@ class SrdPotionsAndOils {
             'Bonus Action to drink: your Strength score becomes 21 (Hill), 23 (Stone/Frost), 25 (Fire), 27 (Cloud), or 29 (Storm) for 1 hour.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'giant', 'strength', 'buff', 'stat boost'],
+      ], tags: ['potion', 'giant', 'strength', 'buff', 'stat boost'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'giant', 'strength', 'buff', 'stat boost'] },
     ),
 
     // Potion of Flying
-    MagicItem(
-      id: 'item_potion_of_flying',
-      name: 'Potion of Flying',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Gain Flying Speed equal to Walking Speed & Hover for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_flying', ruleset: RulesetVersion.v2024), name: 'Potion of Flying',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Gain Fly Speed equal to Speed and Hover capability for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain a flying speed equal to your walking speed for 1 hour and can hover.',
@@ -194,25 +150,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gain Fly Speed equal to Speed (with Hover) for 1 hour. Floats down safely if effect ends mid-air.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'flying', 'mobility', 'hover'],
+      ], tags: ['potion', 'flying', 'mobility', 'hover'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'flying', 'mobility', 'hover'] },
     ),
 
     // Potion of Invisibility
-    MagicItem(
-      id: 'item_potion_of_invisibility',
-      name: 'Potion of Invisibility',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Gain Invisibility for 1 Hour (Ends on Attack or Spell)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_invisibility', ruleset: RulesetVersion.v2024), name: 'Potion of Invisibility',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Gain Invisible condition for 1 hour (ends if you attack, cast a spell, or deal damage).',
       rules2014: ItemEditionDetails(
         summary:
             'Become invisible for 1 hour. Anything you are wearing or carrying is invisible with you. Ends if you attack or cast a spell.',
@@ -227,26 +176,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gain Invisible condition for 1 hour. Ends if you make an attack roll, cast a spell, or deal damage.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'invisibility', 'stealth'],
+      ], tags: ['potion', 'invisibility', 'stealth'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'invisibility', 'stealth'] },
     ),
 
     // Potion of Speed
-    MagicItem(
-      id: 'item_potion_of_speed',
-      name: 'Potion of Speed',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Gain Haste for 1 Minute without Concentration (Doubles Speed, +2 AC, Advantage on DEX Saves, Extra Action)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_speed', ruleset: RulesetVersion.v2024), name: 'Potion of Speed',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Gain Haste effect for 1 minute without concentration. Lethargy follows when it ends.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain the effect of the Haste spell for 1 minute (no concentration required).',
@@ -261,26 +202,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gain the benefits of the Haste spell for 1 minute without requiring Concentration. When the effect ends, you experience wave of lethargy.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'speed', 'haste', 'buff'],
+      ], tags: ['potion', 'speed', 'haste', 'buff'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'speed', 'haste', 'buff'] },
     ),
 
     // Oil of Sharpness
-    MagicItem(
-      id: 'item_oil_of_sharpness',
-      name: 'Oil of Sharpness',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Coat Weapon or 5 Ammunition: Grants +3 Bonus to Attack & Damage for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_oil_of_sharpness', ruleset: RulesetVersion.v2024), name: 'Oil of Sharpness',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Apply to weapon or 5 pieces of ammo: grants +3 attack and damage rolls for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Coat a slashing or piercing weapon or up to 5 pieces of ammunition: gains a +3 bonus to attack and damage rolls for 1 hour.',
@@ -295,22 +228,16 @@ class SrdPotionsAndOils {
             'Take 1 minute to coat a weapon or 5 ammunition: grants +3 to attack and damage rolls for 1 hour.',
         activation: '1 Minute to Apply',
       ),
-      isChangedIn2024: false,
-      tags: ['oil', 'sharpness', 'weapon buff', 'damage'],
+      isChangedIn2024: false, tags: ['oil', 'sharpness', 'weapon buff', 'damage'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['oil', 'sharpness', 'weapon buff', 'damage'] },
     ),
 
     // Oil of Slipperiness
-    MagicItem(
-      id: 'item_oil_of_slipperiness',
-      name: 'Oil of Slipperiness',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Freedom of Movement for 8 Hours; Or Pour as 10-ft Square Grease'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_oil_of_slipperiness', ruleset: RulesetVersion.v2024), name: 'Oil of Slipperiness',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Freedom of Movement for 8 hours (applied to body), or creates 10 ft Grease surface for 8 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Apply to creature for Freedom of Movement for 8 hours, or pour on ground to create a 10-foot square Grease spell area for 8 hours.',
@@ -325,21 +252,16 @@ class SrdPotionsAndOils {
             'Apply to body over 10 minutes for 8 hours of Freedom of Movement, or pour as an Action for a permanent 10-ft Grease area.',
         activation: '10 Minutes / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['oil', 'slipperiness', 'freedom of movement', 'grease'],
+      isChangedIn2024: false, tags: ['oil', 'slipperiness', 'freedom of movement', 'grease'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['oil', 'slipperiness', 'freedom of movement', 'grease'] },
     ),
 
     // Potion of Water Breathing
-    MagicItem(
-      id: 'item_potion_of_water_breathing',
-      name: 'Potion of Water Breathing',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Breathe Underwater for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_water_breathing', ruleset: RulesetVersion.v2024), name: 'Potion of Water Breathing',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: breathe underwater for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'You can breathe underwater for 1 hour after drinking this potion.',
@@ -353,26 +275,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gain the ability to breathe underwater for 1 hour.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'water breathing', 'aquatic', 'utility'],
+      ], tags: ['potion', 'water breathing', 'aquatic', 'utility'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'water breathing', 'aquatic', 'utility'] },
     ),
 
     // Potion of Vitality
-    MagicItem(
-      id: 'item_potion_of_vitality',
-      name: 'Potion of Vitality',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Cures Exhaustion, Disease & Poison; Maximizes all Hit Dice rolled for 24 Hours'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_vitality', ruleset: RulesetVersion.v2024), name: 'Potion of Vitality',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Removes all Exhaustion, cures Poisoned/Disease conditions, and maximizes all Hit Dice healing for 24 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Cures all diseases and poison, removes all exhaustion, and maximizes all hit points restored from Hit Dice for the next 24 hours.',
@@ -387,26 +301,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: cleanses all Exhaustion levels and cures all active diseases and poisons. For the next 24 hours, rolling Hit Point Dice automatically restores maximum HP.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'vitality', 'exhaustion', 'disease', 'healing'],
+      ], tags: ['potion', 'vitality', 'exhaustion', 'disease', 'healing'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'vitality', 'exhaustion', 'disease', 'healing'] },
     ),
 
     // Potion of Heroism
-    MagicItem(
-      id: 'item_potion_of_heroism',
-      name: 'Potion of Heroism',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Gain 10 Temp HP & Bless spell effect (+1d4 on Attacks & Saves) for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_heroism', ruleset: RulesetVersion.v2024), name: 'Potion of Heroism',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Gain 10 Temp HP and Bless (+1d4 to attack rolls and saving throws) for 1 hour without concentration.',
       rules2014: ItemEditionDetails(
         summary:
             'For 1 hour after drinking it, you gain 10 temporary hit points that last for 1 hour, and you are under the effect of the Bless spell (no concentration required).',
@@ -421,25 +327,18 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gain 10 Temporary HP and the Bless spell effect for 1 hour (no Concentration required).',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', diffHighlights: [
         '2024: Bonus action drinking.',
-      ],
-      tags: ['potion', 'heroism', 'bless', 'temp hp', 'buff'],
+      ], tags: ['potion', 'heroism', 'bless', 'temp hp', 'buff'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'heroism', 'bless', 'temp hp', 'buff'] },
     ),
 
     // Potion of Animal Friendship
-    MagicItem(
-      id: 'item_potion_of_animal_friendship',
-      name: 'Potion of Animal Friendship',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Cast Animal Friendship (DC 13) for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_animal_friendship', ruleset: RulesetVersion.v2024), name: 'Potion of Animal Friendship',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: cast Animal Friendship (DC 13) for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you can cast the Animal Friendship spell (save DC 13) for 1 hour at will.',
@@ -454,22 +353,16 @@ class SrdPotionsAndOils {
         activation: '1 Bonus Action',
         savingThrowDc: 'Your Spell Save DC or DC 13',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'animal friendship', 'charm', 'beasts'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'animal friendship', 'charm', 'beasts'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'animal friendship', 'charm', 'beasts'] },
     ),
 
     // Potion of Clairvoyance
-    MagicItem(
-      id: 'item_potion_of_clairvoyance',
-      name: 'Potion of Clairvoyance',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Gain Clairvoyance Spell Effect for 10 Minutes'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_clairvoyance', ruleset: RulesetVersion.v2024), name: 'Potion of Clairvoyance',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: gain Clairvoyance for 10 minutes.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain the effect of the Clairvoyance spell for 10 minutes.',
@@ -483,23 +376,16 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action to create an invisible sensor to see or hear a familiar location within 1 mile.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'clairvoyance', 'scrying', 'divination'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'clairvoyance', 'scrying', 'divination'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'clairvoyance', 'scrying', 'divination'] },
     ),
 
     // Potion of Climbing
-    MagicItem(
-      id: 'item_potion_of_climbing',
-      name: 'Potion of Climbing',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.common,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Climb Speed equal to Walk Speed & Advantage on Athletics (Climbing) for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_climbing', ruleset: RulesetVersion.v2024), name: 'Potion of Climbing',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'common', rarityTier: ItemRarity.common,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: gain Climb Speed and Advantage on climbing checks for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain a climbing speed equal to your walking speed for 1 hour and have advantage on Strength (Athletics) checks made to climb.',
@@ -513,23 +399,16 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gain Climb Speed equal to your Speed and Advantage on Athletics checks to climb.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'climbing', 'mobility', 'athletics'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'climbing', 'mobility', 'athletics'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'climbing', 'mobility', 'athletics'] },
     ),
 
     // Potion of Diminution
-    MagicItem(
-      id: 'item_potion_of_diminution',
-      name: 'Potion of Diminution',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Shrink to Half Size / 1/8 Weight for 1d4 Hours (-1d4 Weapon Dmg, Adv on Stealth)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_diminution', ruleset: RulesetVersion.v2024), name: 'Potion of Diminution',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: reduce size category by one for 1d4 hours with advantage on Stealth checks.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain the \'Reduce\' effect of the Enlarge/Reduce spell for 1d4 hours. Dimensions are halved, weight is divided by 8, and weapons deal 1d4 less damage (minimum 1).',
@@ -544,23 +423,16 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: size halves, gaining Advantage on Dexterity (Stealth) checks and fitting into tiny crevices.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'diminution', 'reduce', 'stealth', 'utility'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'diminution', 'reduce', 'stealth', 'utility'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'diminution', 'reduce', 'stealth', 'utility'] },
     ),
 
     // Potion of Gaseous Form
-    MagicItem(
-      id: 'item_potion_of_gaseous_form',
-      name: 'Potion of Gaseous Form',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Gain Gaseous Form for 1 Hour (Fly Speed 10 ft, Damage Resistance, Pass Tiny Cracks)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_gaseous_form', ruleset: RulesetVersion.v2024), name: 'Potion of Gaseous Form',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: transform into a misty cloud for 1 hour without concentration.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain the effect of the Gaseous Form spell for 1 hour (no concentration required) or until you dismiss it as a bonus action.',
@@ -575,23 +447,16 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gain Fly Speed 10 ft, Resistance to nonmagical damage, and pass through any opening where air can pass.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'gaseous form', 'mist', 'infiltrate', 'defense'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'gaseous form', 'mist', 'infiltrate', 'defense'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'gaseous form', 'mist', 'infiltrate', 'defense'] },
     ),
 
     // Potion of Growth
-    MagicItem(
-      id: 'item_potion_of_growth',
-      name: 'Potion of Growth',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Enlarge Size for 1d4 Hours (+1d4 Weapon Damage & Adv on STR Checks/Saves)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_growth', ruleset: RulesetVersion.v2024), name: 'Potion of Growth',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: increase size by one category for 1d4 hours (+1d4 damage on weapon attacks).',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain the \'Enlarge\' effect of the Enlarge/Reduce spell for 1d4 hours. Your size doubles in all dimensions, weight is multiplied by 8, and weapon attacks deal an extra 1d4 damage.',
@@ -605,22 +470,16 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: grow to Large (or Huge), gaining +1d4 weapon damage and Advantage on Strength checks and saves.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'growth', 'enlarge', 'damage bonus', 'strength'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'growth', 'enlarge', 'damage bonus', 'strength'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'growth', 'enlarge', 'damage bonus', 'strength'] },
     ),
 
     // Potion of Invulnerability
-    MagicItem(
-      id: 'item_potion_of_invulnerability',
-      name: 'Potion of Invulnerability',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Gain Resistance to ALL Damage for 1 Minute'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_invulnerability', ruleset: RulesetVersion.v2024), name: 'Potion of Invulnerability',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: gain Resistance to ALL damage types for 1 minute.',
       rules2014: ItemEditionDetails(
         summary:
             'For 1 minute after you drink this potion, you have resistance to all damage.',
@@ -634,23 +493,16 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: gives comprehensive 50% damage reduction across every single damage type for 1 full minute.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'invulnerability', 'resistance', 'tank', 'defense'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'invulnerability', 'resistance', 'tank', 'defense'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'invulnerability', 'resistance', 'tank', 'defense'] },
     ),
 
     // Potion of Longevity
-    MagicItem(
-      id: 'item_potion_of_longevity',
-      name: 'Potion of Longevity',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Reduces Physical Age by 1d6 + 6 Years (10% Cumulative Aging Risk)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_longevity', ruleset: RulesetVersion.v2024), name: 'Potion of Longevity',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Reduces physical age by 1d6 + 6 years. Repeated drinks have cumulative 10% aging risk.',
       rules2014: ItemEditionDetails(
         summary:
             'Drinking this potion reduces your physical age by 1d6 + 6 years (to a minimum of 13 years). Each subsequent potion drunk has a cumulative 10% chance to AGE you by 1d6 + 6 years instead.',
@@ -666,20 +518,15 @@ class SrdPotionsAndOils {
         activation: '1 Action',
       ),
       tags: ['potion', 'longevity', 'youth', 'age'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'longevity', 'youth', 'age'] },
     ),
 
     // Potion of Mind Reading
-    MagicItem(
-      id: 'item_potion_of_mind_reading',
-      name: 'Potion of Mind Reading',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Gain Detect Thoughts Spell Effect for 1 Hour (DC 13 / Caster DC)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_mind_reading', ruleset: RulesetVersion.v2024), name: 'Potion of Mind Reading',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: gain Detect Thoughts for 1 hour using your own Spell Save DC or DC 13.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain the effect of the Detect Thoughts spell (save DC 13) for 1 hour.',
@@ -696,30 +543,22 @@ class SrdPotionsAndOils {
         activation: '1 Bonus Action',
         savingThrowDc: 'Your Spell Save DC or DC 13',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: [
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: [
         'potion',
         'mind reading',
         'detect thoughts',
         'telepathy',
         'psychic'
       ],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'mind reading', 'detect thoughts', 'telepathy', 'psychic'] },
     ),
 
     // Potion of Poison
-    MagicItem(
-      id: 'item_potion_of_poison',
-      name: 'Potion of Poison',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.poison,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Deals 3d6 Poison Damage & Poisoned Condition (DC 13 CON Save at Turn Start for 3d6 per round)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_poison', ruleset: RulesetVersion.v2024), name: 'Potion of Poison',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Disguised poison potion dealing 3d6 poison damage and continuous Poisoned condition on DC 13 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             'Deceptively looks, smells, and tastes like a Potion of Healing. When drunk, deals 3d6 poison damage and forces DC 13 Con save or poisoned condition, taking 3d6 poison at turn start until saved.',
@@ -736,20 +575,15 @@ class SrdPotionsAndOils {
         savingThrowDc: 'Fixed DC 13',
       ),
       tags: ['potion', 'poison', 'trap', 'debuff', 'cursed'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'poison', 'trap', 'debuff', 'cursed'] },
     ),
 
     // Potion of Resistance
-    MagicItem(
-      id: 'item_potion_of_resistance',
-      name: 'Potion of Resistance',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to 1 Damage Type (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, Thunder) for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_potion_of_resistance', ruleset: RulesetVersion.v2024), name: 'Potion of Resistance',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: gain Resistance to one designated damage type for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, you gain resistance to one type of damage for 1 hour (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, or Thunder).',
@@ -764,23 +598,16 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: grants 1 hour of Resistance to an elemental or energy damage type.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'resistance', 'elemental', 'defense'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'resistance', 'elemental', 'defense'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'resistance', 'elemental', 'defense'] },
     ),
 
     // Oil of Etherealness
-    MagicItem(
-      id: 'item_oil_of_etherealness',
-      name: 'Oil of Etherealness',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Apply in 10 Minutes: Gain Etherealness Spell Effect for 1 Hour'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_oil_of_etherealness', ruleset: RulesetVersion.v2024), name: 'Oil of Etherealness',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Apply in 10 minutes for 1 hour of Etherealness border plane phasing.',
       rules2014: ItemEditionDetails(
         summary:
             'Takes 10 minutes to apply to a Medium or smaller creature. Gains the effect of the Etherealness spell for 1 hour.',
@@ -796,20 +623,15 @@ class SrdPotionsAndOils {
         activation: '10 Minutes to Apply',
       ),
       tags: ['oil', 'etherealness', 'phase', 'infiltrate'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['oil', 'etherealness', 'phase', 'infiltrate'] },
     ),
 
     // Philter of Love
-    MagicItem(
-      id: 'item_philter_of_love',
-      name: 'Philter of Love',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Charmed by Next Creature Seen for 1 Hour (Regards as True Love)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_philter_of_love', ruleset: RulesetVersion.v2024), name: 'Philter of Love',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: charmed by the next creature seen for 1 hour, treating it as true love.',
       rules2014: ItemEditionDetails(
         summary:
             'The next time you see a creature within 10 minutes after drinking this philter, you become charmed by that creature for 1 hour and regard it as your true love.',
@@ -824,23 +646,16 @@ class SrdPotionsAndOils {
             'Enchantment draught inducing romantic devotion toward the first creature perceived.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'charm', 'love', 'enchantment', 'social'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'charm', 'love', 'enchantment', 'social'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'charm', 'love', 'enchantment', 'social'] },
     ),
 
     // Elixir of Health
-    MagicItem(
-      id: 'item_elixir_of_health',
-      name: 'Elixir of Health',
-      category: ItemCategory.potion,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Cures all Diseases, Blindness, Deafness, Paralyzed & Poisoned Conditions'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_elixir_of_health', ruleset: RulesetVersion.v2024), name: 'Elixir of Health',
+      itemType: 'potion', category: ItemCategory.potion, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Bonus Action to drink: cleanses all active diseases and removes Blinded, Deafened, Paralyzed, and Poisoned conditions.',
       rules2014: ItemEditionDetails(
         summary:
             'When you drink this potion, it cures any disease afflicting you, and it removes the blinded, deafened, paralyzed, and poisoned conditions.',
@@ -855,9 +670,8 @@ class SrdPotionsAndOils {
             'Drink as a Bonus Action: instantly ends all disease and major sensory/debilitating conditions.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Drinking is a Bonus Action in 2024.',
-      tags: ['potion', 'elixir', 'cure', 'cleansing', 'healing'],
+      isChangedIn2024: true, diffSummary: 'Drinking is a Bonus Action in 2024.', tags: ['potion', 'elixir', 'cure', 'cleansing', 'healing'],
+      customProperties: { 'cost': null, 'category': 'potion', 'tags': ['potion', 'elixir', 'cure', 'cleansing', 'healing'] },
     ),
   ];
 }

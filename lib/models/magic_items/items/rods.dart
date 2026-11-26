@@ -4,19 +4,13 @@ import '../magic_item_data.dart';
 class SrdMagicRods {
   SrdMagicRods._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // Immovable Rod
-    MagicItem(
-      id: 'item_immovable_rod',
-      name: 'Immovable Rod',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Press Button to Lock in Place (Holds up to 8,000 lbs; DC 30 STR to Move)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_immovable_rod', ruleset: RulesetVersion.v2024), name: 'Immovable Rod',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: lock in place anywhere in space. Holds up to 8,000 lbs (DC 30 Strength check to move).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: press the button to fix the rod in place in mid-air. It defies gravity and holds up to 8,000 pounds of weight (DC 30 Strength check to move 10 ft).',
@@ -31,24 +25,16 @@ class SrdMagicRods {
             'Press the button as an Action to fix the rod in its current position in mid-air. Supports up to 8,000 pounds before deactivating.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'immovable', 'utility', 'climbing', 'physics'],
+      isChangedIn2024: false, tags: ['rod', 'immovable', 'utility', 'climbing', 'physics'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'immovable', 'utility', 'climbing', 'physics'] },
     ),
 
     // Rod of the Pact Keeper (+1 / +2 / +3)
-    MagicItem(
-      id: 'item_rod_of_the_pact_keeper_plus_1',
-      name: 'Rod of the Pact Keeper +1',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.uncommon,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Warlock',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+1 to Warlock Spell Attack Rolls & Spell Save DC; Action: Regain 1 Warlock Spell Slot (1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_the_pact_keeper_plus_1', ruleset: RulesetVersion.v2024), name: 'Rod of the Pact Keeper +1',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: true, attunementRequirement: 'by a Warlock',
+      descriptionMarkdown: '+1 to Warlock Spell Attacks and Spell Save DC; Action: regain 1 Warlock spell slot once per Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this rod, you gain a +1 bonus to spell attack rolls and to the saving throw DCs of your warlock spells. Regain 1 warlock spell slot as an action once per day.',
@@ -63,22 +49,14 @@ class SrdMagicRods {
             'Grants +1 bonus to Warlock spell attack rolls and Spell Save DC. Action: regain 1 expended Warlock spell slot (once per Long Rest).',
         activation: 'Passive / 1 Action (1/Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'],
+      isChangedIn2024: false, tags: ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'], 'bonusSpellAttack': 1, 'bonusSpellSaveDc': 1, 'spellDcBonus': 1, 'spellClass': 'warlock' },
     ),
-    MagicItem(
-      id: 'item_rod_of_the_pact_keeper_plus_2',
-      name: 'Rod of the Pact Keeper +2',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Warlock',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+2 to Warlock Spell Attack Rolls & Spell Save DC; Action: Regain 1 Warlock Spell Slot (1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_the_pact_keeper_plus_2', ruleset: RulesetVersion.v2024), name: 'Rod of the Pact Keeper +2',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Warlock',
+      descriptionMarkdown: '+2 to Warlock Spell Attacks and Spell Save DC; Action: regain 1 Warlock spell slot once per Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this rod, you gain a +2 bonus to spell attack rolls and to the saving throw DCs of your warlock spells. Regain 1 warlock spell slot once per day.',
@@ -93,22 +71,14 @@ class SrdMagicRods {
             'Grants +2 bonus to Warlock spell attack rolls and Spell Save DC. Action: regain 1 expended Warlock spell slot (once per Long Rest).',
         activation: 'Passive / 1 Action (1/Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'],
+      isChangedIn2024: false, tags: ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'], 'bonusSpellAttack': 2, 'bonusSpellSaveDc': 2, 'spellDcBonus': 2, 'spellClass': 'warlock' },
     ),
-    MagicItem(
-      id: 'item_rod_of_the_pact_keeper_plus_3',
-      name: 'Rod of the Pact Keeper +3',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.veryRare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Warlock',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+3 to Warlock Spell Attack Rolls & Spell Save DC; Action: Regain 1 Warlock Spell Slot (1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_the_pact_keeper_plus_3', ruleset: RulesetVersion.v2024), name: 'Rod of the Pact Keeper +3',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: true, attunementRequirement: 'by a Warlock',
+      descriptionMarkdown: '+3 to Warlock Spell Attacks and Spell Save DC; Action: regain 1 Warlock spell slot once per Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this rod, you gain a +3 bonus to spell attack rolls and to the saving throw DCs of your warlock spells. Regain 1 warlock spell slot once per day.',
@@ -123,23 +93,16 @@ class SrdMagicRods {
             'Grants +3 bonus to Warlock spell attack rolls and Spell Save DC. Action: regain 1 expended Warlock spell slot (once per Long Rest).',
         activation: 'Passive / 1 Action (1/Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'],
+      isChangedIn2024: false, tags: ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'warlock', 'spell slot', 'dc bonus', 'spellcaster'], 'bonusSpellAttack': 3, 'bonusSpellSaveDc': 3, 'spellDcBonus': 3, 'spellClass': 'warlock' },
     ),
 
     // Rod of Absorption
-    MagicItem(
-      id: 'item_rod_of_absorption',
-      name: 'Rod of Absorption',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_absorption', ruleset: RulesetVersion.v2024), name: 'Rod of Absorption',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Reaction: Absorb Incoming Spells (Up to 50 Levels Total) & Convert into Spell Slots'),
-      ],
+      descriptionMarkdown: 'Reaction: absorb targeted spells up to 50 levels total in rod\'s lifetime and convert to free spell slots.',
       rules2014: ItemEditionDetails(
         summary:
             'Reaction: absorb spells targeted only at you, nullifying their effect and storing the spell levels (up to 50 levels max) to convert into free spell slots.',
@@ -154,23 +117,16 @@ class SrdMagicRods {
             'Reaction to counter and absorb targeted spells. Stored energy powers your own spell slots without using your personal spell slots.',
         activation: '1 Reaction / Free Action',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'absorption', 'counterspell', 'spell slots', 'spellcaster'],
+      isChangedIn2024: false, tags: ['rod', 'absorption', 'counterspell', 'spell slots', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'absorption', 'counterspell', 'spell slots', 'spellcaster'] },
     ),
 
     // Rod of Alertness
-    MagicItem(
-      id: 'item_rod_of_alertness',
-      name: 'Rod of Alertness',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_alertness', ruleset: RulesetVersion.v2024), name: 'Rod of Alertness',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Advantage on Initiative, Perception & Insight; Cast Detect Evil/Good, Magic, Poison/Disease, See Invisibility; Action: 10-ft Protective Aura'),
-      ],
+      descriptionMarkdown: '+1 Mace; Advantage on Initiative, Perception, Insight; Divination spells; Action: plant rod for 60 ft +1 AC and Save aura.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 mace granting advantage on Initiative and Wisdom checks. Can cast Detect Evil and Good, Detect Magic, Detect Poison and Disease, and See Invisibility. Action: plant rod to create 120-ft aura granting +1 AC and advantage on all saves.',
@@ -186,23 +142,16 @@ class SrdMagicRods {
         activation: 'Passive / 1 Action',
         masteryProperties: 'Sap',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'mace', 'alertness', 'initiative', 'aura', 'divination'],
+      isChangedIn2024: false, tags: ['rod', 'mace', 'alertness', 'initiative', 'aura', 'divination'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'mace', 'alertness', 'initiative', 'aura', 'divination'] },
     ),
 
     // Rod of Lordly Might
-    MagicItem(
-      id: 'item_rod_of_lordly_might',
-      name: 'Rod of Lordly Might',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_lordly_might', ruleset: RulesetVersion.v2024), name: 'Rod of Lordly Might',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Transforms into +3 Flail, +3 Spear, or +3 Battleaxe; Climbing Pole, Battering Ram, Drain Life 4d6, DC 17 Fear & Paralyze'),
-      ],
+      descriptionMarkdown: 'Multifunctional +2/+3 weapon; transforms into flail, spear, battleaxe, ladder, or ram. Life drain, paralysis, and fear effects.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 mace with 6 mechanical transformation buttons (transforms into +3 Flame Tongue Flail, +3 Spear, +3 Battleaxe, 50-ft Climbing Pole, or Battering Ram) and 3 spell powers (Drain 4d6 HP, DC 17 Paralysis, DC 17 Frighten).',
@@ -220,23 +169,16 @@ class SrdMagicRods {
         savingThrowDc: 'Fixed DC 17',
         masteryProperties: 'Vex / Topple / Cleave / Sap',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'weapon', 'transform', 'versatile', 'legendary'],
+      isChangedIn2024: false, tags: ['rod', 'weapon', 'transform', 'versatile', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'weapon', 'transform', 'versatile', 'legendary'], 'isWeapon': true, 'defaultSlot': EquipmentSlot.mainHand },
     ),
 
     // Rod of Rulership
-    MagicItem(
-      id: 'item_rod_of_rulership',
-      name: 'Rod of Rulership',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_rulership', ruleset: RulesetVersion.v2024), name: 'Rod of Rulership',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Charm all creatures within 120 ft for 8 Hours (DC 15 WIS Save; 1/Day)'),
-      ],
+      descriptionMarkdown: 'Action: Charm all chosen creatures in 120 ft for 8 hours on failed DC 15 Wisdom save (1/Long Rest).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: speak command word to charm all creatures within 120 feet for 8 hours (DC 15 Wisdom save). Charmed creatures regard you as their trusted leader.',
@@ -253,22 +195,16 @@ class SrdMagicRods {
         activation: '1 Action (1/Long Rest)',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: ['rod', 'charm', 'command', 'social', 'enchantment'],
+      isChangedIn2024: false, tags: ['rod', 'charm', 'command', 'social', 'enchantment'],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'charm', 'command', 'social', 'enchantment'] },
     ),
 
     // Rod of Security
-    MagicItem(
-      id: 'item_rod_of_security',
-      name: 'Rod of Security',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Transport up to 200 Creatures to Paradise Demiplane for up to 200 Days'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_security', ruleset: RulesetVersion.v2024), name: 'Rod of Security',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: transport up to 200 creatures to a tranquil, restorative demiplane paradise.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: transport yourself and up to 199 other willing creatures to a tranquil extradimensional paradise demiplane for up to 200 days (10 days recharge per day spent in paradise).',
@@ -291,22 +227,15 @@ class SrdMagicRods {
         'sanctuary',
         'utility'
       ],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'security', 'demiplane', 'teleport', 'sanctuary', 'utility'] },
     ),
 
     // Rod of Resurrection
-    MagicItem(
-      id: 'item_rod_of_resurrection',
-      name: 'Rod of Resurrection',
-      category: ItemCategory.rod,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Cleric, Druid, or Paladin',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label:
-                '5 Charges: Cast Heal (1 charge) or Resurrection (5 charges; 5% Destruction Risk)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_rod_of_resurrection', ruleset: RulesetVersion.v2024), name: 'Rod of Resurrection',
+      itemType: 'rod', category: ItemCategory.rod, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'by a Cleric, Druid, or Paladin',
+      descriptionMarkdown: '5 charges: cast Heal (1 charge) or Resurrection (5 charges). Essential divine restoration staff.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 5 charges. Cast Heal (6th level) for 1 charge or Resurrection (7th level) for 5 charges. 5% chance of rod crumbling to dust when 0 charges remain.',
@@ -334,6 +263,7 @@ class SrdMagicRods {
         'paladin',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'rod', 'tags': ['rod', 'resurrection', 'heal', 'life', 'divine', 'cleric', 'druid', 'paladin', 'legendary'] },
     ),
   ];
 }

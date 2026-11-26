@@ -4,18 +4,13 @@ import '../magic_item_data.dart';
 class SrdWondrousItems {
   SrdWondrousItems._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // Bag of Holding
-    MagicItem(
-      id: 'item_bag_of_holding',
-      name: 'Bag of Holding',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Holds 500 lbs / 64 cu ft (Weighs 15 lbs)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bag_of_holding', ruleset: RulesetVersion.v2024), name: 'Bag of Holding',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Extradimensional space holding up to 500 lbs / 64 cu ft. Breathing creatures have 10 minutes of air.',
       rules2014: ItemEditionDetails(
         summary:
             'Opens into an extradimensional space holding up to 500 pounds and 64 cubic feet while weighing 15 pounds.',
@@ -30,22 +25,16 @@ class SrdWondrousItems {
             'An extradimensional container that holds up to 500 pounds and 64 cubic feet while weighing only 15 pounds. Overloading, puncturing, or placing inside another extradimensional space destroys the bag and opens a portal to the Astral Plane.',
         activation: '1 Action / Object Interaction',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'bag', 'storage', 'extradimensional', 'utility'],
+      isChangedIn2024: false, tags: ['wondrous', 'bag', 'storage', 'extradimensional', 'utility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bag', 'storage', 'extradimensional', 'utility'] },
     ),
 
     // Cloak of Protection
-    MagicItem(
-      id: 'item_cloak_of_protection',
-      name: 'Cloak of Protection',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_cloak_of_protection', ruleset: RulesetVersion.v2024), name: 'Cloak of Protection',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+1 to AC & Saving Throws'),
-      ],
+      descriptionMarkdown: 'You gain a +1 bonus to AC and all saving throws while wearing this cloak.',
       rules2014: ItemEditionDetails(
         summary:
             'You gain a +1 bonus to AC and saving throws while you wear this cloak.',
@@ -60,21 +49,16 @@ class SrdWondrousItems {
             'You gain a +1 bonus to AC and all saving throws while wearing this cloak.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'cloak', 'ac', 'defense'],
+      isChangedIn2024: false, tags: ['wondrous', 'cloak', 'ac', 'defense'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cloak', 'ac', 'defense'], 'bonusAc': 1, 'acBonus': 1 },
     ),
 
     // Deck of Many Things
-    MagicItem(
-      id: 'item_deck_of_many_things',
-      name: 'Deck of Many Things',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label: 'Draw Fate-Altering Arcane Cards'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_deck_of_many_things', ruleset: RulesetVersion.v2024), name: 'Deck of Many Things',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Iconic deck of fate-altering cards updated with modernized conditions and escape mechanics for catastrophic cards.',
       rules2014: ItemEditionDetails(
         summary:
             'Deck of 13 or 22 cards containing cosmic fortunes, instant destruction, demon enmities, and wish grants.',
@@ -89,28 +73,18 @@ class SrdWondrousItems {
             'The 2024 Deck of Many Things refines classic card mechanics to provide engaging gameplay counters and clearer resolution steps while preserving epic legendary stakes.',
         activation: '1 Action (Declare & Draw)',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Catastrophic cards (Donjon, Void) given clearer resolution and rescue mechanics.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Catastrophic cards (Donjon, Void) given clearer resolution and rescue mechanics.', diffHighlights: [
         '2024: Card mechanics modernized to prevent non-interactive permanent character loss.',
-      ],
-      tags: ['wondrous', 'deck', 'cards', 'fate', 'legendary'],
+      ], tags: ['wondrous', 'deck', 'cards', 'fate', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'deck', 'cards', 'fate', 'legendary'] },
     ),
 
     // Boots of Speed
-    MagicItem(
-      id: 'item_boots_of_speed',
-      name: 'Boots of Speed',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_boots_of_speed', ruleset: RulesetVersion.v2024), name: 'Boots of Speed',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Bonus Action: Double Speed & Opportunity Disadvantage (10 Min)'),
-      ],
+      descriptionMarkdown: 'Bonus Action: doubles Speed for up to 10 minutes and gives Opportunity Attacks Disadvantage against you.',
       rules2014: ItemEditionDetails(
         summary:
             'Use a bonus action to click heels: doubles walking speed for 10 minutes and opportunity attacks against you have disadvantage.',
@@ -125,22 +99,16 @@ class SrdWondrousItems {
             'Click heels as a Bonus Action: doubles your Speed for up to 10 minutes (can be used in 1-minute increments). Opportunity Attacks against you have Disadvantage. Regains all expended time on a Long Rest.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'boots', 'speed', 'mobility'],
+      isChangedIn2024: false, tags: ['wondrous', 'boots', 'speed', 'mobility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'boots', 'speed', 'mobility'] },
     ),
 
     // Winged Boots
-    MagicItem(
-      id: 'item_winged_boots',
-      name: 'Winged Boots',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_winged_boots', ruleset: RulesetVersion.v2024), name: 'Winged Boots',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Flying Speed equal to Walking Speed (Up to 4 Hours)'),
-      ],
+      descriptionMarkdown: 'Grants a Fly Speed equal to your Speed for up to 4 hours (recharges on Long Rest).',
       rules2014: ItemEditionDetails(
         summary:
             'While you wear these boots, you have a flying speed equal to your walking speed for up to 4 hours per day.',
@@ -155,22 +123,16 @@ class SrdWondrousItems {
             'Grants a Fly Speed equal to your Speed for up to 4 hours (increments of 1 minute). Regains 2 hours of flight per Long Rest.',
         activation: 'Passive / Movement',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'boots', 'flight', 'mobility'],
+      isChangedIn2024: false, tags: ['wondrous', 'boots', 'flight', 'mobility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'boots', 'flight', 'mobility'] },
     ),
 
     // Belt of Giant Strength
-    MagicItem(
-      id: 'item_belt_of_giant_strength',
-      name: 'Belt of Giant Strength',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_belt_of_giant_strength', ruleset: RulesetVersion.v2024), name: 'Belt of Giant Strength',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Sets Strength to 21, 23, 25, 27, or 29'),
-      ],
+      descriptionMarkdown: 'Sets your Strength score to a fixed score based on giant tier (Hill 21 to Storm 29).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this belt, your Strength score changes to a fixed high score (Hill 21, Stone/Frost 23, Fire 25, Cloud 27, Storm 29).',
@@ -185,22 +147,16 @@ class SrdWondrousItems {
             'While wearing this belt, your Strength score equals 21 (Hill, Rare), 23 (Stone/Frost, Very Rare), 25 (Fire, Very Rare), 27 (Cloud, Legendary), or 29 (Storm, Legendary). Has no effect if your Strength is already higher.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'belt', 'strength', 'giant', 'stat boost'],
+      isChangedIn2024: false, tags: ['wondrous', 'belt', 'strength', 'giant', 'stat boost'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'belt', 'strength', 'giant', 'stat boost'] },
     ),
 
     // Amulet of Health
-    MagicItem(
-      id: 'item_amulet_of_health',
-      name: 'Amulet of Health',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_amulet_of_health', ruleset: RulesetVersion.v2024), name: 'Amulet of Health',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Sets Constitution Score to 19 (+4 Mod)'),
-      ],
+      descriptionMarkdown: 'Sets your Constitution score to 19 (+4 mod) while worn.',
       rules2014: ItemEditionDetails(
         summary:
             'Your Constitution score is 19 while you wear this amulet. Has no effect if your Constitution is already 19 or higher.',
@@ -214,22 +170,16 @@ class SrdWondrousItems {
             'While wearing this amulet, your Constitution score equals 19. Has no effect if your Constitution is already 19 or higher.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'amulet', 'constitution', 'hp', 'stat boost'],
+      isChangedIn2024: false, tags: ['wondrous', 'amulet', 'constitution', 'hp', 'stat boost'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'amulet', 'constitution', 'hp', 'stat boost'] },
     ),
 
     // Headband of Intellect
-    MagicItem(
-      id: 'item_headband_of_intellect',
-      name: 'Headband of Intellect',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_headband_of_intellect', ruleset: RulesetVersion.v2024), name: 'Headband of Intellect',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Sets Intelligence Score to 19 (+4 Mod)'),
-      ],
+      descriptionMarkdown: 'Sets Intelligence score to 19 (+4 mod) while worn.',
       rules2014: ItemEditionDetails(
         summary:
             'Your Intelligence score is 19 while you wear this headband. Has no effect if your Intelligence is already 19 or higher.',
@@ -243,22 +193,16 @@ class SrdWondrousItems {
             'While wearing this headband, your Intelligence score equals 19. Has no effect if your Intelligence is already 19 or higher.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'headband', 'intelligence', 'stat boost'],
+      isChangedIn2024: false, tags: ['wondrous', 'headband', 'intelligence', 'stat boost'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'headband', 'intelligence', 'stat boost'] },
     ),
 
     // Gauntlets of Ogre Power
-    MagicItem(
-      id: 'item_gauntlets_of_ogre_power',
-      name: 'Gauntlets of Ogre Power',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_gauntlets_of_ogre_power', ruleset: RulesetVersion.v2024), name: 'Gauntlets of Ogre Power',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Sets Strength Score to 19 (+4 Mod)'),
-      ],
+      descriptionMarkdown: 'Sets Strength score to 19 (+4 mod) while worn.',
       rules2014: ItemEditionDetails(
         summary:
             'Your Strength score is 19 while you wear these gauntlets. Has no effect if your Strength is already 19 or higher.',
@@ -272,22 +216,16 @@ class SrdWondrousItems {
             'While wearing these gauntlets, your Strength score equals 19. Has no effect if your Strength is already 19 or higher.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'gauntlets', 'strength', 'stat boost'],
+      isChangedIn2024: false, tags: ['wondrous', 'gauntlets', 'strength', 'stat boost'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gauntlets', 'strength', 'stat boost'] },
     ),
 
     // Bracers of Archery
-    MagicItem(
-      id: 'item_bracers_of_archery',
-      name: 'Bracers of Archery',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_bracers_of_archery', ruleset: RulesetVersion.v2024), name: 'Bracers of Archery',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+2 Damage with Longbows & Shortbows; Bow Proficiency'),
-      ],
+      descriptionMarkdown: 'Proficiency with Longbow and Shortbow; +2 damage on attacks made with those weapons.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants proficiency with longbows and shortbows, and a +2 bonus to damage rolls with ranged attacks made with them.',
@@ -302,22 +240,16 @@ class SrdWondrousItems {
             'Grants proficiency with the Longbow and Shortbow and adds a +2 bonus to damage rolls made with them.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'bracers', 'archery', 'bow', 'damage'],
+      isChangedIn2024: false, tags: ['wondrous', 'bracers', 'archery', 'bow', 'damage'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bracers', 'archery', 'bow', 'damage'] },
     ),
 
     // Bracers of Defense
-    MagicItem(
-      id: 'item_bracers_of_defense',
-      name: 'Bracers of Defense',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_bracers_of_defense', ruleset: RulesetVersion.v2024), name: 'Bracers of Defense',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+2 to AC while Wearing No Armor and No Shield'),
-      ],
+      descriptionMarkdown: '+2 bonus to AC while not wearing armor or wielding a shield.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing these bracers, you gain a +2 bonus to AC if you are wearing no armor and using no shield.',
@@ -331,23 +263,16 @@ class SrdWondrousItems {
             'You gain a +2 bonus to AC while wearing these bracers if you are wearing no armor and wielding no Shield.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'bracers', 'ac', 'defense', 'monk', 'wizard'],
+      isChangedIn2024: false, tags: ['wondrous', 'bracers', 'ac', 'defense', 'monk', 'wizard'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bracers', 'ac', 'defense', 'monk', 'wizard'] },
     ),
 
     // Cloak of Elvenkind
-    MagicItem(
-      id: 'item_cloak_of_elvenkind',
-      name: 'Cloak of Elvenkind',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_cloak_of_elvenkind', ruleset: RulesetVersion.v2024), name: 'Cloak of Elvenkind',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Advantage on Stealth & Disadvantage on Perception to see you'),
-      ],
+      descriptionMarkdown: 'Advantage on Stealth checks and Disadvantage on Perception checks made to spot you.',
       rules2014: ItemEditionDetails(
         summary:
             'While you wear this cloak with its hood up, Wisdom (Perception) checks made to see you have disadvantage, and you have advantage on Dexterity (Stealth) checks made to hide.',
@@ -362,22 +287,16 @@ class SrdWondrousItems {
             'While wearing this cloak with its hood up, you have Advantage on Dexterity (Stealth) checks, and Wisdom (Perception) checks made to see you have Disadvantage.',
         activation: '1 Action / Bonus Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'cloak', 'stealth', 'elvenkind'],
+      isChangedIn2024: false, tags: ['wondrous', 'cloak', 'stealth', 'elvenkind'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cloak', 'stealth', 'elvenkind'] },
     ),
 
     // Cloak of Invisibility
-    MagicItem(
-      id: 'item_cloak_of_invisibility',
-      name: 'Cloak of Invisibility',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_cloak_of_invisibility', ruleset: RulesetVersion.v2024), name: 'Cloak of Invisibility',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action: Become Invisible (Up to 2 Hours Total)'),
-      ],
+      descriptionMarkdown: 'Action: become Invisible for up to 2 hours (recharges on Long Rest).',
       rules2014: ItemEditionDetails(
         summary:
             'Pull up the hood as an action to become invisible for up to 2 hours (recharges 1 hour per 12 hours unused).',
@@ -392,23 +311,16 @@ class SrdWondrousItems {
             'Pull the hood up as an Action to gain the Invisible condition for up to 2 hours. Regains all expended time on a Long Rest.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'cloak', 'invisibility', 'legendary', 'stealth'],
+      isChangedIn2024: false, tags: ['wondrous', 'cloak', 'invisibility', 'legendary', 'stealth'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cloak', 'invisibility', 'legendary', 'stealth'] },
     ),
 
     // Cloak of the Bat
-    MagicItem(
-      id: 'item_cloak_of_the_bat',
-      name: 'Cloak of the Bat',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_cloak_of_the_bat', ruleset: RulesetVersion.v2024), name: 'Cloak of the Bat',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Advantage on Stealth; Fly 40 ft in Dim Light / Darkness; Polymorph into Bat'),
-      ],
+      descriptionMarkdown: 'Advantage on Stealth; Fly 40 ft in Dim Light/Darkness; cast Polymorph (Bat only) once per Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'Advantage on Stealth checks. In dim light or darkness, grants flying speed of 40 feet and ability to cast Polymorph on yourself to become a bat.',
@@ -423,22 +335,16 @@ class SrdWondrousItems {
             'Grants Advantage on Stealth checks, Fly Speed 40 ft in darkness/dim light while holding the cloak with both hands, and cast Polymorph on yourself (Bat) once per Long Rest.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'cloak', 'bat', 'stealth', 'fly', 'polymorph'],
+      isChangedIn2024: false, tags: ['wondrous', 'cloak', 'bat', 'stealth', 'fly', 'polymorph'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cloak', 'bat', 'stealth', 'fly', 'polymorph'] },
     ),
 
     // Driftglobe
-    MagicItem(
-      id: 'item_driftglobe',
-      name: 'Driftglobe',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Light spell at will; Daylight spell (1/Day); Floats and follows within 60 ft'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_driftglobe', ruleset: RulesetVersion.v2024), name: 'Driftglobe',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: cast Light at will, Daylight once per Long Rest, and commands the globe to hover and follow you.',
       rules2014: ItemEditionDetails(
         summary:
             'Cast Light at will, Daylight once per day, and command the globe to hover and follow you within 60 feet.',
@@ -453,22 +359,16 @@ class SrdWondrousItems {
             'Glass sphere that casts Light at will, Daylight (1/Long Rest), and hovers alongside you within 60 feet.',
         activation: '1 Action / Bonus Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'driftglobe', 'light', 'utility'],
+      isChangedIn2024: false, tags: ['wondrous', 'driftglobe', 'light', 'utility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'driftglobe', 'light', 'utility'] },
     ),
 
     // Goggles of Night
-    MagicItem(
-      id: 'item_goggles_of_night',
-      name: 'Goggles of Night',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Darkvision out to 60 ft (or +60 ft if you already have it)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_goggles_of_night', ruleset: RulesetVersion.v2024), name: 'Goggles of Night',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Grants Darkvision with a range of 60 feet (or increases existing Darkvision range by 60 feet).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing these dark lenses, you have darkvision out to a range of 60 feet. If you already have darkvision, wearing the goggles increases its range by 60 feet.',
@@ -483,22 +383,16 @@ class SrdWondrousItems {
             'While wearing these goggles, you have Darkvision out to 60 feet (or +60 ft to your existing Darkvision).',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'goggles', 'darkvision', 'utility'],
+      isChangedIn2024: false, tags: ['wondrous', 'goggles', 'darkvision', 'utility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'goggles', 'darkvision', 'utility'] },
     ),
 
     // Hat of Disguise
-    MagicItem(
-      id: 'item_hat_of_disguise',
-      name: 'Hat of Disguise',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_hat_of_disguise', ruleset: RulesetVersion.v2024), name: 'Hat of Disguise',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Cast Disguise Self at Will (Action)'),
-      ],
+      descriptionMarkdown: 'Action: cast Disguise Self at will while wearing this hat.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this hat, you can use an action to cast the Disguise Self spell from it at will. The spell ends if the hat is removed.',
@@ -512,24 +406,16 @@ class SrdWondrousItems {
             'Cast Disguise Self at will as an Action. The spell ends if the hat is taken off.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'hat', 'disguise', 'illusion'],
+      isChangedIn2024: false, tags: ['wondrous', 'hat', 'disguise', 'illusion'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'hat', 'disguise', 'illusion'] },
     ),
 
     // Necklace of Fireballs
-    MagicItem(
-      id: 'item_necklace_of_fireballs',
-      name: 'Necklace of Fireballs',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            damageType: DamageAccent.fire,
-            label:
-                'Detachable Beads (1d6+3): Throw up to 60 ft for 8d6+ Fireball'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_necklace_of_fireballs', ruleset: RulesetVersion.v2024), name: 'Necklace of Fireballs',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: throw beads up to 60 ft to detonate as Fireball (8d6 Fire + 1d6 per extra bead thrown).',
       rules2014: ItemEditionDetails(
         summary:
             'This necklace has 1d6 + 3 beads. Detach and throw 1 or more beads up to 60 feet: each bead casts Fireball (3rd level + 1 level per additional bead).',
@@ -546,23 +432,16 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'necklace', 'fireball', 'fire', 'aoe', 'consumable'],
+      isChangedIn2024: false, tags: ['wondrous', 'necklace', 'fireball', 'fire', 'aoe', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'necklace', 'fireball', 'fire', 'aoe', 'consumable'] },
     ),
 
     // Necklace of Adaptation
-    MagicItem(
-      id: 'item_necklace_of_adaptation',
-      name: 'Necklace of Adaptation',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_necklace_of_adaptation', ruleset: RulesetVersion.v2024), name: 'Necklace of Adaptation',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Breathe normally in any environment; Advantage on saves vs harmful gases & vapors'),
-      ],
+      descriptionMarkdown: 'Breathe in any environment; Advantage on saves against gases, vapors, and inhalation hazards.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this necklace, you can breathe normally in any environment, and you have advantage on saving throws made against harmful gases and vapors.',
@@ -577,23 +456,16 @@ class SrdWondrousItems {
             'Grants continuous breathing in water, vacuum, or toxic atmospheres, and Advantage on saving throws vs noxious gases.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'necklace', 'breathing', 'adaptation', 'survival'],
+      isChangedIn2024: false, tags: ['wondrous', 'necklace', 'breathing', 'adaptation', 'survival'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'necklace', 'breathing', 'adaptation', 'survival'] },
     ),
 
     // Periapt of Wound Closure
-    MagicItem(
-      id: 'item_periapt_of_wound_closure',
-      name: 'Periapt of Wound Closure',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_periapt_of_wound_closure', ruleset: RulesetVersion.v2024), name: 'Periapt of Wound Closure',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Stabilize at start of turn at 0 HP; Double HP regained from Hit Dice'),
-      ],
+      descriptionMarkdown: 'Automatic stabilization when dying; doubles all HP restored from Hit Point Dice during Short Rests.',
       rules2014: ItemEditionDetails(
         summary:
             'While you wear this pendant, you stabilize whenever you are dying at the start of your turn. In addition, whenever you roll a Hit Die to regain hit points, double the number of hit points it restores.',
@@ -608,22 +480,16 @@ class SrdWondrousItems {
             'Stabilizes you automatically at the start of your turn if at 0 HP. Doubles HP recovered when rolling Hit Point Dice.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'periapt', 'healing', 'stabilize', 'hit dice'],
+      isChangedIn2024: false, tags: ['wondrous', 'periapt', 'healing', 'stabilize', 'hit dice'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'periapt', 'healing', 'stabilize', 'hit dice'] },
     ),
 
     // Portable Hole
-    MagicItem(
-      id: 'item_portable_hole',
-      name: 'Portable Hole',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Opens 10-ft deep extradimensional cylindrical space (6 ft diameter)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_portable_hole', ruleset: RulesetVersion.v2024), name: 'Portable Hole',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Extradimensional hole 6 ft wide by 10 ft deep that folds up into a handkerchief-sized cloth.',
       rules2014: ItemEditionDetails(
         summary:
             'Unfolds into a circular 6-foot diameter hole leading to a 10-foot-deep extradimensional space.',
@@ -638,23 +504,16 @@ class SrdWondrousItems {
             'Unfold on a solid surface as an Action to open a 10-ft-deep cylinder storage hole. Breathable air lasts 10 minutes.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'portable hole', 'storage', 'extradimensional'],
+      isChangedIn2024: false, tags: ['wondrous', 'portable hole', 'storage', 'extradimensional'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'portable hole', 'storage', 'extradimensional'] },
     ),
 
     // Slippers of Spider Climbing
-    MagicItem(
-      id: 'item_slippers_of_spider_climbing',
-      name: 'Slippers of Spider Climbing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_slippers_of_spider_climbing', ruleset: RulesetVersion.v2024), name: 'Slippers of Spider Climbing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Climbing Speed equal to Walking Speed on vertical surfaces & ceilings (Hands Free)'),
-      ],
+      descriptionMarkdown: 'Grants Climb Speed equal to Speed on vertical surfaces and ceilings with hands free.',
       rules2014: ItemEditionDetails(
         summary:
             'While you wear these slippers, you have a climbing speed equal to your walking speed, and you can move up, down, and across vertical surfaces and upside down along ceilings, while leaving your hands free.',
@@ -669,22 +528,16 @@ class SrdWondrousItems {
             'Walk across walls and ceilings hands-free with a Climb Speed equal to your base Speed.',
         activation: 'Passive / Movement',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'slippers', 'climbing', 'spider climb', 'mobility'],
+      isChangedIn2024: false, tags: ['wondrous', 'slippers', 'climbing', 'spider climb', 'mobility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'slippers', 'climbing', 'spider climb', 'mobility'] },
     ),
 
     // Stone of Good Luck (Luckstone)
-    MagicItem(
-      id: 'item_stone_of_good_luck',
-      name: 'Stone of Good Luck (Luckstone)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_stone_of_good_luck', ruleset: RulesetVersion.v2024), name: 'Stone of Good Luck (Luckstone)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+1 Bonus to Ability Checks & Saving Throws'),
-      ],
+      descriptionMarkdown: '+1 bonus to all Ability Checks (including Initiative) and all Saving Throws while carried.',
       rules2014: ItemEditionDetails(
         summary:
             'While this polished agate is on your person, you gain a +1 bonus to ability checks and saving throws.',
@@ -699,24 +552,16 @@ class SrdWondrousItems {
             'While carrying this stone, you gain a +1 bonus to all Ability Checks and Saving Throws.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'stone', 'luck', 'ability check', 'saving throw'],
+      isChangedIn2024: false, tags: ['wondrous', 'stone', 'luck', 'ability check', 'saving throw'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'stone', 'luck', 'ability check', 'saving throw'] },
     ),
 
     // Pearl of Power
-    MagicItem(
-      id: 'item_pearl_of_power',
-      name: 'Pearl of Power',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Regain 1 Expended Spell Slot up to 3rd Level (1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_pearl_of_power', ruleset: RulesetVersion.v2024), name: 'Pearl of Power',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: 'Action: regain 1 expended spell slot of level 1–3 once per Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'Use an action to speak command word and regain 1 expended spell slot of up to 3rd level once per day.',
@@ -731,27 +576,16 @@ class SrdWondrousItems {
             'While holding or carrying this pearl, you can use an Action to regain one expended spell slot of up to level 3 (once per Long Rest).',
         activation: '1 Action (1/Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'pearl', 'spell slot', 'spellcaster'],
+      isChangedIn2024: false, tags: ['wondrous', 'pearl', 'spell slot', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'pearl', 'spell slot', 'spellcaster'] },
     ),
 
     // Robe of the Archmagi (White)
-    MagicItem(
-      id: 'item_robe_of_the_archmagi_white',
-      name: 'Robe of the Archmagi (White)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Good Sorcerer, Warlock, or Wizard',
-      glyphColor: Argb(0xFFF8FAFC),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 15 + Dex & Advantage on Saves vs Spells'),
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label: '+2 to Spell Save DC & Spell Attack Rolls'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_robe_of_the_archmagi_white', ruleset: RulesetVersion.v2024), name: 'Robe of the Archmagi (White)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'by a Good Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: 'White Robe (Good): Base AC 15 + Dex, Advantage on saves vs spells/effects, and +2 to your Spell Save DC and spell attack rolls.',
       rules2014: ItemEditionDetails(
         summary:
             'White Robe (Good): Base AC 15 + Dex, Advantage on saves vs spells, and +2 bonus to spell save DCs and spell attack rolls.',
@@ -766,8 +600,7 @@ class SrdWondrousItems {
             'While wearing this white robe, your base Armor Class equals 15 + Dexterity modifier. You have Advantage on saving throws against spells and magical effects, and your Spell Save DC and spell attack bonus each increase by 2.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'robe',
         'white',
@@ -778,25 +611,15 @@ class SrdWondrousItems {
         'warlock',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'robe', 'white', 'archmagi', 'good', 'wizard', 'sorcerer', 'warlock', 'legendary'] },
     ),
 
     // Robe of the Archmagi (Gray)
-    MagicItem(
-      id: 'item_robe_of_the_archmagi_gray',
-      name: 'Robe of the Archmagi (Gray)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Neutral Sorcerer, Warlock, or Wizard',
-      glyphColor: Argb(0xFF94A3B8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 15 + Dex & Advantage on Saves vs Spells'),
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label: '+2 to Spell Save DC & Spell Attack Rolls'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_robe_of_the_archmagi_gray', ruleset: RulesetVersion.v2024), name: 'Robe of the Archmagi (Gray)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'by a Neutral Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: 'Gray Robe (Neutral): Base AC 15 + Dex, Advantage on saves vs spells/effects, and +2 to your Spell Save DC and spell attack rolls.',
       rules2014: ItemEditionDetails(
         summary:
             'Gray Robe (Neutral): Base AC 15 + Dex, Advantage on saves vs spells, and +2 bonus to spell save DCs and spell attack rolls.',
@@ -811,8 +634,7 @@ class SrdWondrousItems {
             'While wearing this gray robe, your base Armor Class equals 15 + Dexterity modifier. You have Advantage on saving throws against spells and magical effects, and your Spell Save DC and spell attack bonus each increase by 2.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'robe',
         'gray',
@@ -824,25 +646,15 @@ class SrdWondrousItems {
         'warlock',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'robe', 'gray', 'grey', 'archmagi', 'neutral', 'wizard', 'sorcerer', 'warlock', 'legendary'] },
     ),
 
     // Robe of the Archmagi (Black)
-    MagicItem(
-      id: 'item_robe_of_the_archmagi_black',
-      name: 'Robe of the Archmagi (Black)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      requiresAttunement: true,
-      attunementRequirement: 'by an Evil Sorcerer, Warlock, or Wizard',
-      glyphColor: Argb(0xFF334155),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 15 + Dex & Advantage on Saves vs Spells'),
-        ActionTraitRing(
-            ringType: ActionRingType.legendary,
-            label: '+2 to Spell Save DC & Spell Attack Rolls'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_robe_of_the_archmagi_black', ruleset: RulesetVersion.v2024), name: 'Robe of the Archmagi (Black)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: true, attunementRequirement: 'by an Evil Sorcerer, Warlock, or Wizard',
+      descriptionMarkdown: 'Black Robe (Evil): Base AC 15 + Dex, Advantage on saves vs spells/effects, and +2 to your Spell Save DC and spell attack rolls.',
       rules2014: ItemEditionDetails(
         summary:
             'Black Robe (Evil): Base AC 15 + Dex, Advantage on saves vs spells, and +2 bonus to spell save DCs and spell attack rolls.',
@@ -857,8 +669,7 @@ class SrdWondrousItems {
             'While wearing this black robe, your base Armor Class equals 15 + Dexterity modifier. You have Advantage on saving throws against spells and magical effects, and your Spell Save DC and spell attack bonus each increase by 2.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'robe',
         'black',
@@ -869,22 +680,15 @@ class SrdWondrousItems {
         'warlock',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'robe', 'black', 'archmagi', 'evil', 'wizard', 'sorcerer', 'warlock', 'legendary'] },
     ),
 
     // Bag of Tricks (Gray)
-    MagicItem(
-      id: 'item_bag_of_tricks_gray',
-      name: 'Bag of Tricks (Gray)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF94A3B8),
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.sustain,
-          label:
-              'Action: Pull & Throw Gray Fuzzy Object (1d8 Summon Table) (3/Day)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bag_of_tricks_gray', ruleset: RulesetVersion.v2024), name: 'Bag of Tricks (Gray)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: throw fuzzy ball up to 20 ft to summon a Gray Beast (d8: Weasel, Giant Rat, Badger, Boar, Panther, Giant Badger, Dire Wolf, Giant Elk). 3/Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: throw a fuzzy ball up to 20 ft to summon a Gray Beast (d8: 1=Weasel, 2=Giant Rat, 3=Badger, 4=Boar, 5=Panther, 6=Giant Badger, 7=Dire Wolf, 8=Giant Elk). 3 pulls/day.',
@@ -899,8 +703,7 @@ class SrdWondrousItems {
             'Pull a fuzzy ball from the gray bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8 (1: Weasel, 2: Giant Rat, 3: Badger, 4: Boar, 5: Panther, 6: Giant Badger, 7: Dire Wolf, 8: Giant Elk). Up to 3 creatures per Long Rest.',
         activation: '1 Action (3/Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'bag',
         'summon',
@@ -910,22 +713,15 @@ class SrdWondrousItems {
         'tricks',
         'minions'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bag', 'summon', 'gray', 'grey', 'beast', 'tricks', 'minions'] },
     ),
 
     // Bag of Tricks (Rust)
-    MagicItem(
-      id: 'item_bag_of_tricks_rust',
-      name: 'Bag of Tricks (Rust)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFFC2410C),
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.sustain,
-          label:
-              'Action: Pull & Throw Rust Fuzzy Object (1d8 Summon Table) (3/Day)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bag_of_tricks_rust', ruleset: RulesetVersion.v2024), name: 'Bag of Tricks (Rust)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: throw fuzzy ball up to 20 ft to summon a Rust Beast (d8: Rat, Owl, Mastiff, Goat, Giant Goat, Giant Boar, Lion, Brown Bear). 3/Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: throw a fuzzy ball up to 20 ft to summon a Rust Beast (d8: 1=Rat, 2=Owl, 3=Mastiff, 4=Goat, 5=Giant Goat, 6=Giant Boar, 7=Lion, 8=Brown Bear). 3 pulls/day.',
@@ -940,24 +736,16 @@ class SrdWondrousItems {
             'Pull a fuzzy ball from the rust bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8 (1: Rat, 2: Owl, 3: Mastiff, 4: Goat, 5: Giant Goat, 6: Giant Boar, 7: Lion, 8: Brown Bear). Up to 3 creatures per Long Rest.',
         activation: '1 Action (3/Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'bag', 'summon', 'rust', 'beast', 'tricks', 'minions'],
+      isChangedIn2024: false, tags: ['wondrous', 'bag', 'summon', 'rust', 'beast', 'tricks', 'minions'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bag', 'summon', 'rust', 'beast', 'tricks', 'minions'] },
     ),
 
     // Bag of Tricks (Tan)
-    MagicItem(
-      id: 'item_bag_of_tricks_tan',
-      name: 'Bag of Tricks (Tan)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFFD4A373),
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.sustain,
-          label:
-              'Action: Pull & Throw Tan Fuzzy Object (1d8 Summon Table) (3/Day)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bag_of_tricks_tan', ruleset: RulesetVersion.v2024), name: 'Bag of Tricks (Tan)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: throw fuzzy ball up to 20 ft to summon a Tan Beast (d8: Jackal, Ape, Baboon, Axe Beak, Black Bear, Giant Weasel, Giant Hyena, Tiger). 3/Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: throw a fuzzy ball up to 20 ft to summon a Tan Beast (d8: 1=Jackal, 2=Ape, 3=Baboon, 4=Axe Beak, 5=Black Bear, 6=Giant Weasel, 7=Giant Hyena, 8=Tiger). 3 pulls/day.',
@@ -972,23 +760,16 @@ class SrdWondrousItems {
             'Pull a fuzzy ball from the tan bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8 (1: Jackal, 2: Ape, 3: Baboon, 4: Axe Beak, 5: Black Bear, 6: Giant Weasel, 7: Giant Hyena, 8: Tiger). Up to 3 creatures per Long Rest.',
         activation: '1 Action (3/Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'bag', 'summon', 'tan', 'beast', 'tricks', 'minions'],
+      isChangedIn2024: false, tags: ['wondrous', 'bag', 'summon', 'tan', 'beast', 'tricks', 'minions'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bag', 'summon', 'tan', 'beast', 'tricks', 'minions'] },
     ),
 
     // Ioun Stone (Deep Red)
-    MagicItem(
-      id: 'item_ioun_stone_deep_red',
-      name: 'Ioun Stone (Deep Red)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ioun_stone_deep_red', ruleset: RulesetVersion.v2024), name: 'Ioun Stone (Deep Red)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFEF4444),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Orbiting Sphere: +2 Dexterity Score (Max 20)'),
-      ],
+      descriptionMarkdown: 'Orbiting deep red sphere gives +2 Dexterity score (max 20).',
       rules2014: ItemEditionDetails(
         summary:
             'Your Dexterity score increases by 2, to a maximum of 20, while this deep red sphere orbits your head.',
@@ -1002,23 +783,16 @@ class SrdWondrousItems {
             'Your Dexterity score increases by 2 (maximum of 20) while this stone orbits your head.',
         activation: '1 Action (Orbit)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'ioun stone', 'deep red', 'dexterity', 'stat boost'],
+      isChangedIn2024: false, tags: ['wondrous', 'ioun stone', 'deep red', 'dexterity', 'stat boost'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'ioun stone', 'deep red', 'dexterity', 'stat boost'] },
     ),
 
     // Ioun Stone (Incandescent Blue)
-    MagicItem(
-      id: 'item_ioun_stone_incandescent_blue',
-      name: 'Ioun Stone (Incandescent Blue)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ioun_stone_incandescent_blue', ruleset: RulesetVersion.v2024), name: 'Ioun Stone (Incandescent Blue)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF38BDF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Orbiting Sphere: +2 Wisdom Score (Max 20)'),
-      ],
+      descriptionMarkdown: 'Orbiting blue sphere gives +2 Wisdom score (max 20).',
       rules2014: ItemEditionDetails(
         summary:
             'Your Wisdom score increases by 2, to a maximum of 20, while this incandescent blue sphere orbits your head.',
@@ -1032,29 +806,22 @@ class SrdWondrousItems {
             'Your Wisdom score increases by 2 (maximum of 20) while this stone orbits your head.',
         activation: '1 Action (Orbit)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'ioun stone',
         'incandescent blue',
         'wisdom',
         'stat boost'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'ioun stone', 'incandescent blue', 'wisdom', 'stat boost'] },
     ),
 
     // Ioun Stone (Pale Green)
-    MagicItem(
-      id: 'item_ioun_stone_pale_green',
-      name: 'Ioun Stone (Pale Green)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ioun_stone_pale_green', ruleset: RulesetVersion.v2024), name: 'Ioun Stone (Pale Green)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF10B981),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Orbiting Prism: +1 to All Attack Rolls, Checks & Saves'),
-      ],
+      descriptionMarkdown: 'Orbiting prism gives +1 bonus to attack rolls, saving throws, and ability checks.',
       rules2014: ItemEditionDetails(
         summary:
             'You gain a +1 bonus to all attack rolls, saving throws, ability checks, and skill checks while this pale green prism orbits your head.',
@@ -1069,8 +836,7 @@ class SrdWondrousItems {
             'While this prism orbits your head, you gain a +1 bonus to all attack rolls, saving throws, and ability checks.',
         activation: '1 Action (Orbit)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'ioun stone',
         'pale green',
@@ -1078,21 +844,15 @@ class SrdWondrousItems {
         'saves',
         'checks'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'ioun stone', 'pale green', 'attacks', 'saves', 'checks'] },
     ),
 
     // Ioun Stone (Dusty Rose)
-    MagicItem(
-      id: 'item_ioun_stone_dusty_rose',
-      name: 'Ioun Stone (Dusty Rose)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ioun_stone_dusty_rose', ruleset: RulesetVersion.v2024), name: 'Ioun Stone (Dusty Rose)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFFB7185),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Orbiting Prism: +1 Bonus to Armor Class (AC)'),
-      ],
+      descriptionMarkdown: 'Orbiting prism gives +1 bonus to Armor Class (AC).',
       rules2014: ItemEditionDetails(
         summary:
             'You gain a +1 bonus to AC while this dusty rose prism orbits your head.',
@@ -1106,8 +866,7 @@ class SrdWondrousItems {
             'You gain a +1 bonus to AC while this stone orbits your head.',
         activation: '1 Action (Orbit)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'ioun stone',
         'dusty rose',
@@ -1115,21 +874,15 @@ class SrdWondrousItems {
         'protection',
         'pink'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'ioun stone', 'dusty rose', 'ac', 'protection', 'pink'] },
     ),
 
     // Ioun Stone (Clear Spindle)
-    MagicItem(
-      id: 'item_ioun_stone_clear_spindle',
-      name: 'Ioun Stone (Clear Spindle)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ioun_stone_clear_spindle', ruleset: RulesetVersion.v2024), name: 'Ioun Stone (Clear Spindle)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFF1F5F9),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Orbiting Spindle: Full Sustenance Without Food or Water'),
-      ],
+      descriptionMarkdown: 'Orbiting crystal provides total sustenance without food or water.',
       rules2014: ItemEditionDetails(
         summary:
             'You don\'t need to eat or drink while this clear spindle orbits your head.',
@@ -1144,23 +897,16 @@ class SrdWondrousItems {
             'You don\'t need food or water while this clear spindle orbits your head.',
         activation: '1 Action (Orbit)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'ioun stone', 'clear spindle', 'sustenance', 'white'],
+      isChangedIn2024: false, tags: ['wondrous', 'ioun stone', 'clear spindle', 'sustenance', 'white'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'ioun stone', 'clear spindle', 'sustenance', 'white'] },
     ),
 
     // Ioun Stone (Reserve)
-    MagicItem(
-      id: 'item_ioun_stone_reserve',
-      name: 'Ioun Stone (Reserve)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_ioun_stone_reserve', ruleset: RulesetVersion.v2024), name: 'Ioun Stone (Reserve)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFA855F7),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Orbiting Rhomboid: Store Up to 3 Levels of Spells'),
-      ],
+      descriptionMarkdown: 'Stores up to 3 levels of spells. Cast stored spells with original caster stats.',
       rules2014: ItemEditionDetails(
         summary:
             'Stores up to 3 levels of spells that any creature can cast into it by touching it. You can cast stored spells using original caster stats.',
@@ -1175,22 +921,16 @@ class SrdWondrousItems {
             'Holds up to 3 spell slot levels that can be cast by the attuner.',
         activation: 'Cast stored spell',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'ioun stone', 'reserve', 'spell storage', 'purple'],
+      isChangedIn2024: false, tags: ['wondrous', 'ioun stone', 'reserve', 'spell storage', 'purple'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'ioun stone', 'reserve', 'spell storage', 'purple'] },
     ),
 
     // Belt of Hill Giant Strength
-    MagicItem(
-      id: 'item_belt_of_hill_giant_strength',
-      name: 'Belt of Hill Giant Strength',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_belt_of_hill_giant_strength', ruleset: RulesetVersion.v2024), name: 'Belt of Hill Giant Strength',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: 'Sets Strength Score to 21 (+5 Modifier)'),
-      ],
+      descriptionMarkdown: 'Sets your Strength score to 21 (+5).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this belt, your Strength score is 21 (+5 modifier). Has no effect if your Strength is already 21 or higher.',
@@ -1203,8 +943,7 @@ class SrdWondrousItems {
         description: 'Your Strength score becomes 21 while wearing this belt.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'belt',
         'giant strength',
@@ -1212,20 +951,15 @@ class SrdWondrousItems {
         'strength',
         'melee'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'belt', 'giant strength', 'hill giant', 'strength', 'melee'] },
     ),
 
     // Belt of Frost Giant Strength
-    MagicItem(
-      id: 'item_belt_of_frost_giant_strength',
-      name: 'Belt of Frost Giant Strength',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_belt_of_frost_giant_strength', ruleset: RulesetVersion.v2024), name: 'Belt of Frost Giant Strength',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: 'Sets Strength Score to 23 (+6 Modifier)'),
-      ],
+      descriptionMarkdown: 'Sets your Strength score to 23 (+6).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this belt, your Strength score is 23 (+6 modifier).',
@@ -1238,8 +972,7 @@ class SrdWondrousItems {
         description: 'Your Strength score becomes 23 while wearing this belt.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'belt',
         'giant strength',
@@ -1247,20 +980,15 @@ class SrdWondrousItems {
         'strength',
         'melee'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'belt', 'giant strength', 'frost giant', 'strength', 'melee'] },
     ),
 
     // Belt of Fire Giant Strength
-    MagicItem(
-      id: 'item_belt_of_fire_giant_strength',
-      name: 'Belt of Fire Giant Strength',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_belt_of_fire_giant_strength', ruleset: RulesetVersion.v2024), name: 'Belt of Fire Giant Strength',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: 'Sets Strength Score to 25 (+7 Modifier)'),
-      ],
+      descriptionMarkdown: 'Sets your Strength score to 25 (+7).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this belt, your Strength score is 25 (+7 modifier).',
@@ -1273,8 +1001,7 @@ class SrdWondrousItems {
         description: 'Your Strength score becomes 25 while wearing this belt.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'belt',
         'giant strength',
@@ -1282,20 +1009,15 @@ class SrdWondrousItems {
         'strength',
         'melee'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'belt', 'giant strength', 'fire giant', 'strength', 'melee'] },
     ),
 
     // Belt of Storm Giant Strength
-    MagicItem(
-      id: 'item_belt_of_storm_giant_strength',
-      name: 'Belt of Storm Giant Strength',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_belt_of_storm_giant_strength', ruleset: RulesetVersion.v2024), name: 'Belt of Storm Giant Strength',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: 'Sets Strength Score to 29 (+9 Modifier)'),
-      ],
+      descriptionMarkdown: 'Sets your Strength score to 29 (+9).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this belt, your Strength score is 29 (+9 modifier).',
@@ -1308,8 +1030,7 @@ class SrdWondrousItems {
         description: 'Your Strength score becomes 29 while wearing this belt.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'belt',
         'giant strength',
@@ -1318,20 +1039,15 @@ class SrdWondrousItems {
         'melee',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'belt', 'giant strength', 'storm giant', 'strength', 'melee', 'legendary'] },
     ),
 
     // Silver Horn of Valhalla
-    MagicItem(
-      id: 'item_horn_of_valhalla_silver',
-      name: 'Silver Horn of Valhalla',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFCBD5E1),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: 'Action: Summon 2d4+2 Spirit Berserkers (1/7 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_horn_of_valhalla_silver', ruleset: RulesetVersion.v2024), name: 'Silver Horn of Valhalla',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Summon 2d4 + 2 spirit Berserkers for 1 hour (1/7 Days).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Blow horn to summon 2d4 + 2 warrior spirits from Ysgard for 1 hour. Recharges in 7 days.',
@@ -1346,22 +1062,16 @@ class SrdWondrousItems {
             'Blow the silver horn as an Action to summon allied Berserker warrior spirits.',
         activation: '1 Action (1/7 Days)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'horn', 'valhalla', 'silver', 'summon', 'berserker'],
+      isChangedIn2024: false, tags: ['wondrous', 'horn', 'valhalla', 'silver', 'summon', 'berserker'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'horn', 'valhalla', 'silver', 'summon', 'berserker'] },
     ),
 
     // Iron Horn of Valhalla
-    MagicItem(
-      id: 'item_horn_of_valhalla_iron',
-      name: 'Iron Horn of Valhalla',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      glyphColor: Argb(0xFF475569),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label: 'Action: Summon 5d4+5 Spirit Berserkers (1/7 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_horn_of_valhalla_iron', ruleset: RulesetVersion.v2024), name: 'Iron Horn of Valhalla',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Summon 5d4 + 5 spirit Berserkers for 1 hour (1/7 Days).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Blow horn to summon 5d4 + 5 warrior spirits from Ysgard for 1 hour. Recharges in 7 days.',
@@ -1376,8 +1086,7 @@ class SrdWondrousItems {
             'Blow the iron horn as an Action to summon allied Berserker warrior spirits.',
         activation: '1 Action (1/7 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'horn',
         'valhalla',
@@ -1386,21 +1095,15 @@ class SrdWondrousItems {
         'berserker',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'horn', 'valhalla', 'iron', 'summon', 'berserker', 'legendary'] },
     ),
 
     // Figurine of Wondrous Power (Bronze Griffon)
-    MagicItem(
-      id: 'item_figurine_bronze_griffon',
-      name: 'Figurine of Wondrous Power (Bronze Griffon)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFCD7F32),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Animate Living Griffon Mount (24 Hours, 2/10 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_bronze_griffon', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Bronze Griffon)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into a living Griffon mount for 24 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Speak command word and throw figurine to animate into a living Griffon mount for up to 24 hours (usable twice every 10 days).',
@@ -1414,22 +1117,16 @@ class SrdWondrousItems {
             'Throws up to 60 feet to become a loyal flying Griffon mount for up to 24 hours.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'figurine', 'bronze', 'griffon', 'summon', 'mount'],
+      isChangedIn2024: false, tags: ['wondrous', 'figurine', 'bronze', 'griffon', 'summon', 'mount'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'bronze', 'griffon', 'summon', 'mount'] },
     ),
 
     // Figurine of Wondrous Power (Ebony Fly)
-    MagicItem(
-      id: 'item_figurine_ebony_fly',
-      name: 'Figurine of Wondrous Power (Ebony Fly)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF334155),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action: Animate Giant Fly Mount (12 Hours, 3/10 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_ebony_fly', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Ebony Fly)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into a giant fly mount for 12 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Speak command word to animate into a pony-sized giant fly for up to 12 hours (usable three times per 8 days).',
@@ -1442,23 +1139,16 @@ class SrdWondrousItems {
         description: 'Transforms into a pony-sized flying mount for 12 hours.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'figurine', 'ebony', 'fly', 'summon', 'mount'],
+      isChangedIn2024: false, tags: ['wondrous', 'figurine', 'ebony', 'fly', 'summon', 'mount'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'ebony', 'fly', 'summon', 'mount'] },
     ),
 
     // Figurine of Wondrous Power (Marble Elephant)
-    MagicItem(
-      id: 'item_figurine_marble_elephant',
-      name: 'Figurine of Wondrous Power (Marble Elephant)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFF1F5F9),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Animate True Elephant Mount/Beast (24 Hours, 1/7 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_marble_elephant', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Marble Elephant)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into an Elephant for 24 hours (1/7 Days).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Transforms into a living Elephant for up to 24 hours (recharges once every 7 days).',
@@ -1472,8 +1162,7 @@ class SrdWondrousItems {
             'Transforms into a massive elephant mount and heavy beast for 24 hours.',
         activation: '1 Action (1/7 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'figurine',
         'marble',
@@ -1482,20 +1171,15 @@ class SrdWondrousItems {
         'mount',
         'white'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'marble', 'elephant', 'summon', 'mount', 'white'] },
     ),
 
     // Figurine of Wondrous Power (Golden Lions)
-    MagicItem(
-      id: 'item_figurine_golden_lions',
-      name: 'Figurine of Wondrous Power (Golden Lions)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFF59E0B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action: Animate Pair of Living Lions (1 Hour, 1/7 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_golden_lions', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Golden Lions)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into two living adult Lions for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Speak command word and throw figurine to animate into two living adult Lions for up to 1 hour (usable once every 7 days).',
@@ -1509,22 +1193,16 @@ class SrdWondrousItems {
             'Throws up to 60 feet to become a coordinated hunting pair of two adult lions for up to 1 hour.',
         activation: '1 Action (1/7 Days)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'figurine', 'gold', 'lion', 'summon', 'pack tactics'],
+      isChangedIn2024: false, tags: ['wondrous', 'figurine', 'gold', 'lion', 'summon', 'pack tactics'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'gold', 'lion', 'summon', 'pack tactics'] },
     ),
 
     // Figurine of Wondrous Power (Ivory Goats)
-    MagicItem(
-      id: 'item_figurine_ivory_goats',
-      name: 'Figurine of Wondrous Power (Ivory Goats)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFFFFBEB),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action: Animate Goat of Traveling, Travail, or Terror'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_ivory_goats', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Ivory Goats)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into Goat of Traveling, Goat of Travail, or Goat of Terror.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Transforms into one of three ivory goats: Goat of Traveling (24 hrs/30 days), Goat of Travail (12 hrs, 1/30 days, +16 bludgeoning charge), or Goat of Terror (3 hrs, 1/30 days, DC 15 Aura of Terror).',
@@ -1539,8 +1217,7 @@ class SrdWondrousItems {
             'Three distinct ivory statuettes transforming into specialized travel, combat, and terror goats.',
         activation: '1 Action (Varies per goat)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'figurine',
         'ivory',
@@ -1549,21 +1226,15 @@ class SrdWondrousItems {
         'mount',
         'terror'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'ivory', 'goat', 'summon', 'mount', 'terror'] },
     ),
 
     // Figurine of Wondrous Power (Obsidian Steed)
-    MagicItem(
-      id: 'item_figurine_obsidian_steed',
-      name: 'Figurine of Wondrous Power (Obsidian Steed)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFFDC2626),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Animate Nightmare Mount with Ethereal Stride (24 Hours, 1/5 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_obsidian_steed', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Obsidian Steed)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into a Nightmare mount with Ethereal Stride for 24 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Transforms into a living Nightmare mount with Fly 90 ft., fire resistance grant, and Ethereal Stride for up to 24 hours (usable once every 5 days).',
@@ -1578,8 +1249,7 @@ class SrdWondrousItems {
             'Transforms into a terrifying Nightmare flying mount with planar travel and fire conferral.',
         activation: '1 Action (1/5 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'figurine',
         'obsidian',
@@ -1590,21 +1260,15 @@ class SrdWondrousItems {
         'fly',
         'ethereal'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'obsidian', 'nightmare', 'steed', 'summon', 'mount', 'fly', 'ethereal'] },
     ),
 
     // Figurine of Wondrous Power (Onyx Dog)
-    MagicItem(
-      id: 'item_figurine_onyx_dog',
-      name: 'Figurine of Wondrous Power (Onyx Dog)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF1E293B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Animate Truesight Onyx Mastiff (6 Hours, 1/7 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_onyx_dog', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Onyx Dog)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into an intelligent Mastiff with Truesight for 6 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Transforms into an Onyx Mastiff with Int 8, Truesight 60 ft., and understanding of Common, Giant, and Goblin for up to 6 hours (usable once every 7 days).',
@@ -1619,8 +1283,7 @@ class SrdWondrousItems {
             'Transforms into a loyal hunting mastiff with 60 ft. Truesight and high intelligence.',
         activation: '1 Action (1/7 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'figurine',
         'onyx',
@@ -1630,21 +1293,15 @@ class SrdWondrousItems {
         'truesight',
         'invisible'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'onyx', 'dog', 'mastiff', 'summon', 'truesight', 'invisible'] },
     ),
 
     // Figurine of Wondrous Power (Serpentine Owl)
-    MagicItem(
-      id: 'item_figurine_serpentine_owl',
-      name: 'Figurine of Wondrous Power (Serpentine Owl)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF059669),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Animate Giant Owl with 1-Mile Telepathy (8 Hours, 1/2 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_serpentine_owl', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Serpentine Owl)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into a Giant Owl scout with 1-mile telepathy for 8 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Transforms into a Giant Owl with Flyby and 1-mile telepathic communication for up to 8 hours (usable once every 2 days).',
@@ -1659,8 +1316,7 @@ class SrdWondrousItems {
             'Transforms into a flying owl scout with Flyby and long-range telepathic report link.',
         activation: '1 Action (1/2 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'figurine',
         'serpentine',
@@ -1669,21 +1325,15 @@ class SrdWondrousItems {
         'flyby',
         'telepathy'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'serpentine', 'owl', 'summon', 'flyby', 'telepathy'] },
     ),
 
     // Figurine of Wondrous Power (Silver Raven)
-    MagicItem(
-      id: 'item_figurine_silver_raven',
-      name: 'Figurine of Wondrous Power (Silver Raven)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF94A3B8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Animate Silver Raven with Animal Messenger (12-24 Hours, 1/2 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_figurine_silver_raven', ruleset: RulesetVersion.v2024), name: 'Figurine of Wondrous Power (Silver Raven)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Animate into a message-delivering Silver Raven for 12 to 24 hours.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Transforms into a Silver Raven that can deliver spoken messages as Animal Messenger for up to 12 hours (or 24 hours on a message flight, usable once every 2 days).',
@@ -1698,8 +1348,7 @@ class SrdWondrousItems {
             'Transforms into an agile raven courier that flies to deliver spoken messages across long distances.',
         activation: '1 Action (1/2 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'figurine',
         'silver',
@@ -1708,21 +1357,15 @@ class SrdWondrousItems {
         'messenger',
         'mimicry'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'figurine', 'silver', 'raven', 'summon', 'messenger', 'mimicry'] },
     ),
 
     // Elemental Gem (Blue Sapphire - Air)
-    MagicItem(
-      id: 'item_elemental_gem_blue_sapphire',
-      name: 'Elemental Gem (Blue Sapphire)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF38BDF8),
-      damageAccent: DamageAccent.lightning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Crush Gem to Summon CR 5 Air Elemental'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_elemental_gem_blue_sapphire', ruleset: RulesetVersion.v2024), name: 'Elemental Gem (Blue Sapphire)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Crush gem to summon a CR 5 Air Elemental for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Air Elemental for up to 1 hour (consumable).',
@@ -1735,23 +1378,16 @@ class SrdWondrousItems {
         description: 'Summons an Air Elemental companion for 1 hour.',
         activation: '1 Action (Consumable)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'gem', 'elemental', 'blue sapphire', 'air', 'summon'],
+      isChangedIn2024: false, tags: ['wondrous', 'gem', 'elemental', 'blue sapphire', 'air', 'summon'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gem', 'elemental', 'blue sapphire', 'air', 'summon'] },
     ),
 
     // Elemental Gem (Red Corundum - Fire)
-    MagicItem(
-      id: 'item_elemental_gem_red_corundum',
-      name: 'Elemental Gem (Red Corundum)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFFEF4444),
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Crush Gem to Summon CR 5 Fire Elemental'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_elemental_gem_red_corundum', ruleset: RulesetVersion.v2024), name: 'Elemental Gem (Red Corundum)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Crush gem to summon a CR 5 Fire Elemental for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Fire Elemental for up to 1 hour (consumable).',
@@ -1765,22 +1401,16 @@ class SrdWondrousItems {
         description: 'Summons a Fire Elemental companion for 1 hour.',
         activation: '1 Action (Consumable)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'gem', 'elemental', 'red corundum', 'fire', 'summon'],
+      isChangedIn2024: false, tags: ['wondrous', 'gem', 'elemental', 'red corundum', 'fire', 'summon'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gem', 'elemental', 'red corundum', 'fire', 'summon'] },
     ),
 
     // Elemental Gem (Yellow Diamond - Earth)
-    MagicItem(
-      id: 'item_elemental_gem_yellow_diamond',
-      name: 'Elemental Gem (Yellow Diamond)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFFF59E0B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Crush Gem to Summon CR 5 Earth Elemental'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_elemental_gem_yellow_diamond', ruleset: RulesetVersion.v2024), name: 'Elemental Gem (Yellow Diamond)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Crush gem to summon a CR 5 Earth Elemental for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Earth Elemental for up to 1 hour (consumable).',
@@ -1794,8 +1424,7 @@ class SrdWondrousItems {
         description: 'Summons an Earth Elemental companion for 1 hour.',
         activation: '1 Action (Consumable)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'gem',
         'elemental',
@@ -1803,21 +1432,15 @@ class SrdWondrousItems {
         'earth',
         'summon'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gem', 'elemental', 'yellow diamond', 'earth', 'summon'] },
     ),
 
     // Elemental Gem (Emerald - Water)
-    MagicItem(
-      id: 'item_elemental_gem_emerald',
-      name: 'Elemental Gem (Emerald)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF10B981),
-      damageAccent: DamageAccent.cold,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: 'Action: Crush Gem to Summon CR 5 Water Elemental'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_elemental_gem_emerald', ruleset: RulesetVersion.v2024), name: 'Elemental Gem (Emerald)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Crush gem to summon a CR 5 Water Elemental for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Water Elemental for up to 1 hour (consumable).',
@@ -1831,23 +1454,16 @@ class SrdWondrousItems {
         description: 'Summons a Water Elemental companion for 1 hour.',
         activation: '1 Action (Consumable)',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'gem', 'elemental', 'emerald', 'water', 'summon'],
+      isChangedIn2024: false, tags: ['wondrous', 'gem', 'elemental', 'emerald', 'water', 'summon'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gem', 'elemental', 'emerald', 'water', 'summon'] },
     ),
 
     // Decanter of Endless Water
-    MagicItem(
-      id: 'item_decanter_of_endless_water',
-      name: 'Decanter of Endless Water',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF38BDF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                'Action: Stream / Fountain / Geyser (30 ft Line, 1d4 Bludgeoning, DC 13 Str or Prone)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_decanter_of_endless_water', ruleset: RulesetVersion.v2024), name: 'Decanter of Endless Water',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Produces continuous fresh/salt water up to Geyser mode (30 gal/round, 30 ft push/prone).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Unstopper and produce endless water: Stream (1 gal), Fountain (5 gal), or Geyser (30 gal, 30 ft blast, 1d4 bludgeoning, DC 13 Str or prone).',
@@ -1861,22 +1477,16 @@ class SrdWondrousItems {
         description: 'Produces Stream, Fountain, or Geyser volume on command.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'decanter', 'water', 'utility', 'geyser'],
+      isChangedIn2024: false, tags: ['wondrous', 'decanter', 'water', 'utility', 'geyser'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'decanter', 'water', 'utility', 'geyser'] },
     ),
 
     // Instant Fortress
-    MagicItem(
-      id: 'item_instant_fortress',
-      name: 'Instant Fortress',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Expands into 30-ft Adamantine Tower (10d10 Bludgeoning to Nearby Creatures)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_instant_fortress', ruleset: RulesetVersion.v2024), name: 'Instant Fortress',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Expands into 30-ft tall adamantine fortress (10d10 bludgeoning damage on expansion).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: Place 1-inch cube on ground and speak command word to instantly expand into a 20-ft square, 30-ft tall adamantine tower (10d10 bludgeoning, DC 15 Dex save for half).',
@@ -1890,8 +1500,7 @@ class SrdWondrousItems {
         description: 'Expands into a fortified tower and shelter.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'fortress',
         'adamantine',
@@ -1899,19 +1508,15 @@ class SrdWondrousItems {
         'cube',
         'structure'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'fortress', 'adamantine', 'shelter', 'cube', 'structure'] },
     ),
 
     // Robe of Useful Items
-    MagicItem(
-      id: 'item_robe_of_useful_items',
-      name: 'Robe of Useful Items',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action: Detach Patch to Produce Real Physical Object'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_robe_of_useful_items', ruleset: RulesetVersion.v2024), name: 'Robe of Useful Items',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: Detach patch to produce the depicted mundane object, vehicle, or creature.',
       rules2014: ItemEditionDetails(
         summary:
             'Robe covered with cloth patches representing items (Daggers, Lanterns, Mirrors, 10-ft Poles, Ropes, Horses, Boats, etc.). Detach patch as an action to transform it into the real item.',
@@ -1926,24 +1531,17 @@ class SrdWondrousItems {
             'Detach cloth patch as an Action to materialize the item in your space.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'robe', 'useful items', 'patches', 'utility'],
+      isChangedIn2024: false, tags: ['wondrous', 'robe', 'useful items', 'patches', 'utility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'robe', 'useful items', 'patches', 'utility'] },
     ),
 
     // Apparatus of the Crab (Apparatus of Kwalish)
-    MagicItem(
-      id: 'item_apparatus_of_the_crab',
-      name: 'Apparatus of the Crab',
-      name2014: 'Apparatus of Kwalish',
-      name2024: 'Apparatus of the Crab',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.melee,
-            label:
-                'Piloted Submersible Vehicle (AC 20, 200 HP, 2 Pincer Attacks 2d6 Bludgeoning)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_apparatus_of_the_crab', ruleset: RulesetVersion.v2024), name: 'Apparatus of the Crab',
+      name2014: 'Apparatus of Kwalish', name2024: 'Apparatus of the Crab',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Piloted mechanical crab vehicle with swim speed, heavy pincers, and sealed life support.',
       rules2014: ItemEditionDetails(
         summary:
             'Large iron barrel that transforms into a piloted mechanical lobster/crab submersible holding up to 2 medium creatures with 10 levers.',
@@ -1958,27 +1556,19 @@ class SrdWondrousItems {
             'Amphibious submersible mechanical vehicle for 2 creatures.',
         activation: 'Action (Operate)',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Apparatus of the Crab in 2024 Free SRD 5.2.1.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Apparatus of the Crab in 2024 Free SRD 5.2.1.', diffHighlights: [
         'Free SRD 5.2.1 trademark-clean name: Apparatus of the Crab',
         'Updated vehicle helm controls and simplified speed mechanics',
-      ],
-      tags: ['wondrous', 'vehicle', 'crab', 'submersible', 'legendary'],
+      ], tags: ['wondrous', 'vehicle', 'crab', 'submersible', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'vehicle', 'crab', 'submersible', 'legendary'] },
     ),
 
     // Boots of Elvenkind
-    MagicItem(
-      id: 'item_boots_of_elvenkind',
-      name: 'Boots of Elvenkind',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Steps Make No Sound • Advantage on Stealth Checks that Rely on Moving Silently'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_boots_of_elvenkind', ruleset: RulesetVersion.v2024), name: 'Boots of Elvenkind',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Footsteps produce zero sound; gain Advantage on Stealth checks relying on silent movement.',
       rules2014: ItemEditionDetails(
         summary:
             'While you wear these boots, your steps make no sound, regardless of the surface you are moving across. You also have advantage on Dexterity (Stealth) checks that rely on moving silently.',
@@ -1994,21 +1584,15 @@ class SrdWondrousItems {
         activation: 'Passive',
       ),
       tags: ['wondrous', 'boots', 'stealth', 'silence', 'elven'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'boots', 'stealth', 'silence', 'elven'] },
     ),
 
     // Boots of Levitation
-    MagicItem(
-      id: 'item_boots_of_levitation',
-      name: 'Boots of Levitation',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_boots_of_levitation', ruleset: RulesetVersion.v2024), name: 'Boots of Levitation',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Cast Levitate on Yourself at Will (Rise or Descend up to 20 ft/round)'),
-      ],
+      descriptionMarkdown: 'Action: cast Levitate at will on yourself.',
       rules2014: ItemEditionDetails(
         summary:
             'While you wear these boots, you can cast the Levitate spell on yourself at will as an action.',
@@ -2023,21 +1607,15 @@ class SrdWondrousItems {
         activation: '1 Action',
       ),
       tags: ['wondrous', 'boots', 'levitate', 'mobility', 'flight'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'boots', 'levitate', 'mobility', 'flight'] },
     ),
 
     // Boots of the Winterlands
-    MagicItem(
-      id: 'item_boots_of_the_winterlands',
-      name: 'Boots of the Winterlands',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_boots_of_the_winterlands', ruleset: RulesetVersion.v2024), name: 'Boots of the Winterlands',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to Cold Damage • Ignore Snow/Ice Difficult Terrain • Immune to Extreme Cold down to -50°F'),
-      ],
+      descriptionMarkdown: 'Cold Resistance, ignore snow/ice difficult terrain, complete protection against Extreme Cold.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants resistance to cold damage, ignores difficult terrain composed of ice or snow, and protects you against extreme cold down to -50 degrees Fahrenheit.',
@@ -2053,21 +1631,15 @@ class SrdWondrousItems {
         activation: 'Passive',
       ),
       tags: ['wondrous', 'boots', 'cold', 'winter', 'resistance', 'survival'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'boots', 'cold', 'winter', 'resistance', 'survival'] },
     ),
 
     // Brooch of Shielding
-    MagicItem(
-      id: 'item_brooch_of_shielding',
-      name: 'Brooch of Shielding',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_brooch_of_shielding', ruleset: RulesetVersion.v2024), name: 'Brooch of Shielding',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to Force Damage • Complete Immunity to Magic Missile Damage'),
-      ],
+      descriptionMarkdown: 'Resistance to Force damage and 100% immunity to damage from Magic Missile.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this brooch, you have resistance to force damage, and you have immunity to damage from the Magic Missile spell.',
@@ -2090,20 +1662,15 @@ class SrdWondrousItems {
         'immunity',
         'defense'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'brooch', 'magic missile', 'force', 'immunity', 'defense'] },
     ),
 
     // Broom of Flying
-    MagicItem(
-      id: 'item_broom_of_flying',
-      name: 'Broom of Flying',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Flying Speed 50 ft (Holds up to 400 lbs; 30 ft speed if over 200 lbs) • Remote Recall 1 Mile'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_broom_of_flying', ruleset: RulesetVersion.v2024), name: 'Broom of Flying',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Flying Speed 50 ft (30 ft if carrying 200–400 lbs). Remote summonable within 1 mile.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: speak command word to gain a flying speed of 50 feet (30 feet if carrying over 200 lbs, max 400 lbs). Can send the broom alone up to 1 mile away.',
@@ -2119,20 +1686,15 @@ class SrdWondrousItems {
         activation: '1 Action',
       ),
       tags: ['wondrous', 'broom', 'flying', 'flight', 'vehicle', 'mobility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'broom', 'flying', 'flight', 'vehicle', 'mobility'] },
     ),
 
     // Cape of the Mountebank
-    MagicItem(
-      id: 'item_cape_of_the_mountebank',
-      name: 'Cape of the Mountebank',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action (1/Day): Cast Dimension Door with Smoke Cloud at Origin & Destination'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_cape_of_the_mountebank', ruleset: RulesetVersion.v2024), name: 'Cape of the Mountebank',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: cast Dimension Door with dramatic obscuring smoke clouds (1/Long Rest).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: cast Dimension Door (recharges daily at dawn). Leaves behind a 5-foot-radius cloud of heavy smoke at both the origin and destination.',
@@ -2155,20 +1717,15 @@ class SrdWondrousItems {
         'escape',
         'stealth'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cape', 'dimension door', 'teleport', 'escape', 'stealth'] },
     ),
 
     // Chime of Opening
-    MagicItem(
-      id: 'item_chime_of_opening',
-      name: 'Chime of Opening',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Unlock Any Mundane or Magical Lock within 120 ft (10 Charges Total)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_chime_of_opening', ruleset: RulesetVersion.v2024), name: 'Chime of Opening',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: instantly open mundane or magical locks within 120 ft (10 charges).',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 10 charges. Action: point at a lock, door, gate, chest, or vehicle within 120 feet. Strikes open the lock (dispelling Arcane Lock or picking normal locks).',
@@ -2186,22 +1743,15 @@ class SrdWondrousItems {
         charges: '10 charges (non-rechargeable)',
       ),
       tags: ['wondrous', 'chime', 'knock', 'lock', 'dungeon', 'utility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'chime', 'knock', 'lock', 'dungeon', 'utility'] },
     ),
 
     // Circlet of Blasting
-    MagicItem(
-      id: 'item_circlet_of_blasting',
-      name: 'Circlet of Blasting',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            damageType: DamageAccent.fire,
-            label:
-                'Action (1/Day): Cast Scorching Ray (+5 to Hit; 3 Rays dealing 2d6 Fire each)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_circlet_of_blasting', ruleset: RulesetVersion.v2024), name: 'Circlet of Blasting',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: cast Scorching Ray (+5 attack bonus or your spell attack bonus) once per Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'Action (1/day): cast the Scorching Ray spell (+5 attack bonus, 120 ft range). Recharges daily at dawn.',
@@ -2217,21 +1767,15 @@ class SrdWondrousItems {
         activation: '1 Action (1/Long Rest)',
       ),
       tags: ['wondrous', 'circlet', 'scorching ray', 'fire', 'damage'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'circlet', 'scorching ray', 'fire', 'damage'] },
     ),
 
     // Cloak of Displacement
-    MagicItem(
-      id: 'item_cloak_of_displacement',
-      name: 'Cloak of Displacement',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_cloak_of_displacement', ruleset: RulesetVersion.v2024), name: 'Cloak of Displacement',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Attack Rolls against you have Disadvantage (Temporarily deactivated until start of next turn if you take damage)'),
-      ],
+      descriptionMarkdown: 'Imposes Disadvantage on all incoming attack rolls. Suppressed until next turn when you take damage.',
       rules2014: ItemEditionDetails(
         summary:
             'Attack rolls against you have disadvantage. If you take damage, this property ceases to function until the start of your next turn (also inactive if incapacitated or unable to move).',
@@ -2247,20 +1791,15 @@ class SrdWondrousItems {
         activation: 'Passive',
       ),
       tags: ['wondrous', 'cloak', 'displacement', 'defense', 'illusion'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cloak', 'displacement', 'defense', 'illusion'] },
     ),
 
     // Cloak of the Manta Ray
-    MagicItem(
-      id: 'item_cloak_of_the_manta_ray',
-      name: 'Cloak of the Manta Ray',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Breathe Underwater • Gain Swimming Speed of 60 Feet while Hood is Pulled Up'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_cloak_of_the_manta_ray', ruleset: RulesetVersion.v2024), name: 'Cloak of the Manta Ray',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Underwater breathing and 60 ft Swim Speed while hood is active.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this cloak with the hood up, you can breathe underwater and gain a swimming speed of 60 feet. Pulling the hood up or down requires an action.',
@@ -2283,21 +1822,15 @@ class SrdWondrousItems {
         'swimming',
         'water breathing'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cloak', 'manta ray', 'aquatic', 'swimming', 'water breathing'] },
     ),
 
     // Cube of Force
-    MagicItem(
-      id: 'item_cube_of_force',
-      name: 'Cube of Force',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_cube_of_force', ruleset: RulesetVersion.v2024), name: 'Cube of Force',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '36 Charges: Action: Deploy 15-ft Force Barrier blocking Gas, Nonliving Matter, Living Matter, Spell Effects, or ALL Things'),
-      ],
+      descriptionMarkdown: '36 charges: customizable 15-ft impenetrable barrier blocking matter, spells, and environmental hazards.',
       rules2014: ItemEditionDetails(
         summary:
             'Has 36 charges (regains 1d20 daily at dawn). Press one of 6 faces as an action to create a 15-foot cubic barrier blocking gas, nonliving matter, living matter, spells, or all things.',
@@ -2315,20 +1848,15 @@ class SrdWondrousItems {
         charges: '36 charges (recharges 1d20 on Long Rest)',
       ),
       tags: ['wondrous', 'cube', 'force', 'barrier', 'defense', 'shield'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cube', 'force', 'barrier', 'defense', 'shield'] },
     ),
 
     // Eversmoking Bottle
-    MagicItem(
-      id: 'item_eversmoking_bottle',
-      name: 'Eversmoking Bottle',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Uncork to produce 60-ft up to 120-ft radius Cloud of Heavy Obscurement (100 ft/minute)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_eversmoking_bottle', ruleset: RulesetVersion.v2024), name: 'Eversmoking Bottle',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: uncork for massive 60–120 ft radius obscuring smoke field.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: uncork to emit thick smoke in a 60-foot radius, expanding 10 feet per minute up to 120 feet. Heavily obscures vision. Action to recork.',
@@ -2344,21 +1872,15 @@ class SrdWondrousItems {
         activation: '1 Action',
       ),
       tags: ['wondrous', 'bottle', 'smoke', 'obscurement', 'tactical'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bottle', 'smoke', 'obscurement', 'tactical'] },
     ),
 
     // Eyes of the Eagle
-    MagicItem(
-      id: 'item_eyes_of_the_eagle',
-      name: 'Eyes of the Eagle',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_eyes_of_the_eagle', ruleset: RulesetVersion.v2024), name: 'Eyes of the Eagle',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Advantage on Perception Checks that Rely on Sight • Discern Fine Detail up to 1 Mile Away'),
-      ],
+      descriptionMarkdown: 'Advantage on sight-based Perception; eagle telescopic sight up to 1 mile.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing these crystal lenses, you have advantage on Wisdom (Perception) checks that rely on sight. Can discern fine details up to 1 mile away.',
@@ -2374,20 +1896,15 @@ class SrdWondrousItems {
         activation: 'Passive',
       ),
       tags: ['wondrous', 'eyes', 'eagle', 'perception', 'scouting', 'vision'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'eyes', 'eagle', 'perception', 'scouting', 'vision'] },
     ),
 
     // Folding Boat
-    MagicItem(
-      id: 'item_folding_boat',
-      name: 'Folding Boat',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Unfolds from 12-in Box into 10-ft Rowboat (4 People) or 24-ft Ship (15 People)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_folding_boat', ruleset: RulesetVersion.v2024), name: 'Folding Boat',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: expands into 10-ft rowboat or 24-ft sailing vessel; folds into portable box.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: speak command word 1 to unfold into a 10-foot rowboat (4 passengers), command word 2 for a 24-foot sailing ship with cabin (15 passengers), or command word 3 to fold back into a 12-inch wooden box.',
@@ -2403,20 +1920,15 @@ class SrdWondrousItems {
         activation: '1 Action',
       ),
       tags: ['wondrous', 'boat', 'vehicle', 'ship', 'transport', 'nautical'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'boat', 'vehicle', 'ship', 'transport', 'nautical'] },
     ),
 
     // Gem of Brightness
-    MagicItem(
-      id: 'item_gem_of_brightness',
-      name: 'Gem of Brightness',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '50 Charges: Shed Bright Light (At Will) • Blind 1 Creature (DC 15 CON, 1 charge) • Blind All in 60-ft Cone (DC 15 CON, 5 charges)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_gem_of_brightness', ruleset: RulesetVersion.v2024), name: 'Gem of Brightness',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '50 charges: at-will illumination, single-target blindness ray, and 60-ft cone blinding flash.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 50 charges. Shed light (0 charges), shoot beam blinding 1 creature on DC 15 Con save (1 charge), or unleash 60-foot cone blinding all creatures for 1 minute (5 charges). Non-rechargeable.',
@@ -2436,21 +1948,15 @@ class SrdWondrousItems {
         savingThrowDc: 'Fixed DC 15',
       ),
       tags: ['wondrous', 'gem', 'brightness', 'blindness', 'light', 'radiant'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gem', 'brightness', 'blindness', 'light', 'radiant'] },
     ),
 
     // Gem of Seeing
-    MagicItem(
-      id: 'item_gem_of_seeing',
-      name: 'Gem of Seeing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_gem_of_seeing', ruleset: RulesetVersion.v2024), name: 'Gem of Seeing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '3 Charges: Action (1 charge): Gain Truesight out to 120 Feet for 10 Minutes (Sees Invisible, Ethereal, Illusions & Shapechangers)'),
-      ],
+      descriptionMarkdown: '3 charges: peer through lens for 10 minutes of 120 ft Truesight.',
       rules2014: ItemEditionDetails(
         summary:
             'Has 3 charges (regains 1d3 daily at dawn). Action: peer through the gem for 10 minutes to gain Truesight out to 120 feet.',
@@ -2475,21 +1981,15 @@ class SrdWondrousItems {
         'illusions',
         'divination'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gem', 'truesight', 'invisible', 'illusions', 'divination'] },
     ),
 
     // Gloves of Missile Snaring
-    MagicItem(
-      id: 'item_gloves_of_missile_snaring',
-      name: 'Gloves of Missile Snaring',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_gloves_of_missile_snaring', ruleset: RulesetVersion.v2024), name: 'Gloves of Missile Snaring',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Reaction: Reduce Ranged Weapon Attack Damage by 1d10 + DEX Mod • Catch Missile if Damage is 0'),
-      ],
+      descriptionMarkdown: 'Reaction: deflect ranged weapon attacks, reducing damage by 1d10 + Dex and catching missile if damage reaches 0.',
       rules2014: ItemEditionDetails(
         summary:
             'When a ranged weapon attack hits you, use your reaction to reduce the damage by 1d10 + Dexterity modifier. If damage is reduced to 0, you catch the missile if you have a free hand.',
@@ -2512,20 +2012,15 @@ class SrdWondrousItems {
         'reaction',
         'defense'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gloves', 'missile snaring', 'deflect', 'reaction', 'defense'] },
     ),
 
     // Gloves of Thievery
-    MagicItem(
-      id: 'item_gloves_of_thievery',
-      name: 'Gloves of Thievery',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+5 Bonus to Sleight of Hand & Thieves\' Tools Ability Checks (Invisible while Worn)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_gloves_of_thievery', ruleset: RulesetVersion.v2024), name: 'Gloves of Thievery',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '+5 bonus on Sleight of Hand and Thieves\' Tools checks; invisible while equipped.',
       rules2014: ItemEditionDetails(
         summary:
             'These gloves are invisible while worn. While wearing them, you gain a +5 bonus to Dexterity (Sleight of Hand) checks and Dexterity checks made to pick locks with thieves\' tools.',
@@ -2548,21 +2043,15 @@ class SrdWondrousItems {
         'lockpicking',
         'rogue'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gloves', 'thievery', 'sleight of hand', 'lockpicking', 'rogue'] },
     ),
 
     // Helm of Teleportation
-    MagicItem(
-      id: 'item_helm_of_teleportation',
-      name: 'Helm of Teleportation',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_helm_of_teleportation', ruleset: RulesetVersion.v2024), name: 'Helm of Teleportation',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '3 Charges: Action (1 charge): Cast Teleport spell anywhere on the same plane'),
-      ],
+      descriptionMarkdown: '3 charges: cast Teleport (7th level) anywhere across the current plane.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 3 charges (regains 1d3 daily at dawn). While wearing it, use an action to expend 1 charge to cast the Teleport spell.',
@@ -2579,20 +2068,15 @@ class SrdWondrousItems {
         charges: '3 charges (recharges 1d3 on Long Rest)',
       ),
       tags: ['wondrous', 'helm', 'teleport', 'travel', 'mobility'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'helm', 'teleport', 'travel', 'mobility'] },
     ),
 
     // Lantern of Revealing
-    MagicItem(
-      id: 'item_lantern_of_revealing',
-      name: 'Lantern of Revealing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Burns for 6 Hours on 1 Pint of Oil: Sheds 30 ft Bright Light (30 ft Dim) • Invisible Creatures & Objects are Visible in Bright Light'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_lantern_of_revealing', ruleset: RulesetVersion.v2024), name: 'Lantern of Revealing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Reveals all invisible creatures and objects within 30 ft bright light radius.',
       rules2014: ItemEditionDetails(
         summary:
             'While lit, sheds bright light in a 30-foot radius and dim light for an additional 30 feet. Invisible creatures and objects are visible as long as they are in the lantern\'s bright light.',
@@ -2615,20 +2099,15 @@ class SrdWondrousItems {
         'light',
         'scouting'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'lantern', 'revealing', 'invisibility', 'light', 'scouting'] },
     ),
 
     // Rope of Climbing
-    MagicItem(
-      id: 'item_rope_of_climbing',
-      name: 'Rope of Climbing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: 60-ft Silk Rope moves up to 50 ft to tie/fasten itself to any object • Supports up to 3,000 lbs • AC 20, 20 HP'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_rope_of_climbing', ruleset: RulesetVersion.v2024), name: 'Rope of Climbing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: snake up to 50 ft to tie off to anchors. Creates knot handholds for effortless climbing.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: command this 60-foot rope to snake forward up to 50 feet and securely knot/fasten itself to an anchor point. Bonus action: create knot handholds (advantage on Athletics to climb). Supports up to 3,000 lbs.',
@@ -2644,20 +2123,15 @@ class SrdWondrousItems {
         activation: '1 Action',
       ),
       tags: ['wondrous', 'rope', 'climbing', 'athletics', 'utility', 'dungeon'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'rope', 'climbing', 'athletics', 'utility', 'dungeon'] },
     ),
 
     // Rope of Entanglement
-    MagicItem(
-      id: 'item_rope_of_entanglement',
-      name: 'Rope of Entanglement',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.ranged,
-            label:
-                'Action: Target creature within 20 ft (DC 15 DEX Save or Restrained) • DC 15 STR or DC 20 Acrobatics to Escape • AC 20, 20 HP'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_rope_of_entanglement', ruleset: RulesetVersion.v2024), name: 'Rope of Entanglement',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: bind target in 20 ft with Restrained condition on failed DC 15 Dex save.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: command rope to lash out at a creature within 20 feet. Target must pass DC 15 Dex save or become restrained. DC 15 Strength or DC 20 Dexterity check to break free.',
@@ -2675,21 +2149,15 @@ class SrdWondrousItems {
         savingThrowDc: 'Fixed DC 15',
       ),
       tags: ['wondrous', 'rope', 'entanglement', 'restrained', 'crowd control'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'rope', 'entanglement', 'restrained', 'crowd control'] },
     ),
 
     // Wings of Flying
-    MagicItem(
-      id: 'item_wings_of_flying',
-      name: 'Wings of Flying',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_wings_of_flying', ruleset: RulesetVersion.v2024), name: 'Wings of Flying',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Transform Cloak into Bat/Bird Wings for 1 Hour (Flying Speed 60 ft; Recharges in 1d12 Hours)'),
-      ],
+      descriptionMarkdown: 'Action: deploy wings granting 60 ft Flying Speed for 1 hour (recharges in 1d12 hours).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: speak command word to transform cloak into bat or bird wings, gaining a flying speed of 60 feet for 1 hour. Can\'t be used again for 1d12 hours.',
@@ -2705,6 +2173,7 @@ class SrdWondrousItems {
         activation: '1 Action',
       ),
       tags: ['wondrous', 'wings', 'flying', 'flight', 'mobility', 'aerial'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'wings', 'flying', 'flight', 'mobility', 'aerial'] },
     ),
 
     // ==========================================
@@ -2712,18 +2181,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Manual of Bodily Health
-    MagicItem(
-      id: 'item_manual_of_bodily_health',
-      name: 'Manual of Bodily Health',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF10B981),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Study (48 Hours over 6 Days): Constitution +2 & Maximum Score +2 (Consumable for 100 Years)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_manual_of_bodily_health', ruleset: RulesetVersion.v2024), name: 'Manual of Bodily Health',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Study for 48 hours to gain permanent +2 to Constitution and Constitution maximum.',
       rules2014: ItemEditionDetails(
         summary:
             'Spend 48 hours over 6 days studying this book to permanently increase your Constitution score by 2 and your maximum for that score by 2. The manual loses its magic for 100 years.',
@@ -2738,8 +2200,7 @@ class SrdWondrousItems {
             'Permanent physical enhancement tome increasing Constitution and raising ability score cap.',
         activation: '48 Hours Study (6 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'manual',
         'tome',
@@ -2748,21 +2209,15 @@ class SrdWondrousItems {
         'health',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'manual', 'tome', 'constitution', 'ability score', 'health', 'consumable'] },
     ),
 
     // Manual of Gainful Exercise
-    MagicItem(
-      id: 'item_manual_of_gainful_exercise',
-      name: 'Manual of Gainful Exercise',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFFEF4444),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Study (48 Hours over 6 Days): Strength +2 & Maximum Score +2 (Consumable for 100 Years)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_manual_of_gainful_exercise', ruleset: RulesetVersion.v2024), name: 'Manual of Gainful Exercise',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Study for 48 hours to gain permanent +2 to Strength and Strength maximum.',
       rules2014: ItemEditionDetails(
         summary:
             'Spend 48 hours over 6 days studying this book to permanently increase your Strength score by 2 and your maximum for that score by 2. The manual loses its magic for 100 years.',
@@ -2777,8 +2232,7 @@ class SrdWondrousItems {
             'Permanent martial training manual increasing Strength and raising ability score cap.',
         activation: '48 Hours Study (6 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'manual',
         'tome',
@@ -2787,21 +2241,15 @@ class SrdWondrousItems {
         'muscle',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'manual', 'tome', 'strength', 'ability score', 'muscle', 'consumable'] },
     ),
 
     // Manual of Quickness of Action
-    MagicItem(
-      id: 'item_manual_of_quickness_of_action',
-      name: 'Manual of Quickness of Action',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF38BDF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Study (48 Hours over 6 Days): Dexterity +2 & Maximum Score +2 (Consumable for 100 Years)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_manual_of_quickness_of_action', ruleset: RulesetVersion.v2024), name: 'Manual of Quickness of Action',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Study for 48 hours to gain permanent +2 to Dexterity and Dexterity maximum.',
       rules2014: ItemEditionDetails(
         summary:
             'Spend 48 hours over 6 days studying this book to permanently increase your Dexterity score by 2 and your maximum for that score by 2. The manual loses its magic for 100 years.',
@@ -2816,8 +2264,7 @@ class SrdWondrousItems {
             'Permanent acrobatics and reflex manual increasing Dexterity and raising ability score cap.',
         activation: '48 Hours Study (6 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'manual',
         'tome',
@@ -2826,21 +2273,15 @@ class SrdWondrousItems {
         'agility',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'manual', 'tome', 'dexterity', 'ability score', 'agility', 'consumable'] },
     ),
 
     // Manual of Golems (Clay)
-    MagicItem(
-      id: 'item_manual_of_golems_clay',
-      name: 'Manual of Golems (Clay)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFFD97706),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Crafting Guide: Create Clay Golem in 30 Days (65,000 gp materials, Consumed on Completion)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_manual_of_golems_clay', ruleset: RulesetVersion.v2024), name: 'Manual of Golems (Clay)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Crafting manual for constructing an animated Clay Golem.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains formulas to animate a Clay Golem. Requires 30 days of continuous work and 65,000 gp in materials. The manual burns to ash upon completion.',
@@ -2854,8 +2295,7 @@ class SrdWondrousItems {
             'Downtime construction guide enabling high-level spellcasters to build an obedient Clay Golem.',
         activation: '30 Days Downtime Crafting',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'manual',
         'golem',
@@ -2864,21 +2304,15 @@ class SrdWondrousItems {
         'minion',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'manual', 'golem', 'clay', 'crafting', 'minion', 'consumable'] },
     ),
 
     // Manual of Golems (Flesh)
-    MagicItem(
-      id: 'item_manual_of_golems_flesh',
-      name: 'Manual of Golems (Flesh)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFFDC2626),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Crafting Guide: Create Flesh Golem in 60 Days (50,000 gp materials, Consumed on Completion)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_manual_of_golems_flesh', ruleset: RulesetVersion.v2024), name: 'Manual of Golems (Flesh)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Crafting manual for assembling and animating a Flesh Golem.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains instructions to assemble and animate a Flesh Golem. Requires 60 days of continuous work and 50,000 gp in materials. The manual burns to ash upon completion.',
@@ -2892,8 +2326,7 @@ class SrdWondrousItems {
             'Downtime construction guide enabling spellcasters to create an obedient Flesh Golem.',
         activation: '60 Days Downtime Crafting',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'manual',
         'golem',
@@ -2902,21 +2335,15 @@ class SrdWondrousItems {
         'minion',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'manual', 'golem', 'flesh', 'crafting', 'minion', 'consumable'] },
     ),
 
     // Manual of Golems (Iron)
-    MagicItem(
-      id: 'item_manual_of_golems_iron',
-      name: 'Manual of Golems (Iron)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF64748B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Crafting Guide: Create Iron Golem in 120 Days (100,000 gp materials, Consumed on Completion)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_manual_of_golems_iron', ruleset: RulesetVersion.v2024), name: 'Manual of Golems (Iron)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Crafting manual for forging and animating an Iron Golem.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains instructions to forge and animate an Iron Golem. Requires 120 days of continuous work and 100,000 gp in materials. The manual burns to ash upon completion.',
@@ -2930,8 +2357,7 @@ class SrdWondrousItems {
             'Downtime construction guide for forging a towering, impervious Iron Golem.',
         activation: '120 Days Downtime Crafting',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'manual',
         'golem',
@@ -2940,21 +2366,15 @@ class SrdWondrousItems {
         'minion',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'manual', 'golem', 'iron', 'crafting', 'minion', 'consumable'] },
     ),
 
     // Manual of Golems (Stone)
-    MagicItem(
-      id: 'item_manual_of_golems_stone',
-      name: 'Manual of Golems (Stone)',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF94A3B8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Crafting Guide: Create Stone Golem in 90 Days (80,000 gp materials, Consumed on Completion)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_manual_of_golems_stone', ruleset: RulesetVersion.v2024), name: 'Manual of Golems (Stone)',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Crafting manual for sculpting and animating a Stone Golem.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains instructions to sculpt and animate a Stone Golem. Requires 90 days of continuous work and 80,000 gp in materials. The manual burns to ash upon completion.',
@@ -2968,8 +2388,7 @@ class SrdWondrousItems {
             'Downtime construction guide for shaping and animating a Stone Golem.',
         activation: '90 Days Downtime Crafting',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'manual',
         'golem',
@@ -2978,21 +2397,15 @@ class SrdWondrousItems {
         'minion',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'manual', 'golem', 'stone', 'crafting', 'minion', 'consumable'] },
     ),
 
     // Tome of Clear Thought
-    MagicItem(
-      id: 'item_tome_of_clear_thought',
-      name: 'Tome of Clear Thought',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF6366F1),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Study (48 Hours over 6 Days): Intelligence +2 & Maximum Score +2 (Consumable for 100 Years)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_tome_of_clear_thought', ruleset: RulesetVersion.v2024), name: 'Tome of Clear Thought',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Study for 48 hours to gain permanent +2 to Intelligence and Intelligence maximum.',
       rules2014: ItemEditionDetails(
         summary:
             'Spend 48 hours over 6 days studying this book to permanently increase your Intelligence score by 2 and your maximum for that score by 2. The tome loses its magic for 100 years.',
@@ -3007,8 +2420,7 @@ class SrdWondrousItems {
             'Permanent cognitive enhancement tome increasing Intelligence and raising ability score cap.',
         activation: '48 Hours Study (6 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'tome',
         'intelligence',
@@ -3016,21 +2428,15 @@ class SrdWondrousItems {
         'cognition',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'tome', 'intelligence', 'ability score', 'cognition', 'consumable'] },
     ),
 
     // Tome of Leadership and Influence
-    MagicItem(
-      id: 'item_tome_of_leadership_and_influence',
-      name: 'Tome of Leadership and Influence',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFFEC4899),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Study (48 Hours over 6 Days): Charisma +2 & Maximum Score +2 (Consumable for 100 Years)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_tome_of_leadership_and_influence', ruleset: RulesetVersion.v2024), name: 'Tome of Leadership and Influence',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Study for 48 hours to gain permanent +2 to Charisma and Charisma maximum.',
       rules2014: ItemEditionDetails(
         summary:
             'Spend 48 hours over 6 days studying this book to permanently increase your Charisma score by 2 and your maximum for that score by 2. The tome loses its magic for 100 years.',
@@ -3045,8 +2451,7 @@ class SrdWondrousItems {
             'Permanent personality and rhetoric enhancement tome increasing Charisma and raising ability score cap.',
         activation: '48 Hours Study (6 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'tome',
         'charisma',
@@ -3055,21 +2460,15 @@ class SrdWondrousItems {
         'influence',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'tome', 'charisma', 'ability score', 'leadership', 'influence', 'consumable'] },
     ),
 
     // Tome of Understanding
-    MagicItem(
-      id: 'item_tome_of_understanding',
-      name: 'Tome of Understanding',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFFFBBF24),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Study (48 Hours over 6 Days): Wisdom +2 & Maximum Score +2 (Consumable for 100 Years)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_tome_of_understanding', ruleset: RulesetVersion.v2024), name: 'Tome of Understanding',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Study for 48 hours to gain permanent +2 to Wisdom and Wisdom maximum.',
       rules2014: ItemEditionDetails(
         summary:
             'Spend 48 hours over 6 days studying this book to permanently increase your Wisdom score by 2 and your maximum for that score by 2. The tome loses its magic for 100 years.',
@@ -3084,8 +2483,7 @@ class SrdWondrousItems {
             'Permanent spiritual and intuitive enhancement tome increasing Wisdom and raising ability score cap.',
         activation: '48 Hours Study (6 Days)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'tome',
         'wisdom',
@@ -3094,6 +2492,7 @@ class SrdWondrousItems {
         'awareness',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'tome', 'wisdom', 'ability score', 'insight', 'awareness', 'consumable'] },
     ),
 
     // ==========================================
@@ -3101,19 +2500,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Cloak of Arachnida
-    MagicItem(
-      id: 'item_cloak_of_arachnida',
-      name: 'Cloak of Arachnida',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_cloak_of_arachnida', ruleset: RulesetVersion.v2024), name: 'Cloak of Arachnida',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF8B5CF6),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Climbing Speed = Walk Speed • Spider Climb • Poison Resistance • Web Immunity • Action (1/Day): Web Spell (DC 13, 2x Area)'),
-      ],
+      descriptionMarkdown: 'Climb speed, Spider Climb trait, Poison resistance, Web immunity, and 1/Day expanded Web spell.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants climbing speed equal to walking speed, Spider Climb (can move upside down on ceilings), poison damage resistance, immunity to webs, and cast Web (DC 13, twice standard area) once per day.',
@@ -3128,8 +2519,7 @@ class SrdWondrousItems {
             'Arachnid garment granting wall-crawling, poison warding, and massive web creation.',
         activation: 'Passive & 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'cloak',
         'arachnida',
@@ -3137,22 +2527,15 @@ class SrdWondrousItems {
         'web',
         'poison resistance'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cloak', 'arachnida', 'spider climb', 'web', 'poison resistance'] },
     ),
 
     // Mantle of Spell Resistance
-    MagicItem(
-      id: 'item_mantle_of_spell_resistance',
-      name: 'Mantle of Spell Resistance',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_mantle_of_spell_resistance', ruleset: RulesetVersion.v2024), name: 'Mantle of Spell Resistance',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF6366F1),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Advantage on Saving Throws against Spells and Magical Effects'),
-      ],
+      descriptionMarkdown: 'Passive: Advantage on saving throws against all spells and spell effects.',
       rules2014: ItemEditionDetails(
         summary: 'You have advantage on saving throws against spells.',
         description:
@@ -3165,8 +2548,7 @@ class SrdWondrousItems {
         description: 'Abjuration cloak providing continuous spell warding.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'mantle',
         'cloak',
@@ -3174,22 +2556,15 @@ class SrdWondrousItems {
         'saving throws',
         'abjuration'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'mantle', 'cloak', 'spell resistance', 'saving throws', 'abjuration'] },
     ),
 
     // Robe of Eyes
-    MagicItem(
-      id: 'item_robe_of_eyes',
-      name: 'Robe of Eyes',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_robe_of_eyes', ruleset: RulesetVersion.v2024), name: 'Robe of Eyes',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF06B6D4),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: 360° Vision • Darkvision 120 ft • Truesight / Ethereal 120 ft • Advantage on Sight Perception • Blinded by Light/Daylight on CON DC 11/15'),
-      ],
+      descriptionMarkdown: '360° vision, 120 ft darkvision, ethereal vision, sight advantage; vulnerable to sudden bright light flashes.',
       rules2014: ItemEditionDetails(
         summary:
             'Robe covered in eye motifs. Grants 360-degree vision, advantage on Perception checks relying on sight, 120 ft darkvision, and ability to see invisible/ethereal creatures within 120 ft. Vulnerable to Light/Daylight blinding.',
@@ -3203,8 +2578,7 @@ class SrdWondrousItems {
         description: 'Divination robe granting panoramic all-seeing vision.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'robe',
         'eyes',
@@ -3213,22 +2587,15 @@ class SrdWondrousItems {
         'ethereal',
         'perception'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'robe', 'eyes', 'truesight', 'darkvision', 'ethereal', 'perception'] },
     ),
 
     // Robe of Scintillating Colors
-    MagicItem(
-      id: 'item_robe_of_scintillating_colors',
-      name: 'Robe of Scintillating Colors',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_robe_of_scintillating_colors', ruleset: RulesetVersion.v2024), name: 'Robe of Scintillating Colors',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFC084FC),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '3 Charges: Action (1 charge): Shed 30-ft Bright Light • Attack Rolls Against You Have Disadvantage • Stun/Blind Foes on DC 15 WIS Save'),
-      ],
+      descriptionMarkdown: '3 charges: dazzling kaleidoscopic light imposing disadvantage on incoming attacks and stunning nearby foes (DC 15 Wis).',
       rules2014: ItemEditionDetails(
         summary:
             'Has 3 charges (regains 1d3 daily at dawn). Action: shed hypnotic shifting colors for 30 ft. Attack rolls against you have disadvantage, and creatures in 30 ft must succeed on a DC 15 Wis save or become stunned until the start of their next turn.',
@@ -3245,8 +2612,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         charges: '3 charges (recharges 1d3 on Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'robe',
         'scintillating',
@@ -3255,22 +2621,15 @@ class SrdWondrousItems {
         'prismatic',
         'illusion'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'robe', 'scintillating', 'stun', 'disadvantage', 'prismatic', 'illusion'] },
     ),
 
     // Robe of Stars
-    MagicItem(
-      id: 'item_robe_of_stars',
-      name: 'Robe of Stars',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_robe_of_stars', ruleset: RulesetVersion.v2024), name: 'Robe of Stars',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF1E1B4B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: +1 to Saving Throws • Action: Enter Astral Plane (and return) • 6 Stars: Action to cast 5th-level Magic Missile (7 darts) per star'),
-      ],
+      descriptionMarkdown: '+1 to all saving throws, at-will Astral Plane transition, and 6 stars to cast 5th-level Magic Missile.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 bonus to all saving throws. As an action, enter the Astral Plane along with everything you are wearing and return as an action. Has 6 silver stars; as an action, pluck a star to cast 5th-level Magic Missile (regains 1d6 stars daily at dusk).',
@@ -3285,8 +2644,7 @@ class SrdWondrousItems {
             'Planar traveling robe with offensive celestial darts and abjuration protection.',
         activation: 'Passive & 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'robe',
         'stars',
@@ -3294,6 +2652,7 @@ class SrdWondrousItems {
         'magic missile',
         'saving throws'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'robe', 'stars', 'astral plane', 'magic missile', 'saving throws'] },
     ),
 
     // ==========================================
@@ -3301,18 +2660,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Cap of Water Breathing
-    MagicItem(
-      id: 'item_cap_of_water_breathing',
-      name: 'Cap of Water Breathing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF0284C7),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Speak Command Word to Create Bubble of Air (Breathe Underwater Indefinitely)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_cap_of_water_breathing', ruleset: RulesetVersion.v2024), name: 'Cap of Water Breathing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: create renewable air bubble around head allowing underwater breathing.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this cap underwater, you can speak its command word as an action to create a bubble of air around your head. It allows you to breathe normally underwater until you speak the command word again.',
@@ -3327,24 +2679,16 @@ class SrdWondrousItems {
             'Aquatic utility cap providing infinite underwater respiration.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'cap', 'water breathing', 'underwater', 'swimming'],
+      isChangedIn2024: false, tags: ['wondrous', 'cap', 'water breathing', 'underwater', 'swimming'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cap', 'water breathing', 'underwater', 'swimming'] },
     ),
 
     // Eyes of Charming
-    MagicItem(
-      id: 'item_eyes_of_charming',
-      name: 'Eyes of Charming',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_eyes_of_charming', ruleset: RulesetVersion.v2024), name: 'Eyes of Charming',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFD946EF),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '3 Charges: Action (1 charge): Cast Charm Person (DC 13 Wisdom Save)'),
-      ],
+      descriptionMarkdown: '3 charges: cast Charm Person (DC 13 Wis save) on a target looking at you.',
       rules2014: ItemEditionDetails(
         summary:
             'Has 3 charges (regains all at dawn). Action: cast Charm Person (save DC 13) on a humanoid within 30 feet that can see you.',
@@ -3363,23 +2707,16 @@ class SrdWondrousItems {
         charges: '3 charges (recharges on Long Rest)',
         savingThrowDc: 'Fixed DC 13',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'eyes', 'charming', 'charm person', 'enchantment'],
+      isChangedIn2024: false, tags: ['wondrous', 'eyes', 'charming', 'charm person', 'enchantment'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'eyes', 'charming', 'charm person', 'enchantment'] },
     ),
 
     // Eyes of Minute Seeing
-    MagicItem(
-      id: 'item_eyes_of_minute_seeing',
-      name: 'Eyes of Minute Seeing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF0EA5E9),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Advantage on Investigation Checks Made to Examine Details Closer than 1 Foot'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_eyes_of_minute_seeing', ruleset: RulesetVersion.v2024), name: 'Eyes of Minute Seeing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Passive: Advantage on Intelligence (Investigation) checks for inspecting objects within 1 foot.',
       rules2014: ItemEditionDetails(
         summary:
             'These crystal lenses allow you to see much better at close range. You have advantage on Intelligence (Investigation) checks that rely on sight while searching an area or examining something within 1 foot of you.',
@@ -3394,8 +2731,7 @@ class SrdWondrousItems {
             'Microscopic inspection lenses for trap disarming and forensic analysis.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'eyes',
         'minute seeing',
@@ -3403,22 +2739,15 @@ class SrdWondrousItems {
         'traps',
         'inspection'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'eyes', 'minute seeing', 'investigation', 'traps', 'inspection'] },
     ),
 
     // Helm of Brilliance
-    MagicItem(
-      id: 'item_helm_of_brilliance',
-      name: 'Helm of Brilliance',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_helm_of_brilliance', ruleset: RulesetVersion.v2024), name: 'Helm of Brilliance',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFFBBF24),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Fire Resistance • 30-ft Light (Damages Undead) • Action: Cast Daylight, Fireball (DC 18), Prismatic Spray (DC 18), Wall of Fire (DC 18) • Risk of Detonation'),
-      ],
+      descriptionMarkdown: 'Gem matrix casting Daylight, Fireball (DC 18), Wall of Fire (DC 18), and Prismatic Spray (DC 18) with passive fire resistance.',
       rules2014: ItemEditionDetails(
         summary:
             'Set with diamonds, rubies, fire opals, and opals. Grants fire resistance, 30 ft radiant illumination dealing 1d6 radiant to undead at start of turn, weapon fire damage (+1d6), and action to cast Daylight (opal), Fireball (ruby, DC 18), Prismatic Spray (diamond, DC 18), or Wall of Fire (fire opal, DC 18). Detonates if wearer fails saving throw against fire.',
@@ -3435,8 +2764,7 @@ class SrdWondrousItems {
         activation: 'Passive & 1 Action',
         savingThrowDc: 'Fixed DC 18',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'helm',
         'brilliance',
@@ -3445,21 +2773,15 @@ class SrdWondrousItems {
         'prismatic spray',
         'radiant'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'helm', 'brilliance', 'fire resistance', 'fireball', 'prismatic spray', 'radiant'] },
     ),
 
     // Helm of Comprehending Languages
-    MagicItem(
-      id: 'item_helm_of_comprehending_languages',
-      name: 'Helm of Comprehending Languages',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF64748B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Cast Comprehend Languages at Will (Understand All Spoken & Written Languages)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_helm_of_comprehending_languages', ruleset: RulesetVersion.v2024), name: 'Helm of Comprehending Languages',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: at-will Comprehend Languages casting.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this helm, you can use an action to cast the Comprehend Languages spell from it at will.',
@@ -3473,30 +2795,22 @@ class SrdWondrousItems {
             'Translation headpiece deciphering any spoken language or written script.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'helm',
         'comprehend languages',
         'translation',
         'linguistics'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'helm', 'comprehend languages', 'translation', 'linguistics'] },
     ),
 
     // Helm of Telepathy
-    MagicItem(
-      id: 'item_helm_of_telepathy',
-      name: 'Helm of Telepathy',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_helm_of_telepathy', ruleset: RulesetVersion.v2024), name: 'Helm of Telepathy',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF8B5CF6),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Cast Detect Thoughts (DC 13) at Will • Action: Cast Suggestion (DC 13) 1/Day on Target of Detect Thoughts'),
-      ],
+      descriptionMarkdown: 'Action: at-will Detect Thoughts (DC 13) and 1/Day Suggestion (DC 13).',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this helm, you can use an action to cast Detect Thoughts (save DC 13) at will. While maintaining concentration on the spell, you can use an action to send a telepathic message or cast Suggestion (save DC 13) on the target once per day.',
@@ -3513,8 +2827,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 13',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'helm',
         'telepathy',
@@ -3522,22 +2835,15 @@ class SrdWondrousItems {
         'suggestion',
         'psionics'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'helm', 'telepathy', 'detect thoughts', 'suggestion', 'psionics'] },
     ),
 
     // Medallion of Thoughts
-    MagicItem(
-      id: 'item_medallion_of_thoughts',
-      name: 'Medallion of Thoughts',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_medallion_of_thoughts', ruleset: RulesetVersion.v2024), name: 'Medallion of Thoughts',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFA855F7),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '3 Charges: Action (1 charge): Cast Detect Thoughts (DC 13 Wisdom Save)'),
-      ],
+      descriptionMarkdown: '3 charges: cast Detect Thoughts (DC 13) from pendant.',
       rules2014: ItemEditionDetails(
         summary:
             'Has 3 charges (regains 1d3 daily at dawn). While wearing it, you can use an action and expend 1 charge to cast the Detect Thoughts spell (save DC 13) from it.',
@@ -3555,14 +2861,14 @@ class SrdWondrousItems {
         charges: '3 charges (recharges 1d3 on Long Rest)',
         savingThrowDc: 'Fixed DC 13',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'medallion',
         'thoughts',
         'detect thoughts',
         'divination'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'medallion', 'thoughts', 'detect thoughts', 'divination'] },
     ),
 
     // ==========================================
@@ -3570,18 +2876,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Amulet of Proof against Detection and Location
-    MagicItem(
-      id: 'item_amulet_of_proof_against_detection_and_location',
-      name: 'Amulet of Proof against Detection and Location',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_amulet_of_proof_against_detection_and_location', ruleset: RulesetVersion.v2024), name: 'Amulet of Proof against Detection and Location',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF64748B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Passive: Hidden from Divination Magic & Sensor Scrying'),
-      ],
+      descriptionMarkdown: 'Passive: Total immunity to divination targeting and magical scrying sensors.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing this amulet, you are hidden from divination magic. You can\'t be targeted by such magic or perceived through magical scrying sensors.',
@@ -3596,8 +2895,7 @@ class SrdWondrousItems {
             'Anti-surveillance pendant protecting the wearer from all forms of magical observation.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'amulet',
         'nondetection',
@@ -3605,22 +2903,15 @@ class SrdWondrousItems {
         'divination',
         'stealth'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'amulet', 'nondetection', 'scrying', 'divination', 'stealth'] },
     ),
 
     // Amulet of the Planes
-    MagicItem(
-      id: 'item_amulet_of_the_planes',
-      name: 'Amulet of the Planes',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_amulet_of_the_planes', ruleset: RulesetVersion.v2024), name: 'Amulet of the Planes',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF38BDF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Cast Plane Shift (DC 15 Intelligence Check Required; Mishap on Failure)'),
-      ],
+      descriptionMarkdown: 'Action: cast Plane Shift with DC 15 Int check; failure triggers wild interplanar teleportation.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: name a plane of existence and make a DC 15 Intelligence check. On success, cast Plane Shift to transport yourself and up to 8 willing creatures. On failure, you and creatures within 15 feet teleport to a random destination.',
@@ -3635,8 +2926,7 @@ class SrdWondrousItems {
             'Interplanar transit relic opening portals across the multiverse.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'amulet',
         'planes',
@@ -3644,22 +2934,15 @@ class SrdWondrousItems {
         'planar',
         'teleportation'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'amulet', 'planes', 'plane shift', 'planar', 'teleportation'] },
     ),
 
     // Necklace of Prayer Beads
-    MagicItem(
-      id: 'item_necklace_of_prayer_beads',
-      name: 'Necklace of Prayer Beads',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_necklace_of_prayer_beads', ruleset: RulesetVersion.v2024), name: 'Necklace of Prayer Beads',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFFBBF24),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Bonus Action: Cast Bead Spell (Bless, Cure Wounds 2nd, Lesser Restoration, Greater Restoration, Branding Smite, Planar Ally; 1/Day per Bead)'),
-      ],
+      descriptionMarkdown: 'Bonus Action divine spellcasting from beads (Bless, Cure Wounds, Restorations, Planar Ally).',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 1d4 + 2 magic beads (Blessing, Curing, Favor, Smiting, Summons, Wind Walk). Attuned cleric, druid, or paladin can cast associated spell as a bonus action (usable 1/day per bead).',
@@ -3674,8 +2957,7 @@ class SrdWondrousItems {
             'Sacred prayer beads providing bonus-action divine spell versatility.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'necklace',
         'prayer beads',
@@ -3684,21 +2966,15 @@ class SrdWondrousItems {
         'cure wounds',
         'healing'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'necklace', 'prayer beads', 'divine', 'bless', 'cure wounds', 'healing'] },
     ),
 
     // Periapt of Health
-    MagicItem(
-      id: 'item_periapt_of_health',
-      name: 'Periapt of Health',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF10B981),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Immune to All Disease (Existing Diseases Suppressed)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_periapt_of_health', ruleset: RulesetVersion.v2024), name: 'Periapt of Health',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Passive: Complete immunity to disease and suppression of active infections.',
       rules2014: ItemEditionDetails(
         summary:
             'You are immune to contracting any disease while you wear this pendant. If you are already infected with disease, its effects are suppressed while wearing the periapt.',
@@ -3713,23 +2989,16 @@ class SrdWondrousItems {
             'Sanitary medical talisman granting total disease immunity.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'periapt', 'health', 'disease', 'immunity', 'healing'],
+      isChangedIn2024: false, tags: ['wondrous', 'periapt', 'health', 'disease', 'immunity', 'healing'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'periapt', 'health', 'disease', 'immunity', 'healing'] },
     ),
 
     // Periapt of Proof against Poison
-    MagicItem(
-      id: 'item_periapt_of_proof_against_poison',
-      name: 'Periapt of Proof against Poison',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF22C55E),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Immune to Poison Damage & Poisoned Condition (Existing Poison Suppressed)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_periapt_of_proof_against_poison', ruleset: RulesetVersion.v2024), name: 'Periapt of Proof against Poison',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Passive: Total immunity to poison damage and the Poisoned condition.',
       rules2014: ItemEditionDetails(
         summary:
             'This delicate pendant makes you immune to poison damage and the poisoned condition. Any active poison is suppressed while worn.',
@@ -3744,8 +3013,7 @@ class SrdWondrousItems {
             'Anti-venom talisman conferring permanent poison immunity.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'periapt',
         'poison',
@@ -3753,22 +3021,15 @@ class SrdWondrousItems {
         'poisoned',
         'protection'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'periapt', 'poison', 'immunity', 'poisoned', 'protection'] },
     ),
 
     // Talisman of Pure Good
-    MagicItem(
-      id: 'item_talisman_of_pure_good',
-      name: 'Talisman of Pure Good',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_talisman_of_pure_good', ruleset: RulesetVersion.v2024), name: 'Talisman of Pure Good',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFFDE047),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: +2 Spell Attack & Save DC • 7 Charges: Action (1 charge): Target Evil Creature (DC 20 Dex Save or Swallow into Flaming Fissure)'),
-      ],
+      descriptionMarkdown: '+2 to spell attacks and save DC; 7 charges to open earth beneath evil foes (DC 20 Dex save or obliterated).',
       rules2014: ItemEditionDetails(
         summary:
             'Requires attunement by good spellcaster. +2 bonus to spell attack rolls and save DC. Has 7 charges. Action: choose an evil creature in 120 ft; target must pass DC 20 Dex save or earth opens to destroy them in a flaming fissure (8d6 radiant + 8d6 fire if saved). Talisman vanishes when last charge is used.',
@@ -3787,8 +3048,7 @@ class SrdWondrousItems {
         charges: '7 charges',
         savingThrowDc: 'Fixed DC 20',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'talisman',
         'pure good',
@@ -3797,22 +3057,15 @@ class SrdWondrousItems {
         'legendary',
         'spell attack'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'talisman', 'pure good', 'holy', 'radiant', 'legendary', 'spell attack'] },
     ),
 
     // Talisman of the Sphere
-    MagicItem(
-      id: 'item_talisman_of_the_sphere',
-      name: 'Talisman of the Sphere',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_talisman_of_the_sphere', ruleset: RulesetVersion.v2024), name: 'Talisman of the Sphere',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF0F172A),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Advantage & Double Prof Bonus on DC 15 Arcana Checks to Control Sphere of Annihilation'),
-      ],
+      descriptionMarkdown: 'Passive: Advantage and doubled proficiency on Arcana checks to manipulate a Sphere of Annihilation.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this talisman, you double your proficiency bonus on Intelligence (Arcana) checks made to control a Sphere of Annihilation and have advantage on the check.',
@@ -3827,30 +3080,22 @@ class SrdWondrousItems {
             'Planar control focus ensuring mastery over black holes and spheres of annihilation.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'talisman',
         'sphere of annihilation',
         'arcana',
         'planar'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'talisman', 'sphere of annihilation', 'arcana', 'planar'] },
     ),
 
     // Talisman of Ultimate Evil
-    MagicItem(
-      id: 'item_talisman_of_ultimate_evil',
-      name: 'Talisman of Ultimate Evil',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_talisman_of_ultimate_evil', ruleset: RulesetVersion.v2024), name: 'Talisman of Ultimate Evil',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF7F1D1D),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: +2 Spell Attack & Save DC • 7 Charges: Action (1 charge): Target Good Creature (DC 20 Dex Save or Swallow into Abyssal Fissure)'),
-      ],
+      descriptionMarkdown: '+2 to spell attacks and save DC; 7 charges to open abyssal chasm beneath good foes (DC 20 Dex save or obliterated).',
       rules2014: ItemEditionDetails(
         summary:
             'Requires attunement by evil spellcaster. +2 bonus to spell attack rolls and save DC. Has 7 charges. Action: choose a good creature in 120 ft; target must pass DC 20 Dex save or earth opens to consume them in an abyssal fissure (8d6 necrotic + 8d6 fire if saved). Talisman crumbles when last charge is spent.',
@@ -3869,8 +3114,7 @@ class SrdWondrousItems {
         charges: '7 charges',
         savingThrowDc: 'Fixed DC 20',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'talisman',
         'ultimate evil',
@@ -3878,6 +3122,7 @@ class SrdWondrousItems {
         'unholy',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'talisman', 'ultimate evil', 'necrotic', 'unholy', 'legendary'] },
     ),
 
     // ==========================================
@@ -3885,19 +3130,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Belt of Dwarvenkind
-    MagicItem(
-      id: 'item_belt_of_dwarvenkind',
-      name: 'Belt of Dwarvenkind',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_belt_of_dwarvenkind', ruleset: RulesetVersion.v2024), name: 'Belt of Dwarvenkind',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFB45309),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Constitution +2 • Advantage on Poison Saves & Resistance • Darkvision 60 ft • Speak Dwarvish • Advantage on Persuasion with Dwarves'),
-      ],
+      descriptionMarkdown: 'Passive: Constitution +2, Poison resistance/advantage, 60 ft Darkvision, Dwarvish fluency, and dwarf diplomacy advantage.',
       rules2014: ItemEditionDetails(
         summary:
             'Constitution increases by 2 (up to max of 20). Advantage on saving throws against poison and resistance to poison damage. Darkvision 60 ft. Can speak, read, and write Dwarvish. Advantage on Charisma (Persuasion) checks with dwarves. Grow a thick beard daily.',
@@ -3912,8 +3149,7 @@ class SrdWondrousItems {
             'Ancestral belt granting dwarven fortitude and racial traits.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'belt',
         'dwarvenkind',
@@ -3922,22 +3158,15 @@ class SrdWondrousItems {
         'darkvision',
         'dwarvish'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'belt', 'dwarvenkind', 'constitution', 'poison resistance', 'darkvision', 'dwarvish'] },
     ),
 
     // Boots of Striding and Springing
-    MagicItem(
-      id: 'item_boots_of_striding_and_springing',
-      name: 'Boots of Striding and Springing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_boots_of_striding_and_springing', ruleset: RulesetVersion.v2024), name: 'Boots of Striding and Springing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF10B981),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Walking Speed Becomes at Least 30 ft (Not Reduced by Heavy Armor/Encumbrance) • Jump Distance Tripled'),
-      ],
+      descriptionMarkdown: 'Passive: 30 ft minimum walking speed immune to armor encumbrance; triple jumping distance.',
       rules2014: ItemEditionDetails(
         summary:
             'Your walking speed becomes 30 feet unless it was already higher, and speed is not reduced if encumbered or in heavy armor. You can jump three times the normal distance.',
@@ -3952,8 +3181,7 @@ class SrdWondrousItems {
             'Mobility boots maximizing jump distance and heavy armor mobility.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'boots',
         'striding',
@@ -3962,22 +3190,15 @@ class SrdWondrousItems {
         'jumping',
         'mobility'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'boots', 'striding', 'springing', 'speed', 'jumping', 'mobility'] },
     ),
 
     // Bracers of Armor
-    MagicItem(
-      id: 'item_bracers_of_armor',
-      name: 'Bracers of Armor',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_bracers_of_armor', ruleset: RulesetVersion.v2024), name: 'Bracers of Armor',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF38BDF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: +2 AC Bonus (Only While Wearing No Armor and Using No Shield)'),
-      ],
+      descriptionMarkdown: 'Passive: +2 AC bonus while unarmored and without a shield.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing these bracers, you gain a +2 bonus to AC if you are wearing no armor and using no shield.',
@@ -3991,8 +3212,7 @@ class SrdWondrousItems {
             'Abjuration bracers granting armored defense to unarmored spellcasters and monks.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'bracers',
         'armor',
@@ -4000,22 +3220,15 @@ class SrdWondrousItems {
         'unarmored',
         'defense'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bracers', 'armor', 'ac bonus', 'unarmored', 'defense'], 'defaultSlot': EquipmentSlot.armor },
     ),
 
     // Gloves of Swimming and Climbing
-    MagicItem(
-      id: 'item_gloves_of_swimming_and_climbing',
-      name: 'Gloves of Swimming and Climbing',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_gloves_of_swimming_and_climbing', ruleset: RulesetVersion.v2024), name: 'Gloves of Swimming and Climbing',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF0D9488),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Climbing & Swimming Do Not Cost Extra Movement • +5 to Athletics Checks to Swim/Climb'),
-      ],
+      descriptionMarkdown: 'Passive: free swimming/climbing movement and +5 to Strength (Athletics) for traverse.',
       rules2014: ItemEditionDetails(
         summary:
             'While wearing these gloves, climbing and swimming do not cost you extra movement, and you have a +5 bonus to Strength (Athletics) checks made to climb or swim.',
@@ -4030,8 +3243,7 @@ class SrdWondrousItems {
             'Exploration gloves optimizing swimming speed and cliff climbing.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'gloves',
         'swimming',
@@ -4039,21 +3251,15 @@ class SrdWondrousItems {
         'athletics',
         'mobility'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'gloves', 'swimming', 'climbing', 'athletics', 'mobility'] },
     ),
 
     // Horseshoes of a Zephyr
-    MagicItem(
-      id: 'item_horseshoes_of_a_zephyr',
-      name: 'Horseshoes of a Zephyr',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF93C5FD),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Mount Floats 4 Inches Above Ground • Ignores Difficult Terrain • Walks on Liquid (Water, Lava) • Leaves No Tracks'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_horseshoes_of_a_zephyr', ruleset: RulesetVersion.v2024), name: 'Horseshoes of a Zephyr',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Passive: mount hovers 4 inches above ground, crossing difficult terrain and liquids without harm or tracks.',
       rules2014: ItemEditionDetails(
         summary:
             'Set of 4 iron horseshoes. A horse or similar creature wearing them floats 4 inches above the ground. It can move across uneven terrain, water, and even lava without harm, leaving no tracks.',
@@ -4068,8 +3274,7 @@ class SrdWondrousItems {
             'Enchanted equestrian shoes enabling floating gallop over all surfaces.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'horseshoes',
         'zephyr',
@@ -4078,20 +3283,15 @@ class SrdWondrousItems {
         'water walk',
         'flight'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'horseshoes', 'zephyr', 'mount', 'hover', 'water walk', 'flight'] },
     ),
 
     // Horseshoes of Speed
-    MagicItem(
-      id: 'item_horseshoes_of_speed',
-      name: 'Horseshoes of Speed',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFF97316),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Passive: Mount Walking Speed Increases by +30 Feet'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_horseshoes_of_speed', ruleset: RulesetVersion.v2024), name: 'Horseshoes of Speed',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Passive: +30 ft walking speed for horse or mount.',
       rules2014: ItemEditionDetails(
         summary:
             'Set of 4 horseshoes. While all four are affixed to the hooves of a horse or similar creature, they increase its walking speed by 30 feet.',
@@ -4104,8 +3304,8 @@ class SrdWondrousItems {
         description: 'Speed-enhancing equestrian shoes for mounts.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'horseshoes', 'speed', 'mount', 'movement'],
+      isChangedIn2024: false, tags: ['wondrous', 'horseshoes', 'speed', 'mount', 'movement'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'horseshoes', 'speed', 'mount', 'movement'] },
     ),
 
     // ==========================================
@@ -4113,18 +3313,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Bag of Beans
-    MagicItem(
-      id: 'item_bag_of_beans',
-      name: 'Bag of Beans',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF16A34A),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Plant Bean in Dirt & Water to Trigger 1d100 Chaotic Wonder Effect (1d6 + 6 Beans)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bag_of_beans', ruleset: RulesetVersion.v2024), name: 'Bag of Beans',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: plant and water bean to spawn random d100 wondrous landmark, monster, or blessing.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 3d4 magic beans. Action: plant a bean in dirt and water it; 1 minute later, a random effect occurs from the d100 Bag of Beans table (giant beanstalk to cloud castle, mummy pyramid, treant spawner, explosive eggs).',
@@ -4139,8 +3332,7 @@ class SrdWondrousItems {
             'Chaotic gardening pouch producing unpredictable magical phenomena.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'bag',
         'beans',
@@ -4149,21 +3341,15 @@ class SrdWondrousItems {
         'spawner',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bag', 'beans', 'chaotic', 'random table', 'spawner', 'consumable'] },
     ),
 
     // Bag of Devouring
-    MagicItem(
-      id: 'item_bag_of_devouring',
-      name: 'Bag of Devouring',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF4C0519),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Cursed Maw: Swallows Ingested Flesh • 50% Pull into Maw when Reaching Inside (DC 15 STR Save or Consumed & Destroyed)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bag_of_devouring', ruleset: RulesetVersion.v2024), name: 'Bag of Devouring',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Hazardous cursed container devouring items and pulling creatures inside on failed DC 15 Strength save.',
       rules2014: ItemEditionDetails(
         summary:
             'Appears as a Bag of Holding. In reality, it is the feeding orifice of an extra-dimensional creature. Swallows organic matter in 1 day. Reaching inside triggers 50% chance to be pulled in on failed DC 15 Strength check, being consumed and killed after 1 round.',
@@ -4180,8 +3366,7 @@ class SrdWondrousItems {
         activation: 'Passive',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'bag',
         'devouring',
@@ -4189,21 +3374,15 @@ class SrdWondrousItems {
         'hazard',
         'extradimensional'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bag', 'devouring', 'cursed', 'hazard', 'extradimensional'] },
     ),
 
     // Crystal Ball
-    MagicItem(
-      id: 'item_crystal_ball',
-      name: 'Crystal Ball',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_crystal_ball', ruleset: RulesetVersion.v2024), name: 'Crystal Ball',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF06B6D4),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label: 'Action: Cast Scrying (Save DC 17) at Will'),
-      ],
+      descriptionMarkdown: 'Action: at-will Scrying casting (DC 17 Wis save).',
       rules2014: ItemEditionDetails(
         summary:
             'While touching this crystal sphere, you can use an action to cast the Scrying spell (save DC 17) with it at will.',
@@ -4218,29 +3397,22 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 17',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'crystal ball',
         'scrying',
         'divination',
         'surveillance'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'crystal ball', 'scrying', 'divination', 'surveillance'] },
     ),
 
     // Cubic Gate
-    MagicItem(
-      id: 'item_cubic_gate',
-      name: 'Cubic Gate',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      glyphColor: Argb(0xFF818CF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '3 Charges: Action (1 charge): Cast Plane Shift to Keyed Plane • Action (2 charges): Open Two-Way Portal for 1 Minute'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_cubic_gate', ruleset: RulesetVersion.v2024), name: 'Cubic Gate',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: '3 charges: Plane Shift or open 1-minute two-way portal to 6 keyed planar destinations.',
       rules2014: ItemEditionDetails(
         summary:
             'A 3-inch cube with 6 faces keyed to Material Plane and 5 other planes. Has 3 charges (regains 1d3 daily at dawn). Action: press 1 face to cast Plane Shift (1 charge) or press twice to open a two-way portal for 1 minute (2 charges).',
@@ -4257,8 +3429,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         charges: '3 charges (recharges 1d3 on Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'cubic gate',
         'portal',
@@ -4266,21 +3437,15 @@ class SrdWondrousItems {
         'planar',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'cubic gate', 'portal', 'plane shift', 'planar', 'legendary'] },
     ),
 
     // Deck of Illusions
-    MagicItem(
-      id: 'item_deck_of_illusions',
-      name: 'Deck of Illusions',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFFA855F7),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Draw & Throw Card up to 30 ft to Spawn Minor Illusion / Creature Phantasm (34 Cards)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_deck_of_illusions', ruleset: RulesetVersion.v2024), name: 'Deck of Illusions',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: draw and toss card up to 30 ft to manifest realistic illusory monster.',
       rules2014: ItemEditionDetails(
         summary:
             'Deck of 34 parchment cards. Action: draw a card at random and throw it up to 30 feet; an illusory creature spawns with visual and audio presence (Dragon, Iron Golem, Giant, Lich, Goblins). Moving card ends illusion.',
@@ -4295,8 +3460,7 @@ class SrdWondrousItems {
             'Illusion card deck deploying decoy creatures in tactical combat.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'deck',
         'illusions',
@@ -4305,21 +3469,15 @@ class SrdWondrousItems {
         'decoy',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'deck', 'illusions', 'phantasm', 'cards', 'decoy', 'consumable'] },
     ),
 
     // Dimensional Shackles
-    MagicItem(
-      id: 'item_dimensional_shackles',
-      name: 'Dimensional Shackles',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF64748B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Shackle Incapacitated Creature • Prevents Extradimensional Movement & Teleportation • DC 30 STR Check to Break (1/30 Days)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_dimensional_shackles', ruleset: RulesetVersion.v2024), name: 'Dimensional Shackles',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: bind incapacitated target, blocking all teleportation, planar travel, and shapechanging (DC 30 Str break check).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: fasten shackles onto an incapacitated creature. Automatically adjusts from Small to Large. Bound creature cannot teleport, use extradimensional travel (Ethereal Plane, Astral Plane, Blink, Misty Step, Plane Shift), or shapeshift. DC 30 Strength check to break free (1 attempt every 30 days).',
@@ -4334,29 +3492,22 @@ class SrdWondrousItems {
             'High-security planar prisoner restraints disabling teleportation and astral escape.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'dimensional shackles',
         'restraints',
         'teleportation',
         'planar lock'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'dimensional shackles', 'restraints', 'teleportation', 'planar lock'] },
     ),
 
     // Iron Bands of Binding
-    MagicItem(
-      id: 'item_iron_bands_of_binding',
-      name: 'Iron Bands of Binding',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF475569),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Throw Sphere at Creature within 60 ft (+6 Ranged Attack) • On Hit: Target is Restrained (DC 20 STR Check to Break; 1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_iron_bands_of_binding', ruleset: RulesetVersion.v2024), name: 'Iron Bands of Binding',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: +6 ranged attack within 60 ft to bind and restrain target up to Huge size on hit (DC 20 Str break).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: throw sphere up to 60 ft with +6 ranged attack. On hit, iron bands expand to bind and restrain target (up to Huge size). Target can make DC 20 Strength check to burst free. Usable once per dawn.',
@@ -4371,29 +3522,22 @@ class SrdWondrousItems {
             'Deployable metallic restraint sphere locking down heavy targets.',
         activation: '1 Action (1/Day)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'iron bands',
         'binding',
         'restrained',
         'crowd control'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'iron bands', 'binding', 'restrained', 'crowd control'] },
     ),
 
     // Iron Flask
-    MagicItem(
-      id: 'item_iron_flask',
-      name: 'Iron Flask',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      glyphColor: Argb(0xFF334155),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Trap Extraplanar Creature within 60 ft (DC 17 WIS Save) • Action: Release Creature (Obeys Commands for 1 Hour)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_iron_flask', ruleset: RulesetVersion.v2024), name: 'Iron Flask',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: imprison extraplanar entity (DC 17 Wis) or release to obey commands for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: unstopper flask and target a creature within 60 ft from another plane. Target must pass DC 17 Wis save or be pulled inside. Action to release: creature obeys your commands for 1 hour, then acts on its own.',
@@ -4410,8 +3554,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 17',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'iron flask',
         'imprisonment',
@@ -4419,21 +3562,15 @@ class SrdWondrousItems {
         'legendary',
         'minion'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'iron flask', 'imprisonment', 'extraplanar', 'legendary', 'minion'] },
     ),
 
     // Mirror of Life Trapping
-    MagicItem(
-      id: 'item_mirror_of_life_trapping',
-      name: 'Mirror of Life Trapping',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.veryRare,
-      glyphColor: Argb(0xFF67E8F9),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Passive: Creature within 30 ft Looking at Mirror Must Make DC 15 CHA Save or be Imprisoned in 1 of 12 Cells • Action: Speak Command Word to Release'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_mirror_of_life_trapping', ruleset: RulesetVersion.v2024), name: 'Mirror of Life Trapping',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Reflection hazard trapping viewers in 12 dimensional cells on failed DC 15 Cha save; command word release.',
       rules2014: ItemEditionDetails(
         summary:
             'Has 12 extra-dimensional cells. Any creature within 30 ft that sees its reflection must succeed on a DC 15 Charisma save or be trapped inside. The mirror can be covered or spoken to to release prisoners.',
@@ -4450,8 +3587,7 @@ class SrdWondrousItems {
         activation: 'Passive & 1 Action',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'mirror',
         'life trapping',
@@ -4459,21 +3595,15 @@ class SrdWondrousItems {
         'hazard',
         'extradimensional'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'mirror', 'life trapping', 'imprisonment', 'hazard', 'extradimensional'] },
     ),
 
     // Well of Many Worlds
-    MagicItem(
-      id: 'item_well_of_many_worlds',
-      name: 'Well of Many Worlds',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      glyphColor: Argb(0xFF312E81),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Unfold Cloth Sheet to Create 6-ft Two-Way Planar Portal to Random World/Plane • Action: Pick up Sheet to Close'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_well_of_many_worlds', ruleset: RulesetVersion.v2024), name: 'Well of Many Worlds',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: deploy black cloth to create 6-foot two-way doorway to random planar world.',
       rules2014: ItemEditionDetails(
         summary:
             'Looks like a 6-foot circular black cloth. Action: unfold onto a flat surface to create a two-way portal to another world or plane (determined randomly by DM). Action: pull edges to fold and close the portal.',
@@ -4488,8 +3618,7 @@ class SrdWondrousItems {
             'Portable world-hopping portal sheet enabling interplanar exploration.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'well of many worlds',
         'portal',
@@ -4497,6 +3626,7 @@ class SrdWondrousItems {
         'interplanetary',
         'legendary'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'well of many worlds', 'portal', 'planar', 'interplanetary', 'legendary'] },
     ),
 
     // ==========================================
@@ -4504,18 +3634,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Bowl of Commanding Water Elementals
-    MagicItem(
-      id: 'item_bowl_of_commanding_water_elementals',
-      name: 'Bowl of Commanding Water Elementals',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF0284C7),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Fill with Water to Cast Conjure Elemental (Water Elemental; 1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bowl_of_commanding_water_elementals', ruleset: RulesetVersion.v2024), name: 'Bowl of Commanding Water Elementals',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: summon Water Elemental using basin of water (1/Day).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: fill bowl with water to cast Conjure Elemental (Water Elemental). The bowl can\'t be used again until next dawn.',
@@ -4529,8 +3652,7 @@ class SrdWondrousItems {
             'Elemental focus for summoning and controlling obedient Water Elementals.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'bowl',
         'water elemental',
@@ -4538,21 +3660,15 @@ class SrdWondrousItems {
         'summon',
         'conjuration'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bowl', 'water elemental', 'elemental', 'summon', 'conjuration'] },
     ),
 
     // Brazier of Commanding Fire Elementals
-    MagicItem(
-      id: 'item_brazier_of_commanding_fire_elementals',
-      name: 'Brazier of Commanding Fire Elementals',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFEA580C),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Light Fire in Brazier to Cast Conjure Elemental (Fire Elemental; 1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_brazier_of_commanding_fire_elementals', ruleset: RulesetVersion.v2024), name: 'Brazier of Commanding Fire Elementals',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: summon Fire Elemental using lit brazier (1/Day).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: light a fire in the brazier to cast Conjure Elemental (Fire Elemental). Usable once per dawn.',
@@ -4565,8 +3681,7 @@ class SrdWondrousItems {
             'Elemental focus for summoning and commanding Fire Elementals.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'brazier',
         'fire elemental',
@@ -4574,21 +3689,15 @@ class SrdWondrousItems {
         'summon',
         'conjuration'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'brazier', 'fire elemental', 'elemental', 'summon', 'conjuration'] },
     ),
 
     // Censer of Controlling Air Elementals
-    MagicItem(
-      id: 'item_censer_of_controlling_air_elementals',
-      name: 'Censer of Controlling Air Elementals',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF38BDF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Burn Incense in Censer to Cast Conjure Elemental (Air Elemental; 1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_censer_of_controlling_air_elementals', ruleset: RulesetVersion.v2024), name: 'Censer of Controlling Air Elementals',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: summon Air Elemental using burning incense (1/Day).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: burn incense in censer to cast Conjure Elemental (Air Elemental). Usable once per dawn.',
@@ -4601,8 +3710,7 @@ class SrdWondrousItems {
             'Elemental focus for summoning and commanding Air Elementals.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'censer',
         'air elemental',
@@ -4610,21 +3718,15 @@ class SrdWondrousItems {
         'summon',
         'conjuration'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'censer', 'air elemental', 'elemental', 'summon', 'conjuration'] },
     ),
 
     // Stone of Controlling Earth Elementals
-    MagicItem(
-      id: 'item_stone_of_controlling_earth_elementals',
-      name: 'Stone of Controlling Earth Elementals',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF78716C),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Place on Ground to Cast Conjure Elemental (Earth Elemental; 1/Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_stone_of_controlling_earth_elementals', ruleset: RulesetVersion.v2024), name: 'Stone of Controlling Earth Elementals',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: summon Earth Elemental by setting stone on ground (1/Day).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: place stone on dirt or rock to cast Conjure Elemental (Earth Elemental). Usable once per dawn.',
@@ -4638,8 +3740,7 @@ class SrdWondrousItems {
             'Elemental focus for summoning and commanding Earth Elementals.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'stone',
         'earth elemental',
@@ -4647,21 +3748,15 @@ class SrdWondrousItems {
         'summon',
         'conjuration'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'stone', 'earth elemental', 'elemental', 'summon', 'conjuration'] },
     ),
 
     // Horn of Blasting
-    MagicItem(
-      id: 'item_horn_of_blasting',
-      name: 'Horn of Blasting',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFFF59E0B),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Blow Horn to Unleash 30-ft Cone (5d6 Thunder + Deafened on DC 15 CON Save; 20% Chance of Horn Explosion)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_horn_of_blasting', ruleset: RulesetVersion.v2024), name: 'Horn of Blasting',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: 30-ft cone dealing 5d6 thunder damage and deafened condition (DC 15 Con). 20% malfunction detonation risk.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: blow horn to emit 30-ft cone. Creatures take 5d6 thunder damage and are deafened for 1 minute on failed DC 15 Con save (half damage on success). 20% chance horn detonates for 10d6 thunder damage to user.',
@@ -4678,23 +3773,16 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'horn', 'blasting', 'thunder', 'deafened', 'sonic'],
+      isChangedIn2024: false, tags: ['wondrous', 'horn', 'blasting', 'thunder', 'deafened', 'sonic'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'horn', 'blasting', 'thunder', 'deafened', 'sonic'] },
     ),
 
     // Pipes of Haunting
-    MagicItem(
-      id: 'item_pipes_of_haunting',
-      name: 'Pipes of Haunting',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF6B7280),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '3 Charges: Action (1 charge): Play Haunting Tune (Creatures in 30 ft Must Pass DC 15 WIS Save or be Frightened for 1 Min)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_pipes_of_haunting', ruleset: RulesetVersion.v2024), name: 'Pipes of Haunting',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '3 charges: play tune frightening non-allies in 30 ft radius (DC 15 Wis save).',
       rules2014: ItemEditionDetails(
         summary:
             'Has 3 charges (regains 1d3 daily at dawn). Action: play pipes; creatures within 30 ft that can hear must succeed on a DC 15 Wisdom save or become frightened for 1 minute.',
@@ -4713,8 +3801,7 @@ class SrdWondrousItems {
         charges: '3 charges (recharges 1d3 on Long Rest)',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'pipes',
         'haunting',
@@ -4723,22 +3810,15 @@ class SrdWondrousItems {
         'music',
         'instrument'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'pipes', 'haunting', 'frightened', 'fear', 'music', 'instrument'] },
     ),
 
     // Pipes of the Sewers
-    MagicItem(
-      id: 'item_pipes_of_the_sewers',
-      name: 'Pipes of the Sewers',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+    EquipmentItem(
+      id: EntityId(slug: 'item_pipes_of_the_sewers', ruleset: RulesetVersion.v2024), name: 'Pipes of the Sewers',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF78716C),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                '3 Charges: Action (1 charge): Call 1d3 Swarms of Rats (Obeys Commands for 1 Hour)'),
-      ],
+      descriptionMarkdown: '3 charges: summon and command 1d3 Swarms of Rats for 1 hour.',
       rules2014: ItemEditionDetails(
         summary:
             'Has 3 charges (regains 1d3 daily at dawn). While worn, ordinary rats are non-hostile. Action: play pipes to call 1d3 Swarms of Rats (if rats are in 1/2 mile); they obey telepathic commands for 1 hour.',
@@ -4753,8 +3833,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         charges: '3 charges (recharges 1d3 on Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'pipes',
         'sewers',
@@ -4763,21 +3842,15 @@ class SrdWondrousItems {
         'summon',
         'minion'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'pipes', 'sewers', 'rats', 'swarm', 'summon', 'minion'] },
     ),
 
     // Wind Fan
-    MagicItem(
-      id: 'item_wind_fan',
-      name: 'Wind Fan',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF38BDF8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Cast Gust of Wind (DC 13 Strength Save; 20% Cumulative Chance to Break if Used More than Once per Day)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wind_fan', ruleset: RulesetVersion.v2024), name: 'Wind Fan',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: cast Gust of Wind (DC 13 Str save). Repeat uses on same day risk destroying fan.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: wave fan to cast Gust of Wind (save DC 13). Can be used once per day safely; each additional use has cumulative 20% chance to rip fan and render it nonmagical.',
@@ -4794,8 +3867,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 13',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'wind fan',
         'gust of wind',
@@ -4803,6 +3875,7 @@ class SrdWondrousItems {
         'push',
         'evocation'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'wind fan', 'gust of wind', 'wind', 'push', 'evocation'] },
     ),
 
     // ==========================================
@@ -4810,18 +3883,11 @@ class SrdWondrousItems {
     // ==========================================
 
     // Bead of Force
-    MagicItem(
-      id: 'item_bead_of_force',
-      name: 'Bead of Force',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      glyphColor: Argb(0xFF6366F1),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                'Action: Throw Bead up to 60 ft • 5d4 Force Damage & Enclose Creatures in 10-ft Resilient Sphere for 1 Min (DC 15 DEX Save)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_bead_of_force', ruleset: RulesetVersion.v2024), name: 'Bead of Force',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: throw bead dealing 5d4 force damage and trapping targets inside a force sphere for 1 minute (DC 15 Dex save).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: throw bead up to 60 ft. Detonates in 10-ft radius: creatures take 5d4 force damage and are trapped in a transparent sphere of force on failed DC 15 Dex save for 1 minute (half damage on success).',
@@ -4838,8 +3904,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'bead of force',
         'force',
@@ -4848,21 +3913,15 @@ class SrdWondrousItems {
         'explosive',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'bead of force', 'force', 'containment', 'sphere', 'explosive', 'consumable'] },
     ),
 
     // Dust of Disappearance
-    MagicItem(
-      id: 'item_dust_of_disappearance',
-      name: 'Dust of Disappearance',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF94A3B8),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Sprinkle Dust on Creature/Object in 5 ft (Invisible for 2d4 Minutes; Does Not End on Attack/Spell)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_dust_of_disappearance', ruleset: RulesetVersion.v2024), name: 'Dust of Disappearance',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: grant 2d4 minutes of persistent Invisibility to all creatures in 10 ft (remains active through attacks and spells).',
       rules2014: ItemEditionDetails(
         summary:
             'Action: throw a pinch of dust into the air; you and creatures within 10 feet become invisible for 2d4 minutes. Unlike normal invisibility, attacking or casting spells does not end the invisibility.',
@@ -4876,8 +3935,7 @@ class SrdWondrousItems {
         description: 'Consumable superior invisibility powder.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'dust',
         'disappearance',
@@ -4885,21 +3943,15 @@ class SrdWondrousItems {
         'stealth',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'dust', 'disappearance', 'invisibility', 'stealth', 'consumable'] },
     ),
 
     // Dust of Dryness
-    MagicItem(
-      id: 'item_dust_of_dryness',
-      name: 'Dust of Dryness',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFFFBBF24),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Absorb 15-ft Cube of Water into Pellet • Action: Smash Pellet to Release Water • 10d6 Damage to Water Elementals'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_dust_of_dryness', ruleset: RulesetVersion.v2024), name: 'Dust of Dryness',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: condense 15-ft cube of water into a portable pellet; crush pellet to unleash flash flood.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: sprinkle dust onto water to instantly absorb a 15-foot cube of liquid into a marble-sized pellet. Action: smash pellet to release all water instantly. Deals 10d6 necrotic damage to water elementals on failed DC 13 Con save.',
@@ -4915,23 +3967,16 @@ class SrdWondrousItems {
             'Water-manipulation dust capturing or unleashing large volumes of liquid.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'dust', 'dryness', 'water', 'flood', 'consumable'],
+      isChangedIn2024: false, tags: ['wondrous', 'dust', 'dryness', 'water', 'flood', 'consumable'],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'dust', 'dryness', 'water', 'flood', 'consumable'] },
     ),
 
     // Dust of Sneezing and Choking
-    MagicItem(
-      id: 'item_dust_of_sneezing_and_choking',
-      name: 'Dust of Sneezing and Choking',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF78716C),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Cursed Hazard: Disperses in 20-ft Cloud (DC 15 CON Save or Incapacitated and Suffocating)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_dust_of_sneezing_and_choking', ruleset: RulesetVersion.v2024), name: 'Dust of Sneezing and Choking',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cursed dust cloud causing Incapacitated condition and suffocation on failed DC 15 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             'Appears as Dust of Disappearance. When thrown, all creatures in 20-ft radius must succeed on a DC 15 Con save or become incapacitated and start suffocating until cured by Lesser Restoration or similar magic.',
@@ -4948,8 +3993,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'dust',
         'sneezing',
@@ -4959,21 +4003,15 @@ class SrdWondrousItems {
         'incapacitated',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'dust', 'sneezing', 'choking', 'cursed', 'suffocating', 'incapacitated', 'consumable'] },
     ),
 
     // Incense of Obsession
-    MagicItem(
-      id: 'item_incense_of_obsession',
-      name: 'Incense of Obsession',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF6B7280),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Cursed Hazard: Sweet Smoke Clouds Mind (DC 15 WIS Save or Obsessed with Spells & Disadvantage on Ability Checks)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_incense_of_obsession', ruleset: RulesetVersion.v2024), name: 'Incense of Obsession',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Cursed incense cloud imposing delusion and disadvantage on all ability checks and attack rolls on failed DC 15 Wis save.',
       rules2014: ItemEditionDetails(
         summary:
             'Appears as Incense of Meditation. When burned, creatures in 30-ft cloud must pass DC 15 Wis save or become obsessed with their spells, taking disadvantage on all attack rolls and ability checks for 24 hours.',
@@ -4989,8 +4027,7 @@ class SrdWondrousItems {
         activation: '1 Action',
         savingThrowDc: 'Fixed DC 15',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'incense',
         'obsession',
@@ -4998,21 +4035,15 @@ class SrdWondrousItems {
         'disadvantage',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'incense', 'obsession', 'cursed', 'disadvantage', 'consumable'] },
     ),
 
     // Restorative Ointment
-    MagicItem(
-      id: 'item_restorative_ointment',
-      name: 'Restorative Ointment',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
-      glyphColor: Argb(0xFF10B981),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Apply 1 Dose (Restores 2d8 + 2 HP • Cures Poison • Cures Disease; 1d4 + 1 Doses)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_restorative_ointment', ruleset: RulesetVersion.v2024), name: 'Restorative Ointment',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: apply salve dose to restore 2d8 + 2 HP, remove Poisoned condition, and cure diseases.',
       rules2014: ItemEditionDetails(
         summary:
             'Jar contains 1d4 + 1 doses of thick salve. Action: apply 1 dose to a creature to restore 2d8 + 2 hit points, cure all diseases, and neutralize all poisons affecting it.',
@@ -5027,8 +4058,7 @@ class SrdWondrousItems {
             'Triple-action medicinal ointment for emergency field healing and neutralization.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'ointment',
         'healing',
@@ -5036,21 +4066,15 @@ class SrdWondrousItems {
         'disease cure',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'ointment', 'healing', 'poison cure', 'disease cure', 'consumable'] },
     ),
 
     // Sovereign Glue
-    MagicItem(
-      id: 'item_sovereign_glue',
-      name: 'Sovereign Glue',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      glyphColor: Argb(0xFFFBBF24),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Apply Glue (Takes 1 Minute to Set; Forms Unbreakable Permanent Bond, Soluble Only by Universal Solvent)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_sovereign_glue', ruleset: RulesetVersion.v2024), name: 'Sovereign Glue',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: apply legendary permanent adhesive bonding objects together permanently.',
       rules2014: ItemEditionDetails(
         summary:
             'Flask contains 1d6 + 1 ounces of milky viscous glue. Takes 1 minute to set, forming an unbreakable bond between two surfaces that can only be dissolved by Universal Solvent, Oil of Etherealness, or Wish.',
@@ -5065,8 +4089,7 @@ class SrdWondrousItems {
             'Indestructible bonding glue dissolved only by Universal Solvent or Wish.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'sovereign glue',
         'adhesive',
@@ -5074,21 +4097,15 @@ class SrdWondrousItems {
         'legendary',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'sovereign glue', 'adhesive', 'permanent', 'legendary', 'consumable'] },
     ),
 
     // Universal Solvent
-    MagicItem(
-      id: 'item_universal_solvent',
-      name: 'Universal Solvent',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.legendary,
-      glyphColor: Argb(0xFF06B6D4),
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Pour Solvent on Any Adhesive or Sovereign Glue to Instantly Dissolve the Bond'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_universal_solvent', ruleset: RulesetVersion.v2024), name: 'Universal Solvent',
+      itemType: 'wondrousItem', category: ItemCategory.wondrousItem, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Action: dissolve any adhesive or Sovereign Glue bond instantly.',
       rules2014: ItemEditionDetails(
         summary:
             'Action: pour milky liquid onto any adhesive, including Sovereign Glue; the adhesive dissolves instantly.',
@@ -5103,8 +4120,7 @@ class SrdWondrousItems {
             'Solvent flask specifically counteracting permanent adhesive bonds.',
         activation: '1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'wondrous',
         'universal solvent',
         'dissolve',
@@ -5112,6 +4128,7 @@ class SrdWondrousItems {
         'legendary',
         'consumable'
       ],
+      customProperties: { 'cost': null, 'category': 'wondrousItem', 'tags': ['wondrous', 'universal solvent', 'dissolve', 'sovereign glue', 'legendary', 'consumable'] },
     ),
   ];
 }

@@ -5,20 +5,15 @@ import '../magic_item_data.dart';
 class SrdArmorAndShields {
   SrdArmorAndShields._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // =========================================================================
     // 1. STANDARD NONMAGICAL ARMOR & SHIELDS
     // =========================================================================
-    MagicItem(
-      id: 'armor_plate',
-      name: 'Plate Armor (Full Plate)',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 18 (Heavy Armor; Str 15 required)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_plate', ruleset: RulesetVersion.v2024), name: 'Plate Armor (Full Plate)',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 18. Heavy armor providing peak nonmagical protection. Requires Str 15 and imposes Disadvantage on Stealth checks.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 18. Heavy armor composed of shaped, interlocking metal plates covering the entire body. Requires Str 15 and imposes Disadvantage on Stealth.',
@@ -46,17 +41,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'heavy', 'plate', 'nonmagical', 'ac 18'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'plate', 'nonmagical', 'ac 18'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'armor_half_plate',
-      name: 'Half Plate Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 15 + Dex Mod (max 2)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_half_plate', ruleset: RulesetVersion.v2024), name: 'Half Plate Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 15 + Dex modifier (max 2). Medium armor with Stealth Disadvantage.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 15 + Dex modifier (max 2). Medium armor covering vital areas with shaped metal plates. Imposes Disadvantage on Stealth.',
@@ -82,17 +73,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'medium', 'half plate', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'half plate', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 15, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'armor_breastplate',
-      name: 'Breastplate',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 14 + Dex Mod (max 2; No Stealth Penalty)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_breastplate', ruleset: RulesetVersion.v2024), name: 'Breastplate',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 14 + Dex modifier (max 2). Medium armor with no Stealth disadvantage.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 14 + Dex modifier (max 2). Medium armor consisting of a fitted metal chest piece worn with supple leather. Imposes NO penalty on Stealth.',
@@ -123,17 +110,13 @@ class SrdArmorAndShields {
         'nonmagical',
         'stealth friendly'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'breastplate', 'nonmagical', 'stealth friendly'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'armor_splint',
-      name: 'Splint Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 17 (Heavy Armor; Str 15 required)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_splint', ruleset: RulesetVersion.v2024), name: 'Splint Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 17. Heavy armor made of vertical metal splints on leather backing.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 17. Heavy armor made of narrow vertical strips of metal riveted to a backing of leather. Requires Str 15 and imposes Disadvantage on Stealth.',
@@ -161,17 +144,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'heavy', 'splint', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'splint', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 17, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'armor_chain_mail',
-      name: 'Chain Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 16 (Heavy Armor; Str 13 required)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_chain_mail', ruleset: RulesetVersion.v2024), name: 'Chain Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 16. Classic heavy armor made of interlocking steel rings.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 16. Heavy armor made of interlocking metal rings worn over a layer of quilted fabric. Requires Str 13 and imposes Disadvantage on Stealth.',
@@ -197,17 +176,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'heavy', 'chain mail', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'chain mail', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 16, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'armor_scale_mail',
-      name: 'Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 14 + Dex Mod (max 2; Stealth Disadvantage)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_scale_mail', ruleset: RulesetVersion.v2024), name: 'Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 14 + Dex modifier (max 2). Overlapping metal scales on leather.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 14 + Dex modifier (max 2). Medium armor consisting of a coat and leggings of leather covered with overlapping pieces of metal.',
@@ -232,17 +207,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'medium', 'scale mail', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'scale mail', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'armor_chain_shirt',
-      name: 'Chain Shirt',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 13 + Dex Mod (max 2; No Stealth Penalty)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_chain_shirt', ruleset: RulesetVersion.v2024), name: 'Chain Shirt',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 13 + Dex modifier (max 2). Medium armor with no Stealth disadvantage.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 13 + Dex modifier (max 2). Medium armor made of interlocking metal rings worn between layers of clothing or leather.',
@@ -268,17 +239,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'medium', 'chain shirt', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'chain shirt', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 13, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'armor_studded_leather',
-      name: 'Studded Leather Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 12 + Full Dex Mod (No Stealth Penalty)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_studded_leather', ruleset: RulesetVersion.v2024), name: 'Studded Leather Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 12 + Dex modifier. Premier light armor reinforced with steel rivets.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 12 + Dex modifier. Light armor made of tough but flexible leather reinforced with close-set rivets or spikes.',
@@ -304,17 +271,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'light', 'studded leather', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'light', 'studded leather', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 12, 'armorType': 'light' },
     ),
-    MagicItem(
-      id: 'armor_leather',
-      name: 'Leather Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 11 + Full Dex Mod'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_leather', ruleset: RulesetVersion.v2024), name: 'Leather Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 11 + Dex modifier. Standard boiled leather suit.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 11 + Dex modifier. Light armor made of boiled and cured leather.',
@@ -338,17 +301,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'light', 'leather', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'light', 'leather', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 11, 'armorType': 'light' },
     ),
-    MagicItem(
-      id: 'armor_padded',
-      name: 'Padded Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 11 + Full Dex Mod (Stealth Disadvantage)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_padded', ruleset: RulesetVersion.v2024), name: 'Padded Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 11 + Dex modifier. Quilted cloth armor with Stealth Disadvantage.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 11 + Dex modifier. Quilted layers of cloth and batting. Imposes Disadvantage on Stealth.',
@@ -373,17 +332,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'light', 'padded', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'light', 'padded', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 11, 'armorType': 'light' },
     ),
-    MagicItem(
-      id: 'armor_hide',
-      name: 'Hide Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Base AC 12 + Dex Mod (max 2)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_hide', ruleset: RulesetVersion.v2024), name: 'Hide Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 12 + Dex modifier (max 2). Medium armor of cured pelts.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 12 + Dex modifier (max 2). Crude armor made from thick furs and pelts.',
@@ -407,18 +362,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'medium', 'hide', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'hide', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 12, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'armor_ring_mail',
-      name: 'Ring Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Base AC 14 (Heavy Armor; No Str Req; Stealth Disadvantage)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_ring_mail', ruleset: RulesetVersion.v2024), name: 'Ring Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: 'AC 14. Heavy armor with no Strength requirement.',
       rules2014: ItemEditionDetails(
         summary:
             'AC 14. Heavy armor consisting of large metal rings sewn into leather backing. Has no Strength requirement and imposes Disadvantage on Stealth.',
@@ -442,17 +392,13 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['armor', 'heavy', 'ring mail', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'ring mail', 'nonmagical'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'armor_shield_standard',
-      name: 'Shield',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.nonmagical,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+2 AC (Requires 1 Free Hand)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'armor_shield_standard', ruleset: RulesetVersion.v2024), name: 'Shield',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'nonmagical', rarityTier: ItemRarity.nonmagical,
+      requiresAttunement: false,
+      descriptionMarkdown: '+2 bonus to AC while held in one hand.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 bonus to AC. Made from wood or metal and carried in one hand. You can benefit from only one shield at a time.',
@@ -476,21 +422,17 @@ class SrdArmorAndShields {
         ],
       ),
       tags: ['shield', 'defense', 'ac', 'nonmagical'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['shield', 'defense', 'ac', 'nonmagical'], 'isShield': true, 'shieldBonus': 2, 'defaultSlot': EquipmentSlot.shield },
     ),
 
     // =========================================================================
     // 2. SPECIFIC MAGIC ARMOR VARIANTS (+1, +2, +3)
     // =========================================================================
-    MagicItem(
-      id: 'plate_plus_1',
-      name: 'Plate Armor +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 19 (18 Base + 1 Magic Bonus)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'plate_plus_1', ruleset: RulesetVersion.v2024), name: 'Plate Armor +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Total AC 19. +1 magical defense bonus applied to full plate armor.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +1 bonus to AC while wearing this suit of magic plate armor (Total AC 19).',
@@ -506,17 +448,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'heavy', 'plate', 'magic', 'ac 19'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'plate', 'magic', 'ac 19'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'plate_plus_2',
-      name: 'Plate Armor +2',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 20 (18 Base + 2 Magic Bonus)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'plate_plus_2', ruleset: RulesetVersion.v2024), name: 'Plate Armor +2',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Total AC 20. +2 magical defense bonus applied to full plate armor.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +2 bonus to AC while wearing this suit of magic plate armor (Total AC 20).',
@@ -532,17 +470,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'heavy', 'plate', 'magic', 'ac 20'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'plate', 'magic', 'ac 20'], 'bonusAc': 2, 'acBonus': 2, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'plate_plus_3',
-      name: 'Plate Armor +3',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.legendary,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 21 (18 Base + 3 Magic Bonus)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'plate_plus_3', ruleset: RulesetVersion.v2024), name: 'Plate Armor +3',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Total AC 21. Legendary +3 enchanted full plate armor.',
       rules2014: ItemEditionDetails(
         summary:
             'You have a +3 bonus to AC while wearing this suit of magic plate armor (Total AC 21).',
@@ -557,18 +491,14 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'heavy', 'plate', 'magic', 'legendary', 'ac 21'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'plate', 'magic', 'legendary', 'ac 21'], 'bonusAc': 3, 'acBonus': 3, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
 
-    MagicItem(
-      id: 'half_plate_plus_1',
-      name: 'Half Plate +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 16 + Dex Mod (max 2)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'half_plate_plus_1', ruleset: RulesetVersion.v2024), name: 'Half Plate +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 bonus to AC (16 + Dex mod max 2) while wearing this magic half plate armor.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 bonus to AC (16 + Dex mod max 2) while wearing this magic half plate armor.',
@@ -584,17 +514,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'medium', 'half plate', 'magic'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'half plate', 'magic'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 15, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'half_plate_plus_2',
-      name: 'Half Plate +2',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 17 + Dex Mod (max 2)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'half_plate_plus_2', ruleset: RulesetVersion.v2024), name: 'Half Plate +2',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+2 bonus to AC (17 + Dex mod max 2) while wearing this magic half plate armor.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 bonus to AC (17 + Dex mod max 2) while wearing this magic half plate armor.',
@@ -610,18 +536,14 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'medium', 'half plate', 'magic'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'half plate', 'magic'], 'bonusAc': 2, 'acBonus': 2, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 15, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
-    MagicItem(
-      id: 'breastplate_plus_1',
-      name: 'Breastplate +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 15 + Dex Mod (max 2; No Stealth Penalty)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'breastplate_plus_1', ruleset: RulesetVersion.v2024), name: 'Breastplate +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 bonus to AC (15 + Dex mod max 2) with no Stealth disadvantage.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 bonus to AC (15 + Dex mod max 2) with no Stealth disadvantage while wearing this magic breastplate.',
@@ -636,17 +558,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'medium', 'breastplate', 'magic', 'stealth friendly'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'breastplate', 'magic', 'stealth friendly'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'breastplate_plus_2',
-      name: 'Breastplate +2',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 16 + Dex Mod (max 2; No Stealth Penalty)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'breastplate_plus_2', ruleset: RulesetVersion.v2024), name: 'Breastplate +2',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+2 bonus to AC (16 + Dex mod max 2) with no Stealth disadvantage.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 bonus to AC (16 + Dex mod max 2) with no Stealth disadvantage while wearing this magic breastplate.',
@@ -661,17 +579,14 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'medium', 'breastplate', 'magic', 'stealth friendly'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'breastplate', 'magic', 'stealth friendly'], 'bonusAc': 2, 'acBonus': 2, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
-    MagicItem(
-      id: 'studded_leather_plus_1',
-      name: 'Studded Leather +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction, label: 'AC 13 + Full Dex Mod'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'studded_leather_plus_1', ruleset: RulesetVersion.v2024), name: 'Studded Leather +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 bonus to AC (13 + Dex modifier) while wearing this magic studded leather armor.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 bonus to AC (13 + Dex modifier) while wearing this magic studded leather armor.',
@@ -687,16 +602,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'light', 'studded leather', 'magic'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'light', 'studded leather', 'magic'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 12, 'armorType': 'light' },
     ),
-    MagicItem(
-      id: 'studded_leather_plus_2',
-      name: 'Studded Leather +2',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction, label: 'AC 14 + Full Dex Mod'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'studded_leather_plus_2', ruleset: RulesetVersion.v2024), name: 'Studded Leather +2',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+2 bonus to AC (14 + Dex modifier) while wearing this magic studded leather armor.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 bonus to AC (14 + Dex modifier) while wearing this magic studded leather armor.',
@@ -712,18 +624,14 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'light', 'studded leather', 'magic'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'light', 'studded leather', 'magic'], 'bonusAc': 2, 'acBonus': 2, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 12, 'armorType': 'light' },
     ),
 
-    MagicItem(
-      id: 'chain_mail_plus_1',
-      name: 'Chain Mail +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 17 (Heavy Armor; Str 13 required)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'chain_mail_plus_1', ruleset: RulesetVersion.v2024), name: 'Chain Mail +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 bonus to AC (Total AC 17) while wearing this magic chain mail.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 bonus to AC (Total AC 17) while wearing this magic chain mail.',
@@ -737,17 +645,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'heavy', 'chain mail', 'magic'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'chain mail', 'magic'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 16, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'chain_shirt_plus_1',
-      name: 'Chain Shirt +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'AC 14 + Dex Mod (max 2; No Stealth Penalty)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'chain_shirt_plus_1', ruleset: RulesetVersion.v2024), name: 'Chain Shirt +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 bonus to AC (14 + Dex mod max 2) with no Stealth penalty.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 bonus to AC (14 + Dex mod max 2) with no Stealth penalty while wearing this magic chain shirt.',
@@ -761,20 +665,17 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'medium', 'chain shirt', 'magic'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'medium', 'chain shirt', 'magic'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 13, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // =========================================================================
     // 3. GENERIC MAGIC ARMOR / SHIELD +1 / +2 / +3
     // =========================================================================
-    MagicItem(
-      id: 'item_armor_plus_1',
-      name: 'Armor +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction, label: '+1 bonus to AC'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_armor_plus_1', ruleset: RulesetVersion.v2024), name: 'Armor +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +1 bonus to AC while wearing this magic armor.',
       rules2014: ItemEditionDetails(
         summary: 'You have a +1 bonus to AC while wearing this magic armor.',
         description:
@@ -787,18 +688,14 @@ class SrdArmorAndShields {
             'You have a +1 bonus to AC while wearing this magic armor.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'defense', 'ac'],
+      isChangedIn2024: false, tags: ['armor', 'defense', 'ac'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'defense', 'ac'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor },
     ),
-    MagicItem(
-      id: 'item_armor_plus_2',
-      name: 'Armor +2',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction, label: '+2 bonus to AC'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_armor_plus_2', ruleset: RulesetVersion.v2024), name: 'Armor +2',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +2 bonus to AC while wearing this magic armor.',
       rules2014: ItemEditionDetails(
         summary: 'You have a +2 bonus to AC while wearing this magic armor.',
         description:
@@ -811,18 +708,14 @@ class SrdArmorAndShields {
             'You have a +2 bonus to AC while wearing this magic armor.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'defense', 'ac'],
+      isChangedIn2024: false, tags: ['armor', 'defense', 'ac'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'defense', 'ac'], 'bonusAc': 2, 'acBonus': 2, 'defaultSlot': EquipmentSlot.armor },
     ),
-    MagicItem(
-      id: 'item_armor_plus_3',
-      name: 'Armor +3',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.legendary,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction, label: '+3 bonus to AC'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_armor_plus_3', ruleset: RulesetVersion.v2024), name: 'Armor +3',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'legendary', rarityTier: ItemRarity.legendary,
+      requiresAttunement: false,
+      descriptionMarkdown: 'You have a +3 bonus to AC while wearing this magic armor.',
       rules2014: ItemEditionDetails(
         summary: 'You have a +3 bonus to AC while wearing this magic armor.',
         description:
@@ -835,20 +728,15 @@ class SrdArmorAndShields {
             'You have a +3 bonus to AC while wearing this magic armor.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'defense', 'ac', 'legendary'],
+      isChangedIn2024: false, tags: ['armor', 'defense', 'ac', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'defense', 'ac', 'legendary'], 'bonusAc': 3, 'acBonus': 3, 'defaultSlot': EquipmentSlot.armor },
     ),
 
-    MagicItem(
-      id: 'item_shield_plus_1',
-      name: 'Shield +1',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+3 Total AC (+2 Base Shield + 1 Magic Bonus)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_shield_plus_1', ruleset: RulesetVersion.v2024), name: 'Shield +1',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 bonus to AC while wielding this shield (+3 AC total).',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this shield, you have a +1 bonus to AC. This bonus is in addition to the shield\'s normal bonus to AC (+2), giving a total of +3 AC.',
@@ -862,19 +750,14 @@ class SrdArmorAndShields {
             'While wielding this magic shield, you gain a +1 bonus to Armor Class (total +3 AC).',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['shield', 'defense', 'ac'],
+      isChangedIn2024: false, tags: ['shield', 'defense', 'ac'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['shield', 'defense', 'ac'], 'bonusAc': 1, 'acBonus': 1, 'isShield': true, 'shieldBonus': 2, 'defaultSlot': EquipmentSlot.shield },
     ),
-    MagicItem(
-      id: 'item_shield_plus_2',
-      name: 'Shield +2',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+4 Total AC (+2 Base Shield + 2 Magic Bonus)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_shield_plus_2', ruleset: RulesetVersion.v2024), name: 'Shield +2',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+2 bonus to AC while wielding this shield (+4 AC total).',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this shield, you have a +2 bonus to AC in addition to the normal shield bonus (+4 AC total).',
@@ -888,19 +771,14 @@ class SrdArmorAndShields {
             'While wielding this magic shield, you gain a +2 bonus to Armor Class (total +4 AC).',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['shield', 'defense', 'ac'],
+      isChangedIn2024: false, tags: ['shield', 'defense', 'ac'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['shield', 'defense', 'ac'], 'bonusAc': 2, 'acBonus': 2, 'isShield': true, 'shieldBonus': 2, 'defaultSlot': EquipmentSlot.shield },
     ),
-    MagicItem(
-      id: 'item_shield_plus_3',
-      name: 'Shield +3',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+5 Total AC (+2 Base Shield + 3 Magic Bonus)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_shield_plus_3', ruleset: RulesetVersion.v2024), name: 'Shield +3',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+3 bonus to AC while wielding this shield (+5 AC total).',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this shield, you have a +3 bonus to AC in addition to the normal shield bonus (+5 AC total).',
@@ -914,25 +792,18 @@ class SrdArmorAndShields {
             'While wielding this magic shield, you gain a +3 bonus to Armor Class (total +5 AC).',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['shield', 'defense', 'ac'],
+      isChangedIn2024: false, tags: ['shield', 'defense', 'ac'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['shield', 'defense', 'ac'], 'bonusAc': 3, 'acBonus': 3, 'isShield': true, 'shieldBonus': 2, 'defaultSlot': EquipmentSlot.shield },
     ),
 
     // =========================================================================
     // 4. SPECIAL & ARTIFACT SHIELDS & ARMOR
     // =========================================================================
-    MagicItem(
-      id: 'item_animated_shield',
-      name: 'Animated Shield',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_animated_shield', ruleset: RulesetVersion.v2024), name: 'Animated Shield',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Bonus Action: Shield Hovers & Protects for 1 Minute (Leaves Both Hands Free)'),
-      ],
+      descriptionMarkdown: 'Bonus Action: shield animates for 1 minute, granting +2 AC while freeing both hands for two-handed weapons/casting.',
       rules2014: ItemEditionDetails(
         summary:
             'Speak command word as bonus action: shield hovers around you for 1 minute, granting +2 AC while leaving both hands free.',
@@ -947,19 +818,14 @@ class SrdArmorAndShields {
             'Speak command word as a Bonus Action: shield hovers for 1 minute to provide +2 AC with both hands free.',
         activation: '1 Bonus Action',
       ),
-      isChangedIn2024: false,
-      tags: ['shield', 'animated', 'hands free', 'defense', 'ac'],
+      isChangedIn2024: false, tags: ['shield', 'animated', 'hands free', 'defense', 'ac'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['shield', 'animated', 'hands free', 'defense', 'ac'], 'isShield': true, 'shieldBonus': 2, 'defaultSlot': EquipmentSlot.shield },
     ),
-    MagicItem(
-      id: 'item_adamantine_armor',
-      name: 'Adamantine Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'Critical Hits against you become Normal Hits'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_adamantine_armor', ruleset: RulesetVersion.v2024), name: 'Adamantine Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Critical Hits against you turn into normal hits.',
       rules2014: ItemEditionDetails(
         summary:
             'This suit of armor is reinforced with adamantine, one of the hardest substances in existence. While you\'re wearing it, any critical hit against you becomes a normal hit.',
@@ -973,19 +839,14 @@ class SrdArmorAndShields {
             'While wearing this armor, any Critical Hit scored against you becomes a normal hit.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'adamantine', 'crit immunity', 'defense'],
+      isChangedIn2024: false, tags: ['armor', 'adamantine', 'crit immunity', 'defense'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'adamantine', 'crit immunity', 'defense'], 'defaultSlot': EquipmentSlot.armor },
     ),
-    MagicItem(
-      id: 'item_mithral_armor',
-      name: 'Mithral Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: 'No Disadvantage on Stealth; No Strength Requirement'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_mithral_armor', ruleset: RulesetVersion.v2024), name: 'Mithral Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: 'Removes Stealth disadvantage and Strength requirements from heavy/medium armor.',
       rules2014: ItemEditionDetails(
         summary:
             'Mithral is a light, flexible metal. If the armor normally imposes disadvantage on Dexterity (Stealth) checks or has a Strength requirement, the mithral version of the armor doesn\'t.',
@@ -1000,25 +861,15 @@ class SrdArmorAndShields {
             'Lightweight mithral eliminates Stealth disadvantage and Strength score requirements on all armor types.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'mithral', 'stealth', 'strength'],
+      isChangedIn2024: false, tags: ['armor', 'mithral', 'stealth', 'strength'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'mithral', 'stealth', 'strength'], 'defaultSlot': EquipmentSlot.armor },
     ),
     // Red Dragon Scale Mail
-    MagicItem(
-      id: 'item_red_dragon_scale_mail',
-      name: 'Red Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_red_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Red Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFEF4444),
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.fire,
-            label:
-                '+1 Scale Mail (AC 15 + Dex max 2), Fire Resistance, Advantage vs Fire Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Fire Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of red dragon scales granting Fire Resistance, advantage on saves against dragon breath weapons and Frightful Presence, and action to sense dragon locations in 30 miles.',
@@ -1033,8 +884,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail crafted from red dragon scales granting Fire Resistance, Advantage on saves vs Dragon breath weapons and Frightful Presence, and 30-mile dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'red dragon',
@@ -1042,24 +892,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'red dragon', 'fire', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Blue Dragon Scale Mail
-    MagicItem(
-      id: 'item_blue_dragon_scale_mail',
-      name: 'Blue Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_blue_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Blue Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF38BDF8),
-      damageAccent: DamageAccent.lightning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.lightning,
-            label:
-                '+1 Scale Mail, Lightning Resistance, Advantage vs Lightning Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Lightning Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of blue dragon scales granting Lightning Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1074,8 +915,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Lightning Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'blue dragon',
@@ -1083,24 +923,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'blue dragon', 'lightning', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Green Dragon Scale Mail
-    MagicItem(
-      id: 'item_green_dragon_scale_mail',
-      name: 'Green Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_green_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Green Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF10B981),
-      damageAccent: DamageAccent.poison,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.poison,
-            label:
-                '+1 Scale Mail, Poison Resistance, Advantage vs Poison Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Poison Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of green dragon scales granting Poison Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1115,8 +946,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Poison Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'green dragon',
@@ -1124,24 +954,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'green dragon', 'poison', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // White Dragon Scale Mail
-    MagicItem(
-      id: 'item_white_dragon_scale_mail',
-      name: 'White Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_white_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'White Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFF1F5F9),
-      damageAccent: DamageAccent.cold,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.cold,
-            label:
-                '+1 Scale Mail, Cold Resistance, Advantage vs Cold Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Cold Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of white dragon scales granting Cold Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1156,8 +977,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Cold Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'white dragon',
@@ -1165,24 +985,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'white dragon', 'cold', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Black Dragon Scale Mail
-    MagicItem(
-      id: 'item_black_dragon_scale_mail',
-      name: 'Black Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_black_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Black Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFF475569),
-      damageAccent: DamageAccent.acid,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.acid,
-            label:
-                '+1 Scale Mail, Acid Resistance, Advantage vs Acid Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Acid Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of black dragon scales granting Acid Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1197,8 +1008,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Acid Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'black dragon',
@@ -1206,24 +1016,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'black dragon', 'acid', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Gold Dragon Scale Mail
-    MagicItem(
-      id: 'item_gold_dragon_scale_mail',
-      name: 'Gold Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_gold_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Gold Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFF59E0B),
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.fire,
-            label:
-                '+1 Scale Mail, Fire Resistance, Advantage vs Fire Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Fire Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of gold dragon scales granting Fire Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1238,8 +1039,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Fire Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'gold dragon',
@@ -1247,24 +1047,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'gold dragon', 'fire', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Silver Dragon Scale Mail
-    MagicItem(
-      id: 'item_silver_dragon_scale_mail',
-      name: 'Silver Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_silver_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Silver Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFCBD5E1),
-      damageAccent: DamageAccent.cold,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.cold,
-            label:
-                '+1 Scale Mail, Cold Resistance, Advantage vs Cold Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Cold Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of silver dragon scales granting Cold Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1279,8 +1070,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Cold Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'silver dragon',
@@ -1288,24 +1078,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'silver dragon', 'cold', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Bronze Dragon Scale Mail
-    MagicItem(
-      id: 'item_bronze_dragon_scale_mail',
-      name: 'Bronze Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_bronze_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Bronze Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFCD7F32),
-      damageAccent: DamageAccent.lightning,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.lightning,
-            label:
-                '+1 Scale Mail, Lightning Resistance, Advantage vs Lightning Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Lightning Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of bronze dragon scales granting Lightning Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1320,8 +1101,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Lightning Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'bronze dragon',
@@ -1329,24 +1109,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'bronze dragon', 'lightning', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Brass Dragon Scale Mail
-    MagicItem(
-      id: 'item_brass_dragon_scale_mail',
-      name: 'Brass Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_brass_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Brass Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFD97706),
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.fire,
-            label:
-                '+1 Scale Mail, Fire Resistance, Advantage vs Fire Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Fire Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of brass dragon scales granting Fire Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1361,8 +1132,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Fire Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'brass dragon',
@@ -1370,24 +1140,15 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'brass dragon', 'fire', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
 
     // Copper Dragon Scale Mail
-    MagicItem(
-      id: 'item_copper_dragon_scale_mail',
-      name: 'Copper Dragon Scale Mail',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_copper_dragon_scale_mail', ruleset: RulesetVersion.v2024), name: 'Copper Dragon Scale Mail',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      glyphColor: Argb(0xFFB87333),
-      damageAccent: DamageAccent.acid,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            damageType: DamageAccent.acid,
-            label:
-                '+1 Scale Mail, Acid Resistance, Advantage vs Acid Breath & 30-Mile Dragon Sense'),
-      ],
+      descriptionMarkdown: '+1 Scale Mail; Acid Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 scale mail made of copper dragon scales granting Acid Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
@@ -1402,8 +1163,7 @@ class SrdArmorAndShields {
             '+1 Scale Mail granting Acid Resistance and dragon detection.',
         activation: 'Passive / 1 Action',
       ),
-      isChangedIn2024: false,
-      tags: [
+      isChangedIn2024: false, tags: [
         'armor',
         'dragon',
         'copper dragon',
@@ -1411,18 +1171,13 @@ class SrdArmorAndShields {
         'resistance',
         'scale mail'
       ],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'dragon', 'copper dragon', 'acid', 'resistance', 'scale mail'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 14, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'item_dwarven_plate',
-      name: 'Dwarven Plate',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+2 Plate Armor (AC 20) & Reaction: Reduce Forced Push/Prone by 10 ft'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_dwarven_plate', ruleset: RulesetVersion.v2024), name: 'Dwarven Plate',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+2 Plate Armor (AC 20); Reaction to resist forced movement by 10 feet.',
       rules2014: ItemEditionDetails(
         summary:
             '+2 plate armor. If an effect moves you against your will along the ground, you can use your reaction to reduce the distance you are moved by up to 10 feet.',
@@ -1437,20 +1192,14 @@ class SrdArmorAndShields {
             '+2 bonus to AC. When an effect pushes you, use Reaction to reduce forced movement by up to 10 feet.',
         activation: 'Passive / 1 Reaction',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'plate', 'dwarven', 'defense', 'forced movement'],
+      isChangedIn2024: false, tags: ['armor', 'plate', 'dwarven', 'defense', 'forced movement'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'plate', 'dwarven', 'defense', 'forced movement'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
-    MagicItem(
-      id: 'item_elven_chain',
-      name: 'Elven Chain',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+1 Chain Shirt (AC 14 + Dex max 2); Proficient Even If You Lack Medium Armor Proficiency'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_elven_chain', ruleset: RulesetVersion.v2024), name: 'Elven Chain',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 Chain Shirt; grants proficiency to wearers who lack medium armor proficiency.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 chain shirt. You are considered proficient with this armor even if you lack medium armor proficiency.',
@@ -1465,20 +1214,14 @@ class SrdArmorAndShields {
             '+1 AC bonus. Any character is proficient while wearing this armor, making it ideal for wizards, sorcerers, and rogues.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'elven', 'medium armor', 'proficiency', 'spellcaster'],
+      isChangedIn2024: false, tags: ['armor', 'elven', 'medium armor', 'proficiency', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'elven', 'medium armor', 'proficiency', 'spellcaster'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 13, 'armorType': 'medium', 'maxDexBonus': 2 },
     ),
-    MagicItem(
-      id: 'item_glamoured_studded_leather',
-      name: 'Glamoured Studded Leather',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+1 Studded Leather (AC 13 + Dex); Bonus Action: Disguise Armor as Any Outfit'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_glamoured_studded_leather', ruleset: RulesetVersion.v2024), name: 'Glamoured Studded Leather',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: false,
+      descriptionMarkdown: '+1 Studded Leather; Bonus Action: illusory shift into clothing or other armor suits.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 studded leather armor. Bonus action: speak command word to disguise the armor as normal clothing or other armor.',
@@ -1493,21 +1236,14 @@ class SrdArmorAndShields {
             '+1 bonus to AC. Use Bonus Action to change visual appearance into normal clothes or distinct armor styles at will.',
         activation: '1 Bonus Action / Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['armor', 'glamour', 'disguise', 'stealth'],
+      isChangedIn2024: false, tags: ['armor', 'glamour', 'disguise', 'stealth'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'glamour', 'disguise', 'stealth'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 12, 'armorType': 'light' },
     ),
-    MagicItem(
-      id: 'item_spellguard_shield',
-      name: 'Spellguard Shield',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_spellguard_shield', ruleset: RulesetVersion.v2024), name: 'Spellguard Shield',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Advantage on Saves vs Spells; Spell Attack Rolls against you have Disadvantage'),
-      ],
+      descriptionMarkdown: 'Advantage on all saving throws vs spells/magical effects; Spell attacks against you suffer Disadvantage.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this shield, you have advantage on saving throws against spells and other magical effects, and spell attacks have disadvantage against you.',
@@ -1522,21 +1258,14 @@ class SrdArmorAndShields {
             'While wielding this shield, gain Advantage on saving throws vs spells and other magical effects, and spell attacks against you have Disadvantage.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['shield', 'spellguard', 'magic resistance', 'defense'],
+      isChangedIn2024: false, tags: ['shield', 'spellguard', 'magic resistance', 'defense'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['shield', 'spellguard', 'magic resistance', 'defense'], 'isShield': true, 'shieldBonus': 2, 'defaultSlot': EquipmentSlot.shield },
     ),
-    MagicItem(
-      id: 'item_shield_of_missile_attraction',
-      name: 'Shield of Missile Attraction',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_shield_of_missile_attraction', ruleset: RulesetVersion.v2024), name: 'Shield of Missile Attraction',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to Ranged Weapon Damage; Cursed: Pulls Ranged Attacks within 10 ft to You'),
-      ],
+      descriptionMarkdown: 'Resistance to Ranged Weapon Damage; Cursed redirection of projectile attacks within 10 ft.',
       rules2014: ItemEditionDetails(
         summary:
             'Grants resistance to damage from ranged weapon attacks. Cursed: whenever a ranged weapon attack is made against a target within 10 feet of you, the curse redirects the attack to you.',
@@ -1551,21 +1280,14 @@ class SrdArmorAndShields {
             'Provides Resistance to damage from ranged weapon attacks. Cursed: pulls ranged attacks within 10 feet directly to yourself.',
         activation: 'Passive / Cursed Trigger',
       ),
-      isChangedIn2024: false,
-      tags: ['shield', 'curse', 'missile', 'ranged defense'],
+      isChangedIn2024: false, tags: ['shield', 'curse', 'missile', 'ranged defense'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['shield', 'curse', 'missile', 'ranged defense'], 'isShield': true, 'shieldBonus': 2, 'defaultSlot': EquipmentSlot.shield },
     ),
-    MagicItem(
-      id: 'item_armor_of_invulnerability',
-      name: 'Armor of Invulnerability',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_armor_of_invulnerability', ruleset: RulesetVersion.v2024), name: 'Armor of Invulnerability',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to Nonmagical Damage • Action (1/Day): Immune to Nonmagical Damage for 10 Minutes'),
-      ],
+      descriptionMarkdown: 'Plate armor granting Resistance to nonmagical damage; Action for 10 minutes of complete immunity to nonmagical damage.',
       rules2014: ItemEditionDetails(
         summary:
             'Plate armor. Resistance to nonmagical damage. Action (1/day): gain immunity to nonmagical damage for 10 minutes.',
@@ -1581,19 +1303,13 @@ class SrdArmorAndShields {
         activation: 'Passive / 1 Action (1/Long Rest)',
       ),
       tags: ['armor', 'plate', 'invulnerability', 'immunity', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'plate', 'invulnerability', 'immunity', 'legendary'], 'defaultSlot': EquipmentSlot.armor },
     ),
-    MagicItem(
-      id: 'item_armor_of_resistance',
-      name: 'Armor of Resistance',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_armor_of_resistance', ruleset: RulesetVersion.v2024), name: 'Armor of Resistance',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to 1 Damage Type (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, Thunder)'),
-      ],
+      descriptionMarkdown: 'Grants Resistance to one designated damage type.',
       rules2014: ItemEditionDetails(
         summary:
             'You have resistance to one type of damage while you wear this armor (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, or Thunder).',
@@ -1608,19 +1324,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'resistance', 'elemental', 'defense'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'resistance', 'elemental', 'defense'], 'defaultSlot': EquipmentSlot.armor },
     ),
-    MagicItem(
-      id: 'item_armor_of_vulnerability',
-      name: 'Armor of Vulnerability',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_armor_of_vulnerability', ruleset: RulesetVersion.v2024), name: 'Armor of Vulnerability',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                'Resistance to 1 Damage Type (Bludgeoning, Piercing, or Slashing) • Cursed: Vulnerability to the Other Two'),
-      ],
+      descriptionMarkdown: 'Plate armor granting Resistance to one weapon damage type and Vulnerability to the other two.',
       rules2014: ItemEditionDetails(
         summary:
             'Plate armor granting resistance to one physical damage type (bludgeoning, piercing, or slashing). Cursed: you are vulnerable to the other two physical damage types.',
@@ -1636,20 +1346,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'plate', 'cursed', 'vulnerability', 'resistance'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'plate', 'cursed', 'vulnerability', 'resistance'], 'defaultSlot': EquipmentSlot.armor },
     ),
-    MagicItem(
-      id: 'item_demon_armor',
-      name: 'Demon Armor',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.veryRare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_demon_armor', ruleset: RulesetVersion.v2024), name: 'Demon Armor',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
       requiresAttunement: true,
-      damageAccent: DamageAccent.slashing,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label:
-                '+1 Plate Armor (AC 19) • Claw Attacks (1d8 Slashing + 1 Magic Weapon) • Cursed: Disadvantage vs Demons'),
-      ],
+      descriptionMarkdown: '+1 Plate Armor with 1d8 claw unarmed strikes and Abyssal fluency. Cursed disadvantage against demons.',
       rules2014: ItemEditionDetails(
         summary:
             '+1 plate armor (AC 19). Gauntlets have claws dealing 1d8 slashing (magic +1). Cursed: cannot remove without Remove Curse; disadvantage on attacks and saves vs demons.',
@@ -1665,19 +1368,13 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'plate', 'demon', 'cursed', 'claws', 'unarmed'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'plate', 'demon', 'cursed', 'claws', 'unarmed'], 'defaultSlot': EquipmentSlot.armor },
     ),
-    MagicItem(
-      id: 'item_plate_armor_of_etherealness',
-      name: 'Plate Armor of Etherealness',
-      category: ItemCategory.armor,
-      rarity: ItemRarity.legendary,
+    EquipmentItem(
+      id: EntityId(slug: 'item_plate_armor_of_etherealness', ruleset: RulesetVersion.v2024), name: 'Plate Armor of Etherealness',
+      itemType: 'armor', category: ItemCategory.armor, rarity: 'legendary', rarityTier: ItemRarity.legendary,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.sustain,
-            label:
-                'Action: Cast Etherealness for up to 10 Minutes (Recharges Daily at Dawn)'),
-      ],
+      descriptionMarkdown: 'Plate armor; Action to shift into the Border Ethereal for 10 minutes (1/Long Rest).',
       rules2014: ItemEditionDetails(
         summary:
             'Plate armor. Action: speak command word to gain the effect of the Etherealness spell for up to 10 minutes or until dismissed as a bonus action.',
@@ -1693,6 +1390,7 @@ class SrdArmorAndShields {
         activation: '1 Action (1/Long Rest)',
       ),
       tags: ['armor', 'plate', 'etherealness', 'phase', 'legendary'],
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'plate', 'etherealness', 'phase', 'legendary'], 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
   ];
 }

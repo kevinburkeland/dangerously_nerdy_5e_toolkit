@@ -84,15 +84,15 @@ Map<String, dynamic> serializeItemEditionDetails(ItemEditionDetails d) => {
       'properties': d.properties,
     };
 
-Map<String, dynamic> serializeItemForCatalogGolden(MagicItem item) {
+Map<String, dynamic> serializeItemForCatalogGolden(EquipmentItem item) {
   final nameQ = item.name.split(' ').first;
   return {
-    'id': item.id,
+    'id': item.id.slug,
     'name': item.name,
     'name2014': item.name2014,
     'name2024': item.name2024,
     'category': item.category.name,
-    'rarity': item.rarity.name,
+    'rarity': item.rarityTier.name,
     'cost': item.cost,
     'cost2014': item.cost2014,
     'cost2024': item.cost2024,
@@ -136,7 +136,7 @@ Map<String, dynamic> buildItemCatalogGoldenMap() {
   MagicItemLibrary.setHomebrewItems(const []);
   final entries = <String, dynamic>{};
   for (final item in MagicItemLibrary.baseItems) {
-    entries[item.id] = serializeItemForCatalogGolden(item);
+    entries[item.id.slug] = serializeItemForCatalogGolden(item);
   }
   return {
     'count': entries.length,
@@ -177,20 +177,20 @@ Map<String, dynamic> buildCatalogLookupsGoldenMap() {
   final itemById = <String, String?>{};
   final itemByName = <String, String?>{};
   for (final item in MagicItemLibrary.baseItems) {
-    itemById[item.id] = MagicItemLibrary.findById(item.id)?.id;
-    itemByName[item.name] = MagicItemLibrary.findByName(item.name)?.id;
+    itemById[item.id.slug] = MagicItemLibrary.findById(item.id.slug)?.id.slug;
+    itemByName[item.name] = MagicItemLibrary.findByName(item.name)?.id.slug;
   }
 
   final itemsByCategory = <String, List<String>>{};
   for (final cat in ItemCategory.values) {
     itemsByCategory[cat.name] =
-        MagicItemLibrary.getByCategory(cat).map((i) => i.id).toList();
+        MagicItemLibrary.getByCategory(cat).map((i) => i.id.slug).toList();
   }
 
   final itemsByRarity = <String, List<String>>{};
   for (final rar in ItemRarity.values) {
     itemsByRarity[rar.name] =
-        MagicItemLibrary.getByRarity(rar).map((i) => i.id).toList();
+        MagicItemLibrary.getByRarity(rar).map((i) => i.id.slug).toList();
   }
 
   return {
@@ -208,7 +208,7 @@ Map<String, dynamic> buildCatalogLookupsGoldenMap() {
       'byClass2024': spellsByClass2024,
     },
     'magicItems': {
-      'diffIds': MagicItemLibrary.diffItems.map((i) => i.id).toList(),
+      'diffIds': MagicItemLibrary.diffItems.map((i) => i.id.slug).toList(),
       'byIdCount': itemById.length,
       'byIdMismatches': itemById.entries
           .where((e) => e.value != e.key)
@@ -225,7 +225,17 @@ Map<String, dynamic> buildItemRulesViewGoldenMap() {
   MagicItemLibrary.setHomebrewItems(const []);
   final entries = <String, dynamic>{};
   for (final eq in SrdEquipmentLibrary.allEquipmentItems) {
-    entries[eq.id.slug] = _jsonSafe(eq.toMap());
+    final full = eq.toMap();
+    entries[eq.id.slug] = _jsonSafe({
+      'id': full['id'],
+      'name': full['name'],
+      'itemType': full['itemType'],
+      'rarity': full['rarity'],
+      'requiresAttunement': full['requiresAttunement'],
+      'descriptionMarkdown': full['descriptionMarkdown'],
+      'grants': full['grants'],
+      'customProperties': full['customProperties'],
+    });
   }
   return {
     'count': entries.length,

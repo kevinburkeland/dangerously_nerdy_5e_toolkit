@@ -1,78 +1,36 @@
 import '../dm_screen_data.dart';
 import '../visual/glyph_kinds.dart';
+import 'item_presentation_registry.dart';
 
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart'
+    show
+        EntityId,
+        EquipmentItem,
+        EquipmentSlot,
+        ItemCategory,
+        ItemEditionDetails,
+        ItemRarity,
+        RulesetVersion;
 export '../dm_screen_data.dart' show DmRulesEdition;
 export '../visual/argb.dart';
 export '../visual/glyph_kinds.dart';
+export 'item_presentation_registry.dart';
 
-/// Detailed rules information for a specific rules edition of a magic item.
-class ItemEditionDetails {
-  final String summary;
-  final String description;
-  final String?
-      activation; // e.g. "1 Action", "1 Bonus Action", "Passive", "Special"
-  final String? charges; // e.g. "7 charges (recharges 1d6 + 1 daily at dawn)"
-  final String? masteryProperties; // e.g. "Vex", "Topple" (2024 Weapon Mastery)
-  final String? savingThrowDc; // e.g. "DC 15 or your Spell Save DC"
-  final List<String> properties; // bullet points of mechanics
+/// UI, crafting, search, and glyph presentation helpers for [EquipmentItem].
+extension EquipmentItemUi on EquipmentItem {
+  /// Stable string identifier for catalog lookup and presentation mapping.
+  String get slug => id.slug;
 
-  const ItemEditionDetails({
-    required this.summary,
-    required this.description,
-    this.activation,
-    this.charges,
-    this.masteryProperties,
-    this.savingThrowDc,
-    this.properties = const [],
-  });
-}
+  /// Explicit glyph color override attached via the app presentation registry.
+  Argb? get glyphArgb => kBundledItemPresentation[id.slug]?.glyphArgb;
 
-/// Represents an SRD Magic Item with 2014 & 2024 comparison metadata and rules definitions.
-class MagicItem {
-  final String id;
-  final String name;
-  final String? name2014;
-  final String? name2024;
-  final ItemCategory category;
-  final ItemRarity rarity;
-  final String? cost;
-  final String? cost2014;
-  final String? cost2024;
-  final bool requiresAttunement;
-  final String? attunementRequirement;
-  final DamageAccent? damageAccent;
-  final List<ActionTraitRing> actionRings;
-  final ItemEditionDetails rules2014;
-  final ItemEditionDetails rules2024;
-  final bool isChangedIn2024;
-  final String? diffSummary;
-  final List<String> diffHighlights;
-  final Argb? glyphArgb;
-  final List<String> tags;
+  /// Explicit damage accent attached via the app presentation registry.
+  DamageAccent? get damageAccent =>
+      kBundledItemPresentation[id.slug]?.damageAccent;
 
-  const MagicItem({
-    required this.id,
-    required this.name,
-    this.name2014,
-    this.name2024,
-    required this.category,
-    required this.rarity,
-    this.cost,
-    this.cost2014,
-    this.cost2024,
-    this.requiresAttunement = false,
-    this.attunementRequirement,
-    this.damageAccent,
-    this.actionRings = const [],
-    required this.rules2014,
-    required this.rules2024,
-    this.isChangedIn2024 = false,
-    this.diffSummary,
-    this.diffHighlights = const [],
-    Argb? glyphColor,
-    Argb? glyphArgb,
-    this.tags = const [],
-  }) : glyphArgb = glyphColor ?? glyphArgb;
+  /// Explicit action rings attached via the app presentation registry.
+  List<ActionTraitRing> get actionRings =>
+      kBundledItemPresentation[id.slug]?.actionRings ?? const [];
 
   /// True if this item is a consumable (potion, scroll, oil, ammunition, single-use token).
   bool get isConsumable {
@@ -226,7 +184,7 @@ class MagicItem {
     final text = [
       name,
       category.displayName,
-      rarity.displayName,
+      rarityTier.displayName,
       ...tags,
       rules.summary,
       rules.description,
@@ -431,8 +389,8 @@ class MagicItem {
     }
 
     // Legendary / Artifact
-    if (rarity == ItemRarity.legendary ||
-        rarity == ItemRarity.artifact ||
+    if (rarityTier == ItemRarity.legendary ||
+        rarityTier == ItemRarity.artifact ||
         lowerTags.contains('legendary') ||
         lowerTags.contains('artifact')) {
       addRing(ActionRingType.legendary);
@@ -525,7 +483,7 @@ class MagicItem {
 
     // Standard 5e / DMG Rarity-based pricing
     final consumable = isConsumable;
-    return switch (rarity) {
+    return switch (rarityTier) {
       ItemRarity.nonmagical => 'Varies',
       ItemRarity.common => consumable ? '25–50 gp' : '50–100 gp',
       ItemRarity.uncommon => consumable ? '100–250 gp' : '100–500 gp',
@@ -816,7 +774,7 @@ class MagicItem {
     bool formulaRequired = true;
     final notes = <String>[];
 
-    if (rarity == ItemRarity.nonmagical) {
+    if (rarityTier == ItemRarity.nonmagical) {
       final priceStr = getEffectivePrice(edition);
       final match = RegExp(r'(\d[\d,]*)').firstMatch(priceStr);
       final basePrice = match != null
@@ -837,7 +795,7 @@ class MagicItem {
       notes.add('Raw materials cost 50% of the item\'s market purchase price.');
       notes.add(
           '2024 Rules: Progress is made at 10 gp per day during downtime.');
-    } else if (rarity == ItemRarity.common) {
+    } else if (rarityTier == ItemRarity.common) {
       goldCost = consumable ? 25 : 50;
       goldCostDisplay =
           '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
@@ -854,7 +812,7 @@ class MagicItem {
         notes.add(
             'Consumable item: Halves crafting time and gold material costs.');
       }
-    } else if (rarity == ItemRarity.uncommon) {
+    } else if (rarityTier == ItemRarity.uncommon) {
       goldCost = consumable ? 100 : 200;
       goldCostDisplay =
           '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
@@ -872,7 +830,7 @@ class MagicItem {
         notes.add(
             'Consumable item: Halves crafting time and gold material costs.');
       }
-    } else if (rarity == ItemRarity.rare) {
+    } else if (rarityTier == ItemRarity.rare) {
       goldCost = consumable ? 1000 : 2000;
       goldCostDisplay =
           '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
@@ -893,7 +851,7 @@ class MagicItem {
         notes.add(
             'Consumable item: Halves crafting time and gold material costs.');
       }
-    } else if (rarity == ItemRarity.veryRare) {
+    } else if (rarityTier == ItemRarity.veryRare) {
       goldCost = consumable ? 10000 : 20000;
       goldCostDisplay =
           '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
@@ -914,7 +872,7 @@ class MagicItem {
         notes.add(
             'Consumable item: Halves crafting time and gold material costs.');
       }
-    } else if (rarity == ItemRarity.legendary) {
+    } else if (rarityTier == ItemRarity.legendary) {
       goldCost = consumable ? 50000 : 100000;
       goldCostDisplay =
           '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
@@ -957,7 +915,7 @@ class MagicItem {
           'Spellcasting Prerequisite: Must be capable of casting ${spells.join(", ")} or expend the requisite spell slot daily during crafting.');
     }
 
-    final quickSummary = rarity == ItemRarity.artifact
+    final quickSummary = rarityTier == ItemRarity.artifact
         ? 'Artifact: Divine quest or planar forge required.'
         : '$goldCostDisplay • $primaryTool • ${edition == DmRulesEdition.v2024 ? time2024Display : time2014Display}';
 
@@ -1007,7 +965,7 @@ class MagicItem {
     final buffer = StringBuffer()
       ..write('$effectiveName ')
       ..write('${category.displayName} ')
-      ..write('${rarity.displayName} ')
+      ..write('${rarityTier.displayName} ')
       ..write('$priceStr ')
       ..write('${crafting.primaryTool} ')
       ..write('${crafting.bastionFacility} ')
@@ -1039,7 +997,7 @@ class MagicItem {
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
     if (categoryFilter != null && category != categoryFilter) return false;
-    if (rarityFilter != null && rarity != rarityFilter) return false;
+    if (rarityFilter != null && rarityTier != rarityFilter) return false;
     if (attunementOnly == true && !requiresAttunement) return false;
     if (changedOnly == true && !isChangedIn2024) return false;
     if (damageAccentFilter != null && damageAccent != damageAccentFilter)

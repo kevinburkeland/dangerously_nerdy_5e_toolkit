@@ -406,7 +406,7 @@ void main() {
 
       for (final item in items) {
         final lowerName = item.name.toLowerCase();
-        final lowerId = item.id.toLowerCase();
+        final lowerId = item.id.slug.toLowerCase();
         final lowerDiff = (item.diffSummary ?? '').toLowerCase();
 
         for (final forbidden in forbiddenProductIdentity) {

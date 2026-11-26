@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/tables/srd_tables_library.dart';
 
-bool _labelMatchesItemName(String label, MagicItem item) {
+bool _labelMatchesItemName(String label, EquipmentItem item) {
   final validNames = <String>{
     item.name,
     if (item.name2014 != null) item.name2014!,
@@ -26,8 +26,8 @@ bool _labelMatchesItemName(String label, MagicItem item) {
 
 void main() {
   test('every itemRefId in bundled tables resolves to a bundled MagicItem with matching label', () {
-    final baseItemsById = <String, MagicItem>{
-      for (final item in MagicItemLibrary.baseItems) item.id: item,
+    final baseItemsById = <String, EquipmentItem>{
+      for (final item in MagicItemLibrary.baseItems) item.id.slug: item,
     };
 
     final unresolvedExact = <String>[];

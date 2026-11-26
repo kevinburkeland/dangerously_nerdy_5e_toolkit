@@ -1647,7 +1647,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white)),
                                       subtitle: Text(
-                                        '${item.category.name.toUpperCase()} • ${item.rarity.name}${item.cost != null ? " • ${item.cost}" : ""}\n${item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary}',
+                                        '${item.category.name.toUpperCase()} • ${item.rarityTier.name}${item.cost != null ? " • ${item.cost}" : ""}\n${item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary}',
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
@@ -1670,7 +1670,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                               instanceId: 'temp',
                                               itemRef: EntityReference(
                                                 refType: EntityType.equipment,
-                                                slug: item.id
+                                                slug: item.id.slug
                                                     .replaceAll('_', '-'),
                                                 displayName: item.name,
                                               ),
@@ -1683,11 +1683,11 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                           final newInstance =
                                               InventoryItemInstance(
                                             instanceId:
-                                                'item-${item.id}-${DateTime.now().millisecondsSinceEpoch}',
+                                                'item-${item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
                                             itemRef: EntityReference(
                                               refType: EntityType.equipment,
-                                              slug:
-                                                  item.id.replaceAll('_', '-'),
+                                              slug: item.id.slug
+                                                  .replaceAll('_', '-'),
                                               displayName: item.name,
                                             ),
                                             quantity: 1,
@@ -1696,7 +1696,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                             equippedSlot: resolvedSlot,
                                             customProperties: {
                                               'category': item.category.name,
-                                              'rarity': item.rarity.name,
+                                              'rarity': item.rarityTier.name,
                                               'tags': item.tags,
                                             },
                                           );

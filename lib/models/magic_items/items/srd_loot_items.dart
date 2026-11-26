@@ -6,13 +6,13 @@ import '../../tables/srd_loot_tables.dart';
 class SrdLootItems {
   SrdLootItems._();
 
-  static List<MagicItem> get items => [
+  static List<EquipmentItem> get items => [
         ..._buildGemstones(),
         ..._buildArtObjects(),
         ..._buildTrinkets(),
       ];
 
-  static List<MagicItem> _buildGemstones() {
+  static List<EquipmentItem> _buildGemstones() {
     final allGems = [
       ...SrdLootTables.gemstones10gp,
       ...SrdLootTables.gemstones50gp,
@@ -34,18 +34,31 @@ class SrdLootItems {
 
       final desc =
           '${gem.name} is a precious gemstone valued at ${gem.gpValue} gold pieces in standard 5e trade.';
+      final costStr = '${gem.gpValue} GP';
+      final summaryStr = '${gem.category} (${gem.gpValue} GP)';
+      final tags = [
+        'gem',
+        'gemstone',
+        'loot',
+        'treasure',
+        'trade',
+        '${gem.gpValue}gp'
+      ];
 
-      return MagicItem(
-        id: id,
+      return EquipmentItem(
+        id: EntityId(slug: id, ruleset: RulesetVersion.v2024),
         name: gem.name,
+        itemType: ItemCategory.gemstone.name,
         category: ItemCategory.gemstone,
-        rarity: rarity,
-        cost: '${gem.gpValue} GP',
-        cost2014: '${gem.gpValue} GP',
-        cost2024: '${gem.gpValue} GP',
+        rarity: rarity.name,
+        rarityTier: rarity,
+        cost: costStr,
+        cost2014: costStr,
+        cost2024: costStr,
         requiresAttunement: false,
+        descriptionMarkdown: summaryStr,
         rules2014: ItemEditionDetails(
-          summary: '${gem.category} (${gem.gpValue} GP)',
+          summary: summaryStr,
           description: desc,
           properties: [
             'Value: ${gem.gpValue} GP',
@@ -54,7 +67,7 @@ class SrdLootItems {
           ],
         ),
         rules2024: ItemEditionDetails(
-          summary: '${gem.category} (${gem.gpValue} GP)',
+          summary: summaryStr,
           description: desc,
           properties: [
             'Value: ${gem.gpValue} GP',
@@ -62,19 +75,17 @@ class SrdLootItems {
             'Mundane trade currency or spell component material',
           ],
         ),
-        tags: [
-          'gem',
-          'gemstone',
-          'loot',
-          'treasure',
-          'trade',
-          '${gem.gpValue}gp'
-        ],
+        tags: tags,
+        customProperties: {
+          'cost': costStr,
+          'category': ItemCategory.gemstone.name,
+          'tags': tags,
+        },
       );
     }).toList();
   }
 
-  static List<MagicItem> _buildArtObjects() {
+  static List<EquipmentItem> _buildArtObjects() {
     final allArt = [
       ...SrdLootTables.artObjects25gp,
       ...SrdLootTables.artObjects250gp,
@@ -96,18 +107,31 @@ class SrdLootItems {
 
       final desc =
           '${art.name} is an exquisite art object valued at ${art.gpValue} gold pieces in standard 5e treasure hoards.';
+      final costStr = '${art.gpValue} GP';
+      final summaryStr = '${art.category} (${art.gpValue} GP)';
+      final tags = [
+        'art',
+        'art object',
+        'loot',
+        'treasure',
+        'heirloom',
+        '${art.gpValue}gp'
+      ];
 
-      return MagicItem(
-        id: id,
+      return EquipmentItem(
+        id: EntityId(slug: id, ruleset: RulesetVersion.v2024),
         name: art.name,
+        itemType: ItemCategory.artObject.name,
         category: ItemCategory.artObject,
-        rarity: rarity,
-        cost: '${art.gpValue} GP',
-        cost2014: '${art.gpValue} GP',
-        cost2024: '${art.gpValue} GP',
+        rarity: rarity.name,
+        rarityTier: rarity,
+        cost: costStr,
+        cost2014: costStr,
+        cost2024: costStr,
         requiresAttunement: false,
+        descriptionMarkdown: summaryStr,
         rules2014: ItemEditionDetails(
-          summary: '${art.category} (${art.gpValue} GP)',
+          summary: summaryStr,
           description: desc,
           properties: [
             'Value: ${art.gpValue} GP',
@@ -116,7 +140,7 @@ class SrdLootItems {
           ],
         ),
         rules2024: ItemEditionDetails(
-          summary: '${art.category} (${art.gpValue} GP)',
+          summary: summaryStr,
           description: desc,
           properties: [
             'Value: ${art.gpValue} GP',
@@ -124,19 +148,17 @@ class SrdLootItems {
             'Thematic hoard treasure and collector heirloom',
           ],
         ),
-        tags: [
-          'art',
-          'art object',
-          'loot',
-          'treasure',
-          'heirloom',
-          '${art.gpValue}gp'
-        ],
+        tags: tags,
+        customProperties: {
+          'cost': costStr,
+          'category': ItemCategory.artObject.name,
+          'tags': tags,
+        },
       );
     }).toList();
   }
 
-  static List<MagicItem> _buildTrinkets() {
+  static List<EquipmentItem> _buildTrinkets() {
     final entries = SrdLootTables.trinketsTable.entries;
 
     return entries.map((entry) {
@@ -144,18 +166,23 @@ class SrdLootItems {
       final id = 'trinket_$numStr';
       final name = entry.label;
       final desc = entry.description ?? name;
+      final summaryStr = '100 SRD Trinket #$numStr';
+      const tags = ['trinket', 'curio', 'oddity', 'character', 'flavor', 'loot'];
 
-      return MagicItem(
-        id: id,
+      return EquipmentItem(
+        id: EntityId(slug: id, ruleset: RulesetVersion.v2024),
         name: 'Trinket: $name',
+        itemType: ItemCategory.trinket.name,
         category: ItemCategory.trinket,
-        rarity: ItemRarity.common,
+        rarity: ItemRarity.common.name,
+        rarityTier: ItemRarity.common,
         cost: '1 GP',
         cost2014: '1 GP',
         cost2024: '1 GP',
         requiresAttunement: false,
+        descriptionMarkdown: summaryStr,
         rules2014: ItemEditionDetails(
-          summary: '100 SRD Trinket #$numStr',
+          summary: summaryStr,
           description: desc,
           properties: [
             'Roll: d100 result ${entry.minRoll}',
@@ -163,14 +190,19 @@ class SrdLootItems {
           ],
         ),
         rules2024: ItemEditionDetails(
-          summary: '100 SRD Trinket #$numStr',
+          summary: summaryStr,
           description: desc,
           properties: [
             'Roll: d100 result ${entry.minRoll}',
             'Category: Character Trinket / Curious Oddity',
           ],
         ),
-        tags: ['trinket', 'curio', 'oddity', 'character', 'flavor', 'loot'],
+        tags: tags,
+        customProperties: const {
+          'cost': '1 GP',
+          'category': 'trinket',
+          'tags': tags,
+        },
       );
     }).toList();
   }

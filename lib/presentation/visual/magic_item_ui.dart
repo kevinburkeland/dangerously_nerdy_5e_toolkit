@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/magic_items/magic_item_data.dart';
 import 'visual_ui.dart';
 
-extension MagicItemVisualUiExtension on MagicItem {
+extension EquipmentItemVisualUiExtension on EquipmentItem {
   Color? get glyphColor => glyphArgb?.toColor();
   Color? get effectiveGlyphColor => effectiveGlyphArgb?.toColor();
 }

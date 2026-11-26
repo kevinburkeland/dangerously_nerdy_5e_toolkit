@@ -9,7 +9,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_libra
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/common/formatted_markdown_text.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/races/race_card.dart';
@@ -123,21 +122,22 @@ void main() {
         id: EntityId(slug: 'sunblade-custom', ruleset: RulesetVersion.v2024),
         name: 'Sunblade of the Dawn',
         itemType: 'Weapon',
+        category: ItemCategory.weapon,
         rarity: 'Rare',
+        rarityTier: ItemRarity.rare,
         requiresAttunement: true,
         descriptionMarkdown: 'A radiant blade that shines with daylight.',
       );
 
-      final magicItem =
-          HomebrewPersistenceService.equipmentItemToMagicItem(equip);
-      expect(magicItem.id, 'sunblade-custom');
-      expect(magicItem.name, 'Sunblade of the Dawn');
-      expect(magicItem.category, ItemCategory.weapon);
-      expect(magicItem.rarity, ItemRarity.rare);
-      expect(magicItem.requiresAttunement, isTrue);
+      expect(equip.id.slug, 'sunblade-custom');
+      expect(equip.name, 'Sunblade of the Dawn');
+      expect(equip.category, ItemCategory.weapon);
+      expect(equip.rarityTier, ItemRarity.rare);
+      expect(equip.requiresAttunement, isTrue);
 
-      MagicItemLibrary.setHomebrewItems([magicItem]);
-      expect(MagicItemLibrary.allItems.any((i) => i.id == 'sunblade-custom'),
+      MagicItemLibrary.setHomebrewItems([equip]);
+      expect(
+          MagicItemLibrary.allItems.any((i) => i.id.slug == 'sunblade-custom'),
           isTrue);
       expect(MagicItemLibrary.findById('sunblade-custom'), isNotNull);
       expect(MagicItemLibrary.findByName('Sunblade of the Dawn'), isNotNull);

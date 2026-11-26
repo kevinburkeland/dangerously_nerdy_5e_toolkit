@@ -4,22 +4,13 @@ import '../magic_item_data.dart';
 class SrdMagicWands {
   SrdMagicWands._();
 
-  static const List<MagicItem> items = [
+  static const List<EquipmentItem> items = [
     // Wand of Magic Missiles
-    MagicItem(
-      id: 'item_wand_of_magic_missiles',
-      name: 'Wand of Magic Missiles',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.force,
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.recharge,
-          damageType: DamageAccent.force,
-          label:
-              '7 Charges: Cast Magic Missile (1–7 Darts, 1d4+1 Force each, Autohit)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_magic_missiles', ruleset: RulesetVersion.v2024), name: 'Wand of Magic Missiles',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '7 charges to cast Magic Missile (up to level 7). Regains 1d6+1 charges on Long Rest.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges to cast Magic Missile (1 charge per spell level, up to 7th level). Automatically hits.',
@@ -36,27 +27,16 @@ class SrdMagicWands {
         activation: '1 Action',
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
       ),
-      isChangedIn2024: false,
-      tags: ['wand', 'magic missile', 'force', 'autohit', 'damage'],
+      isChangedIn2024: false, tags: ['wand', 'magic missile', 'force', 'autohit', 'damage'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'magic missile', 'force', 'autohit', 'damage'] },
     ),
 
     // Wand of Fireballs
-    MagicItem(
-      id: 'item_wand_of_fireballs',
-      name: 'Wand of Fireballs',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.recharge,
-          damageType: DamageAccent.fire,
-          label:
-              '7 Charges: Cast Fireball 8d6+ (3–7 charges, DC 15 Dex Save, 150 ft Range)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_fireballs', ruleset: RulesetVersion.v2024), name: 'Wand of Fireballs',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges for Fireball (3+ charges); save DC uses your own Spell Save DC (or DC 15).',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges to cast Fireball (3rd level for 3 charges, +1 level per additional charge, save DC 15).',
@@ -75,32 +55,18 @@ class SrdMagicWands {
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Spell DC scales with caster\'s personal Spell Save DC in 2024 if higher than 15.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Spell DC scales with caster\'s personal Spell Save DC in 2024 if higher than 15.', diffHighlights: [
         '2024: Scaled save DC.',
-      ],
-      tags: ['wand', 'fireball', 'fire', 'aoe', 'charges'],
+      ], tags: ['wand', 'fireball', 'fire', 'aoe', 'charges'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'fireball', 'fire', 'aoe', 'charges'] },
     ),
 
     // Wand of Lightning Bolts
-    MagicItem(
-      id: 'item_wand_of_lightning_bolts',
-      name: 'Wand of Lightning Bolts',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      damageAccent: DamageAccent.lightning,
-      actionRings: [
-        ActionTraitRing(
-          ringType: ActionRingType.recharge,
-          damageType: DamageAccent.lightning,
-          label:
-              '7 Charges: Cast Lightning Bolt 8d6+ (3–7 charges, 100-ft Line)',
-        ),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_lightning_bolts', ruleset: RulesetVersion.v2024), name: 'Wand of Lightning Bolts',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges for Lightning Bolt (3+ charges) in a 100 ft line. Save DC scales with caster in 2024.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges to cast Lightning Bolt (3rd level for 3 charges, +1 level per additional charge, save DC 15).',
@@ -119,27 +85,18 @@ class SrdMagicWands {
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Scaled save DC in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Scaled save DC in 2024.', diffHighlights: [
         '2024: Scaled save DC.',
-      ],
-      tags: ['wand', 'lightning', 'line', 'charges'],
+      ], tags: ['wand', 'lightning', 'line', 'charges'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'lightning', 'line', 'charges'] },
     ),
 
     // Wand of the War Mage (+1 / +2 / +3)
-    MagicItem(
-      id: 'item_wand_of_the_war_mage_plus_1',
-      name: 'Wand of the War Mage +1',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.uncommon,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+1 to Spell Attack Rolls & Ignores Half Cover'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_the_war_mage_plus_1', ruleset: RulesetVersion.v2024), name: 'Wand of the War Mage +1',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '+1 to spell attack rolls; ignore Half Cover with spell attacks.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this wand, you gain a +1 bonus to spell attack rolls. In addition, you ignore half cover when making a spell attack.',
@@ -154,21 +111,14 @@ class SrdMagicWands {
             'While holding this wand as an arcane focus, gain +1 to spell attack rolls and ignore Half Cover.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'],
+      isChangedIn2024: false, tags: ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'], 'bonusSpellAttack': 1 },
     ),
-    MagicItem(
-      id: 'item_wand_of_the_war_mage_plus_2',
-      name: 'Wand of the War Mage +2',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+2 to Spell Attack Rolls & Ignores Half Cover'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_the_war_mage_plus_2', ruleset: RulesetVersion.v2024), name: 'Wand of the War Mage +2',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '+2 to spell attack rolls; ignore Half Cover with spell attacks.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this wand, you gain a +2 bonus to spell attack rolls. In addition, you ignore half cover when making a spell attack.',
@@ -183,21 +133,14 @@ class SrdMagicWands {
             'While holding this wand as an arcane focus, gain +2 to spell attack rolls and ignore Half Cover.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'],
+      isChangedIn2024: false, tags: ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'], 'bonusSpellAttack': 2 },
     ),
-    MagicItem(
-      id: 'item_wand_of_the_war_mage_plus_3',
-      name: 'Wand of the War Mage +3',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.veryRare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.reaction,
-            label: '+3 to Spell Attack Rolls & Ignores Half Cover'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_the_war_mage_plus_3', ruleset: RulesetVersion.v2024), name: 'Wand of the War Mage +3',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '+3 to spell attack rolls; ignore Half Cover with spell attacks.',
       rules2014: ItemEditionDetails(
         summary:
             'While holding this wand, you gain a +3 bonus to spell attack rolls. In addition, you ignore half cover when making a spell attack.',
@@ -212,24 +155,16 @@ class SrdMagicWands {
             'While holding this wand as an arcane focus, gain +3 to spell attack rolls and ignore Half Cover.',
         activation: 'Passive',
       ),
-      isChangedIn2024: false,
-      tags: ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'],
+      isChangedIn2024: false, tags: ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'war mage', 'spell attack', 'cover', 'spellcaster'], 'bonusSpellAttack': 3 },
     ),
 
     // Wand of Web
-    MagicItem(
-      id: 'item_wand_of_web',
-      name: 'Wand of Web',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.uncommon,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '7 Charges: Cast Web (DC 15 Dex Save, 20-ft Cube Restraining Web)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_web', ruleset: RulesetVersion.v2024), name: 'Wand of Web',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges to cast Web. Uses your own Spell Save DC (or DC 15).',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges to cast the Web spell (save DC 15) from it.',
@@ -248,27 +183,18 @@ class SrdMagicWands {
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Scaled save DC in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Scaled save DC in 2024.', diffHighlights: [
         '2024: Scaled save DC.',
-      ],
-      tags: ['wand', 'web', 'restrained', 'crowd control'],
+      ], tags: ['wand', 'web', 'restrained', 'crowd control'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'web', 'restrained', 'crowd control'] },
     ),
 
     // Wand of Wonder
-    MagicItem(
-      id: 'item_wand_of_wonder',
-      name: 'Wand of Wonder',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label: '7 Charges: Roll d100 on Chaotic Spell Effect Table'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_wonder', ruleset: RulesetVersion.v2024), name: 'Wand of Wonder',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges to roll on the Wand of Wonder table for unexpected, exciting chaotic effects.',
       rules2014: ItemEditionDetails(
         summary:
             '7 charges: roll d100 on the chaotic table for random effects (Fireball, Lightning Bolt, Gust of Wind, Stinking Cloud, Invisibility, polymorphing into butterfly, etc.).',
@@ -287,29 +213,18 @@ class SrdMagicWands {
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          'Modernized d100 table with updated 2024 condition rules and scaled save DCs.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Modernized d100 table with updated 2024 condition rules and scaled save DCs.', diffHighlights: [
         '2024: Updated chaotic d100 table rules.',
-      ],
-      tags: ['wand', 'wonder', 'chaotic', 'fun'],
+      ], tags: ['wand', 'wonder', 'chaotic', 'fun'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'wonder', 'chaotic', 'fun'] },
     ),
 
     // Wand of Polymorph
-    MagicItem(
-      id: 'item_wand_of_polymorph',
-      name: 'Wand of Polymorph',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.veryRare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '7 Charges: Cast Polymorph (DC 15 WIS Save, 1 Hour Duration)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_polymorph', ruleset: RulesetVersion.v2024), name: 'Wand of Polymorph',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'veryRare', rarityTier: ItemRarity.veryRare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges to cast Polymorph (1 charge). In 2024, benefits from updated 2024 Polymorph rules (granting Temporary HP).',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges to cast Polymorph (1 charge, save DC 15) transforming target into a beast.',
@@ -328,29 +243,18 @@ class SrdMagicWands {
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary:
-          '2024 Polymorph spell grants Temporary HP matching beast form rather than distinct HP pool.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: '2024 Polymorph spell grants Temporary HP matching beast form rather than distinct HP pool.', diffHighlights: [
         '2024: Polymorph grants Temp HP equal to beast form.',
-      ],
-      tags: ['wand', 'polymorph', 'transformation', 'beast'],
+      ], tags: ['wand', 'polymorph', 'transformation', 'beast'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'polymorph', 'transformation', 'beast'] },
     ),
 
     // Wand of Paralysis
-    MagicItem(
-      id: 'item_wand_of_paralysis',
-      name: 'Wand of Paralysis',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '7 Charges: Cast Paralyzing Ray (60 ft, DC 15 CON Save or Paralyzed for 1 Min)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_paralysis', ruleset: RulesetVersion.v2024), name: 'Wand of Paralysis',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges to shoot ray paralyzing target for 1 minute on failed DC 15 Con save.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges: shoot a ray at a creature within 60 feet. Target must pass DC 15 Con save or be paralyzed for 1 minute (repeating save at end of its turns).',
@@ -369,28 +273,18 @@ class SrdMagicWands {
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
-      isChangedIn2024: true,
-      diffSummary: 'Scaled save DC in 2024.',
-      diffHighlights: [
+      isChangedIn2024: true, diffSummary: 'Scaled save DC in 2024.', diffHighlights: [
         '2024: Scaled save DC.',
-      ],
-      tags: ['wand', 'paralysis', 'crowd control', 'ray'],
+      ], tags: ['wand', 'paralysis', 'crowd control', 'ray'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'paralysis', 'crowd control', 'ray'] },
     ),
 
     // Wand of Binding
-    MagicItem(
-      id: 'item_wand_of_binding',
-      name: 'Wand of Binding',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '7 Charges: Hold Person (2 charges), Hold Monster (5 charges) • Reaction (1 charge): Advantage to escape Paralyzed/Restrained'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_binding', ruleset: RulesetVersion.v2024), name: 'Wand of Binding',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges for Hold Person, Hold Monster, and Reaction to escape Paralyzed/Restrained conditions with Advantage.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges. Cast Hold Person (2 charges, save DC 17) or Hold Monster (5 charges, save DC 17). Reaction (1 charge): gain advantage on saving throw to end paralyzed or restrained condition.',
@@ -417,21 +311,15 @@ class SrdMagicWands {
         'paralysis',
         'crowd control'
       ],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'binding', 'hold person', 'hold monster', 'paralysis', 'crowd control'] },
     ),
 
     // Wand of Enemy Detection
-    MagicItem(
-      id: 'item_wand_of_enemy_detection',
-      name: 'Wand of Enemy Detection',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_enemy_detection', ruleset: RulesetVersion.v2024), name: 'Wand of Enemy Detection',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
       requiresAttunement: true,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '7 Charges: Action (1 charge): Detects Direction & Distance of Nearest Hostile Creature within 60 Feet (1 Min Concentration)'),
-      ],
+      descriptionMarkdown: '7 charges: detect and track distance/direction to nearest hostile within 60 ft for 1 minute.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges. Action (1 charge): for 1 minute (concentration), you learn the direction and distance to the closest hostile creature within 60 feet.',
@@ -449,22 +337,15 @@ class SrdMagicWands {
         charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
       ),
       tags: ['wand', 'enemy detection', 'scouting', 'radar', 'utility'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'enemy detection', 'scouting', 'radar', 'utility'] },
     ),
 
     // Wand of Fear
-    MagicItem(
-      id: 'item_wand_of_fear',
-      name: 'Wand of Fear',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.rare,
-      requiresAttunement: true,
-      attunementRequirement: 'by a Spellcaster',
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '7 Charges: Command "Flee" (1 charge, DC 15) • 60-ft Cone of Fear (2 charges, DC 15 WIS Save, 1 Min)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_fear', ruleset: RulesetVersion.v2024), name: 'Wand of Fear',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'rare', rarityTier: ItemRarity.rare,
+      requiresAttunement: true, attunementRequirement: 'by a Spellcaster',
+      descriptionMarkdown: '7 charges for Command (Flee) and 60-ft Cone of Fear (Frightened condition, drops items, dashes away).',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges. Cast Command ("Flee", 1 charge, save DC 15) or project a 60-foot cone of fear (2 charges: DC 15 Wis save or frightened and drops held items for 1 min).',
@@ -484,20 +365,15 @@ class SrdMagicWands {
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
       tags: ['wand', 'fear', 'frightened', 'command', 'flee', 'crowd control'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'fear', 'frightened', 'command', 'flee', 'crowd control'] },
     ),
 
     // Wand of Magic Detection
-    MagicItem(
-      id: 'item_wand_of_magic_detection',
-      name: 'Wand of Magic Detection',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '3 Charges: Cast Detect Magic at Will (30-ft Radius Aura Sensing)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_magic_detection', ruleset: RulesetVersion.v2024), name: 'Wand of Magic Detection',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '3 charges: cast Detect Magic without expending spell slots.',
       rules2014: ItemEditionDetails(
         summary:
             'This wand has 3 charges (regains 1d3 daily at dawn). While holding it, you can expend 1 charge to cast Detect Magic.',
@@ -514,22 +390,15 @@ class SrdMagicWands {
         charges: '3 charges (recharges 1d3 on Long Rest)',
       ),
       tags: ['wand', 'detect magic', 'divination', 'utility'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'detect magic', 'divination', 'utility'] },
     ),
 
     // Wand of Pyrotechnics
-    MagicItem(
-      id: 'item_wand_of_pyrotechnics',
-      name: 'Wand of Pyrotechnics',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.fire,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            damageType: DamageAccent.fire,
-            label:
-                '7 Charges: Fireworks (60 ft, DC 15 CON Save or Blinded) or Thick Obscuring Smoke (20-ft Radius Sphere)'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_pyrotechnics', ruleset: RulesetVersion.v2024), name: 'Wand of Pyrotechnics',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '7 charges: create blinding fireworks or heavy smoke screen from any flame.',
       rules2014: ItemEditionDetails(
         summary:
             'Contains 7 charges. Cast Pyrotechnics (1 charge, save DC 15) on a nonmagical flame within 60 feet to create blinding fireworks or heavy smoke.',
@@ -549,20 +418,15 @@ class SrdMagicWands {
         savingThrowDc: 'Your Spell Save DC or DC 15',
       ),
       tags: ['wand', 'pyrotechnics', 'fire', 'smoke', 'blindness', 'tactical'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'pyrotechnics', 'fire', 'smoke', 'blindness', 'tactical'] },
     ),
 
     // Wand of Secrets
-    MagicItem(
-      id: 'item_wand_of_secrets',
-      name: 'Wand of Secrets',
-      category: ItemCategory.wand,
-      rarity: ItemRarity.uncommon,
-      actionRings: [
-        ActionTraitRing(
-            ringType: ActionRingType.recharge,
-            label:
-                '3 Charges: Action (1 charge): Pulses & Points to Nearest Secret Door or Trap within 30 Feet'),
-      ],
+    EquipmentItem(
+      id: EntityId(slug: 'item_wand_of_secrets', ruleset: RulesetVersion.v2024), name: 'Wand of Secrets',
+      itemType: 'wand', category: ItemCategory.wand, rarity: 'uncommon', rarityTier: ItemRarity.uncommon,
+      requiresAttunement: false,
+      descriptionMarkdown: '3 charges: locate closest hidden door or trap mechanism within 30 feet.',
       rules2014: ItemEditionDetails(
         summary:
             'This wand has 3 charges (regains 1d3 daily at dawn). Action: expend 1 charge to detect and point to the nearest secret door or trap within 30 feet.',
@@ -580,6 +444,7 @@ class SrdMagicWands {
         charges: '3 charges (recharges 1d3 on Long Rest)',
       ),
       tags: ['wand', 'secrets', 'traps', 'doors', 'exploration', 'dungeon'],
+      customProperties: { 'cost': null, 'category': 'wand', 'tags': ['wand', 'secrets', 'traps', 'doors', 'exploration', 'dungeon'] },
     ),
   ];
 }

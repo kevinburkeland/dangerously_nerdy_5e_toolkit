@@ -9,7 +9,7 @@ import '../glyphs/dnd_glyph.dart';
 
 /// Interactive modal comparing 2014 RAW magic item mechanics vs 2024 Revised rules side-by-side.
 class ItemComparisonDialog extends StatefulWidget {
-  final MagicItem item;
+  final EquipmentItem item;
   final DmRulesEdition initialEdition;
   final bool isPinned;
   final VoidCallback onTogglePin;
@@ -24,7 +24,7 @@ class ItemComparisonDialog extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    required MagicItem item,
+    required EquipmentItem item,
     DmRulesEdition? edition,
     required bool isPinned,
     required VoidCallback onTogglePin,
@@ -70,7 +70,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final item = widget.item;
-    final rarityColor = item.rarity.getLegibleColor(isDark);
+    final rarityColor = item.rarityTier.getLegibleColor(isDark);
     final categoryColor = item.category.getLegibleColor(isDark);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final showDualView = _showDiff && item.isChangedIn2024;
@@ -96,7 +96,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
               children: [
                 DndGlyph.item(
                   category: item.category,
-                  rarity: item.rarity,
+                  rarity: item.rarityTier,
                   requiresAttunement: item.requiresAttunement,
                   damageAccent:
                       item.getGlyphPrimaryDamageAccent(_activeEdition),
@@ -136,7 +136,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
                               style:
                                   TextStyle(color: theme.colorScheme.outline)),
                           Text(
-                            item.rarity.displayName,
+                            item.rarityTier.displayName,
                             style: TextStyle(
                               color: rarityColor,
                               fontWeight: FontWeight.bold,
@@ -256,7 +256,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
 
   Widget _buildSingleEditionView(
     BuildContext context,
-    MagicItem item,
+    EquipmentItem item,
     DmRulesEdition edition,
     bool isDark,
     Color rarityColor,
@@ -325,7 +325,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
 
   Widget _buildDualColumnView(
     BuildContext context,
-    MagicItem item,
+    EquipmentItem item,
     bool isDark,
     Color rarityColor,
   ) {
@@ -387,7 +387,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
 
   Widget _buildEditionColumn(
     BuildContext context,
-    MagicItem item,
+    EquipmentItem item,
     DmRulesEdition edition,
     String header,
     Color headerColor,

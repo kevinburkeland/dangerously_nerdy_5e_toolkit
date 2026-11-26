@@ -268,7 +268,7 @@ class CharacterTelemetryResolver {
           MagicItemLibrary.findById(cleanNormalized) ??
           MagicItemLibrary.findByName(clean) ??
           MagicItemLibrary.allItems.where((m) {
-            final mId = m.id.toLowerCase();
+            final mId = m.id.slug.toLowerCase();
             final mName = m.name.toLowerCase();
             final cleanMName =
                 mName.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();

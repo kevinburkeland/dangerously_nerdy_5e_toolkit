@@ -18,7 +18,7 @@ class MagicItemLibrary {
   MagicItemLibrary._();
 
   /// Complete list of all SRD 5.1 & 5.2 Magic Items and Equipment in the toolkit.
-  static final List<MagicItem> _baseItems = [
+  static final List<EquipmentItem> _baseItems = [
     ...SrdMagicWeapons.items,
     ...SrdArmorAndShields.items,
     ...SrdPotionsAndOils.items,
@@ -32,41 +32,41 @@ class MagicItemLibrary {
     ...SrdLootItems.items,
   ];
 
-  static List<MagicItem> _homebrewItems = [];
+  static List<EquipmentItem> _homebrewItems = [];
 
   /// Base SRD 5.1 & 5.2 Magic Items unpolluted by homebrew items.
-  static List<MagicItem> get baseItems => _baseItems;
+  static List<EquipmentItem> get baseItems => _baseItems;
 
   /// Combined list of all SRD and Homebrew Magic Items and Equipment in the toolkit.
-  static List<MagicItem> get allItems => [..._baseItems, ..._homebrewItems];
+  static List<EquipmentItem> get allItems => [..._baseItems, ..._homebrewItems];
 
   /// Sets the list of custom/homebrew items in the library.
-  static void setHomebrewItems(List<MagicItem> items) {
-    _homebrewItems = List<MagicItem>.from(items);
+  static void setHomebrewItems(List<EquipmentItem> items) {
+    _homebrewItems = List<EquipmentItem>.from(items);
   }
 
   /// Adds or replaces a custom homebrew item in the library.
-  static void addHomebrewItem(MagicItem item) {
-    _homebrewItems.removeWhere((i) => i.id == item.id);
+  static void addHomebrewItem(EquipmentItem item) {
+    _homebrewItems.removeWhere((i) => i.id.slug == item.id.slug);
     _homebrewItems.add(item);
   }
 
   /// Removes a custom homebrew item by id.
   static void removeHomebrewItem(String id) {
-    _homebrewItems.removeWhere((i) => i.id == id);
+    _homebrewItems.removeWhere((i) => i.id.slug == id);
   }
 
   /// Find an item by its unique identifier.
-  static MagicItem? findById(String id) {
+  static EquipmentItem? findById(String id) {
     try {
-      return allItems.firstWhere((item) => item.id == id);
+      return allItems.firstWhere((item) => item.id.slug == id);
     } catch (_) {
       return null;
     }
   }
 
   /// Find an item by its display name (case-insensitive).
-  static MagicItem? findByName(String name) {
+  static EquipmentItem? findByName(String name) {
     final q = name.trim().toLowerCase();
     try {
       return allItems.firstWhere(
@@ -81,14 +81,14 @@ class MagicItemLibrary {
   }
 
   /// All items that have mechanical differences between 2014 RAW and 2024 Revised rules.
-  static List<MagicItem> get diffItems =>
+  static List<EquipmentItem> get diffItems =>
       allItems.where((item) => item.isChangedIn2024).toList();
 
   /// Retrieve all items belonging to a specific category.
-  static List<MagicItem> getByCategory(ItemCategory category) =>
+  static List<EquipmentItem> getByCategory(ItemCategory category) =>
       allItems.where((item) => item.category == category).toList();
 
   /// Retrieve all items of a specific rarity tier.
-  static List<MagicItem> getByRarity(ItemRarity rarity) =>
-      allItems.where((item) => item.rarity == rarity).toList();
+  static List<EquipmentItem> getByRarity(ItemRarity rarity) =>
+      allItems.where((item) => item.rarityTier == rarity).toList();
 }

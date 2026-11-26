@@ -292,8 +292,7 @@ class HomebrewPersistenceService {
     MonsterCodexLibrary.setHomebrewMonsters(monsters);
 
     final items = await loadCustomItems();
-    final magicItems = items.map(equipmentItemToMagicItem).toList();
-    MagicItemLibrary.setHomebrewItems(magicItems);
+    MagicItemLibrary.setHomebrewItems(items);
 
     final races = await loadCustomRaces();
     SrdSpeciesLibrary.setCustomSpecies(races);
@@ -833,104 +832,6 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Converts an [EquipmentItem] domain entity to a [MagicItem] for [MagicItemLibrary].
-  static MagicItem equipmentItemToMagicItem(EquipmentItem item) {
-    final typeStr = item.itemType.toLowerCase();
-    final ItemCategory category;
-    if (typeStr.contains('weapon')) {
-      category = ItemCategory.weapon;
-    } else if (typeStr.contains('armor') || typeStr.contains('shield')) {
-      category = ItemCategory.armor;
-    } else if (typeStr.contains('potion') ||
-        typeStr.contains('elixir') ||
-        typeStr.contains('oil')) {
-      category = ItemCategory.potion;
-    } else if (typeStr.contains('ring')) {
-      category = ItemCategory.ring;
-    } else if (typeStr.contains('rod')) {
-      category = ItemCategory.rod;
-    } else if (typeStr.contains('scroll')) {
-      category = ItemCategory.scroll;
-    } else if (typeStr.contains('staff') || typeStr.contains('stave')) {
-      category = ItemCategory.staff;
-    } else if (typeStr.contains('wand')) {
-      category = ItemCategory.wand;
-    } else if (typeStr.contains('gem')) {
-      category = ItemCategory.gemstone;
-    } else if (typeStr.contains('art')) {
-      category = ItemCategory.artObject;
-    } else if (typeStr.contains('trinket')) {
-      category = ItemCategory.trinket;
-    } else if (typeStr.contains('gear') ||
-        typeStr.contains('tool') ||
-        typeStr.contains('adventuring')) {
-      category = ItemCategory.adventuringGear;
-    } else {
-      category = ItemCategory.wondrousItem;
-    }
-
-    final rarityStr = item.rarity.toLowerCase();
-    final ItemRarity rarity;
-    if (rarityStr.contains('artifact')) {
-      rarity = ItemRarity.artifact;
-    } else if (rarityStr.contains('legendary')) {
-      rarity = ItemRarity.legendary;
-    } else if (rarityStr.contains('very rare') ||
-        rarityStr.contains('very_rare')) {
-      rarity = ItemRarity.veryRare;
-    } else if (rarityStr.contains('rare')) {
-      rarity = ItemRarity.rare;
-    } else if (rarityStr.contains('uncommon')) {
-      rarity = ItemRarity.uncommon;
-    } else if (rarityStr.contains('common')) {
-      rarity = ItemRarity.common;
-    } else {
-      rarity = ItemRarity.nonmagical;
-    }
-
-    final rawJson = item.customProperties['rawJson'] as Map?;
-    final costStr = rawJson?['value']?.toString() ??
-        item.customProperties['cost']?.toString();
-    final attunementReq = item.requiresAttunement
-        ? (rawJson?['reqAttune']?.toString() ?? 'Requires Attunement')
-        : null;
-
-    final descLines = item.descriptionMarkdown
-        .split('\n')
-        .map((l) => l.trim())
-        .where((l) => l.isNotEmpty && !l.startsWith('#') && !l.startsWith('|'))
-        .toList();
-    final firstContentLine = descLines.isNotEmpty
-        ? descLines.first
-        : (item.descriptionMarkdown.isNotEmpty
-            ? item.descriptionMarkdown.split('\n').first
-            : item.name);
-
-    final editionDetails = ItemEditionDetails(
-      summary: firstContentLine,
-      description: item.descriptionMarkdown,
-    );
-
-    return MagicItem(
-      id: item.id.slug.isNotEmpty
-          ? item.id.slug
-          : item.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
-      name: item.name,
-      category: category,
-      rarity: rarity,
-      cost: costStr,
-      requiresAttunement: item.requiresAttunement,
-      attunementRequirement: attunementReq,
-      rules2014: editionDetails,
-      rules2024: editionDetails,
-      tags: [
-        item.itemType,
-        item.rarity,
-        if (item.requiresAttunement) 'attunement'
-      ],
-    );
-  }
-
   /// Converts a [Spell] domain entity to a [SpellItem] for [SpellbookLibrary].
   static SpellItem spellToSpellItem(Spell s) {
     final school = SpellSchool.values.firstWhere(
@@ -1182,7 +1083,7 @@ class HomebrewPersistenceService {
       getEntitySlug: (i) => i.id.slug,
       toMap: (i) => i.toMap(),
       onEntityAddedOrUpdated: (i) =>
-          MagicItemLibrary.addHomebrewItem(equipmentItemToMagicItem(i)),
+          MagicItemLibrary.addHomebrewItem(i),
     );
   }
 

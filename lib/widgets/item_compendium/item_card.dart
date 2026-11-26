@@ -8,7 +8,7 @@ import '../interactive/pressable_card.dart';
 
 /// Modular, interactive card presenting an individual SRD magic item with edition diff support.
 class ItemCard extends StatelessWidget {
-  final MagicItem item;
+  final EquipmentItem item;
   final DmRulesEdition edition;
   final bool isPinned;
   final VoidCallback onTogglePin;
@@ -30,7 +30,7 @@ class ItemCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final rules = item.getRules(edition);
-    final rarityColor = item.rarity.getLegibleColor(isDark);
+    final rarityColor = item.rarityTier.getLegibleColor(isDark);
     final categoryColor = item.category.getLegibleColor(isDark);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final cardBorderColor = isPinned
@@ -56,7 +56,7 @@ class ItemCard extends StatelessWidget {
             children: [
               DndGlyph.item(
                 category: item.category,
-                rarity: item.rarity,
+                rarity: item.rarityTier,
                 requiresAttunement: item.requiresAttunement,
                 damageAccent: item.getGlyphPrimaryDamageAccent(edition),
                 actionRings: item.getGlyphActionRings(edition),
@@ -98,7 +98,7 @@ class ItemCard extends StatelessWidget {
                       Border.all(color: rarityColor.withValues(alpha: 0.45)),
                 ),
                 child: Text(
-                  item.rarity.displayName.toUpperCase(),
+                  item.rarityTier.displayName.toUpperCase(),
                   style: TextStyle(
                     color: rarityColor,
                     fontSize: 9.5,
@@ -139,7 +139,7 @@ class ItemCard extends StatelessWidget {
               _buildBadge(context, Icons.category_outlined,
                   item.category.displayName, categoryColor),
               _buildBadge(context, Icons.diamond_outlined,
-                  item.rarity.displayName, rarityColor),
+                  item.rarityTier.displayName, rarityColor),
               _buildPriceBadge(context, item.getEffectivePrice(edition)),
               if (item.requiresAttunement)
                 _buildTag(
