@@ -1,0 +1,42 @@
+From a3b5edc96b1b05d1dc694f89526f8cd2faa7a61e Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 25 Nov 2026 15:35:13 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20M1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/monster_codex_data.dart | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
+
+diff --git a/lib/models/monster_codex_data.dart b/lib/models/monster_codex_data.dart
+index 5c30d8cf..de0fb988 100644
+--- a/lib/models/monster_codex_data.dart
++++ b/lib/models/monster_codex_data.dart
+@@ -148,17 +148,10 @@ class MonsterItem {
+   /// [DmRulesEdition] for this immutable [MonsterItem] instance.
+   MonsterCombatProfile getCombatProfile(
+       [DmRulesEdition edition = DmRulesEdition.v2024]) {
+-    var byEdition = _combatProfileCache[this];
+-    if (byEdition == null) {
+-      byEdition = <DmRulesEdition, MonsterCombatProfile>{};
+-      _combatProfileCache[this] = byEdition;
+-    }
+-    return byEdition.putIfAbsent(
+-      edition,
+-      () => MonsterCombatProfile.fromStatBlock(
+-        getStatBlock(edition),
+-        challengeRating: challengeRating,
+-      ),
++    _combatProfileCache[this];
++    return MonsterCombatProfile.fromStatBlock(
++      getStatBlock(edition),
++      challengeRating: challengeRating,
+     );
+   }
+ 
+-- 
+2.55.0
+

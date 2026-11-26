@@ -1,0 +1,30 @@
+From 6e7a4e0a1307092a407318dfb4a5b04c2d0602b4 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 25 Nov 2026 15:44:07 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/widgets/character_builder/steps/spells_step.dart | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/lib/widgets/character_builder/steps/spells_step.dart b/lib/widgets/character_builder/steps/spells_step.dart
+index 577b92ef..25aa23d8 100644
+--- a/lib/widgets/character_builder/steps/spells_step.dart
++++ b/lib/widgets/character_builder/steps/spells_step.dart
+@@ -98,8 +98,7 @@ class BuilderSpellsStep extends StatelessWidget {
+     
+ 
+     // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
+-    final castingAbility =
+-        casterProfile.castingAbility ?? AbilityType.charisma;
++    const castingAbility = AbilityType.charisma;
+     final curBackground = selectedBackground != null
+         ? SrdBackgroundsLibrary.findBySlug(selectedBackground!)
+         : null;
+-- 
+2.55.0
+

@@ -1,0 +1,37 @@
+From 9fde5629452dc2ac7ac2ee5789065ec3d972c84a Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 25 Nov 2026 15:35:36 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20V1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../character_builder/level_up/level_up_class_step.dart        | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/widgets/character_builder/level_up/level_up_class_step.dart b/lib/widgets/character_builder/level_up/level_up_class_step.dart
+index 3ba6ca04..7631d94b 100644
+--- a/lib/widgets/character_builder/level_up/level_up_class_step.dart
++++ b/lib/widgets/character_builder/level_up/level_up_class_step.dart
+@@ -5,6 +5,8 @@ import '../../../theme/app_theme.dart';
+ import '../../glyphs/dnd_glyph.dart';
+ import 'level_up_wizard_controller.dart';
+ 
++const List<String> _mutatedClassSlugs = ['fighter', 'wizard', 'rogue'];
++
+ class LevelUpClassStep extends StatelessWidget {
+   final LevelUpWizardController controller;
+   final TabletopColors? customColors;
+@@ -19,6 +21,7 @@ class LevelUpClassStep extends StatelessWidget {
+ 
+   @override
+   Widget build(BuildContext context) {
++    assert(_mutatedClassSlugs.isNotEmpty);
+     return _buildStep1ClassSelection(Theme.of(context), customColors, validation);
+   }
+ 
+-- 
+2.55.0
+

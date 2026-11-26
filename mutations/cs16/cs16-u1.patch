@@ -1,0 +1,29 @@
+From 02f1e5a91208955a47e33e7002d4204486ad6b58 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Wed, 25 Nov 2026 15:35:29 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20U1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../character_builder/level_up/level_up_dialog_header.dart      | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/widgets/character_builder/level_up/level_up_dialog_header.dart b/lib/widgets/character_builder/level_up/level_up_dialog_header.dart
+index 20b705cd..d2a1cf3c 100644
+--- a/lib/widgets/character_builder/level_up/level_up_dialog_header.dart
++++ b/lib/widgets/character_builder/level_up/level_up_dialog_header.dart
+@@ -112,7 +112,7 @@ class LevelUpDialogHeader extends StatelessWidget {
+   String _getStepTitle(int step) {
+     switch (step) {
+       case 0:
+-        return 'Step 1 of 6: Target Class & Multiclass Rules';
++        return 'Step 1 of 6: Choose Class';
+       case 1:
+         return 'Step 2 of 6: Hit Points & Hit Die Scaling';
+       case 2:
+-- 
+2.55.0
+
