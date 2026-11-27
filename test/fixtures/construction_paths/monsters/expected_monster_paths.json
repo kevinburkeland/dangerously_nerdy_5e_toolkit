@@ -338,21 +338,21 @@
     "form_blank_optionals": {
       "domainMonster": {
         "actionsMarkdown": "",
-        "alignment": "unaligned",
-        "armorClass": 10,
+        "alignment": null,
+        "armorClass": null,
         "attackMath": [],
-        "challengeRating": "1",
+        "challengeRating": null,
         "customProperties": {},
-        "hitDieFormula": "",
-        "hitPoints": 10,
+        "hitDieFormula": null,
+        "hitPoints": null,
         "id": {
           "ruleset": "homebrew",
           "slug": "blank-sentinel"
         },
         "innateSpells": [],
-        "monsterType": "Humanoid",
+        "monsterType": null,
         "name": "Blank Sentinel",
-        "size": "Medium"
+        "size": null
       },
       "codexView": {
         "id": "blank-sentinel",
@@ -367,18 +367,18 @@
         "sourceSpellId": null,
         "sourceCategory": "spell",
         "isHomebrew": true,
-        "challengeRating": 1.0,
+        "challengeRating": null,
         "xp": null,
-        "size": "Medium",
-        "type": "Humanoid",
-        "alignment": "unaligned",
-        "crDisplay": "CR 1",
-        "ac": 10,
-        "hp": 10,
+        "size": null,
+        "type": null,
+        "alignment": null,
+        "crDisplay": null,
+        "ac": null,
+        "hp": null,
         "speed": "30 ft.",
         "v2014": {
           "editionName": "Blank Sentinel",
-          "baselineDpr": 2.925,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -410,7 +410,7 @@
           "dprProfile": {
             "id": "blank-sentinel",
             "name": "Blank Sentinel",
-            "description": "CR CR 1 Medium Humanoid",
+            "description": "CR — — —",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -423,13 +423,13 @@
           "statBlock": {
             "id": "blank-sentinel",
             "name": "Blank Sentinel",
-            "sizeDisplay": "Medium",
-            "crDisplay": "CR 1",
-            "typeDisplay": "Humanoid",
-            "alignment": "unaligned",
-            "ac": 10,
+            "sizeDisplay": null,
+            "crDisplay": null,
+            "typeDisplay": null,
+            "alignment": null,
+            "ac": null,
             "armorType": null,
-            "maxHp": 10,
+            "maxHp": null,
             "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
@@ -458,7 +458,7 @@
             "hasHover": null,
             "spellSaveDc": null,
             "spellAttackBonus": null,
-            "attackBonus": 4,
+            "attackBonus": 2,
             "damageDiceCount": 1,
             "damageDiceSides": 6,
             "damageBonus": 2,
@@ -470,14 +470,14 @@
             "specialTrait": null,
             "presentation": {
               "accentArgb": 4287323382,
-              "glyphCreatureType": "humanoid",
+              "glyphCreatureType": "beast",
               "glyphCrTier": 1,
               "glyphActionRings": [
                 "Instance of 'ActionTraitRing'"
               ]
             },
             "derived": {
-              "crValue": 1.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -489,10 +489,10 @@
               "hasLegendaryActions": false
             },
             "displayText": {
-              "subtitleText": "Medium humanoid, unaligned",
-              "acLine": "10",
-              "hpLine": "10",
-              "challengeLine": "1",
+              "subtitleText": "— —, —",
+              "acLine": "—",
+              "hpLine": "—",
+              "challengeLine": "—",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
             }
@@ -500,7 +500,7 @@
         },
         "v2024": {
           "editionName": "Blank Sentinel",
-          "baselineDpr": 2.925,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -532,7 +532,7 @@
           "dprProfile": {
             "id": "blank-sentinel",
             "name": "Blank Sentinel",
-            "description": "CR CR 1 Medium Humanoid",
+            "description": "CR — — —",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -545,13 +545,13 @@
           "statBlock": {
             "id": "blank-sentinel",
             "name": "Blank Sentinel",
-            "sizeDisplay": "Medium",
-            "crDisplay": "CR 1",
-            "typeDisplay": "Humanoid",
-            "alignment": "unaligned",
-            "ac": 10,
+            "sizeDisplay": null,
+            "crDisplay": null,
+            "typeDisplay": null,
+            "alignment": null,
+            "ac": null,
             "armorType": null,
-            "maxHp": 10,
+            "maxHp": null,
             "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
@@ -580,7 +580,7 @@
             "hasHover": null,
             "spellSaveDc": null,
             "spellAttackBonus": null,
-            "attackBonus": 4,
+            "attackBonus": 2,
             "damageDiceCount": 1,
             "damageDiceSides": 6,
             "damageBonus": 2,
@@ -592,14 +592,14 @@
             "specialTrait": null,
             "presentation": {
               "accentArgb": 4287323382,
-              "glyphCreatureType": "humanoid",
+              "glyphCreatureType": "beast",
               "glyphCrTier": 1,
               "glyphActionRings": [
                 "Instance of 'ActionTraitRing'"
               ]
             },
             "derived": {
-              "crValue": 1.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -611,10 +611,10 @@
               "hasLegendaryActions": false
             },
             "displayText": {
-              "subtitleText": "Medium humanoid, unaligned",
-              "acLine": "10",
-              "hpLine": "10",
-              "challengeLine": "1",
+              "subtitleText": "— —, —",
+              "acLine": "—",
+              "hpLine": "—",
+              "challengeLine": "—",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
             }
@@ -654,18 +654,18 @@
         "sourceSpellId": null,
         "sourceCategory": "spell",
         "isHomebrew": true,
-        "challengeRating": 0.0,
+        "challengeRating": null,
         "xp": null,
         "size": "Medium",
         "type": "Aberration",
         "alignment": "Chaotic Neutral",
-        "crDisplay": "CR varies",
+        "crDisplay": "varies",
         "ac": 14,
         "hp": 42,
         "speed": "30 ft.",
         "v2014": {
           "editionName": "Shifting Enigma",
-          "baselineDpr": 4.95,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [
@@ -699,7 +699,7 @@
           "dprProfile": {
             "id": "shifting-enigma",
             "name": "Shifting Enigma",
-            "description": "CR CR varies Medium Aberration",
+            "description": "CR varies Medium Aberration",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -713,7 +713,7 @@
             "id": "shifting-enigma",
             "name": "Shifting Enigma",
             "sizeDisplay": "Medium",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "Aberration",
             "alignment": "Chaotic Neutral",
             "ac": 14,
@@ -780,7 +780,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -803,7 +803,7 @@
         },
         "v2024": {
           "editionName": "Shifting Enigma",
-          "baselineDpr": 4.95,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [
@@ -837,7 +837,7 @@
           "dprProfile": {
             "id": "shifting-enigma",
             "name": "Shifting Enigma",
-            "description": "CR CR varies Medium Aberration",
+            "description": "CR varies Medium Aberration",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -851,7 +851,7 @@
             "id": "shifting-enigma",
             "name": "Shifting Enigma",
             "sizeDisplay": "Medium",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "Aberration",
             "alignment": "Chaotic Neutral",
             "ac": 14,
@@ -918,7 +918,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -1966,10 +1966,10 @@
     "acl_minimal_missing_keys": {
       "domainMonster": {
         "actionsMarkdown": "**Speed:** 30 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |",
-        "alignment": "Unaligned",
-        "armorClass": 10,
+        "alignment": null,
+        "armorClass": null,
         "attackMath": [],
-        "challengeRating": "0",
+        "challengeRating": null,
         "customProperties": {
           "cha": 10,
           "chaScore": 10,
@@ -1985,16 +1985,16 @@
           "wis": 10,
           "wisScore": 10
         },
-        "hitDieFormula": "2d8 + 2",
-        "hitPoints": 10,
+        "hitDieFormula": null,
+        "hitPoints": null,
         "id": {
           "ruleset": "homebrew",
           "slug": "acl-bare-echo"
         },
         "innateSpells": [],
-        "monsterType": "monstrosity",
+        "monsterType": null,
         "name": "ACL Bare Echo",
-        "size": "Medium"
+        "size": null
       },
       "codexView": {
         "id": "acl-bare-echo",
@@ -2009,18 +2009,18 @@
         "sourceSpellId": null,
         "sourceCategory": "spell",
         "isHomebrew": true,
-        "challengeRating": 0.0,
+        "challengeRating": null,
         "xp": null,
-        "size": "Medium",
-        "type": "monstrosity",
-        "alignment": "Unaligned",
-        "crDisplay": "CR 0",
-        "ac": 10,
-        "hp": 10,
+        "size": null,
+        "type": null,
+        "alignment": null,
+        "crDisplay": null,
+        "ac": null,
+        "hp": null,
         "speed": "30 ft.",
         "v2014": {
           "editionName": "ACL Bare Echo",
-          "baselineDpr": 2.375,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -2052,7 +2052,7 @@
           "dprProfile": {
             "id": "acl-bare-echo",
             "name": "ACL Bare Echo",
-            "description": "CR CR 0 Medium monstrosity",
+            "description": "CR — — —",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -2065,14 +2065,14 @@
           "statBlock": {
             "id": "acl-bare-echo",
             "name": "ACL Bare Echo",
-            "sizeDisplay": "Medium",
-            "crDisplay": "CR 0",
-            "typeDisplay": "monstrosity",
-            "alignment": "Unaligned",
-            "ac": 10,
+            "sizeDisplay": null,
+            "crDisplay": null,
+            "typeDisplay": null,
+            "alignment": null,
+            "ac": null,
             "armorType": null,
-            "maxHp": 10,
-            "hitDice": "2d8 + 2",
+            "maxHp": null,
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -2121,14 +2121,14 @@
             "specialTrait": null,
             "presentation": {
               "accentArgb": 4287323382,
-              "glyphCreatureType": "monstrosity",
+              "glyphCreatureType": "beast",
               "glyphCrTier": 1,
               "glyphActionRings": [
                 "Instance of 'ActionTraitRing'"
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -2140,10 +2140,10 @@
               "hasLegendaryActions": false
             },
             "displayText": {
-              "subtitleText": "Medium monstrosity, Unaligned",
-              "acLine": "10",
-              "hpLine": "10 (2d8 + 2)",
-              "challengeLine": "0",
+              "subtitleText": "— —, —",
+              "acLine": "—",
+              "hpLine": "—",
+              "challengeLine": "—",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
             }
@@ -2151,7 +2151,7 @@
         },
         "v2024": {
           "editionName": "ACL Bare Echo",
-          "baselineDpr": 2.375,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -2183,7 +2183,7 @@
           "dprProfile": {
             "id": "acl-bare-echo",
             "name": "ACL Bare Echo",
-            "description": "CR CR 0 Medium monstrosity",
+            "description": "CR — — —",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -2196,14 +2196,14 @@
           "statBlock": {
             "id": "acl-bare-echo",
             "name": "ACL Bare Echo",
-            "sizeDisplay": "Medium",
-            "crDisplay": "CR 0",
-            "typeDisplay": "monstrosity",
-            "alignment": "Unaligned",
-            "ac": 10,
+            "sizeDisplay": null,
+            "crDisplay": null,
+            "typeDisplay": null,
+            "alignment": null,
+            "ac": null,
             "armorType": null,
-            "maxHp": 10,
-            "hitDice": "2d8 + 2",
+            "maxHp": null,
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -2252,14 +2252,14 @@
             "specialTrait": null,
             "presentation": {
               "accentArgb": 4287323382,
-              "glyphCreatureType": "monstrosity",
+              "glyphCreatureType": "beast",
               "glyphCrTier": 1,
               "glyphActionRings": [
                 "Instance of 'ActionTraitRing'"
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -2271,10 +2271,10 @@
               "hasLegendaryActions": false
             },
             "displayText": {
-              "subtitleText": "Medium monstrosity, Unaligned",
-              "acLine": "10",
-              "hpLine": "10 (2d8 + 2)",
-              "challengeLine": "0",
+              "subtitleText": "— —, —",
+              "acLine": "—",
+              "hpLine": "—",
+              "challengeLine": "—",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
             }
@@ -2304,7 +2304,7 @@
           "wis": 10,
           "wisScore": 10
         },
-        "hitDieFormula": "45hp",
+        "hitDieFormula": null,
         "hitPoints": 45,
         "id": {
           "ruleset": "homebrew",
@@ -2328,18 +2328,18 @@
         "sourceSpellId": null,
         "sourceCategory": "spell",
         "isHomebrew": true,
-        "challengeRating": 0.0,
+        "challengeRating": null,
         "xp": null,
         "size": "Medium",
         "type": "aberration",
         "alignment": "N",
-        "crDisplay": "CR varies",
+        "crDisplay": "varies",
         "ac": 14,
         "hp": 45,
         "speed": "30 ft.",
         "v2014": {
           "editionName": "ACL Shifting Horror",
-          "baselineDpr": 5.85,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [
@@ -2373,7 +2373,7 @@
           "dprProfile": {
             "id": "acl-shifting-horror",
             "name": "ACL Shifting Horror",
-            "description": "CR CR varies Medium aberration",
+            "description": "CR varies Medium aberration",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -2387,13 +2387,13 @@
             "id": "acl-shifting-horror",
             "name": "ACL Shifting Horror",
             "sizeDisplay": "Medium",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "aberration",
             "alignment": "N",
             "ac": 14,
             "armorType": null,
             "maxHp": 45,
-            "hitDice": "45hp",
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -2458,7 +2458,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -2472,7 +2472,7 @@
             "displayText": {
               "subtitleText": "Medium aberration, N",
               "acLine": "14",
-              "hpLine": "45 (45hp)",
+              "hpLine": "45",
               "challengeLine": "varies",
               "primaryDamageFormula": "2d6+3",
               "fullDamageFormula": "2d6+3 Bludgeoning"
@@ -2481,7 +2481,7 @@
         },
         "v2024": {
           "editionName": "ACL Shifting Horror",
-          "baselineDpr": 5.85,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [
@@ -2515,7 +2515,7 @@
           "dprProfile": {
             "id": "acl-shifting-horror",
             "name": "ACL Shifting Horror",
-            "description": "CR CR varies Medium aberration",
+            "description": "CR varies Medium aberration",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -2529,13 +2529,13 @@
             "id": "acl-shifting-horror",
             "name": "ACL Shifting Horror",
             "sizeDisplay": "Medium",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "aberration",
             "alignment": "N",
             "ac": 14,
             "armorType": null,
             "maxHp": 45,
-            "hitDice": "45hp",
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -2600,7 +2600,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -2614,7 +2614,7 @@
             "displayText": {
               "subtitleText": "Medium aberration, N",
               "acLine": "14",
-              "hpLine": "45 (45hp)",
+              "hpLine": "45",
               "challengeLine": "varies",
               "primaryDamageFormula": "2d6+3",
               "fullDamageFormula": "2d6+3 Bludgeoning"
@@ -3030,7 +3030,7 @@
           },
           "source": "HB"
         },
-        "hitDieFormula": "2d8",
+        "hitDieFormula": null,
         "hitPoints": 18,
         "id": {
           "ruleset": "homebrew",
@@ -3119,7 +3119,7 @@
             "ac": 13,
             "armorType": null,
             "maxHp": 18,
-            "hitDice": "2d8",
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -3194,7 +3194,7 @@
             "displayText": {
               "subtitleText": "Tiny fey, Chaotic Neutral",
               "acLine": "13",
-              "hpLine": "18 (2d8)",
+              "hpLine": "18",
               "challengeLine": "0.5",
               "primaryDamageFormula": "1d8+3",
               "fullDamageFormula": "1d8+3 Radiant"
@@ -3257,7 +3257,7 @@
             "ac": 13,
             "armorType": null,
             "maxHp": 18,
-            "hitDice": "2d8",
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -3332,7 +3332,7 @@
             "displayText": {
               "subtitleText": "Tiny fey, Chaotic Neutral",
               "acLine": "13",
-              "hpLine": "18 (2d8)",
+              "hpLine": "18",
               "challengeLine": "0.5",
               "primaryDamageFormula": "1d8+3",
               "fullDamageFormula": "1d8+3 Radiant"
@@ -3344,26 +3344,26 @@
     "comm_minimal_missing": {
       "domainMonster": {
         "actionsMarkdown": "",
-        "alignment": "unaligned",
-        "armorClass": 10,
+        "alignment": null,
+        "armorClass": null,
         "attackMath": [],
-        "challengeRating": "1",
+        "challengeRating": null,
         "customProperties": {
           "rawJson": {
             "name": "Community Bare Wisp"
           },
           "source": "HOMEBREW"
         },
-        "hitDieFormula": "2d8",
-        "hitPoints": 10,
+        "hitDieFormula": null,
+        "hitPoints": null,
         "id": {
           "ruleset": "v2024",
           "slug": "community-bare-wisp"
         },
         "innateSpells": [],
-        "monsterType": "Humanoid",
+        "monsterType": null,
         "name": "Community Bare Wisp",
-        "size": "Medium"
+        "size": null
       },
       "codexView": {
         "id": "community-bare-wisp",
@@ -3378,18 +3378,18 @@
         "sourceSpellId": null,
         "sourceCategory": "spell",
         "isHomebrew": true,
-        "challengeRating": 1.0,
+        "challengeRating": null,
         "xp": null,
-        "size": "Medium",
-        "type": "Humanoid",
-        "alignment": "unaligned",
-        "crDisplay": "CR 1",
-        "ac": 10,
-        "hp": 10,
+        "size": null,
+        "type": null,
+        "alignment": null,
+        "crDisplay": null,
+        "ac": null,
+        "hp": null,
         "speed": "30 ft.",
         "v2014": {
           "editionName": "Community Bare Wisp",
-          "baselineDpr": 2.925,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -3421,7 +3421,7 @@
           "dprProfile": {
             "id": "community-bare-wisp",
             "name": "Community Bare Wisp",
-            "description": "CR CR 1 Medium Humanoid",
+            "description": "CR — — —",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -3434,14 +3434,14 @@
           "statBlock": {
             "id": "community-bare-wisp",
             "name": "Community Bare Wisp",
-            "sizeDisplay": "Medium",
-            "crDisplay": "CR 1",
-            "typeDisplay": "Humanoid",
-            "alignment": "unaligned",
-            "ac": 10,
+            "sizeDisplay": null,
+            "crDisplay": null,
+            "typeDisplay": null,
+            "alignment": null,
+            "ac": null,
             "armorType": null,
-            "maxHp": 10,
-            "hitDice": "2d8",
+            "maxHp": null,
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -3469,7 +3469,7 @@
             "hasHover": null,
             "spellSaveDc": null,
             "spellAttackBonus": null,
-            "attackBonus": 4,
+            "attackBonus": 2,
             "damageDiceCount": 1,
             "damageDiceSides": 6,
             "damageBonus": 2,
@@ -3481,14 +3481,14 @@
             "specialTrait": null,
             "presentation": {
               "accentArgb": 4287323382,
-              "glyphCreatureType": "humanoid",
+              "glyphCreatureType": "beast",
               "glyphCrTier": 1,
               "glyphActionRings": [
                 "Instance of 'ActionTraitRing'"
               ]
             },
             "derived": {
-              "crValue": 1.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -3500,10 +3500,10 @@
               "hasLegendaryActions": false
             },
             "displayText": {
-              "subtitleText": "Medium humanoid, unaligned",
-              "acLine": "10",
-              "hpLine": "10 (2d8)",
-              "challengeLine": "1",
+              "subtitleText": "— —, —",
+              "acLine": "—",
+              "hpLine": "—",
+              "challengeLine": "—",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
             }
@@ -3511,7 +3511,7 @@
         },
         "v2024": {
           "editionName": "Community Bare Wisp",
-          "baselineDpr": 2.925,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -3543,7 +3543,7 @@
           "dprProfile": {
             "id": "community-bare-wisp",
             "name": "Community Bare Wisp",
-            "description": "CR CR 1 Medium Humanoid",
+            "description": "CR — — —",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -3556,14 +3556,14 @@
           "statBlock": {
             "id": "community-bare-wisp",
             "name": "Community Bare Wisp",
-            "sizeDisplay": "Medium",
-            "crDisplay": "CR 1",
-            "typeDisplay": "Humanoid",
-            "alignment": "unaligned",
-            "ac": 10,
+            "sizeDisplay": null,
+            "crDisplay": null,
+            "typeDisplay": null,
+            "alignment": null,
+            "ac": null,
             "armorType": null,
-            "maxHp": 10,
-            "hitDice": "2d8",
+            "maxHp": null,
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -3591,7 +3591,7 @@
             "hasHover": null,
             "spellSaveDc": null,
             "spellAttackBonus": null,
-            "attackBonus": 4,
+            "attackBonus": 2,
             "damageDiceCount": 1,
             "damageDiceSides": 6,
             "damageBonus": 2,
@@ -3603,14 +3603,14 @@
             "specialTrait": null,
             "presentation": {
               "accentArgb": 4287323382,
-              "glyphCreatureType": "humanoid",
+              "glyphCreatureType": "beast",
               "glyphCrTier": 1,
               "glyphActionRings": [
                 "Instance of 'ActionTraitRing'"
               ]
             },
             "derived": {
-              "crValue": 1.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -3622,10 +3622,10 @@
               "hasLegendaryActions": false
             },
             "displayText": {
-              "subtitleText": "Medium humanoid, unaligned",
-              "acLine": "10",
-              "hpLine": "10 (2d8)",
-              "challengeLine": "1",
+              "subtitleText": "— —, —",
+              "acLine": "—",
+              "hpLine": "—",
+              "challengeLine": "—",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
             }
@@ -3652,7 +3652,7 @@
           },
           "source": "HOMEBREW"
         },
-        "hitDieFormula": "2d8",
+        "hitDieFormula": null,
         "hitPoints": 52,
         "id": {
           "ruleset": "v2024",
@@ -3676,18 +3676,18 @@
         "sourceSpellId": null,
         "sourceCategory": "spell",
         "isHomebrew": true,
-        "challengeRating": 0.0,
+        "challengeRating": null,
         "xp": null,
         "size": "Medium",
         "type": "Construct",
         "alignment": "unaligned",
-        "crDisplay": "CR varies",
+        "crDisplay": "varies",
         "ac": 15,
         "hp": 52,
         "speed": "30 ft.",
         "v2014": {
           "editionName": "Community Variable Construct",
-          "baselineDpr": 2.375,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -3719,7 +3719,7 @@
           "dprProfile": {
             "id": "community-variable-construct",
             "name": "Community Variable Construct",
-            "description": "CR CR varies Medium Construct",
+            "description": "CR varies Medium Construct",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -3733,13 +3733,13 @@
             "id": "community-variable-construct",
             "name": "Community Variable Construct",
             "sizeDisplay": "Medium",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "Construct",
             "alignment": "unaligned",
             "ac": 15,
             "armorType": null,
             "maxHp": 52,
-            "hitDice": "2d8",
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -3786,7 +3786,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -3800,7 +3800,7 @@
             "displayText": {
               "subtitleText": "Medium construct, unaligned",
               "acLine": "15",
-              "hpLine": "52 (2d8)",
+              "hpLine": "52",
               "challengeLine": "varies",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
@@ -3809,7 +3809,7 @@
         },
         "v2024": {
           "editionName": "Community Variable Construct",
-          "baselineDpr": 2.375,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -3841,7 +3841,7 @@
           "dprProfile": {
             "id": "community-variable-construct",
             "name": "Community Variable Construct",
-            "description": "CR CR varies Medium Construct",
+            "description": "CR varies Medium Construct",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -3855,13 +3855,13 @@
             "id": "community-variable-construct",
             "name": "Community Variable Construct",
             "sizeDisplay": "Medium",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "Construct",
             "alignment": "unaligned",
             "ac": 15,
             "armorType": null,
             "maxHp": 52,
-            "hitDice": "2d8",
+            "hitDice": null,
             "speed": "30 ft.",
             "strScore": 10,
             "dexScore": 10,
@@ -3908,7 +3908,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -3922,7 +3922,7 @@
             "displayText": {
               "subtitleText": "Medium construct, unaligned",
               "acLine": "15",
-              "hpLine": "52 (2d8)",
+              "hpLine": "52",
               "challengeLine": "varies",
               "primaryDamageFormula": "1d6+2",
               "fullDamageFormula": "1d6+2 Slashing"
@@ -4265,7 +4265,7 @@
           "sourceText": "Stone Mote\nSmall construct, unaligned\nAC 12 HP 15 Speed 20 ft. CR 1/4",
           "speed": "20 ft."
         },
-        "hitDieFormula": "",
+        "hitDieFormula": null,
         "hitPoints": 15,
         "id": {
           "ruleset": "v2024",
@@ -4555,7 +4555,7 @@
           "sourceText": "Mire Chimera\nLarge monstrosity, neutral\nAC 15 HP 68 Speed 30 ft. CR varies",
           "speed": "30 ft."
         },
-        "hitDieFormula": "",
+        "hitDieFormula": null,
         "hitPoints": 68,
         "id": {
           "ruleset": "v2024",
@@ -4579,18 +4579,18 @@
         "sourceSpellId": null,
         "sourceCategory": "spell",
         "isHomebrew": true,
-        "challengeRating": 0.0,
+        "challengeRating": null,
         "xp": null,
         "size": "Large",
         "type": "Monstrosity",
         "alignment": "neutral",
-        "crDisplay": "CR varies",
+        "crDisplay": "varies",
         "ac": 15,
         "hp": 68,
         "speed": "30 ft.",
         "v2014": {
           "editionName": "Mire Chimera",
-          "baselineDpr": 2.375,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -4622,7 +4622,7 @@
           "dprProfile": {
             "id": "mire-chimera",
             "name": "Mire Chimera",
-            "description": "CR CR varies Large Monstrosity",
+            "description": "CR varies Large Monstrosity",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -4636,7 +4636,7 @@
             "id": "mire-chimera",
             "name": "Mire Chimera",
             "sizeDisplay": "Large",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "Monstrosity",
             "alignment": "neutral",
             "ac": 15,
@@ -4689,7 +4689,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,
@@ -4712,7 +4712,7 @@
         },
         "v2024": {
           "editionName": "Mire Chimera",
-          "baselineDpr": 2.375,
+          "baselineDpr": null,
           "matchesName": true,
           "combatProfile": {
             "attackNames": [],
@@ -4744,7 +4744,7 @@
           "dprProfile": {
             "id": "mire-chimera",
             "name": "Mire Chimera",
-            "description": "CR CR varies Large Monstrosity",
+            "description": "CR varies Large Monstrosity",
             "level": 1,
             "abilityScore": 10,
             "proficiencyBonus": 2,
@@ -4758,7 +4758,7 @@
             "id": "mire-chimera",
             "name": "Mire Chimera",
             "sizeDisplay": "Large",
-            "crDisplay": "CR varies",
+            "crDisplay": "varies",
             "typeDisplay": "Monstrosity",
             "alignment": "neutral",
             "ac": 15,
@@ -4811,7 +4811,7 @@
               ]
             },
             "derived": {
-              "crValue": 0.0,
+              "crValue": null,
               "strMod": 0,
               "dexMod": 0,
               "conMod": 0,

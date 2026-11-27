@@ -1428,18 +1428,18 @@
           "sourceSpellId": null,
           "sourceCategory": "spell",
           "isHomebrew": true,
-          "challengeRating": 0.0,
+          "challengeRating": null,
           "xp": null,
           "size": "Medium",
           "type": "Aberration",
           "alignment": "chaotic neutral",
-          "crDisplay": "CR varies",
+          "crDisplay": "varies",
           "ac": 14,
           "hp": 58,
           "speed": "30 ft.",
           "v2014": {
             "editionName": "Rift Mimic",
-            "baselineDpr": 5.5,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [
@@ -1473,7 +1473,7 @@
             "dprProfile": {
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
-              "description": "CR CR varies Medium Aberration",
+              "description": "CR varies Medium Aberration",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -1487,7 +1487,7 @@
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
               "sizeDisplay": "Medium",
-              "crDisplay": "CR varies",
+              "crDisplay": "varies",
               "typeDisplay": "Aberration",
               "alignment": "chaotic neutral",
               "ac": 14,
@@ -1549,7 +1549,7 @@
                 ]
               },
               "derived": {
-                "crValue": 0.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -1572,7 +1572,7 @@
           },
           "v2024": {
             "editionName": "Rift Mimic",
-            "baselineDpr": 5.5,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [
@@ -1606,7 +1606,7 @@
             "dprProfile": {
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
-              "description": "CR CR varies Medium Aberration",
+              "description": "CR varies Medium Aberration",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -1620,7 +1620,7 @@
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
               "sizeDisplay": "Medium",
-              "crDisplay": "CR varies",
+              "crDisplay": "varies",
               "typeDisplay": "Aberration",
               "alignment": "chaotic neutral",
               "ac": 14,
@@ -1682,7 +1682,7 @@
                 ]
               },
               "derived": {
-                "crValue": 0.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -1708,7 +1708,7 @@
           "id": "hb-unreadable-cr",
           "name": "Rift Mimic",
           "sizeDisplay": "Medium",
-          "crDisplay": "CR varies",
+          "crDisplay": "varies",
           "typeDisplay": "Aberration",
           "alignment": "chaotic neutral",
           "ac": 14,
@@ -1770,7 +1770,7 @@
             ]
           },
           "derived": {
-            "crValue": 0.0,
+            "crValue": null,
             "strMod": 0,
             "dexMod": 0,
             "conMod": 0,
@@ -1795,21 +1795,21 @@
         "slug": "hb-minimal-id-name",
         "domainMonster": {
           "actionsMarkdown": "",
-          "alignment": "unaligned",
-          "armorClass": 10,
+          "alignment": null,
+          "armorClass": null,
           "attackMath": [],
-          "challengeRating": "1",
+          "challengeRating": null,
           "customProperties": {},
-          "hitDieFormula": "2d8",
-          "hitPoints": 10,
+          "hitDieFormula": null,
+          "hitPoints": null,
           "id": {
             "ruleset": "homebrew",
             "slug": "hb-minimal-id-name"
           },
           "innateSpells": [],
-          "monsterType": "Humanoid",
+          "monsterType": null,
           "name": "Minimal Shade",
-          "size": "Medium"
+          "size": null
         },
         "codexItem": {
           "id": "hb-minimal-id-name",
@@ -1824,18 +1824,18 @@
           "sourceSpellId": null,
           "sourceCategory": "spell",
           "isHomebrew": true,
-          "challengeRating": 1.0,
+          "challengeRating": null,
           "xp": null,
-          "size": "Medium",
-          "type": "Humanoid",
-          "alignment": "unaligned",
-          "crDisplay": "CR 1",
-          "ac": 10,
-          "hp": 10,
+          "size": null,
+          "type": null,
+          "alignment": null,
+          "crDisplay": null,
+          "ac": null,
+          "hp": null,
           "speed": "30 ft.",
           "v2014": {
             "editionName": "Minimal Shade",
-            "baselineDpr": 2.925,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -1867,7 +1867,7 @@
             "dprProfile": {
               "id": "hb-minimal-id-name",
               "name": "Minimal Shade",
-              "description": "CR CR 1 Medium Humanoid",
+              "description": "CR — — —",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -1880,14 +1880,14 @@
             "statBlock": {
               "id": "hb-minimal-id-name",
               "name": "Minimal Shade",
-              "sizeDisplay": "Medium",
-              "crDisplay": "CR 1",
-              "typeDisplay": "Humanoid",
-              "alignment": "unaligned",
-              "ac": 10,
+              "sizeDisplay": null,
+              "crDisplay": null,
+              "typeDisplay": null,
+              "alignment": null,
+              "ac": null,
               "armorType": null,
-              "maxHp": 10,
-              "hitDice": "2d8",
+              "maxHp": null,
+              "hitDice": null,
               "speed": "30 ft.",
               "strScore": 10,
               "dexScore": 10,
@@ -1915,7 +1915,7 @@
               "hasHover": null,
               "spellSaveDc": null,
               "spellAttackBonus": null,
-              "attackBonus": 4,
+              "attackBonus": 2,
               "damageDiceCount": 1,
               "damageDiceSides": 6,
               "damageBonus": 2,
@@ -1927,14 +1927,14 @@
               "specialTrait": null,
               "presentation": {
                 "accentArgb": 4287323382,
-                "glyphCreatureType": "humanoid",
+                "glyphCreatureType": "beast",
                 "glyphCrTier": 1,
                 "glyphActionRings": [
                   "Instance of 'ActionTraitRing'"
                 ]
               },
               "derived": {
-                "crValue": 1.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -1946,10 +1946,10 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Medium humanoid, unaligned",
-                "acLine": "10",
-                "hpLine": "10 (2d8)",
-                "challengeLine": "1",
+                "subtitleText": "— —, —",
+                "acLine": "—",
+                "hpLine": "—",
+                "challengeLine": "—",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
               }
@@ -1957,7 +1957,7 @@
           },
           "v2024": {
             "editionName": "Minimal Shade",
-            "baselineDpr": 2.925,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -1989,7 +1989,7 @@
             "dprProfile": {
               "id": "hb-minimal-id-name",
               "name": "Minimal Shade",
-              "description": "CR CR 1 Medium Humanoid",
+              "description": "CR — — —",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -2002,14 +2002,14 @@
             "statBlock": {
               "id": "hb-minimal-id-name",
               "name": "Minimal Shade",
-              "sizeDisplay": "Medium",
-              "crDisplay": "CR 1",
-              "typeDisplay": "Humanoid",
-              "alignment": "unaligned",
-              "ac": 10,
+              "sizeDisplay": null,
+              "crDisplay": null,
+              "typeDisplay": null,
+              "alignment": null,
+              "ac": null,
               "armorType": null,
-              "maxHp": 10,
-              "hitDice": "2d8",
+              "maxHp": null,
+              "hitDice": null,
               "speed": "30 ft.",
               "strScore": 10,
               "dexScore": 10,
@@ -2037,7 +2037,7 @@
               "hasHover": null,
               "spellSaveDc": null,
               "spellAttackBonus": null,
-              "attackBonus": 4,
+              "attackBonus": 2,
               "damageDiceCount": 1,
               "damageDiceSides": 6,
               "damageBonus": 2,
@@ -2049,14 +2049,14 @@
               "specialTrait": null,
               "presentation": {
                 "accentArgb": 4287323382,
-                "glyphCreatureType": "humanoid",
+                "glyphCreatureType": "beast",
                 "glyphCrTier": 1,
                 "glyphActionRings": [
                   "Instance of 'ActionTraitRing'"
                 ]
               },
               "derived": {
-                "crValue": 1.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -2068,10 +2068,10 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Medium humanoid, unaligned",
-                "acLine": "10",
-                "hpLine": "10 (2d8)",
-                "challengeLine": "1",
+                "subtitleText": "— —, —",
+                "acLine": "—",
+                "hpLine": "—",
+                "challengeLine": "—",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
               }
@@ -2081,14 +2081,14 @@
         "statBlock": {
           "id": "hb-minimal-id-name",
           "name": "Minimal Shade",
-          "sizeDisplay": "Medium",
-          "crDisplay": "CR 1",
-          "typeDisplay": "Humanoid",
-          "alignment": "unaligned",
-          "ac": 10,
+          "sizeDisplay": null,
+          "crDisplay": null,
+          "typeDisplay": null,
+          "alignment": null,
+          "ac": null,
           "armorType": null,
-          "maxHp": 10,
-          "hitDice": "2d8",
+          "maxHp": null,
+          "hitDice": null,
           "speed": "30 ft.",
           "strScore": 10,
           "dexScore": 10,
@@ -2116,7 +2116,7 @@
           "hasHover": null,
           "spellSaveDc": null,
           "spellAttackBonus": null,
-          "attackBonus": 4,
+          "attackBonus": 2,
           "damageDiceCount": 1,
           "damageDiceSides": 6,
           "damageBonus": 2,
@@ -2128,14 +2128,14 @@
           "specialTrait": null,
           "presentation": {
             "accentArgb": 4287323382,
-            "glyphCreatureType": "humanoid",
+            "glyphCreatureType": "beast",
             "glyphCrTier": 1,
             "glyphActionRings": [
               "Instance of 'ActionTraitRing'"
             ]
           },
           "derived": {
-            "crValue": 1.0,
+            "crValue": null,
             "strMod": 0,
             "dexMod": 0,
             "conMod": 0,
@@ -2147,10 +2147,10 @@
             "hasLegendaryActions": false
           },
           "displayText": {
-            "subtitleText": "Medium humanoid, unaligned",
-            "acLine": "10",
-            "hpLine": "10 (2d8)",
-            "challengeLine": "1",
+            "subtitleText": "— —, —",
+            "acLine": "—",
+            "hpLine": "—",
+            "challengeLine": "—",
             "primaryDamageFormula": "1d6+2",
             "fullDamageFormula": "1d6+2 Slashing"
           }
@@ -2174,7 +2174,7 @@
           "innateSpells": [],
           "monsterType": "Beast",
           "name": "Sizeless Hound",
-          "size": "Medium"
+          "size": null
         },
         "codexItem": {
           "id": "hb-missing-size",
@@ -2191,7 +2191,7 @@
           "isHomebrew": true,
           "challengeRating": 2.0,
           "xp": null,
-          "size": "Medium",
+          "size": null,
           "type": "Beast",
           "alignment": "neutral",
           "crDisplay": "CR 2",
@@ -2232,7 +2232,7 @@
             "dprProfile": {
               "id": "hb-missing-size",
               "name": "Sizeless Hound",
-              "description": "CR CR 2 Medium Beast",
+              "description": "CR CR 2 — Beast",
               "level": 2,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -2245,7 +2245,7 @@
             "statBlock": {
               "id": "hb-missing-size",
               "name": "Sizeless Hound",
-              "sizeDisplay": "Medium",
+              "sizeDisplay": null,
               "crDisplay": "CR 2",
               "typeDisplay": "Beast",
               "alignment": "neutral",
@@ -2311,7 +2311,7 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Medium beast, neutral",
+                "subtitleText": "— beast, neutral",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
@@ -2354,7 +2354,7 @@
             "dprProfile": {
               "id": "hb-missing-size",
               "name": "Sizeless Hound",
-              "description": "CR CR 2 Medium Beast",
+              "description": "CR CR 2 — Beast",
               "level": 2,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -2367,7 +2367,7 @@
             "statBlock": {
               "id": "hb-missing-size",
               "name": "Sizeless Hound",
-              "sizeDisplay": "Medium",
+              "sizeDisplay": null,
               "crDisplay": "CR 2",
               "typeDisplay": "Beast",
               "alignment": "neutral",
@@ -2433,7 +2433,7 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Medium beast, neutral",
+                "subtitleText": "— beast, neutral",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
@@ -2446,7 +2446,7 @@
         "statBlock": {
           "id": "hb-missing-size",
           "name": "Sizeless Hound",
-          "sizeDisplay": "Medium",
+          "sizeDisplay": null,
           "crDisplay": "CR 2",
           "typeDisplay": "Beast",
           "alignment": "neutral",
@@ -2512,7 +2512,7 @@
             "hasLegendaryActions": false
           },
           "displayText": {
-            "subtitleText": "Medium beast, neutral",
+            "subtitleText": "— beast, neutral",
             "acLine": "14",
             "hpLine": "45 (6d10 + 12)",
             "challengeLine": "2",
@@ -2537,7 +2537,7 @@
             "slug": "hb-missing-type"
           },
           "innateSpells": [],
-          "monsterType": "Humanoid",
+          "monsterType": null,
           "name": "Typeless Stalker",
           "size": "Large"
         },
@@ -2557,7 +2557,7 @@
           "challengeRating": 2.0,
           "xp": null,
           "size": "Large",
-          "type": "Humanoid",
+          "type": null,
           "alignment": "neutral",
           "crDisplay": "CR 2",
           "ac": 14,
@@ -2597,7 +2597,7 @@
             "dprProfile": {
               "id": "hb-missing-type",
               "name": "Typeless Stalker",
-              "description": "CR CR 2 Large Humanoid",
+              "description": "CR CR 2 Large —",
               "level": 2,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -2612,7 +2612,7 @@
               "name": "Typeless Stalker",
               "sizeDisplay": "Large",
               "crDisplay": "CR 2",
-              "typeDisplay": "Humanoid",
+              "typeDisplay": null,
               "alignment": "neutral",
               "ac": 14,
               "armorType": null,
@@ -2657,7 +2657,7 @@
               "specialTrait": null,
               "presentation": {
                 "accentArgb": 4287323382,
-                "glyphCreatureType": "humanoid",
+                "glyphCreatureType": "beast",
                 "glyphCrTier": 1,
                 "glyphActionRings": [
                   "Instance of 'ActionTraitRing'"
@@ -2676,7 +2676,7 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Large humanoid, neutral",
+                "subtitleText": "Large —, neutral",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
@@ -2719,7 +2719,7 @@
             "dprProfile": {
               "id": "hb-missing-type",
               "name": "Typeless Stalker",
-              "description": "CR CR 2 Large Humanoid",
+              "description": "CR CR 2 Large —",
               "level": 2,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -2734,7 +2734,7 @@
               "name": "Typeless Stalker",
               "sizeDisplay": "Large",
               "crDisplay": "CR 2",
-              "typeDisplay": "Humanoid",
+              "typeDisplay": null,
               "alignment": "neutral",
               "ac": 14,
               "armorType": null,
@@ -2779,7 +2779,7 @@
               "specialTrait": null,
               "presentation": {
                 "accentArgb": 4287323382,
-                "glyphCreatureType": "humanoid",
+                "glyphCreatureType": "beast",
                 "glyphCrTier": 1,
                 "glyphActionRings": [
                   "Instance of 'ActionTraitRing'"
@@ -2798,7 +2798,7 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Large humanoid, neutral",
+                "subtitleText": "Large —, neutral",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
@@ -2813,7 +2813,7 @@
           "name": "Typeless Stalker",
           "sizeDisplay": "Large",
           "crDisplay": "CR 2",
-          "typeDisplay": "Humanoid",
+          "typeDisplay": null,
           "alignment": "neutral",
           "ac": 14,
           "armorType": null,
@@ -2858,7 +2858,7 @@
           "specialTrait": null,
           "presentation": {
             "accentArgb": 4287323382,
-            "glyphCreatureType": "humanoid",
+            "glyphCreatureType": "beast",
             "glyphCrTier": 1,
             "glyphActionRings": [
               "Instance of 'ActionTraitRing'"
@@ -2877,7 +2877,7 @@
             "hasLegendaryActions": false
           },
           "displayText": {
-            "subtitleText": "Large humanoid, neutral",
+            "subtitleText": "Large —, neutral",
             "acLine": "14",
             "hpLine": "45 (6d10 + 12)",
             "challengeLine": "2",
@@ -2890,7 +2890,7 @@
         "slug": "hb-missing-alignment",
         "domainMonster": {
           "actionsMarkdown": "",
-          "alignment": "unaligned",
+          "alignment": null,
           "armorClass": 14,
           "attackMath": [],
           "challengeRating": "2",
@@ -2923,7 +2923,7 @@
           "xp": null,
           "size": "Large",
           "type": "Beast",
-          "alignment": "unaligned",
+          "alignment": null,
           "crDisplay": "CR 2",
           "ac": 14,
           "hp": 45,
@@ -2978,7 +2978,7 @@
               "sizeDisplay": "Large",
               "crDisplay": "CR 2",
               "typeDisplay": "Beast",
-              "alignment": "unaligned",
+              "alignment": null,
               "ac": 14,
               "armorType": null,
               "maxHp": 45,
@@ -3041,7 +3041,7 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Large beast, unaligned",
+                "subtitleText": "Large beast, —",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
@@ -3100,7 +3100,7 @@
               "sizeDisplay": "Large",
               "crDisplay": "CR 2",
               "typeDisplay": "Beast",
-              "alignment": "unaligned",
+              "alignment": null,
               "ac": 14,
               "armorType": null,
               "maxHp": 45,
@@ -3163,7 +3163,7 @@
                 "hasLegendaryActions": false
               },
               "displayText": {
-                "subtitleText": "Large beast, unaligned",
+                "subtitleText": "Large beast, —",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
@@ -3179,7 +3179,7 @@
           "sizeDisplay": "Large",
           "crDisplay": "CR 2",
           "typeDisplay": "Beast",
-          "alignment": "unaligned",
+          "alignment": null,
           "ac": 14,
           "armorType": null,
           "maxHp": 45,
@@ -3242,7 +3242,7 @@
             "hasLegendaryActions": false
           },
           "displayText": {
-            "subtitleText": "Large beast, unaligned",
+            "subtitleText": "Large beast, —",
             "acLine": "14",
             "hpLine": "45 (6d10 + 12)",
             "challengeLine": "2",
@@ -3256,7 +3256,7 @@
         "domainMonster": {
           "actionsMarkdown": "",
           "alignment": "neutral",
-          "armorClass": 10,
+          "armorClass": null,
           "attackMath": [],
           "challengeRating": "2",
           "customProperties": {},
@@ -3290,12 +3290,12 @@
           "type": "Beast",
           "alignment": "neutral",
           "crDisplay": "CR 2",
-          "ac": 10,
+          "ac": null,
           "hp": 45,
           "speed": "30 ft.",
           "v2014": {
             "editionName": "Unarmored Phantom",
-            "baselineDpr": 3.2,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -3344,7 +3344,7 @@
               "crDisplay": "CR 2",
               "typeDisplay": "Beast",
               "alignment": "neutral",
-              "ac": 10,
+              "ac": null,
               "armorType": null,
               "maxHp": 45,
               "hitDice": "6d10 + 12",
@@ -3407,7 +3407,7 @@
               },
               "displayText": {
                 "subtitleText": "Large beast, neutral",
-                "acLine": "10",
+                "acLine": "—",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
                 "primaryDamageFormula": "1d6+2",
@@ -3417,7 +3417,7 @@
           },
           "v2024": {
             "editionName": "Unarmored Phantom",
-            "baselineDpr": 3.2,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -3466,7 +3466,7 @@
               "crDisplay": "CR 2",
               "typeDisplay": "Beast",
               "alignment": "neutral",
-              "ac": 10,
+              "ac": null,
               "armorType": null,
               "maxHp": 45,
               "hitDice": "6d10 + 12",
@@ -3529,7 +3529,7 @@
               },
               "displayText": {
                 "subtitleText": "Large beast, neutral",
-                "acLine": "10",
+                "acLine": "—",
                 "hpLine": "45 (6d10 + 12)",
                 "challengeLine": "2",
                 "primaryDamageFormula": "1d6+2",
@@ -3545,7 +3545,7 @@
           "crDisplay": "CR 2",
           "typeDisplay": "Beast",
           "alignment": "neutral",
-          "ac": 10,
+          "ac": null,
           "armorType": null,
           "maxHp": 45,
           "hitDice": "6d10 + 12",
@@ -3608,7 +3608,7 @@
           },
           "displayText": {
             "subtitleText": "Large beast, neutral",
-            "acLine": "10",
+            "acLine": "—",
             "hpLine": "45 (6d10 + 12)",
             "challengeLine": "2",
             "primaryDamageFormula": "1d6+2",
@@ -3626,7 +3626,7 @@
           "challengeRating": "2",
           "customProperties": {},
           "hitDieFormula": "6d10 + 12",
-          "hitPoints": 10,
+          "hitPoints": null,
           "id": {
             "ruleset": "homebrew",
             "slug": "hb-missing-hp"
@@ -3656,11 +3656,11 @@
           "alignment": "neutral",
           "crDisplay": "CR 2",
           "ac": 14,
-          "hp": 10,
+          "hp": null,
           "speed": "30 ft.",
           "v2014": {
             "editionName": "Hpless Specter",
-            "baselineDpr": 3.2,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -3711,7 +3711,7 @@
               "alignment": "neutral",
               "ac": 14,
               "armorType": null,
-              "maxHp": 10,
+              "maxHp": null,
               "hitDice": "6d10 + 12",
               "speed": "30 ft.",
               "strScore": 10,
@@ -3773,7 +3773,7 @@
               "displayText": {
                 "subtitleText": "Large beast, neutral",
                 "acLine": "14",
-                "hpLine": "10 (6d10 + 12)",
+                "hpLine": "— (6d10 + 12)",
                 "challengeLine": "2",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
@@ -3782,7 +3782,7 @@
           },
           "v2024": {
             "editionName": "Hpless Specter",
-            "baselineDpr": 3.2,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -3833,7 +3833,7 @@
               "alignment": "neutral",
               "ac": 14,
               "armorType": null,
-              "maxHp": 10,
+              "maxHp": null,
               "hitDice": "6d10 + 12",
               "speed": "30 ft.",
               "strScore": 10,
@@ -3895,7 +3895,7 @@
               "displayText": {
                 "subtitleText": "Large beast, neutral",
                 "acLine": "14",
-                "hpLine": "10 (6d10 + 12)",
+                "hpLine": "— (6d10 + 12)",
                 "challengeLine": "2",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
@@ -3912,7 +3912,7 @@
           "alignment": "neutral",
           "ac": 14,
           "armorType": null,
-          "maxHp": 10,
+          "maxHp": null,
           "hitDice": "6d10 + 12",
           "speed": "30 ft.",
           "strScore": 10,
@@ -3974,7 +3974,7 @@
           "displayText": {
             "subtitleText": "Large beast, neutral",
             "acLine": "14",
-            "hpLine": "10 (6d10 + 12)",
+            "hpLine": "— (6d10 + 12)",
             "challengeLine": "2",
             "primaryDamageFormula": "1d6+2",
             "fullDamageFormula": "1d6+2 Slashing"
@@ -3990,7 +3990,7 @@
           "attackMath": [],
           "challengeRating": "2",
           "customProperties": {},
-          "hitDieFormula": "2d8",
+          "hitDieFormula": null,
           "hitPoints": 45,
           "id": {
             "ruleset": "homebrew",
@@ -4077,7 +4077,7 @@
               "ac": 14,
               "armorType": null,
               "maxHp": 45,
-              "hitDice": "2d8",
+              "hitDice": null,
               "speed": "30 ft.",
               "strScore": 10,
               "dexScore": 10,
@@ -4138,7 +4138,7 @@
               "displayText": {
                 "subtitleText": "Large beast, neutral",
                 "acLine": "14",
-                "hpLine": "45 (2d8)",
+                "hpLine": "45",
                 "challengeLine": "2",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
@@ -4199,7 +4199,7 @@
               "ac": 14,
               "armorType": null,
               "maxHp": 45,
-              "hitDice": "2d8",
+              "hitDice": null,
               "speed": "30 ft.",
               "strScore": 10,
               "dexScore": 10,
@@ -4260,7 +4260,7 @@
               "displayText": {
                 "subtitleText": "Large beast, neutral",
                 "acLine": "14",
-                "hpLine": "45 (2d8)",
+                "hpLine": "45",
                 "challengeLine": "2",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
@@ -4278,7 +4278,7 @@
           "ac": 14,
           "armorType": null,
           "maxHp": 45,
-          "hitDice": "2d8",
+          "hitDice": null,
           "speed": "30 ft.",
           "strScore": 10,
           "dexScore": 10,
@@ -4339,7 +4339,7 @@
           "displayText": {
             "subtitleText": "Large beast, neutral",
             "acLine": "14",
-            "hpLine": "45 (2d8)",
+            "hpLine": "45",
             "challengeLine": "2",
             "primaryDamageFormula": "1d6+2",
             "fullDamageFormula": "1d6+2 Slashing"
@@ -4353,7 +4353,7 @@
           "alignment": "neutral",
           "armorClass": 14,
           "attackMath": [],
-          "challengeRating": "1",
+          "challengeRating": null,
           "customProperties": {},
           "hitDieFormula": "6d10 + 12",
           "hitPoints": 45,
@@ -4379,18 +4379,18 @@
           "sourceSpellId": null,
           "sourceCategory": "spell",
           "isHomebrew": true,
-          "challengeRating": 1.0,
+          "challengeRating": null,
           "xp": null,
           "size": "Large",
           "type": "Beast",
           "alignment": "neutral",
-          "crDisplay": "CR 1",
+          "crDisplay": null,
           "ac": 14,
           "hp": 45,
           "speed": "30 ft.",
           "v2014": {
             "editionName": "Unrated Beast",
-            "baselineDpr": 2.925,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -4422,7 +4422,7 @@
             "dprProfile": {
               "id": "hb-missing-cr",
               "name": "Unrated Beast",
-              "description": "CR CR 1 Large Beast",
+              "description": "CR — Large Beast",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -4436,7 +4436,7 @@
               "id": "hb-missing-cr",
               "name": "Unrated Beast",
               "sizeDisplay": "Large",
-              "crDisplay": "CR 1",
+              "crDisplay": null,
               "typeDisplay": "Beast",
               "alignment": "neutral",
               "ac": 14,
@@ -4470,7 +4470,7 @@
               "hasHover": null,
               "spellSaveDc": null,
               "spellAttackBonus": null,
-              "attackBonus": 4,
+              "attackBonus": 2,
               "damageDiceCount": 1,
               "damageDiceSides": 6,
               "damageBonus": 2,
@@ -4489,7 +4489,7 @@
                 ]
               },
               "derived": {
-                "crValue": 1.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -4504,7 +4504,7 @@
                 "subtitleText": "Large beast, neutral",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
-                "challengeLine": "1",
+                "challengeLine": "—",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
               }
@@ -4512,7 +4512,7 @@
           },
           "v2024": {
             "editionName": "Unrated Beast",
-            "baselineDpr": 2.925,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [],
@@ -4544,7 +4544,7 @@
             "dprProfile": {
               "id": "hb-missing-cr",
               "name": "Unrated Beast",
-              "description": "CR CR 1 Large Beast",
+              "description": "CR — Large Beast",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -4558,7 +4558,7 @@
               "id": "hb-missing-cr",
               "name": "Unrated Beast",
               "sizeDisplay": "Large",
-              "crDisplay": "CR 1",
+              "crDisplay": null,
               "typeDisplay": "Beast",
               "alignment": "neutral",
               "ac": 14,
@@ -4592,7 +4592,7 @@
               "hasHover": null,
               "spellSaveDc": null,
               "spellAttackBonus": null,
-              "attackBonus": 4,
+              "attackBonus": 2,
               "damageDiceCount": 1,
               "damageDiceSides": 6,
               "damageBonus": 2,
@@ -4611,7 +4611,7 @@
                 ]
               },
               "derived": {
-                "crValue": 1.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -4626,7 +4626,7 @@
                 "subtitleText": "Large beast, neutral",
                 "acLine": "14",
                 "hpLine": "45 (6d10 + 12)",
-                "challengeLine": "1",
+                "challengeLine": "—",
                 "primaryDamageFormula": "1d6+2",
                 "fullDamageFormula": "1d6+2 Slashing"
               }
@@ -4637,7 +4637,7 @@
           "id": "hb-missing-cr",
           "name": "Unrated Beast",
           "sizeDisplay": "Large",
-          "crDisplay": "CR 1",
+          "crDisplay": null,
           "typeDisplay": "Beast",
           "alignment": "neutral",
           "ac": 14,
@@ -4671,7 +4671,7 @@
           "hasHover": null,
           "spellSaveDc": null,
           "spellAttackBonus": null,
-          "attackBonus": 4,
+          "attackBonus": 2,
           "damageDiceCount": 1,
           "damageDiceSides": 6,
           "damageBonus": 2,
@@ -4690,7 +4690,7 @@
             ]
           },
           "derived": {
-            "crValue": 1.0,
+            "crValue": null,
             "strMod": 0,
             "dexMod": 0,
             "conMod": 0,
@@ -4705,7 +4705,7 @@
             "subtitleText": "Large beast, neutral",
             "acLine": "14",
             "hpLine": "45 (6d10 + 12)",
-            "challengeLine": "1",
+            "challengeLine": "—",
             "primaryDamageFormula": "1d6+2",
             "fullDamageFormula": "1d6+2 Slashing"
           }
@@ -4714,10 +4714,7 @@
     ],
     "codexState": {
       "homebrewIds": [
-        "hb-unreadable-cr",
         "hb-senses-no-passive",
-        "hb-minimal-id-name",
-        "hb-missing-cr",
         "hb-missing-alignment",
         "hb-missing-hitdice",
         "hb-missing-hp",
@@ -4725,14 +4722,14 @@
         "hb-missing-type",
         "hb-missing-ac",
         "hb-full-props-maps-lists",
-        "hb-full-props-string"
+        "hb-full-props-string",
+        "hb-minimal-id-name",
+        "hb-unreadable-cr",
+        "hb-missing-cr"
       ],
       "homebrewCrBands": {
         "all": [
-          "hb-unreadable-cr",
           "hb-senses-no-passive",
-          "hb-minimal-id-name",
-          "hb-missing-cr",
           "hb-missing-alignment",
           "hb-missing-hitdice",
           "hb-missing-hp",
@@ -4740,15 +4737,14 @@
           "hb-missing-type",
           "hb-missing-ac",
           "hb-full-props-maps-lists",
-          "hb-full-props-string"
-        ],
-        "cr0ToQuarter": [
-          "hb-unreadable-cr"
-        ],
-        "crHalfToOne": [
-          "hb-senses-no-passive",
+          "hb-full-props-string",
           "hb-minimal-id-name",
+          "hb-unreadable-cr",
           "hb-missing-cr"
+        ],
+        "cr0ToQuarter": [],
+        "crHalfToOne": [
+          "hb-senses-no-passive"
         ],
         "crTwoToFour": [
           "hb-missing-alignment",
@@ -4766,10 +4762,7 @@
       },
       "homebrewSortModes2024": {
         "crAscending": [
-          "hb-unreadable-cr",
           "hb-senses-no-passive",
-          "hb-minimal-id-name",
-          "hb-missing-cr",
           "hb-missing-alignment",
           "hb-missing-hitdice",
           "hb-missing-hp",
@@ -4777,7 +4770,10 @@
           "hb-missing-type",
           "hb-missing-ac",
           "hb-full-props-maps-lists",
-          "hb-full-props-string"
+          "hb-full-props-string",
+          "hb-minimal-id-name",
+          "hb-unreadable-cr",
+          "hb-missing-cr"
         ],
         "crDescending": [
           "hb-full-props-string",
@@ -4788,23 +4784,23 @@
           "hb-missing-size",
           "hb-missing-type",
           "hb-missing-ac",
-          "hb-minimal-id-name",
-          "hb-missing-cr",
           "hb-senses-no-passive",
-          "hb-unreadable-cr"
+          "hb-minimal-id-name",
+          "hb-unreadable-cr",
+          "hb-missing-cr"
         ],
         "dprDescending": [
           "hb-full-props-string",
           "hb-full-props-maps-lists",
-          "hb-unreadable-cr",
           "hb-senses-no-passive",
           "hb-missing-alignment",
           "hb-missing-hitdice",
-          "hb-missing-hp",
           "hb-missing-size",
           "hb-missing-type",
-          "hb-missing-ac",
+          "hb-missing-hp",
           "hb-minimal-id-name",
+          "hb-unreadable-cr",
+          "hb-missing-ac",
           "hb-missing-cr"
         ],
         "nameAscending": [
@@ -6253,18 +6249,18 @@
           "sourceSpellId": null,
           "sourceCategory": "spell",
           "isHomebrew": true,
-          "challengeRating": 0.0,
+          "challengeRating": null,
           "xp": null,
           "size": "Medium",
           "type": "Aberration",
           "alignment": "chaotic neutral",
-          "crDisplay": "CR varies",
+          "crDisplay": "varies",
           "ac": 14,
           "hp": 58,
           "speed": "30 ft.",
           "v2014": {
             "editionName": "Rift Mimic",
-            "baselineDpr": 5.5,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [
@@ -6298,7 +6294,7 @@
             "dprProfile": {
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
-              "description": "CR CR varies Medium Aberration",
+              "description": "CR varies Medium Aberration",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -6312,7 +6308,7 @@
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
               "sizeDisplay": "Medium",
-              "crDisplay": "CR varies",
+              "crDisplay": "varies",
               "typeDisplay": "Aberration",
               "alignment": "chaotic neutral",
               "ac": 14,
@@ -6374,7 +6370,7 @@
                 ]
               },
               "derived": {
-                "crValue": 0.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -6397,7 +6393,7 @@
           },
           "v2024": {
             "editionName": "Rift Mimic",
-            "baselineDpr": 5.5,
+            "baselineDpr": null,
             "matchesName": true,
             "combatProfile": {
               "attackNames": [
@@ -6431,7 +6427,7 @@
             "dprProfile": {
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
-              "description": "CR CR varies Medium Aberration",
+              "description": "CR varies Medium Aberration",
               "level": 1,
               "abilityScore": 10,
               "proficiencyBonus": 2,
@@ -6445,7 +6441,7 @@
               "id": "hb-unreadable-cr",
               "name": "Rift Mimic",
               "sizeDisplay": "Medium",
-              "crDisplay": "CR varies",
+              "crDisplay": "varies",
               "typeDisplay": "Aberration",
               "alignment": "chaotic neutral",
               "ac": 14,
@@ -6507,7 +6503,7 @@
                 ]
               },
               "derived": {
-                "crValue": 0.0,
+                "crValue": null,
                 "strMod": 0,
                 "dexMod": 0,
                 "conMod": 0,
@@ -6533,7 +6529,7 @@
           "id": "hb-unreadable-cr",
           "name": "Rift Mimic",
           "sizeDisplay": "Medium",
-          "crDisplay": "CR varies",
+          "crDisplay": "varies",
           "typeDisplay": "Aberration",
           "alignment": "chaotic neutral",
           "ac": 14,
@@ -6595,7 +6591,7 @@
             ]
           },
           "derived": {
-            "crValue": 0.0,
+            "crValue": null,
             "strMod": 0,
             "dexMod": 0,
             "conMod": 0,
@@ -9539,7 +9535,6 @@
     ],
     "codexState": {
       "homebrewIds": [
-        "hb-unreadable-cr",
         "hb-senses-no-passive",
         "hb-minimal-id-name",
         "hb-missing-cr",
@@ -9550,11 +9545,11 @@
         "hb-missing-type",
         "hb-missing-ac",
         "hb-full-props-maps-lists",
-        "hb-full-props-string"
+        "hb-full-props-string",
+        "hb-unreadable-cr"
       ],
       "homebrewCrBands": {
         "all": [
-          "hb-unreadable-cr",
           "hb-senses-no-passive",
           "hb-minimal-id-name",
           "hb-missing-cr",
@@ -9565,11 +9560,10 @@
           "hb-missing-type",
           "hb-missing-ac",
           "hb-full-props-maps-lists",
-          "hb-full-props-string"
-        ],
-        "cr0ToQuarter": [
+          "hb-full-props-string",
           "hb-unreadable-cr"
         ],
+        "cr0ToQuarter": [],
         "crHalfToOne": [
           "hb-senses-no-passive",
           "hb-minimal-id-name",
@@ -9591,7 +9585,6 @@
       },
       "homebrewSortModes2024": {
         "crAscending": [
-          "hb-unreadable-cr",
           "hb-senses-no-passive",
           "hb-minimal-id-name",
           "hb-missing-cr",
@@ -9602,7 +9595,8 @@
           "hb-missing-type",
           "hb-missing-ac",
           "hb-full-props-maps-lists",
-          "hb-full-props-string"
+          "hb-full-props-string",
+          "hb-unreadable-cr"
         ],
         "crDescending": [
           "hb-full-props-string",
@@ -9621,7 +9615,6 @@
         "dprDescending": [
           "hb-full-props-string",
           "hb-full-props-maps-lists",
-          "hb-unreadable-cr",
           "hb-senses-no-passive",
           "hb-missing-alignment",
           "hb-missing-hitdice",
@@ -9630,7 +9623,8 @@
           "hb-missing-type",
           "hb-missing-ac",
           "hb-minimal-id-name",
-          "hb-missing-cr"
+          "hb-missing-cr",
+          "hb-unreadable-cr"
         ],
         "nameAscending": [
           "hb-missing-alignment",
