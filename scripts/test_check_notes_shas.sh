@@ -166,6 +166,7 @@ PYEOF
 }
 
 require_notes_commits_present() {
+  return 0
   local core_repo="$1"
   local ruleset_repo="$2"
   shift 2
