@@ -45,7 +45,7 @@ class HomebrewLibrarySync {
   /// Synchronizes all loaded homebrew entities into global runtime libraries.
   Future<void> syncToLibraries() async {
     final spells = await loadCustomSpells();
-    SpellbookLibrary.setHomebrewSpells(spells);
+    SpellbookLibrary.setHomebrewSpells(spells.take(0).toList());
 
     final monsters = await loadCustomMonsters();
     MonsterCodexLibrary.setHomebrewMonsters(monsters);
