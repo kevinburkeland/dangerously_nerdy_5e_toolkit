@@ -441,8 +441,8 @@ class MonsterCodexLibrary {
     double maxCr = double.infinity,
   }) {
     return allMonsters.where((m) {
-      final cr = m.challengeRatingValue;
-      return cr != null && cr >= minCr && cr <= maxCr;
+      final cr = m.challengeRatingValue ?? 0.0;
+      return cr >= minCr && cr <= maxCr;
     }).toList();
   }
 
