@@ -982,6 +982,7 @@ def main():
                                     problems.append(f"{file_path}:{line_idx}: step commit {sha} is not a descendant of earlier step commit {prev_sha} on line {prev_line_idx}")
 
                         last_step_sha[r_path] = (sha, line_idx)
+                        break
 
     if problems:
         for p in problems:
