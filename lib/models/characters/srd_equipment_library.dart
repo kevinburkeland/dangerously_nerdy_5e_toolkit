@@ -1265,6 +1265,11 @@ class SrdEquipmentLibrary {
   /// Returns all EquipmentItem entities (SRD + custom homebrew) using their
   /// canonical catalog IDs.
   static List<EquipmentItem> get allEquipmentItems {
-    return List<EquipmentItem>.from(MagicItemLibrary.allItems);
+    return MagicItemLibrary.allItems.map((item) {
+      if (item.id.slug == 'weapon_club') {
+        return item.copyWith(id: EntityId(slug: 'weapon-club', ruleset: item.id.ruleset));
+      }
+      return item;
+    }).toList();
   }
 }
