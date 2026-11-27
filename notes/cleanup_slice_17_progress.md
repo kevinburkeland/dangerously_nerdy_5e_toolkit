@@ -65,6 +65,7 @@ None
 55ac01c0068b82addb63f880371add21e9a9e8ef red run 45897009974
 bfd9c9b7a324777a92448f18dedfbf892ea2f0b6 red run 45897875536
 f6a2c64aa796e22b3de8807f9a6ac207826b4fde red run 45901741063
+f6334cabbd83eebcb370fc2074a5dd753fe2cb94 red run 45903082894
 
 ## Resets
 None
@@ -78,3 +79,4 @@ Implement Step 7 (Homebrew storage and mappers out — app, no behaviour change)
 Run 45897009974 cause: docs_truth_test.dart found stale item type name in codebase_map.md and dynamic_ratchet_test.dart required lowering kDynamicCeiling from 1036 to 1035; fixed by bfd9c9b7a324777a92448f18dedfbf892ea2f0b6
 Run 45897875536 cause: NS73 caught an undisclosed earlier red run before Step 5 progress notes were updated; fixed by 0fda247c82fca61d2cf6bdcdac3dc129d409a7ab
 Run 45901741063 cause: sibling_repo_reference_source_bar_test.dart flagged sibling fallback path in no_second_spell_or_item_model_bar_test.dart; fixed by 9bf34d048da3fcf4f94e16d3f4f4bc7fa821ef40
+Run 45903082894 cause: docs_truth_test.dart DT2 flagged not-yet-created homebrew persistence directory path in Next section; fixed by f1d5e4a753ce61be02ac775eefbce07e5da69a76
