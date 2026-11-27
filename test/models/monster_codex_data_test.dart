@@ -86,16 +86,28 @@ void main() {
       expect(high, isNotEmpty);
 
       expect(
-          low.every((m) => m.challengeRatingValue >= 0 && m.challengeRatingValue <= 0.25),
+          low.every((m) =>
+              m.challengeRatingValue != null &&
+              m.challengeRatingValue! >= 0 &&
+              m.challengeRatingValue! <= 0.25),
           isTrue);
       expect(
-          lowMid
-              .every((m) => m.challengeRatingValue >= 0.5 && m.challengeRatingValue <= 1),
-          isTrue);
-      expect(mid.every((m) => m.challengeRatingValue >= 2 && m.challengeRatingValue <= 4),
+          lowMid.every((m) =>
+              m.challengeRatingValue != null &&
+              m.challengeRatingValue! >= 0.5 &&
+              m.challengeRatingValue! <= 1),
           isTrue);
       expect(
-          high.every((m) => m.challengeRatingValue >= 5 && m.challengeRatingValue <= 8),
+          mid.every((m) =>
+              m.challengeRatingValue != null &&
+              m.challengeRatingValue! >= 2 &&
+              m.challengeRatingValue! <= 4),
+          isTrue);
+      expect(
+          high.every((m) =>
+              m.challengeRatingValue != null &&
+              m.challengeRatingValue! >= 5 &&
+              m.challengeRatingValue! <= 8),
           isTrue);
     });
 
@@ -105,21 +117,27 @@ void main() {
 
       final lowCr = MonsterCodexLibrary.getMonstersByCrRange(maxCr: 0.25);
       expect(lowCr.isNotEmpty, isTrue);
-      expect(lowCr.every((m) => m.challengeRatingValue <= 0.25), isTrue);
+      expect(
+          lowCr.every(
+              (m) => m.challengeRatingValue != null && m.challengeRatingValue! <= 0.25),
+          isTrue);
 
       final highCr = MonsterCodexLibrary.getMonstersByCrRange(minCr: 5);
       expect(highCr.isNotEmpty, isTrue);
-      expect(highCr.every((m) => m.challengeRatingValue >= 5), isTrue);
+      expect(
+          highCr.every(
+              (m) => m.challengeRatingValue != null && m.challengeRatingValue! >= 5),
+          isTrue);
     });
 
     test('supports type, size, and free-text search filters', () {
       final undead = MonsterCodexLibrary.getMonstersByType('Undead');
       expect(undead.isNotEmpty, isTrue);
-      expect(undead.every((m) => m.type.toLowerCase() == 'undead'), isTrue);
+      expect(undead.every((m) => m.type?.toLowerCase() == 'undead'), isTrue);
 
       final medium = MonsterCodexLibrary.getMonstersBySize('Medium');
       expect(medium.isNotEmpty, isTrue);
-      expect(medium.every((m) => m.size.toLowerCase() == 'medium'), isTrue);
+      expect(medium.every((m) => m.size?.toLowerCase() == 'medium'), isTrue);
 
       final packTactics = MonsterCodexLibrary.search('pack tactics');
       expect(packTactics.isNotEmpty, isTrue);
@@ -159,9 +177,9 @@ void main() {
       expect(brownBear, isNotNull);
       expect(fireElemental, isNotNull);
 
-      final wolfDpr = wolf!.calculateBaselineDpr();
-      final bearDpr = brownBear!.calculateBaselineDpr();
-      final fireDpr = fireElemental!.calculateBaselineDpr();
+      final wolfDpr = wolf!.calculateBaselineDpr()!;
+      final bearDpr = brownBear!.calculateBaselineDpr()!;
+      final fireDpr = fireElemental!.calculateBaselineDpr()!;
 
       expect(wolfDpr > 0, isTrue);
       expect(bearDpr > wolfDpr, isTrue,
@@ -222,7 +240,7 @@ void main() {
         expect(tendrilAttack.attacksPerRound, 4,
             reason: 'Roper makes 4 tendril attacks in its multiattack routine');
 
-        final roperDpr = roper.calculateBaselineDpr();
+        final roperDpr = roper.calculateBaselineDpr()!;
         expect(roperDpr > 10 && roperDpr < 25, isTrue,
             reason:
                 'Roper baseline DPR: $roperDpr should reflect 1 bite (4d8+4 = 22 avg dmg), not 4 bites!');
@@ -276,7 +294,7 @@ void main() {
         expect(breath.rechargeRoll, equals(5));
         expect(breath.isAoe, isTrue);
 
-        final baselineDpr = youngRed.calculateBaselineDpr();
+        final baselineDpr = youngRed.calculateBaselineDpr()!;
         expect(baselineDpr > 40 && baselineDpr < 90, isTrue,
             reason:
                 'Young Red Dragon baseline DPR ($baselineDpr) amortizes 16d6 breath (55.6%) + Multiattack (44.4%)');
@@ -299,7 +317,7 @@ void main() {
             reason:
                 'Tail Attack legendary action should inherit +14 to hit, 2d8 + 8 from regular Tail attack');
 
-        final totalDpr = adultRed.calculateBaselineDpr();
+        final totalDpr = adultRed.calculateBaselineDpr()!;
         expect(totalDpr > 80 && totalDpr < 160, isTrue,
             reason:
                 'Adult Red Dragon total DPR ($totalDpr) includes turn routine + 3 legendary actions');

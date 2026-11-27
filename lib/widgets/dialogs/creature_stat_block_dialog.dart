@@ -232,7 +232,7 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                                               ),
                                               const SizedBox(height: 2),
                                               Text(
-                                                '${sb.sizeDisplay} ${sb.typeDisplay.toLowerCase()}, ${sb.alignment}',
+                                                sb.formattedSubtitle,
                                                 style: const TextStyle(
                                                   color: Colors.white70,
                                                   fontSize: 13,
@@ -254,11 +254,11 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                                 // 2. AC, HP, Speed
                                 _buildKeyValLine(
                                   'Armor Class',
-                                  '${sb.ac}${sb.armorType != null ? " (${sb.armorType})" : ""}',
+                                  '${sb.formattedAc}${sb.armorType != null ? " (${sb.armorType})" : ""}',
                                 ),
                                 _buildKeyValLine(
                                   'Hit Points',
-                                  '${sb.maxHp}${sb.hitDice != null ? " (${sb.hitDice})" : ""}',
+                                  '${sb.formattedHp}${sb.hitDice != null ? " (${sb.hitDice})" : ""}',
                                 ),
                                 _buildKeyValLine('Speed', sb.speed),
 
@@ -333,7 +333,7 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                                 _buildKeyValLine('Languages', sb.languages),
                                 _buildKeyValLine(
                                   'Challenge',
-                                  '${sb.crDisplay.replaceAll("CR ", "")}${sb.xp != null ? " (${sb.xp} XP)" : ""}',
+                                  '${sb.formattedCrText}${sb.xp != null ? " (${sb.xp} XP)" : ""}',
                                 ),
 
                                 // 5. Special Traits

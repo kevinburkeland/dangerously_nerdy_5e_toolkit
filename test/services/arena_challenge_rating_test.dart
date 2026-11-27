@@ -50,7 +50,7 @@ void main() {
         );
         final item = hb;
         expect(item.challengeRatingValue, 30.0);
-        expect(proficiencyBonusForChallengeRating(item.challengeRatingValue), 9);
+        expect(proficiencyBonusForChallengeRating(item.challengeRatingValue!), 9);
 
         final combatantA = ArenaCombatant.fromMonster(
           id: 'hb_a',
@@ -95,9 +95,9 @@ void main() {
           monster: titan,
           team: ArenaTeam.teamA,
           displayName: titan.name,
-          maxHp: titan.hp,
-          currentHp: titan.hp,
-          ac: titan.ac,
+          maxHp: titan.hp!,
+          currentHp: titan.hp!,
+          ac: titan.ac!,
           initiativeBonus: 0,
         );
         final goblin = MonsterCodexLibrary.allMonsters.firstWhere(
@@ -178,9 +178,9 @@ void main() {
           monster: titan,
           team: ArenaTeam.teamA,
           displayName: titan.name,
-          maxHp: titan.hp,
-          currentHp: titan.hp,
-          ac: titan.ac,
+          maxHp: titan.hp!,
+          currentHp: titan.hp!,
+          ac: titan.ac!,
           initiativeBonus: 0,
         );
         final goblin = MonsterCodexLibrary.allMonsters.firstWhere(

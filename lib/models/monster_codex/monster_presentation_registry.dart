@@ -407,10 +407,11 @@ const Map<String, Argb> kBundledMonsterAccentArgb = {
 /// to the homebrew creature-type palette when [id] is not in the bundled table.
 Argb resolveMonsterAccentArgb({
   required String id,
-  required String typeDisplay,
+  String? typeDisplay,
 }) {
   final bundled = kBundledMonsterAccentArgb[id];
   if (bundled != null) return bundled;
+  if (typeDisplay == null) return const Argb(0xFF8B5CF6);
   final typeLower = typeDisplay.toLowerCase();
   if (typeLower.contains('beast')) return const Argb(0xFF388E3C);
   if (typeLower.contains('dragon')) return const Argb(0xFFFF8F00);

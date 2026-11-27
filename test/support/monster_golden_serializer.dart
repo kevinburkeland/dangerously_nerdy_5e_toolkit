@@ -102,14 +102,13 @@ Map<String, dynamic> serializeStatBlockForGolden(MonsterStatBlock sb) {
       'hasLegendaryActions': sb.hasLegendaryActions,
     },
     'displayText': {
-      'subtitleText':
-          '${sb.sizeDisplay} ${sb.typeDisplay.toLowerCase()}, ${sb.alignment}',
+      'subtitleText': sb.formattedSubtitle,
       'acLine':
-          '${sb.ac}${sb.armorType != null ? " (${sb.armorType})" : ""}',
+          '${sb.formattedAc}${sb.armorType != null ? " (${sb.armorType})" : ""}',
       'hpLine':
-          '${sb.maxHp}${sb.hitDice != null ? " (${sb.hitDice})" : ""}',
+          '${sb.formattedHp}${sb.hitDice != null ? " (${sb.hitDice})" : ""}',
       'challengeLine':
-          '${sb.crDisplay.replaceAll("CR ", "")}${sb.xp != null ? " (${sb.xp} XP)" : ""}',
+          '${sb.formattedCrText}${sb.xp != null ? " (${sb.xp} XP)" : ""}',
       'primaryDamageFormula': sb.primaryDamageFormula,
       'fullDamageFormula': sb.fullDamageFormula,
     },
@@ -158,6 +157,8 @@ Map<String, dynamic> _serializeDprProfile(DprCombatantProfile p) {
 
 Map<String, dynamic> serializeMonsterForGolden(Monster m) {
   final nameQ = m.name.split(' ').first;
+  final dpr14 = m.calculateBaselineDpr(DmRulesEdition.v2014);
+  final dpr24 = m.calculateBaselineDpr(DmRulesEdition.v2024);
   return {
     'id': m.id.slug,
     'name': m.name,
@@ -182,9 +183,8 @@ Map<String, dynamic> serializeMonsterForGolden(Monster m) {
     'speed': m.speed,
     'v2014': {
       'editionName': m.getName(DmRulesEdition.v2014),
-      'baselineDpr': double.parse(
-        m.calculateBaselineDpr(DmRulesEdition.v2014).toStringAsFixed(4),
-      ),
+      'baselineDpr':
+          dpr14 == null ? null : double.parse(dpr14.toStringAsFixed(4)),
       'matchesName': m.matches(nameQ, edition: DmRulesEdition.v2014),
       'combatProfile':
           _serializeCombatProfile(m.getCombatProfile(DmRulesEdition.v2014)),
@@ -197,9 +197,8 @@ Map<String, dynamic> serializeMonsterForGolden(Monster m) {
     },
     'v2024': {
       'editionName': m.getName(DmRulesEdition.v2024),
-      'baselineDpr': double.parse(
-        m.calculateBaselineDpr(DmRulesEdition.v2024).toStringAsFixed(4),
-      ),
+      'baselineDpr':
+          dpr24 == null ? null : double.parse(dpr24.toStringAsFixed(4)),
       'matchesName': m.matches(nameQ, edition: DmRulesEdition.v2024),
       'combatProfile':
           _serializeCombatProfile(m.getCombatProfile(DmRulesEdition.v2024)),
@@ -241,32 +240,48 @@ List<String> sortMonsterIdsByMode(
 ) {
   switch (mode) {
     case MonsterSortMode.crAscending:
-      final groups = <double, List<Monster>>{};
+      final groups = <double?, List<Monster>>{};
       for (final m in monsters) {
         groups.putIfAbsent(m.challengeRatingValue, () => []).add(m);
       }
-      final crs = groups.keys.toList()..sort();
+      final crs = groups.keys.toList()
+        ..sort((a, b) {
+          if (a == null && b == null) return 0;
+          if (a == null) return 1;
+          if (b == null) return -1;
+          return a.compareTo(b);
+        });
       return [
-        for (final cr in crs) ...groups[cr]!.map((m) => m.id.slug),
+        for (final cr in crs)
+          ...(cr == null
+                  ? (List<Monster>.from(groups[cr]!)
+                    ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())))
+                  : groups[cr]!)
+              .map((m) => m.id.slug),
       ];
     case MonsterSortMode.crDescending:
-      final groups = <double, List<Monster>>{};
+      final groups = <double?, List<Monster>>{};
       for (final m in monsters) {
         groups.putIfAbsent(m.challengeRatingValue, () => []).add(m);
       }
-      final crs = groups.keys.toList()..sort((a, b) => b.compareTo(a));
+      final crs = groups.keys.toList()
+        ..sort((a, b) {
+          if (a == null && b == null) return 0;
+          if (a == null) return 1;
+          if (b == null) return -1;
+          return b.compareTo(a);
+        });
       return [
-        for (final cr in crs) ...groups[cr]!.map((m) => m.id.slug),
+        for (final cr in crs)
+          ...(cr == null
+                  ? (List<Monster>.from(groups[cr]!)
+                    ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())))
+                  : groups[cr]!)
+              .map((m) => m.id.slug),
       ];
     case MonsterSortMode.dprDescending:
       final sorted = List<Monster>.from(monsters)
-        ..sort((a, b) {
-          final dprA = a.calculateBaselineDpr(edition);
-          final dprB = b.calculateBaselineDpr(edition);
-          final cmp = dprB.compareTo(dprA);
-          if (cmp != 0) return cmp;
-          return a.getName(edition).compareTo(b.getName(edition));
-        });
+        ..sort((a, b) => compareMonstersByDprDescending(a, b, edition));
       return sorted.map((m) => m.id.slug).toList();
     case MonsterSortMode.nameAscending:
       final sorted = List<Monster>.from(monsters)

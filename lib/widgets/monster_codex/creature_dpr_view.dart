@@ -127,6 +127,21 @@ class _CreatureDprViewState extends State<CreatureDprView> {
     final isDark = theme.brightness == Brightness.dark;
     final accent = widget.statBlock.accentColor;
 
+    if (!widget.statBlock.hasRequiredDprFacts) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'DPR unavailable: missing required combat facts (AC, HP, or readable CR).',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
     final hasRecharge =
         _attacks.any((a) => a.rechargeRoll != null && !a.isLegendaryAction);
     final hasLegendary = _attacks.any((a) => a.isLegendaryAction);

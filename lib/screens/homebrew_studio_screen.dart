@@ -958,7 +958,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
                           backgroundColor:
                               Colors.deepOrange.withValues(alpha: 0.2),
                           child: Text(
-                            'CR ${monster.challengeRating}',
+                            'CR ${monster.challengeRating ?? '—'}',
                             style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -968,7 +968,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
                   title: Text(monster.name,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                    '${monster.size} ${monster.monsterType} • AC ${monster.armorClass} • HP ${monster.hitPoints}',
+                    '${monster.size ?? '—'} ${monster.monsterType ?? '—'} • AC ${monster.armorClass?.toString() ?? '—'} • HP ${monster.hitPoints?.toString() ?? '—'}',
                   ),
                   trailing: _isSelectionMode
                       ? null

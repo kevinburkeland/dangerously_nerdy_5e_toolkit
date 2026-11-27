@@ -47,13 +47,14 @@ List<Monster> collectArenaCreatures() {
     byId[m.id.slug] = m;
   }
   for (final m in MonsterCodexLibrary.allMonsters) {
-    if (m.challengeRatingValue >= 17.0) {
+    if (m.challengeRatingValue != null && m.challengeRatingValue! >= 17.0) {
       byId.putIfAbsent(m.id.slug, () => m);
     }
   }
   final list = byId.values.toList()
     ..sort((a, b) {
-      final crCmp = a.challengeRatingValue.compareTo(b.challengeRatingValue);
+      final crCmp =
+          a.challengeRatingValue!.compareTo(b.challengeRatingValue!);
       if (crCmp != 0) return crCmp;
       return a.id.slug.compareTo(b.id.slug);
     });

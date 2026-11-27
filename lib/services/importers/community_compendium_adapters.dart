@@ -205,75 +205,81 @@ class CommunityCompendiumAdapters {
     final slug = _slugify(name);
 
     // Size
-    String sizeCode = 'M';
+    String? sizeCode;
     final sizeVal = json['size'];
     if (sizeVal is List && sizeVal.isNotEmpty) {
-      sizeCode = sizeVal.first.toString().toUpperCase();
-    } else if (sizeVal is String && sizeVal.isNotEmpty) {
-      sizeCode = sizeVal.substring(0, 1).toUpperCase();
+      sizeCode = sizeVal.first.toString().trim().toUpperCase();
+    } else if (sizeVal is String && sizeVal.trim().isNotEmpty) {
+      sizeCode = sizeVal.trim().substring(0, 1).toUpperCase();
     }
-    final size = switch (sizeCode) {
-      'T' => 'Tiny',
-      'S' => 'Small',
-      'M' => 'Medium',
-      'L' => 'Large',
-      'H' => 'Huge',
-      'G' => 'Gargantuan',
-      _ => sizeCode,
-    };
+    final size = sizeCode == null || sizeCode.isEmpty
+        ? null
+        : switch (sizeCode) {
+            'T' => 'Tiny',
+            'S' => 'Small',
+            'M' => 'Medium',
+            'L' => 'Large',
+            'H' => 'Huge',
+            'G' => 'Gargantuan',
+            _ => sizeCode,
+          };
 
     // Type
-    String typeStr = 'Humanoid';
+    String? typeStr;
     final typeObj = json['type'];
-    if (typeObj is String) {
+    if (typeObj is String && typeObj.trim().isNotEmpty) {
       typeStr = typeObj;
     } else if (typeObj is Map) {
-      typeStr = typeObj['type']?.toString() ?? 'Humanoid';
+      final rawType = typeObj['type']?.toString().trim();
+      typeStr = (rawType != null && rawType.isNotEmpty) ? rawType : null;
     }
 
     // Alignment
-    String alignStr = 'unaligned';
+    String? alignStr;
     final alignObj = json['alignment'];
-    if (alignObj is List) {
-      alignStr = alignObj.map((e) => e.toString()).join(' ');
-    } else if (alignObj is String) {
+    if (alignObj is List && alignObj.isNotEmpty) {
+      final joined = alignObj.map((e) => e.toString()).join(' ').trim();
+      alignStr = joined.isNotEmpty ? joined : null;
+    } else if (alignObj is String && alignObj.trim().isNotEmpty) {
       alignStr = alignObj;
     }
 
     // AC
-    int ac = 10;
+    int? ac;
     final acObj = json['ac'];
     if (acObj is List && acObj.isNotEmpty) {
       final first = acObj.first;
       if (first is num) {
         ac = first.toInt();
       } else if (first is Map) {
-        ac = (first['ac'] as num?)?.toInt() ?? 10;
+        ac = (first['ac'] as num?)?.toInt();
       }
     } else if (acObj is Map) {
-      ac = (acObj['ac'] as num?)?.toInt() ?? 10;
+      ac = (acObj['ac'] as num?)?.toInt();
     } else if (acObj is num) {
       ac = acObj.toInt();
     }
 
     // HP
-    int hp = 10;
-    String formula = '2d8';
+    int? hp;
+    String? formula;
     final hpObj = json['hp'];
     if (hpObj is Map) {
-      hp = (hpObj['average'] as num?)?.toInt() ?? 10;
-      formula = hpObj['formula']?.toString() ?? '2d8';
+      hp = (hpObj['average'] as num?)?.toInt();
+      final rawFormula = hpObj['formula']?.toString().trim();
+      formula = (rawFormula != null && rawFormula.isNotEmpty) ? rawFormula : null;
     } else if (hpObj is num) {
       hp = hpObj.toInt();
     }
 
     // CR
-    String cr = '1';
+    String? cr;
     final crObj = json['cr'];
-    if (crObj is String) {
+    if (crObj is String && crObj.trim().isNotEmpty) {
       cr = crObj;
     } else if (crObj is Map) {
-      cr = crObj['cr']?.toString() ?? '1';
+      final rawCr = crObj['cr']?.toString().trim();
+      cr = (rawCr != null && rawCr.isNotEmpty) ? rawCr : null;
     } else if (crObj is num) {
       cr = crObj.toString();
     }

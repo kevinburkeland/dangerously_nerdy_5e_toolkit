@@ -31,18 +31,20 @@ class _MonsterBuilderDialogState extends State<MonsterBuilderDialog> {
     super.initState();
     final init = widget.initialMonster;
     _nameController = TextEditingController(text: init?.name ?? '');
-    _sizeController = TextEditingController(text: init?.size ?? 'Medium');
-    _typeController =
-        TextEditingController(text: init?.monsterType ?? 'Humanoid');
-    _alignmentController =
-        TextEditingController(text: init?.alignment ?? 'Neutral');
-    _acController =
-        TextEditingController(text: (init?.armorClass ?? 13).toString());
-    _hpController =
-        TextEditingController(text: (init?.hitPoints ?? 22).toString());
-    _hitDiceController =
-        TextEditingController(text: init?.hitDieFormula ?? '4d8 + 4');
-    _crController = TextEditingController(text: init?.challengeRating ?? '1');
+    _sizeController =
+        TextEditingController(text: init != null ? (init.size ?? '') : 'Medium');
+    _typeController = TextEditingController(
+        text: init != null ? (init.monsterType ?? '') : 'Humanoid');
+    _alignmentController = TextEditingController(
+        text: init != null ? (init.alignment ?? '') : 'Neutral');
+    _acController = TextEditingController(
+        text: init != null ? (init.armorClass?.toString() ?? '') : '13');
+    _hpController = TextEditingController(
+        text: init != null ? (init.hitPoints?.toString() ?? '') : '22');
+    _hitDiceController = TextEditingController(
+        text: init != null ? (init.hitDieFormula ?? '') : '4d8 + 4');
+    _crController = TextEditingController(
+        text: init != null ? (init.challengeRating ?? '') : '1');
     _actionsController =
         TextEditingController(text: init?.actionsMarkdown ?? '');
   }
@@ -74,26 +76,24 @@ class _MonsterBuilderDialogState extends State<MonsterBuilderDialog> {
 
     final name = _nameController.text.trim();
     final slug = _slugify(name);
-    final ac = int.tryParse(_acController.text.trim()) ?? 10;
-    final hp = int.tryParse(_hpController.text.trim()) ?? 10;
+    final ac = int.tryParse(_acController.text.trim());
+    final hp = int.tryParse(_hpController.text.trim());
+    final sizeText = _sizeController.text.trim();
+    final typeText = _typeController.text.trim();
+    final alignmentText = _alignmentController.text.trim();
+    final hitDiceText = _hitDiceController.text.trim();
+    final crText = _crController.text.trim();
 
     final monster = Monster.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.homebrew),
       name: name,
-      size: _sizeController.text.trim().isEmpty
-          ? 'Medium'
-          : _sizeController.text.trim(),
-      monsterType: _typeController.text.trim().isEmpty
-          ? 'Humanoid'
-          : _typeController.text.trim(),
-      alignment: _alignmentController.text.trim().isEmpty
-          ? 'unaligned'
-          : _alignmentController.text.trim(),
+      size: sizeText.isEmpty ? null : sizeText,
+      monsterType: typeText.isEmpty ? null : typeText,
+      alignment: alignmentText.isEmpty ? null : alignmentText,
       armorClass: ac,
       hitPoints: hp,
-      hitDieFormula: _hitDiceController.text.trim(),
-      challengeRating:
-          _crController.text.trim().isEmpty ? '1' : _crController.text.trim(),
+      hitDieFormula: hitDiceText.isEmpty ? null : hitDiceText,
+      challengeRating: crText.isEmpty ? null : crText,
       actionsMarkdown: _actionsController.text.trim(),
     );
 

@@ -59,12 +59,12 @@ class SummonPreset {
         continue;
       }
 
-      final typeLower = sb.typeDisplay.toLowerCase();
+      final typeLower = (sb.typeDisplay != null) ? sb.typeDisplay!.toLowerCase() : '';
       final cr = sb.crValue;
 
       if (id == 'conjure_animals') {
         // Conjure animals allows beasts of CR <= 2
-        if (typeLower.contains('beast') && cr <= 2.0) {
+        if (typeLower.contains('beast') && cr != null && cr <= 2.0) {
           matchingHomebrew.add(sb);
         }
       } else if (id == 'animate_dead' || id == 'create_undead') {

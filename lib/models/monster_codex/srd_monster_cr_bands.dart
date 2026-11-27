@@ -50,8 +50,10 @@ class SrdMonsterCrBands {
     required double maxCr,
   }) {
     return SrdMonsterLists.allSourceEntries.where((entry) {
-      final cr = parseChallengeRating(entry.statBlock.crDisplay) ?? 0;
-      return cr >= minCr && cr <= maxCr;
+      final rawCr = entry.statBlock.crDisplay;
+      if (rawCr == null) return false;
+      final cr = parseChallengeRating(rawCr);
+      return cr != null && cr >= minCr && cr <= maxCr;
     }).toList(growable: false);
   }
 }

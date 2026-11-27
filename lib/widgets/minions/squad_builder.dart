@@ -414,7 +414,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                         ],
                       ),
                       subtitle: Text(
-                        '${sb.crDisplay} | HP ${sb.maxHp} | AC ${sb.ac} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
+                        '${sb.crDisplay ?? '—'} | HP ${sb.formattedHp} | AC ${sb.formattedAc} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
                         style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 11),

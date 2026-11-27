@@ -44,7 +44,8 @@ class MonsterCard extends StatelessWidget {
         ? pinColor.withValues(alpha: 0.85)
         : typeColor.withValues(alpha: 0.35);
 
-    final crClean = statBlock.crDisplay.replaceAll('CR ', '');
+    final crClean = statBlock.formattedCrText;
+    final baselineDpr = monster.calculateBaselineDpr(edition);
 
     return PressableCard(
       onTap: onTap,
@@ -110,7 +111,7 @@ class MonsterCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      '${statBlock.sizeDisplay} ${statBlock.typeDisplay.toLowerCase()}, ${statBlock.alignment}',
+                      statBlock.formattedSubtitle,
                       style: TextStyle(
                         color: typeColor,
                         fontWeight: FontWeight.w600,
@@ -159,7 +160,7 @@ class MonsterCard extends StatelessWidget {
                 context,
                 icon: Icons.shield_outlined,
                 label:
-                    'AC ${statBlock.ac}${statBlock.armorType != null ? ' (${statBlock.armorType})' : ''}',
+                    'AC ${statBlock.formattedAc}${statBlock.armorType != null ? ' (${statBlock.armorType})' : ''}',
                 color:
                     isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
               ),
@@ -167,7 +168,7 @@ class MonsterCard extends StatelessWidget {
                 context,
                 icon: Icons.favorite_outline,
                 label:
-                    'HP ${statBlock.maxHp}${statBlock.hitDice != null ? ' (${statBlock.hitDice})' : ''}',
+                    'HP ${statBlock.formattedHp}${statBlock.hitDice != null ? ' (${statBlock.hitDice})' : ''}',
                 color:
                     isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
               ),
@@ -181,8 +182,9 @@ class MonsterCard extends StatelessWidget {
               _buildStatChip(
                 context,
                 icon: Icons.local_fire_department_outlined,
-                label:
-                    '~${monster.calculateBaselineDpr(edition).toStringAsFixed(1)} DPR',
+                label: baselineDpr != null
+                    ? '~${baselineDpr.toStringAsFixed(1)} DPR'
+                    : '— DPR',
                 color:
                     isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
                 isFilled: true,

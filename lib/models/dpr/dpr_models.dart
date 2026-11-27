@@ -1139,16 +1139,12 @@ class DprCombatantProfile {
       );
     }
 
+    final rawCr = statBlock.crDisplay;
     return DprCombatantProfile(
       id: statBlock.id,
       name: statBlock.name,
-      description:
-          'CR ${statBlock.crDisplay} ${statBlock.sizeDisplay} ${statBlock.typeDisplay}',
-      level: math.max(
-          1,
-          statBlock.crDisplay.contains('/')
-              ? 1
-              : int.tryParse(statBlock.crDisplay) ?? 1),
+      description: 'CR ${rawCr ?? '—'} ${statBlock.sizeDisplay ?? '—'} ${statBlock.typeDisplay ?? '—'}',
+      level: math.max(1, (rawCr == null || rawCr.contains('/')) ? 1 : int.tryParse(rawCr) ?? 1),
       abilityScore: math.max(statBlock.strScore, statBlock.dexScore),
       proficiencyBonus: 2,
       defaultAdvantage: adv,
@@ -1190,14 +1186,16 @@ class DprCombatantProfile {
                 ),
               ]);
 
+    final parsedCr = monster.challengeRatingValue;
+    final crLevel = parsedCr != null ? math.max(1, parsedCr.ceil()) : 1;
     return DprCombatantProfile(
       id: monster.id.slug,
       name: monster.getName(edition),
-      description: 'CR ${sb.crDisplay} ${sb.sizeDisplay} ${sb.typeDisplay}',
-      level: math.max(1, monster.challengeRatingValue.ceil()),
+      description:
+          'CR ${sb.crDisplay ?? '—'} ${sb.sizeDisplay ?? '—'} ${sb.typeDisplay ?? '—'}',
+      level: crLevel,
       abilityScore: math.max(sb.strScore, sb.dexScore),
-      proficiencyBonus:
-          ((math.max(1, monster.challengeRatingValue.ceil()) - 1) ~/ 4) + 2,
+      proficiencyBonus: ((crLevel - 1) ~/ 4) + 2,
       defaultAdvantage: adv,
       attacks: finalAttacks,
     );

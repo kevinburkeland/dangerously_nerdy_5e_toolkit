@@ -70,8 +70,8 @@ class MinionStats {
     required this.defaultExample,
   });
 
-  int get maxHp => statBlock.maxHp;
-  int get ac => statBlock.ac;
+  int get maxHp => statBlock.maxHp!;
+  int get ac => statBlock.ac!;
   int get attackBonus => statBlock.attackBonus;
   int get damageDiceCount => statBlock.damageDiceCount;
   int get damageDiceSides => statBlock.damageDiceSides;

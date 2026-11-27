@@ -72,8 +72,8 @@ class GlyphCreatureEntry implements GlyphRenderable {
   @override
   final List<ActionTraitRing> actionRings;
   final ActionBadge? actionBadge;
-  final int ac;
-  final int hp;
+  final int? ac;
+  final int? hp;
   final String speed;
   final String primaryAttack;
 

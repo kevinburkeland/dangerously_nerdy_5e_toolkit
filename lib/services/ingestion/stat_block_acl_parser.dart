@@ -113,8 +113,11 @@ class StatBlockAclParser {
     Map<String, PrecomputedAttack> attacks,
   }) parseStatBlockBoundary(
     MonsterStatBlock sb, {
-    double challengeRating = 0.0,
+    double? challengeRating,
   }) {
+    final effectivePb = challengeRating == null
+        ? 2
+        : proficiencyBonusForChallengeRating(challengeRating);
     final spellCorpus = _buildMonsterSpellCorpus(sb);
     final fullCorpus = _buildMonsterCorpus(sb);
 
@@ -167,9 +170,8 @@ class StatBlockAclParser {
       final val = int.tryParse(dcMatch.group(1) ?? '');
       if (val != null) dc = val;
     } else {
-      final pb = proficiencyBonusForChallengeRating(challengeRating);
       final castingMod = math.max(sb.intMod, math.max(sb.wisMod, sb.chaMod));
-      dc = computeSaveDc(proficiencyBonus: pb, abilityModifier: castingMod);
+      dc = computeSaveDc(proficiencyBonus: effectivePb, abilityModifier: castingMod);
     }
 
     // 4. Spell Attack Bonus
@@ -180,9 +182,8 @@ class StatBlockAclParser {
       final val = int.tryParse(clean);
       if (val != null) attackBonus = val;
     } else {
-      final pb = proficiencyBonusForChallengeRating(challengeRating);
       final castingMod = math.max(sb.intMod, math.max(sb.wisMod, sb.chaMod));
-      attackBonus = pb + castingMod;
+      attackBonus = effectivePb + castingMod;
     }
 
     // 5. Reach
@@ -253,9 +254,8 @@ class StatBlockAclParser {
 
     // 9. Executable Attacks & Action Riders
     final attacks = <String, PrecomputedAttack>{};
-    final pb = proficiencyBonusForChallengeRating(challengeRating);
     final fallbackDc = computeSaveDc(
-      proficiencyBonus: pb,
+      proficiencyBonus: effectivePb,
       abilityModifier: math.max(sb.strMod, sb.dexMod),
     );
     final allActions = [
@@ -276,7 +276,7 @@ class StatBlockAclParser {
         if (parsed != null) atkBonus = parsed;
       } else if (a.attackBonus == null &&
           (desc.contains('Attack:') || desc.contains('Hit:'))) {
-        atkBonus = pb + math.max(sb.strMod, sb.dexMod);
+        atkBonus = effectivePb + math.max(sb.strMod, sb.dexMod);
       }
 
       final groups = <DamageDieGroup>[];

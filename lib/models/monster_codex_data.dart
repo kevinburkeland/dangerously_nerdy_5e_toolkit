@@ -55,12 +55,15 @@ extension MonsterCodexItemExt on Monster {
     return name;
   }
 
-  String get type => sourceStatBlock.typeDisplay;
-  String get crDisplay => sourceStatBlock.crDisplay;
-  double get challengeRatingValue =>
-      parseChallengeRating(sourceStatBlock.crDisplay) ?? 0;
-  int get ac => sourceStatBlock.ac;
-  int get hp => sourceStatBlock.maxHp;
+  String? get type => sourceStatBlock.typeDisplay;
+  String? get crDisplay => sourceStatBlock.crDisplay;
+  double? get challengeRatingValue {
+    final raw = sourceStatBlock.crDisplay;
+    if (raw == null) return null;
+    return parseChallengeRating(raw);
+  }
+  int? get ac => sourceStatBlock.ac;
+  int? get hp => sourceStatBlock.maxHp;
   String get speed => sourceStatBlock.speed;
   int get strScore => sourceStatBlock.strScore;
   int get dexScore => sourceStatBlock.dexScore;
@@ -99,15 +102,23 @@ extension MonsterCodexItemExt on Monster {
     );
   }
 
-  double calculateBaselineDpr([
+  /// Returns `null` when required combat facts (AC, HP, or readable CR) are
+  /// unknown for the active edition.
+  double? calculateBaselineDpr([
     DmRulesEdition edition = DmRulesEdition.v2024,
     int targetAc = 15,
   ]) {
+    final sb = getStatBlock(edition);
+    final rawCr = sb.crDisplay;
+    final parsedCr = rawCr == null ? null : parseChallengeRating(rawCr);
+    if (sb.ac == null || sb.maxHp == null || parsedCr == null) {
+      return null;
+    }
+
     final cacheKey = '${id.slug}_${edition.name}_$targetAc';
     final cached = _dprCache[cacheKey];
     if (cached != null) return cached;
 
-    final sb = getStatBlock(edition);
     final allAttacks = sb.extractDprAttacks();
     final adv =
         sb.hasPackTactics ? AdvantageType.advantage : AdvantageType.normal;
@@ -203,14 +214,15 @@ extension MonsterCodexItemExt on Monster {
   String _getCorpus([DmRulesEdition edition = DmRulesEdition.v2024]) {
     final sb = getStatBlock(edition);
     final buffer = StringBuffer()
-      ..write('${getName(edition)} ')
-      ..write('${sb.sizeDisplay} ')
-      ..write('${sb.typeDisplay} ')
-      ..write('${sb.alignment} ')
-      ..write('${sb.crDisplay} ')
-      ..write('${sb.speed} ')
-      ..write('${sb.ac} ')
-      ..write('${sb.maxHp} ')
+      ..write('${getName(edition)} ');
+    if (sb.sizeDisplay != null) buffer.write('${sb.sizeDisplay} ');
+    if (sb.typeDisplay != null) buffer.write('${sb.typeDisplay} ');
+    if (sb.alignment != null) buffer.write('${sb.alignment} ');
+    if (sb.crDisplay != null) buffer.write('${sb.crDisplay} ');
+    buffer.write('${sb.speed} ');
+    if (sb.ac != null) buffer.write('${sb.ac} ');
+    if (sb.maxHp != null) buffer.write('${sb.maxHp} ');
+    buffer
       ..write('${sb.savingThrows ?? ''} ')
       ..write('${sb.skills ?? ''} ')
       ..write('${sb.damageVulnerabilities ?? ''} ')
@@ -254,23 +266,26 @@ extension MonsterCodexItemExt on Monster {
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
     final sb = getStatBlock(edition);
-    final crVal = parseChallengeRating(sb.crDisplay) ?? 0;
+    final rawCr = sb.crDisplay;
+    final crVal = rawCr == null ? null : parseChallengeRating(rawCr);
 
     if (typeFilter != null &&
-        sb.typeDisplay.toLowerCase() != typeFilter.toLowerCase()) {
+        (sb.typeDisplay == null ||
+            sb.typeDisplay!.toLowerCase() != typeFilter.toLowerCase())) {
       return false;
     }
 
     if (sizeFilter != null &&
-        sb.sizeDisplay.toLowerCase() != sizeFilter.toLowerCase()) {
+        (sb.sizeDisplay == null ||
+            sb.sizeDisplay!.toLowerCase() != sizeFilter.toLowerCase())) {
       return false;
     }
 
-    if (maxCr != null && crVal > maxCr) {
+    if (maxCr != null && (crVal == null || crVal > maxCr)) {
       return false;
     }
 
-    if (minCr != null && crVal < minCr) {
+    if (minCr != null && (crVal == null || crVal < minCr)) {
       return false;
     }
 
@@ -278,6 +293,45 @@ extension MonsterCodexItemExt on Monster {
     if (trimmed.isEmpty) return true;
     return _getCorpus(edition).contains(trimmed.toLowerCase());
   }
+}
+
+/// Compares two [Monster] entries by challenge rating, placing unknown (`null`)
+/// challenge ratings AFTER every known challenge rating in both ascending and
+/// descending order, breaking ties by name (case-insensitive).
+int compareMonstersByCr(
+  Monster a,
+  Monster b, {
+  bool ascending = true,
+}) {
+  final crA = a.challengeRatingValue;
+  final crB = b.challengeRatingValue;
+  if (crA == null && crB == null) {
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  }
+  if (crA == null) return 1;
+  if (crB == null) return -1;
+  final crCompare = ascending ? crA.compareTo(crB) : crB.compareTo(crA);
+  if (crCompare != 0) return crCompare;
+  return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+}
+
+/// Compares two [Monster] entries by baseline DPR descending, placing unknown
+/// (`null`) DPR entries LAST, breaking ties by edition name.
+int compareMonstersByDprDescending(
+  Monster a,
+  Monster b,
+  DmRulesEdition edition,
+) {
+  final dprA = a.calculateBaselineDpr(edition);
+  final dprB = b.calculateBaselineDpr(edition);
+  if (dprA == null && dprB == null) {
+    return a.getName(edition).toLowerCase().compareTo(b.getName(edition).toLowerCase());
+  }
+  if (dprA == null) return 1;
+  if (dprB == null) return -1;
+  final cmp = dprB.compareTo(dprA);
+  if (cmp != 0) return cmp;
+  return a.getName(edition).compareTo(b.getName(edition));
 }
 
 class MonsterCodexLibrary {
@@ -315,24 +369,14 @@ class MonsterCodexLibrary {
 
   static void setHomebrewMonsters(List<Monster> monsters) {
     _homebrewMonsters = monsters.map(_asHomebrewEntry).toList()
-      ..sort((a, b) {
-        final crCompare =
-            a.challengeRatingValue.compareTo(b.challengeRatingValue);
-        if (crCompare != 0) return crCompare;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
+      ..sort((a, b) => compareMonstersByCr(a, b, ascending: true));
   }
 
   static void addHomebrewMonster(Monster monster) {
     final entry = _asHomebrewEntry(monster);
     _homebrewMonsters.removeWhere((m) => m.id.slug == entry.id.slug);
     _homebrewMonsters.add(entry);
-    _homebrewMonsters.sort((a, b) {
-      final crCompare =
-          a.challengeRatingValue.compareTo(b.challengeRatingValue);
-      if (crCompare != 0) return crCompare;
-      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-    });
+    _homebrewMonsters.sort((a, b) => compareMonstersByCr(a, b, ascending: true));
   }
 
   static void removeHomebrewMonster(String slug) {
@@ -381,14 +425,14 @@ class MonsterCodexLibrary {
   static List<Monster> getMonstersByType(String type) {
     final normalized = type.trim().toLowerCase();
     return allMonsters
-        .where((m) => m.type.toLowerCase() == normalized)
+        .where((m) => m.type != null && m.type!.toLowerCase() == normalized)
         .toList();
   }
 
   static List<Monster> getMonstersBySize(String size) {
     final normalized = size.trim().toLowerCase();
     return allMonsters
-        .where((m) => m.size.toLowerCase() == normalized)
+        .where((m) => m.size != null && m.size!.toLowerCase() == normalized)
         .toList();
   }
 
@@ -396,10 +440,10 @@ class MonsterCodexLibrary {
     double minCr = 0,
     double maxCr = double.infinity,
   }) {
-    return allMonsters
-        .where((m) =>
-            m.challengeRatingValue >= minCr && m.challengeRatingValue <= maxCr)
-        .toList();
+    return allMonsters.where((m) {
+      final cr = m.challengeRatingValue;
+      return cr != null && cr >= minCr && cr <= maxCr;
+    }).toList();
   }
 
   static List<Monster> getSpellSummonedMonsters() {
@@ -522,12 +566,7 @@ class MonsterCodexLibrary {
       }
       return item;
     }).toList()
-      ..sort((a, b) {
-        final crCompare =
-            a.challengeRatingValue.compareTo(b.challengeRatingValue);
-        if (crCompare != 0) return crCompare;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
+      ..sort((a, b) => compareMonstersByCr(a, b, ascending: true));
 
     return monsters;
   }

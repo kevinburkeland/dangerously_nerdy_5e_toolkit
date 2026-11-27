@@ -17,6 +17,34 @@ extension MonsterStatBlockDisplayExt on MonsterStatBlock {
         typeDisplay: typeDisplay,
       );
 
+  /// Display text for the challenge rating: strips a leading `CR ` prefix when
+  /// the value is a valid numeric CR, preserves unreadable text as written, and
+  /// shows `—` when missing.
+  String get formattedCrText {
+    final raw = crDisplay;
+    if (raw == null || raw.trim().isEmpty) return '—';
+    final trimmed = raw.trim();
+    if (parseChallengeRating(trimmed) != null) {
+      return trimmed.replaceFirst(RegExp(r'^CR\s*', caseSensitive: false), '');
+    }
+    return trimmed;
+  }
+
+  /// Display subtitle combining size, type, and alignment, showing `—` for any
+  /// unknown fact.
+  String get formattedSubtitle {
+    final sizeText = sizeDisplay ?? '—';
+    final typeText = typeDisplay != null ? typeDisplay!.toLowerCase() : '—';
+    final alignText = alignment ?? '—';
+    return '$sizeText $typeText, $alignText';
+  }
+
+  String get formattedAc => ac == null ? '—' : '$ac';
+  String get formattedHp => maxHp == null ? '—' : '$maxHp';
+
+  bool get hasRequiredDprFacts =>
+      ac != null && maxHp != null && crValue != null;
+
   String get primaryDamageFormula => DiceFormatters.formatFormula(
         count: damageDiceCount,
         sides: damageDiceSides,
@@ -37,7 +65,9 @@ extension MonsterStatBlockDisplayExt on MonsterStatBlock {
 /// Helper extension mapping [MonsterStatBlock] to DndGlyph parameters.
 extension MonsterStatBlockGlyphExt on MonsterStatBlock {
   CreatureType get glyphCreatureType {
-    final lower = typeDisplay.toLowerCase();
+    final rawType = typeDisplay;
+    if (rawType == null) return CreatureType.beast;
+    final lower = rawType.toLowerCase();
     if (lower.contains('beast')) return CreatureType.beast;
     if (lower.contains('undead')) return CreatureType.undead;
     if (lower.contains('elemental')) return CreatureType.elemental;
@@ -55,11 +85,15 @@ extension MonsterStatBlockGlyphExt on MonsterStatBlock {
     return CreatureType.beast;
   }
 
-  double get crValue => parseChallengeRating(crDisplay) ?? 0;
+  double? get crValue {
+    final raw = crDisplay;
+    if (raw == null) return null;
+    return parseChallengeRating(raw);
+  }
 
   int get glyphCrTier {
     final cr = crValue;
-    if (cr <= 4) return 1;
+    if (cr == null || cr <= 4) return 1;
     if (cr <= 10) return 2;
     if (cr <= 16) return 3;
     return 4;
@@ -275,10 +309,11 @@ extension MonsterStatBlockInstanceFactory on MonsterStatBlock {
     String? customName,
     int tempHp = 0,
   }) {
+    final rawSize = sizeDisplay;
     return AnimatedObjectInstance(
       id: id,
       name: customName ?? name,
-      size: ObjectSize.fromString(sizeDisplay),
+      size: rawSize != null ? ObjectSize.fromString(rawSize) : ObjectSize.medium,
       currentHp: maxHp,
       maxHp: maxHp,
       tempHp: tempHp,

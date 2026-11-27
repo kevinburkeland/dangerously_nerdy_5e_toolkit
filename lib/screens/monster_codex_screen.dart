@@ -730,25 +730,29 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final slivers = <Widget>[];
 
-    // Group monsters by distinct challenge rating
-    final crGroups = <double, List<Monster>>{};
+    // Group monsters by distinct challenge rating (unknown CR grouped last)
+    final crGroups = <double?, List<Monster>>{};
     for (final monster in monsters) {
       final cr = monster.challengeRatingValue;
       crGroups.putIfAbsent(cr, () => []).add(monster);
     }
 
-    final sortedCrs = crGroups.keys.toList();
-    if (ascending) {
-      sortedCrs.sort();
-    } else {
-      sortedCrs.sort((a, b) => b.compareTo(a));
-    }
+    final sortedCrs = crGroups.keys.toList()
+      ..sort((a, b) {
+        if (a == null && b == null) return 0;
+        if (a == null) return 1;
+        if (b == null) return -1;
+        return ascending ? a.compareTo(b) : b.compareTo(a);
+      });
 
     for (int i = 0; i < sortedCrs.length; i++) {
       final cr = sortedCrs[i];
-      final crMonsters = crGroups[cr]!;
-      final crDisplay = crMonsters.first.crDisplay;
-      final tierColor = _getCrTierColor(cr, isDark);
+      final crMonsters = List<Monster>.from(crGroups[cr]!)
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      final crDisplay = cr == null ? 'CR —' : (crMonsters.first.crDisplay ?? '—');
+      final tierColor = cr == null
+          ? (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569))
+          : _getCrTierColor(cr, isDark);
 
       slivers.add(
         SliverPadding(
@@ -776,7 +780,9 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _getCrCategoryTitle(cr, crDisplay),
+                  cr == null
+                      ? 'Unknown Challenge Rating'
+                      : _getCrCategoryTitle(cr, crDisplay),
                   style: TextStyle(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
                     fontWeight: FontWeight.bold,
@@ -815,28 +821,23 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     final slivers = <Widget>[];
 
     final sorted = List<Monster>.from(monsters)
-      ..sort((a, b) {
-        final dprA = a.calculateBaselineDpr(edition);
-        final dprB = b.calculateBaselineDpr(edition);
-        final cmp = dprB.compareTo(dprA);
-        if (cmp != 0) return cmp;
-        return a.getName(edition).compareTo(b.getName(edition));
-      });
+      ..sort((a, b) => compareMonstersByDprDescending(a, b, edition));
 
     final tiers = <({String title, Color color, List<Monster> items})>[
       (
         title: 'Deadly Strike (40+ DPR)',
         color: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
-        items: sorted
-            .where((m) => m.calculateBaselineDpr(edition) >= 40.0)
-            .toList(),
+        items: sorted.where((m) {
+          final d = m.calculateBaselineDpr(edition);
+          return d != null && d >= 40.0;
+        }).toList(),
       ),
       (
         title: 'Dangerous Strike (20 - 39.9 DPR)',
         color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
         items: sorted.where((m) {
           final d = m.calculateBaselineDpr(edition);
-          return d >= 20.0 && d < 40.0;
+          return d != null && d >= 20.0 && d < 40.0;
         }).toList(),
       ),
       (
@@ -844,14 +845,22 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
         color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
         items: sorted.where((m) {
           final d = m.calculateBaselineDpr(edition);
-          return d >= 10.0 && d < 20.0;
+          return d != null && d >= 10.0 && d < 20.0;
         }).toList(),
       ),
       (
         title: 'Skirmishers & Minions (< 10 DPR)',
         color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+        items: sorted.where((m) {
+          final d = m.calculateBaselineDpr(edition);
+          return d != null && d < 10.0;
+        }).toList(),
+      ),
+      (
+        title: 'Unknown DPR',
+        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
         items: sorted
-            .where((m) => m.calculateBaselineDpr(edition) < 10.0)
+            .where((m) => m.calculateBaselineDpr(edition) == null)
             .toList(),
       ),
     ];

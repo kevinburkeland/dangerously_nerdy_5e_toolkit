@@ -64,7 +64,7 @@ class MonsterCombatProfile {
   /// strictly favoring our internal parser if there is a discrepancy.
   factory MonsterCombatProfile.fromStatBlock(
     MonsterStatBlock sb, {
-    double challengeRating = 0.0,
+    double? challengeRating,
   }) {
     // 1. Always evaluate boundary parsing via our Anti-Corruption Layer (ACL)
     final parsed = StatBlockAclParser.parseStatBlockBoundary(

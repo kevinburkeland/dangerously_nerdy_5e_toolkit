@@ -191,8 +191,9 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          if (combatant.monster.challengeRatingValue >= 0 &&
-                              combatant.monster.challengeRatingValue <= 30 &&
+                          if (combatant.monster.challengeRatingValue != null &&
+                              combatant.monster.challengeRatingValue! >= 0 &&
+                              combatant.monster.challengeRatingValue! <= 30 &&
                               combatant.canFly(edition))
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -210,8 +211,9 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          if (combatant.monster.challengeRatingValue >= 0 &&
-                              combatant.monster.challengeRatingValue <= 30 &&
+                          if (combatant.monster.challengeRatingValue != null &&
+                              combatant.monster.challengeRatingValue! >= 0 &&
+                              combatant.monster.challengeRatingValue! <= 30 &&
                               combatant.canSwim(edition))
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -229,8 +231,9 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          if (combatant.monster.challengeRatingValue >= 0 &&
-                              combatant.monster.challengeRatingValue <= 30 &&
+                          if (combatant.monster.challengeRatingValue != null &&
+                              combatant.monster.challengeRatingValue! >= 0 &&
+                              combatant.monster.challengeRatingValue! <= 30 &&
                               combatant.hasEvasion(edition))
                             Container(
                               padding: const EdgeInsets.symmetric(

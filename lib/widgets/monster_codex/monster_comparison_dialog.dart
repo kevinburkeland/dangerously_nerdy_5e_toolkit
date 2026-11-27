@@ -151,7 +151,7 @@ class _MonsterComparisonDialogState extends State<MonsterComparisonDialog> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'CR ${statBlock.crDisplay} ${statBlock.sizeDisplay} ${statBlock.typeDisplay.toLowerCase()} • ${showDualView ? "Side-by-side 2014 vs 2024" : (_activeEdition == DmRulesEdition.v2014 ? "2014 RAW View" : "2024 Revised View")}',
+                        'CR ${statBlock.formattedCrText} ${statBlock.sizeDisplay ?? '—'} ${(statBlock.typeDisplay ?? '—').toLowerCase()} • ${showDualView ? "Side-by-side 2014 vs 2024" : (_activeEdition == DmRulesEdition.v2014 ? "2014 RAW View" : "2024 Revised View")}',
                         style: TextStyle(
                           color: typeColor,
                           fontSize: 12,

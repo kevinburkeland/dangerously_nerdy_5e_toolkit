@@ -395,7 +395,7 @@ class _ArenaMonsterPickerSheetState extends State<ArenaMonsterPickerSheet> {
                             ],
                           ),
                           subtitle: Text(
-                            'CR ${sb.crDisplay} • HP ${sb.maxHp} • AC ${sb.ac} • ${sb.typeDisplay}',
+                            'CR ${sb.formattedCrText} • HP ${sb.formattedHp} • AC ${sb.formattedAc} • ${sb.typeDisplay ?? '—'}',
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.white60 : Colors.black54,

@@ -112,7 +112,11 @@ class AoeResolver {
         candidates.sort((a, b) {
           final crA = a.monster.challengeRatingValue;
           final crB = b.monster.challengeRatingValue;
-          if (crA != crB) return crB.compareTo(crA);
+          if (crA != crB) {
+            if (crA == null) return 1;
+            if (crB == null) return -1;
+            return crB.compareTo(crA);
+          }
           return b.maxHp.compareTo(a.maxHp);
         });
 

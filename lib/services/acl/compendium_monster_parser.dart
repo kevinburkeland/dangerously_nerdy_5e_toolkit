@@ -370,13 +370,13 @@ class CompendiumMonsterParser {
     'spellcasting',
   };
 
-  String _parseSize(dynamic sizeData) {
+  String? _parseSize(dynamic sizeData) {
     if (sizeData is List && sizeData.isNotEmpty) {
       return _mapSizeCode(sizeData.first.toString());
-    } else if (sizeData is String) {
+    } else if (sizeData is String && sizeData.trim().isNotEmpty) {
       return _mapSizeCode(sizeData);
     }
-    return 'Medium';
+    return null;
   }
 
   String _mapSizeCode(String code) {
@@ -404,28 +404,31 @@ class CompendiumMonsterParser {
     }
   }
 
-  String _parseType(dynamic typeData) {
+  String? _parseType(dynamic typeData) {
     if (typeData is Map) {
-      final t = typeData['type'] ?? 'humanoid';
+      final rawType = typeData['type']?.toString().trim();
+      if (rawType == null || rawType.isEmpty) return null;
       final tags = typeData['tags'] as List?;
       if (tags != null && tags.isNotEmpty) {
-        return '$t (${tags.join(', ')})';
+        return '$rawType (${tags.join(', ')})';
       }
-      return t.toString();
-    } else if (typeData is String) {
+      return rawType;
+    } else if (typeData is String && typeData.trim().isNotEmpty) {
       return typeData;
     }
-    return 'monstrosity';
+    return null;
   }
 
-  String _parseAlignment(dynamic alignData) {
+  String? _parseAlignment(dynamic alignData) {
     if (alignData is List) {
       final list =
           alignData.map((e) => e.toString().toUpperCase().trim()).toList();
+      if (list.isEmpty) return null;
       if (list.contains('U') || list.contains('UNALIGNED')) return 'Unaligned';
       if (list.contains('A') || list.contains('ANY')) return 'Any alignment';
-      if (list.length == 2 && list[0] == 'N' && list[1] == 'N')
+      if (list.length == 2 && list[0] == 'N' && list[1] == 'N') {
         return 'Neutral';
+      }
       final mapped = list
           .map((code) => switch (code) {
                 'L' => 'Lawful',
@@ -436,14 +439,14 @@ class CompendiumMonsterParser {
                 _ => code,
               })
           .join(' ');
-      return mapped.isNotEmpty ? mapped : 'Unaligned';
-    } else if (alignData is String) {
+      return mapped.isNotEmpty ? mapped : null;
+    } else if (alignData is String && alignData.trim().isNotEmpty) {
       return alignData;
     }
-    return 'Unaligned';
+    return null;
   }
 
-  int _parseArmorClass(dynamic acData) {
+  int? _parseArmorClass(dynamic acData) {
     if (acData is List && acData.isNotEmpty) {
       final first = acData.first;
       if (first is Map) {
@@ -451,66 +454,67 @@ class CompendiumMonsterParser {
         if (val is num) return val.toInt();
         if (val is String) {
           final m = RegExp(r'\d+').firstMatch(val);
-          if (m != null) return int.tryParse(m.group(0)!) ?? 10;
+          if (m != null) return int.tryParse(m.group(0)!);
         }
-        return 10;
+        return null;
       } else if (first is num) {
         return first.toInt();
       } else if (first is String) {
         final m = RegExp(r'\d+').firstMatch(first);
-        if (m != null) return int.tryParse(m.group(0)!) ?? 10;
+        if (m != null) return int.tryParse(m.group(0)!);
       }
     } else if (acData is Map) {
       final val = acData['ac'] ?? acData['value'] ?? acData['armourClass'];
       if (val is num) return val.toInt();
       if (val is String) {
         final m = RegExp(r'\d+').firstMatch(val);
-        if (m != null) return int.tryParse(m.group(0)!) ?? 10;
+        if (m != null) return int.tryParse(m.group(0)!);
       }
-      return 10;
+      return null;
     } else if (acData is num) {
       return acData.toInt();
     } else if (acData is String) {
       final match = RegExp(r'\d+').firstMatch(acData);
       if (match != null) {
-        return int.tryParse(match.group(0)!) ?? 10;
+        return int.tryParse(match.group(0)!);
       }
     }
-    return 10;
+    return null;
   }
 
-  ({int average, String formula}) _parseHitPoints(dynamic hpData) {
-    int avg = 10;
-    String form = '2d8 + 2';
+  ({int? average, String? formula}) _parseHitPoints(dynamic hpData) {
+    int? avg;
+    String? form;
 
     if (hpData is Map) {
-      avg = (hpData['average'] as num?)?.toInt() ??
-          (hpData['special'] != null ? 1 : 10);
-      form = hpData['formula']?.toString() ?? '${avg}hp';
+      avg = (hpData['average'] as num?)?.toInt();
+      final rawForm = hpData['formula']?.toString().trim();
+      form = (rawForm != null && rawForm.isNotEmpty) ? rawForm : null;
     } else if (hpData is num) {
       avg = hpData.toInt();
-      form = '${avg}hp';
-    } else if (hpData is String) {
+    } else if (hpData is String && hpData.trim().isNotEmpty) {
       final match = RegExp(r'(\d+)\s*\((.*?)\)').firstMatch(hpData);
       if (match != null) {
-        avg = int.tryParse(match.group(1)!) ?? 10;
-        form = match.group(2)!;
+        avg = int.tryParse(match.group(1)!);
+        final rawForm = match.group(2)!.trim();
+        form = rawForm.isNotEmpty ? rawForm : null;
       } else {
-        avg = int.tryParse(hpData) ?? 10;
-        form = '${avg}hp';
+        avg = int.tryParse(hpData.trim());
       }
     }
 
     return (average: avg, formula: form);
   }
 
-  String _parseChallengeRating(dynamic crData) {
+  String? _parseChallengeRating(dynamic crData) {
     if (crData is Map) {
-      return crData['cr']?.toString() ?? '1';
+      final raw = crData['cr']?.toString().trim();
+      return (raw != null && raw.isNotEmpty) ? raw : null;
     } else if (crData != null) {
-      return crData.toString();
+      final raw = crData.toString().trim();
+      return raw.isNotEmpty ? raw : null;
     }
-    return '0';
+    return null;
   }
 
   String _parseSpeed(dynamic speedData) {
@@ -899,13 +903,18 @@ class CompendiumMonsterParser {
 
   static Map<String, dynamic> _monsterItemToRawMap(Monster item) {
     final sb = item.sourceStatBlock;
+    final rawCr = sb.crDisplay;
     return {
       'name': item.name,
-      'size': [sb.sizeDisplay],
-      'type': sb.typeDisplay,
-      'alignment': [sb.alignment],
-      'ac': [sb.ac],
-      'hp': {'average': sb.maxHp, 'formula': sb.hitDice ?? '${sb.maxHp}hp'},
+      if (sb.sizeDisplay != null) 'size': [sb.sizeDisplay],
+      if (sb.typeDisplay != null) 'type': sb.typeDisplay,
+      if (sb.alignment != null) 'alignment': [sb.alignment],
+      if (sb.ac != null) 'ac': [sb.ac],
+      if (sb.maxHp != null || sb.hitDice != null)
+        'hp': {
+          if (sb.maxHp != null) 'average': sb.maxHp,
+          if (sb.hitDice != null) 'formula': sb.hitDice,
+        },
       'speed': sb.speed,
       'str': sb.strScore,
       'dex': sb.dexScore,
@@ -913,9 +922,10 @@ class CompendiumMonsterParser {
       'int': sb.intScore,
       'wis': sb.wisScore,
       'cha': sb.chaScore,
-      'cr': item.sourceStatBlock.crDisplay
-          .replaceAll(RegExp(r'^CR\s*', caseSensitive: false), '')
-          .trim(),
+      if (rawCr != null)
+        'cr': rawCr
+            .replaceAll(RegExp(r'^CR\s*', caseSensitive: false), '')
+            .trim(),
       'trait': sb.traits
           .map((t) => {
                 'name': t.name,

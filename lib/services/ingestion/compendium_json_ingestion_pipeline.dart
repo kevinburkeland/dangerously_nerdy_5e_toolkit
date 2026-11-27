@@ -350,12 +350,15 @@ class CompendiumJsonIngestionPipeline {
 
         final revitalizedMonsters = bundle.monsters.map((m) {
           final hasCopy = m.customProperties.containsKey('_copy');
+          final mAc = m.armorClass;
+          final mHp = m.hitPoints;
           final hasDefaultStats = m.actionsMarkdown.isEmpty ||
               m.actionsMarkdown.contains(
                   '| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |') ||
               m.actionsMarkdown
                   .startsWith('**Speed:** 30 ft.\n\n| STR | DEX') ||
-              (m.hitPoints <= 10 && m.armorClass == 10) ||
+              ((mHp == null || mHp <= 10) && (mAc == null || mAc == 10)) ||
+              m.challengeRating == null ||
               m.challengeRating == '0';
 
           if (hasCopy && hasDefaultStats) {
@@ -366,26 +369,18 @@ class CompendiumJsonIngestionPipeline {
                 'name': m.name,
                 'source': m.id.ruleset.name,
                 '_copy': copyObj,
-                if (m.armorClass > 10) 'ac': m.armorClass,
-                if (m.hitPoints > 10)
-                  'hp': {'average': m.hitPoints, 'formula': m.hitDieFormula},
-                if (m.challengeRating != '0') 'cr': m.challengeRating,
+                if (mAc != null && mAc > 10) 'ac': mAc,
+                if (mHp != null && mHp > 10)
+                  'hp': {'average': mHp, if (m.hitDieFormula != null) 'formula': m.hitDieFormula},
+                if (m.challengeRating != null && m.challengeRating != '0')
+                  'cr': m.challengeRating,
               };
-              rawSynthesized.remove('str');
-              rawSynthesized.remove('dex');
-              rawSynthesized.remove('con');
-              rawSynthesized.remove('int');
-              rawSynthesized.remove('wis');
-              rawSynthesized.remove('cha');
-              rawSynthesized.remove('strScore');
-              rawSynthesized.remove('dexScore');
-              rawSynthesized.remove('conScore');
-              rawSynthesized.remove('intScore');
-              rawSynthesized.remove('wisScore');
-              rawSynthesized.remove('chaScore');
-              if (m.armorClass <= 10) rawSynthesized.remove('ac');
-              if (m.hitPoints <= 10) rawSynthesized.remove('hp');
-              if (m.challengeRating == '0') rawSynthesized.remove('cr');
+              for (final k in const ['str', 'dex', 'con', 'int', 'wis', 'cha', 'strScore', 'dexScore', 'conScore', 'intScore', 'wisScore', 'chaScore']) {
+                rawSynthesized.remove(k);
+              }
+              if (mAc == null || mAc <= 10) rawSynthesized.remove('ac');
+              if (mHp == null || mHp <= 10) rawSynthesized.remove('hp');
+              if (m.challengeRating == null || m.challengeRating == '0') rawSynthesized.remove('cr');
 
               return monsterParser.parseMonster(
                 rawSynthesized,

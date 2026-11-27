@@ -60,6 +60,8 @@ class ArenaCombatant {
   }
 
   final int ac;
+  final bool hasExplicitAcOverride;
+  final bool hasExplicitHpOverride;
   final int initiativeBonus;
   int initiative;
   bool isRechargeReady;
@@ -145,6 +147,8 @@ class ArenaCombatant {
     dynamic drainedAbilityScores,
     this.maxHpReduction = 0,
     this.isHealingSuppressed = false,
+    this.hasExplicitAcOverride = false,
+    this.hasExplicitHpOverride = false,
   })  : hitPoints = hitPoints ??
             HitPoints(
               currentHp: currentHp ?? maxHp ?? 1,
@@ -228,8 +232,11 @@ class ArenaCombatant {
 
   /// Derives the combatant's spellcasting ability modifier from [spellSaveDc]
   /// and its challenge-rating proficiency bonus (`DC = 8 + PB + mod`).
-  int get spellcastingAbilityModifier =>
-      spellSaveDc - 8 - proficiencyBonusForChallengeRating(monster.challengeRatingValue);
+  int get spellcastingAbilityModifier {
+    final cr = monster.challengeRatingValue;
+    final pb = cr == null ? 2 : proficiencyBonusForChallengeRating(cr);
+    return spellSaveDc - 8 - pb;
+  }
 
   bool get isSpellcaster =>
       knownSpellIds.isNotEmpty || maxSpellSlots.isNotEmpty;
@@ -280,8 +287,10 @@ class ArenaCombatant {
   }) {
     final sb = monster.getStatBlock(edition);
     final initBonus = sb.dexMod;
-    final maxHp = hpOverride ?? sb.maxHp;
-    final ac = acOverride ?? sb.ac;
+    final rawMaxHp = hpOverride ?? sb.maxHp;
+    final rawAc = acOverride ?? sb.ac;
+    final effectiveHp = (rawMaxHp != null && rawMaxHp > 0) ? rawMaxHp : 0;
+    final effectiveAc = (rawAc != null && rawAc > 0) ? rawAc : 0;
     final name = customName ?? monster.getName(edition);
     final profile = monster.getCombatProfile(edition);
 
@@ -290,9 +299,11 @@ class ArenaCombatant {
       monster: monster,
       team: team,
       displayName: name,
-      maxHp: maxHp > 0 ? maxHp : 1,
-      currentHp: maxHp > 0 ? maxHp : 1,
-      ac: ac > 0 ? ac : 10,
+      maxHp: effectiveHp,
+      currentHp: effectiveHp,
+      ac: effectiveAc,
+      hasExplicitAcOverride: acOverride != null,
+      hasExplicitHpOverride: hpOverride != null,
       initiativeBonus: initBonus,
       isRechargeReady: true,
       isAirborne: profile.canFly,
