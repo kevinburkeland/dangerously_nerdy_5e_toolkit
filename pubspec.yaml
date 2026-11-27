@@ -29,7 +29,7 @@ dependencies:
       ref: 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61
   meta: ^1.19.0
   uuid: ^4.6.0
-  flutter_webrtc: ^1.6.3
+  flutter_webrtc: ^1.7.0
   fast_immutable_collections: ^12.0.1
   collection: ^1.19.1
   mutex: ^3.1.0

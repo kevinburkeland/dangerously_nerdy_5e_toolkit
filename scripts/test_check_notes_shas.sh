@@ -201,11 +201,29 @@ for nf in notes_files:
             missing.append(sha)
 
 if missing:
-    print(
-        f"Missing commit(s) requiring archive tags ({', '.join(missing)}); "
-        f"run: git fetch origin 'refs/tags/archive/*:refs/tags/archive/*'",
-        file=sys.stderr,
-    )
+    all_have_archive_tags = True
+    for repo in repos:
+        tag_res = subprocess.run(
+            ["git", "-C", repo, "tag", "-l", "archive/*"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        if tag_res.returncode != 0 or not tag_res.stdout.strip():
+            all_have_archive_tags = False
+            break
+    if all_have_archive_tags:
+        print(
+            f"Missing commit(s) {', '.join(missing)} reachable from no fetched tag or branch; "
+            f"this case needs GITHUB_TOKEN",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            f"Missing commit(s) requiring archive tags ({', '.join(missing)}); "
+            f"run: git fetch origin 'refs/tags/archive/*:refs/tags/archive/*'",
+            file=sys.stderr,
+        )
     sys.exit(1)
 PYEOF
 }
@@ -3109,8 +3127,59 @@ case_NS83() {
 )
 }
 
+# NS84 (Cleanup slice 19 Fix 1.2): when archive tags are present locally but a commit is still missing,
+# NS31 fails with a single line naming each missing commit (full SHA) and saying it is reachable from no
+# fetched tag or branch, so this case needs GITHUB_TOKEN.
+case_NS84() {
+(
+  ws="$TMP_DIR/ns84_ws"
+  mkdir -p "$ws"
+  app_full="$ws/dangerously_nerdy_5e_toolkit"
+  git clone "file://$SCRIPT_DIR/.." "$app_full" >/dev/null 2>&1
+  git -C "$app_full" fetch "file://$SCRIPT_DIR/.." 'refs/tags/archive/*:refs/tags/archive/*' >/dev/null 2>&1
+  cp "$SCRIPT_DIR/test_check_notes_shas.sh" "$app_full/scripts/test_check_notes_shas.sh"
+  cp "$CHECK_SCRIPT" "$app_full/scripts/check_notes_shas.py"
+
+  # Set up ruleset with archive tags
+  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e/.git" ]; then
+    git clone "file://$SCRIPT_DIR/../../vtt-ruleset-dnd5e" "$ws/vtt-ruleset-dnd5e" >/dev/null 2>&1
+    git -C "$ws/vtt-ruleset-dnd5e" fetch "file://$SCRIPT_DIR/../../vtt-ruleset-dnd5e" 'refs/tags/archive/*:refs/tags/archive/*' >/dev/null 2>&1
+  fi
+
+  # Set up core with archive tags present, but without 59d7178dea6527a18a2cac3b7fe0f110fb93717a
+  setup_repo "$ws/vtt-engine-core"
+  git -C "$ws/vtt-engine-core" tag archive/ns84-dummy >/dev/null 2>&1
+
+  set +e
+  full_out=$(cd "$app_full" && GITHUB_TOKEN="" ./scripts/test_check_notes_shas.sh NS31 2>&1)
+  full_rc=$?
+  set -e
+  if [ "$full_rc" -eq 0 ]; then
+    echo "FAIL: NS84 expected NS31 to fail when 59d7178dea6527a18a2cac3b7fe0f110fb93717a is missing, got: $full_out" >&2
+    exit 1
+  fi
+  if [[ "$full_out" == *"git fetch origin"* ]]; then
+    echo "FAIL: NS84 expected no fetch-tags hint when archive tags are present, got: $full_out" >&2
+    exit 1
+  fi
+  if [[ "$full_out" != *"59d7178dea6527a18a2cac3b7fe0f110fb93717a"* ]]; then
+    echo "FAIL: NS84 expected missing commit 59d7178dea6527a18a2cac3b7fe0f110fb93717a in output, got: $full_out" >&2
+    exit 1
+  fi
+  if [[ "$full_out" != *"reachable from no fetched tag or branch"* ]] || [[ "$full_out" != *"GITHUB_TOKEN"* ]]; then
+    echo "FAIL: NS84 expected 'reachable from no fetched tag or branch' and 'GITHUB_TOKEN', got: $full_out" >&2
+    exit 1
+  fi
+  hint_lines=$(printf '%s\n' "$full_out" | grep -vE '^(FAIL: NS31 \(exit [0-9]+\)|Failed cases \([0-9]+\): .*)$' | wc -l | tr -d ' ')
+  if [ "$hint_lines" -ne 1 ]; then
+    echo "FAIL: NS84 expected exactly 1 hint line from NS31, got $hint_lines lines: $full_out" >&2
+    exit 1
+  fi
+)
+}
+
 ALL_CASES=(
-  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS73 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82 NS83
+  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS73 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82 NS83 NS84
 )
 
 SELECTED_CASES=()
@@ -3153,7 +3222,7 @@ if [ "${#FAILED_CASES[@]}" -gt 0 ]; then
 fi
 
 if [ "$#" -eq 0 ]; then
-  echo "All notes SHA check self-tests passed (NS1 - NS83)."
+  echo "All notes SHA check self-tests passed (NS1 - NS84)."
 else
   echo "Selected notes SHA check self-tests passed (${#SELECTED_CASES[@]} case(s))."
 fi
