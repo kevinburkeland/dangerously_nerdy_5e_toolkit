@@ -7,7 +7,6 @@ import '../../../models/arena/arena_combatant.dart';
 import '../../../models/arena/arena_simulation_models.dart';
 import '../../../models/dm_screen_data.dart';
 import '../../../models/dpr/dpr_models.dart';
-import '../../../models/srd_summons/minion_stat_block.dart';
 import '../aoe_resolver.dart';
 import 'arena_combat_context.dart';
 
@@ -20,7 +19,7 @@ class ArenaAttackResolver {
   List<DprAttackAction> selectAttacksForTurn(
     ArenaCombatant attacker,
     List<DprAttackAction> allAttacks,
-    MinionStatBlock sb, {
+    MonsterStatBlock sb, {
     ArenaEnvironment environment = ArenaEnvironment.colosseum,
   }) {
     if (allAttacks.isEmpty) {

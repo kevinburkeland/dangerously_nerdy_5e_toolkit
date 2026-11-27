@@ -29,7 +29,7 @@ Map<String, dynamic> serializeCreatureAction(CreatureAction a) => {
       'hitDamage': a.hitDamage,
     };
 
-Map<String, dynamic> serializeStatBlockForGolden(MinionStatBlock sb) {
+Map<String, dynamic> serializeStatBlockForGolden(MonsterStatBlock sb) {
   return {
     'id': sb.id,
     'name': sb.name,

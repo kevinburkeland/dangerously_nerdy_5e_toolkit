@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/monster_combat_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_generic_entry_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
 
@@ -27,7 +26,7 @@ void main() {
         'MonsterCombatProfile.fromStatBlock checks explicit declarations against ACL parser and favors ACL on discrepancies',
         () {
       // Create a statblock where incoming/explicit declarations conflict with the actual text/traits
-      const conflictedStatBlock = MinionStatBlock(
+      const conflictedStatBlock = MonsterStatBlock(
         id: 'aberrant-beast',
         name: 'Aberrant Beast',
         sizeDisplay: 'Large',

@@ -18,7 +18,7 @@ MonsterItem _buildEvasionMonster(MonsterItem base, {required bool withEvasion}) 
           ),
         ]
       : sb.traits;
-  final modifiedSb = MinionStatBlock(
+  final modifiedSb = MonsterStatBlock(
     id: withEvasion ? '${sb.id}_evasion' : '${sb.id}_no_evasion',
     name: withEvasion ? 'Evasive Target' : 'Standard Target',
     sizeDisplay: sb.sizeDisplay,

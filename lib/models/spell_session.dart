@@ -114,7 +114,7 @@ class SpellSession {
     return maxPoints;
   }
 
-  bool canAddMinion(MinionStatBlock statBlock) {
+  bool canAddMinion(MonsterStatBlock statBlock) {
     if (activeObjects.length >= 50) return false;
     if (activePreset.category == SummonCategory.magicItem) {
       return true;
@@ -167,7 +167,7 @@ class SpellSession {
     );
   }
 
-  void addMinionFromStatBlock(MinionStatBlock statBlock, {String? customName}) {
+  void addMinionFromStatBlock(MonsterStatBlock statBlock, {String? customName}) {
     if (!canAddMinion(statBlock)) return;
     if (activeObjects.length >= 50) return;
     int count =
@@ -184,7 +184,7 @@ class SpellSession {
   }
 
   // Bag of Tricks Random Pull Generator (d8 on active bag variant table)
-  MinionStatBlock rollBagOfTricks() {
+  MonsterStatBlock rollBagOfTricks() {
     final list = activePreset.statBlocks.isNotEmpty
         ? activePreset.statBlocks
         : BagOfTricksSummons.grayBagPreset.statBlocks;

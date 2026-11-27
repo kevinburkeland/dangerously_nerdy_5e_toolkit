@@ -3,12 +3,11 @@ import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
 
 void main() {
   group('Shadow Strength Drain & Instant Death Hardening', () {
-    const fireGiantStatBlock = MinionStatBlock(
+    const fireGiantStatBlock = MonsterStatBlock(
       id: 'fire_giant_sb',
       name: 'Fire Giant',
       sizeDisplay: 'Huge',

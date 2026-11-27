@@ -15,7 +15,7 @@ class SummonPreset {
   final String duration;
   final String description;
   final String upcastRules;
-  final List<MinionStatBlock> statBlocks;
+  final List<MonsterStatBlock> statBlocks;
   final bool isRandomTable; // e.g., Bag of Tricks
   final Map<int, int>? budgetBySpellLevel;
   final int defaultMinionCount;
@@ -43,14 +43,14 @@ class SummonPreset {
       spellId != null ? SpellbookLibrary.getSpellById(spellId!) : null;
 
   /// Effective stat blocks combining canonical SRD monsters and applicable custom Homebrew creatures.
-  List<MinionStatBlock> get effectiveStatBlocks {
+  List<MonsterStatBlock> get effectiveStatBlocks {
     if (MonsterCodexLibrary.homebrewMonsters.isEmpty) {
       return statBlocks;
     }
 
     final existingIds = statBlocks.map((s) => s.id).toSet();
     final existingNames = statBlocks.map((s) => s.name.toLowerCase()).toSet();
-    final matchingHomebrew = <MinionStatBlock>[];
+    final matchingHomebrew = <MonsterStatBlock>[];
 
     for (final monsterItem in MonsterCodexLibrary.homebrewMonsters) {
       final sb = monsterItem.sourceStatBlock;

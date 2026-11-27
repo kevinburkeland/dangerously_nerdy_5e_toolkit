@@ -4,12 +4,11 @@ import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena/arena_combat_context.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena/arena_spellcasting_ai.dart';
 
 MonsterItem _makeHealerMonster() {
-  const sb = MinionStatBlock(
+  const sb = MonsterStatBlock(
     id: 'test_healer',
     name: 'Test Healer',
     sizeDisplay: 'Medium',

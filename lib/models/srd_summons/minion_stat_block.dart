@@ -1,168 +1,21 @@
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 import '../../utils/dice_formatters.dart';
+import '../monster_codex/monster_presentation_registry.dart';
 import '../visual/glyph_kinds.dart';
 
-import '../domain/character_models.dart';
 import 'srd_summons_library.dart';
 
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart'
+    show CreatureAction, CreatureTrait, MonsterStatBlock, SummonCategory;
 export '../visual/argb.dart';
 
-enum SummonCategory { spell, magicItem }
-
-class CreatureTrait {
-  final String name;
-  final String description;
-
-  const CreatureTrait({
-    required this.name,
-    required this.description,
-  });
-}
-
-class CreatureAction {
-  final String name;
-  final String description;
-  final String? attackType; // e.g. "Melee Weapon Attack"
-  final int? attackBonus;
-  final String? reach; // e.g. "reach 5 ft." or "range 20/60 ft."
-  final String? hitDamage; // e.g. "7 (1d8 + 3) piercing damage"
-
-  const CreatureAction({
-    required this.name,
-    required this.description,
-    this.attackType,
-    this.attackBonus,
-    this.reach,
-    this.hitDamage,
-  });
-}
-
-class MinionStatBlock {
-  final String id;
-  final String name;
-  final String sizeDisplay;
-  final String crDisplay;
-  final String typeDisplay; // e.g. "Beast", "Undead", "Elemental", "Construct"
-  final String alignment; // e.g. "unaligned", "lawful evil", "neutral"
-  final int ac;
-  final String? armorType; // e.g. "natural armor", "leather armor"
-  final int maxHp;
-  final String? hitDice; // e.g. "2d8 + 2"
-  final String speed; // e.g. "40 ft., climb 30 ft."
-  final int strScore;
-  final int dexScore;
-  final int conScore;
-  final int intScore;
-  final int wisScore;
-  final int chaScore;
-  final String? savingThrows;
-  final String? skills;
-  final String? damageVulnerabilities;
-  final String? damageResistances;
-  final String? damageImmunities;
-  final String? conditionImmunities;
-  final String senses;
-  final String languages;
-  final int? xp;
-  final List<CreatureTrait> traits;
-  final List<CreatureAction> actions;
-  final List<CreatureAction> reactions;
-  final List<CreatureAction> legendaryActions;
-
-  // Pre-calculated & Strongly-Typed Ingestion Fields
-  final Map<int, int>? explicitSpellSlots;
-  final int? explicitMeleeReachFt;
-  final Map<AbilityType, int>? explicitSavingThrows;
-  final bool? canFly;
-  final bool? hasHover;
-  final int? spellSaveDc;
-  final int? spellAttackBonus;
-
-  // Rapid Batch Dice Roller Fields
-  final int attackBonus;
-  final int damageDiceCount;
-  final int damageDiceSides;
-  final int damageBonus;
-  final String damageType;
-  final int secondaryDamageDiceCount;
-  final int secondaryDamageDiceSides;
-  final String? secondaryDamageType;
-  final bool hasPackTactics;
-  final String? specialTrait;
-  final Argb accentArgb;
-
-  const MinionStatBlock({
-    required this.id,
-    required this.name,
-    required this.sizeDisplay,
-    required this.crDisplay,
-    this.typeDisplay = 'Beast',
-    this.alignment = 'unaligned',
-    required this.ac,
-    this.armorType,
-    required this.maxHp,
-    this.hitDice,
-    this.speed = '30 ft.',
-    this.strScore = 10,
-    this.dexScore = 10,
-    this.conScore = 10,
-    this.intScore = 10,
-    this.wisScore = 10,
-    this.chaScore = 10,
-    this.savingThrows,
-    this.skills,
-    this.damageVulnerabilities,
-    this.damageResistances,
-    this.damageImmunities,
-    this.conditionImmunities,
-    this.senses = 'passive Perception 10',
-    this.languages = '—',
-    this.xp,
-    this.traits = const [],
-    this.actions = const [],
-    this.reactions = const [],
-    this.legendaryActions = const [],
-    this.explicitSpellSlots,
-    this.explicitMeleeReachFt,
-    this.explicitSavingThrows,
-    this.canFly,
-    this.hasHover,
-    this.spellSaveDc,
-    this.spellAttackBonus,
-    required this.attackBonus,
-    required this.damageDiceCount,
-    required this.damageDiceSides,
-    required this.damageBonus,
-    required this.damageType,
-    this.secondaryDamageDiceCount = 0,
-    this.secondaryDamageDiceSides = 0,
-    this.secondaryDamageType,
-    this.hasPackTactics = false,
-    this.specialTrait,
-    Argb? accentArgb,
-    Argb? accentColor,
-  }) : accentArgb = accentArgb ?? accentColor ?? const Argb(0xFF673AB7);
-
-  bool get hasLegendary =>
-      legendaryActions.isNotEmpty ||
-      hasLegendaryResistance ||
-      hasLegendaryActions;
-
-  bool get hasLegendaryResistance =>
-      traits.any((t) => t.name.toLowerCase().contains('legendary resistance'));
-
-  bool get hasLegendaryActions =>
-      legendaryActions.isNotEmpty ||
-      traits.any((t) => t.name.toLowerCase().contains('legendary action')) ||
-      actions.any((a) => a.name.toLowerCase().contains('legendary action'));
-
-  int get strMod => strScore.dndModifier;
-  int get dexMod => dexScore.dndModifier;
-  int get conMod => conScore.dndModifier;
-  int get intMod => intScore.dndModifier;
-  int get wisMod => wisScore.dndModifier;
-  int get chaMod => chaScore.dndModifier;
+/// App-layer presentation and dice-formatting helpers on [MonsterStatBlock].
+extension MonsterStatBlockDisplayExt on MonsterStatBlock {
+  Argb get accentArgb => resolveMonsterAccentArgb(
+        id: id,
+        typeDisplay: typeDisplay,
+      );
 
   String get primaryDamageFormula => DiceFormatters.formatFormula(
         count: damageDiceCount,
@@ -181,8 +34,8 @@ class MinionStatBlock {
       );
 }
 
-/// Helper extension mapping MinionStatBlock to DndGlyph parameters.
-extension MinionStatBlockGlyphExt on MinionStatBlock {
+/// Helper extension mapping [MonsterStatBlock] to DndGlyph parameters.
+extension MonsterStatBlockGlyphExt on MonsterStatBlock {
   CreatureType get glyphCreatureType {
     final lower = typeDisplay.toLowerCase();
     if (lower.contains('beast')) return CreatureType.beast;
@@ -363,8 +216,9 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
 
   void _extractDamageAccents(String text, Set<DamageAccent> target) {
     if (text.contains('fire')) target.add(DamageAccent.fire);
-    if (text.contains('cold') || text.contains('ice'))
+    if (text.contains('cold') || text.contains('ice')) {
       target.add(DamageAccent.cold);
+    }
     if (text.contains('lightning')) target.add(DamageAccent.lightning);
     if (text.contains('acid')) target.add(DamageAccent.acid);
     if (text.contains('poison')) target.add(DamageAccent.poison);
@@ -391,11 +245,11 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
   }
 }
 
-/// Extension resolving concrete MinionStatBlock from outer-layer SRD summons libraries
+/// Extension resolving concrete [MonsterStatBlock] from outer-layer SRD summons libraries
 /// without leaking outer-layer dependencies into the pure domain AnimatedObjectInstance entity.
 extension AnimatedObjectStatBlockX on AnimatedObjectInstance {
-  /// Resolves the full 5e SRD MinionStatBlock for this creature instance.
-  MinionStatBlock get statBlock {
+  /// Resolves the full 5e SRD [MonsterStatBlock] for this creature instance.
+  MonsterStatBlock get statBlock {
     if (statBlockId != null) {
       final found = SrdSummonsLibrary.findStatBlockById(statBlockId!);
       if (found != null) return found;
@@ -414,8 +268,8 @@ extension AnimatedObjectStatBlockX on AnimatedObjectInstance {
   }
 }
 
-/// Factory extension to construct AnimatedObjectInstance from an SRD MinionStatBlock.
-extension MinionStatBlockInstanceFactory on MinionStatBlock {
+/// Factory extension to construct AnimatedObjectInstance from an SRD [MonsterStatBlock].
+extension MonsterStatBlockInstanceFactory on MonsterStatBlock {
   AnimatedObjectInstance toInstance({
     required String id,
     String? customName,

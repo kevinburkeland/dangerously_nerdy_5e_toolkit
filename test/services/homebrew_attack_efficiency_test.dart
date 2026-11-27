@@ -4,7 +4,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_model
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
 
@@ -16,7 +15,7 @@ void main() {
         'extracts optimal multiattack branch when creature has multiple weapon options',
         () {
       // Gladiator-style monster with choice between Scimitar + Shield Bash melee branch vs Javelin ranged branch
-      const statBlock = MinionStatBlock(
+      const statBlock = MonsterStatBlock(
         id: 'test_gladiator',
         name: 'Gladiator',
         crDisplay: '5',
@@ -85,7 +84,7 @@ void main() {
         'picks the highest DPR attack when an imported character has multiple single-attack weapons',
         () {
       // Monster with a weak Dagger vs strong Greatsword without multiattack
-      const statBlock = MinionStatBlock(
+      const statBlock = MonsterStatBlock(
         id: 'test_warrior',
         name: 'Warrior',
         crDisplay: '1',
@@ -140,7 +139,7 @@ void main() {
       final monster = MonsterItem.simple(
         id: 'wyvern',
         name: 'Wyvern',
-        statBlock: const MinionStatBlock(
+        statBlock: const MonsterStatBlock(
           id: 'wyvern',
           name: 'Wyvern',
           crDisplay: '6',
@@ -206,7 +205,7 @@ void main() {
         monster: MonsterItem.simple(
           id: 'bandit',
           name: 'Bandit',
-          statBlock: const MinionStatBlock(
+          statBlock: const MonsterStatBlock(
             id: 'bandit',
             name: 'Bandit',
             crDisplay: '1/8',
@@ -252,7 +251,7 @@ void main() {
         monster: MonsterItem.simple(
           id: 'target_dummy',
           name: 'Target Dummy',
-          statBlock: const MinionStatBlock(
+          statBlock: const MonsterStatBlock(
             id: 'target_dummy',
             name: 'Target Dummy',
             crDisplay: '0',

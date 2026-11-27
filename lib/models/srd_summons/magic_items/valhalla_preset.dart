@@ -2,7 +2,7 @@ import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
 class ValhallaSummons {
-  static const berserker = MinionStatBlock(
+  static const berserker = MonsterStatBlock(
     id: 'item_berserker',
     name: 'Berserker (Valhalla)',
     sizeDisplay: 'Medium',
@@ -48,7 +48,6 @@ class ValhallaSummons {
     damageType: 'Slashing',
     specialTrait:
         'Reckless Attack (Advantage on attacks, grants advantage on incoming)',
-    accentColor: Argb(0xFFD32F2F),
   );
 
   static const silverHornPreset = SummonPreset(

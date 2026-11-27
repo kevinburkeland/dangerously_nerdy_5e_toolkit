@@ -2,7 +2,7 @@ import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
 class UndeadSummons {
-  static const skeleton = MinionStatBlock(
+  static const skeleton = MonsterStatBlock(
     id: 'undead_skeleton',
     name: 'Skeleton',
     sizeDisplay: 'Medium',
@@ -53,10 +53,9 @@ class UndeadSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Shortbow / Shortsword',
-    accentColor: Argb(0xFFB0BEC5),
   );
 
-  static const zombie = MinionStatBlock(
+  static const zombie = MonsterStatBlock(
     id: 'undead_zombie',
     name: 'Zombie',
     sizeDisplay: 'Medium',
@@ -103,10 +102,9 @@ class UndeadSummons {
     damageBonus: 1,
     damageType: 'Bludgeoning',
     specialTrait: 'Undead Fortitude (DC 5+dmg Con save to stay at 1 HP)',
-    accentColor: Argb(0xFF78909C),
   );
 
-  static const ghoul = MinionStatBlock(
+  static const ghoul = MonsterStatBlock(
     id: 'undead_ghoul',
     name: 'Ghoul',
     sizeDisplay: 'Medium',
@@ -155,10 +153,9 @@ class UndeadSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Claws (DC 10 Con save or paralyzed for 1 min)',
-    accentColor: Argb(0xFF546E7A),
   );
 
-  static const ghast = MinionStatBlock(
+  static const ghast = MonsterStatBlock(
     id: 'undead_ghast',
     name: 'Ghast',
     sizeDisplay: 'Medium',
@@ -219,10 +216,9 @@ class UndeadSummons {
     damageBonus: 3,
     damageType: 'Slashing',
     specialTrait: 'Stench (DC 10 Con save or poisoned within 5 ft) + Paralyze',
-    accentColor: Argb(0xFF37474F),
   );
 
-  static const wight = MinionStatBlock(
+  static const wight = MonsterStatBlock(
     id: 'undead_wight',
     name: 'Wight',
     sizeDisplay: 'Medium',
@@ -295,10 +291,9 @@ class UndeadSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Multiattack / Life Drain (DC 13 Con save)',
-    accentColor: Argb(0xFF263238),
   );
 
-  static const mummy = MinionStatBlock(
+  static const mummy = MonsterStatBlock(
     id: 'undead_mummy',
     name: 'Mummy',
     sizeDisplay: 'Medium',
@@ -351,7 +346,6 @@ class UndeadSummons {
     secondaryDamageDiceSides: 6,
     secondaryDamageType: 'Necrotic',
     specialTrait: 'Rotting Fist (3d6 Necrotic + Mummy Rot) + Dreadful Glare',
-    accentColor: Argb(0xFF8D6E63),
   );
 
   static const animateDeadPreset = SummonPreset(

@@ -31,7 +31,7 @@ class DeterministicRandom implements math.Random {
 }
 
 void main() {
-  const wolfStatBlock = MinionStatBlock(
+  const wolfStatBlock = MonsterStatBlock(
     id: 'srd_wolf',
     name: 'Wolf',
     sizeDisplay: 'Medium',
@@ -66,7 +66,7 @@ void main() {
     ],
   );
 
-  const defenderStatBlock = MinionStatBlock(
+  const defenderStatBlock = MonsterStatBlock(
     id: 'defender_target',
     name: 'Defender',
     sizeDisplay: 'Medium',

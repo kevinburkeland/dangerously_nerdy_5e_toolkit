@@ -17,7 +17,7 @@ void main() {
       hitDamage: '22 (2d6 + 15) fire damage',
     );
 
-    const attackerStatBlock = MinionStatBlock(
+    const attackerStatBlock = MonsterStatBlock(
       id: 'attacker_mob',
       name: 'Fire Attacker',
       sizeDisplay: 'Medium',
@@ -44,7 +44,7 @@ void main() {
       String? resistances,
       String? immunities,
     }) {
-      final statBlock = MinionStatBlock(
+      final statBlock = MonsterStatBlock(
         id: 'defender_mob',
         name: 'Defender Mob',
         sizeDisplay: 'Medium',

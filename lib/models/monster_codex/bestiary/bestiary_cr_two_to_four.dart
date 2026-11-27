@@ -12,7 +12,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_allosaurus',
       name: 'Allosaurus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'allosaurus',
         name: 'Allosaurus',
         sizeDisplay: 'Large',
@@ -39,7 +39,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Pounce',
@@ -72,7 +71,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ankylosaurus',
       name: 'Ankylosaurus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ankylosaurus',
         name: 'Ankylosaurus',
         sizeDisplay: 'Huge',
@@ -98,7 +97,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Tail',
@@ -115,7 +113,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_basilisk',
       name: 'Basilisk',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'basilisk',
         name: 'Basilisk',
         sizeDisplay: 'Medium',
@@ -144,7 +142,6 @@ class BestiaryCrTwoToFour {
         secondaryDamageDiceCount: 2,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Petrifying Gaze',
@@ -168,7 +165,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_berserker',
       name: 'Berserker',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'berserker',
         name: 'Berserker',
         sizeDisplay: 'Medium',
@@ -194,7 +191,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 12,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Reckless',
@@ -218,7 +214,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_centaur',
       name: 'Centaur',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'centaur',
         name: 'Centaur',
         sizeDisplay: 'Large',
@@ -244,7 +240,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -291,7 +286,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_couatl',
       name: 'Couatl',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'couatl',
         name: 'Couatl',
         sizeDisplay: 'Medium',
@@ -324,7 +319,6 @@ class BestiaryCrTwoToFour {
         secondaryDamageDiceCount: 2,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'radiant',
-        accentColor: Argb(0xFFEAB308),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -362,7 +356,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_cult_fanatic',
       name: 'Cult Fanatic',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'cult_fanatic',
         name: 'Cult Fanatic',
         sizeDisplay: 'Medium',
@@ -389,7 +383,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Dark Devotion',
@@ -422,7 +415,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_doppelganger',
       name: 'Doppelganger',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'doppelganger',
         name: 'Doppelganger',
         sizeDisplay: 'Medium',
@@ -449,7 +442,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Ambusher',
@@ -487,7 +479,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_gargoyle',
       name: 'Gargoyle',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'gargoyle',
         name: 'Gargoyle',
         sizeDisplay: 'Medium',
@@ -517,7 +509,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF0EA5E9),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -555,7 +546,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_gelatinous_cube',
       name: 'Gelatinous Cube',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'gelatinous_cube',
         name: 'Gelatinous Cube',
         sizeDisplay: 'Large',
@@ -583,7 +574,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'acid',
-        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'Ooze Cube',
@@ -617,7 +607,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ghost',
       name: 'Ghost',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ghost',
         name: 'Ghost',
         sizeDisplay: 'Medium',
@@ -647,7 +637,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'necrotic',
-        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Ethereal Sight',
@@ -691,7 +680,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_manticore',
       name: 'Manticore',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'manticore',
         name: 'Manticore',
         sizeDisplay: 'Large',
@@ -717,7 +706,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Tail Spike Regrowth',
@@ -764,7 +752,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_minotaur',
       name: 'Minotaur',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'minotaur',
         name: 'Minotaur',
         sizeDisplay: 'Large',
@@ -791,7 +779,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 12,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -834,7 +821,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_mummy',
       name: 'Mummy',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'mummy',
         name: 'Mummy',
         sizeDisplay: 'Medium',
@@ -870,7 +857,6 @@ class BestiaryCrTwoToFour {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'necrotic',
-        accentColor: Argb(0xFFCBD5E1),
         actions: [
           CreatureAction(
             name: 'Dreadful Glare',
@@ -892,7 +878,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ogre',
       name: 'Ogre',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ogre',
         name: 'Ogre',
         sizeDisplay: 'Large',
@@ -918,7 +904,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Greatclub',
@@ -944,7 +929,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_werewolf',
       name: 'Werewolf',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'werewolf',
         name: 'Werewolf',
         sizeDisplay: 'Medium',
@@ -973,7 +958,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Shapechanger',
@@ -1016,7 +1000,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_wight',
       name: 'Wight',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'wight',
         name: 'Wight',
         sizeDisplay: 'Medium',
@@ -1047,7 +1031,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Sunlight Sensitivity',
@@ -1094,7 +1077,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_will_o_wisp',
       name: 'Will-o\'-Wisp',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'will_o_wisp',
         name: 'Will-o\'-Wisp',
         sizeDisplay: 'Tiny',
@@ -1124,7 +1107,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 0,
         damageType: 'lightning',
-        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Consume Life',
@@ -1163,7 +1145,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ankheg',
       name: 'Ankheg',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ankheg',
         name: 'Ankheg',
         sizeDisplay: 'Large',
@@ -1189,7 +1171,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFFD97706),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -1211,7 +1192,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_awakened_tree',
       name: 'Awakened Tree',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'awakened_tree',
         name: 'Awakened Tree',
         sizeDisplay: 'Huge',
@@ -1239,7 +1220,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -1263,7 +1243,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_azer',
       name: 'Azer',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'azer',
         name: 'Azer',
         sizeDisplay: 'Medium',
@@ -1292,7 +1272,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Heated Body',
@@ -1326,7 +1305,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_bandit_captain',
       name: 'Bandit Captain',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'bandit_captain',
         name: 'Bandit Captain',
         sizeDisplay: 'Medium',
@@ -1354,7 +1333,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFF3B82F6),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -1392,7 +1370,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_bearded_devil',
       name: 'Bearded Devil',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'bearded_devil',
         name: 'Bearded Devil',
         sizeDisplay: 'Medium',
@@ -1423,7 +1401,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Devil\'s Sight',
@@ -1471,7 +1448,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_black_dragon_wyrmling',
       name: 'Black Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'black_dragon_wyrmling',
         name: 'Black Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -1500,7 +1477,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -1528,7 +1504,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_black_pudding',
       name: 'Black Pudding',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'black_pudding',
         name: 'Black Pudding',
         sizeDisplay: 'Large',
@@ -1557,7 +1533,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF10B981),
         traits: [
           CreatureTrait(
             name: 'Amorphous',
@@ -1598,7 +1573,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_blue_dragon_wyrmling',
       name: 'Blue Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'blue_dragon_wyrmling',
         name: 'Blue Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -1627,7 +1602,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -1649,7 +1623,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_bronze_dragon_wyrmling',
       name: 'Bronze Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'bronze_dragon_wyrmling',
         name: 'Bronze Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -1678,7 +1652,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -1706,7 +1679,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_chuul',
       name: 'Chuul',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'chuul',
         name: 'Chuul',
         sizeDisplay: 'Large',
@@ -1735,7 +1708,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF8B5CF6),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -1773,7 +1745,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_druid',
       name: 'Druid',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'druid',
         name: 'Druid',
         sizeDisplay: 'Medium',
@@ -1800,7 +1772,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Spellcasting',
@@ -1824,7 +1795,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_elephant',
       name: 'Elephant',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'elephant',
         name: 'Elephant',
         sizeDisplay: 'Huge',
@@ -1850,7 +1821,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Trampling Charge',
@@ -1883,7 +1853,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ettercap',
       name: 'Ettercap',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ettercap',
         name: 'Ettercap',
         sizeDisplay: 'Medium',
@@ -1910,7 +1880,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Spider Climb',
@@ -1975,7 +1944,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ettin',
       name: 'Ettin',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ettin',
         name: 'Ettin',
         sizeDisplay: 'Large',
@@ -2002,7 +1971,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'slashing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Two Heads',
@@ -2045,7 +2013,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ghast',
       name: 'Ghast',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ghast',
         name: 'Ghast',
         sizeDisplay: 'Medium',
@@ -2073,7 +2041,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFF9333EA),
         traits: [
           CreatureTrait(
             name: 'Stench',
@@ -2111,7 +2078,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_giant_boar',
       name: 'Giant Boar',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_boar',
         name: 'Giant Boar',
         sizeDisplay: 'Large',
@@ -2137,7 +2104,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -2166,7 +2132,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_giant_constrictor_snake',
       name: 'Giant Constrictor Snake',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_constrictor_snake',
         name: 'Giant Constrictor Snake',
         sizeDisplay: 'Huge',
@@ -2192,7 +2158,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -2218,7 +2183,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_giant_elk',
       name: 'Giant Elk',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_elk',
         name: 'Giant Elk',
         sizeDisplay: 'Huge',
@@ -2246,7 +2211,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -2279,7 +2243,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_giant_scorpion',
       name: 'Giant Scorpion',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_scorpion',
         name: 'Giant Scorpion',
         sizeDisplay: 'Large',
@@ -2305,7 +2269,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Claw',
@@ -2336,7 +2299,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_gibbering_mouther',
       name: 'Gibbering Mouther',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'gibbering_mouther',
         name: 'Gibbering Mouther',
         sizeDisplay: 'Medium',
@@ -2362,7 +2325,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF8B5CF6),
         traits: [
           CreatureTrait(
             name: 'Aberrant Ground',
@@ -2401,7 +2363,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_gold_dragon_wyrmling',
       name: 'Gold Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'gold_dragon_wyrmling',
         name: 'Gold Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -2430,7 +2392,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2458,7 +2419,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_green_dragon_wyrmling',
       name: 'Green Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'green_dragon_wyrmling',
         name: 'Green Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -2488,7 +2449,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2516,7 +2476,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_green_hag',
       name: 'Green Hag',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'green_hag',
         name: 'Green Hag',
         sizeDisplay: 'Medium',
@@ -2543,7 +2503,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Argb(0xFF34D399),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2601,7 +2560,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_grick',
       name: 'Grick',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'grick',
         name: 'Grick',
         sizeDisplay: 'Medium',
@@ -2629,7 +2588,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Stone Camouflage',
@@ -2667,7 +2625,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_griffon',
       name: 'Griffon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'griffon',
         name: 'Griffon',
         sizeDisplay: 'Large',
@@ -2693,7 +2651,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -2731,7 +2688,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_hell_hound',
       name: 'Hell Hound',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'hell_hound',
         name: 'Hell Hound',
         sizeDisplay: 'Medium',
@@ -2759,7 +2716,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         hasPackTactics: true,
         traits: [
           CreatureTrait(
@@ -2794,7 +2750,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_hunter_shark',
       name: 'Hunter Shark',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'hunter_shark',
         name: 'Hunter Shark',
         sizeDisplay: 'Large',
@@ -2821,7 +2777,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Blood Frenzy',
@@ -2849,7 +2804,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_killer_whale',
       name: 'Killer Whale',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'killer_whale',
         name: 'Killer Whale',
         sizeDisplay: 'Huge',
@@ -2876,7 +2831,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Echolocation',
@@ -2908,7 +2862,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_knight',
       name: 'Knight',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'knight',
         name: 'Knight',
         sizeDisplay: 'Medium',
@@ -2935,7 +2889,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Brave',
@@ -2984,7 +2937,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_lamia',
       name: 'Lamia',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'lamia',
         name: 'Lamia',
         sizeDisplay: 'Large',
@@ -3011,7 +2964,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Innate Spellcasting',
@@ -3057,7 +3009,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_merrow',
       name: 'Merrow',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'merrow',
         name: 'Merrow',
         sizeDisplay: 'Large',
@@ -3083,7 +3035,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3129,7 +3080,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_mimic',
       name: 'Mimic',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'mimic',
         name: 'Mimic',
         sizeDisplay: 'Medium',
@@ -3158,7 +3109,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Shapechanger',
@@ -3206,7 +3156,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_minotaur_skeleton',
       name: 'Minotaur Skeleton',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'minotaur_skeleton',
         name: 'Minotaur Skeleton',
         sizeDisplay: 'Large',
@@ -3235,7 +3185,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 12,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Argb(0xFF9333EA),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -3268,7 +3217,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_nightmare',
       name: 'Nightmare',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'nightmare',
         name: 'Nightmare',
         sizeDisplay: 'Large',
@@ -3295,7 +3244,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Confer Fire Resistance',
@@ -3329,7 +3277,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ochre_jelly',
       name: 'Ochre Jelly',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ochre_jelly',
         name: 'Ochre Jelly',
         sizeDisplay: 'Large',
@@ -3359,7 +3307,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF10B981),
         traits: [
           CreatureTrait(
             name: 'Amorphous',
@@ -3395,7 +3342,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_ogre_zombie',
       name: 'Ogre Zombie',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'ogre_zombie',
         name: 'Ogre Zombie',
         sizeDisplay: 'Large',
@@ -3423,7 +3370,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF9333EA),
         traits: [
           CreatureTrait(
             name: 'Undead Fortitude',
@@ -3447,7 +3393,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_owlbear',
       name: 'Owlbear',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'owlbear',
         name: 'Owlbear',
         sizeDisplay: 'Large',
@@ -3474,7 +3420,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Keen Sight and Smell',
@@ -3512,7 +3457,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_pegasus',
       name: 'Pegasus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'pegasus',
         name: 'Pegasus',
         sizeDisplay: 'Large',
@@ -3540,7 +3485,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFF59E0B),
         actions: [
           CreatureAction(
             name: 'Hooves',
@@ -3557,7 +3501,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_phase_spider',
       name: 'Phase Spider',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'phase_spider',
         name: 'Phase Spider',
         sizeDisplay: 'Large',
@@ -3584,7 +3528,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Ethereal Jaunt',
@@ -3618,7 +3561,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_plesiosaurus',
       name: 'Plesiosaurus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'plesiosaurus',
         name: 'Plesiosaurus',
         sizeDisplay: 'Large',
@@ -3645,7 +3588,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Hold Breath',
@@ -3668,7 +3610,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_polar_bear',
       name: 'Polar Bear',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'polar_bear',
         name: 'Polar Bear',
         sizeDisplay: 'Large',
@@ -3695,7 +3637,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -3733,7 +3674,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_priest',
       name: 'Priest',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'priest',
         name: 'Priest',
         sizeDisplay: 'Medium',
@@ -3760,7 +3701,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Divine Eminence',
@@ -3789,7 +3729,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_red_dragon_wyrmling',
       name: 'Red Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'red_dragon_wyrmling',
         name: 'Red Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -3818,7 +3758,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -3840,7 +3779,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_rhinoceros',
       name: 'Rhinoceros',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'rhinoceros',
         name: 'Rhinoceros',
         sizeDisplay: 'Large',
@@ -3866,7 +3805,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -3890,7 +3828,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_rug_of_smothering',
       name: 'Rug of Smothering',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'rug_of_smothering',
         name: 'Rug of Smothering',
         sizeDisplay: 'Large',
@@ -3919,7 +3857,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 0,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF64748B),
         traits: [
           CreatureTrait(
             name: 'Antimagic Susceptibility',
@@ -3952,7 +3889,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_saber_toothed_tiger',
       name: 'Saber-Toothed Tiger',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'saber_toothed_tiger',
         name: 'Saber-Toothed Tiger',
         sizeDisplay: 'Large',
@@ -3978,7 +3915,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -4016,7 +3952,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_sea_hag',
       name: 'Sea Hag',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'sea_hag',
         name: 'Sea Hag',
         sizeDisplay: 'Medium',
@@ -4042,7 +3978,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFF34D399),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -4095,7 +4030,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_silver_dragon_wyrmling',
       name: 'Silver Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'silver_dragon_wyrmling',
         name: 'Silver Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -4124,7 +4059,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -4146,7 +4080,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_succubus_incubus',
       name: 'Succubus/Incubus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'succubus_incubus',
         name: 'Succubus/Incubus',
         sizeDisplay: 'Medium',
@@ -4176,7 +4110,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Telepathic Bond',
@@ -4220,7 +4153,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_swarm_of_poisonous_snakes',
       name: 'Swarm of Poisonous Snakes',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'swarm_of_poisonous_snakes',
         name: 'Swarm of Poisonous Snakes',
         sizeDisplay: 'Medium',
@@ -4248,7 +4181,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Swarm',
@@ -4272,7 +4204,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_veteran',
       name: 'Veteran',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'veteran',
         name: 'Veteran',
         sizeDisplay: 'Medium',
@@ -4299,7 +4231,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFF3B82F6),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -4339,7 +4270,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_wereboar',
       name: 'Wereboar',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'wereboar',
         name: 'Wereboar',
         sizeDisplay: 'Medium',
@@ -4369,7 +4300,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Shapechanger',
@@ -4417,7 +4347,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_wererat',
       name: 'Wererat',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'wererat',
         name: 'Wererat',
         sizeDisplay: 'Medium',
@@ -4445,7 +4375,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Shapechanger',
@@ -4497,7 +4426,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_weretiger',
       name: 'Weretiger',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'weretiger',
         name: 'Weretiger',
         sizeDisplay: 'Medium',
@@ -4525,7 +4454,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Shapechanger',
@@ -4591,7 +4519,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_white_dragon_wyrmling',
       name: 'White Dragon Wyrmling',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'white_dragon_wyrmling',
         name: 'White Dragon Wyrmling',
         sizeDisplay: 'Medium',
@@ -4620,7 +4548,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 10,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -4642,7 +4569,7 @@ class BestiaryCrTwoToFour {
     MonsterItem.simple(
       id: 'srd_mon_winter_wolf',
       name: 'Winter Wolf',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'winter_wolf',
         name: 'Winter Wolf',
         sizeDisplay: 'Large',
@@ -4670,7 +4597,6 @@ class BestiaryCrTwoToFour {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         hasPackTactics: true,
         traits: [
           CreatureTrait(

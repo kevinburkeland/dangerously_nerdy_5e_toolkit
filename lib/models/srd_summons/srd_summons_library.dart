@@ -137,7 +137,7 @@ class SrdSummonsLibrary {
         ...magicItemPresets,
       ];
 
-  static MinionStatBlock? findStatBlockById(String id) {
+  static MonsterStatBlock? findStatBlockById(String id) {
     for (final preset in allPresets) {
       for (final sb in preset.effectiveStatBlocks) {
         if (sb.id == id) return sb;
@@ -151,7 +151,7 @@ class SrdSummonsLibrary {
     return null;
   }
 
-  static MinionStatBlock? findStatBlockByName(String name) {
+  static MonsterStatBlock? findStatBlockByName(String name) {
     final lower = name.trim().toLowerCase();
     if (lower.isEmpty) return null;
 

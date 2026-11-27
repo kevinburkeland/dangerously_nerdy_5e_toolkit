@@ -12,7 +12,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
@@ -134,7 +133,7 @@ SourceBlock _makeBlock(String text) => SourceBlock(
       span: const SourceSpan.empty(),
     );
 
-MinionStatBlock _makeMinion(List<CreatureAction> actions) => MinionStatBlock(
+MonsterStatBlock _makeMinion(List<CreatureAction> actions) => MonsterStatBlock(
       id: 'step3-minion',
       name: 'Step3 Minion',
       sizeDisplay: 'Medium',

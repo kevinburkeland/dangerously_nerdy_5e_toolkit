@@ -80,7 +80,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
     widget.onSquadUpdated();
   }
 
-  void _addMinions(MinionStatBlock statBlock, int count) {
+  void _addMinions(MonsterStatBlock statBlock, int count) {
     int added = 0;
     for (int i = 0; i < count; i++) {
       if (widget.session.canAddMinion(statBlock)) {

@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import '../arena/arena_combatant.dart';
 import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
-import '../srd_summons/minion_stat_block.dart';
 
 /// Advantage state for attack accuracy calculations.
 enum AdvantageType {
@@ -1109,9 +1108,9 @@ class DprCombatantProfile {
     );
   }
 
-  /// Factory constructor to convert any MinionStatBlock into a DprCombatantProfile.
+  /// Factory constructor to convert any MonsterStatBlock into a DprCombatantProfile.
   factory DprCombatantProfile.fromMinionStatBlock(
-    MinionStatBlock statBlock, {
+    MonsterStatBlock statBlock, {
     AdvantageType? advantage,
   }) {
     final adv = advantage ??
@@ -1389,8 +1388,8 @@ final Map<String, RegExp> _aliasAndCache = {};
 final Map<String, RegExp> _aliasPostfixCache = {};
 final Map<String, RegExp> _branchMentionsCache = {};
 
-/// Extension on MinionStatBlock providing DPR conversion, attack extraction, and routine calculations.
-extension MinionStatBlockDprExt on MinionStatBlock {
+/// Extension on MonsterStatBlock providing DPR conversion, attack extraction, and routine calculations.
+extension MinionStatBlockDprExt on MonsterStatBlock {
   /// Extracts structured DprAttackAction objects from this monster's stat block, actions, and legendary actions.
   List<DprAttackAction> extractDprAttacks() {
     final attacks = <DprAttackAction>[];

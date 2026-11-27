@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/monster_combat_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 
 void _expectProfilesEqualFieldByField(
   MonsterCombatProfile actual,
@@ -75,7 +74,7 @@ void main() {
       final monster = MonsterItem(
         id: runtimeId,
         name: 'Custom Cached Monster',
-        statBlock2014: const MinionStatBlock(
+        statBlock2014: const MonsterStatBlock(
           id: 'custom_2014',
           name: 'Custom 2014',
           sizeDisplay: 'Large',
@@ -89,7 +88,7 @@ void main() {
           damageBonus: 4,
           damageType: 'slashing',
         ),
-        statBlock2024: const MinionStatBlock(
+        statBlock2024: const MonsterStatBlock(
           id: 'custom_2024',
           name: 'Custom 2024',
           sizeDisplay: 'Large',

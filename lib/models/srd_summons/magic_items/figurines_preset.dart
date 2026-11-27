@@ -3,7 +3,7 @@ import '../summon_preset.dart';
 
 class FigurinesSummons {
   // 1. Bronze Griffon
-  static const bronzeGriffon = MinionStatBlock(
+  static const bronzeGriffon = MonsterStatBlock(
     id: 'item_griffon',
     name: 'Bronze Griffon',
     sizeDisplay: 'Large',
@@ -62,11 +62,10 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Slashing',
     specialTrait: 'Multiattack (Beak + Claws) & Fly 80 ft.',
-    accentColor: Argb(0xFFCD7F32),
   );
 
   // 2. Ebony Fly
-  static const ebonyFly = MinionStatBlock(
+  static const ebonyFly = MonsterStatBlock(
     id: 'item_ebony_fly',
     name: 'Ebony Fly',
     sizeDisplay: 'Large',
@@ -111,11 +110,10 @@ class FigurinesSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Fly 60 ft. & Blindsight 60 ft. (Mount up to 240 lbs)',
-    accentColor: Argb(0xFF334155),
   );
 
   // 3. Golden Lions (Lion)
-  static const goldenLion = MinionStatBlock(
+  static const goldenLion = MonsterStatBlock(
     id: 'item_golden_lion',
     name: 'Golden Lion',
     sizeDisplay: 'Large',
@@ -185,11 +183,10 @@ class FigurinesSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Pounce (DC 13 Str or prone) & Pack Tactics',
-    accentColor: Argb(0xFFF59E0B),
   );
 
   // 4a. Ivory Goat of Traveling
-  static const ivoryGoatTraveling = MinionStatBlock(
+  static const ivoryGoatTraveling = MonsterStatBlock(
     id: 'item_ivory_goat_traveling',
     name: 'Ivory Goat of Traveling',
     sizeDisplay: 'Large',
@@ -233,11 +230,10 @@ class FigurinesSummons {
     damageBonus: 3,
     damageType: 'Bludgeoning',
     specialTrait: 'Sure-Footed & Mount (24 hrs / 30 days total)',
-    accentColor: Argb(0xFFFFFBEB),
   );
 
   // 4b. Ivory Goat of Travail
-  static const ivoryGoatTravail = MinionStatBlock(
+  static const ivoryGoatTravail = MonsterStatBlock(
     id: 'item_ivory_goat_travail',
     name: 'Ivory Goat of Travail',
     sizeDisplay: 'Large',
@@ -291,11 +287,10 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Charge (+16 bludgeoning + DC 15 prone) & Multiattack',
-    accentColor: Argb(0xFFFDE68A),
   );
 
   // 4c. Ivory Goat of Terror
-  static const ivoryGoatTerror = MinionStatBlock(
+  static const ivoryGoatTerror = MonsterStatBlock(
     id: 'item_ivory_goat_terror',
     name: 'Ivory Goat of Terror',
     sizeDisplay: 'Large',
@@ -345,11 +340,10 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Piercing',
     specialTrait: 'Aura of Terror (DC 15 Wis save or Frightened & Grant Adv)',
-    accentColor: Argb(0xFFD97706),
   );
 
   // 5. Marble Elephant
-  static const marbleElephant = MinionStatBlock(
+  static const marbleElephant = MonsterStatBlock(
     id: 'item_elephant',
     name: 'Marble Elephant',
     sizeDisplay: 'Huge',
@@ -403,11 +397,10 @@ class FigurinesSummons {
     damageBonus: 6,
     damageType: 'Bludgeoning',
     specialTrait: 'Trampling Charge & Stomp (3d10+6 bludgeoning)',
-    accentColor: Argb(0xFFB0BEC5),
   );
 
   // 6. Obsidian Steed (Nightmare)
-  static const obsidianSteed = MinionStatBlock(
+  static const obsidianSteed = MonsterStatBlock(
     id: 'item_obsidian_steed',
     name: 'Obsidian Steed (Nightmare)',
     sizeDisplay: 'Large',
@@ -463,11 +456,10 @@ class FigurinesSummons {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 90 ft., Fire Resistance to Rider & Ethereal Stride',
-    accentColor: Argb(0xFFDC2626),
   );
 
   // 7. Onyx Dog
-  static const onyxDog = MinionStatBlock(
+  static const onyxDog = MonsterStatBlock(
     id: 'item_onyx_dog',
     name: 'Onyx Dog',
     sizeDisplay: 'Medium',
@@ -520,11 +512,10 @@ class FigurinesSummons {
     damageBonus: 1,
     damageType: 'Piercing',
     specialTrait: 'Truesight 60 ft. & Trip (DC 11 Strength save)',
-    accentColor: Argb(0xFF1E293B),
   );
 
   // 8. Serpentine Owl (Giant Owl)
-  static const serpentineOwl = MinionStatBlock(
+  static const serpentineOwl = MonsterStatBlock(
     id: 'item_serpentine_owl',
     name: 'Serpentine Owl',
     sizeDisplay: 'Large',
@@ -579,11 +570,10 @@ class FigurinesSummons {
     damageBonus: 1,
     damageType: 'Slashing',
     specialTrait: 'Flyby, Darkvision 120 ft., & Telepathic Link (1 mile)',
-    accentColor: Argb(0xFF059669),
   );
 
   // 9. Silver Raven
-  static const silverRaven = MinionStatBlock(
+  static const silverRaven = MonsterStatBlock(
     id: 'item_silver_raven',
     name: 'Silver Raven',
     sizeDisplay: 'Tiny',
@@ -633,7 +623,6 @@ class FigurinesSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Animal Messenger Delivery (24 hrs) & Mimicry',
-    accentColor: Argb(0xFF94A3B8),
   );
 
   static const figurinesPreset = SummonPreset(

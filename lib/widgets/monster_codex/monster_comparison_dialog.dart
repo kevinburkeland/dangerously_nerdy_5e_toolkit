@@ -259,7 +259,7 @@ class _MonsterComparisonDialogState extends State<MonsterComparisonDialog> {
   Widget _buildEditionCard(
     BuildContext context, {
     required DmRulesEdition edition,
-    required MinionStatBlock statBlock,
+    required MonsterStatBlock statBlock,
     required bool isHighlighted,
   }) {
     final theme = Theme.of(context);
@@ -318,7 +318,7 @@ class _MonsterComparisonDialogState extends State<MonsterComparisonDialog> {
 
   Widget _buildStatBlockBody(
     BuildContext context,
-    MinionStatBlock sb,
+    MonsterStatBlock sb,
     DmRulesEdition edition,
   ) {
     final theme = Theme.of(context);

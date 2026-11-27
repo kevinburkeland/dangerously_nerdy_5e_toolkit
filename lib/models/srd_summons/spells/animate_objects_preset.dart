@@ -2,7 +2,7 @@ import '../minion_stat_block.dart';
 import '../summon_preset.dart';
 
 class AnimateObjectsSummon {
-  static const tinyObject = MinionStatBlock(
+  static const tinyObject = MonsterStatBlock(
     id: 'ao_tiny',
     name: 'Tiny Animated Object',
     sizeDisplay: 'Tiny',
@@ -54,10 +54,9 @@ class AnimateObjectsSummon {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Argb(0xFF4CAF50),
   );
 
-  static const smallObject = MinionStatBlock(
+  static const smallObject = MonsterStatBlock(
     id: 'ao_small',
     name: 'Small Animated Object',
     sizeDisplay: 'Small',
@@ -109,10 +108,9 @@ class AnimateObjectsSummon {
     damageBonus: 2,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Argb(0xFF03A9F4),
   );
 
-  static const mediumObject = MinionStatBlock(
+  static const mediumObject = MonsterStatBlock(
     id: 'ao_medium',
     name: 'Medium Animated Object',
     sizeDisplay: 'Medium',
@@ -164,10 +162,9 @@ class AnimateObjectsSummon {
     damageBonus: 1,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Argb(0xFFFF9800),
   );
 
-  static const largeObject = MinionStatBlock(
+  static const largeObject = MonsterStatBlock(
     id: 'ao_large',
     name: 'Large Animated Object',
     sizeDisplay: 'Large',
@@ -219,10 +216,9 @@ class AnimateObjectsSummon {
     damageBonus: 2,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Argb(0xFFE91E63),
   );
 
-  static const hugeObject = MinionStatBlock(
+  static const hugeObject = MonsterStatBlock(
     id: 'ao_huge',
     name: 'Huge Animated Object',
     sizeDisplay: 'Huge',
@@ -274,7 +270,6 @@ class AnimateObjectsSummon {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Fly 30 ft. (hover) & Antimagic Susceptibility',
-    accentColor: Argb(0xFF9C27B0),
   );
 
   static const preset = SummonPreset(

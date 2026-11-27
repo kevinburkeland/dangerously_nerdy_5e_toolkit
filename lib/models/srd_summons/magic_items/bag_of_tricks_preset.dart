@@ -4,7 +4,7 @@ import '../spells/beast_presets.dart';
 
 class BagOfTricksSummons {
   // --- GRAY BAG CREATURES (d8) ---
-  static const weasel = MinionStatBlock(
+  static const weasel = MonsterStatBlock(
     id: 'bot_weasel',
     name: 'Weasel',
     sizeDisplay: 'Tiny',
@@ -49,10 +49,9 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Keen Hearing and Smell',
-    accentColor: Argb(0xFF90A4AE),
   );
 
-  static const giantRat = MinionStatBlock(
+  static const giantRat = MonsterStatBlock(
     id: 'bot_giant_rat',
     name: 'Giant Rat',
     sizeDisplay: 'Small',
@@ -102,10 +101,9 @@ class BagOfTricksSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Keen Smell & Pack Tactics',
-    accentColor: Argb(0xFF78909C),
   );
 
-  static const badger = MinionStatBlock(
+  static const badger = MonsterStatBlock(
     id: 'bot_badger',
     name: 'Badger',
     sizeDisplay: 'Tiny',
@@ -149,10 +147,9 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Keen Smell & Burrow 5 ft.',
-    accentColor: Argb(0xFF607D8B),
   );
 
-  static const giantElk = MinionStatBlock(
+  static const giantElk = MonsterStatBlock(
     id: 'bot_giant_elk',
     name: 'Giant Elk',
     sizeDisplay: 'Huge',
@@ -209,11 +206,10 @@ class BagOfTricksSummons {
     damageType: 'Bludgeoning',
     specialTrait:
         'Charge (Extra 2d6 damage, DC 14 Str save or prone) & Hooves (4d8+4)',
-    accentColor: Argb(0xFF263238),
   );
 
   // --- RUST BAG CREATURES (d8) ---
-  static const rat = MinionStatBlock(
+  static const rat = MonsterStatBlock(
     id: 'bot_rat',
     name: 'Rat',
     sizeDisplay: 'Tiny',
@@ -257,10 +253,9 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Piercing',
     specialTrait: 'Keen Smell & Darkvision',
-    accentColor: Argb(0xFFA1887F),
   );
 
-  static const owl = MinionStatBlock(
+  static const owl = MonsterStatBlock(
     id: 'bot_owl',
     name: 'Owl',
     sizeDisplay: 'Tiny',
@@ -310,10 +305,9 @@ class BagOfTricksSummons {
     damageBonus: 0,
     damageType: 'Slashing',
     specialTrait: 'Flyby (no opportunity attacks) & Darkvision 120 ft.',
-    accentColor: Argb(0xFF8D6E63),
   );
 
-  static const mastiff = MinionStatBlock(
+  static const mastiff = MonsterStatBlock(
     id: 'bot_mastiff',
     name: 'Mastiff',
     sizeDisplay: 'Medium',
@@ -358,10 +352,9 @@ class BagOfTricksSummons {
     damageBonus: 1,
     damageType: 'Piercing',
     specialTrait: 'Keen Hearing/Smell & Trip (DC 11 Str save)',
-    accentColor: Argb(0xFF795548),
   );
 
-  static const goat = MinionStatBlock(
+  static const goat = MonsterStatBlock(
     id: 'bot_goat',
     name: 'Goat',
     sizeDisplay: 'Medium',
@@ -410,10 +403,9 @@ class BagOfTricksSummons {
     damageBonus: 1,
     damageType: 'Bludgeoning',
     specialTrait: 'Charge (Extra 1d4 damage, DC 10 Str save or prone)',
-    accentColor: Argb(0xFF6D4C41),
   );
 
-  static const giantGoat = MinionStatBlock(
+  static const giantGoat = MonsterStatBlock(
     id: 'bot_giant_goat',
     name: 'Giant Goat',
     sizeDisplay: 'Large',
@@ -463,11 +455,10 @@ class BagOfTricksSummons {
     damageBonus: 3,
     damageType: 'Bludgeoning',
     specialTrait: 'Charge (Extra 2d4 damage, DC 13 Str save or prone)',
-    accentColor: Argb(0xFF5D4037),
   );
 
   // --- TAN BAG CREATURES (d8) ---
-  static const jackal = MinionStatBlock(
+  static const jackal = MonsterStatBlock(
     id: 'bot_jackal',
     name: 'Jackal',
     sizeDisplay: 'Small',
@@ -518,10 +509,9 @@ class BagOfTricksSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Pack Tactics & Keen Hearing/Smell',
-    accentColor: Argb(0xFFDCE775),
   );
 
-  static const baboon = MinionStatBlock(
+  static const baboon = MonsterStatBlock(
     id: 'bot_baboon',
     name: 'Baboon',
     sizeDisplay: 'Small',
@@ -566,10 +556,9 @@ class BagOfTricksSummons {
     damageBonus: -1,
     damageType: 'Bludgeoning',
     specialTrait: 'Pack Tactics & Climb 30 ft.',
-    accentColor: Argb(0xFFAFB42B),
   );
 
-  static const axeBeak = MinionStatBlock(
+  static const axeBeak = MonsterStatBlock(
     id: 'bot_axe_beak',
     name: 'Axe Beak',
     sizeDisplay: 'Large',
@@ -607,10 +596,9 @@ class BagOfTricksSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Speed 50 ft.',
-    accentColor: Argb(0xFFFBC02D),
   );
 
-  static const giantWeasel = MinionStatBlock(
+  static const giantWeasel = MonsterStatBlock(
     id: 'bot_giant_weasel',
     name: 'Giant Weasel',
     sizeDisplay: 'Medium',
@@ -655,7 +643,6 @@ class BagOfTricksSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Keen Hearing and Smell & Darkvision',
-    accentColor: Argb(0xFF827717),
   );
 
   // --- PRESETS FOR EACH BAG VARIANT ---

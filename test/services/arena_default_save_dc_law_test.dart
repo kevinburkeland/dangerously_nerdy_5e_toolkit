@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,7 +32,7 @@ void main() {
           final base = MonsterCodexLibrary.allMonsters
               .firstWhere((m) => m.id == 'srd_mon_tarrasque')
               .statBlock2014;
-          final sb = MinionStatBlock(
+          final sb = MonsterStatBlock(
             id: 'test_titan',
             name: 'Test Titan',
             sizeDisplay: base.sizeDisplay,
@@ -112,7 +111,7 @@ void main() {
           final tarrasque = MonsterCodexLibrary.allMonsters
               .firstWhere((m) => m.id == 'srd_mon_tarrasque');
           final base = tarrasque.statBlock2014;
-          final titanSb = MinionStatBlock(
+          final titanSb = MonsterStatBlock(
             id: 'test_cr30_titan',
             name: 'Default-DC Titan',
             sizeDisplay: base.sizeDisplay,
@@ -150,7 +149,7 @@ void main() {
 
           final wolf = MonsterCodexLibrary.allMonsters
               .firstWhere((m) => m.id == 'srd_mon_wolf');
-          final targetSb = MinionStatBlock(
+          final targetSb = MonsterStatBlock(
             id: 'test_target',
             name: 'Sturdy Target',
             sizeDisplay: wolf.statBlock2014.sizeDisplay,

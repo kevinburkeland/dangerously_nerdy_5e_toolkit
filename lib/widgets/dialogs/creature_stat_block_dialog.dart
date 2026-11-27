@@ -9,7 +9,7 @@ import '../glyphs/dnd_glyph.dart';
 import '../monster_codex/creature_dpr_view.dart';
 
 class CreatureStatBlockDialog extends StatefulWidget {
-  final MinionStatBlock statBlock;
+  final MonsterStatBlock statBlock;
   final VoidCallback? onAddToSquad;
   final String? addToSquadLabel;
 
@@ -22,7 +22,7 @@ class CreatureStatBlockDialog extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    required MinionStatBlock statBlock,
+    required MonsterStatBlock statBlock,
     VoidCallback? onAddToSquad,
     String? addToSquadLabel,
   }) {
@@ -629,7 +629,7 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
   }
 
   Widget _buildLoreNotesTab(
-      MinionStatBlock sb, String slug, EntityFluff? importedFluff) {
+      MonsterStatBlock sb, String slug, EntityFluff? importedFluff) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(

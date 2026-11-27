@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import '../../models/arena/arena_condition.dart';
-import '../../models/srd_summons/minion_stat_block.dart';
 import '../../models/spellbook_data.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 
@@ -92,7 +91,7 @@ class StatBlockAclParser {
     caseSensitive: false,
   );
 
-  /// Parses an unstructured/third-party [MinionStatBlock] at the ingestion boundary
+  /// Parses an unstructured/third-party [MonsterStatBlock] at the ingestion boundary
   /// to pre-calculate all combat metrics into explicit typed primitives.
   static ({
     Map<int, int> spellSlots,
@@ -113,7 +112,7 @@ class StatBlockAclParser {
     Map<AbilityType, int> savingThrows,
     Map<String, PrecomputedAttack> attacks,
   }) parseStatBlockBoundary(
-    MinionStatBlock sb, {
+    MonsterStatBlock sb, {
     double challengeRating = 0.0,
   }) {
     final spellCorpus = _buildMonsterSpellCorpus(sb);
@@ -334,7 +333,7 @@ class StatBlockAclParser {
     return RegExp('\\b$escaped\\b', caseSensitive: false).hasMatch(corpus);
   }
 
-  static String _buildMonsterSpellCorpus(MinionStatBlock sb) {
+  static String _buildMonsterSpellCorpus(MonsterStatBlock sb) {
     final buffer = StringBuffer();
     for (final t in sb.traits) {
       final nameLower = t.name.toLowerCase();
@@ -359,7 +358,7 @@ class StatBlockAclParser {
         .replaceAll('*', ' ');
   }
 
-  static String _buildMonsterCorpus(MinionStatBlock sb) {
+  static String _buildMonsterCorpus(MonsterStatBlock sb) {
     final buffer = StringBuffer();
     for (final t in sb.traits) {
       buffer.writeln('${t.name}: ${t.description}');
@@ -380,7 +379,7 @@ class StatBlockAclParser {
         .replaceAll('*', ' ');
   }
 
-  static int _computeSavingThrowBonus(MinionStatBlock sb, AbilityType ab) {
+  static int _computeSavingThrowBonus(MonsterStatBlock sb, AbilityType ab) {
     final rawSaves = sb.savingThrows;
     if (rawSaves != null && rawSaves.isNotEmpty) {
       final pattern = _staticAbilitySavePatterns[ab];

@@ -1917,11 +1917,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                       },
                     ),
                     // Creature Stat Block Loader
-                    _buildPresetDropdown<MinionStatBlock>(
+                    _buildPresetDropdown<MonsterStatBlock>(
                       label: '🐉 Read Minion Stat Block...',
                       isDark: isDark,
                       items: () {
-                        final uniqueStatBlocks = <String, MinionStatBlock>{};
+                        final uniqueStatBlocks = <String, MonsterStatBlock>{};
                         for (final p in SrdSummonsLibrary.allPresets) {
                           for (final sb in p.statBlocks) {
                             uniqueStatBlocks[sb.id] = sb;

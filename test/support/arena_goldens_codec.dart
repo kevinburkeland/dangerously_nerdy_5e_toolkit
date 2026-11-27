@@ -7,7 +7,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_preset_matchups.
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
 
 const String kArenaGoldensDir = 'test/fixtures/arena_goldens';
@@ -244,7 +243,7 @@ String probeDefenseCategory({
   final rawSb = monster.getStatBlock(edition);
   // Clone only the defense text fields onto a clean defender with high HP, low AC,
   // no spells/reactions/riders so executeTurn always lands a clean 101-damage hit.
-  final probeDefenderSb = MinionStatBlock(
+  final probeDefenderSb = MonsterStatBlock(
     id: 'probe_def_${monster.id}',
     name: monster.name,
     sizeDisplay: rawSb.sizeDisplay,
@@ -271,7 +270,7 @@ String probeDefenseCategory({
   // directly from attackBonus + damageDiceCount/Sides/Bonus + damageType
   // (so even empty '' and 'zzz' damage types reach _applyDefensiveModifiers verbatim).
   // With Random(2): first nextInt(20)+1 == 13 (normal hit), next nextInt(2)+1 == 1 -> 1 + 100 = 101.
-  final probeAttackerSb = MinionStatBlock(
+  final probeAttackerSb = MonsterStatBlock(
     id: 'probe_att',
     name: 'Probe Attacker',
     sizeDisplay: 'Medium',

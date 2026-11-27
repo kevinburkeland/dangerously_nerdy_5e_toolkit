@@ -20,7 +20,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_other_catego
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
@@ -746,7 +745,7 @@ void main() {
           final monster = MonsterItem.simple(
             id: 'test-wolf',
             name: 'Test Wolf',
-            statBlock: MinionStatBlock(
+            statBlock: MonsterStatBlock(
               id: 'test-wolf',
               name: 'Test Wolf',
               sizeDisplay: 'Medium',
@@ -779,7 +778,6 @@ void main() {
               damageBonus: 2,
               damageType: 'Piercing',
               hasPackTactics: true,
-              accentColor: const Argb(0xFF388E3C),
             ),
           );
 
@@ -902,8 +900,8 @@ void main() {
         );
       }
 
-      MinionStatBlock makeMinion(List<CreatureAction> actions) {
-        return MinionStatBlock(
+      MonsterStatBlock makeMinion(List<CreatureAction> actions) {
+        return MonsterStatBlock(
           id: 'test',
           name: 'Wolf',
           sizeDisplay: 'Medium',
@@ -915,7 +913,6 @@ void main() {
           damageDiceSides: 6,
           damageBonus: 2,
           damageType: 'Piercing',
-          accentArgb: const Argb(0xFF000000),
           actions: actions,
         );
       }

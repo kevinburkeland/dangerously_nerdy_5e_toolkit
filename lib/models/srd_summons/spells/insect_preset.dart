@@ -3,7 +3,7 @@ import '../summon_preset.dart';
 import 'beast_presets.dart';
 
 class InsectSummons {
-  static const giantCentipede = MinionStatBlock(
+  static const giantCentipede = MonsterStatBlock(
     id: 'insect_centipede',
     name: 'Giant Centipede',
     sizeDisplay: 'Small',
@@ -46,10 +46,9 @@ class InsectSummons {
     secondaryDamageType: 'Poison',
     specialTrait:
         'Bite (1d4+2 piercing + 3d6 poison, DC 11 Con save) + Blindsight 30 ft.',
-    accentColor: Argb(0xFF4CAF50),
   );
 
-  static const giantWasp = MinionStatBlock(
+  static const giantWasp = MonsterStatBlock(
     id: 'insect_wasp',
     name: 'Giant Wasp',
     sizeDisplay: 'Medium',
@@ -91,10 +90,9 @@ class InsectSummons {
     secondaryDamageType: 'Poison',
     specialTrait:
         'Sting (1d4+2 piercing + 3d6 poison, DC 11 Con save) & Fly 50 ft.',
-    accentColor: Argb(0xFFFBC02D),
   );
 
-  static const giantScorpion = MinionStatBlock(
+  static const giantScorpion = MonsterStatBlock(
     id: 'insect_scorpion',
     name: 'Giant Scorpion',
     sizeDisplay: 'Large',
@@ -151,7 +149,6 @@ class InsectSummons {
     secondaryDamageType: 'Poison',
     specialTrait:
         'Multiattack (2 Claws + 1 Sting with 4d10 poison, DC 12 Con save)',
-    accentColor: Argb(0xFFE65100),
   );
 
   static const giantInsectPreset = SummonPreset(

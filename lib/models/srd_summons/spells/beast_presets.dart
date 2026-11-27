@@ -3,7 +3,7 @@ import '../summon_preset.dart';
 
 class BeastSummons {
   // --- CR 1/4 BEASTS (8 Beasts summoned at 3rd level) ---
-  static const wolf = MinionStatBlock(
+  static const wolf = MonsterStatBlock(
     id: 'beast_wolf',
     name: 'Wolf',
     sizeDisplay: 'Medium',
@@ -55,10 +55,9 @@ class BeastSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Pack Tactics + Trip (DC 11 Strength save)',
-    accentColor: Argb(0xFF8D6E63),
   );
 
-  static const boar = MinionStatBlock(
+  static const boar = MonsterStatBlock(
     id: 'beast_boar',
     name: 'Boar',
     sizeDisplay: 'Medium',
@@ -109,10 +108,9 @@ class BeastSummons {
     damageType: 'Slashing',
     specialTrait:
         'Charge (Extra 1d6 damage, DC 11 Str save or prone) & Relentless',
-    accentColor: Argb(0xFF8D6E63),
   );
 
-  static const panther = MinionStatBlock(
+  static const panther = MonsterStatBlock(
     id: 'beast_panther',
     name: 'Panther',
     sizeDisplay: 'Medium',
@@ -171,10 +169,9 @@ class BeastSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Keen Smell & Pounce (DC 12 Str save or prone + bonus bite)',
-    accentColor: Argb(0xFF546E7A),
   );
 
-  static const giantBadger = MinionStatBlock(
+  static const giantBadger = MonsterStatBlock(
     id: 'beast_giant_badger',
     name: 'Giant Badger',
     sizeDisplay: 'Medium',
@@ -232,10 +229,9 @@ class BeastSummons {
     damageBonus: 1,
     damageType: 'Slashing',
     specialTrait: 'Multiattack (Bite + Claws) & Burrow 10 ft.',
-    accentColor: Argb(0xFF455A64),
   );
 
-  static const giantPoisonousSnake = MinionStatBlock(
+  static const giantPoisonousSnake = MonsterStatBlock(
     id: 'beast_giant_poisonous_snake',
     name: 'Giant Poisonous Snake',
     sizeDisplay: 'Medium',
@@ -277,11 +273,10 @@ class BeastSummons {
     secondaryDamageDiceSides: 6,
     secondaryDamageType: 'Poison',
     specialTrait: 'Bite (1d4+4 piercing + 3d6 poison, reach 10 ft.)',
-    accentColor: Argb(0xFF4CAF50),
   );
 
   // --- CR 1/2 BEASTS (4 Beasts summoned at 3rd level) ---
-  static const ape = MinionStatBlock(
+  static const ape = MonsterStatBlock(
     id: 'beast_ape',
     name: 'Ape',
     sizeDisplay: 'Medium',
@@ -333,10 +328,9 @@ class BeastSummons {
     damageBonus: 3,
     damageType: 'Bludgeoning',
     specialTrait: 'Multiattack (2 Fists) + Ranged Rock Throw',
-    accentColor: Argb(0xFF5D4037),
   );
 
-  static const blackBear = MinionStatBlock(
+  static const blackBear = MonsterStatBlock(
     id: 'beast_black_bear',
     name: 'Black Bear',
     sizeDisplay: 'Medium',
@@ -396,10 +390,9 @@ class BeastSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Multiattack (Bite + Claws) & Keen Smell',
-    accentColor: Argb(0xFF4E342E),
   );
 
-  static const crocodile = MinionStatBlock(
+  static const crocodile = MonsterStatBlock(
     id: 'beast_crocodile',
     name: 'Crocodile',
     sizeDisplay: 'Large',
@@ -444,11 +437,10 @@ class BeastSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Bite & Grapple (DC 12 Str escape, target restrained)',
-    accentColor: Argb(0xFF2E7D32),
   );
 
   // --- CR 1 BEASTS (2 Beasts summoned at 3rd level) ---
-  static const direWolf = MinionStatBlock(
+  static const direWolf = MonsterStatBlock(
     id: 'beast_dire_wolf',
     name: 'Dire Wolf',
     sizeDisplay: 'Large',
@@ -500,10 +492,9 @@ class BeastSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Pack Tactics + Trip (DC 13 Strength save)',
-    accentColor: Argb(0xFF6D4C41),
   );
 
-  static const giantHyena = MinionStatBlock(
+  static const giantHyena = MonsterStatBlock(
     id: 'beast_giant_hyena',
     name: 'Giant Hyena',
     sizeDisplay: 'Large',
@@ -548,10 +539,9 @@ class BeastSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Rampage (Bonus bite attack when reducing creature to 0 HP)',
-    accentColor: Argb(0xFFA1887F),
   );
 
-  static const giantSpider = MinionStatBlock(
+  static const giantSpider = MonsterStatBlock(
     id: 'beast_giant_spider',
     name: 'Giant Spider',
     sizeDisplay: 'Large',
@@ -619,10 +609,9 @@ class BeastSummons {
     secondaryDamageDiceSides: 8,
     secondaryDamageType: 'Poison',
     specialTrait: 'Bite (1d8+3 piercing + 2d8 poison) + Webbing & Spider Climb',
-    accentColor: Argb(0xFF43A047),
   );
 
-  static const giantEagle = MinionStatBlock(
+  static const giantEagle = MonsterStatBlock(
     id: 'beast_giant_eagle',
     name: 'Giant Eagle',
     sizeDisplay: 'Large',
@@ -682,10 +671,9 @@ class BeastSummons {
     damageBonus: 3,
     damageType: 'Slashing',
     specialTrait: 'Multiattack (Beak + Talons) & Fly 80 ft.',
-    accentColor: Argb(0xFFFB8C00),
   );
 
-  static const brownBear = MinionStatBlock(
+  static const brownBear = MonsterStatBlock(
     id: 'beast_brown_bear',
     name: 'Brown Bear',
     sizeDisplay: 'Large',
@@ -745,10 +733,9 @@ class BeastSummons {
     damageBonus: 4,
     damageType: 'Slashing',
     specialTrait: 'Multiattack (Bite + Claws) & Keen Smell',
-    accentColor: Argb(0xFFFB8C00),
   );
 
-  static const lion = MinionStatBlock(
+  static const lion = MonsterStatBlock(
     id: 'beast_lion',
     name: 'Lion',
     sizeDisplay: 'Large',
@@ -819,10 +806,9 @@ class BeastSummons {
     damageType: 'Slashing',
     specialTrait:
         'Pack Tactics & Pounce (DC 13 Str save or prone + bonus bite)',
-    accentColor: Argb(0xFFFFB74D),
   );
 
-  static const tiger = MinionStatBlock(
+  static const tiger = MonsterStatBlock(
     id: 'beast_tiger',
     name: 'Tiger',
     sizeDisplay: 'Large',
@@ -881,10 +867,9 @@ class BeastSummons {
     damageBonus: 3,
     damageType: 'Slashing',
     specialTrait: 'Pounce (DC 13 Str save or prone + bonus bite) & Darkvision',
-    accentColor: Argb(0xFFE65100),
   );
 
-  static const giantToad = MinionStatBlock(
+  static const giantToad = MonsterStatBlock(
     id: 'beast_giant_toad',
     name: 'Giant Toad',
     sizeDisplay: 'Large',
@@ -940,11 +925,10 @@ class BeastSummons {
     secondaryDamageDiceSides: 10,
     secondaryDamageType: 'Poison',
     specialTrait: 'Bite (1d10+2 piercing + 1d10 poison) & Swallow (3d6 acid)',
-    accentColor: Argb(0xFF689F38),
   );
 
   // --- CR 2 BEASTS (1 Beast summoned at 3rd level) ---
-  static const rhinoceros = MinionStatBlock(
+  static const rhinoceros = MonsterStatBlock(
     id: 'beast_rhinoceros',
     name: 'Rhinoceros',
     sizeDisplay: 'Large',
@@ -990,10 +974,9 @@ class BeastSummons {
     damageType: 'Bludgeoning',
     specialTrait:
         'Charge (Extra 2d8 damage, DC 15 Strength save or knock prone)',
-    accentColor: Argb(0xFF78909C),
   );
 
-  static const polarBear = MinionStatBlock(
+  static const polarBear = MonsterStatBlock(
     id: 'beast_polar_bear',
     name: 'Polar Bear',
     sizeDisplay: 'Large',
@@ -1053,10 +1036,9 @@ class BeastSummons {
     damageBonus: 5,
     damageType: 'Slashing',
     specialTrait: 'Multiattack (Bite + Claws) & Swim 30 ft.',
-    accentColor: Argb(0xFFB0BEC5),
   );
 
-  static const giantBoar = MinionStatBlock(
+  static const giantBoar = MonsterStatBlock(
     id: 'beast_giant_boar',
     name: 'Giant Boar',
     sizeDisplay: 'Large',
@@ -1107,10 +1089,9 @@ class BeastSummons {
     damageType: 'Slashing',
     specialTrait:
         'Charge (Extra 2d6 damage, DC 13 Str save or prone) & Relentless',
-    accentColor: Argb(0xFF5D4037),
   );
 
-  static const saberToothedTiger = MinionStatBlock(
+  static const saberToothedTiger = MonsterStatBlock(
     id: 'beast_saber_toothed_tiger',
     name: 'Saber-Toothed Tiger',
     sizeDisplay: 'Large',
@@ -1169,10 +1150,9 @@ class BeastSummons {
     damageBonus: 5,
     damageType: 'Slashing',
     specialTrait: 'Pounce (DC 14 Str save or prone + bonus bite) & Keen Smell',
-    accentColor: Argb(0xFFF57C00),
   );
 
-  static const giantConstrictorSnake = MinionStatBlock(
+  static const giantConstrictorSnake = MonsterStatBlock(
     id: 'beast_giant_constrictor_snake',
     name: 'Giant Constrictor Snake',
     sizeDisplay: 'Huge',
@@ -1221,7 +1201,6 @@ class BeastSummons {
     damageType: 'Bludgeoning',
     specialTrait:
         'Constrict (2d8+4 bludgeoning, DC 14 Strength save or grappled/restrained)',
-    accentColor: Argb(0xFF388E3C),
   );
 
   static const conjureAnimalsPreset = SummonPreset(

@@ -26,7 +26,7 @@ dependencies:
   vtt_ruleset_dnd5e:
     git:
       url: https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git
-      ref: 996f39d5fc5f483ae5892573689e47149afb6144
+      ref: 4250e200118ed79810841e91036f00a7a789fcb8
   meta: ^1.19.0
   uuid: ^4.6.0
   flutter_webrtc: ^1.6.3

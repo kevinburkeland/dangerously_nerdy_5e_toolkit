@@ -171,7 +171,7 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
     );
   }
 
-  Widget _buildCreatureProfileCard(MinionStatBlock sb) {
+  Widget _buildCreatureProfileCard(MonsterStatBlock sb) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final tabletop = theme.extension<TabletopColors>() ??

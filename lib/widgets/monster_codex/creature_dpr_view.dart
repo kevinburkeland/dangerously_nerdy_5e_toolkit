@@ -15,7 +15,7 @@ enum CreatureCombatTurnMode {
 
 /// Interactive Damage Per Round (DPR) calculation and analysis view for creature entries.
 class CreatureDprView extends StatefulWidget {
-  final MinionStatBlock statBlock;
+  final MonsterStatBlock statBlock;
 
   const CreatureDprView({
     super.key,

@@ -8,7 +8,6 @@ import 'monster_codex/bestiary/bestiary_cr_nine_plus.dart';
 import 'monster_codex/bestiary/bestiary_cr_two_to_four.dart';
 import 'monster_codex/srd_monster_2024_diffs.dart';
 import 'monster_codex/srd_monster_cr_bands.dart';
-import 'srd_summons/srd_summons_library.dart';
 import 'visual/app_icon.dart';
 import '../services/rules/dpr_calculator_engine.dart';
 
@@ -40,8 +39,8 @@ class MonsterItem {
   final String name;
   final String? name2014;
   final String? name2024;
-  final MinionStatBlock statBlock2014;
-  final MinionStatBlock statBlock2024;
+  final MonsterStatBlock statBlock2014;
+  final MonsterStatBlock statBlock2024;
   final bool isChangedIn2024;
   final String? diffSummary;
   final List<String> diffHighlights;
@@ -71,7 +70,7 @@ class MonsterItem {
     required String name,
     String? name2014,
     String? name2024,
-    required MinionStatBlock statBlock,
+    required MonsterStatBlock statBlock,
     bool isChangedIn2024 = false,
     String? diffSummary,
     List<String> diffHighlights = const [],
@@ -97,7 +96,7 @@ class MonsterItem {
     );
   }
 
-  MinionStatBlock getStatBlock(
+  MonsterStatBlock getStatBlock(
       [DmRulesEdition edition = DmRulesEdition.v2024]) {
     return edition == DmRulesEdition.v2014 ? statBlock2014 : statBlock2024;
   }
@@ -108,7 +107,7 @@ class MonsterItem {
     return name;
   }
 
-  MinionStatBlock get sourceStatBlock => statBlock2024;
+  MonsterStatBlock get sourceStatBlock => statBlock2024;
 
   String get size => sourceStatBlock.sizeDisplay;
   String get type => sourceStatBlock.typeDisplay;
@@ -602,9 +601,9 @@ class MonsterCodexLibrary {
   }
 }
 
-/// Extension mapping domain Monster to MinionStatBlock and MonsterItem for cross-toolkit usage.
+/// Extension mapping domain Monster to MonsterStatBlock and MonsterItem for cross-toolkit usage.
 extension MonsterHomebrewExt on Monster {
-  MinionStatBlock toMinionStatBlock() {
+  MonsterStatBlock toMinionStatBlock() {
     final parsedCr = parseChallengeRating(challengeRating) ?? 0;
     final crStr = challengeRating.trim().toLowerCase().startsWith('cr')
         ? challengeRating.trim()
@@ -798,30 +797,6 @@ extension MonsterHomebrewExt on Monster {
       }
     }
 
-    Argb color;
-    final typeLower = monsterType.toLowerCase();
-    if (typeLower.contains('beast')) {
-      color = const Argb(0xFF388E3C);
-    } else if (typeLower.contains('dragon')) {
-      color = const Argb(0xFFFF8F00);
-    } else if (typeLower.contains('fiend')) {
-      color = const Argb(0xFFC62828);
-    } else if (typeLower.contains('undead')) {
-      color = const Argb(0xFF7B1FA2);
-    } else if (typeLower.contains('elemental')) {
-      color = const Argb(0xFFE65100);
-    } else if (typeLower.contains('fey')) {
-      color = const Argb(0xFF00897B);
-    } else if (typeLower.contains('celestial')) {
-      color = const Argb(0xFF0288D1);
-    } else if (typeLower.contains('construct')) {
-      color = const Argb(0xFF5D4037);
-    } else if (typeLower.contains('aberration')) {
-      color = const Argb(0xFF6A1B9A);
-    } else {
-      color = const Argb(0xFF8B5CF6);
-    }
-
     // If parsedActions is empty and creature has _copy in customProperties, revitalize from base monster!
     if (parsedActions.isEmpty && customProperties.containsKey('_copy')) {
       final copyObj = customProperties['_copy'];
@@ -925,7 +900,7 @@ extension MonsterHomebrewExt on Monster {
         formatDefenses(customProperties['languages']) ??
         '—';
 
-    return MinionStatBlock(
+    return MonsterStatBlock(
       id: id.slug,
       name: name,
       sizeDisplay: size,
@@ -958,7 +933,6 @@ extension MonsterHomebrewExt on Monster {
       damageBonus: dmgBonus,
       damageType: dmgType,
       hasPackTactics: packTactics,
-      accentColor: color,
     );
   }
 

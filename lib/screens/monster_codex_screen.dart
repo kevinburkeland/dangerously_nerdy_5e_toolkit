@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import '../models/dm_screen_data.dart';
 import '../models/monster_codex_data.dart';
-import '../models/srd_summons/minion_stat_block.dart';
 import '../presentation/codex/codex.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';

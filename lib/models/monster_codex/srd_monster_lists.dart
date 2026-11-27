@@ -2,7 +2,7 @@ import '../srd_summons/srd_summons_library.dart';
 
 class MonsterSourceEntry {
   final SummonPreset preset;
-  final MinionStatBlock statBlock;
+  final MonsterStatBlock statBlock;
 
   const MonsterSourceEntry({
     required this.preset,

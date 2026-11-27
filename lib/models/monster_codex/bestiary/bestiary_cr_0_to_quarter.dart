@@ -12,7 +12,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_baboon',
       name: 'Baboon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'baboon',
         name: 'Baboon',
         sizeDisplay: 'Small',
@@ -38,7 +38,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: -1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Pack Tactics',
@@ -62,7 +61,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_badger',
       name: 'Badger',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'badger',
         name: 'Badger',
         sizeDisplay: 'Tiny',
@@ -87,7 +86,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -111,7 +109,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_bat',
       name: 'Bat',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'bat',
         name: 'Bat',
         sizeDisplay: 'Tiny',
@@ -136,7 +134,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Echolocation',
@@ -164,7 +161,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_cat',
       name: 'Cat',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'cat',
         name: 'Cat',
         sizeDisplay: 'Tiny',
@@ -190,7 +187,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -214,7 +210,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_commoner',
       name: 'Commoner',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'commoner',
         name: 'Commoner',
         sizeDisplay: 'Medium',
@@ -239,7 +235,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Club',
@@ -256,7 +251,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_crab',
       name: 'Crab',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'crab',
         name: 'Crab',
         sizeDisplay: 'Tiny',
@@ -283,7 +278,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -306,7 +300,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_deer',
       name: 'Deer',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'deer',
         name: 'Deer',
         sizeDisplay: 'Medium',
@@ -331,7 +325,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -348,7 +341,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_eagle',
       name: 'Eagle',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'eagle',
         name: 'Eagle',
         sizeDisplay: 'Small',
@@ -374,7 +367,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -398,7 +390,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_frog',
       name: 'Frog',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'frog',
         name: 'Frog',
         sizeDisplay: 'Tiny',
@@ -424,7 +416,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 0,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -442,7 +433,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_fire_beetle',
       name: 'Giant Fire Beetle',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_fire_beetle',
         name: 'Giant Fire Beetle',
         sizeDisplay: 'Small',
@@ -468,7 +459,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: -1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Illumination',
@@ -492,7 +482,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_goat',
       name: 'Goat',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'goat',
         name: 'Goat',
         sizeDisplay: 'Medium',
@@ -517,7 +507,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -546,7 +535,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_hawk',
       name: 'Hawk',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'hawk',
         name: 'Hawk',
         sizeDisplay: 'Tiny',
@@ -572,7 +561,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -596,7 +584,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_homunculus',
       name: 'Homunculus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'homunculus',
         name: 'Homunculus',
         sizeDisplay: 'Tiny',
@@ -624,7 +612,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Telepathic Bond',
@@ -648,7 +635,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_hyena',
       name: 'Hyena',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'hyena',
         name: 'Hyena',
         sizeDisplay: 'Medium',
@@ -675,7 +662,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Pack Tactics',
@@ -699,7 +685,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_jackal',
       name: 'Jackal',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'jackal',
         name: 'Jackal',
         sizeDisplay: 'Small',
@@ -726,7 +712,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: -1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -755,7 +740,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_lemure',
       name: 'Lemure',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'lemure',
         name: 'Lemure',
         sizeDisplay: 'Medium',
@@ -783,7 +768,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFF43F5E),
         traits: [
           CreatureTrait(
             name: 'Devil\'s Sight',
@@ -812,7 +796,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_lizard',
       name: 'Lizard',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'lizard',
         name: 'Lizard',
         sizeDisplay: 'Tiny',
@@ -837,7 +821,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -854,7 +837,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_octopus',
       name: 'Octopus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'octopus',
         name: 'Octopus',
         sizeDisplay: 'Small',
@@ -880,7 +863,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Hold Breath',
@@ -918,7 +900,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_owl',
       name: 'Owl',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'owl',
         name: 'Owl',
         sizeDisplay: 'Tiny',
@@ -944,7 +926,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Flyby',
@@ -973,7 +954,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_rat',
       name: 'Rat',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'rat',
         name: 'Rat',
         sizeDisplay: 'Tiny',
@@ -998,7 +979,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -1022,7 +1002,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_raven',
       name: 'Raven',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'raven',
         name: 'Raven',
         sizeDisplay: 'Tiny',
@@ -1048,7 +1028,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Mimicry',
@@ -1072,7 +1051,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_scorpion',
       name: 'Scorpion',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'scorpion',
         name: 'Scorpion',
         sizeDisplay: 'Tiny',
@@ -1101,7 +1080,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 1,
         secondaryDamageDiceSides: 8,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Sting',
@@ -1118,7 +1096,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_spider',
       name: 'Spider',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'spider',
         name: 'Spider',
         sizeDisplay: 'Tiny',
@@ -1147,7 +1125,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 1,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Spider Climb',
@@ -1180,7 +1157,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_bandit',
       name: 'Bandit',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'bandit',
         name: 'Bandit',
         sizeDisplay: 'Medium',
@@ -1206,7 +1183,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Scimitar',
@@ -1232,7 +1208,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_blood_hawk',
       name: 'Blood Hawk',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'blood_hawk',
         name: 'Blood Hawk',
         sizeDisplay: 'Small',
@@ -1259,7 +1235,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Sight',
@@ -1288,7 +1263,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_cultist',
       name: 'Cultist',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'cultist',
         name: 'Cultist',
         sizeDisplay: 'Medium',
@@ -1315,7 +1290,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Dark Devotion',
@@ -1339,7 +1313,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_flying_snake',
       name: 'Flying Snake',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'flying_snake',
         name: 'Flying Snake',
         sizeDisplay: 'Tiny',
@@ -1367,7 +1341,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Flyby',
@@ -1391,7 +1364,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_rat',
       name: 'Giant Rat',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_rat',
         name: 'Giant Rat',
         sizeDisplay: 'Small',
@@ -1417,7 +1390,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -1446,7 +1418,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_guard',
       name: 'Guard',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'guard',
         name: 'Guard',
         sizeDisplay: 'Medium',
@@ -1473,7 +1445,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Spear',
@@ -1490,7 +1461,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_kobold',
       name: 'Kobold',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'kobold',
         name: 'Kobold',
         sizeDisplay: 'Small',
@@ -1517,7 +1488,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Sunlight Sensitivity',
@@ -1555,7 +1525,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_mastiff',
       name: 'Mastiff',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'mastiff',
         name: 'Mastiff',
         sizeDisplay: 'Medium',
@@ -1581,7 +1551,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -1605,7 +1574,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_mule',
       name: 'Mule',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'mule',
         name: 'Mule',
         sizeDisplay: 'Medium',
@@ -1630,7 +1599,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Beast of Burden',
@@ -1659,7 +1627,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_noble',
       name: 'Noble',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'noble',
         name: 'Noble',
         sizeDisplay: 'Medium',
@@ -1686,7 +1654,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Rapier',
@@ -1710,7 +1677,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_poisonous_snake',
       name: 'Poisonous Snake',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'poisonous_snake',
         name: 'Poisonous Snake',
         sizeDisplay: 'Tiny',
@@ -1738,7 +1705,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 2,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -1755,7 +1721,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_pony',
       name: 'Pony',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'pony',
         name: 'Pony',
         sizeDisplay: 'Medium',
@@ -1780,7 +1746,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Hooves',
@@ -1797,7 +1762,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_stirge',
       name: 'Stirge',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'stirge',
         name: 'Stirge',
         sizeDisplay: 'Tiny',
@@ -1823,7 +1788,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         actions: [
           CreatureAction(
             name: 'Blood Drain',
@@ -1840,7 +1804,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_tribal_warrior',
       name: 'Tribal Warrior',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'tribal_warrior',
         name: 'Tribal Warrior',
         sizeDisplay: 'Medium',
@@ -1867,7 +1831,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Pack Tactics',
@@ -1895,7 +1858,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_acolyte',
       name: 'Acolyte',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'acolyte',
         name: 'Acolyte',
         sizeDisplay: 'Medium',
@@ -1921,7 +1884,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Spellcasting',
@@ -1945,7 +1907,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_blink_dog',
       name: 'Blink Dog',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'blink_dog',
         name: 'Blink Dog',
         sizeDisplay: 'Medium',
@@ -1971,7 +1933,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFFC084FC),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2000,7 +1961,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_drow',
       name: 'Drow',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'drow',
         name: 'Drow',
         sizeDisplay: 'Medium',
@@ -2027,7 +1988,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Fey Ancestry',
@@ -2065,7 +2025,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_flying_sword',
       name: 'Flying Sword',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'flying_sword',
         name: 'Flying Sword',
         sizeDisplay: 'Small',
@@ -2096,7 +2056,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Antimagic Susceptibility',
@@ -2125,7 +2084,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_badger',
       name: 'Giant Badger',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_badger',
         name: 'Giant Badger',
         sizeDisplay: 'Medium',
@@ -2150,7 +2109,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -2188,7 +2146,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_centipede',
       name: 'Giant Centipede',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_centipede',
         name: 'Giant Centipede',
         sizeDisplay: 'Small',
@@ -2217,7 +2175,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -2234,7 +2191,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_frog',
       name: 'Giant Frog',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_frog',
         name: 'Giant Frog',
         sizeDisplay: 'Medium',
@@ -2260,7 +2217,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2293,7 +2249,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_goblin',
       name: 'Goblin',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'goblin',
         name: 'Goblin',
         sizeDisplay: 'Small',
@@ -2320,7 +2276,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Nimble Escape',
@@ -2353,7 +2308,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_skeleton',
       name: 'Skeleton',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'skeleton',
         name: 'Skeleton',
         sizeDisplay: 'Medium',
@@ -2382,7 +2337,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFCBD5E1),
         actions: [
           CreatureAction(
             name: 'Shortsword',
@@ -2408,7 +2362,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_wolf',
       name: 'Wolf',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'wolf',
         name: 'Wolf',
         sizeDisplay: 'Medium',
@@ -2436,7 +2390,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2465,7 +2418,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_zombie',
       name: 'Zombie',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'zombie',
         name: 'Zombie',
         sizeDisplay: 'Medium',
@@ -2493,7 +2446,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Undead Fortitude',
@@ -2521,7 +2473,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_quipper',
       name: 'Quipper',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'quipper',
         name: 'Quipper',
         sizeDisplay: 'Tiny',
@@ -2546,7 +2498,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Blood Frenzy',
@@ -2574,7 +2525,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_sea_horse',
       name: 'Sea Horse',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'sea_horse',
         name: 'Sea Horse',
         sizeDisplay: 'Tiny',
@@ -2599,7 +2550,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF38BDF8),
         traits: [
           CreatureTrait(
             name: 'Water Breathing',
@@ -2612,7 +2562,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_shrieker',
       name: 'Shrieker',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'shrieker',
         name: 'Shrieker',
         sizeDisplay: 'Medium',
@@ -2639,7 +2589,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'none',
-        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -2660,7 +2609,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_vulture',
       name: 'Vulture',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'vulture',
         name: 'Vulture',
         sizeDisplay: 'Medium',
@@ -2686,7 +2635,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Keen Sight and Smell',
@@ -2716,7 +2664,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_weasel',
       name: 'Weasel',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'weasel',
         name: 'Weasel',
         sizeDisplay: 'Tiny',
@@ -2742,7 +2690,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFFA16207),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2770,7 +2717,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_camel',
       name: 'Camel',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'camel',
         name: 'Camel',
         sizeDisplay: 'Large',
@@ -2795,7 +2742,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFD4A76A),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -2812,7 +2758,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_crab',
       name: 'Giant Crab',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_crab',
         name: 'Giant Crab',
         sizeDisplay: 'Medium',
@@ -2839,7 +2785,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFEF4444),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2862,7 +2807,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_weasel',
       name: 'Giant Weasel',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_weasel',
         name: 'Giant Weasel',
         sizeDisplay: 'Medium',
@@ -2888,7 +2833,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFA16207),
         traits: [
           CreatureTrait(
             name: 'Keen Hearing and Smell',
@@ -2912,7 +2856,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_merfolk',
       name: 'Merfolk',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'merfolk',
         name: 'Merfolk',
         sizeDisplay: 'Medium',
@@ -2938,7 +2882,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -2965,7 +2908,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_axe_beak',
       name: 'Axe Beak',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'axe_beak',
         name: 'Axe Beak',
         sizeDisplay: 'Large',
@@ -2990,7 +2933,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Argb(0xFF78716C),
         actions: [
           CreatureAction(
             name: 'Beak',
@@ -3007,7 +2949,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_boar',
       name: 'Boar',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'boar',
         name: 'Boar',
         sizeDisplay: 'Medium',
@@ -3033,7 +2975,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -3062,7 +3003,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_constrictor_snake',
       name: 'Constrictor Snake',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'constrictor_snake',
         name: 'Constrictor Snake',
         sizeDisplay: 'Large',
@@ -3087,7 +3028,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -3113,7 +3053,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_draft_horse',
       name: 'Draft Horse',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'draft_horse',
         name: 'Draft Horse',
         sizeDisplay: 'Large',
@@ -3138,7 +3078,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF78716C),
         actions: [
           CreatureAction(
             name: 'Hooves',
@@ -3155,7 +3094,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_dretch',
       name: 'Dretch',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'dretch',
         name: 'Dretch',
         sizeDisplay: 'Small',
@@ -3185,7 +3124,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3221,7 +3159,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_elk',
       name: 'Elk',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'elk',
         name: 'Elk',
         sizeDisplay: 'Large',
@@ -3246,7 +3184,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -3279,7 +3216,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_bat',
       name: 'Giant Bat',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_bat',
         name: 'Giant Bat',
         sizeDisplay: 'Large',
@@ -3304,7 +3241,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Echolocation',
@@ -3332,7 +3268,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_lizard',
       name: 'Giant Lizard',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_lizard',
         name: 'Giant Lizard',
         sizeDisplay: 'Large',
@@ -3358,7 +3294,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -3375,7 +3310,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_owl',
       name: 'Giant Owl',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_owl',
         name: 'Giant Owl',
         sizeDisplay: 'Large',
@@ -3402,7 +3337,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Flyby',
@@ -3431,7 +3365,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_poisonous_snake',
       name: 'Giant Poisonous Snake',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_poisonous_snake',
         name: 'Giant Poisonous Snake',
         sizeDisplay: 'Medium',
@@ -3460,7 +3394,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 3,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',
@@ -3477,7 +3410,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_wolf_spider',
       name: 'Giant Wolf Spider',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_wolf_spider',
         name: 'Giant Wolf Spider',
         sizeDisplay: 'Medium',
@@ -3506,7 +3439,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 2,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Spider Climb',
@@ -3540,7 +3472,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_grimlock',
       name: 'Grimlock',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'grimlock',
         name: 'Grimlock',
         sizeDisplay: 'Medium',
@@ -3568,7 +3500,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Blind Senses',
@@ -3602,7 +3533,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_panther',
       name: 'Panther',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'panther',
         name: 'Panther',
         sizeDisplay: 'Medium',
@@ -3628,7 +3559,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 2,
         damageType: 'slashing',
-        accentColor: Argb(0xFF1E293B),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -3666,7 +3596,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_pseudodragon',
       name: 'Pseudodragon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'pseudodragon',
         name: 'Pseudodragon',
         sizeDisplay: 'Tiny',
@@ -3693,7 +3623,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFFA855F7),
         traits: [
           CreatureTrait(
             name: 'Keen Senses',
@@ -3736,7 +3665,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_riding_horse',
       name: 'Riding Horse',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'riding_horse',
         name: 'Riding Horse',
         sizeDisplay: 'Large',
@@ -3761,7 +3690,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF78716C),
         actions: [
           CreatureAction(
             name: 'Hooves',
@@ -3778,7 +3706,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_sprite',
       name: 'Sprite',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'sprite',
         name: 'Sprite',
         sizeDisplay: 'Tiny',
@@ -3805,7 +3733,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 1,
         damageBonus: 0,
         damageType: 'slashing',
-        accentColor: Argb(0xFF34D399),
         actions: [
           CreatureAction(
             name: 'Longsword',
@@ -3841,7 +3768,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_steam_mephit',
       name: 'Steam Mephit',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'steam_mephit',
         name: 'Steam Mephit',
         sizeDisplay: 'Small',
@@ -3871,7 +3798,6 @@ class BestiaryCr0ToQuarter {
         secondaryDamageDiceCount: 1,
         secondaryDamageDiceSides: 4,
         secondaryDamageType: 'fire',
-        accentColor: Argb(0xFFE5E7EB),
         traits: [
           CreatureTrait(
             name: 'Death Burst',
@@ -3905,7 +3831,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_swarm_of_bats',
       name: 'Swarm of Bats',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'swarm_of_bats',
         name: 'Swarm of Bats',
         sizeDisplay: 'Medium',
@@ -3933,7 +3859,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF6B7280),
         traits: [
           CreatureTrait(
             name: 'Echolocation',
@@ -3966,7 +3891,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_swarm_of_rats',
       name: 'Swarm of Rats',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'swarm_of_rats',
         name: 'Swarm of Rats',
         sizeDisplay: 'Medium',
@@ -3994,7 +3919,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF78716C),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -4023,7 +3947,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_swarm_of_ravens',
       name: 'Swarm of Ravens',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'swarm_of_ravens',
         name: 'Swarm of Ravens',
         sizeDisplay: 'Medium',
@@ -4052,7 +3976,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 6,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFF1E293B),
         traits: [
           CreatureTrait(
             name: 'Swarm',
@@ -4076,7 +3999,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_violet_fungus',
       name: 'Violet Fungus',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'violet_fungus',
         name: 'Violet Fungus',
         sizeDisplay: 'Medium',
@@ -4103,7 +4026,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 8,
         damageBonus: 0,
         damageType: 'necrotic',
-        accentColor: Argb(0xFFA855F7),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -4132,7 +4054,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_awakened_shrub',
       name: 'Awakened Shrub',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'awakened_shrub',
         name: 'Awakened Shrub',
         sizeDisplay: 'Small',
@@ -4159,7 +4081,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: -1,
         damageType: 'slashing',
-        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -4183,7 +4104,7 @@ class BestiaryCr0ToQuarter {
     MonsterItem.simple(
       id: 'srd_mon_giant_rat_diseased',
       name: 'Giant Rat (Diseased)',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_rat_diseased',
         name: 'Giant Rat (Diseased)',
         sizeDisplay: 'Small',
@@ -4208,7 +4129,6 @@ class BestiaryCr0ToQuarter {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Bite',

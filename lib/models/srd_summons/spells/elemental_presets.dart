@@ -3,7 +3,7 @@ import '../summon_preset.dart';
 
 class ElementalSummons {
   // --- CR 5 ELEMENTALS (5th-level base slot) ---
-  static const airElemental = MinionStatBlock(
+  static const airElemental = MonsterStatBlock(
     id: 'elem_air',
     name: 'Air Elemental',
     sizeDisplay: 'Large',
@@ -61,10 +61,9 @@ class ElementalSummons {
     damageBonus: 5,
     damageType: 'Bludgeoning',
     specialTrait: 'Whirlwind (DC 13 Strength save or flung)',
-    accentColor: Argb(0xFF81D4FA),
   );
 
-  static const earthElemental = MinionStatBlock(
+  static const earthElemental = MonsterStatBlock(
     id: 'elem_earth',
     name: 'Earth Elemental',
     sizeDisplay: 'Large',
@@ -124,10 +123,9 @@ class ElementalSummons {
     damageBonus: 5,
     damageType: 'Bludgeoning',
     specialTrait: 'Siege Monster & Earth Glide',
-    accentColor: Argb(0xFFA1887F),
   );
 
-  static const fireElemental = MinionStatBlock(
+  static const fireElemental = MonsterStatBlock(
     id: 'elem_fire',
     name: 'Fire Elemental',
     sizeDisplay: 'Large',
@@ -190,10 +188,9 @@ class ElementalSummons {
     damageBonus: 3,
     damageType: 'Fire',
     specialTrait: 'Touch (Target catches fire for 1d10 fire per turn)',
-    accentColor: Argb(0xFFFF5722),
   );
 
-  static const waterElemental = MinionStatBlock(
+  static const waterElemental = MonsterStatBlock(
     id: 'elem_water',
     name: 'Water Elemental',
     sizeDisplay: 'Large',
@@ -257,10 +254,9 @@ class ElementalSummons {
     damageBonus: 4,
     damageType: 'Bludgeoning',
     specialTrait: 'Whelm (DC 15 Strength save or grappled and drowning)',
-    accentColor: Argb(0xFF0288D1),
   );
 
-  static const salamander = MinionStatBlock(
+  static const salamander = MonsterStatBlock(
     id: 'elem_salamander',
     name: 'Salamander',
     sizeDisplay: 'Large',
@@ -332,10 +328,9 @@ class ElementalSummons {
     secondaryDamageDiceSides: 6,
     secondaryDamageType: 'Fire',
     specialTrait: 'Spear + Tail Constrict + Heated Body (2d6 fire aura)',
-    accentColor: Argb(0xFFE64A19),
   );
 
-  static const xorn = MinionStatBlock(
+  static const xorn = MonsterStatBlock(
     id: 'elem_xorn',
     name: 'Xorn',
     sizeDisplay: 'Medium',
@@ -408,11 +403,10 @@ class ElementalSummons {
     damageBonus: 3,
     damageType: 'Piercing',
     specialTrait: 'Multiattack (3 Claws + 1 Bite) & Earth Glide',
-    accentColor: Argb(0xFF795548),
   );
 
   // --- CR 2 & CR 1/4 - 1/2 MINOR ELEMENTALS ---
-  static const fireSnake = MinionStatBlock(
+  static const fireSnake = MonsterStatBlock(
     id: 'elem_fire_snake',
     name: 'Fire Snake',
     sizeDisplay: 'Medium',
@@ -479,10 +473,9 @@ class ElementalSummons {
     secondaryDamageDiceSides: 6,
     secondaryDamageType: 'Fire',
     specialTrait: 'Bite + Tail (1d6 fire each) + Heated Body',
-    accentColor: Argb(0xFFFF7043),
   );
 
-  static const gargoyle = MinionStatBlock(
+  static const gargoyle = MonsterStatBlock(
     id: 'elem_gargoyle',
     name: 'Gargoyle',
     sizeDisplay: 'Medium',
@@ -545,10 +538,9 @@ class ElementalSummons {
     damageBonus: 2,
     damageType: 'Piercing',
     specialTrait: 'Multiattack (Bite + Claws) & False Appearance',
-    accentColor: Argb(0xFF616161),
   );
 
-  static const dustMephit = MinionStatBlock(
+  static const dustMephit = MonsterStatBlock(
     id: 'elem_dust_mephit',
     name: 'Dust Mephit',
     sizeDisplay: 'Small',
@@ -601,10 +593,9 @@ class ElementalSummons {
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Death Burst & Blinding Breath (DC 10 Con save)',
-    accentColor: Argb(0xFFBCAAA4),
   );
 
-  static const iceMephit = MinionStatBlock(
+  static const iceMephit = MonsterStatBlock(
     id: 'elem_ice_mephit',
     name: 'Ice Mephit',
     sizeDisplay: 'Small',
@@ -665,10 +656,9 @@ class ElementalSummons {
     secondaryDamageDiceSides: 4,
     secondaryDamageType: 'Cold',
     specialTrait: 'Death Burst (1d8 cold) & Frost Breath',
-    accentColor: Argb(0xFF80DEEA),
   );
 
-  static const magmaMephit = MinionStatBlock(
+  static const magmaMephit = MonsterStatBlock(
     id: 'elem_magma_mephit',
     name: 'Magma Mephit',
     sizeDisplay: 'Small',
@@ -729,10 +719,9 @@ class ElementalSummons {
     secondaryDamageDiceSides: 4,
     secondaryDamageType: 'Fire',
     specialTrait: 'Death Burst (2d6 fire) & Fire Breath',
-    accentColor: Argb(0xFFFF8A65),
   );
 
-  static const steamMephit = MinionStatBlock(
+  static const steamMephit = MonsterStatBlock(
     id: 'elem_steam_mephit',
     name: 'Steam Mephit',
     sizeDisplay: 'Small',
@@ -786,7 +775,6 @@ class ElementalSummons {
     secondaryDamageDiceSides: 4,
     secondaryDamageType: 'Fire',
     specialTrait: 'Death Burst (1d8 fire) & Steam Breath',
-    accentColor: Argb(0xFFB0BEC5),
   );
 
   static const conjureElementalPreset = SummonPreset(

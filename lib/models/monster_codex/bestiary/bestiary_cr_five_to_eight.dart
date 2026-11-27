@@ -12,7 +12,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_bulette',
       name: 'Bulette',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'bulette',
         name: 'Bulette',
         sizeDisplay: 'Large',
@@ -39,7 +39,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Standing Leap',
@@ -68,7 +67,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_flesh_golem',
       name: 'Flesh Golem',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'flesh_golem',
         name: 'Flesh Golem',
         sizeDisplay: 'Medium',
@@ -97,7 +96,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Berserk',
@@ -140,7 +138,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_hill_giant',
       name: 'Hill Giant',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'hill_giant',
         name: 'Hill Giant',
         sizeDisplay: 'Huge',
@@ -167,7 +165,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -197,7 +194,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_troll',
       name: 'Troll',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'troll',
         name: 'Troll',
         sizeDisplay: 'Large',
@@ -224,7 +221,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Keen Smell',
@@ -267,7 +263,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_unicorn',
       name: 'Unicorn',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'unicorn',
         name: 'Unicorn',
         sizeDisplay: 'Large',
@@ -294,7 +290,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFEAB308),
         traits: [
           CreatureTrait(
             name: 'Charge',
@@ -351,7 +346,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_wraith',
       name: 'Wraith',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'wraith',
         name: 'Wraith',
         sizeDisplay: 'Medium',
@@ -381,7 +376,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'necrotic',
-        accentColor: Argb(0xFFCBD5E1),
         traits: [
           CreatureTrait(
             name: 'Incorporeal Movement',
@@ -419,7 +413,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_chimera',
       name: 'Chimera',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'chimera',
         name: 'Chimera',
         sizeDisplay: 'Large',
@@ -446,7 +440,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Argb(0xFFD97706),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -491,7 +484,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_cyclops',
       name: 'Cyclops',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'cyclops',
         name: 'Cyclops',
         sizeDisplay: 'Huge',
@@ -517,7 +510,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Poor Depth Perception',
@@ -554,7 +546,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_medusa',
       name: 'Medusa',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'medusa',
         name: 'Medusa',
         sizeDisplay: 'Medium',
@@ -584,7 +576,6 @@ class BestiaryCrFiveToEight {
         secondaryDamageDiceCount: 4,
         secondaryDamageDiceSides: 6,
         secondaryDamageType: 'poison',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Petrifying Gaze',
@@ -635,7 +626,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_stone_giant',
       name: 'Stone Giant',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'stone_giant',
         name: 'Stone Giant',
         sizeDisplay: 'Huge',
@@ -663,7 +654,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF94A3B8),
         traits: [
           CreatureTrait(
             name: 'Stone Camouflage',
@@ -711,7 +701,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_hydra',
       name: 'Hydra',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'hydra',
         name: 'Hydra',
         sizeDisplay: 'Huge',
@@ -738,7 +728,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Hold Breath',
@@ -781,7 +770,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_frost_giant',
       name: 'Frost Giant',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'frost_giant',
         name: 'Frost Giant',
         sizeDisplay: 'Huge',
@@ -810,7 +799,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 6,
         damageType: 'slashing',
-        accentColor: Argb(0xFF94A3B8),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -848,7 +836,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_air_elemental',
       name: 'Air Elemental',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'air_elemental',
         name: 'Air Elemental',
         sizeDisplay: 'Large',
@@ -878,7 +866,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Air Form',
@@ -911,7 +898,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_assassin',
       name: 'Assassin',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'assassin',
         name: 'Assassin',
         sizeDisplay: 'Medium',
@@ -940,7 +927,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Assassinate',
@@ -987,7 +973,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_barbed_devil',
       name: 'Barbed Devil',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'barbed_devil',
         name: 'Barbed Devil',
         sizeDisplay: 'Medium',
@@ -1019,7 +1005,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Barbed Hide',
@@ -1075,7 +1060,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_cloaker',
       name: 'Cloaker',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'cloaker',
         name: 'Cloaker',
         sizeDisplay: 'Large',
@@ -1102,7 +1087,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFF8B5CF6),
         traits: [
           CreatureTrait(
             name: 'Damage Transfer',
@@ -1160,7 +1144,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_drider',
       name: 'Drider',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'drider',
         name: 'Drider',
         sizeDisplay: 'Large',
@@ -1187,7 +1171,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 4,
         damageBonus: 0,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Fey Ancestry',
@@ -1254,7 +1237,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_earth_elemental',
       name: 'Earth Elemental',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'earth_elemental',
         name: 'Earth Elemental',
         sizeDisplay: 'Large',
@@ -1286,7 +1269,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 5,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Earth Glide',
@@ -1319,7 +1301,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_fire_elemental',
       name: 'Fire Elemental',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'fire_elemental',
         name: 'Fire Elemental',
         sizeDisplay: 'Large',
@@ -1349,7 +1331,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'fire',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Fire Form',
@@ -1387,7 +1368,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_giant_ape',
       name: 'Giant Ape',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_ape',
         name: 'Giant Ape',
         sizeDisplay: 'Huge',
@@ -1413,7 +1394,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -1443,7 +1423,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_giant_crocodile',
       name: 'Giant Crocodile',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_crocodile',
         name: 'Giant Crocodile',
         sizeDisplay: 'Huge',
@@ -1470,7 +1450,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Hold Breath',
@@ -1507,7 +1486,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_giant_shark',
       name: 'Giant Shark',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'giant_shark',
         name: 'Giant Shark',
         sizeDisplay: 'Huge',
@@ -1534,7 +1513,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Blood Frenzy',
@@ -1562,7 +1540,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_gladiator',
       name: 'Gladiator',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'gladiator',
         name: 'Gladiator',
         sizeDisplay: 'Medium',
@@ -1590,7 +1568,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Brave',
@@ -1640,7 +1617,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_gorgon',
       name: 'Gorgon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'gorgon',
         name: 'Gorgon',
         sizeDisplay: 'Large',
@@ -1668,7 +1645,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Trampling Charge',
@@ -1706,7 +1682,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_half_red_dragon_veteran',
       name: 'Half-Red Dragon Veteran',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'half_red_dragon_veteran',
         name: 'Half-Red Dragon Veteran',
         sizeDisplay: 'Medium',
@@ -1733,7 +1709,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'slashing',
-        accentColor: Argb(0xFF3B82F6),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -1778,7 +1753,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_hezrou',
       name: 'Hezrou',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'hezrou',
         name: 'Hezrou',
         sizeDisplay: 'Large',
@@ -1809,7 +1784,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -1857,7 +1831,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_invisible_stalker',
       name: 'Invisible Stalker',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'invisible_stalker',
         name: 'Invisible Stalker',
         sizeDisplay: 'Medium',
@@ -1888,7 +1862,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Invisibility',
@@ -1920,7 +1893,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_mage',
       name: 'Mage',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'mage',
         name: 'Mage',
         sizeDisplay: 'Medium',
@@ -1948,7 +1921,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 4,
         damageBonus: 2,
         damageType: 'piercing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Spellcasting',
@@ -1972,7 +1944,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_mammoth',
       name: 'Mammoth',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'mammoth',
         name: 'Mammoth',
         sizeDisplay: 'Huge',
@@ -1998,7 +1970,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Trampling Charge',
@@ -2031,7 +2002,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_night_hag',
       name: 'Night Hag',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'night_hag',
         name: 'Night Hag',
         sizeDisplay: 'Medium',
@@ -2061,7 +2032,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Innate Spellcasting',
@@ -2125,7 +2095,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_oni',
       name: 'Oni',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'oni',
         name: 'Oni',
         sizeDisplay: 'Large',
@@ -2153,7 +2123,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'slashing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Innate Spellcasting',
@@ -2205,7 +2174,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_otyugh',
       name: 'Otyugh',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'otyugh',
         name: 'Otyugh',
         sizeDisplay: 'Large',
@@ -2232,7 +2201,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFF8B5CF6),
         traits: [
           CreatureTrait(
             name: 'Limited Telepathy',
@@ -2275,7 +2243,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_roper',
       name: 'Roper',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'roper',
         name: 'Roper',
         sizeDisplay: 'Large',
@@ -2302,7 +2270,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'False Appearance',
@@ -2354,7 +2321,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_salamander',
       name: 'Salamander',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'salamander',
         name: 'Salamander',
         sizeDisplay: 'Large',
@@ -2384,7 +2351,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Heated Body',
@@ -2427,7 +2393,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_shambling_mound',
       name: 'Shambling Mound',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'shambling_mound',
         name: 'Shambling Mound',
         sizeDisplay: 'Large',
@@ -2458,7 +2424,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF84CC16),
         traits: [
           CreatureTrait(
             name: 'Lightning Absorption',
@@ -2492,7 +2457,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_shield_guardian',
       name: 'Shield Guardian',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'shield_guardian',
         name: 'Shield Guardian',
         sizeDisplay: 'Large',
@@ -2522,7 +2487,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF64748B),
         traits: [
           CreatureTrait(
             name: 'Bound',
@@ -2567,7 +2531,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_spirit_naga',
       name: 'Spirit Naga',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'spirit_naga',
         name: 'Spirit Naga',
         sizeDisplay: 'Large',
@@ -2596,7 +2560,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFD97706),
         traits: [
           CreatureTrait(
             name: 'Rejuvenation',
@@ -2625,7 +2588,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_triceratops',
       name: 'Triceratops',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'triceratops',
         name: 'Triceratops',
         sizeDisplay: 'Huge',
@@ -2651,7 +2614,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 6,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         traits: [
           CreatureTrait(
             name: 'Trampling Charge',
@@ -2684,7 +2646,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_tyrannosaurus_rex',
       name: 'Tyrannosaurus Rex',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'tyrannosaurus_rex',
         name: 'Tyrannosaurus Rex',
         sizeDisplay: 'Huge',
@@ -2711,7 +2673,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 12,
         damageBonus: 7,
         damageType: 'piercing',
-        accentColor: Argb(0xFF22C55E),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -2742,7 +2703,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_vampire_spawn',
       name: 'Vampire Spawn',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'vampire_spawn',
         name: 'Vampire Spawn',
         sizeDisplay: 'Medium',
@@ -2772,7 +2733,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFF9333EA),
         traits: [
           CreatureTrait(
             name: 'Regeneration',
@@ -2820,7 +2780,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_vrock',
       name: 'Vrock',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'vrock',
         name: 'Vrock',
         sizeDisplay: 'Large',
@@ -2851,7 +2811,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Magic Resistance',
@@ -2904,7 +2863,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_water_elemental',
       name: 'Water Elemental',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'water_elemental',
         name: 'Water Elemental',
         sizeDisplay: 'Large',
@@ -2935,7 +2894,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 8,
         damageBonus: 4,
         damageType: 'bludgeoning',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Water Form',
@@ -2973,7 +2931,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_werebear',
       name: 'Werebear',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'werebear',
         name: 'Werebear',
         sizeDisplay: 'Medium',
@@ -3003,7 +2961,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFF3B82F6),
         traits: [
           CreatureTrait(
             name: 'Shapechanger',
@@ -3055,7 +3012,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_wyvern',
       name: 'Wyvern',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'wyvern',
         name: 'Wyvern',
         sizeDisplay: 'Large',
@@ -3082,7 +3039,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3122,7 +3078,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_xorn',
       name: 'Xorn',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'xorn',
         name: 'Xorn',
         sizeDisplay: 'Medium',
@@ -3151,7 +3107,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 6,
         damageBonus: 3,
         damageType: 'piercing',
-        accentColor: Argb(0xFF06B6D4),
         traits: [
           CreatureTrait(
             name: 'Earth Glide',
@@ -3199,7 +3154,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_young_black_dragon',
       name: 'Young Black Dragon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'young_black_dragon',
         name: 'Young Black Dragon',
         sizeDisplay: 'Large',
@@ -3228,7 +3183,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3270,7 +3224,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_young_brass_dragon',
       name: 'Young Brass Dragon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'young_brass_dragon',
         name: 'Young Brass Dragon',
         sizeDisplay: 'Large',
@@ -3299,7 +3253,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3335,7 +3288,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_young_bronze_dragon',
       name: 'Young Bronze Dragon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'young_bronze_dragon',
         name: 'Young Bronze Dragon',
         sizeDisplay: 'Large',
@@ -3364,7 +3317,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 5,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3406,7 +3358,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_young_copper_dragon',
       name: 'Young Copper Dragon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'young_copper_dragon',
         name: 'Young Copper Dragon',
         sizeDisplay: 'Large',
@@ -3435,7 +3387,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         actions: [
           CreatureAction(
             name: 'Multiattack',
@@ -3471,7 +3422,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_young_green_dragon',
       name: 'Young Green Dragon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'young_green_dragon',
         name: 'Young Green Dragon',
         sizeDisplay: 'Large',
@@ -3501,7 +3452,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Amphibious',
@@ -3543,7 +3493,7 @@ class BestiaryCrFiveToEight {
     MonsterItem.simple(
       id: 'srd_mon_young_white_dragon',
       name: 'Young White Dragon',
-      statBlock: const MinionStatBlock(
+      statBlock: const MonsterStatBlock(
         id: 'young_white_dragon',
         name: 'Young White Dragon',
         sizeDisplay: 'Large',
@@ -3572,7 +3522,6 @@ class BestiaryCrFiveToEight {
         damageDiceSides: 10,
         damageBonus: 4,
         damageType: 'piercing',
-        accentColor: Argb(0xFFDC2626),
         traits: [
           CreatureTrait(
             name: 'Ice Walk',

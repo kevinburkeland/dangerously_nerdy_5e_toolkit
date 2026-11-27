@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import '../domain/character_models.dart';
-import '../srd_summons/minion_stat_block.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 import '../../services/ingestion/stat_block_acl_parser.dart';
 
@@ -60,11 +59,11 @@ class MonsterCombatProfile {
     return savingThrowBonuses[key] ?? 0;
   }
 
-  /// Parses a [MinionStatBlock] ONCE during ingestion/load into a reusable [MonsterCombatProfile].
+  /// Parses a [MonsterStatBlock] ONCE during ingestion/load into a reusable [MonsterCombatProfile].
   /// Explicit/incoming fields are validated against our internal Anti-Corruption Layer (ACL) parser,
   /// strictly favoring our internal parser if there is a discrepancy.
   factory MonsterCombatProfile.fromStatBlock(
-    MinionStatBlock sb, {
+    MonsterStatBlock sb, {
     double challengeRating = 0.0,
   }) {
     // 1. Always evaluate boundary parsing via our Anti-Corruption Layer (ACL)
