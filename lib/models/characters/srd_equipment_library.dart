@@ -1226,10 +1226,16 @@ class SrdEquipmentLibrary {
   }
 
   static EquipmentItem _withHyphenatedSlug(EquipmentItem item) {
+    final props = Map<String, dynamic>.from(item.customProperties);
+    final match = RegExp(r'\+(\d+)').firstMatch(item.name);
+    if (match != null) {
+      props['bonusAc'] = int.tryParse(match.group(1) ?? '');
+    }
     final hyphenated = item.id.slug.replaceAll('_', '-');
     if (hyphenated == item.id.slug) return item;
     return item.copyWith(
       id: EntityId(slug: hyphenated, ruleset: item.id.ruleset),
+      customProperties: props,
     );
   }
 }
