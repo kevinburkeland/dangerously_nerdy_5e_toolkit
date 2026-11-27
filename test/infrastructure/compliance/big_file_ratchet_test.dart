@@ -16,7 +16,6 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/models/magic_items/items/wondrous_items.dart': 4134,
   'lib/models/monster_codex/bestiary/bestiary_cr_two_to_four.dart': 4711,
   'lib/models/monster_codex/bestiary/bestiary_cr_0_to_quarter.dart': 4226,
-  'lib/services/persistence/homebrew_persistence_service.dart': 2815,
   'lib/screens/glyph_showcase_screen.dart': 3685,
   'lib/models/monster_codex/bestiary/bestiary_cr_five_to_eight.dart': 3616,
   'lib/services/party/party_room_service.dart': 3605,
