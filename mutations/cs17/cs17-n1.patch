@@ -1,0 +1,28 @@
+From 8e4a38c09c82aa8a31adf9d8e5bd04b7c26874f7 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 26 Nov 2026 17:16:50 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20N1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/check_notes_shas.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/scripts/check_notes_shas.py b/scripts/check_notes_shas.py
+index 43a5513e..61cffbd2 100755
+--- a/scripts/check_notes_shas.py
++++ b/scripts/check_notes_shas.py
+@@ -982,6 +982,7 @@ def main():
+                                     problems.append(f"{file_path}:{line_idx}: step commit {sha} is not a descendant of earlier step commit {prev_sha} on line {prev_line_idx}")
+ 
+                         last_step_sha[r_path] = (sha, line_idx)
++                        break
+ 
+     if problems:
+         for p in problems:
+-- 
+2.55.0
+

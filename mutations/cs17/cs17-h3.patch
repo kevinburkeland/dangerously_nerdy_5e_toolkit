@@ -1,0 +1,29 @@
+From 8b35f8bb61ddc7eaa8db6eca8736cd03c15dcc13 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 26 Nov 2026 17:17:53 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20H3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/services/persistence/homebrew/homebrew_library_sync.dart | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/services/persistence/homebrew/homebrew_library_sync.dart b/lib/services/persistence/homebrew/homebrew_library_sync.dart
+index 366855ba..362e4dff 100644
+--- a/lib/services/persistence/homebrew/homebrew_library_sync.dart
++++ b/lib/services/persistence/homebrew/homebrew_library_sync.dart
+@@ -45,7 +45,7 @@ class HomebrewLibrarySync {
+   /// Synchronizes all loaded homebrew entities into global runtime libraries.
+   Future<void> syncToLibraries() async {
+     final spells = await loadCustomSpells();
+-    SpellbookLibrary.setHomebrewSpells(spells);
++    SpellbookLibrary.setHomebrewSpells(spells.take(0).toList());
+ 
+     final monsters = await loadCustomMonsters();
+     MonsterCodexLibrary.setHomebrewMonsters(monsters);
+-- 
+2.55.0
+

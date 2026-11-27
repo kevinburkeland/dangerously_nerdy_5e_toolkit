@@ -1,0 +1,34 @@
+From 646d6e58d69e5e3c5904ea89608920ef2f030e8f Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Thu, 26 Nov 2026 17:17:25 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20S1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/shadow_spell_mutation.dart | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 lib/models/shadow_spell_mutation.dart
+
+diff --git a/lib/models/shadow_spell_mutation.dart b/lib/models/shadow_spell_mutation.dart
+new file mode 100644
+index 00000000..1eb1eecd
+--- /dev/null
++++ b/lib/models/shadow_spell_mutation.dart
+@@ -0,0 +1,11 @@
++/// Synthetic shadow spell model to prove Fix 6.3 bar fails cleanly.
++class ShadowSpellMutation {
++  final int level;
++  final String school;
++  final String rules2014;
++  const ShadowSpellMutation({
++    required this.level,
++    required this.school,
++    required this.rules2014,
++  });
++}
+-- 
+2.55.0
+
