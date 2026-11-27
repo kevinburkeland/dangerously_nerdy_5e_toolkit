@@ -127,9 +127,7 @@ class _SpellBuilderDialogState extends State<SpellBuilderDialog> {
         type: _durationType,
         requiresConcentration: _concentration,
       ),
-      range: _rangeController.text.trim().isEmpty
-          ? 'Self'
-          : _rangeController.text.trim(),
+      range: 'Self',
       components: SpellComponents(
         v: _verbal,
         s: _somatic,
