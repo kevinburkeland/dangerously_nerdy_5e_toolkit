@@ -1,0 +1,4838 @@
+{
+  "lib/widgets/homebrew/monster_builder_dialog.dart": {
+    "form_full_stalker": {
+      "domainMonster": {
+        "actionsMarkdown": "### Traits\n\n**Shadow Stealth.** While in dim light or darkness, the stalker can take the Hide action as a bonus action.\n\n**Pack Tactics.** The stalker has advantage on an attack roll against a creature if at least one of its allies is within 5 feet.\n\n### Actions\n\n**Multiattack.** The stalker makes two claw attacks.\n\n**Claw.** Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) slashing damage.",
+        "alignment": "Neutral Evil",
+        "armorClass": 16,
+        "attackMath": [],
+        "challengeRating": "5",
+        "customProperties": {},
+        "hitDieFormula": "10d10 + 30",
+        "hitPoints": 85,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "cinder-stalker"
+        },
+        "innateSpells": [],
+        "monsterType": "Fiend",
+        "name": "Cinder Stalker",
+        "size": "Large"
+      },
+      "codexView": {
+        "id": "cinder-stalker",
+        "name": "Cinder Stalker",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 5.0,
+        "xp": null,
+        "size": "Large",
+        "type": "Fiend",
+        "alignment": "Neutral Evil",
+        "crDisplay": "CR 5",
+        "ac": 16,
+        "hp": 85,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Cinder Stalker",
+          "baselineDpr": 12.285,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "claw.** melee weapon attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 11,
+            "spellAttackBonus": 3,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "cinder-stalker",
+            "name": "Cinder Stalker",
+            "description": "CR CR 5 Large Fiend",
+            "level": 5,
+            "abilityScore": 10,
+            "proficiencyBonus": 3,
+            "defaultAdvantage": "advantage",
+            "attackCount": 1,
+            "attackNames": [
+              "Claw.** Melee Weapon Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "cinder-stalker",
+            "name": "Cinder Stalker",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR 5",
+            "typeDisplay": "Fiend",
+            "alignment": "Neutral Evil",
+            "ac": 16,
+            "armorType": null,
+            "maxHp": 85,
+            "hitDice": "10d10 + 30",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Feature",
+                "description": "Shadow Stealth.** While in dim light or darkness, the stalker can take the Hide action as a bonus action."
+              },
+              {
+                "name": "Feature",
+                "description": "Pack Tactics.** The stalker has advantage on an attack roll against a creature if at least one of its allies is within 5 feet."
+              },
+              {
+                "name": "Feature",
+                "description": "Multiattack.** The stalker makes two claw attacks."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Claw.** Melee Weapon Attack",
+                "description": "+7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) slashing damage.",
+                "attackType": null,
+                "attackBonus": 7,
+                "reach": "5 ft.",
+                "hitDamage": "13 (2d8 + 4) slashing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 7,
+            "damageDiceCount": 2,
+            "damageDiceSides": 8,
+            "damageBonus": 4,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": true,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4291176488,
+              "glyphCreatureType": "fiend",
+              "glyphCrTier": 2,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 5.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large fiend, Neutral Evil",
+              "acLine": "16",
+              "hpLine": "85 (10d10 + 30)",
+              "challengeLine": "5",
+              "primaryDamageFormula": "2d8+4",
+              "fullDamageFormula": "2d8+4 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Cinder Stalker",
+          "baselineDpr": 12.285,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "claw.** melee weapon attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 11,
+            "spellAttackBonus": 3,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "cinder-stalker",
+            "name": "Cinder Stalker",
+            "description": "CR CR 5 Large Fiend",
+            "level": 5,
+            "abilityScore": 10,
+            "proficiencyBonus": 3,
+            "defaultAdvantage": "advantage",
+            "attackCount": 1,
+            "attackNames": [
+              "Claw.** Melee Weapon Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "cinder-stalker",
+            "name": "Cinder Stalker",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR 5",
+            "typeDisplay": "Fiend",
+            "alignment": "Neutral Evil",
+            "ac": 16,
+            "armorType": null,
+            "maxHp": 85,
+            "hitDice": "10d10 + 30",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Feature",
+                "description": "Shadow Stealth.** While in dim light or darkness, the stalker can take the Hide action as a bonus action."
+              },
+              {
+                "name": "Feature",
+                "description": "Pack Tactics.** The stalker has advantage on an attack roll against a creature if at least one of its allies is within 5 feet."
+              },
+              {
+                "name": "Feature",
+                "description": "Multiattack.** The stalker makes two claw attacks."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Claw.** Melee Weapon Attack",
+                "description": "+7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) slashing damage.",
+                "attackType": null,
+                "attackBonus": 7,
+                "reach": "5 ft.",
+                "hitDamage": "13 (2d8 + 4) slashing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 7,
+            "damageDiceCount": 2,
+            "damageDiceSides": 8,
+            "damageBonus": 4,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": true,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4291176488,
+              "glyphCreatureType": "fiend",
+              "glyphCrTier": 2,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 5.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large fiend, Neutral Evil",
+              "acLine": "16",
+              "hpLine": "85 (10d10 + 30)",
+              "challengeLine": "5",
+              "primaryDamageFormula": "2d8+4",
+              "fullDamageFormula": "2d8+4 Slashing"
+            }
+          }
+        }
+      }
+    },
+    "form_blank_optionals": {
+      "domainMonster": {
+        "actionsMarkdown": "",
+        "alignment": "unaligned",
+        "armorClass": 10,
+        "attackMath": [],
+        "challengeRating": "1",
+        "customProperties": {},
+        "hitDieFormula": "",
+        "hitPoints": 10,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "blank-sentinel"
+        },
+        "innateSpells": [],
+        "monsterType": "Humanoid",
+        "name": "Blank Sentinel",
+        "size": "Medium"
+      },
+      "codexView": {
+        "id": "blank-sentinel",
+        "name": "Blank Sentinel",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 1.0,
+        "xp": null,
+        "size": "Medium",
+        "type": "Humanoid",
+        "alignment": "unaligned",
+        "crDisplay": "CR 1",
+        "ac": 10,
+        "hp": 10,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Blank Sentinel",
+          "baselineDpr": 2.925,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "blank-sentinel",
+            "name": "Blank Sentinel",
+            "description": "CR CR 1 Medium Humanoid",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "blank-sentinel",
+            "name": "Blank Sentinel",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 1",
+            "typeDisplay": "Humanoid",
+            "alignment": "unaligned",
+            "ac": 10,
+            "armorType": null,
+            "maxHp": 10,
+            "hitDice": null,
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 4,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "humanoid",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 1.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium humanoid, unaligned",
+              "acLine": "10",
+              "hpLine": "10",
+              "challengeLine": "1",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Blank Sentinel",
+          "baselineDpr": 2.925,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "blank-sentinel",
+            "name": "Blank Sentinel",
+            "description": "CR CR 1 Medium Humanoid",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "blank-sentinel",
+            "name": "Blank Sentinel",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 1",
+            "typeDisplay": "Humanoid",
+            "alignment": "unaligned",
+            "ac": 10,
+            "armorType": null,
+            "maxHp": 10,
+            "hitDice": null,
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 4,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "humanoid",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 1.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium humanoid, unaligned",
+              "acLine": "10",
+              "hpLine": "10",
+              "challengeLine": "1",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        }
+      }
+    },
+    "form_unreadable_cr": {
+      "domainMonster": {
+        "actionsMarkdown": "Flicker: The enigma blinks 10 feet when hit.\n\n**Bite**: Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d10 + 3) psychic damage.",
+        "alignment": "Chaotic Neutral",
+        "armorClass": 14,
+        "attackMath": [],
+        "challengeRating": "varies",
+        "customProperties": {},
+        "hitDieFormula": "6d8 + 15",
+        "hitPoints": 42,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "shifting-enigma"
+        },
+        "innateSpells": [],
+        "monsterType": "Aberration",
+        "name": "Shifting Enigma",
+        "size": "Medium"
+      },
+      "codexView": {
+        "id": "shifting-enigma",
+        "name": "Shifting Enigma",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.0,
+        "xp": null,
+        "size": "Medium",
+        "type": "Aberration",
+        "alignment": "Chaotic Neutral",
+        "crDisplay": "CR varies",
+        "ac": 14,
+        "hp": 42,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Shifting Enigma",
+          "baselineDpr": 4.95,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "bite"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "shifting-enigma",
+            "name": "Shifting Enigma",
+            "description": "CR CR varies Medium Aberration",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Bite"
+            ]
+          },
+          "statBlock": {
+            "id": "shifting-enigma",
+            "name": "Shifting Enigma",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR varies",
+            "typeDisplay": "Aberration",
+            "alignment": "Chaotic Neutral",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 42,
+            "hitDice": "6d8 + 15",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Flicker",
+                "description": "The enigma blinks 10 feet when hit."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Bite",
+                "description": "Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d10 + 3) psychic damage.",
+                "attackType": null,
+                "attackBonus": 5,
+                "reach": "5 ft.",
+                "hitDamage": "8 (1d10 + 3) psychic damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 5,
+            "damageDiceCount": 1,
+            "damageDiceSides": 10,
+            "damageBonus": 3,
+            "damageType": "Psychic",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4285143962,
+              "glyphCreatureType": "aberration",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium aberration, Chaotic Neutral",
+              "acLine": "14",
+              "hpLine": "42 (6d8 + 15)",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "1d10+3",
+              "fullDamageFormula": "1d10+3 Psychic"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Shifting Enigma",
+          "baselineDpr": 4.95,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "bite"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "shifting-enigma",
+            "name": "Shifting Enigma",
+            "description": "CR CR varies Medium Aberration",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Bite"
+            ]
+          },
+          "statBlock": {
+            "id": "shifting-enigma",
+            "name": "Shifting Enigma",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR varies",
+            "typeDisplay": "Aberration",
+            "alignment": "Chaotic Neutral",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 42,
+            "hitDice": "6d8 + 15",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Flicker",
+                "description": "The enigma blinks 10 feet when hit."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Bite",
+                "description": "Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d10 + 3) psychic damage.",
+                "attackType": null,
+                "attackBonus": 5,
+                "reach": "5 ft.",
+                "hitDamage": "8 (1d10 + 3) psychic damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 5,
+            "damageDiceCount": 1,
+            "damageDiceSides": 10,
+            "damageBonus": 3,
+            "damageType": "Psychic",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4285143962,
+              "glyphCreatureType": "aberration",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium aberration, Chaotic Neutral",
+              "acLine": "14",
+              "hpLine": "42 (6d8 + 15)",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "1d10+3",
+              "fullDamageFormula": "1d10+3 Psychic"
+            }
+          }
+        }
+      }
+    }
+  },
+  "lib/services/acl/compendium_monster_parser.dart": {
+    "acl_rich_dragon": {
+      "domainMonster": {
+        "actionsMarkdown": "**Speed:** walk 40ft., fly 80ft., swim 40ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 22 (+6) | 14 (+2) | 19 (+4) | 16 (+3) | 15 (+2) | 18 (+4) |\n\n**Saving Throws:** DEX +7, CON +9, WIS +7, CHA +9\n**Skills:** perception +12, stealth +7\n**Damage Vulnerabilities:** thunder\n**Damage Resistances:** cold, [bludgeoning, piercing, slashing] (from nonmagical attacks)\n**Damage Immunities:** lightning\n**Condition Immunities:** paralyzed\n**Senses:** blindsight 60 ft., darkvision 120 ft., passive Perception 22\n**Languages:** Common, Draconic\n\n### Traits\n**Legendary Resistance (3/Day)**: If the drake fails a saving throw, it can choose to succeed instead.\n\n### Spellcasting\n**Innate Spellcasting**: The drake can innately cast the following spells (spell save DC 17):\n\n- **At will:** *light*\n- **1/day each:** *haste*\n- **Cantrips (at will):** *prestidigitation*\n- **Level 1 (2 slots):** *shield*\n\n### Actions\n**Multiattack**: The drake makes one bite attack and two claw attacks.\n\n**Bite**: *Melee Weapon Attack:* **`+11`** to hit, reach 10 ft., one target. *Hit:* 17 (**`2d10 + 6`**) piercing damage plus 7 (**`2d6`**) lightning damage.\n\n**Claw**: *Melee Weapon Attack:* **`+11`** to hit, reach 5 ft., one target. *Hit:* 13 (**`2d6 + 6`**) slashing damage.\n\n### Bonus Actions\n**Quicksilver Step**: The drake teleports 15 feet to an unoccupied space.\n\n### Reactions\n**Deflect Blow**: The drake adds 3 to its AC against one melee attack.\n\n### Legendary Actions\nThe creature can take 3 legendary actions, choosing from the options below.\n\n**Tail Swipe**: The drake makes a tail attack: +11 to hit, reach 15 ft. Hit: 15 (2d8 + 6) bludgeoning damage.",
+        "alignment": "Chaotic Good",
+        "armorClass": 19,
+        "attackMath": [
+          {
+            "damageType": "piercing",
+            "diceFormula": "2d10 + 6",
+            "isAttackRoll": false,
+            "requiresSave": false,
+            "scalingFormula": null
+          },
+          {
+            "damageType": "lightning",
+            "diceFormula": "2d6",
+            "isAttackRoll": false,
+            "requiresSave": false,
+            "scalingFormula": null
+          },
+          {
+            "damageType": "slashing",
+            "diceFormula": "2d6 + 6",
+            "isAttackRoll": false,
+            "requiresSave": false,
+            "scalingFormula": null
+          }
+        ],
+        "challengeRating": "13",
+        "customProperties": {
+          "cha": 18,
+          "chaScore": 18,
+          "con": 19,
+          "conScore": 19,
+          "conditionImmune": [
+            "paralyzed"
+          ],
+          "conditionImmunities": "paralyzed",
+          "damageImmunities": "lightning",
+          "damageResistances": "cold, [bludgeoning, piercing, slashing] (from nonmagical attacks)",
+          "damageVulnerabilities": "thunder",
+          "dex": 14,
+          "dexScore": 14,
+          "immune": [
+            "lightning"
+          ],
+          "int": 16,
+          "intScore": 16,
+          "languages": "Common, Draconic",
+          "passive": 22,
+          "resist": [
+            "cold",
+            {
+              "note": "from nonmagical attacks",
+              "resist": [
+                "bludgeoning",
+                "piercing",
+                "slashing"
+              ]
+            }
+          ],
+          "save": {
+            "cha": "+9",
+            "con": "+9",
+            "dex": "+7",
+            "wis": "+7"
+          },
+          "savingThrows": "DEX +7, CON +9, WIS +7, CHA +9",
+          "senses": "blindsight 60 ft., darkvision 120 ft., passive Perception 22",
+          "skill": {
+            "perception": "+12",
+            "stealth": "+7"
+          },
+          "skills": "perception +12, stealth +7",
+          "speed": "walk 40ft., fly 80ft., swim 40ft.",
+          "str": 22,
+          "strScore": 22,
+          "vulnerable": [
+            "thunder"
+          ],
+          "wis": 15,
+          "wisScore": 15
+        },
+        "hitDieFormula": "17d12 + 68",
+        "hitPoints": 178,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "quicksilver-drake"
+        },
+        "innateSpells": [
+          {
+            "displayName": "light",
+            "grantedSkills": [],
+            "refType": "spell",
+            "rulesetPreferred": "homebrew",
+            "slug": "light"
+          },
+          {
+            "displayName": "haste",
+            "grantedSkills": [],
+            "refType": "spell",
+            "rulesetPreferred": "homebrew",
+            "slug": "haste"
+          },
+          {
+            "displayName": "prestidigitation",
+            "grantedSkills": [],
+            "refType": "spell",
+            "rulesetPreferred": "homebrew",
+            "slug": "prestidigitation"
+          },
+          {
+            "displayName": "shield",
+            "grantedSkills": [],
+            "refType": "spell",
+            "rulesetPreferred": "homebrew",
+            "slug": "shield"
+          }
+        ],
+        "monsterType": "dragon (metallic)",
+        "name": "Quicksilver Drake",
+        "size": "Huge"
+      },
+      "codexView": {
+        "id": "quicksilver-drake",
+        "name": "Quicksilver Drake",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 13.0,
+        "xp": null,
+        "size": "Huge",
+        "type": "dragon (metallic)",
+        "alignment": "Chaotic Good",
+        "crDisplay": "CR 13",
+        "ac": 19,
+        "hp": 178,
+        "speed": "walk 40ft., fly 80ft., swim 40ft.",
+        "v2014": {
+          "editionName": "Quicksilver Drake",
+          "baselineDpr": 44.1,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "bite",
+              "claw",
+              "multiattack",
+              "tail swipe"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 17,
+            "spellAttackBonus": 9,
+            "meleeReachInFeet": 15,
+            "canFly": true,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 20,
+            "savingThrowBonuses": {
+              "cha": 9,
+              "con": 9,
+              "dex": 7,
+              "int": 3,
+              "str": 6,
+              "wis": 7
+            },
+            "maxLegendaryActions": 3,
+            "maxLegendaryResistances": 3,
+            "canSwim": true,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "quicksilver-drake",
+            "name": "Quicksilver Drake",
+            "description": "CR CR 13 Huge dragon (metallic)",
+            "level": 13,
+            "abilityScore": 22,
+            "proficiencyBonus": 5,
+            "defaultAdvantage": "normal",
+            "attackCount": 2,
+            "attackNames": [
+              "Bite",
+              "Claw"
+            ]
+          },
+          "statBlock": {
+            "id": "quicksilver-drake",
+            "name": "Quicksilver Drake",
+            "sizeDisplay": "Huge",
+            "crDisplay": "CR 13",
+            "typeDisplay": "dragon (metallic)",
+            "alignment": "Chaotic Good",
+            "ac": 19,
+            "armorType": null,
+            "maxHp": 178,
+            "hitDice": "17d12 + 68",
+            "speed": "walk 40ft., fly 80ft., swim 40ft.",
+            "strScore": 22,
+            "dexScore": 14,
+            "conScore": 19,
+            "intScore": 16,
+            "wisScore": 15,
+            "chaScore": 18,
+            "savingThrows": "DEX +7, CON +9, WIS +7, CHA +9",
+            "skills": "perception +12, stealth +7",
+            "damageVulnerabilities": "thunder",
+            "damageResistances": "cold, [bludgeoning, piercing, slashing] (from nonmagical attacks)",
+            "damageImmunities": "lightning",
+            "conditionImmunities": "paralyzed",
+            "senses": "blindsight 60 ft., darkvision 120 ft., passive Perception 22",
+            "languages": "Common, Draconic",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** walk 40ft., fly 80ft., swim 40ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 22 (+6) | 14 (+2) | 19 (+4) | 16 (+3) | 15 (+2) | 18 (+4) |"
+              },
+              {
+                "name": "Saving Throws",
+                "description": "** DEX +7, CON +9, WIS +7, CHA +9"
+              },
+              {
+                "name": "Skills",
+                "description": "** perception +12, stealth +7"
+              },
+              {
+                "name": "Damage Vulnerabilities",
+                "description": "** thunder"
+              },
+              {
+                "name": "Damage Resistances",
+                "description": "** cold, [bludgeoning, piercing, slashing] (from nonmagical attacks)"
+              },
+              {
+                "name": "Damage Immunities",
+                "description": "** lightning"
+              },
+              {
+                "name": "Condition Immunities",
+                "description": "** paralyzed"
+              },
+              {
+                "name": "Senses",
+                "description": "** blindsight 60 ft., darkvision 120 ft., passive Perception 22"
+              },
+              {
+                "name": "Languages",
+                "description": "** Common, Draconic"
+              },
+              {
+                "name": "Legendary Resistance (3/Day)",
+                "description": "If the drake fails a saving throw, it can choose to succeed instead."
+              },
+              {
+                "name": "Spellcasting",
+                "description": "Spellcasting"
+              },
+              {
+                "name": "Innate Spellcasting",
+                "description": "The drake can innately cast the following spells (spell save DC 17):"
+              },
+              {
+                "name": "At will",
+                "description": "** *light*"
+              },
+              {
+                "name": "1/day each",
+                "description": "** *haste*"
+              },
+              {
+                "name": "Cantrips (at will)",
+                "description": "** *prestidigitation*"
+              },
+              {
+                "name": "Level 1 (2 slots)",
+                "description": "** *shield*"
+              },
+              {
+                "name": "Quicksilver Step",
+                "description": "The drake teleports 15 feet to an unoccupied space."
+              },
+              {
+                "name": "Deflect Blow",
+                "description": "The drake adds 3 to its AC against one melee attack."
+              },
+              {
+                "name": "Legendary Actions",
+                "description": "The creature can take 3 legendary actions, choosing from the options below."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Multiattack",
+                "description": "The drake makes one bite attack and two claw attacks.",
+                "attackType": null,
+                "attackBonus": null,
+                "reach": null,
+                "hitDamage": null
+              },
+              {
+                "name": "Bite",
+                "description": "*Melee Weapon Attack:* **`+11`** to hit, reach 10 ft., one target. *Hit:* 17 (**`2d10 + 6`**) piercing damage plus 7 (**`2d6`**) lightning damage.",
+                "attackType": null,
+                "attackBonus": null,
+                "reach": "10 ft.",
+                "hitDamage": "17 (**`2d10 + 6`**) piercing damage plus 7 (**`2d6`**) lightning damage"
+              },
+              {
+                "name": "Claw",
+                "description": "*Melee Weapon Attack:* **`+11`** to hit, reach 5 ft., one target. *Hit:* 13 (**`2d6 + 6`**) slashing damage.",
+                "attackType": null,
+                "attackBonus": null,
+                "reach": "5 ft.",
+                "hitDamage": "13 (**`2d6 + 6`**) slashing damage"
+              },
+              {
+                "name": "Tail Swipe",
+                "description": "The drake makes a tail attack: +11 to hit, reach 15 ft. Hit: 15 (2d8 + 6) bludgeoning damage.",
+                "attackType": null,
+                "attackBonus": 11,
+                "reach": "15 ft. Hit: 15 (2d8 + 6) bludgeoning damage.",
+                "hitDamage": "15 (2d8 + 6) bludgeoning damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 11,
+            "damageDiceCount": 2,
+            "damageDiceSides": 8,
+            "damageBonus": 6,
+            "damageType": "Bludgeoning",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4294938368,
+              "glyphCreatureType": "dragon",
+              "glyphCrTier": 3,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'",
+                "Instance of 'ActionTraitRing'",
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 13.0,
+              "strMod": 6,
+              "dexMod": 2,
+              "conMod": 4,
+              "intMod": 3,
+              "wisMod": 2,
+              "chaMod": 4,
+              "hasLegendary": true,
+              "hasLegendaryResistance": true,
+              "hasLegendaryActions": true
+            },
+            "displayText": {
+              "subtitleText": "Huge dragon (metallic), Chaotic Good",
+              "acLine": "19",
+              "hpLine": "178 (17d12 + 68)",
+              "challengeLine": "13",
+              "primaryDamageFormula": "2d8+6",
+              "fullDamageFormula": "2d8+6 Bludgeoning"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Quicksilver Drake",
+          "baselineDpr": 44.1,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "bite",
+              "claw",
+              "multiattack",
+              "tail swipe"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 17,
+            "spellAttackBonus": 9,
+            "meleeReachInFeet": 15,
+            "canFly": true,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 20,
+            "savingThrowBonuses": {
+              "cha": 9,
+              "con": 9,
+              "dex": 7,
+              "int": 3,
+              "str": 6,
+              "wis": 7
+            },
+            "maxLegendaryActions": 3,
+            "maxLegendaryResistances": 3,
+            "canSwim": true,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "quicksilver-drake",
+            "name": "Quicksilver Drake",
+            "description": "CR CR 13 Huge dragon (metallic)",
+            "level": 13,
+            "abilityScore": 22,
+            "proficiencyBonus": 5,
+            "defaultAdvantage": "normal",
+            "attackCount": 2,
+            "attackNames": [
+              "Bite",
+              "Claw"
+            ]
+          },
+          "statBlock": {
+            "id": "quicksilver-drake",
+            "name": "Quicksilver Drake",
+            "sizeDisplay": "Huge",
+            "crDisplay": "CR 13",
+            "typeDisplay": "dragon (metallic)",
+            "alignment": "Chaotic Good",
+            "ac": 19,
+            "armorType": null,
+            "maxHp": 178,
+            "hitDice": "17d12 + 68",
+            "speed": "walk 40ft., fly 80ft., swim 40ft.",
+            "strScore": 22,
+            "dexScore": 14,
+            "conScore": 19,
+            "intScore": 16,
+            "wisScore": 15,
+            "chaScore": 18,
+            "savingThrows": "DEX +7, CON +9, WIS +7, CHA +9",
+            "skills": "perception +12, stealth +7",
+            "damageVulnerabilities": "thunder",
+            "damageResistances": "cold, [bludgeoning, piercing, slashing] (from nonmagical attacks)",
+            "damageImmunities": "lightning",
+            "conditionImmunities": "paralyzed",
+            "senses": "blindsight 60 ft., darkvision 120 ft., passive Perception 22",
+            "languages": "Common, Draconic",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** walk 40ft., fly 80ft., swim 40ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 22 (+6) | 14 (+2) | 19 (+4) | 16 (+3) | 15 (+2) | 18 (+4) |"
+              },
+              {
+                "name": "Saving Throws",
+                "description": "** DEX +7, CON +9, WIS +7, CHA +9"
+              },
+              {
+                "name": "Skills",
+                "description": "** perception +12, stealth +7"
+              },
+              {
+                "name": "Damage Vulnerabilities",
+                "description": "** thunder"
+              },
+              {
+                "name": "Damage Resistances",
+                "description": "** cold, [bludgeoning, piercing, slashing] (from nonmagical attacks)"
+              },
+              {
+                "name": "Damage Immunities",
+                "description": "** lightning"
+              },
+              {
+                "name": "Condition Immunities",
+                "description": "** paralyzed"
+              },
+              {
+                "name": "Senses",
+                "description": "** blindsight 60 ft., darkvision 120 ft., passive Perception 22"
+              },
+              {
+                "name": "Languages",
+                "description": "** Common, Draconic"
+              },
+              {
+                "name": "Legendary Resistance (3/Day)",
+                "description": "If the drake fails a saving throw, it can choose to succeed instead."
+              },
+              {
+                "name": "Spellcasting",
+                "description": "Spellcasting"
+              },
+              {
+                "name": "Innate Spellcasting",
+                "description": "The drake can innately cast the following spells (spell save DC 17):"
+              },
+              {
+                "name": "At will",
+                "description": "** *light*"
+              },
+              {
+                "name": "1/day each",
+                "description": "** *haste*"
+              },
+              {
+                "name": "Cantrips (at will)",
+                "description": "** *prestidigitation*"
+              },
+              {
+                "name": "Level 1 (2 slots)",
+                "description": "** *shield*"
+              },
+              {
+                "name": "Quicksilver Step",
+                "description": "The drake teleports 15 feet to an unoccupied space."
+              },
+              {
+                "name": "Deflect Blow",
+                "description": "The drake adds 3 to its AC against one melee attack."
+              },
+              {
+                "name": "Legendary Actions",
+                "description": "The creature can take 3 legendary actions, choosing from the options below."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Multiattack",
+                "description": "The drake makes one bite attack and two claw attacks.",
+                "attackType": null,
+                "attackBonus": null,
+                "reach": null,
+                "hitDamage": null
+              },
+              {
+                "name": "Bite",
+                "description": "*Melee Weapon Attack:* **`+11`** to hit, reach 10 ft., one target. *Hit:* 17 (**`2d10 + 6`**) piercing damage plus 7 (**`2d6`**) lightning damage.",
+                "attackType": null,
+                "attackBonus": null,
+                "reach": "10 ft.",
+                "hitDamage": "17 (**`2d10 + 6`**) piercing damage plus 7 (**`2d6`**) lightning damage"
+              },
+              {
+                "name": "Claw",
+                "description": "*Melee Weapon Attack:* **`+11`** to hit, reach 5 ft., one target. *Hit:* 13 (**`2d6 + 6`**) slashing damage.",
+                "attackType": null,
+                "attackBonus": null,
+                "reach": "5 ft.",
+                "hitDamage": "13 (**`2d6 + 6`**) slashing damage"
+              },
+              {
+                "name": "Tail Swipe",
+                "description": "The drake makes a tail attack: +11 to hit, reach 15 ft. Hit: 15 (2d8 + 6) bludgeoning damage.",
+                "attackType": null,
+                "attackBonus": 11,
+                "reach": "15 ft. Hit: 15 (2d8 + 6) bludgeoning damage.",
+                "hitDamage": "15 (2d8 + 6) bludgeoning damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 11,
+            "damageDiceCount": 2,
+            "damageDiceSides": 8,
+            "damageBonus": 6,
+            "damageType": "Bludgeoning",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4294938368,
+              "glyphCreatureType": "dragon",
+              "glyphCrTier": 3,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'",
+                "Instance of 'ActionTraitRing'",
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 13.0,
+              "strMod": 6,
+              "dexMod": 2,
+              "conMod": 4,
+              "intMod": 3,
+              "wisMod": 2,
+              "chaMod": 4,
+              "hasLegendary": true,
+              "hasLegendaryResistance": true,
+              "hasLegendaryActions": true
+            },
+            "displayText": {
+              "subtitleText": "Huge dragon (metallic), Chaotic Good",
+              "acLine": "19",
+              "hpLine": "178 (17d12 + 68)",
+              "challengeLine": "13",
+              "primaryDamageFormula": "2d8+6",
+              "fullDamageFormula": "2d8+6 Bludgeoning"
+            }
+          }
+        }
+      }
+    },
+    "acl_copy_wolf": {
+      "domainMonster": {
+        "actionsMarkdown": "**Speed:** 40 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 12 (+1) | 15 (+2) | 12 (+1) | 3 (-4) | 12 (+1) | 6 (-2) |\n\n**Senses:** passive Perception 13\n**Languages:** —\n\n### Traits\n**Keen Hearing and Smell**: The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell.\n\n**Pack Tactics**: The wolf has advantage on attack rolls against a creature if at least one ally is within 5 ft.\n\n### Actions\n**Bite**: Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (2d4 + 2) piercing damage. If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone.",
+        "alignment": "Unaligned",
+        "armorClass": 14,
+        "attackMath": [],
+        "challengeRating": "1/2",
+        "customProperties": {
+          "_copy": {
+            "name": "Wolf",
+            "source": "SRD"
+          },
+          "cha": 6,
+          "chaScore": 6,
+          "con": 12,
+          "conScore": 12,
+          "conditionImmune": null,
+          "dex": 15,
+          "dexScore": 15,
+          "immune": null,
+          "int": 3,
+          "intScore": 3,
+          "languages": "—",
+          "resist": null,
+          "savingThrows": null,
+          "senses": "passive Perception 13",
+          "skills": "Perception +3, Stealth +4",
+          "speed": "40 ft.",
+          "str": 12,
+          "strScore": 12,
+          "vulnerable": null,
+          "wis": 12,
+          "wisScore": 12
+        },
+        "hitDieFormula": "4d8 + 4",
+        "hitPoints": 22,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "frost-wolf-alpha"
+        },
+        "innateSpells": [],
+        "monsterType": "Beast",
+        "name": "Frost Wolf Alpha",
+        "size": "Medium"
+      },
+      "codexView": {
+        "id": "frost-wolf-alpha",
+        "name": "Frost Wolf Alpha",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.5,
+        "xp": null,
+        "size": "Medium",
+        "type": "Beast",
+        "alignment": "Unaligned",
+        "crDisplay": "CR 1/2",
+        "ac": 14,
+        "hp": 22,
+        "speed": "40 ft.",
+        "v2014": {
+          "editionName": "Frost Wolf Alpha",
+          "baselineDpr": 5.7375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "bite"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 11,
+            "spellAttackBonus": 3,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": -2,
+              "con": 1,
+              "dex": 2,
+              "int": -4,
+              "str": 1,
+              "wis": 1
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "frost-wolf-alpha",
+            "name": "Frost Wolf Alpha",
+            "description": "CR CR 1/2 Medium Beast",
+            "level": 1,
+            "abilityScore": 15,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "advantage",
+            "attackCount": 1,
+            "attackNames": [
+              "Bite"
+            ]
+          },
+          "statBlock": {
+            "id": "frost-wolf-alpha",
+            "name": "Frost Wolf Alpha",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 1/2",
+            "typeDisplay": "Beast",
+            "alignment": "Unaligned",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 22,
+            "hitDice": "4d8 + 4",
+            "speed": "40 ft.",
+            "strScore": 12,
+            "dexScore": 15,
+            "conScore": 12,
+            "intScore": 3,
+            "wisScore": 12,
+            "chaScore": 6,
+            "savingThrows": null,
+            "skills": "Perception +3, Stealth +4",
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 13",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** 40 ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 12 (+1) | 15 (+2) | 12 (+1) | 3 (-4) | 12 (+1) | 6 (-2) |"
+              },
+              {
+                "name": "Senses",
+                "description": "** passive Perception 13"
+              },
+              {
+                "name": "Languages",
+                "description": "** —"
+              },
+              {
+                "name": "Keen Hearing and Smell",
+                "description": "The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell."
+              },
+              {
+                "name": "Pack Tactics",
+                "description": "The wolf has advantage on attack rolls against a creature if at least one ally is within 5 ft."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Bite",
+                "description": "Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (2d4 + 2) piercing damage. If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone.",
+                "attackType": null,
+                "attackBonus": 4,
+                "reach": "5 ft.",
+                "hitDamage": "7 (2d4 + 2) piercing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 4,
+            "damageDiceCount": 2,
+            "damageDiceSides": 4,
+            "damageBonus": 2,
+            "damageType": "Piercing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": true,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4281896508,
+              "glyphCreatureType": "beast",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.5,
+              "strMod": 1,
+              "dexMod": 2,
+              "conMod": 1,
+              "intMod": -4,
+              "wisMod": 1,
+              "chaMod": -2,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium beast, Unaligned",
+              "acLine": "14",
+              "hpLine": "22 (4d8 + 4)",
+              "challengeLine": "1/2",
+              "primaryDamageFormula": "2d4+2",
+              "fullDamageFormula": "2d4+2 Piercing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Frost Wolf Alpha",
+          "baselineDpr": 5.7375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "bite"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 11,
+            "spellAttackBonus": 3,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": -2,
+              "con": 1,
+              "dex": 2,
+              "int": -4,
+              "str": 1,
+              "wis": 1
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "frost-wolf-alpha",
+            "name": "Frost Wolf Alpha",
+            "description": "CR CR 1/2 Medium Beast",
+            "level": 1,
+            "abilityScore": 15,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "advantage",
+            "attackCount": 1,
+            "attackNames": [
+              "Bite"
+            ]
+          },
+          "statBlock": {
+            "id": "frost-wolf-alpha",
+            "name": "Frost Wolf Alpha",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 1/2",
+            "typeDisplay": "Beast",
+            "alignment": "Unaligned",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 22,
+            "hitDice": "4d8 + 4",
+            "speed": "40 ft.",
+            "strScore": 12,
+            "dexScore": 15,
+            "conScore": 12,
+            "intScore": 3,
+            "wisScore": 12,
+            "chaScore": 6,
+            "savingThrows": null,
+            "skills": "Perception +3, Stealth +4",
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 13",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** 40 ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 12 (+1) | 15 (+2) | 12 (+1) | 3 (-4) | 12 (+1) | 6 (-2) |"
+              },
+              {
+                "name": "Senses",
+                "description": "** passive Perception 13"
+              },
+              {
+                "name": "Languages",
+                "description": "** —"
+              },
+              {
+                "name": "Keen Hearing and Smell",
+                "description": "The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell."
+              },
+              {
+                "name": "Pack Tactics",
+                "description": "The wolf has advantage on attack rolls against a creature if at least one ally is within 5 ft."
+              }
+            ],
+            "actions": [
+              {
+                "name": "Bite",
+                "description": "Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (2d4 + 2) piercing damage. If the target is a creature, it must succeed on a DC 11 Strength saving throw or be knocked prone.",
+                "attackType": null,
+                "attackBonus": 4,
+                "reach": "5 ft.",
+                "hitDamage": "7 (2d4 + 2) piercing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 4,
+            "damageDiceCount": 2,
+            "damageDiceSides": 4,
+            "damageBonus": 2,
+            "damageType": "Piercing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": true,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4281896508,
+              "glyphCreatureType": "beast",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.5,
+              "strMod": 1,
+              "dexMod": 2,
+              "conMod": 1,
+              "intMod": -4,
+              "wisMod": 1,
+              "chaMod": -2,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium beast, Unaligned",
+              "acLine": "14",
+              "hpLine": "22 (4d8 + 4)",
+              "challengeLine": "1/2",
+              "primaryDamageFormula": "2d4+2",
+              "fullDamageFormula": "2d4+2 Piercing"
+            }
+          }
+        }
+      }
+    },
+    "acl_minimal_missing_keys": {
+      "domainMonster": {
+        "actionsMarkdown": "**Speed:** 30 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |",
+        "alignment": "Unaligned",
+        "armorClass": 10,
+        "attackMath": [],
+        "challengeRating": "0",
+        "customProperties": {
+          "cha": 10,
+          "chaScore": 10,
+          "con": 10,
+          "conScore": 10,
+          "dex": 10,
+          "dexScore": 10,
+          "int": 10,
+          "intScore": 10,
+          "speed": "30 ft.",
+          "str": 10,
+          "strScore": 10,
+          "wis": 10,
+          "wisScore": 10
+        },
+        "hitDieFormula": "2d8 + 2",
+        "hitPoints": 10,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "acl-bare-echo"
+        },
+        "innateSpells": [],
+        "monsterType": "monstrosity",
+        "name": "ACL Bare Echo",
+        "size": "Medium"
+      },
+      "codexView": {
+        "id": "acl-bare-echo",
+        "name": "ACL Bare Echo",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.0,
+        "xp": null,
+        "size": "Medium",
+        "type": "monstrosity",
+        "alignment": "Unaligned",
+        "crDisplay": "CR 0",
+        "ac": 10,
+        "hp": 10,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "ACL Bare Echo",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "acl-bare-echo",
+            "name": "ACL Bare Echo",
+            "description": "CR CR 0 Medium monstrosity",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "acl-bare-echo",
+            "name": "ACL Bare Echo",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 0",
+            "typeDisplay": "monstrosity",
+            "alignment": "Unaligned",
+            "ac": 10,
+            "armorType": null,
+            "maxHp": 10,
+            "hitDice": "2d8 + 2",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** 30 ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |"
+              }
+            ],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "monstrosity",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium monstrosity, Unaligned",
+              "acLine": "10",
+              "hpLine": "10 (2d8 + 2)",
+              "challengeLine": "0",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "ACL Bare Echo",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "acl-bare-echo",
+            "name": "ACL Bare Echo",
+            "description": "CR CR 0 Medium monstrosity",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "acl-bare-echo",
+            "name": "ACL Bare Echo",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 0",
+            "typeDisplay": "monstrosity",
+            "alignment": "Unaligned",
+            "ac": 10,
+            "armorType": null,
+            "maxHp": 10,
+            "hitDice": "2d8 + 2",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** 30 ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |"
+              }
+            ],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "monstrosity",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium monstrosity, Unaligned",
+              "acLine": "10",
+              "hpLine": "10 (2d8 + 2)",
+              "challengeLine": "0",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        }
+      }
+    },
+    "acl_unreadable_cr": {
+      "domainMonster": {
+        "actionsMarkdown": "**Speed:** 30 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |\n\n\n### Actions\n**Tentacle**: Melee Weapon Attack: +5 to hit, reach 10 ft., one target. Hit: 10 (2d6 + 3) bludgeoning damage.",
+        "alignment": "N",
+        "armorClass": 14,
+        "attackMath": [],
+        "challengeRating": "varies",
+        "customProperties": {
+          "cha": 10,
+          "chaScore": 10,
+          "con": 10,
+          "conScore": 10,
+          "dex": 10,
+          "dexScore": 10,
+          "int": 10,
+          "intScore": 10,
+          "speed": "30 ft.",
+          "str": 10,
+          "strScore": 10,
+          "wis": 10,
+          "wisScore": 10
+        },
+        "hitDieFormula": "45hp",
+        "hitPoints": 45,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "acl-shifting-horror"
+        },
+        "innateSpells": [],
+        "monsterType": "aberration",
+        "name": "ACL Shifting Horror",
+        "size": "Medium"
+      },
+      "codexView": {
+        "id": "acl-shifting-horror",
+        "name": "ACL Shifting Horror",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.0,
+        "xp": null,
+        "size": "Medium",
+        "type": "aberration",
+        "alignment": "N",
+        "crDisplay": "CR varies",
+        "ac": 14,
+        "hp": 45,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "ACL Shifting Horror",
+          "baselineDpr": 5.85,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "tentacle"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 10,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "acl-shifting-horror",
+            "name": "ACL Shifting Horror",
+            "description": "CR CR varies Medium aberration",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Tentacle"
+            ]
+          },
+          "statBlock": {
+            "id": "acl-shifting-horror",
+            "name": "ACL Shifting Horror",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR varies",
+            "typeDisplay": "aberration",
+            "alignment": "N",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 45,
+            "hitDice": "45hp",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** 30 ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |"
+              }
+            ],
+            "actions": [
+              {
+                "name": "Tentacle",
+                "description": "Melee Weapon Attack: +5 to hit, reach 10 ft., one target. Hit: 10 (2d6 + 3) bludgeoning damage.",
+                "attackType": null,
+                "attackBonus": 5,
+                "reach": "10 ft.",
+                "hitDamage": "10 (2d6 + 3) bludgeoning damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 5,
+            "damageDiceCount": 2,
+            "damageDiceSides": 6,
+            "damageBonus": 3,
+            "damageType": "Bludgeoning",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4285143962,
+              "glyphCreatureType": "aberration",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium aberration, N",
+              "acLine": "14",
+              "hpLine": "45 (45hp)",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "2d6+3",
+              "fullDamageFormula": "2d6+3 Bludgeoning"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "ACL Shifting Horror",
+          "baselineDpr": 5.85,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "tentacle"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 10,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "acl-shifting-horror",
+            "name": "ACL Shifting Horror",
+            "description": "CR CR varies Medium aberration",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Tentacle"
+            ]
+          },
+          "statBlock": {
+            "id": "acl-shifting-horror",
+            "name": "ACL Shifting Horror",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR varies",
+            "typeDisplay": "aberration",
+            "alignment": "N",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 45,
+            "hitDice": "45hp",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Speed",
+                "description": "** 30 ft."
+              },
+              {
+                "name": "| STR | DEX | CON | INT | WIS | CHA |",
+                "description": "|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |"
+              }
+            ],
+            "actions": [
+              {
+                "name": "Tentacle",
+                "description": "Melee Weapon Attack: +5 to hit, reach 10 ft., one target. Hit: 10 (2d6 + 3) bludgeoning damage.",
+                "attackType": null,
+                "attackBonus": 5,
+                "reach": "10 ft.",
+                "hitDamage": "10 (2d6 + 3) bludgeoning damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 5,
+            "damageDiceCount": 2,
+            "damageDiceSides": 6,
+            "damageBonus": 3,
+            "damageType": "Bludgeoning",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4285143962,
+              "glyphCreatureType": "aberration",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium aberration, N",
+              "acLine": "14",
+              "hpLine": "45 (45hp)",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "2d6+3",
+              "fullDamageFormula": "2d6+3 Bludgeoning"
+            }
+          }
+        }
+      }
+    }
+  },
+  "lib/services/importers/community_compendium_adapters.dart": {
+    "comm_full_fiend": {
+      "domainMonster": {
+        "actionsMarkdown": "### Traits\n\n#### Devil's Sight\n\nMagical darkness doesn't impede the devil's darkvision.\n\n### Actions\n\n#### Pitchfork\n\nMelee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 14 (2d8 + 5) piercing damage.",
+        "alignment": "L E",
+        "armorClass": 17,
+        "attackMath": [],
+        "challengeRating": "8",
+        "customProperties": {
+          "rawJson": {
+            "ac": [
+              {
+                "ac": 17
+              }
+            ],
+            "action": [
+              {
+                "entries": [
+                  "Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 14 (2d8 + 5) piercing damage."
+                ],
+                "name": "Pitchfork"
+              }
+            ],
+            "alignment": [
+              "L",
+              "E"
+            ],
+            "cr": {
+              "cr": "8"
+            },
+            "hp": {
+              "average": 110,
+              "formula": "13d10 + 39"
+            },
+            "name": "Cinder Devil",
+            "size": "L",
+            "source": "HB",
+            "trait": [
+              {
+                "entries": [
+                  "Magical darkness doesn't impede the devil's darkvision."
+                ],
+                "name": "Devil's Sight"
+              }
+            ],
+            "type": {
+              "type": "fiend"
+            }
+          },
+          "source": "HB"
+        },
+        "hitDieFormula": "13d10 + 39",
+        "hitPoints": 110,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "cinder-devil"
+        },
+        "innateSpells": [],
+        "monsterType": "fiend",
+        "name": "Cinder Devil",
+        "size": "Large"
+      },
+      "codexView": {
+        "id": "cinder-devil",
+        "name": "Cinder Devil",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 8.0,
+        "xp": null,
+        "size": "Large",
+        "type": "fiend",
+        "alignment": "L E",
+        "crDisplay": "CR 8",
+        "ac": 17,
+        "hp": 110,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Cinder Devil",
+          "baselineDpr": 10.25,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "melee weapon attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 11,
+            "spellAttackBonus": 3,
+            "meleeReachInFeet": 10,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "cinder-devil",
+            "name": "Cinder Devil",
+            "description": "CR CR 8 Large fiend",
+            "level": 8,
+            "abilityScore": 10,
+            "proficiencyBonus": 3,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Melee Weapon Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "cinder-devil",
+            "name": "Cinder Devil",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR 8",
+            "typeDisplay": "fiend",
+            "alignment": "L E",
+            "ac": 17,
+            "armorType": null,
+            "maxHp": 110,
+            "hitDice": "13d10 + 39",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Devil's Sight",
+                "description": "Devil's Sight"
+              },
+              {
+                "name": "Feature",
+                "description": "Magical darkness doesn't impede the devil's darkvision."
+              },
+              {
+                "name": "Pitchfork",
+                "description": "Pitchfork"
+              }
+            ],
+            "actions": [
+              {
+                "name": "Melee Weapon Attack",
+                "description": "+8 to hit, reach 10 ft., one target. Hit: 14 (2d8 + 5) piercing damage.",
+                "attackType": null,
+                "attackBonus": 8,
+                "reach": "10 ft.",
+                "hitDamage": "14 (2d8 + 5) piercing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 8,
+            "damageDiceCount": 2,
+            "damageDiceSides": 8,
+            "damageBonus": 5,
+            "damageType": "Piercing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4291176488,
+              "glyphCreatureType": "fiend",
+              "glyphCrTier": 2,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 8.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large fiend, L E",
+              "acLine": "17",
+              "hpLine": "110 (13d10 + 39)",
+              "challengeLine": "8",
+              "primaryDamageFormula": "2d8+5",
+              "fullDamageFormula": "2d8+5 Piercing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Cinder Devil",
+          "baselineDpr": 10.25,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "melee weapon attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 11,
+            "spellAttackBonus": 3,
+            "meleeReachInFeet": 10,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "cinder-devil",
+            "name": "Cinder Devil",
+            "description": "CR CR 8 Large fiend",
+            "level": 8,
+            "abilityScore": 10,
+            "proficiencyBonus": 3,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Melee Weapon Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "cinder-devil",
+            "name": "Cinder Devil",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR 8",
+            "typeDisplay": "fiend",
+            "alignment": "L E",
+            "ac": 17,
+            "armorType": null,
+            "maxHp": 110,
+            "hitDice": "13d10 + 39",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Devil's Sight",
+                "description": "Devil's Sight"
+              },
+              {
+                "name": "Feature",
+                "description": "Magical darkness doesn't impede the devil's darkvision."
+              },
+              {
+                "name": "Pitchfork",
+                "description": "Pitchfork"
+              }
+            ],
+            "actions": [
+              {
+                "name": "Melee Weapon Attack",
+                "description": "+8 to hit, reach 10 ft., one target. Hit: 14 (2d8 + 5) piercing damage.",
+                "attackType": null,
+                "attackBonus": 8,
+                "reach": "10 ft.",
+                "hitDamage": "14 (2d8 + 5) piercing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 8,
+            "damageDiceCount": 2,
+            "damageDiceSides": 8,
+            "damageBonus": 5,
+            "damageType": "Piercing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4291176488,
+              "glyphCreatureType": "fiend",
+              "glyphCrTier": 2,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 8.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large fiend, L E",
+              "acLine": "17",
+              "hpLine": "110 (13d10 + 39)",
+              "challengeLine": "8",
+              "primaryDamageFormula": "2d8+5",
+              "fullDamageFormula": "2d8+5 Piercing"
+            }
+          }
+        }
+      }
+    },
+    "comm_scalar_fey": {
+      "domainMonster": {
+        "actionsMarkdown": "### Actions\n\n#### Spark Dart\n\nRanged Spell Attack: +5 to hit, range 30 ft., one target. Hit: 7 (1d8 + 3) radiant damage.",
+        "alignment": "Chaotic Neutral",
+        "armorClass": 13,
+        "attackMath": [],
+        "challengeRating": "0.5",
+        "customProperties": {
+          "rawJson": {
+            "ac": 13,
+            "action": [
+              {
+                "entries": [
+                  "Ranged Spell Attack: +5 to hit, range 30 ft., one target. Hit: 7 (1d8 + 3) radiant damage."
+                ],
+                "name": "Spark Dart"
+              }
+            ],
+            "alignment": "Chaotic Neutral",
+            "cr": 0.5,
+            "hp": 18,
+            "name": "Lantern Sprite",
+            "size": "T",
+            "source": "HB",
+            "type": "Fey"
+          },
+          "source": "HB"
+        },
+        "hitDieFormula": "2d8",
+        "hitPoints": 18,
+        "id": {
+          "ruleset": "homebrew",
+          "slug": "lantern-sprite"
+        },
+        "innateSpells": [],
+        "monsterType": "Fey",
+        "name": "Lantern Sprite",
+        "size": "Tiny"
+      },
+      "codexView": {
+        "id": "lantern-sprite",
+        "name": "Lantern Sprite",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.5,
+        "xp": null,
+        "size": "Tiny",
+        "type": "Fey",
+        "alignment": "Chaotic Neutral",
+        "crDisplay": "CR 0.5",
+        "ac": 13,
+        "hp": 18,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Lantern Sprite",
+          "baselineDpr": 4.35,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "ranged spell attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "lantern-sprite",
+            "name": "Lantern Sprite",
+            "description": "CR CR 0.5 Tiny Fey",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Ranged Spell Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "lantern-sprite",
+            "name": "Lantern Sprite",
+            "sizeDisplay": "Tiny",
+            "crDisplay": "CR 0.5",
+            "typeDisplay": "Fey",
+            "alignment": "Chaotic Neutral",
+            "ac": 13,
+            "armorType": null,
+            "maxHp": 18,
+            "hitDice": "2d8",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Spark Dart",
+                "description": "Spark Dart"
+              }
+            ],
+            "actions": [
+              {
+                "name": "Ranged Spell Attack",
+                "description": "+5 to hit, range 30 ft., one target. Hit: 7 (1d8 + 3) radiant damage.",
+                "attackType": null,
+                "attackBonus": 5,
+                "reach": "30 ft.",
+                "hitDamage": "7 (1d8 + 3) radiant damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 5,
+            "damageDiceCount": 1,
+            "damageDiceSides": 8,
+            "damageBonus": 3,
+            "damageType": "Radiant",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4278225275,
+              "glyphCreatureType": "fey",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.5,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Tiny fey, Chaotic Neutral",
+              "acLine": "13",
+              "hpLine": "18 (2d8)",
+              "challengeLine": "0.5",
+              "primaryDamageFormula": "1d8+3",
+              "fullDamageFormula": "1d8+3 Radiant"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Lantern Sprite",
+          "baselineDpr": 4.35,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "ranged spell attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "lantern-sprite",
+            "name": "Lantern Sprite",
+            "description": "CR CR 0.5 Tiny Fey",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Ranged Spell Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "lantern-sprite",
+            "name": "Lantern Sprite",
+            "sizeDisplay": "Tiny",
+            "crDisplay": "CR 0.5",
+            "typeDisplay": "Fey",
+            "alignment": "Chaotic Neutral",
+            "ac": 13,
+            "armorType": null,
+            "maxHp": 18,
+            "hitDice": "2d8",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [
+              {
+                "name": "Spark Dart",
+                "description": "Spark Dart"
+              }
+            ],
+            "actions": [
+              {
+                "name": "Ranged Spell Attack",
+                "description": "+5 to hit, range 30 ft., one target. Hit: 7 (1d8 + 3) radiant damage.",
+                "attackType": null,
+                "attackBonus": 5,
+                "reach": "30 ft.",
+                "hitDamage": "7 (1d8 + 3) radiant damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 5,
+            "damageDiceCount": 1,
+            "damageDiceSides": 8,
+            "damageBonus": 3,
+            "damageType": "Radiant",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4278225275,
+              "glyphCreatureType": "fey",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.5,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Tiny fey, Chaotic Neutral",
+              "acLine": "13",
+              "hpLine": "18 (2d8)",
+              "challengeLine": "0.5",
+              "primaryDamageFormula": "1d8+3",
+              "fullDamageFormula": "1d8+3 Radiant"
+            }
+          }
+        }
+      }
+    },
+    "comm_minimal_missing": {
+      "domainMonster": {
+        "actionsMarkdown": "",
+        "alignment": "unaligned",
+        "armorClass": 10,
+        "attackMath": [],
+        "challengeRating": "1",
+        "customProperties": {
+          "rawJson": {
+            "name": "Community Bare Wisp"
+          },
+          "source": "HOMEBREW"
+        },
+        "hitDieFormula": "2d8",
+        "hitPoints": 10,
+        "id": {
+          "ruleset": "v2024",
+          "slug": "community-bare-wisp"
+        },
+        "innateSpells": [],
+        "monsterType": "Humanoid",
+        "name": "Community Bare Wisp",
+        "size": "Medium"
+      },
+      "codexView": {
+        "id": "community-bare-wisp",
+        "name": "Community Bare Wisp",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 1.0,
+        "xp": null,
+        "size": "Medium",
+        "type": "Humanoid",
+        "alignment": "unaligned",
+        "crDisplay": "CR 1",
+        "ac": 10,
+        "hp": 10,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Community Bare Wisp",
+          "baselineDpr": 2.925,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "community-bare-wisp",
+            "name": "Community Bare Wisp",
+            "description": "CR CR 1 Medium Humanoid",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "community-bare-wisp",
+            "name": "Community Bare Wisp",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 1",
+            "typeDisplay": "Humanoid",
+            "alignment": "unaligned",
+            "ac": 10,
+            "armorType": null,
+            "maxHp": 10,
+            "hitDice": "2d8",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 4,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "humanoid",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 1.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium humanoid, unaligned",
+              "acLine": "10",
+              "hpLine": "10 (2d8)",
+              "challengeLine": "1",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Community Bare Wisp",
+          "baselineDpr": 2.925,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "community-bare-wisp",
+            "name": "Community Bare Wisp",
+            "description": "CR CR 1 Medium Humanoid",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "community-bare-wisp",
+            "name": "Community Bare Wisp",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR 1",
+            "typeDisplay": "Humanoid",
+            "alignment": "unaligned",
+            "ac": 10,
+            "armorType": null,
+            "maxHp": 10,
+            "hitDice": "2d8",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 4,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "humanoid",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 1.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium humanoid, unaligned",
+              "acLine": "10",
+              "hpLine": "10 (2d8)",
+              "challengeLine": "1",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        }
+      }
+    },
+    "comm_unreadable_cr": {
+      "domainMonster": {
+        "actionsMarkdown": "",
+        "alignment": "unaligned",
+        "armorClass": 15,
+        "attackMath": [],
+        "challengeRating": "varies",
+        "customProperties": {
+          "rawJson": {
+            "ac": 15,
+            "alignment": "unaligned",
+            "cr": "varies",
+            "hp": 52,
+            "name": "Community Variable Construct",
+            "size": "M",
+            "type": "Construct"
+          },
+          "source": "HOMEBREW"
+        },
+        "hitDieFormula": "2d8",
+        "hitPoints": 52,
+        "id": {
+          "ruleset": "v2024",
+          "slug": "community-variable-construct"
+        },
+        "innateSpells": [],
+        "monsterType": "Construct",
+        "name": "Community Variable Construct",
+        "size": "Medium"
+      },
+      "codexView": {
+        "id": "community-variable-construct",
+        "name": "Community Variable Construct",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.0,
+        "xp": null,
+        "size": "Medium",
+        "type": "Construct",
+        "alignment": "unaligned",
+        "crDisplay": "CR varies",
+        "ac": 15,
+        "hp": 52,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Community Variable Construct",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "community-variable-construct",
+            "name": "Community Variable Construct",
+            "description": "CR CR varies Medium Construct",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "community-variable-construct",
+            "name": "Community Variable Construct",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR varies",
+            "typeDisplay": "Construct",
+            "alignment": "unaligned",
+            "ac": 15,
+            "armorType": null,
+            "maxHp": 52,
+            "hitDice": "2d8",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4284301367,
+              "glyphCreatureType": "construct",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium construct, unaligned",
+              "acLine": "15",
+              "hpLine": "52 (2d8)",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Community Variable Construct",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "community-variable-construct",
+            "name": "Community Variable Construct",
+            "description": "CR CR varies Medium Construct",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "community-variable-construct",
+            "name": "Community Variable Construct",
+            "sizeDisplay": "Medium",
+            "crDisplay": "CR varies",
+            "typeDisplay": "Construct",
+            "alignment": "unaligned",
+            "ac": 15,
+            "armorType": null,
+            "maxHp": 52,
+            "hitDice": "2d8",
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4284301367,
+              "glyphCreatureType": "construct",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Medium construct, unaligned",
+              "acLine": "15",
+              "hpLine": "52 (2d8)",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        }
+      }
+    }
+  },
+  "lib/infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart": {
+    "ing_full_beast": {
+      "domainMonster": {
+        "actionsMarkdown": "**Tusk.** Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 11 (2d6 + 4) slashing damage.",
+        "alignment": "unaligned",
+        "armorClass": 14,
+        "attackMath": [],
+        "challengeRating": "2",
+        "customProperties": {
+          "charisma": 5,
+          "constitution": 15,
+          "dexterity": 11,
+          "intelligence": 2,
+          "legendaryActionsMarkdown": "**Gore.** Makes one tusk attack.",
+          "reactionsMarkdown": "**Bristle.** Gains +2 AC against one attack.",
+          "sourceText": "Obsidian Boar\nLarge beast, unaligned\nAC 14 HP 52 (7d10 + 14) Speed 40 ft. CR 2",
+          "speed": "40 ft.",
+          "strength": 18,
+          "traitsMarkdown": "**Charge.** Deals extra 7 (2d6) damage after moving 20 feet straight.",
+          "wisdom": 10
+        },
+        "hitDieFormula": "7d10 + 14",
+        "hitPoints": 52,
+        "id": {
+          "ruleset": "v2024",
+          "slug": "obsidian-boar"
+        },
+        "innateSpells": [],
+        "monsterType": "Beast",
+        "name": "Obsidian Boar",
+        "size": "Large"
+      },
+      "codexView": {
+        "id": "obsidian-boar",
+        "name": "Obsidian Boar",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 2.0,
+        "xp": null,
+        "size": "Large",
+        "type": "Beast",
+        "alignment": "unaligned",
+        "crDisplay": "CR 2",
+        "ac": 14,
+        "hp": 52,
+        "speed": "40 ft.",
+        "v2014": {
+          "editionName": "Obsidian Boar",
+          "baselineDpr": 6.95,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "tusk.** melee weapon attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "obsidian-boar",
+            "name": "Obsidian Boar",
+            "description": "CR CR 2 Large Beast",
+            "level": 2,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Tusk.** Melee Weapon Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "obsidian-boar",
+            "name": "Obsidian Boar",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR 2",
+            "typeDisplay": "Beast",
+            "alignment": "unaligned",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 52,
+            "hitDice": "7d10 + 14",
+            "speed": "40 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [
+              {
+                "name": "Tusk.** Melee Weapon Attack",
+                "description": "+6 to hit, reach 5 ft., one target. Hit: 11 (2d6 + 4) slashing damage.",
+                "attackType": null,
+                "attackBonus": 6,
+                "reach": "5 ft.",
+                "hitDamage": "11 (2d6 + 4) slashing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 6,
+            "damageDiceCount": 2,
+            "damageDiceSides": 6,
+            "damageBonus": 4,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4281896508,
+              "glyphCreatureType": "beast",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 2.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large beast, unaligned",
+              "acLine": "14",
+              "hpLine": "52 (7d10 + 14)",
+              "challengeLine": "2",
+              "primaryDamageFormula": "2d6+4",
+              "fullDamageFormula": "2d6+4 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Obsidian Boar",
+          "baselineDpr": 6.95,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [
+              "tusk.** melee weapon attack"
+            ],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "obsidian-boar",
+            "name": "Obsidian Boar",
+            "description": "CR CR 2 Large Beast",
+            "level": 2,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Tusk.** Melee Weapon Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "obsidian-boar",
+            "name": "Obsidian Boar",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR 2",
+            "typeDisplay": "Beast",
+            "alignment": "unaligned",
+            "ac": 14,
+            "armorType": null,
+            "maxHp": 52,
+            "hitDice": "7d10 + 14",
+            "speed": "40 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [
+              {
+                "name": "Tusk.** Melee Weapon Attack",
+                "description": "+6 to hit, reach 5 ft., one target. Hit: 11 (2d6 + 4) slashing damage.",
+                "attackType": null,
+                "attackBonus": 6,
+                "reach": "5 ft.",
+                "hitDamage": "11 (2d6 + 4) slashing damage"
+              }
+            ],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 6,
+            "damageDiceCount": 2,
+            "damageDiceSides": 6,
+            "damageBonus": 4,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4281896508,
+              "glyphCreatureType": "beast",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 2.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large beast, unaligned",
+              "acLine": "14",
+              "hpLine": "52 (7d10 + 14)",
+              "challengeLine": "2",
+              "primaryDamageFormula": "2d6+4",
+              "fullDamageFormula": "2d6+4 Slashing"
+            }
+          }
+        }
+      }
+    },
+    "ing_minimal_required": {
+      "domainMonster": {
+        "actionsMarkdown": "",
+        "alignment": "unaligned",
+        "armorClass": 12,
+        "attackMath": [],
+        "challengeRating": "1/4",
+        "customProperties": {
+          "sourceText": "Stone Mote\nSmall construct, unaligned\nAC 12 HP 15 Speed 20 ft. CR 1/4",
+          "speed": "20 ft."
+        },
+        "hitDieFormula": "",
+        "hitPoints": 15,
+        "id": {
+          "ruleset": "v2024",
+          "slug": "stone-mote"
+        },
+        "innateSpells": [],
+        "monsterType": "Construct",
+        "name": "Stone Mote",
+        "size": "Small"
+      },
+      "codexView": {
+        "id": "stone-mote",
+        "name": "Stone Mote",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.25,
+        "xp": null,
+        "size": "Small",
+        "type": "Construct",
+        "alignment": "unaligned",
+        "crDisplay": "CR 1/4",
+        "ac": 12,
+        "hp": 15,
+        "speed": "20 ft.",
+        "v2014": {
+          "editionName": "Stone Mote",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "stone-mote",
+            "name": "Stone Mote",
+            "description": "CR CR 1/4 Small Construct",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "stone-mote",
+            "name": "Stone Mote",
+            "sizeDisplay": "Small",
+            "crDisplay": "CR 1/4",
+            "typeDisplay": "Construct",
+            "alignment": "unaligned",
+            "ac": 12,
+            "armorType": null,
+            "maxHp": 15,
+            "hitDice": null,
+            "speed": "20 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4284301367,
+              "glyphCreatureType": "construct",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.25,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Small construct, unaligned",
+              "acLine": "12",
+              "hpLine": "15",
+              "challengeLine": "1/4",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Stone Mote",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "stone-mote",
+            "name": "Stone Mote",
+            "description": "CR CR 1/4 Small Construct",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "stone-mote",
+            "name": "Stone Mote",
+            "sizeDisplay": "Small",
+            "crDisplay": "CR 1/4",
+            "typeDisplay": "Construct",
+            "alignment": "unaligned",
+            "ac": 12,
+            "armorType": null,
+            "maxHp": 15,
+            "hitDice": null,
+            "speed": "20 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4284301367,
+              "glyphCreatureType": "construct",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.25,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Small construct, unaligned",
+              "acLine": "12",
+              "hpLine": "15",
+              "challengeLine": "1/4",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        }
+      }
+    },
+    "ing_unreadable_cr": {
+      "domainMonster": {
+        "actionsMarkdown": "",
+        "alignment": "neutral",
+        "armorClass": 15,
+        "attackMath": [],
+        "challengeRating": "varies",
+        "customProperties": {
+          "sourceText": "Mire Chimera\nLarge monstrosity, neutral\nAC 15 HP 68 Speed 30 ft. CR varies",
+          "speed": "30 ft."
+        },
+        "hitDieFormula": "",
+        "hitPoints": 68,
+        "id": {
+          "ruleset": "v2024",
+          "slug": "mire-chimera"
+        },
+        "innateSpells": [],
+        "monsterType": "Monstrosity",
+        "name": "Mire Chimera",
+        "size": "Large"
+      },
+      "codexView": {
+        "id": "mire-chimera",
+        "name": "Mire Chimera",
+        "name2014": null,
+        "name2024": null,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "sourcePresetId": "homebrew",
+        "sourcePresetName": "Homebrew & Custom Creatures",
+        "sourceSpellId": null,
+        "sourceCategory": "spell",
+        "isHomebrew": true,
+        "challengeRating": 0.0,
+        "xp": null,
+        "size": "Large",
+        "type": "Monstrosity",
+        "alignment": "neutral",
+        "crDisplay": "CR varies",
+        "ac": 15,
+        "hp": 68,
+        "speed": "30 ft.",
+        "v2014": {
+          "editionName": "Mire Chimera",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "mire-chimera",
+            "name": "Mire Chimera",
+            "description": "CR CR varies Large Monstrosity",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "mire-chimera",
+            "name": "Mire Chimera",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR varies",
+            "typeDisplay": "Monstrosity",
+            "alignment": "neutral",
+            "ac": 15,
+            "armorType": null,
+            "maxHp": 68,
+            "hitDice": null,
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "monstrosity",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large monstrosity, neutral",
+              "acLine": "15",
+              "hpLine": "68",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        },
+        "v2024": {
+          "editionName": "Mire Chimera",
+          "baselineDpr": 2.375,
+          "matchesName": true,
+          "combatProfile": {
+            "attackNames": [],
+            "maxSpellSlots": {},
+            "knownSpellIds": [],
+            "spellSaveDc": 10,
+            "spellAttackBonus": 2,
+            "meleeReachInFeet": 5,
+            "canFly": false,
+            "hasHover": false,
+            "defaultAltitudeInFeet": 0,
+            "savingThrowBonuses": {
+              "cha": 0,
+              "con": 0,
+              "dex": 0,
+              "int": 0,
+              "str": 0,
+              "wis": 0
+            },
+            "maxLegendaryActions": 0,
+            "maxLegendaryResistances": 0,
+            "canSwim": false,
+            "canBurrow": false,
+            "canClimb": false,
+            "hasEvasion": false,
+            "hasFlyby": false,
+            "hasNimbleEscape": false
+          },
+          "dprProfile": {
+            "id": "mire-chimera",
+            "name": "Mire Chimera",
+            "description": "CR CR varies Large Monstrosity",
+            "level": 1,
+            "abilityScore": 10,
+            "proficiencyBonus": 2,
+            "defaultAdvantage": "normal",
+            "attackCount": 1,
+            "attackNames": [
+              "Primary Attack"
+            ]
+          },
+          "statBlock": {
+            "id": "mire-chimera",
+            "name": "Mire Chimera",
+            "sizeDisplay": "Large",
+            "crDisplay": "CR varies",
+            "typeDisplay": "Monstrosity",
+            "alignment": "neutral",
+            "ac": 15,
+            "armorType": null,
+            "maxHp": 68,
+            "hitDice": null,
+            "speed": "30 ft.",
+            "strScore": 10,
+            "dexScore": 10,
+            "conScore": 10,
+            "intScore": 10,
+            "wisScore": 10,
+            "chaScore": 10,
+            "savingThrows": null,
+            "skills": null,
+            "damageVulnerabilities": null,
+            "damageResistances": null,
+            "damageImmunities": null,
+            "conditionImmunities": null,
+            "senses": "passive Perception 10",
+            "languages": "—",
+            "xp": null,
+            "traits": [],
+            "actions": [],
+            "reactions": [],
+            "legendaryActions": [],
+            "explicitSpellSlots": null,
+            "explicitMeleeReachFt": null,
+            "explicitSavingThrows": null,
+            "canFly": null,
+            "hasHover": null,
+            "spellSaveDc": null,
+            "spellAttackBonus": null,
+            "attackBonus": 2,
+            "damageDiceCount": 1,
+            "damageDiceSides": 6,
+            "damageBonus": 2,
+            "damageType": "Slashing",
+            "secondaryDamageDiceCount": 0,
+            "secondaryDamageDiceSides": 0,
+            "secondaryDamageType": null,
+            "hasPackTactics": false,
+            "specialTrait": null,
+            "presentation": {
+              "accentArgb": 4287323382,
+              "glyphCreatureType": "monstrosity",
+              "glyphCrTier": 1,
+              "glyphActionRings": [
+                "Instance of 'ActionTraitRing'"
+              ]
+            },
+            "derived": {
+              "crValue": 0.0,
+              "strMod": 0,
+              "dexMod": 0,
+              "conMod": 0,
+              "intMod": 0,
+              "wisMod": 0,
+              "chaMod": 0,
+              "hasLegendary": false,
+              "hasLegendaryResistance": false,
+              "hasLegendaryActions": false
+            },
+            "displayText": {
+              "subtitleText": "Large monstrosity, neutral",
+              "acLine": "15",
+              "hpLine": "68",
+              "challengeLine": "varies",
+              "primaryDamageFormula": "1d6+2",
+              "fullDamageFormula": "1d6+2 Slashing"
+            }
+          }
+        }
+      }
+    }
+  }
+}

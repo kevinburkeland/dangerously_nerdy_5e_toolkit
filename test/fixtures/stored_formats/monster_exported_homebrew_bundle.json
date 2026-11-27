@@ -1,0 +1,306 @@
+{
+  "schemaVersion": 1,
+  "appVersion": "1.0.0",
+  "exportedAt": "2026-01-01T00:00:00.000Z",
+  "bundleName": "Step 4 Monster Stored Bundle",
+  "author": "Test Harness",
+  "spells": [],
+  "monsters": [
+    {
+      "id": {
+        "slug": "hb-full-props-string",
+        "ruleset": "homebrew"
+      },
+      "name": "Ashbound Warden",
+      "size": "Large",
+      "monsterType": "Fiend",
+      "alignment": "lawful evil",
+      "armorClass": 17,
+      "hitPoints": 114,
+      "hitDieFormula": "12d10 + 48",
+      "challengeRating": "7",
+      "actionsMarkdown": "### Traits\n\n### Smoke Aura\nCreatures within 5 feet have disadvantage on Perception checks.\n\n**Pack Tactics.** The warden has advantage on an attack roll against a creature if at least one ally is within 5 feet.\n\n### Actions\n\n**Multiattack.** The warden makes two halberd attacks.\n\n**Halberd.** Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 14 (2d8 + 5) slashing damage.",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {
+        "speed": "35 ft., climb 20 ft.",
+        "str": 20,
+        "dex": 12,
+        "con": 18,
+        "int": 11,
+        "wis": 14,
+        "cha": 15,
+        "savingThrows": "STR +8, CON +7, WIS +5",
+        "skills": "Athletics +8, Perception +5",
+        "damageVulnerabilities": "cold",
+        "damageResistances": "necrotic, poison",
+        "damageImmunities": "fire",
+        "conditionImmunities": "charmed, frightened",
+        "senses": "darkvision 60 ft., passive Perception 15",
+        "languages": "Common, Infernal"
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-full-props-maps-lists",
+        "ruleset": "homebrew"
+      },
+      "name": "Gale Revenant",
+      "size": "Medium",
+      "monsterType": "Undead",
+      "alignment": "neutral evil",
+      "armorClass": 15,
+      "hitPoints": 75,
+      "hitDieFormula": "10d8 + 30",
+      "challengeRating": "4",
+      "actionsMarkdown": "**Speed:** 40 ft., fly 60 ft.\n\n### Traits\n\n### Storm Shroud: Ranged attacks against the revenant have disadvantage.\n\n- **Wind Walk**: Moves through hostile spaces without penalty.\n\n*Cold Presence.* Deals 3 cold damage to grappling creatures.\n\nHollow Echo: Cannot be tracked by nonmagical means.\n\n- Misty Form: Can squeeze through a 1-inch gap.\n\n### Silent Drift\n\nGale Surge\nPushes nearby creatures 10 feet on initiative count 20.\n\nAn ancient echo lingers in the storm.\n\n### Actions\n\n**Gale Slash.** Melee Weapon Attack: +6 to hit, reach 5 ft, one target. Hit: 12 (2d6 + 5) cold damage.\n\n### Reactions",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {
+        "strScore": 14,
+        "dexScore": 18,
+        "conScore": 16,
+        "intScore": 10,
+        "wisScore": 13,
+        "chaScore": 15,
+        "save": {
+          "dex": "+6",
+          "wis": "+3"
+        },
+        "skill": {
+          "stealth": "+6",
+          "perception": "+3"
+        },
+        "vulnerable": [
+          "radiant"
+        ],
+        "resist": [
+          "cold",
+          {
+            "resist": "bludgeoning, piercing, slashing",
+            "note": "from nonmagical attacks"
+          }
+        ],
+        "immune": [
+          "poison",
+          "necrotic"
+        ],
+        "conditionImmune": [
+          "exhaustion",
+          "poisoned"
+        ],
+        "senses": [
+          "darkvision 120 ft."
+        ],
+        "passive": 15,
+        "languages": [
+          "Common",
+          "Primordial"
+        ]
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-senses-no-passive",
+        "ruleset": "homebrew"
+      },
+      "name": "Shard Beetle",
+      "size": "Small",
+      "monsterType": "Construct",
+      "alignment": "unaligned",
+      "armorClass": 16,
+      "hitPoints": 33,
+      "hitDieFormula": "6d6 + 12",
+      "challengeRating": "1/2",
+      "actionsMarkdown": "**Crystal Carapace.** Sheds dim light in a 10-foot radius.",
+      "innateSpells": [],
+      "attackMath": [
+        {
+          "diceFormula": "2d4 + 3",
+          "damageType": "piercing",
+          "isAttackRoll": false,
+          "requiresSave": false,
+          "scalingFormula": null
+        }
+      ],
+      "customProperties": {
+        "senses": [
+          "tremorsense 30 ft."
+        ],
+        "languages": []
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-unreadable-cr",
+        "ruleset": "homebrew"
+      },
+      "name": "Rift Mimic",
+      "size": "Medium",
+      "monsterType": "Aberration",
+      "alignment": "chaotic neutral",
+      "armorClass": 14,
+      "hitPoints": 58,
+      "hitDieFormula": "9d8 + 18",
+      "challengeRating": "varies",
+      "actionsMarkdown": "**Pseudopod.** Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 9 (1d10 + 4) force damage.",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {
+        "speed": "30 ft."
+      }
+    },
+    {
+      "id": {
+        "slug": "hb-minimal-id-name",
+        "ruleset": "homebrew"
+      },
+      "name": "Minimal Shade",
+      "size": "Medium",
+      "monsterType": "Humanoid",
+      "alignment": "unaligned",
+      "armorClass": 10,
+      "hitPoints": 10,
+      "hitDieFormula": "2d8",
+      "challengeRating": "1",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-missing-size",
+        "ruleset": "homebrew"
+      },
+      "name": "Sizeless Hound",
+      "size": "Medium",
+      "monsterType": "Beast",
+      "alignment": "neutral",
+      "armorClass": 14,
+      "hitPoints": 45,
+      "hitDieFormula": "6d10 + 12",
+      "challengeRating": "2",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-missing-type",
+        "ruleset": "homebrew"
+      },
+      "name": "Typeless Stalker",
+      "size": "Large",
+      "monsterType": "Humanoid",
+      "alignment": "neutral",
+      "armorClass": 14,
+      "hitPoints": 45,
+      "hitDieFormula": "6d10 + 12",
+      "challengeRating": "2",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-missing-alignment",
+        "ruleset": "homebrew"
+      },
+      "name": "Alignmentless Spirit",
+      "size": "Large",
+      "monsterType": "Beast",
+      "alignment": "unaligned",
+      "armorClass": 14,
+      "hitPoints": 45,
+      "hitDieFormula": "6d10 + 12",
+      "challengeRating": "2",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-missing-ac",
+        "ruleset": "homebrew"
+      },
+      "name": "Unarmored Phantom",
+      "size": "Large",
+      "monsterType": "Beast",
+      "alignment": "neutral",
+      "armorClass": 10,
+      "hitPoints": 45,
+      "hitDieFormula": "6d10 + 12",
+      "challengeRating": "2",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-missing-hp",
+        "ruleset": "homebrew"
+      },
+      "name": "Hpless Specter",
+      "size": "Large",
+      "monsterType": "Beast",
+      "alignment": "neutral",
+      "armorClass": 14,
+      "hitPoints": 10,
+      "hitDieFormula": "6d10 + 12",
+      "challengeRating": "2",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-missing-hitdice",
+        "ruleset": "homebrew"
+      },
+      "name": "Diceless Golem",
+      "size": "Large",
+      "monsterType": "Beast",
+      "alignment": "neutral",
+      "armorClass": 14,
+      "hitPoints": 45,
+      "hitDieFormula": "2d8",
+      "challengeRating": "2",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    },
+    {
+      "id": {
+        "slug": "hb-missing-cr",
+        "ruleset": "homebrew"
+      },
+      "name": "Unrated Beast",
+      "size": "Large",
+      "monsterType": "Beast",
+      "alignment": "neutral",
+      "armorClass": 14,
+      "hitPoints": 45,
+      "hitDieFormula": "6d10 + 12",
+      "challengeRating": "1",
+      "actionsMarkdown": "",
+      "innateSpells": [],
+      "attackMath": [],
+      "customProperties": {}
+    }
+  ],
+  "items": [],
+  "classes": [],
+  "subclasses": [],
+  "races": [],
+  "subraces": [],
+  "feats": [],
+  "backgrounds": [],
+  "otherEntries": []
+}

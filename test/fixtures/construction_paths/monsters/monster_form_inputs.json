@@ -1,0 +1,40 @@
+{
+  "monsters": [
+    {
+      "inputId": "form_full_stalker",
+      "name": "Cinder Stalker",
+      "size": "Large",
+      "type": "Fiend",
+      "alignment": "Neutral Evil",
+      "cr": "5",
+      "ac": "16",
+      "hp": "85",
+      "hitDice": "10d10 + 30",
+      "actionsMarkdown": "### Traits\n\n**Shadow Stealth.** While in dim light or darkness, the stalker can take the Hide action as a bonus action.\n\n**Pack Tactics.** The stalker has advantage on an attack roll against a creature if at least one of its allies is within 5 feet.\n\n### Actions\n\n**Multiattack.** The stalker makes two claw attacks.\n\n**Claw.** Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) slashing damage."
+    },
+    {
+      "inputId": "form_blank_optionals",
+      "name": "Blank Sentinel",
+      "size": "",
+      "type": "",
+      "alignment": "",
+      "cr": "",
+      "ac": "",
+      "hp": "",
+      "hitDice": "",
+      "actionsMarkdown": ""
+    },
+    {
+      "inputId": "form_unreadable_cr",
+      "name": "Shifting Enigma",
+      "size": "Medium",
+      "type": "Aberration",
+      "alignment": "Chaotic Neutral",
+      "cr": "varies",
+      "ac": "14",
+      "hp": "42",
+      "hitDice": "6d8 + 15",
+      "actionsMarkdown": "Flicker: The enigma blinks 10 feet when hit.\n\n**Bite**: Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d10 + 3) psychic damage."
+    }
+  ]
+}
