@@ -59,6 +59,8 @@ None
 
 ## Red runs on main
 cd1a0589d922aa2f06e814dbb267de14c9aa789b red run 45931535844
+6f9f098bce85c4a974a23c257dda98c9ccf874fa red run 46052955247
+101158ef2968a0f3b4fa9b7088d2a2fd122aa61d red run 46055346755
 
 ## Resets
 None
@@ -74,3 +76,5 @@ Begin Step 6 (ruleset, then app): unify MonsterItem into ruleset Monster with Mo
 - Fix 3.1: Dedicated golden rekey commit 607272c6cfcbd509122e0f75c09f214c90d25d05 rekeyed 641 of 675 entries in test/fixtures/catalog_goldens/item_rules_view_golden.json with zero non-id value changes; ReferenceResolver also normalizes legacy hyphenated bundled equipment slugs so existing character inventory references remain valid while MagicItemLibrary.findById stays strict.
 - Fix 3.2: Widening the shape-based bar with rules2014/rules2024 as model-specific matched three non-DTO classes in lib/ besides SpellDto: DmReferenceItem (lib/models/dm_screen_data.dart — DM rules reference card with List<String> rules2014/rules2024), SummonPreset (lib/models/srd_summons/summon_preset.dart — summon squad preset with display strings alongside spellId), and GlyphItemEntry (lib/models/glyph_gallery_data.dart — 29 illustrative Glyph Gallery entries, 7 not in MagicItemLibrary). All four rows are explicitly named with one-line reasons in kSecondModelExemptions.
 Run 45931535844 cause: flutter analyze flagged deprecated package:flutter/material.dart import in test/support/characterization_error_guard_test.dart; fixed by 73cbecded5cd8084137b32bfaf89b8eb67ddfc14
+Run 46052955247 cause: ruleset dart analyze --fatal-infos flagged one unnecessary_import in monster.dart and three prefer_const_constructors in monster_law_test.dart; fixed by 6cf3557d466c81aff13e8b2ce244b5f9795a2250
+Run 46055346755 cause: dynamic_ratchet_test.dart required lowering kDynamicCeiling to 1025 and check_test_names.py flagged three test names accidentally renamed during MonsterItem sweep; fixed by 4b24d418772a7d6b8b5da3e0d733995d48407462
