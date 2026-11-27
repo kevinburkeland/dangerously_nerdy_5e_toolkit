@@ -1,8 +1,8 @@
 # Cleanup slice 18 progress notes
 Status: IN PROGRESS
 Start heads: core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0, app d0ec577035660eda7054495ab5673be005bcbecc
-Last pushed heads (CI green): core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 6cf3557d466c81aff13e8b2ce244b5f9795a2250, app 0d3d1dff19adff9c7dee833ea0dadcb5ecd1a7e2
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 6cf3557d466c81aff13e8b2ce244b5f9795a2250
+Last pushed heads (CI green): core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61, app 3c08450dbe98f16a4946b1e056743de79e51eb34
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 4.1 4.2 5.1 5.2 6.1 6.2 6.3 7.1 7.2 7.3
 Mutation ids: R1 R2 R3 R4 N1 X1 P1 P2 P3 S1 S2 D1 M1 M2 U1 U2
 
@@ -35,7 +35,7 @@ Fix 7.3: The named fixture changes for unknown facts
 - [x] Step 4 Monster catalog, stored-format and construction pins: app aabb4298707beb86958802d8effa0d3cd7a4c9f3 run 46046586130
 - [x] Step 5 One stat block model: ruleset 4250e200118ed79810841e91036f00a7a789fcb8 run 46048859007, app 54a194ddff2e095753a0db37426cee8b8ab0b4fd run 46050233827
 - [x] Step 6 One monster model: ruleset 6cf3557d466c81aff13e8b2ce244b5f9795a2250 run 46053205742, app 0d3d1dff19adff9c7dee833ea0dadcb5ecd1a7e2 run 46057237191
-- [ ] Step 7 Unknown monster facts stay unknown
+- [x] Step 7 Unknown monster facts stay unknown: ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61 run 46059406094, app 3c08450dbe98f16a4946b1e056743de79e51eb34 run 46061722419
 - [ ] Step 8 Mutations and report
 
 ## Fix checklist
@@ -56,6 +56,9 @@ Fix 5.2 done: [Monster presentation is attached by id] Extracted all 397 bundled
 Fix 6.1 done: [One monster model] Unified MonsterItem into ruleset Monster (holding statBlock2014 and statBlock2024, deriving shared combat facts from statBlock2024 while emitting all 13 legacy map keys in toMap, plus Monster.singleEdition and 500-seed round-trip laws), migrated all 5 bundled bestiary files via idempotent tool/migrate_bundled_monsters.py (zero other diffs, byte-identical second run), deleted app MonsterItem and MonsterHomebrewExt, lowered five bestiary big-file ceilings and kDynamicCeiling to 1025, and verified all Step 4, slice 17, arena, DPR, character map, and UI goldens pass unedited.
 Fix 6.2 done: [Old stored monsters load into the one model] Implemented pre-Cleanup slice 18 legacy hydration in ruleset Monster.fromMap via hydrateLegacyMonsterStatBlock with a 200-seed ruleset parity law against the deleted app converter copied from Step 5 head 591b12489f9eadfb411d5f434923b882b5b71241, and verified monster_stored_format_load_law_test.dart passes with unchanged fixtures.
 Fix 6.3 done: [No second model for a monster] Widened test/infrastructure/compliance/no_second_spell_or_item_model_bar_test.dart to ruleset Monster and MonsterStatBlock with zero new exemption rows, refactored MinionStats (lib/models/domain/minion_instance.dart) to hold MonsterStatBlock by reference, and verified the bar failed on Step 5 head (flagging MonsterItem and MinionStats) and passes on Step 6 head with all controls green.
+Fix 7.1 done: [A monster's missing facts stay unknown] Made the seven F-16 monster facts (size, type, alignment, AC, HP, hit dice, CR) nullable with zero invented defaults in ruleset Monster, MonsterStatBlock, hydrateLegacyMonsterStatBlock, and fromMap (backed by 200-seed unknown-facts laws), removed invented defaults in app forms/parsers/importers, updated every lib/ reader (em-dash in displays, pre-match arena refusal naming missing facts, null DPR and unknown DPR sorted last), lowered two big-file ceilings, and added bundled_monster_facts_completeness_test.dart, arena_missing_facts_refusal_test.dart, and no_null_monster_fact_defaults_bar_test.dart.
+Fix 7.2 done: [An unreadable challenge rating is not CR 0] Made crValue and challengeRatingValue return parseChallengeRating directly (null when unreadable, zero ?? 0 fallbacks), kept unreadable CR text as written without a forced CR prefix, restricted unknown CR to All CR only sorted last in both CR sorts (ties by name) with XP unknown, and added monster_codex_unknown_cr_test.dart and no_cr_zero_fallback_bar_test.dart.
+Fix 7.3 done: [The named fixture changes for unknown facts] Updated only test/fixtures/stored_formats/expected_loaded_monsters.json and test/fixtures/construction_paths/monsters/expected_monster_paths.json in dedicated commit 3c08450dbe98f16a4946b1e056743de79e51eb34 with zero unexpected field diffs and zero changes to bundled monster catalog goldens, arena/DPR goldens, slice 17 goldens, or legacy load law.
 
 ## Mutation branches
 None
@@ -70,9 +73,11 @@ cd1a0589d922aa2f06e814dbb267de14c9aa789b red run 45931535844
 None
 
 ## Next
-Begin Step 7 (ruleset, then app): make the seven F-16 monster facts (size, type, alignment, AC, HP, hit dice, CR) nullable with zero invented defaults in Monster and MonsterStatBlock constructors and fromMap (Fix 7.1), make unreadable CR null rather than CR 0 across the codex and arena with both source bars and the codex test (Fix 7.2), and update only the Step 4 expected files in a dedicated app commit (Fix 7.3).
+Begin Step 8: push and verify all 16 cs18 mutation branches (R1-R4 in ruleset; N1, X1, P1-P3, S1-S2, D1, M1-M2, U1-U2 in app), run the full Exit Check and dependencies.yml workflow_dispatch across all three repos, set notes Status to COMPLETE with final heads, and write report.md.
 
 ## Open issues and deviations
+- Fix 7.1 out-of-scope defaults left for a later slice: ruleset monster_stat_block.dart defaults six ability scores to 10 (lines 187-192, 359-364), speed to '30 ft.' (lines 186, 358), senses to 'passive Perception 10' (lines 199, 371), and languages to '—' (lines 200, 372); ruleset monster.dart hydrateLegacyMonsterStatBlock defaults ability scores to 10 (lines 57-58) and senses to 'passive Perception 10' (line 335); ruleset character_models.dart defaults character languages to ['Common'] (lines 875, 935, 1545).
+- Fix 7.1 bundled completeness guard: all 343 bundled monsters and 87 summon stat blocks state sizeDisplay, typeDisplay, alignment, ac, maxHp, and crDisplay; hitDice is omitted only on the five Animate Objects fixed-HP constructs (ao_tiny through ao_huge), which have fixed HP with no hit dice formula in SRD 5.1/5.2.1.
 - Fix 6.3: On Step 5 head, the widened shape bar flagged both MonsterItem (deleted in Step 6) and MinionStats in lib/models/domain/minion_instance.dart (which duplicated ac, maxHp, strScore, and dexScore). MinionStats was refactored to hold MonsterStatBlock by reference instead of adding a new exemption row.
 - Step 1 ruleset commit 188c03912b1d7d2a5313502885275f52275be3a2 changed only test files and the changelog, so the app did not re-pin ruleset in Step 1.
 - Fix 1.2: TestWidgetsFlutterBinding resets debugPrint to debugPrintOverride right before dumping a Multiple exceptions batch, so Choice 2 captures dumped error records via ZoneSpecification(print: ...) inside CharacterizationErrorCapture.run rather than assigning debugPrint directly; this does not assign FlutterError.onError.
