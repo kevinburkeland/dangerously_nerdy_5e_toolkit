@@ -448,7 +448,7 @@ class SrdArmorAndShields {
         activation: 'Passive',
       ),
       tags: ['armor', 'heavy', 'plate', 'magic', 'ac 19'],
-      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'plate', 'magic', 'ac 19'], 'bonusAc': 1, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
+      customProperties: { 'cost': null, 'category': 'armor', 'tags': ['armor', 'heavy', 'plate', 'magic', 'ac 19'], 'bonusAc': 2, 'acBonus': 1, 'defaultSlot': EquipmentSlot.armor, 'baseAc': 18, 'armorType': 'heavy', 'maxDexBonus': 0 },
     ),
     EquipmentItem(
       id: EntityId(slug: 'plate_plus_2', ruleset: RulesetVersion.v2024), name: 'Plate Armor +2',
