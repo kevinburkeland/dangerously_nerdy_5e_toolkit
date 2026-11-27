@@ -42,7 +42,7 @@ void _expectProfilesEqualFieldByField(
 }
 
 void main() {
-  group('Fix 4.2: Monster.getCombatProfile caches once per edition', () {
+  group('Fix 4.2: MonsterItem.getCombatProfile caches once per edition', () {
     test('const SRD monster returns identical object per edition and matches fresh build',
         () {
       final monster = MonsterCodexLibrary.allMonsters.first;
@@ -68,7 +68,7 @@ void main() {
       _expectProfilesEqualFieldByField(p2014a, fresh2014);
     });
 
-    test('non-const Monster returns identical object per edition and differs across editions',
+    test('non-const MonsterItem returns identical object per edition and differs across editions',
         () {
       final runtimeId = 'custom_cached_${DateTime.now().microsecondsSinceEpoch}';
       final monster = Monster(

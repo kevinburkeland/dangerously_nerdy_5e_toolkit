@@ -138,8 +138,8 @@ int countDynamic(String source) {
   return count;
 }
 
-// Cleanup slice 17 Step 7: dynamic ceiling lowered to 1027 (7 removed by generic HomebrewCategoryStore)
-const kDynamicCeiling = 1027;
+// Cleanup slice 18 Step 6: dynamic ceiling lowered to 1025 (2 removed when MonsterHomebrewExt deleted)
+const kDynamicCeiling = 1025;
 
 void main() {
   group('dynamic ratchet', () {

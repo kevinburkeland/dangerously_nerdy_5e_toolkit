@@ -154,3 +154,6 @@ validateSpellAllocations accepts class-warlock-mystic-arcanum grant key | moved 
 PartyRoomService Tests | deleted unused duplicate lib/application/services/party_room_service.dart in Cleanup slice 14
 initializes with a valid node ID and creates local timestamps | deleted unused duplicate lib/application/services/party_room_service.dart in Cleanup slice 14
 application PartyRoomService validates identity | deleted unused duplicate lib/application/services/party_room_service.dart in Cleanup slice 14
+Fix 4.2: Monster.getCombatProfile caches once per edition | Restored original test name in Cleanup slice 18 Step 6
+non-const Monster returns identical object per edition and differs across editions | Restored original test name in Cleanup slice 18 Step 6
+converts domain Monster into MinionStatBlock and Monster accurately | Restored original test name in Cleanup slice 18 Step 6

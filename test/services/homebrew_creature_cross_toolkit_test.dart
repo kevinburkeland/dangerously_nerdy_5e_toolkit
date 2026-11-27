@@ -62,7 +62,7 @@ void main() {
     );
 
     test(
-        'converts domain Monster into MinionStatBlock and Monster accurately',
+        'converts domain Monster into MinionStatBlock and MonsterItem accurately',
         () {
       final statBlock = customBeast.sourceStatBlock;
       expect(statBlock.id, equals('dire-timber-wolf'));
