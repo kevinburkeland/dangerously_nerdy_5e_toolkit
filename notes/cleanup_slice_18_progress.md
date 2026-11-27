@@ -61,6 +61,7 @@ None
 cd1a0589d922aa2f06e814dbb267de14c9aa789b red run 45931535844
 6f9f098bce85c4a974a23c257dda98c9ccf874fa red run 46052955247
 101158ef2968a0f3b4fa9b7088d2a2fd122aa61d red run 46055346755
+4b24d418772a7d6b8b5da3e0d733995d48407462 red run 46056344144
 
 ## Resets
 None
@@ -78,3 +79,4 @@ Begin Step 6 (ruleset, then app): unify MonsterItem into ruleset Monster with Mo
 Run 45931535844 cause: flutter analyze flagged deprecated package:flutter/material.dart import in test/support/characterization_error_guard_test.dart; fixed by 73cbecded5cd8084137b32bfaf89b8eb67ddfc14
 Run 46052955247 cause: ruleset dart analyze --fatal-infos flagged one unnecessary_import in monster.dart and three prefer_const_constructors in monster_law_test.dart; fixed by 6cf3557d466c81aff13e8b2ce244b5f9795a2250
 Run 46055346755 cause: dynamic_ratchet_test.dart required lowering kDynamicCeiling to 1025 and check_test_names.py flagged three test names accidentally renamed during MonsterItem sweep; fixed by 4b24d418772a7d6b8b5da3e0d733995d48407462
+Run 46056344144 cause: NS73 flagged undisclosed Step 6 ruleset and app red runs before notes update; fixed by 9180ff8327356b16ac2b9f38ac2528e61b16ec6a
