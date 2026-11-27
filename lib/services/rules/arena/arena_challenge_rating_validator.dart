@@ -41,9 +41,6 @@ void validateArenaCombatantsChallengeRatings(
   for (final combatant in combatants) {
     final sb = combatant.monster.getStatBlock(edition);
     final missing = <String>[];
-    if (sb.ac == null && !combatant.hasExplicitAcOverride) {
-      missing.add('armor class');
-    }
     if (sb.maxHp == null && !combatant.hasExplicitHpOverride) {
       missing.add('hit points');
     }

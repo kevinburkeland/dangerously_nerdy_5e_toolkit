@@ -290,7 +290,7 @@ class ArenaCombatant {
     final rawMaxHp = hpOverride ?? sb.maxHp;
     final rawAc = acOverride ?? sb.ac;
     final effectiveHp = (rawMaxHp != null && rawMaxHp > 0) ? rawMaxHp : 0;
-    final effectiveAc = (rawAc != null && rawAc > 0) ? rawAc : 0;
+    final effectiveAc = (rawAc != null && rawAc > 0) ? rawAc : 10;
     final name = customName ?? monster.getName(edition);
     final profile = monster.getCombatProfile(edition);
 
