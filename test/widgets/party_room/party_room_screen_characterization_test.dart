@@ -588,6 +588,7 @@ void main() {
         errors.where((e) {
           final msg = e.toString();
           return !msg.contains('RenderFlex overflowed') &&
+              // Mutation X1 marker: Fix 1.3 stopped per prompt (TestWidgetsFlutterBinding._runTest stores plain String).
               !RegExp(r'Multiple exceptions \(\d+\) were detected').hasMatch(msg);
         }),
         isEmpty,
