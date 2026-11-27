@@ -3,6 +3,9 @@
 One line per slice, newest first. Each line: date, slice name, what changed for a user or a developer.
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
+## 2026-11-27
+- Cleanup slice 18: Retire 11 cs17 mutation branches, replace Multiple exceptions skips in DM Dashboard and Party Room characterization tests with characterization_error_guard.dart and wider viewports, add archive-tag commit check (NS83) to test_check_notes_shas.sh, and confirm 14-day dependency look-ahead passes (Fixes 1.1-1.3, 1.5).
+
 ## 2026-11-26
 - Cleanup slice 17: Extract HomebrewLibrarySync, HomebrewBundleIo, HomebrewClearing, HomebrewReparser (with ReparseResult), and HomebrewRemoteBatchSaver under lib/services/persistence/homebrew/ (all files 242-762 lines, zero part/part of), shrinking homebrew_persistence_service.dart (2,815 -> 758 lines) with every public signature unchanged, and remove homebrew_persistence_service.dart from big_file_ratchet_test.dart (Fixes 8.1, 8.2).
 - Cleanup slice 17: Extract generic HomebrewCategoryStore<T>, HomebrewRawPayloadStore, and HomebrewCompendiumMappers under lib/services/persistence/homebrew/, shrinking homebrew_persistence_service.dart (3,849 -> 2,815 lines), tightening no_second_spell_or_item_model_bar_test.dart, lowering kDynamicCeiling to 1027, and refreshing codebase_map.md with zero behaviour change (Fix 7.1).

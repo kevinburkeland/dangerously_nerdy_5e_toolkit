@@ -33,6 +33,7 @@ import 'package:vtt_engine_core/ports/i_character_repository.dart';
 import 'package:vtt_engine_core/ports/i_network_time_port.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 
+import '../../support/characterization_error_guard.dart';
 import '../../test_doubles/fake_blob_network.dart';
 import '../../test_doubles/fake_blob_store.dart';
 import '../../test_doubles/fake_room_document_port.dart';
@@ -223,7 +224,6 @@ void main() {
         customRoomCode: 'NARRW1',
       );
 
-      final errors = <Object>[];
       await tester.pumpWidget(MaterialApp(
         theme: ThemeData.dark(useMaterial3: true),
         home: PartyRoomScreen(
@@ -232,26 +232,11 @@ void main() {
           partyService: partyService,
         ),
       ));
-      for (Object? ex = tester.takeException();
-          ex != null;
-          ex = tester.takeException()) {
-        errors.add(ex);
-      }
       await tester.pumpAndSettle();
-      for (Object? ex = tester.takeException();
-          ex != null;
-          ex = tester.takeException()) {
-        errors.add(ex);
-      }
 
       expect(find.byType(PartyRoomScreen), findsOneWidget);
       expect(find.textContaining('NARRW1'), findsWidgets);
-      expect(
-        errors.where(
-          (e) => !e.toString().contains('RenderFlex overflowed'),
-        ),
-        isEmpty,
-      );
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets(
@@ -577,23 +562,6 @@ void main() {
       );
     }
 
-    void expectNoNonOverflowExceptions(WidgetTester tester) {
-      final errors = <Object>[];
-      for (Object? ex = tester.takeException();
-          ex != null;
-          ex = tester.takeException()) {
-        errors.add(ex);
-      }
-      expect(
-        errors.where((e) {
-          final msg = e.toString();
-          return !msg.contains('RenderFlex overflowed') &&
-              !RegExp(r'Multiple exceptions \(\d+\) were detected').hasMatch(msg);
-        }),
-        isEmpty,
-      );
-    }
-
     Finder vaultScrollable() => find.descendant(
           of: find.byType(TabBarView),
           matching: find.byType(Scrollable),
@@ -656,7 +624,7 @@ void main() {
         expect(find.text('Cracked Wand'), findsOneWidget);
         expect(find.text('Rusty Dagger'), findsOneWidget);
         expect(find.text('Restore'), findsNWidgets(2));
-        expectNoNonOverflowExceptions(tester);
+        expectNoCharacterizationErrors(tester);
       },
     );
 
@@ -674,7 +642,7 @@ void main() {
 
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.textContaining('RICH01'), findsWidgets);
-      expectNoNonOverflowExceptions(tester);
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('open and cancel leave campaign dialog', (tester) async {
@@ -683,21 +651,24 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final partyService = await seedRichRoom(isHost: false);
-      await tester.pumpWidget(buildRichRoomApp(partyService));
-      await tester.pumpAndSettle();
+      final capture = CharacterizationErrorCapture();
+      await capture.run(() async {
+        await tester.pumpWidget(buildRichRoomApp(partyService));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Leave Campaign'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.more_vert).first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Leave Campaign'));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Leave Campaign'), findsWidgets);
-      expect(find.text('Cancel'), findsOneWidget);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsNothing);
-      expectNoNonOverflowExceptions(tester);
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Leave Campaign'), findsWidgets);
+        expect(find.text('Cancel'), findsOneWidget);
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+        expectNoCharacterizationErrors(tester, capture: capture);
+      });
     });
 
     testWidgets('open and cancel delete campaign dialog', (tester) async {
@@ -706,22 +677,25 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
 
       final partyService = await seedRichRoom();
-      await tester.pumpWidget(buildRichRoomApp(partyService));
-      await tester.pumpAndSettle();
+      final capture = CharacterizationErrorCapture();
+      await capture.run(() async {
+        await tester.pumpWidget(buildRichRoomApp(partyService));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert).first);
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Delete Campaign'));
-      await tester.tap(find.text('Delete Campaign'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.more_vert).first);
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Delete Campaign'));
+        await tester.tap(find.text('Delete Campaign'));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Delete Permanently'), findsOneWidget);
-      expect(find.text('Cancel'), findsOneWidget);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsNothing);
-      expectNoNonOverflowExceptions(tester);
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Delete Permanently'), findsOneWidget);
+        expect(find.text('Cancel'), findsOneWidget);
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+        expectNoCharacterizationErrors(tester, capture: capture);
+      });
     });
 
     testWidgets('member coin change updates member purse in fake service and UI', (tester) async {
@@ -750,7 +724,7 @@ void main() {
       final session = partyService.getCachedSession('RICH01');
       expect(session!.getMemberPurse('Aria').gp, 65);
       expect(find.textContaining('65 GP'), findsWidgets);
-      expectNoNonOverflowExceptions(tester);
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('party coin change updates party reserve purse in fake service and UI', (tester) async {
@@ -777,7 +751,7 @@ void main() {
 
       final session = partyService.getCachedSession('RICH01');
       expect(session!.partyPurse.gp, 125);
-      expectNoNonOverflowExceptions(tester);
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('claim one loot item updates claim state in fake service and UI', (tester) async {
@@ -801,7 +775,7 @@ void main() {
       final chalice = items.firstWhere((i) => i.id == 'loot_chalice');
       expect(chalice.claimedByPlayer, 'Aria');
       expect(find.text('In Vault (Unclaimed)'), findsNothing);
-      expectNoNonOverflowExceptions(tester);
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('assign one loot item assigns to chosen roster member in fake service and UI', (tester) async {
@@ -828,7 +802,7 @@ void main() {
       final items = await partyService.streamLoot('RICH01').first;
       expect(items.any((i) => i.claimedByPlayer == 'Cora'), isTrue);
       expect(find.text('Claimed: Cora'), findsOneWidget);
-      expectNoNonOverflowExceptions(tester);
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('restore one trashed item restores the chosen item and keeps the other archived', (tester) async {
@@ -863,7 +837,7 @@ void main() {
       final dagger = allLoot.firstWhere((i) => i.id == 'loot_trash_2');
       expect(wand.isArchived, isFalse, reason: 'Cracked Wand must be restored');
       expect(dagger.isArchived, isTrue, reason: 'Rusty Dagger must remain archived');
-      expectNoNonOverflowExceptions(tester);
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('switch tabs and back preserves vault filter keep-alive state', (tester) async {
@@ -894,7 +868,7 @@ void main() {
 
       expect(find.text('Silver Chalice'), findsNothing);
       expect(find.text('Radiant Longsword'), findsOneWidget);
-      expectNoNonOverflowExceptions(tester);
+      expectNoCharacterizationErrors(tester);
     });
   });
 }

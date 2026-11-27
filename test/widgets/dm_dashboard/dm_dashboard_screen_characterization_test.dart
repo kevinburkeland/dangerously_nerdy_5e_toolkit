@@ -17,39 +17,13 @@ import 'package:vtt_engine_core/models/party_purse.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
 
+import '../../support/characterization_error_guard.dart';
 import '../../test_doubles/hive_test_harness.dart';
 
 Widget _buildTestApp({String? initialCampaignId}) {
   return MaterialApp(
     theme: ThemeData.dark(useMaterial3: true),
     home: DmDashboardScreen(initialCampaignId: initialCampaignId),
-  );
-}
-
-bool _isKnownNarrowOverflow(Object error, Size size) {
-  final msg = error.toString();
-  if (msg.contains('RenderFlex overflowed')) return true;
-  // When multiple RenderFlex layout overflows occur in a single frame (e.g.
-  // narrow 360x640 viewport or 3-character vitality purse rows at 1280px),
-  // Flutter's TestWidgetsFlutterBinding rolls them up into a single
-  // "Multiple exceptions (N) were detected" message on tester.takeException().
-  if (RegExp(r'Multiple exceptions \(\d+\) were detected').hasMatch(msg)) {
-    return true;
-  }
-  return false;
-}
-
-void _expectNoNonOverflowExceptions(WidgetTester tester, Size size) {
-  final errors = <Object>[];
-  for (Object? ex = tester.takeException();
-      ex != null;
-      ex = tester.takeException()) {
-    errors.add(ex);
-  }
-  expect(
-    errors.where((e) => !_isKnownNarrowOverflow(e, size)),
-    isEmpty,
-    reason: 'No non-overflow exceptions at $size',
   );
 }
 
@@ -149,33 +123,23 @@ void main() {
         tester.view.devicePixelRatio = 1.0;
         addTearDown(() => tester.view.resetPhysicalSize());
 
-        final errors = <Object>[];
-        await tester.pumpWidget(_buildTestApp());
-        for (Object? ex = tester.takeException();
-            ex != null;
-            ex = tester.takeException()) {
-          errors.add(ex);
-        }
-        await tester.pumpAndSettle();
-        for (Object? ex = tester.takeException();
-            ex != null;
-            ex = tester.takeException()) {
-          errors.add(ex);
-        }
+        final capture = CharacterizationErrorCapture();
+        await capture.run(() async {
+          await tester.pumpWidget(_buildTestApp());
+          await tester.pumpAndSettle();
 
-        expect(find.byType(DmDashboardScreen), findsOneWidget);
-        expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
-        expect(find.byTooltip('Export Campaign Snapshot'), findsOneWidget);
-        expect(find.byTooltip('Add Combatant'), findsOneWidget);
-        expect(find.byTooltip('Add Party Member'), findsOneWidget);
-        expect(find.byTooltip('Summon Minion / Object'), findsOneWidget);
-        expect(
-          errors.where(
-            (e) => !_isKnownNarrowOverflow(e, size),
-          ),
-          isEmpty,
-          reason: 'No non-overflow exceptions at $size',
-        );
+          expect(find.byType(DmDashboardScreen), findsOneWidget);
+          expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
+          expect(find.byTooltip('Export Campaign Snapshot'), findsOneWidget);
+          expect(find.byTooltip('Add Combatant'), findsOneWidget);
+          expect(find.byTooltip('Add Party Member'), findsOneWidget);
+          expect(find.byTooltip('Summon Minion / Object'), findsOneWidget);
+          expectNoCharacterizationErrors(
+            tester,
+            capture: capture,
+            reason: 'No non-overflow exceptions at $size',
+          );
+        });
       }
     });
 
@@ -189,37 +153,27 @@ void main() {
         tester.view.devicePixelRatio = 1.0;
         addTearDown(() => tester.view.resetPhysicalSize());
 
-        final errors = <Object>[];
-        await tester.pumpWidget(
-          _buildTestApp(initialCampaignId: profile.id),
-        );
-        for (Object? ex = tester.takeException();
-            ex != null;
-            ex = tester.takeException()) {
-          errors.add(ex);
-        }
-        await tester.pumpAndSettle();
-        for (Object? ex = tester.takeException();
-            ex != null;
-            ex = tester.takeException()) {
-          errors.add(ex);
-        }
+        final capture = CharacterizationErrorCapture();
+        await capture.run(() async {
+          await tester.pumpWidget(
+            _buildTestApp(initialCampaignId: profile.id),
+          );
+          await tester.pumpAndSettle();
 
-        expect(find.text('Shadowfell Watch'), findsOneWidget);
-        expect(find.text('Goblin Boss'), findsOneWidget);
-        expect(find.text('Aldric Stonehelm'), findsWidgets);
-        expect(find.text('Silver Dagger #1'), findsOneWidget);
-        expect(
-          find.text('Watchtower secret door behind the tapestry.'),
-          findsOneWidget,
-        );
-        expect(
-          errors.where(
-            (e) => !_isKnownNarrowOverflow(e, size),
-          ),
-          isEmpty,
-          reason: 'No non-overflow exceptions at $size',
-        );
+          expect(find.text('Shadowfell Watch'), findsOneWidget);
+          expect(find.text('Goblin Boss'), findsOneWidget);
+          expect(find.text('Aldric Stonehelm'), findsWidgets);
+          expect(find.text('Silver Dagger #1'), findsOneWidget);
+          expect(
+            find.text('Watchtower secret door behind the tapestry.'),
+            findsOneWidget,
+          );
+          expectNoCharacterizationErrors(
+            tester,
+            capture: capture,
+            reason: 'No non-overflow exceptions at $size',
+          );
+        });
       }
     });
 
@@ -255,7 +209,7 @@ void main() {
       await tester.tap(find.text('Blinded'));
       await tester.pumpAndSettle();
       expect(find.text('Blinded'), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets(
@@ -304,7 +258,7 @@ void main() {
       expect(find.byType(AlertDialog), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
+      expectNoCharacterizationErrors(tester);
     });
   });
 
@@ -455,66 +409,58 @@ void main() {
           tester.view.devicePixelRatio = 1.0;
           addTearDown(() => tester.view.resetPhysicalSize());
 
-          final errors = <Object>[];
-          await tester.pumpWidget(_buildTestApp(initialCampaignId: profile.id));
-          for (Object? ex = tester.takeException();
-              ex != null;
-              ex = tester.takeException()) {
-            errors.add(ex);
-          }
-          await tester.pumpAndSettle();
-          for (Object? ex = tester.takeException();
-              ex != null;
-              ex = tester.takeException()) {
-            errors.add(ex);
-          }
+          final capture = CharacterizationErrorCapture();
+          await capture.run(() async {
+            await tester.pumpWidget(_buildTestApp(initialCampaignId: profile.id));
+            await tester.pumpAndSettle();
 
-          expect(find.text('Ironhold Citadel'), findsOneWidget);
-          expect(find.text('Combat & Turn Tracker'), findsOneWidget);
-          expect(find.text('Prev'), findsOneWidget);
-          expect(find.text('Next Turn'), findsOneWidget);
-          expect(find.text('HP: 28/32'), findsOneWidget);
-          expect(find.text('HP: 15/21'), findsOneWidget);
-          expect(find.text('HP: 30/30'), findsOneWidget);
-          expect(find.text('Poisoned'), findsOneWidget);
+            expect(find.text('Ironhold Citadel'), findsOneWidget);
+            expect(find.text('Combat & Turn Tracker'), findsOneWidget);
+            expect(find.text('Prev'), findsOneWidget);
+            expect(find.text('Next Turn'), findsOneWidget);
+            expect(find.text('HP: 28/32'), findsOneWidget);
+            expect(find.text('HP: 15/21'), findsOneWidget);
+            expect(find.text('HP: 30/30'), findsOneWidget);
+            expect(find.text('Poisoned'), findsOneWidget);
 
-          // Participant order: Aldric above Goblin Boss above Orc Brute
-          final yAldric = tester.getTopLeft(find.text('Init 20')).dy;
-          final yGoblin = tester.getTopLeft(find.text('Init 14')).dy;
-          final yOrc = tester.getTopLeft(find.text('Init 9')).dy;
-          expect(yAldric, lessThan(yGoblin));
-          expect(yGoblin, lessThan(yOrc));
+            // Participant order: Aldric above Goblin Boss above Orc Brute
+            final yAldric = tester.getTopLeft(find.text('Init 20')).dy;
+            final yGoblin = tester.getTopLeft(find.text('Init 14')).dy;
+            final yOrc = tester.getTopLeft(find.text('Init 9')).dy;
+            expect(yAldric, lessThan(yGoblin));
+            expect(yGoblin, lessThan(yOrc));
 
-          if (size.width >= 1200) {
-            expect(find.text('Party Vitality HUD'), findsOneWidget);
-            expect(find.text('32 HP'), findsOneWidget);
-            expect(find.text('24 HP'), findsOneWidget);
-            expect(find.text('41 HP'), findsOneWidget);
-            expect(find.text('L1: 3/4'), findsOneWidget);
-            expect(find.text('Minion & Summon Tracker'), findsOneWidget);
-            expect(find.text('Silver Dagger #1'), findsOneWidget);
-            expect(find.text('20/20'), findsOneWidget);
-            expect(find.text('Iron Shield #2'), findsOneWidget);
-            expect(find.text('40/40'), findsOneWidget);
-            expect(find.text('Session Notes & Party Purse'), findsOneWidget);
-            expect(find.text('120'), findsOneWidget);
-            expect(find.text('15'), findsOneWidget);
-            expect(find.text('Crypt key is hidden under the altar.'), findsOneWidget);
-            expect(find.text('Quick-Pinned Rules & Calculators'), findsOneWidget);
-            expect(find.textContaining('2 Pinned'), findsOneWidget);
-          }
+            if (size.width >= 1200) {
+              expect(find.text('Party Vitality HUD'), findsOneWidget);
+              expect(find.text('32 HP'), findsOneWidget);
+              expect(find.text('24 HP'), findsOneWidget);
+              expect(find.text('41 HP'), findsOneWidget);
+              expect(find.text('L1: 3/4'), findsOneWidget);
+              expect(find.text('Minion & Summon Tracker'), findsOneWidget);
+              expect(find.text('Silver Dagger #1'), findsOneWidget);
+              expect(find.text('20/20'), findsOneWidget);
+              expect(find.text('Iron Shield #2'), findsOneWidget);
+              expect(find.text('40/40'), findsOneWidget);
+              expect(find.text('Session Notes & Party Purse'), findsOneWidget);
+              expect(find.text('120'), findsOneWidget);
+              expect(find.text('15'), findsOneWidget);
+              expect(find.text('Crypt key is hidden under the altar.'), findsOneWidget);
+              expect(find.text('Quick-Pinned Rules & Calculators'), findsOneWidget);
+              expect(find.textContaining('2 Pinned'), findsOneWidget);
+            }
 
-          expect(
-            errors.where((e) => !_isKnownNarrowOverflow(e, size)),
-            isEmpty,
-            reason: 'No non-overflow exceptions at $size',
-          );
+            expectNoCharacterizationErrors(
+              tester,
+              capture: capture,
+              reason: 'No non-overflow exceptions at $size',
+            );
+          });
         }
       },
     );
 
     testWidgets('next turn advances active participant in fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -528,11 +474,11 @@ void main() {
       final saved = await sl<ICampaignRepository>().getProfile(profile.id);
       final encounter = saved!.roomState.activeEncounterList;
       expect(encounter.firstWhere((p) => p.isActiveTurn).participantId, 'p_goblin');
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('previous turn moves active participant backward in fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -546,11 +492,11 @@ void main() {
       final saved = await sl<ICampaignRepository>().getProfile(profile.id);
       final encounter = saved!.roomState.activeEncounterList;
       expect(encounter.firstWhere((p) => p.isActiveTurn).participantId, 'p_orc');
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('roll all initiative updates encounter order in fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -568,11 +514,11 @@ void main() {
       for (final p in encounter) {
         expect(p.initiativeScore, inInclusiveRange(1, 30));
       }
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('damage one participant reduces HP in fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -589,11 +535,11 @@ void main() {
       final aldric = saved!.roomState.activeEncounterList
           .firstWhere((p) => p.participantId == 'p_hero');
       expect(aldric.currentHp, 23);
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('heal one participant increases HP by exact amount in fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -610,11 +556,11 @@ void main() {
       final goblin = saved!.roomState.activeEncounterList
           .firstWhere((p) => p.participantId == 'p_goblin');
       expect(goblin.currentHp, 20);
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('toggle one condition updates participant conditions in fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -632,11 +578,11 @@ void main() {
       final aldric = saved!.roomState.activeEncounterList
           .firstWhere((p) => p.participantId == 'p_hero');
       expect(aldric.activeConditions, contains('blinded'));
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('change one character HP updates character repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -650,11 +596,11 @@ void main() {
       expect(find.text('27 HP'), findsOneWidget);
       final char = await sl<ICharacterRepository>().getCharacter('char_rich_1');
       expect(char!.resources.currentHp, 27);
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('toggle one spell slot decrements slot in character repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -669,11 +615,11 @@ void main() {
       final char =
           await sl<ICharacterRepository>().getCharacter('char_rich_1') as Character?;
       expect(char!.resources.spellSlots.currentSlots[1], 2);
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('change one minion HP updates fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 1200);
+      tester.view.physicalSize = const Size(1600, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -690,11 +636,11 @@ void main() {
           .whereType<AnimatedObjectInstance>()
           .firstWhere((m) => m.id == 'rich_min_1');
       expect(minion.currentHp, 15);
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 1200));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('change one purse coin updates fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 1200);
+      tester.view.physicalSize = const Size(1600, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -716,11 +662,11 @@ void main() {
       expect(find.text('130'), findsOneWidget);
       final saved = await sl<ICampaignRepository>().getProfile(profile.id);
       expect(saved!.partyPurse.gp, 130);
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 1200));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('switch edition updates campaign rules edition in fake repo and UI', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -738,11 +684,11 @@ void main() {
       final saved = await sl<ICampaignRepository>().getProfile(profile.id);
       expect(saved!.rulesEdition, DmRulesEdition.v2014);
       expect(find.textContaining('2014'), findsWidgets);
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 900));
+      expectNoCharacterizationErrors(tester);
     });
 
     testWidgets('open and cancel every inline dialog with title and button texts', (tester) async {
-      tester.view.physicalSize = const Size(1280, 1200);
+      tester.view.physicalSize = const Size(1600, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -824,7 +770,7 @@ void main() {
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
-      _expectNoNonOverflowExceptions(tester, const Size(1280, 1200));
+      expectNoCharacterizationErrors(tester);
     });
   });
 }

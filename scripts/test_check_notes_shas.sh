@@ -165,6 +165,51 @@ for owner, wf_runs in runs_by_owner.items():
 PYEOF
 }
 
+require_notes_commits_present() {
+  local core_repo="$1"
+  local ruleset_repo="$2"
+  shift 2
+  python3 - "$core_repo" "$ruleset_repo" "$@" <<'PYEOF'
+import re, subprocess, sys
+
+core_repo, ruleset_repo = sys.argv[1], sys.argv[2]
+notes_files = sys.argv[3:]
+repos = [".", core_repo, ruleset_repo]
+sha_pat = re.compile(r"\b([0-9a-f]{40})\b")
+seen = set()
+missing = []
+
+for nf in notes_files:
+    with open(nf, "r", encoding="utf-8") as f:
+        text = f.read()
+    for sha in sha_pat.findall(text):
+        if sha in seen or sha == "0" * 40:
+            continue
+        seen.add(sha)
+        found = False
+        for repo in repos:
+            res = subprocess.run(
+                ["git", "-C", repo, "cat-file", "-t", sha],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+            )
+            if res.returncode == 0 and res.stdout.strip() == "commit":
+                found = True
+                break
+        if not found:
+            missing.append(sha)
+
+if missing:
+    print(
+        f"Missing commit(s) requiring archive tags ({', '.join(missing)}); "
+        f"run: git fetch origin 'refs/tags/archive/*:refs/tags/archive/*'",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+PYEOF
+}
+
 # NS1: a notes file holding a real commit SHA of the given repo passes.
 case_NS1() {
 (
@@ -1036,6 +1081,8 @@ case_NS31() {
   frozen_notes="$TMP_DIR/cleanup_slice_10_progress.md"
   cp "$SCRIPT_DIR/../notes/cleanup_slice_10_progress.md" "$frozen_notes"
 
+  require_notes_commits_present "$core_repo" "$ruleset_repo" "$frozen_notes" || exit 1
+
   extra_args=()
   if [ -z "${GITHUB_TOKEN:-}" ]; then
     echo "Note: NS31 using local stub server (GITHUB_TOKEN not set)"
@@ -1221,6 +1268,10 @@ case_NS37() {
     git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns37.git" >/dev/null 2>&1
     ruleset_repo="$TMP_DIR/ruleset_ns37.git"
   fi
+
+  require_notes_commits_present "$core_repo" "$ruleset_repo" \
+    "$SCRIPT_DIR/../notes/cleanup_slice_10_1_progress.md" \
+    "$SCRIPT_DIR/../notes/bonus_slice_1_progress.md" || exit 1
 
   extra_args=()
   if [ -z "${GITHUB_TOKEN:-}" ]; then
@@ -1515,6 +1566,10 @@ case_NS45() {
     git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns45.git" >/dev/null 2>&1
     ruleset_repo="$TMP_DIR/ruleset_ns45.git"
   fi
+
+  require_notes_commits_present "$core_repo" "$ruleset_repo" \
+    "$SCRIPT_DIR/../notes/cleanup_slice_10_1_progress.md" \
+    "$SCRIPT_DIR/../notes/bonus_slice_1_1_progress.md" || exit 1
 
   extra_args=()
   if [ -z "${GITHUB_TOKEN:-}" ]; then
@@ -2635,6 +2690,8 @@ case_NS73() {
     ruleset_repo="$TMP_DIR/ruleset_ns53.git"
   fi
 
+  require_notes_commits_present "$core_repo" "$ruleset_repo" "$SCRIPT_DIR/../notes"/*.md || exit 1
+
   extra_args=()
   if [ -z "${GITHUB_TOKEN:-}" ]; then
     echo "Note: NS73 using local stub server (GITHUB_TOKEN not set)"
@@ -3002,8 +3059,58 @@ case_NS82() {
 )
 }
 
+# NS83 (Cleanup slice 18 Fix 1.3): NS31 on a shallow --depth 1 clone without archive tags
+# fails with a single hint line naming missing commits and the exact git fetch command,
+# and passes on the full clone with archive tags.
+case_NS83() {
+(
+  ws="$TMP_DIR/ns83_ws"
+  mkdir -p "$ws"
+  app_shallow="$ws/dangerously_nerdy_5e_toolkit"
+  git clone --depth 1 --no-tags "file://$SCRIPT_DIR/.." "$app_shallow" >/dev/null 2>&1
+  cp "$SCRIPT_DIR/test_check_notes_shas.sh" "$app_shallow/scripts/test_check_notes_shas.sh"
+  cp "$CHECK_SCRIPT" "$app_shallow/scripts/check_notes_shas.py"
+  if [ -d "$SCRIPT_DIR/../../vtt-engine-core/.git" ]; then
+    git clone --depth 1 --no-tags "file://$SCRIPT_DIR/../../vtt-engine-core" "$ws/vtt-engine-core" >/dev/null 2>&1
+  fi
+  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e/.git" ]; then
+    git clone --depth 1 --no-tags "file://$SCRIPT_DIR/../../vtt-ruleset-dnd5e" "$ws/vtt-ruleset-dnd5e" >/dev/null 2>&1
+  fi
+
+  set +e
+  shallow_out=$(cd "$app_shallow" && GITHUB_TOKEN="" ./scripts/test_check_notes_shas.sh NS31 2>&1)
+  shallow_rc=$?
+  set -e
+  if [ "$shallow_rc" -eq 0 ]; then
+    echo "FAIL: NS83 expected NS31 on shallow clone without tags to fail, got: $shallow_out" >&2
+    exit 1
+  fi
+  if [[ "$shallow_out" == *"not a commit in any given repo"* ]]; then
+    echo "FAIL: NS83 expected hint line instead of 'not a commit in any given repo', got: $shallow_out" >&2
+    exit 1
+  fi
+  if [[ "$shallow_out" != *"git fetch origin 'refs/tags/archive/*:refs/tags/archive/*'"* ]]; then
+    echo "FAIL: NS83 expected git fetch archive tags hint line, got: $shallow_out" >&2
+    exit 1
+  fi
+  # Hint line from case_NS31 itself must be a single line (before runner's FAIL/Failed cases footer).
+  hint_lines=$(printf '%s\n' "$shallow_out" | grep -vE '^(FAIL: NS31 \(exit [0-9]+\)|Failed cases \([0-9]+\): .*)$' | wc -l | tr -d ' ')
+  if [ "$hint_lines" -ne 1 ]; then
+    echo "FAIL: NS83 expected exactly 1 hint line from NS31 on shallow clone, got $hint_lines lines: $shallow_out" >&2
+    exit 1
+  fi
+
+  # On the full clone with archive tags, NS31 passes as today.
+  full_out=$(GITHUB_TOKEN="" "$SCRIPT_DIR/test_check_notes_shas.sh" NS31 2>&1)
+  if [[ "$full_out" != *"PASS: NS31"* ]]; then
+    echo "FAIL: NS83 expected PASS: NS31 on full clone with tags, got: $full_out" >&2
+    exit 1
+  fi
+)
+}
+
 ALL_CASES=(
-  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS73 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82
+  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS73 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82 NS83
 )
 
 SELECTED_CASES=()
@@ -3046,7 +3153,7 @@ if [ "${#FAILED_CASES[@]}" -gt 0 ]; then
 fi
 
 if [ "$#" -eq 0 ]; then
-  echo "All notes SHA check self-tests passed (NS1 - NS82)."
+  echo "All notes SHA check self-tests passed (NS1 - NS83)."
 else
   echo "Selected notes SHA check self-tests passed (${#SELECTED_CASES[@]} case(s))."
 fi
