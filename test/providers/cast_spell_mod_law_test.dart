@@ -175,6 +175,8 @@ Spell _domainSpellFromItem(Spell item, DmRulesEdition edition) {
             ),
           ]
         : const [],
+    rules2014: rules,
+    rules2024: rules,
     customProperties: {
       if (hasFormula) 'rollFormula': rf,
       'scalingFormula': ?scaleStr,
@@ -187,7 +189,7 @@ Spell _customSpell({
   String? scalingFormula,
   int level = 1,
 }) =>
-    Spell(
+    Spell.singleEdition(
       id: const EntityId(slug: 'custom-law-spell', ruleset: RulesetVersion.v2024),
       name: 'Custom Law Spell',
       level: level,

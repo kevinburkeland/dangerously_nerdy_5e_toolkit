@@ -353,7 +353,7 @@ class SpellDto {
       ...unparsedPayload,
     };
 
-    return Spell(
+    return Spell.singleEdition(
       id: entityId,
       name: name,
       level: level,

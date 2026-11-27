@@ -127,6 +127,14 @@ void main() {
         rarityTier: ItemRarity.rare,
         requiresAttunement: true,
         descriptionMarkdown: 'A radiant blade that shines with daylight.',
+        rules2014: ItemEditionDetails(
+          summary: 'A radiant blade that shines with daylight.',
+          description: 'A radiant blade that shines with daylight.',
+        ),
+        rules2024: ItemEditionDetails(
+          summary: 'A radiant blade that shines with daylight.',
+          description: 'A radiant blade that shines with daylight.',
+        ),
       );
 
       expect(equip.id.slug, 'sunblade-custom');

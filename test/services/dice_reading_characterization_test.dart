@@ -66,7 +66,7 @@ Spell _makeSpell({
   String? higherLevelsMarkdown,
   int level = 1,
 }) {
-  return Spell(
+  return Spell.singleEdition(
     id: const EntityId(slug: 'spell-test', ruleset: RulesetVersion.v2024),
     name: 'Test Spell',
     level: level,

@@ -72,25 +72,25 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, character: warlock);
 
       // Spell entity matching the catalog format: slug has 'spell-eldritch-blast'
-      const eldritchBlast = Spell(
-        id: EntityId(
+      final eldritchBlast = Spell.singleEdition(
+        id: const EntityId(
             slug: 'spell-eldritch-blast', ruleset: RulesetVersion.v2024),
         name: 'Eldritch Blast',
         level: 0,
         school: 'evocation',
-        castingTime: CastingTime(
+        castingTime: const CastingTime(
             cost: 1,
             actionType: ActionType.action,
             triggerCondition: '1 Action'),
-        duration: SpellDuration(
+        duration: const SpellDuration(
             type: DurationType.instantaneous, rawText: 'Instantaneous'),
         range: '120 ft',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'A beam of crackling energy.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(diceFormula: '1d10', damageType: DamageType.force),
         ],
-        customProperties: {
+        customProperties: const {
           'isSpellAttack': true,
           'rollFormula': '1d10',
         },

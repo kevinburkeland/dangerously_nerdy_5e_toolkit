@@ -490,24 +490,24 @@ void main() {
 
       expect(controller.hasAgonizingBlast, isTrue);
 
-      const eldritchBlast = Spell(
-        id: EntityId(slug: 'eldritch-blast', ruleset: RulesetVersion.v2014),
+      final eldritchBlast = Spell.singleEdition(
+        id: const EntityId(slug: 'eldritch-blast', ruleset: RulesetVersion.v2014),
         name: 'Eldritch Blast',
         level: 0,
         school: 'evocation',
-        castingTime: CastingTime(
+        castingTime: const CastingTime(
             cost: 1,
             actionType: ActionType.action,
             triggerCondition: '1 Action'),
-        duration: SpellDuration(
+        duration: const SpellDuration(
             type: DurationType.instantaneous, rawText: 'Instantaneous'),
         range: '120 ft',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Make a ranged spell attack against the target.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(diceFormula: '1d10', damageType: DamageType.force),
         ],
-        customProperties: {
+        customProperties: const {
           'isSpellAttack': true,
           'rollFormula': '1d10',
         },

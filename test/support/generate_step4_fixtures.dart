@@ -13,22 +13,22 @@ import '../test_doubles/hive_test_harness.dart';
 import 'catalog_golden_serializer.dart';
 
 List<Spell> _buildStoredFormatTestSpells() {
-  return const [
+  return [
     // 1. Spell with every optional field set
-    Spell(
-      id: EntityId(slug: 'hb-solar-flare', ruleset: RulesetVersion.homebrew),
+    Spell.singleEdition(
+      id: const EntityId(slug: 'hb-solar-flare', ruleset: RulesetVersion.homebrew),
       name: 'Solar Flare',
       level: 3,
       school: 'evocation',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
       range: '120 feet',
-      components: SpellComponents(
+      components: const SpellComponents(
         v: true,
         s: true,
         m: true,
         materialDescription: 'a pinch of sunstone dust',
       ),
-      duration: SpellDuration(
+      duration: const SpellDuration(
         type: DurationType.timed,
         durationSeconds: 60,
         requiresConcentration: true,
@@ -36,7 +36,7 @@ List<Spell> _buildStoredFormatTestSpells() {
       ),
       descriptionMarkdown: 'A burst of radiant fire erupts in a 20-foot sphere.',
       higherLevelsMarkdown: 'When cast using a 4th-level slot or higher, damage increases by 1d6.',
-      damageMath: [
+      damageMath: const [
         EvaluationMath(
           diceFormula: '6d6',
           damageType: DamageType.radiant,
@@ -44,7 +44,7 @@ List<Spell> _buildStoredFormatTestSpells() {
           requiresSave: true,
         ),
       ],
-      customProperties: {
+      customProperties: const {
         'classes': ['Wizard', 'Cleric'],
         'ritual': true,
         'savingThrow': ['dexterity'],
@@ -54,45 +54,45 @@ List<Spell> _buildStoredFormatTestSpells() {
       },
     ),
     // 2. Spell with minimal/no optional fields
-    Spell(
-      id: EntityId(slug: 'hb-quiet-spark', ruleset: RulesetVersion.homebrew),
+    Spell.singleEdition(
+      id: const EntityId(slug: 'hb-quiet-spark', ruleset: RulesetVersion.homebrew),
       name: 'Quiet Spark',
       level: 0,
       school: 'conjuration',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.bonusAction),
       range: '30 feet',
-      components: SpellComponents(v: true, s: false, m: false),
-      duration: SpellDuration(type: DurationType.instantaneous),
+      components: const SpellComponents(v: true, s: false, m: false),
+      duration: const SpellDuration(type: DurationType.instantaneous),
       descriptionMarkdown: 'Creates a tiny silent spark.',
     ),
     // 3. Spell with unknown school text (defaults to evocation in spellToSpellItem)
-    Spell(
-      id: EntityId(slug: 'hb-chrono-step', ruleset: RulesetVersion.homebrew),
+    Spell.singleEdition(
+      id: const EntityId(slug: 'hb-chrono-step', ruleset: RulesetVersion.homebrew),
       name: 'Chrono Step',
       level: 2,
       school: 'chronomancy',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.reaction),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.reaction),
       range: 'Self',
-      components: SpellComponents(v: true, s: true, m: false),
-      duration: SpellDuration(type: DurationType.special),
+      components: const SpellComponents(v: true, s: true, m: false),
+      duration: const SpellDuration(type: DurationType.special),
       descriptionMarkdown: 'Step briefly sideways in time.',
-      customProperties: {
+      customProperties: const {
         'meta': {'ritual': false},
         'savingThrow': 'wisdom',
       },
     ),
     // 4. Spell with classes in fromClassList / fromClassListVariant / fromSubclass Map shape
-    Spell(
-      id: EntityId(slug: 'hb-astral-weave', ruleset: RulesetVersion.homebrew),
+    Spell.singleEdition(
+      id: const EntityId(slug: 'hb-astral-weave', ruleset: RulesetVersion.homebrew),
       name: 'Astral Weave',
       level: 4,
       school: 'abjuration',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
       range: '60 feet',
-      components: SpellComponents(v: true, s: true, m: false),
-      duration: SpellDuration(type: DurationType.permanent),
+      components: const SpellComponents(v: true, s: true, m: false),
+      duration: const SpellDuration(type: DurationType.permanent),
       descriptionMarkdown: 'Weaves a protective veil of starlight.',
-      customProperties: {
+      customProperties: const {
         'classes': {
           'fromClassList': [
             {'name': 'Bard', 'source': 'SRD'},
@@ -110,17 +110,17 @@ List<Spell> _buildStoredFormatTestSpells() {
       },
     ),
     // 5. Spell with classes in nested customProperties.customProperties.classes shape
-    Spell(
-      id: EntityId(slug: 'hb-nested-ward', ruleset: RulesetVersion.homebrew),
+    Spell.singleEdition(
+      id: const EntityId(slug: 'hb-nested-ward', ruleset: RulesetVersion.homebrew),
       name: 'Nested Ward',
       level: 1,
       school: 'abjuration',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
       range: 'Touch',
-      components: SpellComponents(v: true, s: false, m: false),
-      duration: SpellDuration(type: DurationType.timed, durationSeconds: 600),
+      components: const SpellComponents(v: true, s: false, m: false),
+      duration: const SpellDuration(type: DurationType.timed, durationSeconds: 600),
       descriptionMarkdown: 'Wards a touched creature.',
-      customProperties: {
+      customProperties: const {
         'customProperties': {
           'classes': ['Paladin', 'Warlock'],
         },
@@ -150,7 +150,7 @@ List<EquipmentItem> _buildStoredFormatTestItems() {
 
   return specs
       .map(
-        (s) => EquipmentItem(
+        (s) => EquipmentItem.singleEdition(
           id: EntityId(slug: s.slug, ruleset: RulesetVersion.homebrew),
           name: s.name,
           itemType: s.itemType,

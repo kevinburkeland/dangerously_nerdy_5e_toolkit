@@ -12,15 +12,15 @@ void main() {
     test('1. Homebrew cantrip correctly routes to cantrips list on Character',
         () {
       // Create a homebrew cantrip
-      const homebrewCantrip = Spell(
-        id: EntityId(slug: 'mystic-spark', ruleset: RulesetVersion.homebrew),
+      final homebrewCantrip = Spell.singleEdition(
+        id: const EntityId(slug: 'mystic-spark', ruleset: RulesetVersion.homebrew),
         name: 'Mystic Spark',
         level: 0,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'You unleash a spark of crackling arcane energy.',
       );
 

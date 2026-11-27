@@ -572,17 +572,17 @@ void main() {
     test(
         'castSpell scales upcast damage dice and decrements the selected higher slot',
         () async {
-      const spell = Spell(
-        id: EntityId(slug: 'scorching-burst', ruleset: RulesetVersion.v2024),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'scorching-burst', ruleset: RulesetVersion.v2024),
         name: 'Scorching Burst',
         level: 2,
         school: 'evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 ft',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown: 'Deal 2d8 fire damage.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(
             diceFormula: '2d8',
             damageType: DamageType.fire,

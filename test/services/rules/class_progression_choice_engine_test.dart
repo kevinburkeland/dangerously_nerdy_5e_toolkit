@@ -328,14 +328,14 @@ void main() {
     group('5. Mechanical Grants & Live Character Sheet Evaluation', () {
       test('Defense Fighting Style grants +1 AC only when armor is equipped',
           () {
-        const leatherArmor = EquipmentItem(
-          id: EntityId(slug: 'leather-armor', ruleset: RulesetVersion.v2024),
+        final leatherArmor = EquipmentItem.singleEdition(
+          id: const EntityId(slug: 'leather-armor', ruleset: RulesetVersion.v2024),
           name: 'Leather Armor',
           itemType: 'Armor',
           rarity: 'common',
           requiresAttunement: false,
           descriptionMarkdown: 'Standard light leather armor.',
-          customProperties: {
+          customProperties: const {
             'baseAc': 11,
             'armorType': 'light',
           },

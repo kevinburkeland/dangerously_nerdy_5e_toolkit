@@ -153,6 +153,8 @@ Spell _domainSpellFromItem(Spell item, DmRulesEdition edition) {
     ),
     descriptionMarkdown: rules.description.join('\n\n'),
     higherLevelsMarkdown: rules.higherLevels,
+    rules2014: rules,
+    rules2024: rules,
     damageMath: (rules.rollFormula != null &&
             rules.rollFormula!.trim().isNotEmpty &&
             rules.rollFormula!.trim().toLowerCase() != 'none')

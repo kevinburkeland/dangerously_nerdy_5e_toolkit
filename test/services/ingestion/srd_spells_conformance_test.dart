@@ -75,7 +75,7 @@ void main() {
         ));
       }
 
-      return Spell(
+      return Spell.singleEdition(
         id: EntityId(slug: slug, ruleset: ruleset),
         name: name,
         level: item.level,

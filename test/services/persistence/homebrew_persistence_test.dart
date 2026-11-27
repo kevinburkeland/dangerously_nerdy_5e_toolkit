@@ -39,17 +39,17 @@ void main() {
     });
 
     test('saves, loads, and deletes custom spells', () async {
-      const spell = Spell(
-        id: EntityId(slug: 'void-lance', ruleset: RulesetVersion.homebrew),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'void-lance', ruleset: RulesetVersion.homebrew),
         name: 'Void Lance',
         level: 4,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '120 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Fires a beam of necrotic void energy.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(diceFormula: '6d8', damageType: DamageType.necrotic)
         ],
       );
@@ -94,8 +94,8 @@ void main() {
     });
 
     test('saves, loads, and deletes custom equipment items', () async {
-      const item = EquipmentItem(
-        id: EntityId(slug: 'ring-of-aether', ruleset: RulesetVersion.homebrew),
+      final item = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'ring-of-aether', ruleset: RulesetVersion.homebrew),
         name: 'Ring of Aether',
         itemType: 'Ring',
         rarity: 'Very Rare',
@@ -117,16 +117,16 @@ void main() {
 
     test('hydrates LayeredPriorityRepository with saved homebrew entities',
         () async {
-      const spell = Spell(
-        id: EntityId(
+      final spell = Spell.singleEdition(
+        id: const EntityId(
             slug: 'chaotic-blast-homebrew', ruleset: RulesetVersion.homebrew),
         name: 'Chaotic Blast (Homebrew)',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '120 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Chaotic blast.',
       );
 
@@ -141,37 +141,37 @@ void main() {
     });
     test('batch deletes custom entities by slug list and cleans up storage',
         () async {
-      const spell1 = Spell(
-        id: EntityId(slug: 'fire-dart', ruleset: RulesetVersion.homebrew),
+      final spell1 = Spell.singleEdition(
+        id: const EntityId(slug: 'fire-dart', ruleset: RulesetVersion.homebrew),
         name: 'Fire Dart',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Fires a dart of flame.',
       );
-      const spell2 = Spell(
-        id: EntityId(slug: 'ice-spike', ruleset: RulesetVersion.homebrew),
+      final spell2 = Spell.singleEdition(
+        id: const EntityId(slug: 'ice-spike', ruleset: RulesetVersion.homebrew),
         name: 'Ice Spike',
         level: 2,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Fires an icy spike.',
       );
-      const spell3 = Spell(
-        id: EntityId(slug: 'arcane-ward', ruleset: RulesetVersion.homebrew),
+      final spell3 = Spell.singleEdition(
+        id: const EntityId(slug: 'arcane-ward', ruleset: RulesetVersion.homebrew),
         name: 'Arcane Ward',
         level: 3,
         school: 'Abjuration',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: 'Self',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Creates an arcane ward.',
       );
 
@@ -531,8 +531,8 @@ void main() {
     test(
         'reparseAllHomebrew preserves custom items even when synced to MagicItemLibrary',
         () async {
-      const customItem = EquipmentItem(
-        id: EntityId(slug: 'chrono-dagger', ruleset: RulesetVersion.homebrew),
+      final customItem = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'chrono-dagger', ruleset: RulesetVersion.homebrew),
         name: 'Chrono Dagger',
         itemType: 'weapon',
         rarity: 'rare',

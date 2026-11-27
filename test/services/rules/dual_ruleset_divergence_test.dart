@@ -155,14 +155,14 @@ void main() {
     test(
         'Equipping and attuning Amulet of Health (CON 19 = +4) dynamically scales HP',
         () {
-      const amuletItem = EquipmentItem(
-        id: EntityId(slug: 'amulet_of_health', ruleset: RulesetVersion.v2024),
+      final amuletItem = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'amulet_of_health', ruleset: RulesetVersion.v2024),
         name: 'Amulet of Health',
         itemType: 'Wondrous Item',
         rarity: 'Rare',
         requiresAttunement: true,
         descriptionMarkdown: 'Sets Constitution to 19.',
-        customProperties: {
+        customProperties: const {
           'abilityOverrides': {'constitution': 19},
         },
       );
@@ -400,14 +400,14 @@ void main() {
         resources: const CharacterResourcePool(currentHp: 10),
       );
 
-      const greatsword = EquipmentItem(
-        id: EntityId(slug: 'greatsword', ruleset: RulesetVersion.v2024),
+      final greatsword = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'greatsword', ruleset: RulesetVersion.v2024),
         name: 'Greatsword',
         itemType: 'Martial Melee Weapon',
         rarity: 'Common',
         requiresAttunement: false,
         descriptionMarkdown: '2d6 slashing damage.',
-        customProperties: {'mastery': 'graze'},
+        customProperties: const {'mastery': 'graze'},
       );
 
       expect(

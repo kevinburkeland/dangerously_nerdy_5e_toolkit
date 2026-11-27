@@ -103,16 +103,16 @@ void main() {
         'HomebrewPersistenceService stores and loads custom spells seamlessly in database',
         () async {
       final homebrewService = HomebrewPersistenceService();
-      const customSpell = Spell(
-        id: EntityId(
+      final customSpell = Spell.singleEdition(
+        id: const EntityId(
             slug: 'hellish-rebuke-plus', ruleset: RulesetVersion.homebrew),
         name: 'Hellish Rebuke Plus',
         level: 2,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.reaction),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.reaction),
         range: '60 ft',
-        duration: SpellDuration(type: DurationType.instantaneous),
-        components: SpellComponents(v: true, s: true),
+        duration: const SpellDuration(type: DurationType.instantaneous),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Blasts back with double fire.',
       );
 

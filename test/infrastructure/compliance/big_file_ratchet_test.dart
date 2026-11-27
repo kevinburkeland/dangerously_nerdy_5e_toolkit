@@ -25,7 +25,7 @@ const Map<String, int> kBigFileAllowlist = {
   'lib/models/dm_screen_data.dart': 2684,
   'lib/models/spells/level_2_spells.dart': 2466,
   'lib/models/tables/srd_loot_tables.dart': 2291,
-  'lib/widgets/character_sheet/character_sheet_tabs.dart': 2394,
+  'lib/widgets/character_sheet/character_sheet_tabs.dart': 2393,
   'lib/models/spells/level_1_spells.dart': 2246,
   'lib/models/spells/level_3_spells.dart': 2125,
   'lib/services/ingestion/compendium_json_ingestion_pipeline.dart': 2198,

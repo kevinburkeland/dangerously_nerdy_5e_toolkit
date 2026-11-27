@@ -482,17 +482,17 @@ void main() {
     test(
         '16. HomebrewMergeResolver applyResolutionToAllCollisions marks isSelected true for overwrite',
         () {
-      const incSpell = Spell(
-        id: EntityId(slug: 'radiant-strike', ruleset: RulesetVersion.v2014),
+      final incSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'radiant-strike', ruleset: RulesetVersion.v2014),
         name: 'Radiant Strike',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: 'Self',
-        components: SpellComponents(v: true),
+        components: const SpellComponents(v: true),
         descriptionMarkdown: 'Updated description with new classes.',
-        customProperties: {
+        customProperties: const {
           'classes': ['Paladin']
         },
       );

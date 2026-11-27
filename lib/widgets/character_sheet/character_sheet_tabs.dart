@@ -2110,13 +2110,12 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
         ? Spell(
             id: EntityId(
               slug: spellItem.id.slug,
-              ruleset: edition == DmRulesEdition.v2024
-                  ? RulesetVersion.v2024
-                  : RulesetVersion.v2014,
+              ruleset: edition == DmRulesEdition.v2024 ? RulesetVersion.v2024 : RulesetVersion.v2014,
             ),
             name: spellName,
             level: spellItem.level,
             school: (rules?.schoolOverride ?? spellItem.resolvedSchool).name,
+            schoolEnum: rules?.schoolOverride ?? spellItem.resolvedSchool,
             castingTime: CastingTime(
               cost: 1,
               actionType: ActionType.action,
@@ -2155,18 +2154,18 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                     )
                   ]
                 : const [],
+            rules2014: rules!, rules2024: rules,
             customProperties: {
-              if (rules?.rollFormula != null) 'rollFormula': rules!.rollFormula,
-              if (rules?.ritual != null) 'ritual': rules!.ritual,
+              if (rules.rollFormula != null) 'rollFormula': rules.rollFormula,
+              'ritual': rules.ritual,
             },
           )
-        : Spell(
+        : Spell.singleEdition(
             id: EntityId(slug: spellRef.slug, ruleset: RulesetVersion.v2024),
             name: spellRef.displayName,
             level: isCantrip ? 0 : 1,
             school: 'evocation',
-            castingTime:
-                const CastingTime(cost: 1, actionType: ActionType.action),
+            castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
             duration: const SpellDuration(type: DurationType.instantaneous),
             range: '30 ft',
             components: const SpellComponents(),

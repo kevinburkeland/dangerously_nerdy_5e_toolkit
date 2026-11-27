@@ -274,15 +274,15 @@ void main() {
     });
 
     test('5. Malformed record skip: one malformed spell and one good spell', () async {
-      final validSpellMap = const Spell(
-        id: EntityId(slug: 'good-spark', ruleset: RulesetVersion.v2024),
+      final validSpellMap = Spell.singleEdition(
+        id: const EntityId(slug: 'good-spark', ruleset: RulesetVersion.v2024),
         name: 'Good Spark',
         level: 0,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: 'Touch',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Creates small sparks.',
       ).toMap();
 
@@ -308,15 +308,15 @@ void main() {
 
     test('6. Law: at least 200 seeded random backups restore + skipped equals total per section', () async {
       const int caseCount = 200;
-      final validSpell = const Spell(
-        id: EntityId(slug: 'spark', ruleset: RulesetVersion.v2024),
+      final validSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'spark', ruleset: RulesetVersion.v2024),
         name: 'Spark',
         level: 0,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: 'Touch',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Creates small sparks.',
       ).toMap();
 
@@ -333,8 +333,8 @@ void main() {
         actionsMarkdown: 'Attacks with dagger.',
       ).toMap();
 
-      final validItem = const EquipmentItem(
-        id: EntityId(slug: 'wooden-club', ruleset: RulesetVersion.v2024),
+      final validItem = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'wooden-club', ruleset: RulesetVersion.v2024),
         name: 'Wooden Club',
         itemType: 'weapon',
         rarity: 'Common',

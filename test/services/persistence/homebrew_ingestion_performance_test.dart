@@ -23,7 +23,7 @@ void main() {
       // 1. Seed 10 existing spells
       final existingSpells = List<Spell>.generate(
         10,
-        (i) => Spell(
+        (i) => Spell.singleEdition(
           id: EntityId(
               slug: 'existing-spell-$i', ruleset: RulesetVersion.homebrew),
           name: 'Existing Spell $i',
@@ -44,7 +44,7 @@ void main() {
       final incomingSpells = <Spell>[
         // 5 updates
         for (int i = 0; i < 5; i++)
-          Spell(
+          Spell.singleEdition(
             id: EntityId(
                 slug: 'existing-spell-$i', ruleset: RulesetVersion.homebrew),
             name: 'Updated Spell $i',
@@ -59,7 +59,7 @@ void main() {
           ),
         // 15 new spells
         for (int i = 10; i < 25; i++)
-          Spell(
+          Spell.singleEdition(
             id: EntityId(
                 slug: 'new-spell-$i', ruleset: RulesetVersion.homebrew),
             name: 'New Spell $i',
@@ -138,7 +138,7 @@ void main() {
       // Pre-seed database with 5 existing items
       final preExistingItems = List<EquipmentItem>.generate(
         5,
-        (i) => EquipmentItem(
+        (i) => EquipmentItem.singleEdition(
           id: EntityId(slug: 'item-$i', ruleset: RulesetVersion.homebrew),
           name: 'Pre-existing Item $i',
           itemType: 'Weapon',
@@ -153,8 +153,8 @@ void main() {
       final incoming = [
         // 1 collided keepLocal (should NOT overwrite or be added)
         ImportAnalysisItem<EquipmentItem>(
-          incomingEntity: const EquipmentItem(
-            id: EntityId(slug: 'item-0', ruleset: RulesetVersion.homebrew),
+          incomingEntity: EquipmentItem.singleEdition(
+            id: const EntityId(slug: 'item-0', ruleset: RulesetVersion.homebrew),
             name: 'Incoming Item 0 Should Be Ignored',
             itemType: 'Weapon',
             rarity: 'Common',
@@ -167,8 +167,8 @@ void main() {
         ),
         // 1 collided duplicateRename (should be renamed to Copy)
         ImportAnalysisItem<EquipmentItem>(
-          incomingEntity: const EquipmentItem(
-            id: EntityId(slug: 'item-1', ruleset: RulesetVersion.homebrew),
+          incomingEntity: EquipmentItem.singleEdition(
+            id: const EntityId(slug: 'item-1', ruleset: RulesetVersion.homebrew),
             name: 'Incoming Item 1',
             itemType: 'Weapon',
             rarity: 'Common',
@@ -182,7 +182,7 @@ void main() {
         // 3 new additions
         for (int i = 10; i < 13; i++)
           ImportAnalysisItem<EquipmentItem>(
-            incomingEntity: EquipmentItem(
+            incomingEntity: EquipmentItem.singleEdition(
               id: EntityId(slug: 'item-$i', ruleset: RulesetVersion.homebrew),
               name: 'New Item $i',
               itemType: 'Armor',

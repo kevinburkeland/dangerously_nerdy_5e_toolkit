@@ -93,17 +93,17 @@ void main() {
       character: _makeCaster(),
       persistenceService: _FakeRepo(),
     );
-    const badSpell = Spell(
-      id: EntityId(slug: 'bad-formula-spell', ruleset: RulesetVersion.v2024),
+    final badSpell = Spell.singleEdition(
+      id: const EntityId(slug: 'bad-formula-spell', ruleset: RulesetVersion.v2024),
       name: 'Broken Bolt',
       level: 0,
       school: 'evocation',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-      duration: SpellDuration(type: DurationType.instantaneous),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+      duration: const SpellDuration(type: DurationType.instantaneous),
       range: '60 feet',
-      components: SpellComponents(v: true),
+      components: const SpellComponents(v: true),
       descriptionMarkdown: 'Malformed homebrew formula.',
-      damageMath: [
+      damageMath: const [
         EvaluationMath(diceFormula: 'banana', damageType: DamageType.fire),
       ],
     );
@@ -231,17 +231,17 @@ void main() {
       character: makeNonCaster(),
       persistenceService: _FakeRepo(),
     );
-    const modSpell = Spell(
-      id: EntityId(slug: 'shillelagh-test', ruleset: RulesetVersion.v2024),
+    final modSpell = Spell.singleEdition(
+      id: const EntityId(slug: 'shillelagh-test', ruleset: RulesetVersion.v2024),
       name: 'Mod Cantrip',
       level: 0,
       school: 'transmutation',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
-      duration: SpellDuration(type: DurationType.instantaneous),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.bonusAction),
+      duration: const SpellDuration(type: DurationType.instantaneous),
       range: 'Touch',
-      components: SpellComponents(v: true),
+      components: const SpellComponents(v: true),
       descriptionMarkdown: 'Requires spellcasting modifier.',
-      damageMath: [
+      damageMath: const [
         EvaluationMath(diceFormula: '1d8 + mod', damageType: DamageType.bludgeoning),
       ],
     );

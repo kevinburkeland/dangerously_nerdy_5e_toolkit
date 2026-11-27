@@ -238,7 +238,7 @@ class CompendiumSpellParser {
       customProperties['miscTags'] = raw['miscTags'];
     }
 
-    final rawSpellMap = Spell(
+    return Spell.singleEdition(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       level: level,
@@ -255,11 +255,7 @@ class CompendiumSpellParser {
       damageMath: damageMath,
       relatedEntityRefs: transformed.extractedRefs,
       customProperties: customProperties,
-    ).toMap()
-      ..remove('rules2014')
-      ..remove('rules2024')
-      ..remove('schoolEnum');
-    return Spell.fromMap(rawSpellMap);
+    );
   }
 
   static const Set<String> _standardSpellKeys = {

@@ -46,7 +46,7 @@ Spell _inMemorySpell({
   required String name,
   required String baseFormula,
 }) =>
-    Spell(
+    Spell.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.v2024),
       name: name,
       level: 1,

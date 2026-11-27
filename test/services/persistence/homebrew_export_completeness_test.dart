@@ -53,15 +53,15 @@ void main() {
         'exportHomebrewBundle captures all 11 categories including attached and standalone sub-entities',
         () async {
       // 1. Spell
-      const spell = Spell(
-        id: EntityId(slug: 'prismatic-flare', ruleset: RulesetVersion.homebrew),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'prismatic-flare', ruleset: RulesetVersion.homebrew),
         name: 'Prismatic Flare',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Fires a beam of prismatic light.',
       );
       await persistence.saveCustomSpell(spell);
@@ -82,8 +82,8 @@ void main() {
       await persistence.saveCustomMonster(monster);
 
       // 3. Equipment Item
-      const item = EquipmentItem(
-        id: EntityId(
+      final item = EquipmentItem.singleEdition(
+        id: const EntityId(
             slug: 'aegis-of-the-dawn', ruleset: RulesetVersion.homebrew),
         name: 'Aegis of the Dawn',
         itemType: 'shield',

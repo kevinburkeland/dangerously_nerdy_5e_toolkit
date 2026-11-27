@@ -1206,7 +1206,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         rawText: duration,
       );
 
-      final spell = Spell(
+      final spell = Spell.singleEdition(
         id: EntityId(
           slug: _slugify(name),
           ruleset: _rulesetVersion,
@@ -1251,7 +1251,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         customProps['attunementDetails'] = attunementDetails;
       }
 
-      final item = EquipmentItem(
+      final item = EquipmentItem.singleEdition(
         id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
         name: name,
         itemType: itemType,

@@ -72,15 +72,15 @@ void main() {
       replicaId: ReplicaId('test_runner_replica'),
     );
 
-    testSpell = const Spell(
-      id: EntityId(slug: 'fireball', ruleset: RulesetVersion.v2024),
+    testSpell = Spell.singleEdition(
+      id: const EntityId(slug: 'fireball', ruleset: RulesetVersion.v2024),
       name: 'Fireball',
       level: 3,
       school: 'evocation',
-      castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-      duration: SpellDuration(type: DurationType.instantaneous),
+      castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+      duration: const SpellDuration(type: DurationType.instantaneous),
       range: '150 feet',
-      components: SpellComponents(v: true, s: true, m: true),
+      components: const SpellComponents(v: true, s: true, m: true),
       descriptionMarkdown:
           'A bright streak flashes from your pointing finger...',
     );

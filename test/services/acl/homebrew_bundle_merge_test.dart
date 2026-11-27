@@ -17,17 +17,17 @@ void main() {
 
   group('Homebrew Bundle Import/Export & Deduplication Tests', () {
     test('round-trip serialization of HomebrewBundle with all categories', () {
-      const spell = Spell(
-        id: EntityId(slug: 'frost-blast', ruleset: RulesetVersion.homebrew),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'frost-blast', ruleset: RulesetVersion.homebrew),
         name: 'Frost Blast',
         level: 2,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'A cone of cold blasts forth.',
-        customProperties: {'flavor': 'Chilling effect'},
+        customProperties: const {'flavor': 'Chilling effect'},
       );
 
       const monster = Monster(
@@ -75,52 +75,52 @@ void main() {
     test(
         'HomebrewMergeResolver correctly classifies Novel, Identical, and Collision entities',
         () {
-      const existingSpell = Spell(
-        id: EntityId(slug: 'fire-whip', ruleset: RulesetVersion.homebrew),
+      final existingSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'fire-whip', ruleset: RulesetVersion.homebrew),
         name: 'Fire Whip',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.timed, durationSeconds: 60),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.timed, durationSeconds: 60),
         range: '15 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Original local version: 1d6 fire damage.',
       );
 
-      const incomingNovelSpell = Spell(
-        id: EntityId(slug: 'ice-spike', ruleset: RulesetVersion.homebrew),
+      final incomingNovelSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'ice-spike', ruleset: RulesetVersion.homebrew),
         name: 'Ice Spike',
         level: 1,
         school: 'Conjuration',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Shoots a piercing spike of ice.',
       );
 
-      const incomingIdenticalSpell = Spell(
-        id: EntityId(slug: 'fire-whip', ruleset: RulesetVersion.homebrew),
+      final incomingIdenticalSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'fire-whip', ruleset: RulesetVersion.homebrew),
         name: 'Fire Whip',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.timed, durationSeconds: 60),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.timed, durationSeconds: 60),
         range: '15 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Original local version: 1d6 fire damage.',
       );
 
-      const incomingConflictingSpell = Spell(
-        id: EntityId(slug: 'fire-whip', ruleset: RulesetVersion.homebrew),
+      final incomingConflictingSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'fire-whip', ruleset: RulesetVersion.homebrew),
         name: 'Fire Whip (Updated)',
         level: 2, // Changed level
         school: 'Evocation',
-        castingTime: CastingTime(
+        castingTime: const CastingTime(
             cost: 1, actionType: ActionType.bonusAction), // Changed action
-        duration: SpellDuration(type: DurationType.timed, durationSeconds: 60),
+        duration: const SpellDuration(type: DurationType.timed, durationSeconds: 60),
         range: '30 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Updated version with 2d6 fire damage.',
       );
 
@@ -166,31 +166,31 @@ void main() {
         () async {
       final persistence = HomebrewPersistenceService();
 
-      const existingSpell = Spell(
-        id: EntityId(
+      final existingSpell = Spell.singleEdition(
+        id: const EntityId(
             slug: 'cinder-edge-custom', ruleset: RulesetVersion.homebrew),
         name: 'Cinder Edge Custom',
         level: 2,
         school: 'Illusion',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
-        duration: SpellDuration(type: DurationType.timed, durationSeconds: 60),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.bonusAction),
+        duration: const SpellDuration(type: DurationType.timed, durationSeconds: 60),
         range: 'Self',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Version 1.0',
       );
 
       await persistence.saveCustomSpell(existingSpell);
 
-      const incomingSpell = Spell(
-        id: EntityId(
+      final incomingSpell = Spell.singleEdition(
+        id: const EntityId(
             slug: 'cinder-edge-custom', ruleset: RulesetVersion.homebrew),
         name: 'Cinder Edge Custom',
         level: 3,
         school: 'Illusion',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
-        duration: SpellDuration(type: DurationType.timed, durationSeconds: 60),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.bonusAction),
+        duration: const SpellDuration(type: DurationType.timed, durationSeconds: 60),
         range: 'Self',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Version 2.0 (Upgraded)',
       );
 
@@ -225,26 +225,26 @@ void main() {
     test(
         'applyResolutionToAllCollisions updates all colliding entities across categories',
         () {
-      const existingSpell = Spell(
-        id: EntityId(slug: 'spell-a', ruleset: RulesetVersion.homebrew),
+      final existingSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'spell-a', ruleset: RulesetVersion.homebrew),
         name: 'Spell A',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '30 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Local A',
       );
-      const incomingSpell = Spell(
-        id: EntityId(slug: 'spell-a', ruleset: RulesetVersion.homebrew),
+      final incomingSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'spell-a', ruleset: RulesetVersion.homebrew),
         name: 'Spell A Modified',
         level: 2,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '30 ft.',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Incoming A',
       );
 
@@ -311,28 +311,28 @@ void main() {
       final persistence = HomebrewPersistenceService();
       await persistence.clearAllHomebrew();
 
-      const spell1 = Spell(
-        id: EntityId(
+      final spell1 = Spell.singleEdition(
+        id: const EntityId(
             slug: 'progress-spell-1', ruleset: RulesetVersion.homebrew),
         name: 'Progress Spell 1',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '30 ft.',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown: 'Test',
       );
-      const spell2 = Spell(
-        id: EntityId(
+      final spell2 = Spell.singleEdition(
+        id: const EntityId(
             slug: 'progress-spell-2', ruleset: RulesetVersion.homebrew),
         name: 'Progress Spell 2',
         level: 2,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '30 ft.',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown: 'Test',
       );
       const monster1 = Monster(

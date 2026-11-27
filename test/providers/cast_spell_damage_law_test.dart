@@ -84,7 +84,7 @@ Spell _makeSpell({
   String? scalingFormula,
   int level = 1,
 }) {
-  return Spell(
+  return Spell.singleEdition(
     id: const EntityId(slug: 'law-spell', ruleset: RulesetVersion.v2024),
     name: 'Law Spell',
     level: level,

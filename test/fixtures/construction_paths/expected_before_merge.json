@@ -1,0 +1,1100 @@
+{
+  "lib/widgets/homebrew/equipment_builder_dialog.dart": {
+    "form_item_weapon_rare_attuned": {
+      "kind": "item",
+      "catalog": {
+        "id": "sunblade-prototype",
+        "name": "Sunblade Prototype",
+        "name2014": null,
+        "name2024": null,
+        "category": "weapon",
+        "rarity": "rare",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": true,
+        "attunementRequirement": "Requires Attunement",
+        "isConsumable": false,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Weapon",
+          "Rare",
+          "attunement"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Sunblade Prototype",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.\nDeals extra radiant damage.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Sunblade Prototype",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.\nDeals extra radiant damage.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "form_item_armor_uncommon": {
+      "kind": "item",
+      "catalog": {
+        "id": "mithral-breastplate",
+        "name": "Mithral Breastplate",
+        "name2014": null,
+        "name2024": null,
+        "category": "armor",
+        "rarity": "uncommon",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": false,
+        "attunementRequirement": null,
+        "isConsumable": false,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Armor",
+          "Uncommon"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": 4291548641,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Mithral Breastplate",
+          "matchesName": true,
+          "rules": {
+            "summary": "Light and silent.",
+            "description": "# Armor\nLight and silent.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Mithral Breastplate",
+          "matchesName": true,
+          "rules": {
+            "summary": "Light and silent.",
+            "description": "# Armor\nLight and silent.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "form_item_potion_common": {
+      "kind": "item",
+      "catalog": {
+        "id": "potion-of-vigor",
+        "name": "Potion of Vigor",
+        "name2014": null,
+        "name2024": null,
+        "category": "potion",
+        "rarity": "common",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": false,
+        "attunementRequirement": null,
+        "isConsumable": true,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Potion",
+          "Common"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Potion of Vigor",
+          "matchesName": true,
+          "rules": {
+            "summary": "Restores 2d4 HP.",
+            "description": "Restores 2d4 HP.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Potion of Vigor",
+          "matchesName": true,
+          "rules": {
+            "summary": "Restores 2d4 HP.",
+            "description": "Restores 2d4 HP.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    }
+  },
+  "lib/widgets/homebrew/spell_builder_dialog.dart": {
+    "form_spell_ranged_1_action": {
+      "kind": "spell",
+      "catalog": {
+        "id": "arcane-bolt",
+        "name": "Arcane Bolt",
+        "name2014": null,
+        "name2024": null,
+        "level": 1,
+        "school": "evocation",
+        "levelLabel": "1st Level",
+        "fullTypeLabel": "1st Level Evocation",
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [],
+        "v2014": {
+          "editionName": "Arcane Bolt",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "1st Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Hurls a bolt of arcane flame."
+            ],
+            "higherLevels": "Deals +1d6 per slot above 1st.",
+            "classes": [],
+            "rollFormula": "2d6",
+            "damageOrHealType": "fire",
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        },
+        "v2024": {
+          "editionName": "Arcane Bolt",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "1st Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Hurls a bolt of arcane flame."
+            ],
+            "higherLevels": "Deals +1d6 per slot above 1st.",
+            "classes": [],
+            "rollFormula": "2d6",
+            "damageOrHealType": "fire",
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        }
+      },
+      "classList2014": [],
+      "classList2024": []
+    },
+    "form_spell_conc_material": {
+      "kind": "spell",
+      "catalog": {
+        "id": "warding-mist",
+        "name": "Warding Mist",
+        "name2014": null,
+        "name2024": null,
+        "level": 2,
+        "school": "abjuration",
+        "levelLabel": "2nd Level",
+        "fullTypeLabel": "2nd Level Abjuration",
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [],
+        "v2014": {
+          "editionName": "Warding Mist",
+          "effectiveSchool": "abjuration",
+          "fullTypeLabel": "2nd Level Abjuration",
+          "glyphActionRings": [
+            "Instance of 'ActionTraitRing'"
+          ],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 bonusAction",
+            "range": "Self",
+            "components": "V, M (a silver bell)",
+            "duration": "0 seconds",
+            "concentration": true,
+            "ritual": false,
+            "description": [
+              "Creates a protective mist."
+            ],
+            "higherLevels": null,
+            "classes": [],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        },
+        "v2024": {
+          "editionName": "Warding Mist",
+          "effectiveSchool": "abjuration",
+          "fullTypeLabel": "2nd Level Abjuration",
+          "glyphActionRings": [
+            "Instance of 'ActionTraitRing'"
+          ],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 bonusAction",
+            "range": "Self",
+            "components": "V, M (a silver bell)",
+            "duration": "0 seconds",
+            "concentration": true,
+            "ritual": false,
+            "description": [
+              "Creates a protective mist."
+            ],
+            "higherLevels": null,
+            "classes": [],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        }
+      },
+      "classList2014": [],
+      "classList2024": []
+    }
+  },
+  "lib/services/acl/compendium_item_parser.dart": {
+    "acl_item_weapon_rare_attuned_cost": {
+      "kind": "item",
+      "catalog": {
+        "id": "moonbrand-blade",
+        "name": "Moonbrand Blade",
+        "name2014": null,
+        "name2024": null,
+        "category": "weapon",
+        "rarity": "rare",
+        "cost": "500 gp",
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": true,
+        "attunementRequirement": "Requires Attunement",
+        "isConsumable": false,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Melee Weapon",
+          "Rare",
+          "attunement"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Moonbrand Blade",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.\n\nEmits bright light.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Moonbrand Blade",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.\n\nEmits bright light.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "acl_item_armor_prereq_fallback": {
+      "kind": "item",
+      "catalog": {
+        "id": "dwarven-plate-prototype",
+        "name": "Dwarven Plate Prototype",
+        "name2014": null,
+        "name2024": null,
+        "category": "armor",
+        "rarity": "veryRare",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": true,
+        "attunementRequirement": "Requires Attunement",
+        "isConsumable": false,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Heavy Armor",
+          "Very Rare",
+          "attunement"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Dwarven Plate Prototype",
+          "matchesName": true,
+          "rules": {
+            "summary": "**Type:** Heavy Armor",
+            "description": "**Type:** Heavy Armor\n\n**Rarity:** Very Rare\n\n**Requires Attunement:** Yes (by a dwarf)\n\n**AC:** 18\n\n**Value:** 1500 gp",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Dwarven Plate Prototype",
+          "matchesName": true,
+          "rules": {
+            "summary": "**Type:** Heavy Armor",
+            "description": "**Type:** Heavy Armor\n\n**Rarity:** Very Rare\n\n**Requires Attunement:** Yes (by a dwarf)\n\n**AC:** 18\n\n**Value:** 1500 gp",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "acl_item_potion_common": {
+      "kind": "item",
+      "catalog": {
+        "id": "elixir-of-clarity",
+        "name": "Elixir of Clarity",
+        "name2014": null,
+        "name2024": null,
+        "category": "potion",
+        "rarity": "common",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": false,
+        "attunementRequirement": null,
+        "isConsumable": true,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Potion",
+          "Common"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Elixir of Clarity",
+          "matchesName": true,
+          "rules": {
+            "summary": "You gain advantage on concentration checks.",
+            "description": "You gain advantage on concentration checks.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Elixir of Clarity",
+          "matchesName": true,
+          "rules": {
+            "summary": "You gain advantage on concentration checks.",
+            "description": "You gain advantage on concentration checks.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    }
+  },
+  "lib/services/acl/compendium_spell_parser.dart": {
+    "acl_spell_wizard_one_class": {
+      "kind": "spell",
+      "catalog": {
+        "id": "starlight-lance",
+        "name": "Starlight Lance",
+        "name2014": null,
+        "name2024": null,
+        "level": 1,
+        "school": "evocation",
+        "levelLabel": "1st Level",
+        "fullTypeLabel": "1st Level Evocation",
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [],
+        "v2014": {
+          "editionName": "Starlight Lance",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "1st Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Fires a beam of starlight dealing 2d8 radiant damage."
+            ],
+            "higherLevels": null,
+            "classes": [
+              "wizard"
+            ],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        },
+        "v2024": {
+          "editionName": "Starlight Lance",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "1st Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Fires a beam of starlight dealing 2d8 radiant damage."
+            ],
+            "higherLevels": null,
+            "classes": [
+              "wizard"
+            ],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        }
+      },
+      "classList2014": [
+        "wizard"
+      ],
+      "classList2024": [
+        "wizard"
+      ]
+    },
+    "acl_spell_two_classes_ritual_conc": {
+      "kind": "spell",
+      "catalog": {
+        "id": "phantom-lantern",
+        "name": "Phantom Lantern",
+        "name2014": null,
+        "name2024": null,
+        "level": 2,
+        "school": "illusion",
+        "levelLabel": "2nd Level",
+        "fullTypeLabel": "2nd Level Illusion",
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [],
+        "v2014": {
+          "editionName": "Phantom Lantern",
+          "effectiveSchool": "illusion",
+          "fullTypeLabel": "2nd Level Illusion",
+          "glyphActionRings": [
+            "Instance of 'ActionTraitRing'"
+          ],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 bonusAction",
+            "range": "self",
+            "components": "V, S, M (a brass wick)",
+            "duration": "10 minute",
+            "concentration": true,
+            "ritual": true,
+            "description": [
+              "Conjures a silent illusory lantern."
+            ],
+            "higherLevels": "### At Higher Levels\n\nDuration increases by 10 minutes per slot.",
+            "classes": [
+              "bard",
+              "sorcerer"
+            ],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": "wisdom",
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        },
+        "v2024": {
+          "editionName": "Phantom Lantern",
+          "effectiveSchool": "illusion",
+          "fullTypeLabel": "2nd Level Illusion",
+          "glyphActionRings": [
+            "Instance of 'ActionTraitRing'"
+          ],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 bonusAction",
+            "range": "self",
+            "components": "V, S, M (a brass wick)",
+            "duration": "10 minute",
+            "concentration": true,
+            "ritual": true,
+            "description": [
+              "Conjures a silent illusory lantern."
+            ],
+            "higherLevels": "### At Higher Levels\n\nDuration increases by 10 minutes per slot.",
+            "classes": [
+              "bard",
+              "sorcerer"
+            ],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": "wisdom",
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        }
+      },
+      "classList2014": [
+        "bard",
+        "sorcerer"
+      ],
+      "classList2024": [
+        "bard",
+        "sorcerer"
+      ]
+    }
+  },
+  "lib/services/importers/community_compendium_adapters.dart": {
+    "community_item_weapon_rare": {
+      "kind": "item",
+      "catalog": {
+        "id": "stormfang-sabre",
+        "name": "Stormfang Sabre",
+        "name2014": null,
+        "name2024": null,
+        "category": "weapon",
+        "rarity": "rare",
+        "cost": "800 gp",
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": true,
+        "attunementRequirement": "true",
+        "isConsumable": false,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Weapon",
+          "Rare",
+          "attunement"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Stormfang Sabre",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.\nForged in thunder.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Stormfang Sabre",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.\nForged in thunder.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "community_item_armor": {
+      "kind": "item",
+      "catalog": {
+        "id": "runed-half-plate",
+        "name": "Runed Half Plate",
+        "name2014": null,
+        "name2024": null,
+        "category": "armor",
+        "rarity": "uncommon",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": false,
+        "attunementRequirement": null,
+        "isConsumable": false,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Armor",
+          "Uncommon"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Runed Half Plate",
+          "matchesName": true,
+          "rules": {
+            "summary": "Grants +1 AC.",
+            "description": "Grants +1 AC.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Runed Half Plate",
+          "matchesName": true,
+          "rules": {
+            "summary": "Grants +1 AC.",
+            "description": "Grants +1 AC.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "community_item_potion": {
+      "kind": "item",
+      "catalog": {
+        "id": "vial-of-ember",
+        "name": "Vial of Ember",
+        "name2014": null,
+        "name2024": null,
+        "category": "potion",
+        "rarity": "common",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": false,
+        "attunementRequirement": null,
+        "isConsumable": true,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Potion",
+          "Common"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Vial of Ember",
+          "matchesName": true,
+          "rules": {
+            "summary": "Grants fire resistance for 1 hour.",
+            "description": "Grants fire resistance for 1 hour.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Vial of Ember",
+          "matchesName": true,
+          "rules": {
+            "summary": "Grants fire resistance for 1 hour.",
+            "description": "Grants fire resistance for 1 hour.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "community_spell_wizard": {
+      "kind": "spell",
+      "catalog": {
+        "id": "frost-prism",
+        "name": "Frost Prism",
+        "name2014": null,
+        "name2024": null,
+        "level": 3,
+        "school": "evocation",
+        "levelLabel": "3rd Level",
+        "fullTypeLabel": "3rd Level Evocation",
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "HB"
+        ],
+        "v2014": {
+          "editionName": "Frost Prism",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "3rd Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S, M (a crystal shard)",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Deals 5d6 cold damage."
+            ],
+            "higherLevels": null,
+            "classes": [],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        },
+        "v2024": {
+          "editionName": "Frost Prism",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "3rd Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S, M (a crystal shard)",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Deals 5d6 cold damage."
+            ],
+            "higherLevels": null,
+            "classes": [],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        }
+      },
+      "classList2014": [],
+      "classList2024": []
+    }
+  },
+  "lib/infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart": {
+    "ingestion_item_weapon_rare": {
+      "kind": "item",
+      "catalog": {
+        "id": "glimmer-edge",
+        "name": "Glimmer Edge",
+        "name2014": null,
+        "name2024": null,
+        "category": "weapon",
+        "rarity": "rare",
+        "cost": null,
+        "cost2014": null,
+        "cost2024": null,
+        "requiresAttunement": true,
+        "attunementRequirement": "Requires Attunement",
+        "isConsumable": false,
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [
+          "Weapon",
+          "Rare",
+          "attunement"
+        ],
+        "glyphArgb": null,
+        "effectiveGlyphArgb": null,
+        "damageAccent": null,
+        "actionRings": [],
+        "v2014": {
+          "editionName": "Glimmer Edge",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        },
+        "v2024": {
+          "editionName": "Glimmer Edge",
+          "matchesName": true,
+          "rules": {
+            "summary": "A shining blade.",
+            "description": "A shining blade.",
+            "activation": null,
+            "charges": null,
+            "masteryProperties": null,
+            "savingThrowDc": null,
+            "properties": []
+          }
+        }
+      }
+    },
+    "ingestion_spell_evocation": {
+      "kind": "spell",
+      "catalog": {
+        "id": "ember-spark",
+        "name": "Ember Spark",
+        "name2014": null,
+        "name2024": null,
+        "level": 1,
+        "school": "evocation",
+        "levelLabel": "1st Level",
+        "fullTypeLabel": "1st Level Evocation",
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [],
+        "v2014": {
+          "editionName": "Ember Spark",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "1st Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Ignites a target for 2d6 fire damage."
+            ],
+            "higherLevels": "Deals +1d6 per higher slot.",
+            "classes": [],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        },
+        "v2024": {
+          "editionName": "Ember Spark",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "1st Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Ignites a target for 2d6 fire damage."
+            ],
+            "higherLevels": "Deals +1d6 per higher slot.",
+            "classes": [],
+            "rollFormula": null,
+            "damageOrHealType": null,
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        }
+      },
+      "classList2014": [],
+      "classList2024": []
+    }
+  },
+  "lib/infrastructure/dtos/spell_dto.dart": {
+    "dto_spell_wizard": {
+      "kind": "spell",
+      "catalog": {
+        "id": "astral-ray",
+        "name": "Astral Ray",
+        "name2014": null,
+        "name2024": null,
+        "level": 2,
+        "school": "evocation",
+        "levelLabel": "2nd Level",
+        "fullTypeLabel": "2nd Level Evocation",
+        "isChangedIn2024": false,
+        "diffSummary": null,
+        "diffHighlights": [],
+        "tags": [],
+        "v2014": {
+          "editionName": "Astral Ray",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "2nd Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Sends a ray of astral force dealing 3d8 force damage."
+            ],
+            "higherLevels": null,
+            "classes": [
+              "wizard",
+              "cleric"
+            ],
+            "rollFormula": "3d8",
+            "damageOrHealType": "force",
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        },
+        "v2024": {
+          "editionName": "Astral Ray",
+          "effectiveSchool": "evocation",
+          "fullTypeLabel": "2nd Level Evocation",
+          "glyphActionRings": [],
+          "matchesName": true,
+          "matchesSchool": true,
+          "rules": {
+            "castingTime": "1 action",
+            "range": "60 feet",
+            "components": "V, S",
+            "duration": "Instantaneous",
+            "concentration": false,
+            "ritual": false,
+            "description": [
+              "Sends a ray of astral force dealing 3d8 force damage."
+            ],
+            "higherLevels": null,
+            "classes": [
+              "wizard",
+              "cleric"
+            ],
+            "rollFormula": "3d8",
+            "damageOrHealType": "force",
+            "savingThrow": null,
+            "schoolOverride": null,
+            "reactionTrigger": null
+          }
+        }
+      },
+      "classList2014": [
+        "cleric",
+        "wizard"
+      ],
+      "classList2024": [
+        "cleric",
+        "wizard"
+      ]
+    }
+  }
+}

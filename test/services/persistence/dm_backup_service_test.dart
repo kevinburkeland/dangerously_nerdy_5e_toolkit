@@ -70,15 +70,15 @@ void main() {
           name: 'Dragonfire', nodeId: 'test_node', timestamp: const HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'test_node'));
       await campaignService.saveProfileImmediate(profile);
 
-      const spell = Spell(
-        id: EntityId(slug: 'time-stop-plus', ruleset: RulesetVersion.v2024),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'time-stop-plus', ruleset: RulesetVersion.v2024),
         name: 'Time Stop Plus',
         level: 9,
         school: 'Transmutation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: 'Self',
-        components: SpellComponents(v: true),
+        components: const SpellComponents(v: true),
         descriptionMarkdown: 'Freezes time for 1 minute.',
       );
       await homebrewService.saveCustomSpell(spell);
@@ -97,8 +97,8 @@ void main() {
       );
       await homebrewService.saveCustomMonster(monster);
 
-      const item = EquipmentItem(
-        id: EntityId(slug: 'blade-of-eternity', ruleset: RulesetVersion.v2024),
+      final item = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'blade-of-eternity', ruleset: RulesetVersion.v2024),
         name: 'Blade of Eternity',
         itemType: 'Weapon',
         rarity: 'Legendary',

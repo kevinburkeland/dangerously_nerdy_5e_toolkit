@@ -114,7 +114,7 @@ class _SpellBuilderDialogState extends State<SpellBuilderDialog> {
       ));
     }
 
-    final spell = Spell(
+    final spell = Spell.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.homebrew),
       name: name,
       level: _level,

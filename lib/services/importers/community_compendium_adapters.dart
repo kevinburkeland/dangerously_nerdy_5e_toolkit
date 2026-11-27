@@ -169,7 +169,7 @@ class CommunityCompendiumAdapters {
           : null;
     }
 
-    return Spell(
+    return Spell.singleEdition(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       level: level,
@@ -350,7 +350,7 @@ class CommunityCompendiumAdapters {
     final parsedEntries =
         parser.parseEntries(json['entries'], defaultRuleset: ruleset);
 
-    return EquipmentItem(
+    return EquipmentItem.singleEdition(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       itemType: itemType,

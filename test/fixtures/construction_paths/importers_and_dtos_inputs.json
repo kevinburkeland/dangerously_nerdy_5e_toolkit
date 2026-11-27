@@ -1,0 +1,294 @@
+{
+  "compendiumItems": [
+    {
+      "inputId": "acl_item_weapon_rare_attuned_cost",
+      "raw": {
+        "name": "Moonbrand Blade",
+        "source": "HB",
+        "type": "M",
+        "rarity": "rare",
+        "reqAttune": true,
+        "cost": "500 gp",
+        "dmg1": "1d8",
+        "dmgType": "S",
+        "entries": [
+          "A shining blade.",
+          "Emits bright light."
+        ]
+      }
+    },
+    {
+      "inputId": "acl_item_armor_prereq_fallback",
+      "raw": {
+        "name": "Dwarven Plate Prototype",
+        "source": "DMG",
+        "type": "HA",
+        "ac": 18,
+        "rarity": "very rare",
+        "reqAttune": "by a dwarf",
+        "value": 150000
+      }
+    },
+    {
+      "inputId": "acl_item_potion_common",
+      "raw": {
+        "name": "Elixir of Clarity",
+        "source": "XDMG",
+        "type": "P",
+        "rarity": "common",
+        "entries": [
+          "You gain advantage on concentration checks."
+        ]
+      }
+    }
+  ],
+  "compendiumSpells": [
+    {
+      "inputId": "acl_spell_wizard_one_class",
+      "raw": {
+        "name": "Starlight Lance",
+        "source": "HB",
+        "level": 1,
+        "school": "V",
+        "time": [
+          {
+            "number": 1,
+            "unit": "action"
+          }
+        ],
+        "range": {
+          "type": "point",
+          "distance": {
+            "type": "feet",
+            "amount": 60
+          }
+        },
+        "components": {
+          "v": true,
+          "s": true
+        },
+        "duration": [
+          {
+            "type": "instant"
+          }
+        ],
+        "entries": [
+          "Fires a beam of starlight dealing 2d8 radiant damage."
+        ],
+        "classes": {
+          "fromClassList": [
+            {
+              "name": "Wizard",
+              "source": "PHB"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "inputId": "acl_spell_two_classes_ritual_conc",
+      "raw": {
+        "name": "Phantom Lantern",
+        "source": "XPHB",
+        "level": 2,
+        "school": "I",
+        "time": [
+          {
+            "number": 1,
+            "unit": "bonus"
+          }
+        ],
+        "range": {
+          "type": "point",
+          "distance": {
+            "type": "self"
+          }
+        },
+        "components": {
+          "v": true,
+          "s": true,
+          "m": "a brass wick"
+        },
+        "duration": [
+          {
+            "type": "timed",
+            "concentration": true,
+            "duration": {
+              "type": "minute",
+              "amount": 10
+            }
+          }
+        ],
+        "meta": {
+          "ritual": true
+        },
+        "savingThrow": [
+          "wisdom"
+        ],
+        "entries": [
+          "Conjures a silent illusory lantern."
+        ],
+        "entriesHigherLevel": [
+          {
+            "type": "entries",
+            "name": "At Higher Levels",
+            "entries": [
+              "Duration increases by 10 minutes per slot."
+            ]
+          }
+        ],
+        "classes": [
+          "Bard",
+          "Sorcerer"
+        ]
+      }
+    }
+  ],
+  "communityItems": [
+    {
+      "inputId": "community_item_weapon_rare",
+      "raw": {
+        "name": "Stormfang Sabre",
+        "source": "HB",
+        "type": "M",
+        "rarity": "Rare",
+        "reqAttune": true,
+        "value": "800 gp",
+        "entries": [
+          "A shining blade.\nForged in thunder."
+        ]
+      }
+    },
+    {
+      "inputId": "community_item_armor",
+      "raw": {
+        "name": "Runed Half Plate",
+        "source": "DMG",
+        "type": "MA",
+        "ac": 15,
+        "rarity": "Uncommon",
+        "entries": [
+          "Grants +1 AC."
+        ]
+      }
+    },
+    {
+      "inputId": "community_item_potion",
+      "raw": {
+        "name": "Vial of Ember",
+        "source": "XDMG",
+        "type": "P",
+        "rarity": "Common",
+        "entries": [
+          "Grants fire resistance for 1 hour."
+        ]
+      }
+    }
+  ],
+  "communitySpells": [
+    {
+      "inputId": "community_spell_wizard",
+      "raw": {
+        "name": "Frost Prism",
+        "source": "HB",
+        "level": 3,
+        "school": "V",
+        "time": [
+          {
+            "number": 1,
+            "unit": "action"
+          }
+        ],
+        "range": {
+          "type": "point",
+          "distance": {
+            "type": "feet",
+            "amount": 60
+          }
+        },
+        "components": {
+          "v": true,
+          "s": true,
+          "m": {
+            "text": "a crystal shard",
+            "cost": 25,
+            "consume": false
+          }
+        },
+        "duration": [
+          {
+            "type": "instant"
+          }
+        ],
+        "entries": [
+          "Deals 5d6 cold damage."
+        ],
+        "classes": {
+          "fromClassList": [
+            {
+              "name": "Wizard"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "ingestionItems": [
+    {
+      "inputId": "ingestion_item_weapon_rare",
+      "rawSource": "Glimmer Edge (Weapon, Rare, Requires Attunement by a paladin)",
+      "fields": {
+        "name": "Glimmer Edge",
+        "itemType": "Weapon",
+        "rarity": "Rare",
+        "requiresAttunement": true,
+        "attunementDetails": "by a paladin",
+        "descriptionMarkdown": "A shining blade."
+      }
+    }
+  ],
+  "ingestionSpells": [
+    {
+      "inputId": "ingestion_spell_evocation",
+      "rawSource": "Ember Spark (1st-level Evocation)",
+      "fields": {
+        "name": "Ember Spark",
+        "level": 1,
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "descriptionMarkdown": "Ignites a target for 2d6 fire damage.",
+        "higherLevelsMarkdown": "Deals +1d6 per higher slot."
+      }
+    }
+  ],
+  "dtoSpells": [
+    {
+      "inputId": "dto_spell_wizard",
+      "raw": {
+        "id": "astral-ray",
+        "name": "Astral Ray",
+        "level": 2,
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "duration": "Instantaneous",
+        "components": {
+          "v": true,
+          "s": true,
+          "m": false
+        },
+        "descriptionMarkdown": "Sends a ray of astral force dealing 3d8 force damage.",
+        "customProperties": {
+          "classes": [
+            "Wizard",
+            "Cleric"
+          ],
+          "ritual": false
+        }
+      }
+    }
+  ]
+}

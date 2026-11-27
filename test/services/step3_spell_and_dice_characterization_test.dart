@@ -95,7 +95,7 @@ Spell _makeSpell({
   String? scalingFormula,
   int level = 1,
 }) {
-  return Spell(
+  return Spell.singleEdition(
     id: const EntityId(slug: 'step3-spell', ruleset: RulesetVersion.v2024),
     name: 'Step3 Spell',
     level: level,

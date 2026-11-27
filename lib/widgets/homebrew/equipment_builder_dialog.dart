@@ -70,7 +70,7 @@ class _EquipmentBuilderDialogState extends State<EquipmentBuilderDialog> {
     final name = _nameController.text.trim();
     final slug = _slugify(name);
 
-    final item = EquipmentItem(
+    final item = EquipmentItem.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.homebrew),
       name: name,
       itemType: _itemTypeController.text.trim().isEmpty

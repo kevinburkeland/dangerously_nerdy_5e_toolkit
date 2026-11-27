@@ -46,6 +46,7 @@ class SpellCard extends StatelessWidget {
       name: spell.getName(edition),
       level: spell.level,
       school: (rules.schoolOverride ?? spell.resolvedSchool).name,
+      schoolEnum: rules.schoolOverride ?? spell.resolvedSchool,
       castingTime: CastingTime(
         cost: 1,
         actionType: ActionType.action,
@@ -85,6 +86,8 @@ class SpellCard extends StatelessWidget {
               )
             ]
           : const [],
+      rules2014: rules,
+      rules2024: rules,
       customProperties: {
         if (rules.rollFormula != null) 'rollFormula': rules.rollFormula,
         if (rules.scalingFormula != null)

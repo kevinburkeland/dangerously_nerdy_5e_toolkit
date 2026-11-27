@@ -212,17 +212,17 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, 
           character: baseCharacter, persistenceService: fakeRepo);
 
-      const cantrip = Spell(
-        id: EntityId(slug: 'fire-bolt', ruleset: RulesetVersion.v2024),
+      final cantrip = Spell.singleEdition(
+        id: const EntityId(slug: 'fire-bolt', ruleset: RulesetVersion.v2024),
         name: 'Fire Bolt',
         level: 0,
         school: 'evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '120 ft',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown: 'Ranged spell attack. 1d10 fire damage.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(
             diceFormula: '1d10',
             damageType: DamageType.fire,
@@ -262,18 +262,18 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, 
           character: baseCharacter, persistenceService: fakeRepo);
 
-      const leveledSpell = Spell(
-        id: EntityId(slug: 'scorching-ray', ruleset: RulesetVersion.v2024),
+      final leveledSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'scorching-ray', ruleset: RulesetVersion.v2024),
         name: 'Scorching Ray',
         level: 2,
         school: 'evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '120 ft',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown:
             'Make three ranged spell attacks. Each deals 2d6 fire damage.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(
             diceFormula: '2d6',
             damageType: DamageType.fire,
@@ -327,18 +327,18 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, 
           character: charWith3rdSlots, persistenceService: fakeRepo);
 
-      const firstLevelSpell = Spell(
-        id: EntityId(slug: 'burning-hands', ruleset: RulesetVersion.v2024),
+      final firstLevelSpell = Spell.singleEdition(
+        id: const EntityId(slug: 'burning-hands', ruleset: RulesetVersion.v2024),
         name: 'Burning Hands',
         level: 1,
         school: 'evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: 'Self (15-foot cone)',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown:
             'Each creature in a 15-foot cone takes 3d6 fire damage.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(
             diceFormula: '3d6',
             damageType: DamageType.fire,
@@ -446,15 +446,15 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, 
           character: warlockChar, persistenceService: fakeRepo);
 
-      const hellishRebuke = Spell(
-        id: EntityId(slug: 'hellish-rebuke', ruleset: RulesetVersion.v2024),
+      final hellishRebuke = Spell.singleEdition(
+        id: const EntityId(slug: 'hellish-rebuke', ruleset: RulesetVersion.v2024),
         name: 'Hellish Rebuke',
         level: 1,
         school: 'evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.reaction),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.reaction),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown: 'Deal 2d10 fire damage on a failed Dexterity save.',
       );
 
@@ -496,15 +496,15 @@ void main() {
       final controller = CharacterSheetController(replicaId: _testReplica, 
           character: multiclassChar, persistenceService: fakeRepo);
 
-      const hellishRebuke = Spell(
-        id: EntityId(slug: 'hellish-rebuke', ruleset: RulesetVersion.v2024),
+      final hellishRebuke = Spell.singleEdition(
+        id: const EntityId(slug: 'hellish-rebuke', ruleset: RulesetVersion.v2024),
         name: 'Hellish Rebuke',
         level: 1,
         school: 'evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.reaction),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.reaction),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: SpellComponents(),
+        components: const SpellComponents(),
         descriptionMarkdown: 'Deal 2d10 fire damage on a failed Dexterity save.',
       );
 

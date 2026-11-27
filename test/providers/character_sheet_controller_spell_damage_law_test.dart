@@ -37,7 +37,7 @@ final _baseCharacter = Character(
 );
 
 Spell _makeSpellWithFormula(String formula) {
-  return Spell(
+  return Spell.singleEdition(
     id: const EntityId(slug: 'spell-law', ruleset: RulesetVersion.v2024),
     name: 'Law Spell',
     level: 1,

@@ -30,15 +30,15 @@ void main() {
         'exportBundle serializes all active registries into comprehensive sibling arrays',
         () async {
       // 1. Seed Custom Spell
-      const spell = Spell(
-        id: EntityId(slug: 'astral-pulse', ruleset: RulesetVersion.homebrew),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'astral-pulse', ruleset: RulesetVersion.homebrew),
         name: 'Astral Pulse',
         level: 2,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Deals 3d8 force damage.',
       );
       await persistence.saveCustomSpell(spell);
@@ -59,8 +59,8 @@ void main() {
       await persistence.saveCustomMonster(monster);
 
       // 3. Seed Custom Equipment Item
-      const item = EquipmentItem(
-        id: EntityId(slug: 'blade-of-echoes', ruleset: RulesetVersion.homebrew),
+      final item = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'blade-of-echoes', ruleset: RulesetVersion.homebrew),
         name: 'Blade of Echoes',
         itemType: 'weapon',
         rarity: 'Uncommon',
@@ -190,21 +190,21 @@ void main() {
 
     test('exportBundle respects category filtering when specified', () async {
       // Seed spell and item
-      const spell = Spell(
-        id: EntityId(slug: 'sun-beam', ruleset: RulesetVersion.homebrew),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'sun-beam', ruleset: RulesetVersion.homebrew),
         name: 'Sun Beam',
         level: 1,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '30 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Deals radiant damage.',
       );
       await persistence.saveCustomSpell(spell);
 
-      const item = EquipmentItem(
-        id: EntityId(slug: 'shield-of-light', ruleset: RulesetVersion.homebrew),
+      final item = EquipmentItem.singleEdition(
+        id: const EntityId(slug: 'shield-of-light', ruleset: RulesetVersion.homebrew),
         name: 'Shield of Light',
         itemType: 'shield',
         rarity: 'Common',

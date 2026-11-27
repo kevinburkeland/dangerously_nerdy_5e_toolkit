@@ -25,17 +25,17 @@ void main() {
         'exports full backup containing homebrew spells, monsters, items, and races with subraces',
         () async {
       // 1. Save sample homebrew entities
-      const spell = Spell(
-        id: EntityId(slug: 'hellfire-blast', ruleset: RulesetVersion.homebrew),
+      final spell = Spell.singleEdition(
+        id: const EntityId(slug: 'hellfire-blast', ruleset: RulesetVersion.homebrew),
         name: 'Hellfire Blast',
         level: 2,
         school: 'Evocation',
-        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
-        duration: SpellDuration(type: DurationType.instantaneous),
+        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+        duration: const SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: SpellComponents(v: true, s: true),
+        components: const SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Blasts with hellfire.',
-        damageMath: [
+        damageMath: const [
           EvaluationMath(diceFormula: '3d10', damageType: DamageType.fire)
         ],
       );
@@ -56,8 +56,8 @@ void main() {
       );
       await homebrewService.saveCustomMonster(monster);
 
-      const item = EquipmentItem(
-        id: EntityId(
+      final item = EquipmentItem.singleEdition(
+        id: const EntityId(
             slug: 'flame-tongue-greatsword', ruleset: RulesetVersion.homebrew),
         name: 'Flame Tongue Greatsword',
         itemType: 'Weapon',

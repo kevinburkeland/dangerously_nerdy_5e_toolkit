@@ -159,7 +159,7 @@ class CompendiumItemParser {
 
     final grants = _extractGrants(slug, raw, customProperties);
 
-    return EquipmentItem(
+    return EquipmentItem.singleEdition(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       itemType: itemType,

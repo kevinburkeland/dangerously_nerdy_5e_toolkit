@@ -58,7 +58,7 @@ void main() {
         ));
       }
 
-      return Spell(
+      return Spell.singleEdition(
         id: EntityId(slug: slug, ruleset: ruleset),
         name: name,
         level: item.level,
@@ -117,6 +117,8 @@ void main() {
         rarityTier: item.rarityTier,
         requiresAttunement: item.requiresAttunement,
         descriptionMarkdown: rules.description,
+        rules2014: item.rules2014,
+        rules2024: item.rules2024,
         customProperties: {
           'legacyId': item.id.slug,
           'category': item.category.label,

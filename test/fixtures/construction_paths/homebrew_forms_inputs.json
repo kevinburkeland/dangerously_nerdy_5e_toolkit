@@ -1,0 +1,66 @@
+{
+  "items": [
+    {
+      "inputId": "form_item_weapon_rare_attuned",
+      "name": "Sunblade Prototype",
+      "itemType": "Weapon",
+      "rarity": "Rare",
+      "requiresAttunement": true,
+      "description": "A shining blade.\nDeals extra radiant damage."
+    },
+    {
+      "inputId": "form_item_armor_uncommon",
+      "name": "Mithral Breastplate",
+      "itemType": "Armor",
+      "rarity": "Uncommon",
+      "requiresAttunement": false,
+      "description": "# Armor\nLight and silent."
+    },
+    {
+      "inputId": "form_item_potion_common",
+      "name": "Potion of Vigor",
+      "itemType": "Potion",
+      "rarity": "Common",
+      "requiresAttunement": false,
+      "description": "Restores 2d4 HP."
+    }
+  ],
+  "spells": [
+    {
+      "inputId": "form_spell_ranged_1_action",
+      "name": "Arcane Bolt",
+      "level": 1,
+      "school": "Evocation",
+      "actionType": "action",
+      "range": "60 feet",
+      "durationType": "instantaneous",
+      "concentration": false,
+      "verbal": true,
+      "somatic": true,
+      "material": false,
+      "materialDescription": "",
+      "diceFormula": "2d6",
+      "damageType": "fire",
+      "description": "Hurls a bolt of arcane flame.",
+      "higherLevels": "Deals +1d6 per slot above 1st."
+    },
+    {
+      "inputId": "form_spell_conc_material",
+      "name": "Warding Mist",
+      "level": 2,
+      "school": "Abjuration",
+      "actionType": "bonusAction",
+      "range": "Self",
+      "durationType": "timed",
+      "concentration": true,
+      "verbal": true,
+      "somatic": false,
+      "material": true,
+      "materialDescription": "a silver bell",
+      "diceFormula": "",
+      "damageType": "cold",
+      "description": "Creates a protective mist.",
+      "higherLevels": ""
+    }
+  ]
+}

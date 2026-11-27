@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/homebrew/models/homebrew_entity.dart';
 import '../../test_doubles/hive_test_harness.dart';
 
-Spell _spell(String slug, String name) => Spell(
+Spell _spell(String slug, String name) => Spell.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.homebrew),
       name: name,
       level: 1,
@@ -41,7 +41,7 @@ Monster _monster(String slug, String name) => Monster(
       actionsMarkdown: 'Club. Melee Weapon Attack.',
     );
 
-EquipmentItem _item(String slug, String name) => EquipmentItem(
+EquipmentItem _item(String slug, String name) => EquipmentItem.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.homebrew),
       name: name,
       itemType: 'Wondrous Item',
