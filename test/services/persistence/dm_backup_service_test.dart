@@ -83,8 +83,8 @@ void main() {
       );
       await homebrewService.saveCustomSpell(spell);
 
-      const monster = Monster(
-        id: EntityId(slug: 'void-drake', ruleset: RulesetVersion.v2024),
+      final monster = Monster.singleEdition(
+        id: const EntityId(slug: 'void-drake', ruleset: RulesetVersion.v2024),
         name: 'Void Drake',
         size: 'Large',
         monsterType: 'Dragon',

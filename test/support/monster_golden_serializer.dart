@@ -156,10 +156,10 @@ Map<String, dynamic> _serializeDprProfile(DprCombatantProfile p) {
   };
 }
 
-Map<String, dynamic> serializeMonsterForGolden(MonsterItem m) {
+Map<String, dynamic> serializeMonsterForGolden(Monster m) {
   final nameQ = m.name.split(' ').first;
   return {
-    'id': m.id,
+    'id': m.id.slug,
     'name': m.name,
     'name2014': m.name2014,
     'name2024': m.name2024,
@@ -171,7 +171,7 @@ Map<String, dynamic> serializeMonsterForGolden(MonsterItem m) {
     'sourceSpellId': m.sourceSpellId,
     'sourceCategory': m.sourceCategory.name,
     'isHomebrew': m.isHomebrew,
-    'challengeRating': m.challengeRating,
+    'challengeRating': m.challengeRatingValue,
     'xp': m.xp,
     'size': m.size,
     'type': m.type,
@@ -214,37 +214,52 @@ Map<String, dynamic> serializeMonsterForGolden(MonsterItem m) {
 }
 
 Map<String, dynamic> serializeDomainMonster(Monster m) {
-  return _jsonSafe(m.toMap()) as Map<String, dynamic>;
+  final full = m.toMap();
+  return _jsonSafe({
+    'id': full['id'],
+    'name': full['name'],
+    'size': full['size'],
+    'monsterType': full['monsterType'],
+    'alignment': full['alignment'],
+    'armorClass': full['armorClass'],
+    'hitPoints': full['hitPoints'],
+    'hitDieFormula': full['hitDieFormula'],
+    'challengeRating': full['challengeRating'],
+    'actionsMarkdown': full['actionsMarkdown'],
+    'innateSpells': full['innateSpells'],
+    'attackMath': full['attackMath'],
+    'customProperties': full['customProperties'],
+  }) as Map<String, dynamic>;
 }
 
 /// Orders monsters exactly as [MonsterCodexScreen] sorts them for each
 /// [MonsterSortMode].
 List<String> sortMonsterIdsByMode(
-  List<MonsterItem> monsters,
+  List<Monster> monsters,
   MonsterSortMode mode,
   DmRulesEdition edition,
 ) {
   switch (mode) {
     case MonsterSortMode.crAscending:
-      final groups = <double, List<MonsterItem>>{};
+      final groups = <double, List<Monster>>{};
       for (final m in monsters) {
-        groups.putIfAbsent(m.challengeRating, () => []).add(m);
+        groups.putIfAbsent(m.challengeRatingValue, () => []).add(m);
       }
       final crs = groups.keys.toList()..sort();
       return [
-        for (final cr in crs) ...groups[cr]!.map((m) => m.id),
+        for (final cr in crs) ...groups[cr]!.map((m) => m.id.slug),
       ];
     case MonsterSortMode.crDescending:
-      final groups = <double, List<MonsterItem>>{};
+      final groups = <double, List<Monster>>{};
       for (final m in monsters) {
-        groups.putIfAbsent(m.challengeRating, () => []).add(m);
+        groups.putIfAbsent(m.challengeRatingValue, () => []).add(m);
       }
       final crs = groups.keys.toList()..sort((a, b) => b.compareTo(a));
       return [
-        for (final cr in crs) ...groups[cr]!.map((m) => m.id),
+        for (final cr in crs) ...groups[cr]!.map((m) => m.id.slug),
       ];
     case MonsterSortMode.dprDescending:
-      final sorted = List<MonsterItem>.from(monsters)
+      final sorted = List<Monster>.from(monsters)
         ..sort((a, b) {
           final dprA = a.calculateBaselineDpr(edition);
           final dprB = b.calculateBaselineDpr(edition);
@@ -252,21 +267,21 @@ List<String> sortMonsterIdsByMode(
           if (cmp != 0) return cmp;
           return a.getName(edition).compareTo(b.getName(edition));
         });
-      return sorted.map((m) => m.id).toList();
+      return sorted.map((m) => m.id.slug).toList();
     case MonsterSortMode.nameAscending:
-      final sorted = List<MonsterItem>.from(monsters)
+      final sorted = List<Monster>.from(monsters)
         ..sort((a, b) => a.getName(edition).compareTo(b.getName(edition)));
-      return sorted.map((m) => m.id).toList();
+      return sorted.map((m) => m.id.slug).toList();
   }
 }
 
 Map<String, dynamic> buildMonsterCatalogGoldenMap() {
   MonsterCodexLibrary.clearHomebrewMonsters();
-  MonsterItem.clearCaches();
+  MonsterCodexLibrary.clearCaches();
 
   final monsters = <String, dynamic>{};
   for (final m in MonsterCodexLibrary.allMonsters) {
-    monsters[m.id] = serializeMonsterForGolden(m);
+    monsters[m.id.slug] = serializeMonsterForGolden(m);
   }
 
   final presets = <String, dynamic>{};
@@ -319,9 +334,9 @@ Map<String, dynamic> buildMonsterCatalogGoldenMap() {
 }
 
 List<Monster> buildCatalogLookupSampleHomebrewMonsters() {
-  return const [
-    Monster(
-      id: EntityId(slug: 'hb-lookup-mire-hound', ruleset: RulesetVersion.homebrew),
+  return [
+    Monster.singleEdition(
+      id: const EntityId(slug: 'hb-lookup-mire-hound', ruleset: RulesetVersion.homebrew),
       name: 'Mire Hound',
       size: 'Medium',
       monsterType: 'Beast',
@@ -332,7 +347,7 @@ List<Monster> buildCatalogLookupSampleHomebrewMonsters() {
       challengeRating: '1',
       actionsMarkdown:
           '**Pack Tactics.** Advantage on attack rolls when an ally is adjacent.\n\n**Bite.** Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 9 (2d6 + 2) piercing damage.',
-      customProperties: {
+      customProperties: const {
         'speed': '40 ft., swim 20 ft.',
         'str': 14,
         'dex': 14,
@@ -342,8 +357,8 @@ List<Monster> buildCatalogLookupSampleHomebrewMonsters() {
         'cha': 6,
       },
     ),
-    Monster(
-      id: EntityId(slug: 'hb-lookup-ash-drake', ruleset: RulesetVersion.homebrew),
+    Monster.singleEdition(
+      id: const EntityId(slug: 'hb-lookup-ash-drake', ruleset: RulesetVersion.homebrew),
       name: 'Ash Drake',
       size: 'Large',
       monsterType: 'Dragon',
@@ -354,13 +369,13 @@ List<Monster> buildCatalogLookupSampleHomebrewMonsters() {
       challengeRating: '6',
       actionsMarkdown:
           '**Bite.** Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 16 (2d10 + 5) piercing damage.',
-      customProperties: {
+      customProperties: const {
         'speed': '30 ft., fly 60 ft.',
         'damageImmunities': 'fire',
       },
     ),
-    Monster(
-      id: EntityId(slug: 'hb-lookup-void-titan', ruleset: RulesetVersion.homebrew),
+    Monster.singleEdition(
+      id: const EntityId(slug: 'hb-lookup-void-titan', ruleset: RulesetVersion.homebrew),
       name: 'Void Titan',
       size: 'Huge',
       monsterType: 'Fiend',
@@ -371,7 +386,7 @@ List<Monster> buildCatalogLookupSampleHomebrewMonsters() {
       challengeRating: '12',
       actionsMarkdown:
           '**Slam.** Melee Weapon Attack: +11 to hit, reach 10 ft., one target. Hit: 24 (3d10 + 7) bludgeoning damage.',
-      customProperties: {
+      customProperties: const {
         'speed': '40 ft.',
       },
     ),
@@ -380,39 +395,39 @@ List<Monster> buildCatalogLookupSampleHomebrewMonsters() {
 
 Map<String, dynamic> buildMonsterLookupsGoldenMap() {
   MonsterCodexLibrary.clearHomebrewMonsters();
-  MonsterItem.clearCaches();
+  MonsterCodexLibrary.clearCaches();
 
   final allBundled = MonsterCodexLibrary.allMonsters;
   final byIdMismatches = <String>[];
   final byName = <String, String?>{};
   for (final m in allBundled) {
-    final resolved = MonsterCodexLibrary.getMonsterById(m.id)?.id;
-    if (resolved != m.id) {
-      byIdMismatches.add('${m.id}->$resolved');
+    final resolved = MonsterCodexLibrary.getMonsterById(m.id.slug)?.id.slug;
+    if (resolved != m.id.slug) {
+      byIdMismatches.add('${m.id.slug}->$resolved');
     }
-    byName[m.name] = MonsterCodexLibrary.getMonsterByName(m.name)?.id;
+    byName[m.name] = MonsterCodexLibrary.getMonsterByName(m.name)?.id.slug;
   }
 
   final nameSpotChecks = <String, String?>{
-    'Dragon': MonsterCodexLibrary.getMonsterByName('Dragon')?.id,
-    'Dragon Turtle': MonsterCodexLibrary.getMonsterByName('Dragon Turtle')?.id,
-    'Wolf': MonsterCodexLibrary.getMonsterByName('Wolf')?.id,
+    'Dragon': MonsterCodexLibrary.getMonsterByName('Dragon')?.id.slug,
+    'Dragon Turtle': MonsterCodexLibrary.getMonsterByName('Dragon Turtle')?.id.slug,
+    'Wolf': MonsterCodexLibrary.getMonsterByName('Wolf')?.id.slug,
     'nonexistent_monster_xyz':
-        MonsterCodexLibrary.getMonsterByName('nonexistent_monster_xyz')?.id,
+        MonsterCodexLibrary.getMonsterByName('nonexistent_monster_xyz')?.id.slug,
   };
 
   final crBandsBundled = <String, List<String>>{
-    'all': allBundled.map((m) => m.id).toList(),
+    'all': allBundled.map((m) => m.id.slug).toList(),
     'cr0ToQuarter':
-        MonsterCodexLibrary.getCr0ToQuarterMonsters().map((m) => m.id).toList(),
+        MonsterCodexLibrary.getCr0ToQuarterMonsters().map((m) => m.id.slug).toList(),
     'crHalfToOne':
-        MonsterCodexLibrary.getCrHalfToOneMonsters().map((m) => m.id).toList(),
+        MonsterCodexLibrary.getCrHalfToOneMonsters().map((m) => m.id.slug).toList(),
     'crTwoToFour':
-        MonsterCodexLibrary.getCrTwoToFourMonsters().map((m) => m.id).toList(),
+        MonsterCodexLibrary.getCrTwoToFourMonsters().map((m) => m.id.slug).toList(),
     'crFiveToEight':
-        MonsterCodexLibrary.getCrFiveToEightMonsters().map((m) => m.id).toList(),
+        MonsterCodexLibrary.getCrFiveToEightMonsters().map((m) => m.id.slug).toList(),
     'crNinePlus':
-        MonsterCodexLibrary.getCrNinePlusMonsters().map((m) => m.id).toList(),
+        MonsterCodexLibrary.getCrNinePlusMonsters().map((m) => m.id.slug).toList(),
   };
 
   final sortModes2014 = <String, List<String>>{};
@@ -425,30 +440,30 @@ Map<String, dynamic> buildMonsterLookupsGoldenMap() {
   }
 
   final searches = <String, List<String>>{
-    'query_wolf': MonsterCodexLibrary.search('wolf').map((m) => m.id).toList(),
+    'query_wolf': MonsterCodexLibrary.search('wolf').map((m) => m.id.slug).toList(),
     'query_pack_tactics':
-        MonsterCodexLibrary.search('pack tactics').map((m) => m.id).toList(),
-    'query_fire': MonsterCodexLibrary.search('fire').map((m) => m.id).toList(),
+        MonsterCodexLibrary.search('pack tactics').map((m) => m.id.slug).toList(),
+    'query_fire': MonsterCodexLibrary.search('fire').map((m) => m.id.slug).toList(),
     'type_dragon': MonsterCodexLibrary.search('', typeFilter: 'Dragon')
-        .map((m) => m.id)
+        .map((m) => m.id.slug)
         .toList(),
     'size_medium': MonsterCodexLibrary.search('', sizeFilter: 'Medium')
-        .map((m) => m.id)
+        .map((m) => m.id.slug)
         .toList(),
     'minCr_5':
-        MonsterCodexLibrary.search('', minCr: 5).map((m) => m.id).toList(),
+        MonsterCodexLibrary.search('', minCr: 5).map((m) => m.id.slug).toList(),
     'maxCr_quarter':
-        MonsterCodexLibrary.search('', maxCr: 0.25).map((m) => m.id).toList(),
+        MonsterCodexLibrary.search('', maxCr: 0.25).map((m) => m.id.slug).toList(),
   };
 
   final byType = <String, List<String>>{
     for (final t in ['Beast', 'Undead', 'Dragon', 'Fiend', 'Elemental'])
-      t: MonsterCodexLibrary.getMonstersByType(t).map((m) => m.id).toList(),
+      t: MonsterCodexLibrary.getMonstersByType(t).map((m) => m.id.slug).toList(),
   };
 
   final bySize = <String, List<String>>{
     for (final s in ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'])
-      s: MonsterCodexLibrary.getMonstersBySize(s).map((m) => m.id).toList(),
+      s: MonsterCodexLibrary.getMonstersBySize(s).map((m) => m.id.slug).toList(),
   };
 
   final summonsById = <String, String?>{};
@@ -468,23 +483,23 @@ Map<String, dynamic> buildMonsterLookupsGoldenMap() {
   final allWithHb = MonsterCodexLibrary.allMonsters;
   final withHomebrew = {
     'homebrewIds':
-        MonsterCodexLibrary.homebrewMonsters.map((m) => m.id).toList(),
+        MonsterCodexLibrary.homebrewMonsters.map((m) => m.id.slug).toList(),
     'crBands': {
-      'all': allWithHb.map((m) => m.id).toList(),
+      'all': allWithHb.map((m) => m.id.slug).toList(),
       'cr0ToQuarter': MonsterCodexLibrary.getCr0ToQuarterMonsters()
-          .map((m) => m.id)
+          .map((m) => m.id.slug)
           .toList(),
       'crHalfToOne': MonsterCodexLibrary.getCrHalfToOneMonsters()
-          .map((m) => m.id)
+          .map((m) => m.id.slug)
           .toList(),
       'crTwoToFour': MonsterCodexLibrary.getCrTwoToFourMonsters()
-          .map((m) => m.id)
+          .map((m) => m.id.slug)
           .toList(),
       'crFiveToEight': MonsterCodexLibrary.getCrFiveToEightMonsters()
-          .map((m) => m.id)
+          .map((m) => m.id.slug)
           .toList(),
       'crNinePlus': MonsterCodexLibrary.getCrNinePlusMonsters()
-          .map((m) => m.id)
+          .map((m) => m.id.slug)
           .toList(),
     },
     'sortModes2024': {
@@ -514,18 +529,18 @@ Map<String, dynamic> buildMonsterLookupsGoldenMap() {
     'byType': byType,
     'bySize': bySize,
     'spellSummoned': MonsterCodexLibrary.getSpellSummonedMonsters()
-        .map((m) => m.id)
+        .map((m) => m.id.slug)
         .toList(),
     'magicItemSummoned': MonsterCodexLibrary.getMagicItemMonsters()
-        .map((m) => m.id)
+        .map((m) => m.id.slug)
         .toList(),
     'bySourcePreset': {
       'animate_dead': MonsterCodexLibrary.getMonstersBySourcePreset('animate_dead')
-          .map((m) => m.id)
+          .map((m) => m.id.slug)
           .toList(),
       'conjure_animals':
           MonsterCodexLibrary.getMonstersBySourcePreset('conjure_animals')
-              .map((m) => m.id)
+              .map((m) => m.id.slug)
               .toList(),
     },
     'summonsById': summonsById,

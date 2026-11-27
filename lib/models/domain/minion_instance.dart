@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/models/value_objects/hit_points.dart';
 import 'package:vtt_engine_core/utils/deep_immutable.dart';
+import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart' show MonsterStatBlock;
 
 /// Pure domain categorical classification of minion and entity sizes.
 /// Decoupled from concrete ruleset combat statistics.
@@ -55,32 +56,28 @@ enum EntitySize {
   String get damageFormula => stats.damageFormula;
 }
 
-/// Pure immutable value object representing combat and physical metrics for a minion.
+/// Pure immutable value object pairing an Animate Objects point cost and example
+/// label with a canonical ruleset [MonsterStatBlock].
 @immutable
 class MinionStats {
   final int pointCost;
-  final int maxHp;
-  final int ac;
-  final int attackBonus;
-  final int damageDiceCount;
-  final int damageDiceSides;
-  final int damageBonus;
-  final int strScore;
-  final int dexScore;
+  final MonsterStatBlock statBlock;
   final String defaultExample;
 
   const MinionStats({
     required this.pointCost,
-    required this.maxHp,
-    required this.ac,
-    required this.attackBonus,
-    required this.damageDiceCount,
-    required this.damageDiceSides,
-    required this.damageBonus,
-    required this.strScore,
-    required this.dexScore,
+    required this.statBlock,
     required this.defaultExample,
   });
+
+  int get maxHp => statBlock.maxHp;
+  int get ac => statBlock.ac;
+  int get attackBonus => statBlock.attackBonus;
+  int get damageDiceCount => statBlock.damageDiceCount;
+  int get damageDiceSides => statBlock.damageDiceSides;
+  int get damageBonus => statBlock.damageBonus;
+  int get strScore => statBlock.strScore;
+  int get dexScore => statBlock.dexScore;
 
   String get damageFormula {
     final bonusStr = damageBonus == 0
@@ -100,62 +97,107 @@ class MinionStats {
   static const Map<EntitySize, MinionStats> _genericFallbackBaselines = {
     EntitySize.tiny: MinionStats(
       pointCost: 1,
-      maxHp: 1,
-      ac: 10,
-      attackBonus: 0,
-      damageDiceCount: 1,
-      damageDiceSides: 4,
-      damageBonus: 0,
-      strScore: 10,
-      dexScore: 10,
+      statBlock: MonsterStatBlock(
+        id: 'fallback_tiny',
+        name: 'Tiny Object',
+        sizeDisplay: 'Tiny',
+        crDisplay: 'CR 0',
+        typeDisplay: 'Construct',
+        alignment: 'unaligned',
+        ac: 10,
+        maxHp: 1,
+        strScore: 10,
+        dexScore: 10,
+        attackBonus: 0,
+        damageDiceCount: 1,
+        damageDiceSides: 4,
+        damageBonus: 0,
+        damageType: 'Bludgeoning',
+      ),
       defaultExample: 'Tiny Object',
     ),
     EntitySize.small: MinionStats(
       pointCost: 1,
-      maxHp: 5,
-      ac: 10,
-      attackBonus: 0,
-      damageDiceCount: 1,
-      damageDiceSides: 4,
-      damageBonus: 0,
-      strScore: 10,
-      dexScore: 10,
+      statBlock: MonsterStatBlock(
+        id: 'fallback_small',
+        name: 'Small Object',
+        sizeDisplay: 'Small',
+        crDisplay: 'CR 0',
+        typeDisplay: 'Construct',
+        alignment: 'unaligned',
+        ac: 10,
+        maxHp: 5,
+        strScore: 10,
+        dexScore: 10,
+        attackBonus: 0,
+        damageDiceCount: 1,
+        damageDiceSides: 4,
+        damageBonus: 0,
+        damageType: 'Bludgeoning',
+      ),
       defaultExample: 'Small Object',
     ),
     EntitySize.medium: MinionStats(
       pointCost: 2,
-      maxHp: 10,
-      ac: 10,
-      attackBonus: 0,
-      damageDiceCount: 1,
-      damageDiceSides: 6,
-      damageBonus: 0,
-      strScore: 10,
-      dexScore: 10,
+      statBlock: MonsterStatBlock(
+        id: 'fallback_medium',
+        name: 'Medium Object',
+        sizeDisplay: 'Medium',
+        crDisplay: 'CR 0',
+        typeDisplay: 'Construct',
+        alignment: 'unaligned',
+        ac: 10,
+        maxHp: 10,
+        strScore: 10,
+        dexScore: 10,
+        attackBonus: 0,
+        damageDiceCount: 1,
+        damageDiceSides: 6,
+        damageBonus: 0,
+        damageType: 'Bludgeoning',
+      ),
       defaultExample: 'Medium Object',
     ),
     EntitySize.large: MinionStats(
       pointCost: 4,
-      maxHp: 15,
-      ac: 10,
-      attackBonus: 0,
-      damageDiceCount: 1,
-      damageDiceSides: 8,
-      damageBonus: 0,
-      strScore: 10,
-      dexScore: 10,
+      statBlock: MonsterStatBlock(
+        id: 'fallback_large',
+        name: 'Large Object',
+        sizeDisplay: 'Large',
+        crDisplay: 'CR 0',
+        typeDisplay: 'Construct',
+        alignment: 'unaligned',
+        ac: 10,
+        maxHp: 15,
+        strScore: 10,
+        dexScore: 10,
+        attackBonus: 0,
+        damageDiceCount: 1,
+        damageDiceSides: 8,
+        damageBonus: 0,
+        damageType: 'Bludgeoning',
+      ),
       defaultExample: 'Large Object',
     ),
     EntitySize.huge: MinionStats(
       pointCost: 8,
-      maxHp: 20,
-      ac: 10,
-      attackBonus: 0,
-      damageDiceCount: 2,
-      damageDiceSides: 6,
-      damageBonus: 0,
-      strScore: 10,
-      dexScore: 10,
+      statBlock: MonsterStatBlock(
+        id: 'fallback_huge',
+        name: 'Huge Object',
+        sizeDisplay: 'Huge',
+        crDisplay: 'CR 0',
+        typeDisplay: 'Construct',
+        alignment: 'unaligned',
+        ac: 10,
+        maxHp: 20,
+        strScore: 10,
+        dexScore: 10,
+        attackBonus: 0,
+        damageDiceCount: 2,
+        damageDiceSides: 6,
+        damageBonus: 0,
+        damageType: 'Bludgeoning',
+      ),
       defaultExample: 'Huge Object',
     ),
   };

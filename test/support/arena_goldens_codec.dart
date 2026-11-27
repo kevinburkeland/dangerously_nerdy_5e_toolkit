@@ -41,28 +41,28 @@ const List<String> kProbedDamageTypes = <String>[
 /// Returns all creatures offered by the arena monster picker (`MonsterCodexLibrary.search`),
 /// plus any bundled creature at CR >= 17 if not already included, sorted deterministically
 /// by `(challengeRating, id)`.
-List<MonsterItem> collectArenaCreatures() {
-  final byId = <String, MonsterItem>{};
+List<Monster> collectArenaCreatures() {
+  final byId = <String, Monster>{};
   for (final m in MonsterCodexLibrary.search('', edition: DmRulesEdition.v2024)) {
-    byId[m.id] = m;
+    byId[m.id.slug] = m;
   }
   for (final m in MonsterCodexLibrary.allMonsters) {
-    if (m.challengeRating >= 17.0) {
-      byId.putIfAbsent(m.id, () => m);
+    if (m.challengeRatingValue >= 17.0) {
+      byId.putIfAbsent(m.id.slug, () => m);
     }
   }
   final list = byId.values.toList()
     ..sort((a, b) {
-      final crCmp = a.challengeRating.compareTo(b.challengeRating);
+      final crCmp = a.challengeRatingValue.compareTo(b.challengeRatingValue);
       if (crCmp != 0) return crCmp;
-      return a.id.compareTo(b.id);
+      return a.id.slug.compareTo(b.id.slug);
     });
   return list;
 }
 
 /// Deterministic opponent selection rule (not by name):
 /// the median-index creature in [sortedCreatures] sorted by `(challengeRating, id)`.
-MonsterItem selectFixedDuelOpponent(List<MonsterItem> sortedCreatures) {
+Monster selectFixedDuelOpponent(List<Monster> sortedCreatures) {
   return sortedCreatures[sortedCreatures.length ~/ 2];
 }
 
@@ -162,7 +162,7 @@ List<Map<String, Object?>> buildAllCreatureDuelRecords() {
     final engine = ArenaCombatEngine(rng: Random(3));
     final teamA = <ArenaCombatant>[
       ArenaCombatant.fromMonster(
-        id: 'duel_a_${creature.id}',
+        id: 'duel_a_${creature.id.slug}',
         monster: creature,
         team: ArenaTeam.teamA,
         edition: DmRulesEdition.v2024,
@@ -170,7 +170,7 @@ List<Map<String, Object?>> buildAllCreatureDuelRecords() {
     ];
     final teamB = <ArenaCombatant>[
       ArenaCombatant.fromMonster(
-        id: 'duel_b_${opponent.id}',
+        id: 'duel_b_${opponent.id.slug}',
         monster: opponent,
         team: ArenaTeam.teamB,
         edition: DmRulesEdition.v2024,
@@ -185,7 +185,7 @@ List<Map<String, Object?>> buildAllCreatureDuelRecords() {
     );
     records.add(
       serializeSimulationResult(
-        matchKey: 'duel:${creature.id}_vs_${opponent.id}|v2024|colosseum|focusLowestHp|seed=3',
+        matchKey: 'duel:${creature.id.slug}_vs_${opponent.id.slug}|v2024|colosseum|focusLowestHp|seed=3',
         matchup: '${creature.name} vs ${opponent.name}',
         edition: DmRulesEdition.v2024,
         environment: ArenaEnvironment.colosseum,
@@ -235,7 +235,7 @@ List<Map<String, Object?>> buildAllMonteCarloRecords() {
 /// 0 -> 'immune', 50 -> 'resistant', 202 -> 'vulnerable',
 /// 100 -> 'resistant+vulnerable', 101 -> 'none'.
 String probeDefenseCategory({
-  required MonsterItem monster,
+  required Monster monster,
   required DmRulesEdition edition,
   required String damageType,
   required ArenaEnvironment environment,
@@ -244,7 +244,7 @@ String probeDefenseCategory({
   // Clone only the defense text fields onto a clean defender with high HP, low AC,
   // no spells/reactions/riders so executeTurn always lands a clean 101-damage hit.
   final probeDefenderSb = MonsterStatBlock(
-    id: 'probe_def_${monster.id}',
+    id: 'probe_def_${monster.id.slug}',
     name: monster.name,
     sizeDisplay: rawSb.sizeDisplay,
     crDisplay: rawSb.crDisplay,
@@ -259,8 +259,7 @@ String probeDefenseCategory({
     damageResistances: rawSb.damageResistances,
     damageVulnerabilities: rawSb.damageVulnerabilities,
   );
-  final probeDefenderMob = MonsterItem(
-    id: 'probe_def_${monster.id}',
+  final probeDefenderMob = Monster(id: EntityId(slug: 'probe_def_${monster.id.slug}', ruleset: RulesetVersion.v2014),
     name: monster.name,
     statBlock2014: probeDefenderSb,
     statBlock2024: probeDefenderSb,
@@ -284,8 +283,7 @@ String probeDefenseCategory({
     damageType: damageType,
     actions: const [],
   );
-  final probeAttackerMob = MonsterItem(
-    id: 'probe_att',
+  final probeAttackerMob = Monster(id: const EntityId(slug: 'probe_att', ruleset: RulesetVersion.v2014),
     name: 'Probe Attacker',
     statBlock2014: probeAttackerSb,
     statBlock2024: probeAttackerSb,
@@ -318,7 +316,7 @@ String probeDefenseCategory({
 
   if (step.attackEvents.isEmpty || !step.attackEvents.first.isHit || step.attackEvents.first.isCrit) {
     throw StateError(
-      'Defense probe did not land a normal hit for ${monster.id} (${edition.name}, "$damageType"): '
+      'Defense probe did not land a normal hit for ${monster.id.slug} (${edition.name}, "$damageType"): '
       'events=${step.attackEvents.length}',
     );
   }
@@ -331,14 +329,14 @@ String probeDefenseCategory({
     100 => 'resistant+vulnerable',
     101 => 'none',
     _ => throw StateError(
-        'Unexpected probe damage $dmg for ${monster.id} (${edition.name}, "$damageType", ${environment.name})',
+        'Unexpected probe damage $dmg for ${monster.id.slug} (${edition.name}, "$damageType", ${environment.name})',
       ),
   };
 }
 
 List<Map<String, Object?>> buildDamageDefenseTableRows() {
   final monsters = MonsterCodexLibrary.allMonsters.toList()
-    ..sort((a, b) => a.id.compareTo(b.id));
+    ..sort((a, b) => a.id.slug.compareTo(b.id.slug));
   final rows = <Map<String, Object?>>[];
   for (final monster in monsters) {
     for (final edition in DmRulesEdition.values) {
@@ -350,7 +348,7 @@ List<Map<String, Object?>> buildDamageDefenseTableRows() {
           environment: ArenaEnvironment.colosseum,
         );
         final row = <String, Object?>{
-          'monsterId': monster.id,
+          'monsterId': monster.id.slug,
           'edition': edition.name,
           'damageType': dmgType,
           'colosseum': colosseum,

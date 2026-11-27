@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
 
 void main() {
@@ -32,14 +31,14 @@ void main() {
       actions: [fireAction],
     );
 
-    const attackerMob = MonsterItem(
-      id: 'attacker_mob',
+    const attackerMob = Monster(
+      id: EntityId(slug: 'attacker_mob', ruleset: RulesetVersion.v2014),
       name: 'Fire Attacker',
       statBlock2014: attackerStatBlock,
       statBlock2024: attackerStatBlock,
     );
 
-    MonsterItem createDefender({
+    Monster createDefender({
       String? vulnerabilities,
       String? resistances,
       String? immunities,
@@ -60,8 +59,8 @@ void main() {
         damageResistances: resistances,
         damageImmunities: immunities,
       );
-      return MonsterItem(
-        id: 'defender_mob',
+      return Monster(
+        id: const EntityId(slug: 'defender_mob', ruleset: RulesetVersion.v2014),
         name: 'Defender Mob',
         statBlock2014: statBlock,
         statBlock2024: statBlock,
@@ -69,7 +68,7 @@ void main() {
     }
 
     int executeSingleAttack({
-      required MonsterItem defenderMob,
+      required Monster defenderMob,
       required ArenaEnvironment environment,
       int seed = 1,
     }) {

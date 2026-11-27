@@ -78,7 +78,7 @@ void main() {
       expect(monster.actionsMarkdown, isNot(contains('{@h}')));
 
       // Verify conversion to MinionStatBlock
-      final statBlock = monster.toMinionStatBlock();
+      final statBlock = monster.sourceStatBlock;
       expect(statBlock.strScore, equals(18));
       expect(statBlock.dexScore, equals(14));
       expect(statBlock.conScore, equals(16));
@@ -132,7 +132,7 @@ void main() {
           equals('understands Abyssal but cannot speak'));
 
       // Verify MinionStatBlock conversion
-      final sb = monster.toMinionStatBlock();
+      final sb = monster.sourceStatBlock;
       expect(sb.ac, equals(17));
       expect(sb.maxHp, equals(178));
       expect(sb.strScore, equals(22)); // Stone Golem STR
@@ -148,8 +148,8 @@ void main() {
         'revitalizes _copy creature from backup bundle where actions were empty',
         () {
       // Simulates creature from ~/homebrew.json where actionsMarkdown was only table and stats were 10
-      const backupMonster = Monster(
-        id: EntityId(
+      final backupMonster = Monster.singleEdition(
+        id: const EntityId(
             slug: 'animated-spider-idol', ruleset: RulesetVersion.v2014),
         name: 'Animated Spider Idol',
         size: 'Large',
@@ -167,7 +167,7 @@ void main() {
         },
       );
 
-      final sb = backupMonster.toMinionStatBlock();
+      final sb = backupMonster.sourceStatBlock;
       expect(sb.ac, equals(17));
       expect(sb.maxHp, equals(178));
       expect(sb.strScore, equals(22));

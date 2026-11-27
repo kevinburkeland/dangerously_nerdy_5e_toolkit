@@ -225,7 +225,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     }
   }
 
-  void _openQuickRollDialog(BuildContext context, MonsterItem monster) {
+  void _openQuickRollDialog(BuildContext context, Monster monster) {
     MonsterQuickRollDialog.show(
       context,
       monster: monster,
@@ -310,7 +310,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       final statBlock = monster.getStatBlock(activeEdition);
 
       if (_viewMode == MonsterCodexViewMode.myBestiary &&
-          !pinnedIds.contains(monster.id)) {
+          !pinnedIds.contains(monster.id.slug)) {
         return false;
       }
       if (_viewMode == MonsterCodexViewMode.revisions2024 &&
@@ -320,7 +320,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       if (_viewMode == MonsterCodexViewMode.homebrew && !monster.isHomebrew) {
         return false;
       }
-      if (_showOnlyPinned && !pinnedIds.contains(monster.id)) {
+      if (_showOnlyPinned && !pinnedIds.contains(monster.id.slug)) {
         return false;
       }
       if (_showOnlySpellSummons &&
@@ -369,9 +369,9 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     }).toList();
 
     final pinnedMonstersInResults =
-        filteredMonsters.where((m) => pinnedIds.contains(m.id)).toList();
+        filteredMonsters.where((m) => pinnedIds.contains(m.id.slug)).toList();
     final otherMonstersInResults =
-        filteredMonsters.where((m) => !pinnedIds.contains(m.id)).toList();
+        filteredMonsters.where((m) => !pinnedIds.contains(m.id.slug)).toList();
 
     final activeFilterCount = _getActiveFilterCount();
 
@@ -700,7 +700,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
   List<Widget> _buildGroupedSlivers(
     BuildContext context,
-    List<MonsterItem> monsters,
+    List<Monster> monsters,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
@@ -721,7 +721,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
   List<Widget> _buildGroupedCrSlivers(
     BuildContext context,
-    List<MonsterItem> monsters,
+    List<Monster> monsters,
     DmRulesEdition edition,
     Set<String> pinnedIds, {
     bool ascending = true,
@@ -731,9 +731,9 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     final slivers = <Widget>[];
 
     // Group monsters by distinct challenge rating
-    final crGroups = <double, List<MonsterItem>>{};
+    final crGroups = <double, List<Monster>>{};
     for (final monster in monsters) {
-      final cr = monster.challengeRating;
+      final cr = monster.challengeRatingValue;
       crGroups.putIfAbsent(cr, () => []).add(monster);
     }
 
@@ -806,7 +806,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
   List<Widget> _buildGroupedDprSlivers(
     BuildContext context,
-    List<MonsterItem> monsters,
+    List<Monster> monsters,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
@@ -814,7 +814,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final slivers = <Widget>[];
 
-    final sorted = List<MonsterItem>.from(monsters)
+    final sorted = List<Monster>.from(monsters)
       ..sort((a, b) {
         final dprA = a.calculateBaselineDpr(edition);
         final dprB = b.calculateBaselineDpr(edition);
@@ -823,7 +823,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
         return a.getName(edition).compareTo(b.getName(edition));
       });
 
-    final tiers = <({String title, Color color, List<MonsterItem> items})>[
+    final tiers = <({String title, Color color, List<Monster> items})>[
       (
         title: 'Deadly Strike (40+ DPR)',
         color: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
@@ -913,7 +913,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
   List<Widget> _buildGroupedAlphabeticalSlivers(
     BuildContext context,
-    List<MonsterItem> monsters,
+    List<Monster> monsters,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
@@ -921,10 +921,10 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final slivers = <Widget>[];
 
-    final sorted = List<MonsterItem>.from(monsters)
+    final sorted = List<Monster>.from(monsters)
       ..sort((a, b) => a.getName(edition).compareTo(b.getName(edition)));
 
-    final letterGroups = <String, List<MonsterItem>>{};
+    final letterGroups = <String, List<Monster>>{};
     for (final monster in sorted) {
       final name = monster.getName(edition);
       final letter = name.isNotEmpty ? name[0].toUpperCase() : '#';
@@ -996,17 +996,17 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
   Widget _buildSliverMonsterCards(
     BuildContext context,
-    List<MonsterItem> monsters,
+    List<Monster> monsters,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    return SliverResponsiveCardGrid<MonsterItem>(
+    return SliverResponsiveCardGrid<Monster>(
       items: monsters,
       itemBuilder: (context, monster) => MonsterCard(
         monster: monster,
         edition: edition,
-        isPinned: pinnedIds.contains(monster.id),
-        onTogglePin: () => _togglePinMonster(context, monster.id),
+        isPinned: pinnedIds.contains(monster.id.slug),
+        onTogglePin: () => _togglePinMonster(context, monster.id.slug),
         onTap: () {
           CreatureStatBlockDialog.show(
             context,
@@ -1020,8 +1020,8 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
             context,
             monster: monster,
             edition: edition,
-            isPinned: pinnedIds.contains(monster.id),
-            onTogglePin: () => _togglePinMonster(context, monster.id),
+            isPinned: pinnedIds.contains(monster.id.slug),
+            onTogglePin: () => _togglePinMonster(context, monster.id.slug),
           );
         },
       ),

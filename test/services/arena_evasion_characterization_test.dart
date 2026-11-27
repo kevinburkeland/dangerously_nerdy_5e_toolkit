@@ -3,10 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
 
-MonsterItem _buildEvasionMonster(MonsterItem base, {required bool withEvasion}) {
+Monster _buildEvasionMonster(Monster base, {required bool withEvasion}) {
   final sb = base.statBlock2024;
   final traits = withEvasion
       ? [
@@ -51,8 +50,11 @@ MonsterItem _buildEvasionMonster(MonsterItem base, {required bool withEvasion}) 
     damageBonus: sb.damageBonus,
     damageType: sb.damageType,
   );
-  return MonsterItem(
-    id: withEvasion ? '${base.id}_evasion' : '${base.id}_no_evasion',
+  return Monster(
+    id: EntityId(
+      slug: withEvasion ? '${base.id.slug}_evasion' : '${base.id.slug}_no_evasion',
+      ruleset: base.id.ruleset,
+    ),
     name: withEvasion ? 'Evasive Target' : 'Standard Target',
     statBlock2014: modifiedSb,
     statBlock2024: modifiedSb,
@@ -61,8 +63,8 @@ MonsterItem _buildEvasionMonster(MonsterItem base, {required bool withEvasion}) 
 
 void main() {
   group('Arena Evasion Save-Site Characterization', () {
-    late MonsterItem wolfMonster;
-    late MonsterItem dragonMonster;
+    late Monster wolfMonster;
+    late Monster dragonMonster;
 
     setUp(() {
       wolfMonster = MonsterCodexLibrary.allMonsters

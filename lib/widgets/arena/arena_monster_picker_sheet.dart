@@ -11,7 +11,7 @@ import '../glyphs/dnd_glyph.dart';
 class ArenaMonsterPickerSheet extends StatefulWidget {
   final ArenaTeam team;
   final DmRulesEdition edition;
-  final void Function(MonsterItem monster, int count) onMonstersSelected;
+  final void Function(Monster monster, int count) onMonstersSelected;
 
   const ArenaMonsterPickerSheet({
     super.key,
@@ -24,7 +24,7 @@ class ArenaMonsterPickerSheet extends StatefulWidget {
     BuildContext context, {
     required ArenaTeam team,
     required DmRulesEdition edition,
-    required void Function(MonsterItem monster, int count) onMonstersSelected,
+    required void Function(Monster monster, int count) onMonstersSelected,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -73,7 +73,7 @@ class _ArenaMonsterPickerSheetState extends State<ArenaMonsterPickerSheet> {
     super.dispose();
   }
 
-  List<MonsterItem> _filterMonsters() {
+  List<Monster> _filterMonsters() {
     final query = _searchController.text.trim();
     double? minCr;
     double? maxCr;

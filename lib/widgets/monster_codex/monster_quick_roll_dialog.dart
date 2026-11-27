@@ -122,7 +122,7 @@ class MonsterActionResult {
 
 /// Interactive modal for quick-rolling creature attack rolls, damage, multiattacks, and traits.
 class MonsterQuickRollDialog extends StatefulWidget {
-  final MonsterItem monster;
+  final Monster monster;
   final CreatureAction? initialAction;
   final void Function(MonsterActionResult result, String monsterName)?
       onRollCompleted;
@@ -136,7 +136,7 @@ class MonsterQuickRollDialog extends StatefulWidget {
 
   static Future<MonsterActionResult?> show(
     BuildContext context, {
-    required MonsterItem monster,
+    required Monster monster,
     CreatureAction? initialAction,
     void Function(MonsterActionResult result, String monsterName)?
         onRollCompleted,

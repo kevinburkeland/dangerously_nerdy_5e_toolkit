@@ -21,8 +21,8 @@ void main() {
   });
 
   group('Homebrew Creature Cross-Toolkit Integration Tests', () {
-    const customBeast = Monster(
-      id: EntityId(slug: 'dire-timber-wolf', ruleset: RulesetVersion.homebrew),
+    final customBeast = Monster.singleEdition(
+      id: const EntityId(slug: 'dire-timber-wolf', ruleset: RulesetVersion.homebrew),
       name: 'Dire Timber Wolf',
       size: 'Large',
       monsterType: 'Beast',
@@ -41,8 +41,8 @@ void main() {
       },
     );
 
-    const customDragon = Monster(
-      id: EntityId(slug: 'astral-drake', ruleset: RulesetVersion.homebrew),
+    final customDragon = Monster.singleEdition(
+      id: const EntityId(slug: 'astral-drake', ruleset: RulesetVersion.homebrew),
       name: 'Astral Drake',
       size: 'Huge',
       monsterType: 'Dragon',
@@ -62,9 +62,9 @@ void main() {
     );
 
     test(
-        'converts domain Monster into MinionStatBlock and MonsterItem accurately',
+        'converts domain Monster into MinionStatBlock and Monster accurately',
         () {
-      final statBlock = customBeast.toMinionStatBlock();
+      final statBlock = customBeast.sourceStatBlock;
       expect(statBlock.id, equals('dire-timber-wolf'));
       expect(statBlock.name, equals('Dire Timber Wolf'));
       expect(statBlock.sizeDisplay, equals('Large'));
@@ -81,17 +81,17 @@ void main() {
       expect(statBlock.hasPackTactics, isTrue);
       expect(statBlock.speed, equals('50 ft.'));
 
-      final monsterItem = customBeast.toMonsterItem();
+      final monsterItem = customBeast;
       expect(monsterItem.isHomebrew, isTrue);
       expect(monsterItem.sourcePresetId, equals('homebrew'));
-      expect(monsterItem.challengeRating, equals(1.0));
+      expect(monsterItem.challengeRatingValue, equals(1.0));
     });
 
     test(
         'parses ### markdown headers without colon into named traits and actions',
         () {
-      const headingMonster = Monster(
-        id: EntityId(slug: 'shadow-stalker', ruleset: RulesetVersion.homebrew),
+      final headingMonster = Monster.singleEdition(
+        id: const EntityId(slug: 'shadow-stalker', ruleset: RulesetVersion.homebrew),
         name: 'Shadow Stalker',
         size: 'Medium',
         monsterType: 'Monstrosity',
@@ -114,7 +114,7 @@ Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d8 + 3) pierci
 ''',
       );
 
-      final statBlock = headingMonster.toMinionStatBlock();
+      final statBlock = headingMonster.sourceStatBlock;
 
       // Traits should be parsed with their exact names (NOT 'Feature')
       expect(statBlock.traits.length, equals(2));
@@ -224,7 +224,7 @@ Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d8 + 3) pierci
         (tester) async {
       await HomebrewPersistenceService().saveCustomMonster(customDragon);
 
-      MonsterItem? selectedMonster;
+      Monster? selectedMonster;
       int selectedCount = 0;
 
       await tester.pumpWidget(
@@ -267,7 +267,7 @@ Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d8 + 3) pierci
       await tester.tap(find.text('ADD TO TEAM CRIMSON'));
       await tester.pumpAndSettle();
 
-      expect(selectedMonster?.id, equals('astral-drake'));
+      expect(selectedMonster?.id.slug, equals('astral-drake'));
       expect(selectedCount, equals(1));
     });
   });

@@ -1156,9 +1156,9 @@ class DprCombatantProfile {
     );
   }
 
-  /// Factory constructor to convert any MonsterItem from Monster Codex into a DprCombatantProfile.
+  /// Factory constructor to convert any Monster from Monster Codex into a DprCombatantProfile.
   factory DprCombatantProfile.fromMonsterItem(
-    MonsterItem monster, {
+    Monster monster, {
     DmRulesEdition edition = DmRulesEdition.v2024,
     AdvantageType? advantage,
   }) {
@@ -1176,7 +1176,7 @@ class DprCombatantProfile {
             ? extracted
             : [
                 DprAttackAction(
-                  id: '${monster.id}_default',
+                  id: '${monster.id.slug}_default',
                   name: monster.getName(edition),
                   attackBonus: sb.attackBonus,
                   diceCount: sb.damageDiceCount,
@@ -1191,13 +1191,13 @@ class DprCombatantProfile {
               ]);
 
     return DprCombatantProfile(
-      id: monster.id,
+      id: monster.id.slug,
       name: monster.getName(edition),
       description: 'CR ${sb.crDisplay} ${sb.sizeDisplay} ${sb.typeDisplay}',
-      level: math.max(1, monster.challengeRating.ceil()),
+      level: math.max(1, monster.challengeRatingValue.ceil()),
       abilityScore: math.max(sb.strScore, sb.dexScore),
       proficiencyBonus:
-          ((math.max(1, monster.challengeRating.ceil()) - 1) ~/ 4) + 2,
+          ((math.max(1, monster.challengeRatingValue.ceil()) - 1) ~/ 4) + 2,
       defaultAdvantage: adv,
       attacks: finalAttacks,
     );

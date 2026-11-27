@@ -14,7 +14,7 @@ Monster _makeHomebrewMonster({
   String actionsMarkdown =
       '**Bite.** Melee Weapon Attack: +19 to hit, reach 10 ft., one target. Hit: 36 (4d12 + 10) piercing damage. Target must make a Dexterity saving throw or be knocked prone.',
 }) {
-  return Monster(
+  return Monster.singleEdition(
     id: EntityId(
       slug: 'hb_${name.toLowerCase().replaceAll(' ', '_')}',
       ruleset: RulesetVersion.v2024,
@@ -48,9 +48,9 @@ void main() {
           name: 'Iron Behemoth',
           crText: '30 (155,000 XP)',
         );
-        final item = hb.toMonsterItem();
-        expect(item.challengeRating, 30.0);
-        expect(proficiencyBonusForChallengeRating(item.challengeRating), 9);
+        final item = hb;
+        expect(item.challengeRatingValue, 30.0);
+        expect(proficiencyBonusForChallengeRating(item.challengeRatingValue), 9);
 
         final combatantA = ArenaCombatant.fromMonster(
           id: 'hb_a',
@@ -89,7 +89,7 @@ void main() {
           crText: 'CR 31',
           actionsMarkdown:
               '**Starburst Cone.** Each creature in a 30-foot cone must make a Dexterity saving throw, taking 28 (8d6) fire damage on a failed save.',
-        ).toMonsterItem();
+        );
         final combatantA = ArenaCombatant(
           id: 'titan_a',
           monster: titan,
@@ -172,7 +172,7 @@ void main() {
         final titan = _makeHomebrewMonster(
           name: 'Astral Titan',
           crText: 'CR 31',
-        ).toMonsterItem();
+        );
         final combatantA = ArenaCombatant(
           id: 'titan_ui',
           monster: titan,

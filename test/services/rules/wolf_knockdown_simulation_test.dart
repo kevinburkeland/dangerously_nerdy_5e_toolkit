@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_action_result.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
@@ -89,8 +88,7 @@ void main() {
     damageType: 'slashing',
   );
 
-  const defenderMonster = MonsterItem(
-    id: 'defender_target',
+  const defenderMonster = Monster(id: EntityId(slug: 'defender_target', ruleset: RulesetVersion.v2014),
     name: 'Defender',
     statBlock2014: defenderStatBlock,
     statBlock2024: defenderStatBlock,
@@ -240,8 +238,7 @@ void main() {
         () {
       final attacker = ArenaCombatant(
         id: 'wolf_1',
-        monster: const MonsterItem(
-          id: 'srd_wolf',
+        monster: const Monster(id: EntityId(slug: 'srd_wolf', ruleset: RulesetVersion.v2014),
           name: 'Wolf',
           statBlock2014: wolfStatBlock,
           statBlock2024: wolfStatBlock,

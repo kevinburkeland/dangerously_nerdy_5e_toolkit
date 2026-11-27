@@ -1141,7 +1141,7 @@ class Dnd5eIngestionCapability implements RulesetIngestionCapability {
         }
       }
 
-      final monster = Monster(
+      final monster = Monster.singleEdition(
         id: EntityId(slug: _slugify(name), ruleset: _rulesetVersion),
         name: name,
         size: size,

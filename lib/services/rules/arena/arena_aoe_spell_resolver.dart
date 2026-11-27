@@ -337,7 +337,7 @@ class ArenaAoeSpellResolver {
     // 1. Hold Monster (spell_hold_monster, Level 5)
     if (attacker.hasSpell('spell_hold_monster') && ctx.hasSlotFor(attacker, 5)) {
       livingEnemies.sort((a, b) =>
-          b.monster.challengeRating.compareTo(a.monster.challengeRating));
+          b.monster.challengeRatingValue.compareTo(a.monster.challengeRatingValue));
       final target = livingEnemies.first;
       final slotLvl = ctx.deductHighestSlot(attacker, 5)!;
       attacker.activeConcentrationSpellId = 'spell_hold_monster';
@@ -397,7 +397,7 @@ class ArenaAoeSpellResolver {
     // 2. Banishment (spell_banishment, Level 4)
     if (attacker.hasSpell('spell_banishment') && ctx.hasSlotFor(attacker, 4)) {
       livingEnemies.sort((a, b) =>
-          b.monster.challengeRating.compareTo(a.monster.challengeRating));
+          b.monster.challengeRatingValue.compareTo(a.monster.challengeRatingValue));
       final target = livingEnemies.first;
       final slotLvl = ctx.deductHighestSlot(attacker, 4)!;
       attacker.activeConcentrationSpellId = 'spell_banishment';

@@ -19,7 +19,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_ent
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_other_category.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
@@ -427,7 +426,7 @@ void main() {
     // Site 8: monster_codex_data.dart line 769 (action hitDamage & description)
     // -------------------------------------------------------------------------
     test('Site 8: monster_codex_data.dart:769 (action hitDamage & description)', () {
-      Monster makeMonster(String hitDamage) => Monster(
+      Monster makeMonster(String hitDamage) => Monster.singleEdition(
         id: const EntityId(slug: 'test-monster', ruleset: RulesetVersion.v2024),
         name: 'Test Monster',
         size: 'Medium',
@@ -444,19 +443,19 @@ void main() {
       );
 
       // 1. plain NdS
-      final s1 = makeMonster('2d6').toMinionStatBlock();
+      final s1 = makeMonster('2d6').sourceStatBlock;
       expect(s1.damageDiceCount, 2);
       expect(s1.damageDiceSides, 6);
       expect(s1.damageBonus, 0);
 
       // 2. NdS + k
-      final s2 = makeMonster('1d8+3').toMinionStatBlock();
+      final s2 = makeMonster('1d8+3').sourceStatBlock;
       expect(s2.damageDiceCount, 1);
       expect(s2.damageDiceSides, 8);
       expect(s2.damageBonus, 3);
 
       // 3. two dice terms
-      final s3 = makeMonster('2d6 + 1d8').toMinionStatBlock();
+      final s3 = makeMonster('2d6 + 1d8').sourceStatBlock;
       expect(s3.damageDiceCount, 1); // Cleanup slice 13: was 2, dropped a die group
       expect(s3.damageDiceSides, 6);
       expect(
@@ -465,12 +464,12 @@ void main() {
       ); // Cleanup slice 13: was 0, dropped a die group
 
       // 4. text around it
-      final s4 = makeMonster('Hit: 3d6 slashing damage').toMinionStatBlock();
+      final s4 = makeMonster('Hit: 3d6 slashing damage').sourceStatBlock;
       expect(s4.damageDiceCount, 3);
       expect(s4.damageDiceSides, 6);
 
       // 5. garbage (defaults to 1d6+2)
-      final s5 = makeMonster('garbage').toMinionStatBlock();
+      final s5 = makeMonster('garbage').sourceStatBlock;
       expect(s5.damageDiceCount, 1);
       expect(s5.damageDiceSides, 6);
       expect(s5.damageBonus, 2);
@@ -480,7 +479,7 @@ void main() {
     // Site 9: monster_codex_data.dart line 787 (attackMath diceFormula)
     // -------------------------------------------------------------------------
     test('Site 9: monster_codex_data.dart:787 (attackMath diceFormula)', () {
-      Monster makeMonsterMath(String formula) => Monster(
+      Monster makeMonsterMath(String formula) => Monster.singleEdition(
         id: const EntityId(
           slug: 'test-math-monster',
           ruleset: RulesetVersion.v2024,
@@ -501,19 +500,19 @@ void main() {
       );
 
       // 1. plain NdS
-      final s1 = makeMonsterMath('2d6').toMinionStatBlock();
+      final s1 = makeMonsterMath('2d6').sourceStatBlock;
       expect(s1.damageDiceCount, 2);
       expect(s1.damageDiceSides, 6);
       expect(s1.damageBonus, 0);
 
       // 2. NdS + k
-      final s2 = makeMonsterMath('1d8+3').toMinionStatBlock();
+      final s2 = makeMonsterMath('1d8+3').sourceStatBlock;
       expect(s2.damageDiceCount, 1);
       expect(s2.damageDiceSides, 8);
       expect(s2.damageBonus, 3);
 
       // 3. two dice terms
-      final s3 = makeMonsterMath('2d6 + 1d8').toMinionStatBlock();
+      final s3 = makeMonsterMath('2d6 + 1d8').sourceStatBlock;
       expect(s3.damageDiceCount, 1); // Cleanup slice 13: was 2, dropped a die group
       expect(s3.damageDiceSides, 6);
       expect(
@@ -522,12 +521,12 @@ void main() {
       ); // Cleanup slice 13: was 0, dropped a die group
 
       // 4. text around it
-      final s4 = makeMonsterMath('3d6 fire').toMinionStatBlock();
+      final s4 = makeMonsterMath('3d6 fire').sourceStatBlock;
       expect(s4.damageDiceCount, 3);
       expect(s4.damageDiceSides, 6);
 
       // 5. garbage (defaults to 1d6+2)
-      final s5 = makeMonsterMath('garbage').toMinionStatBlock();
+      final s5 = makeMonsterMath('garbage').sourceStatBlock;
       expect(s5.damageDiceCount, 1);
       expect(s5.damageDiceSides, 6);
       expect(s5.damageBonus, 2);
@@ -742,8 +741,7 @@ void main() {
       (tester) async {
         Future<MonsterActionResult?> rollWithDamage(String hitDamage) async {
           MonsterActionResult? captured;
-          final monster = MonsterItem.simple(
-            id: 'test-wolf',
+          final monster = Monster.simple(id: const EntityId(slug: 'test-wolf', ruleset: RulesetVersion.v2014),
             name: 'Test Wolf',
             statBlock: MonsterStatBlock(
               id: 'test-wolf',

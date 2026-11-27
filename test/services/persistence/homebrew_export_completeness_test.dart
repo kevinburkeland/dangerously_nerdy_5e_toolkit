@@ -67,8 +67,8 @@ void main() {
       await persistence.saveCustomSpell(spell);
 
       // 2. Monster
-      const monster = Monster(
-        id: EntityId(slug: 'cinder-drake', ruleset: RulesetVersion.homebrew),
+      final monster = Monster.singleEdition(
+        id: const EntityId(slug: 'cinder-drake', ruleset: RulesetVersion.homebrew),
         name: 'Cinder Drake',
         size: 'Large',
         monsterType: 'Dragon',

@@ -25,10 +25,10 @@ import '../test_doubles/hive_test_harness.dart';
 import 'monster_golden_serializer.dart';
 
 List<Monster> _buildRichStoredTestMonsters() {
-  return const [
+  return [
     // 1. Every customProperties key in string shape + ### Heading and **Bold.** markdown
-    Monster(
-      id: EntityId(
+    Monster.singleEdition(
+      id: const EntityId(
         slug: 'hb-full-props-string',
         ruleset: RulesetVersion.homebrew,
       ),
@@ -42,7 +42,7 @@ List<Monster> _buildRichStoredTestMonsters() {
       challengeRating: '7',
       actionsMarkdown:
           '### Traits\n\n### Smoke Aura\nCreatures within 5 feet have disadvantage on Perception checks.\n\n**Pack Tactics.** The warden has advantage on an attack roll against a creature if at least one ally is within 5 feet.\n\n### Actions\n\n**Multiattack.** The warden makes two halberd attacks.\n\n**Halberd.** Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 14 (2d8 + 5) slashing damage.',
-      customProperties: {
+      customProperties: const {
         'speed': '35 ft., climb 20 ft.',
         'str': 20,
         'dex': 12,
@@ -61,8 +61,8 @@ List<Monster> _buildRichStoredTestMonsters() {
       },
     ),
     // 2. Every customProperties key in map/list/legacy shape + markdown speed + all trait/action shapes
-    Monster(
-      id: EntityId(
+    Monster.singleEdition(
+      id: const EntityId(
         slug: 'hb-full-props-maps-lists',
         ruleset: RulesetVersion.homebrew,
       ),
@@ -76,7 +76,7 @@ List<Monster> _buildRichStoredTestMonsters() {
       challengeRating: '4',
       actionsMarkdown:
           '**Speed:** 40 ft., fly 60 ft.\n\n### Traits\n\n### Storm Shroud: Ranged attacks against the revenant have disadvantage.\n\n- **Wind Walk**: Moves through hostile spaces without penalty.\n\n*Cold Presence.* Deals 3 cold damage to grappling creatures.\n\nHollow Echo: Cannot be tracked by nonmagical means.\n\n- Misty Form: Can squeeze through a 1-inch gap.\n\n### Silent Drift\n\nGale Surge\nPushes nearby creatures 10 feet on initiative count 20.\n\nAn ancient echo lingers in the storm.\n\n### Actions\n\n**Gale Slash.** Melee Weapon Attack: +6 to hit, reach 5 ft, one target. Hit: 12 (2d6 + 5) cold damage.\n\n### Reactions',
-      customProperties: {
+      customProperties: const {
         'strScore': 14,
         'dexScore': 18,
         'conScore': 16,
@@ -101,8 +101,8 @@ List<Monster> _buildRichStoredTestMonsters() {
       },
     ),
     // 3. Senses list without passive + attackMath fallback (no parsed actions in markdown)
-    Monster(
-      id: EntityId(
+    Monster.singleEdition(
+      id: const EntityId(
         slug: 'hb-senses-no-passive',
         ruleset: RulesetVersion.homebrew,
       ),
@@ -115,20 +115,20 @@ List<Monster> _buildRichStoredTestMonsters() {
       hitDieFormula: '6d6 + 12',
       challengeRating: '1/2',
       actionsMarkdown: '**Crystal Carapace.** Sheds dim light in a 10-foot radius.',
-      attackMath: [
+      attackMath: const [
         EvaluationMath(
           diceFormula: '2d4 + 3',
           damageType: DamageType.piercing,
         ),
       ],
-      customProperties: {
+      customProperties: const {
         'senses': ['tremorsense 30 ft.'],
         'languages': <String>[],
       },
     ),
     // 4. Unreadable CR text
-    Monster(
-      id: EntityId(
+    Monster.singleEdition(
+      id: const EntityId(
         slug: 'hb-unreadable-cr',
         ruleset: RulesetVersion.homebrew,
       ),
@@ -142,7 +142,7 @@ List<Monster> _buildRichStoredTestMonsters() {
       challengeRating: 'varies',
       actionsMarkdown:
           '**Pseudopod.** Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 9 (1d10 + 4) force damage.',
-      customProperties: {
+      customProperties: const {
         'speed': '30 ft.',
       },
     ),
@@ -188,7 +188,7 @@ Map<String, dynamic> _buildLoadedMonstersSnapshot(
   List<Monster> loadedMonsters,
 ) {
   final hbItems = MonsterCodexLibrary.homebrewMonsters;
-  final hbIds = hbItems.map((m) => m.id).toSet();
+  final hbIds = hbItems.map((m) => m.id.slug).toSet();
   return {
     'monsters': loadedMonsters.map((m) {
       final item = MonsterCodexLibrary.getMonsterById(m.id.slug)!;
@@ -200,31 +200,31 @@ Map<String, dynamic> _buildLoadedMonstersSnapshot(
       };
     }).toList(),
     'codexState': {
-      'homebrewIds': hbItems.map((m) => m.id).toList(),
+      'homebrewIds': hbItems.map((m) => m.id.slug).toList(),
       'homebrewCrBands': {
         'all': MonsterCodexLibrary.allMonsters
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'cr0ToQuarter': MonsterCodexLibrary.getCr0ToQuarterMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crHalfToOne': MonsterCodexLibrary.getCrHalfToOneMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crTwoToFour': MonsterCodexLibrary.getCrTwoToFourMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crFiveToEight': MonsterCodexLibrary.getCrFiveToEightMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crNinePlus': MonsterCodexLibrary.getCrNinePlusMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
       },
       'homebrewSortModes2024': {
@@ -288,12 +288,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await hive.setUpInMemory();
     MonsterCodexLibrary.clearHomebrewMonsters();
-    MonsterItem.clearCaches();
+    MonsterCodexLibrary.clearCaches();
   });
 
   tearDown(() async {
     MonsterCodexLibrary.clearHomebrewMonsters();
-    MonsterItem.clearCaches();
+    MonsterCodexLibrary.clearCaches();
     await hive.tearDown();
   });
 

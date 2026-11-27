@@ -3,11 +3,10 @@ import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex/srd_monster_cr
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex/srd_monster_lists.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 
 void main() {
   setUp(() {
-    MonsterItem.clearCaches();
+    MonsterCodexLibrary.clearCaches();
   });
 
   group('MonsterCodexLibrary', () {
@@ -87,16 +86,16 @@ void main() {
       expect(high, isNotEmpty);
 
       expect(
-          low.every((m) => m.challengeRating >= 0 && m.challengeRating <= 0.25),
+          low.every((m) => m.challengeRatingValue >= 0 && m.challengeRatingValue <= 0.25),
           isTrue);
       expect(
           lowMid
-              .every((m) => m.challengeRating >= 0.5 && m.challengeRating <= 1),
+              .every((m) => m.challengeRatingValue >= 0.5 && m.challengeRatingValue <= 1),
           isTrue);
-      expect(mid.every((m) => m.challengeRating >= 2 && m.challengeRating <= 4),
+      expect(mid.every((m) => m.challengeRatingValue >= 2 && m.challengeRatingValue <= 4),
           isTrue);
       expect(
-          high.every((m) => m.challengeRating >= 5 && m.challengeRating <= 8),
+          high.every((m) => m.challengeRatingValue >= 5 && m.challengeRatingValue <= 8),
           isTrue);
     });
 
@@ -106,11 +105,11 @@ void main() {
 
       final lowCr = MonsterCodexLibrary.getMonstersByCrRange(maxCr: 0.25);
       expect(lowCr.isNotEmpty, isTrue);
-      expect(lowCr.every((m) => m.challengeRating <= 0.25), isTrue);
+      expect(lowCr.every((m) => m.challengeRatingValue <= 0.25), isTrue);
 
       final highCr = MonsterCodexLibrary.getMonstersByCrRange(minCr: 5);
       expect(highCr.isNotEmpty, isTrue);
-      expect(highCr.every((m) => m.challengeRating >= 5), isTrue);
+      expect(highCr.every((m) => m.challengeRatingValue >= 5), isTrue);
     });
 
     test('supports type, size, and free-text search filters', () {

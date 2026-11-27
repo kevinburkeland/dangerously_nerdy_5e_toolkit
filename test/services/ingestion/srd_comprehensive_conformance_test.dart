@@ -127,7 +127,7 @@ void main() {
       );
     }
 
-    Monster convertMonster(MonsterItem item, DmRulesEdition edition) {
+    Monster convertMonster(Monster item, DmRulesEdition edition) {
       final ruleset = edition == DmRulesEdition.v2024
           ? RulesetVersion.v2024
           : RulesetVersion.v2014;
@@ -149,7 +149,7 @@ void main() {
         }
       }
 
-      return Monster(
+      return Monster.singleEdition(
         id: EntityId(slug: slugify(name), ruleset: ruleset),
         name: name,
         size: statBlock.sizeDisplay,
@@ -166,7 +166,7 @@ void main() {
         customProperties: {
           'sourceCategory': item.sourceCategory.name,
           'sourcePresetId': item.sourcePresetId,
-          'legacyId': item.id,
+          'legacyId': item.id.slug,
         },
       );
     }
@@ -324,8 +324,8 @@ void main() {
       final baseGoblin = repository.lookup<Monster>('goblin')!;
       final customGoblin = baseGoblin.copyWith(
         name: 'Armored Goblin Chieftain',
-        armorClass: 18,
-        hitPoints: 35,
+        statBlock2014: baseGoblin.statBlock2014.copyWith(ac: 18, maxHp: 35),
+        statBlock2024: baseGoblin.statBlock2024.copyWith(ac: 18, maxHp: 35),
       );
       repository.saveOverride('campaign-overrides', customGoblin);
 

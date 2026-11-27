@@ -338,7 +338,7 @@ void main() {
 
       for (final monster in monsters) {
         final lowerName = monster.name.toLowerCase();
-        final lowerId = monster.id.toLowerCase();
+        final lowerId = monster.id.slug.toLowerCase();
         final lowerDiff = (monster.diffSummary ?? '').toLowerCase();
 
         for (final forbidden in forbiddenProductIdentity) {

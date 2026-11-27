@@ -28,7 +28,7 @@ void validateArenaCombatantsChallengeRatings(
   Iterable<ArenaCombatant> combatants,
 ) {
   for (final combatant in combatants) {
-    final cr = combatant.monster.challengeRating;
+    final cr = combatant.monster.challengeRatingValue;
     if (cr.isNaN || cr < 0 || cr > 30) {
       throw InvalidArenaChallengeRatingException(
         combatantName: combatant.displayName,

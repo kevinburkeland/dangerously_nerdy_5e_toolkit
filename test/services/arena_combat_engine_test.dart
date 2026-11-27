@@ -12,9 +12,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.
 void main() {
   group('ArenaCombatEngine Tests', () {
     late ArenaCombatEngine engine;
-    late MonsterItem wolfMonster;
-    late MonsterItem trexMonster;
-    late MonsterItem dragonMonster;
+    late Monster wolfMonster;
+    late Monster trexMonster;
+    late Monster dragonMonster;
 
     setUp(() {
       engine = ArenaCombatEngine(rng: Random(42));
@@ -902,7 +902,7 @@ void main() {
           );
 
           spellcasterMonsters.add(
-              '${monster.name} (CR ${monster.challengeRating}) -> Slots: ${combatant.maxSpellSlots}, Known Spells: ${combatant.knownSpellIds.length}');
+              '${monster.name} (CR ${monster.challengeRatingValue}) -> Slots: ${combatant.maxSpellSlots}, Known Spells: ${combatant.knownSpellIds.length}');
 
           if (!combatant.isSpellcaster ||
               (combatant.maxSpellSlots.isEmpty &&

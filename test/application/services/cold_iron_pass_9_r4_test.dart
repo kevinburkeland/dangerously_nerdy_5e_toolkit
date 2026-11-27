@@ -320,8 +320,8 @@ void main() {
         descriptionMarkdown: 'Creates small sparks.',
       ).toMap();
 
-      final validMonster = const Monster(
-        id: EntityId(slug: 'kobold-guard', ruleset: RulesetVersion.v2024),
+      final validMonster = Monster.singleEdition(
+        id: const EntityId(slug: 'kobold-guard', ruleset: RulesetVersion.v2024),
         name: 'Kobold Guard',
         size: 'Small',
         monsterType: 'Humanoid',

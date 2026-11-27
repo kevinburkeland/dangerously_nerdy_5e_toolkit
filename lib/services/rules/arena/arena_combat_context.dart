@@ -123,8 +123,8 @@ class ArenaCombatContext {
 
       case ArenaTargetingStrategy.highestThreat:
         candidates.sort((a, b) {
-          final crA = a.monster.challengeRating;
-          final crB = b.monster.challengeRating;
+          final crA = a.monster.challengeRatingValue;
+          final crB = b.monster.challengeRatingValue;
           if (crA != crB) return crB.compareTo(crA);
           return b.maxHp.compareTo(a.maxHp);
         });
@@ -190,7 +190,7 @@ class ArenaCombatContext {
   }
 
   int getCantripDiceMultiplier(ArenaCombatant caster) {
-    final cr = caster.monster.challengeRating;
+    final cr = caster.monster.challengeRatingValue;
     if (cr >= 17) return 4;
     if (cr >= 11) return 3;
     if (cr >= 5) return 2;
@@ -261,7 +261,7 @@ class ArenaCombatContext {
   /// Default DC calculation when not explicit (8 + proficiency + ability modifier).
   int computeDefaultSaveDc(ArenaCombatant attacker, DmRulesEdition edition) {
     final pb = proficiencyBonusForChallengeRating(
-      attacker.monster.challengeRating,
+      attacker.monster.challengeRatingValue,
     );
     final sb = attacker.getStatBlock(edition);
     final mod = max(sb.conMod, max(sb.strMod, sb.chaMod));

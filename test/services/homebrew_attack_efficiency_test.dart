@@ -136,10 +136,9 @@ void main() {
     test(
         'DprCombatantProfile.fromMonsterItem accurately extracts multiattacks and riders',
         () {
-      final monster = MonsterItem.simple(
-        id: 'wyvern',
+      const monster = Monster.simple(id: EntityId(slug: 'wyvern', ruleset: RulesetVersion.v2014),
         name: 'Wyvern',
-        statBlock: const MonsterStatBlock(
+        statBlock: MonsterStatBlock(
           id: 'wyvern',
           name: 'Wyvern',
           crDisplay: '6',
@@ -202,10 +201,9 @@ void main() {
 
       final combatant = ArenaCombatant.fromMonster(
         id: 'bandit_1',
-        monster: MonsterItem.simple(
-          id: 'bandit',
+        monster: const Monster.simple(id: EntityId(slug: 'bandit', ruleset: RulesetVersion.v2014),
           name: 'Bandit',
-          statBlock: const MonsterStatBlock(
+          statBlock: MonsterStatBlock(
             id: 'bandit',
             name: 'Bandit',
             crDisplay: '1/8',
@@ -248,10 +246,9 @@ void main() {
 
       final enemy = ArenaCombatant.fromMonster(
         id: 'dummy_1',
-        monster: MonsterItem.simple(
-          id: 'target_dummy',
+        monster: const Monster.simple(id: EntityId(slug: 'target_dummy', ruleset: RulesetVersion.v2014),
           name: 'Target Dummy',
-          statBlock: const MonsterStatBlock(
+          statBlock: MonsterStatBlock(
             id: 'target_dummy',
             name: 'Target Dummy',
             crDisplay: '0',
@@ -339,7 +336,7 @@ void main() {
       expect(m.actionsMarkdown, contains('### Bonus Actions'));
       expect(m.actionsMarkdown, contains('Command Undead'));
 
-      final item = m.toMonsterItem();
+      final item = m;
       final attacks =
           item.getStatBlock(DmRulesEdition.v2024).extractDprAttacks();
       final longsword =

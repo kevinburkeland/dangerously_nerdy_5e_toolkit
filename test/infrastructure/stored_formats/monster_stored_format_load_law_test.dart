@@ -38,7 +38,7 @@ Future<void> _assertLoadedMonstersMatch(
   await svc.syncToLibraries();
   final loadedMonsters = await svc.loadCustomMonsters();
   final hbItems = MonsterCodexLibrary.homebrewMonsters;
-  final hbIds = hbItems.map((m) => m.id).toSet();
+  final hbIds = hbItems.map((m) => m.id.slug).toSet();
 
   final actual = jsonDecode(jsonEncode({
     'monsters': loadedMonsters.map((m) {
@@ -56,31 +56,31 @@ Future<void> _assertLoadedMonstersMatch(
       };
     }).toList(),
     'codexState': {
-      'homebrewIds': hbItems.map((m) => m.id).toList(),
+      'homebrewIds': hbItems.map((m) => m.id.slug).toList(),
       'homebrewCrBands': {
         'all': MonsterCodexLibrary.allMonsters
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'cr0ToQuarter': MonsterCodexLibrary.getCr0ToQuarterMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crHalfToOne': MonsterCodexLibrary.getCrHalfToOneMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crTwoToFour': MonsterCodexLibrary.getCrTwoToFourMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crFiveToEight': MonsterCodexLibrary.getCrFiveToEightMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
         'crNinePlus': MonsterCodexLibrary.getCrNinePlusMonsters()
-            .where((m) => hbIds.contains(m.id))
-            .map((m) => m.id)
+            .where((m) => hbIds.contains(m.id.slug))
+            .map((m) => m.id.slug)
             .toList(),
       },
       'homebrewSortModes2024': {
@@ -131,12 +131,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await hive.setUpInMemory();
     MonsterCodexLibrary.clearHomebrewMonsters();
-    MonsterItem.clearCaches();
+    MonsterCodexLibrary.clearCaches();
   });
 
   tearDown(() async {
     MonsterCodexLibrary.clearHomebrewMonsters();
-    MonsterItem.clearCaches();
+    MonsterCodexLibrary.clearCaches();
     await hive.tearDown();
   });
 

@@ -14,7 +14,7 @@ void main() {
     testWidgets(
         'ArenaMonsterPickerSheet renders info dot button and opens CreatureStatBlockDialog',
         (tester) async {
-      MonsterItem? selectedMonster;
+      Monster? selectedMonster;
       int? selectedCount;
 
       await tester.pumpWidget(

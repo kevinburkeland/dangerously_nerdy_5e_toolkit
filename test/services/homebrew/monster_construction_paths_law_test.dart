@@ -13,7 +13,6 @@ import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compen
 import 'package:dangerously_nerdy_5e_toolkit/widgets/homebrew/monster_builder_dialog.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
 
 import '../../support/dart_directive_reader.dart';
 import '../../support/monster_golden_serializer.dart';
@@ -31,7 +30,7 @@ const Map<String, String> kMonsterConstructionSiteInventory = {
   'lib/services/importers/community_compendium_adapters.dart': 'path',
   'lib/infrastructure/modules/dnd5e/ingestion/dnd5e_ingestion_capability.dart':
       'path',
-  'lib/models/monster_codex_data.dart': 'converter',
+  'lib/models/domain/minion_instance.dart': 'fallback_baseline',
 };
 
 final RegExp _kMonsterOrStatBlockCtorRe = RegExp(
@@ -280,7 +279,7 @@ const msg = 'MinionStatBlock(';
       addTearDown(() => tester.view.resetPhysicalSize());
       addTearDown(() {
         MonsterCodexLibrary.clearHomebrewMonsters();
-        MonsterItem.clearCaches();
+        MonsterCodexLibrary.clearCaches();
       });
 
       const dir = 'test/fixtures/construction_paths/monsters';

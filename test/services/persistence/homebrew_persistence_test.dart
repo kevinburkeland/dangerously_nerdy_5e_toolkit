@@ -68,8 +68,8 @@ void main() {
     });
 
     test('saves, loads, and deletes custom monsters', () async {
-      const monster = Monster(
-        id: EntityId(slug: 'void-crawler', ruleset: RulesetVersion.homebrew),
+      final monster = Monster.singleEdition(
+        id: const EntityId(slug: 'void-crawler', ruleset: RulesetVersion.homebrew),
         name: 'Void Crawler',
         size: 'Large',
         monsterType: 'Monstrosity',
@@ -202,8 +202,8 @@ void main() {
     test(
         'clearHomebrewCategory purges specific category from AppDatabaseService and updates runtime library',
         () async {
-      const monster = Monster(
-        id: EntityId(slug: 'abyssal-stalker', ruleset: RulesetVersion.homebrew),
+      final monster = Monster.singleEdition(
+        id: const EntityId(slug: 'abyssal-stalker', ruleset: RulesetVersion.homebrew),
         name: 'Abyssal Stalker',
         size: 'Medium',
         monsterType: 'Fiend',

@@ -30,7 +30,7 @@ void main() {
         'CR 20-30 StatBlockAclParser default spell DC, attack bonus, and fallback rider DC use PB +6/+7/+8/+9',
         () {
           final base = MonsterCodexLibrary.allMonsters
-              .firstWhere((m) => m.id == 'srd_mon_tarrasque')
+              .firstWhere((m) => m.id.slug == 'srd_mon_tarrasque')
               .statBlock2014;
           final sb = MonsterStatBlock(
             id: 'test_titan',
@@ -109,7 +109,7 @@ void main() {
           // With PB +9: default save DC = 8 + 9 + 10 = 27.
           // With old capped PB +6: default save DC was 8 + 6 + 10 = 24.
           final tarrasque = MonsterCodexLibrary.allMonsters
-              .firstWhere((m) => m.id == 'srd_mon_tarrasque');
+              .firstWhere((m) => m.id.slug == 'srd_mon_tarrasque');
           final base = tarrasque.statBlock2014;
           final titanSb = MonsterStatBlock(
             id: 'test_cr30_titan',
@@ -140,15 +140,14 @@ void main() {
             damageBonus: 9,
             damageType: 'bludgeoning',
           );
-          final titanMonster = MonsterItem(
-            id: 'test_cr30_titan',
+          final titanMonster = Monster(id: const EntityId(slug: 'test_cr30_titan', ruleset: RulesetVersion.v2014),
             name: 'Default-DC Titan',
             statBlock2014: titanSb,
             statBlock2024: titanSb,
           );
 
           final wolf = MonsterCodexLibrary.allMonsters
-              .firstWhere((m) => m.id == 'srd_mon_wolf');
+              .firstWhere((m) => m.id.slug == 'srd_mon_wolf');
           final targetSb = MonsterStatBlock(
             id: 'test_target',
             name: 'Sturdy Target',
@@ -173,8 +172,7 @@ void main() {
             damageBonus: 2,
             damageType: 'bludgeoning',
           );
-          final targetMonster = MonsterItem(
-            id: 'test_target',
+          final targetMonster = Monster(id: const EntityId(slug: 'test_target', ruleset: RulesetVersion.v2014),
             name: 'Sturdy Target',
             statBlock2014: targetSb,
             statBlock2024: targetSb,

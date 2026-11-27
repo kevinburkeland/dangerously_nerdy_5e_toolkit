@@ -10,7 +10,7 @@ import '../interactive/pressable_card.dart';
 
 /// Modular, interactive card presenting an individual SRD creature in the Monster Codex.
 class MonsterCard extends StatelessWidget {
-  final MonsterItem monster;
+  final Monster monster;
   final DmRulesEdition edition;
   final bool isPinned;
   final VoidCallback onTogglePin;

@@ -30,8 +30,8 @@ void main() {
         customProperties: const {'flavor': 'Chilling effect'},
       );
 
-      const monster = Monster(
-        id: EntityId(slug: 'void-crawler', ruleset: RulesetVersion.homebrew),
+      final monster = Monster.singleEdition(
+        id: const EntityId(slug: 'void-crawler', ruleset: RulesetVersion.homebrew),
         name: 'Void Crawler',
         size: 'Small',
         monsterType: 'Aberration',
@@ -248,8 +248,8 @@ void main() {
         descriptionMarkdown: 'Incoming A',
       );
 
-      const existingMonster = Monster(
-        id: EntityId(slug: 'beast-b', ruleset: RulesetVersion.homebrew),
+      final existingMonster = Monster.singleEdition(
+        id: const EntityId(slug: 'beast-b', ruleset: RulesetVersion.homebrew),
         name: 'Beast B',
         size: 'Medium',
         monsterType: 'Beast',
@@ -260,8 +260,8 @@ void main() {
         challengeRating: '1/4',
         actionsMarkdown: 'Bite',
       );
-      const incomingMonster = Monster(
-        id: EntityId(slug: 'beast-b', ruleset: RulesetVersion.homebrew),
+      final incomingMonster = Monster.singleEdition(
+        id: const EntityId(slug: 'beast-b', ruleset: RulesetVersion.homebrew),
         name: 'Beast B Alpha',
         size: 'Large',
         monsterType: 'Beast',
@@ -335,8 +335,8 @@ void main() {
         components: const SpellComponents(),
         descriptionMarkdown: 'Test',
       );
-      const monster1 = Monster(
-        id: EntityId(
+      final monster1 = Monster.singleEdition(
+        id: const EntityId(
             slug: 'progress-monster-1', ruleset: RulesetVersion.homebrew),
         name: 'Progress Monster 1',
         size: 'Medium',

@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
 
 void main() {
@@ -27,8 +26,7 @@ void main() {
       damageType: 'slashing',
     );
 
-    const fireGiantMonster = MonsterItem(
-      id: 'fire_giant',
+    const fireGiantMonster = Monster(id: EntityId(slug: 'fire_giant', ruleset: RulesetVersion.v2014),
       name: 'Fire Giant',
       statBlock2014: fireGiantStatBlock,
       statBlock2024: fireGiantStatBlock,

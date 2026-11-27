@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
 
@@ -141,7 +140,7 @@ void main() {
           .where((m) => m.name == 'Animated Guardian Statue')
           .firstOrNull;
       expect(statue, isNotNull);
-      final statueSb = statue!.toMinionStatBlock();
+      final statueSb = statue!.sourceStatBlock;
       // Stone Golem copy inherits AC 17, STR 22, Slam attacks, while preserving specified HP 230
       expect(statueSb.ac, equals(17));
       expect(statueSb.maxHp, equals(230));
@@ -151,7 +150,7 @@ void main() {
       final serpent =
           result.monsters.where((m) => m.name == 'Serpent Drake').firstOrNull;
       expect(serpent, isNotNull);
-      final serpentSb = serpent!.toMinionStatBlock();
+      final serpentSb = serpent!.sourceStatBlock;
       // Giant Poisonous Snake copy inherits DEX 18
       expect(serpentSb.dexScore, equals(18));
       expect(serpentSb.actions.any((a) => a.name.contains('Bite')), isTrue);

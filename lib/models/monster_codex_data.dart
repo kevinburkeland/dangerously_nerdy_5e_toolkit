@@ -11,6 +11,9 @@ import 'monster_codex/srd_monster_cr_bands.dart';
 import 'visual/app_icon.dart';
 import '../services/rules/dpr_calculator_engine.dart';
 
+export 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart'
+    show CreatureAction, CreatureTrait, EntityId, Monster, MonsterStatBlock, RulesetVersion, SummonCategory;
+
 enum MonsterSortMode {
   crAscending('CR: Low to High', AppIcon.sort),
   crDescending('CR: High to Low', AppIcon.sort),
@@ -34,68 +37,13 @@ enum MonsterCrBand {
   const MonsterCrBand(this.label);
 }
 
-class MonsterItem {
-  final String id;
-  final String name;
-  final String? name2014;
-  final String? name2024;
-  final MonsterStatBlock statBlock2014;
-  final MonsterStatBlock statBlock2024;
-  final bool isChangedIn2024;
-  final String? diffSummary;
-  final List<String> diffHighlights;
-  final String sourcePresetId;
-  final String sourcePresetName;
-  final String? sourceSpellId;
-  final SummonCategory sourceCategory;
+Expando<Map<DmRulesEdition, MonsterCombatProfile>> _combatProfileCache =
+    Expando<Map<DmRulesEdition, MonsterCombatProfile>>('Monster.combatProfile');
+final Map<String, double> _dprCache = {};
 
-  const MonsterItem({
-    required this.id,
-    required this.name,
-    this.name2014,
-    this.name2024,
-    required this.statBlock2014,
-    required this.statBlock2024,
-    this.isChangedIn2024 = false,
-    this.diffSummary,
-    this.diffHighlights = const [],
-    this.sourcePresetId = 'srd_bestiary',
-    this.sourcePresetName = '5e SRD Bestiary',
-    this.sourceSpellId,
-    this.sourceCategory = SummonCategory.spell,
-  });
-
-  factory MonsterItem.simple({
-    required String id,
-    required String name,
-    String? name2014,
-    String? name2024,
-    required MonsterStatBlock statBlock,
-    bool isChangedIn2024 = false,
-    String? diffSummary,
-    List<String> diffHighlights = const [],
-    String sourcePresetId = 'srd_bestiary',
-    String sourcePresetName = '5e SRD Bestiary',
-    String? sourceSpellId,
-    SummonCategory sourceCategory = SummonCategory.spell,
-  }) {
-    return MonsterItem(
-      id: id,
-      name: name,
-      name2014: name2014,
-      name2024: name2024,
-      statBlock2014: statBlock,
-      statBlock2024: statBlock,
-      isChangedIn2024: isChangedIn2024,
-      diffSummary: diffSummary,
-      diffHighlights: diffHighlights,
-      sourcePresetId: sourcePresetId,
-      sourcePresetName: sourcePresetName,
-      sourceSpellId: sourceSpellId,
-      sourceCategory: sourceCategory,
-    );
-  }
-
+/// App-layer codex, combat profile, DPR, and search extensions on canonical
+/// ruleset [Monster].
+extension MonsterCodexItemExt on Monster {
   MonsterStatBlock getStatBlock(
       [DmRulesEdition edition = DmRulesEdition.v2024]) {
     return edition == DmRulesEdition.v2014 ? statBlock2014 : statBlock2024;
@@ -107,14 +55,9 @@ class MonsterItem {
     return name;
   }
 
-  MonsterStatBlock get sourceStatBlock => statBlock2024;
-
-  String get size => sourceStatBlock.sizeDisplay;
   String get type => sourceStatBlock.typeDisplay;
-  String get alignment => sourceStatBlock.alignment;
   String get crDisplay => sourceStatBlock.crDisplay;
-  bool get isHomebrew => sourcePresetId == 'homebrew';
-  double get challengeRating =>
+  double get challengeRatingValue =>
       parseChallengeRating(sourceStatBlock.crDisplay) ?? 0;
   int get ac => sourceStatBlock.ac;
   int get hp => sourceStatBlock.maxHp;
@@ -138,13 +81,8 @@ class MonsterItem {
   List<CreatureAction> get reactions => sourceStatBlock.reactions;
   int? get xp => sourceStatBlock.xp;
 
-  static Expando<Map<DmRulesEdition, MonsterCombatProfile>>
-      _combatProfileCache =
-      Expando<Map<DmRulesEdition, MonsterCombatProfile>>(
-          'MonsterItem.combatProfile');
-
   /// Lazily builds and caches one strongly typed [MonsterCombatProfile] per
-  /// [DmRulesEdition] for this immutable [MonsterItem] instance.
+  /// [DmRulesEdition] for this immutable [Monster] instance.
   MonsterCombatProfile getCombatProfile(
       [DmRulesEdition edition = DmRulesEdition.v2024]) {
     var byEdition = _combatProfileCache[this];
@@ -156,25 +94,16 @@ class MonsterItem {
       edition,
       () => MonsterCombatProfile.fromStatBlock(
         getStatBlock(edition),
-        challengeRating: challengeRating,
+        challengeRating: challengeRatingValue,
       ),
     );
-  }
-
-  static final Map<String, double> _dprCache = {};
-
-  static void clearCaches() {
-    _dprCache.clear();
-    _combatProfileCache =
-        Expando<Map<DmRulesEdition, MonsterCombatProfile>>(
-            'MonsterItem.combatProfile');
   }
 
   double calculateBaselineDpr([
     DmRulesEdition edition = DmRulesEdition.v2024,
     int targetAc = 15,
   ]) {
-    final cacheKey = '${id}_${edition.name}_$targetAc';
+    final cacheKey = '${id.slug}_${edition.name}_$targetAc';
     final cached = _dprCache[cacheKey];
     if (cached != null) return cached;
 
@@ -354,60 +283,80 @@ class MonsterItem {
 class MonsterCodexLibrary {
   MonsterCodexLibrary._();
 
-  static final List<MonsterItem> _baseMonsters = _buildAllMonsters();
-  static List<MonsterItem> _homebrewMonsters = [];
+  static final List<Monster> _baseMonsters = _buildAllMonsters();
+  static List<Monster> _homebrewMonsters = [];
 
-  static List<MonsterItem> get allMonsters => [
+  static void clearCaches() {
+    _dprCache.clear();
+    _combatProfileCache =
+        Expando<Map<DmRulesEdition, MonsterCombatProfile>>(
+            'Monster.combatProfile');
+  }
+
+  static List<Monster> get allMonsters => [
         ..._baseMonsters,
         ..._homebrewMonsters,
       ];
 
-  static List<MonsterItem> get homebrewMonsters =>
+  static List<Monster> get homebrewMonsters =>
       List.unmodifiable(_homebrewMonsters);
 
+  static Monster _asHomebrewEntry(Monster monster) {
+    if (monster.isHomebrew &&
+        monster.sourcePresetName == 'Homebrew & Custom Creatures') {
+      return monster;
+    }
+    return monster.copyWith(
+      sourcePresetId: 'homebrew',
+      sourcePresetName: 'Homebrew & Custom Creatures',
+      sourceCategory: SummonCategory.spell,
+    );
+  }
+
   static void setHomebrewMonsters(List<Monster> monsters) {
-    _homebrewMonsters = monsters.map((m) => m.toMonsterItem()).toList()
+    _homebrewMonsters = monsters.map(_asHomebrewEntry).toList()
       ..sort((a, b) {
-        final crCompare = a.challengeRating.compareTo(b.challengeRating);
+        final crCompare =
+            a.challengeRatingValue.compareTo(b.challengeRatingValue);
         if (crCompare != 0) return crCompare;
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
   }
 
   static void addHomebrewMonster(Monster monster) {
-    final item = monster.toMonsterItem();
-    _homebrewMonsters.removeWhere((m) => m.id == item.id);
-    _homebrewMonsters.add(item);
+    final entry = _asHomebrewEntry(monster);
+    _homebrewMonsters.removeWhere((m) => m.id.slug == entry.id.slug);
+    _homebrewMonsters.add(entry);
     _homebrewMonsters.sort((a, b) {
-      final crCompare = a.challengeRating.compareTo(b.challengeRating);
+      final crCompare =
+          a.challengeRatingValue.compareTo(b.challengeRatingValue);
       if (crCompare != 0) return crCompare;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
   }
 
   static void removeHomebrewMonster(String slug) {
-    _homebrewMonsters.removeWhere((m) => m.id == slug);
+    _homebrewMonsters.removeWhere((m) => m.id.slug == slug);
   }
 
   static void clearHomebrewMonsters() {
     _homebrewMonsters.clear();
   }
 
-  static MonsterItem? getMonsterById(String id) {
-    try {
-      return allMonsters.firstWhere((m) => m.id == id);
-    } catch (_) {
-      return null;
+  static Monster? getMonsterById(String id) {
+    for (final m in allMonsters) {
+      if (m.id.slug == id) return m;
     }
+    return null;
   }
 
-  static MonsterItem? getMonsterByName(String name) {
+  static Monster? getMonsterByName(String name) {
     final lower = name.trim().toLowerCase();
     if (lower.isEmpty) return null;
 
     // 1. Exact equality match takes strict precedence
     for (final m in allMonsters) {
-      if (m.name.toLowerCase() == lower || m.id.toLowerCase() == lower) {
+      if (m.name.toLowerCase() == lower || m.id.slug.toLowerCase() == lower) {
         return m;
       }
     }
@@ -429,69 +378,70 @@ class MonsterCodexLibrary {
     return null;
   }
 
-  static List<MonsterItem> getMonstersByType(String type) {
+  static List<Monster> getMonstersByType(String type) {
     final normalized = type.trim().toLowerCase();
     return allMonsters
         .where((m) => m.type.toLowerCase() == normalized)
         .toList();
   }
 
-  static List<MonsterItem> getMonstersBySize(String size) {
+  static List<Monster> getMonstersBySize(String size) {
     final normalized = size.trim().toLowerCase();
     return allMonsters
         .where((m) => m.size.toLowerCase() == normalized)
         .toList();
   }
 
-  static List<MonsterItem> getMonstersByCrRange({
+  static List<Monster> getMonstersByCrRange({
     double minCr = 0,
     double maxCr = double.infinity,
   }) {
     return allMonsters
-        .where((m) => m.challengeRating >= minCr && m.challengeRating <= maxCr)
+        .where((m) =>
+            m.challengeRatingValue >= minCr && m.challengeRatingValue <= maxCr)
         .toList();
   }
 
-  static List<MonsterItem> getSpellSummonedMonsters() {
+  static List<Monster> getSpellSummonedMonsters() {
     return allMonsters
         .where((m) => m.sourceCategory == SummonCategory.spell)
         .toList();
   }
 
-  static List<MonsterItem> getMagicItemMonsters() {
+  static List<Monster> getMagicItemMonsters() {
     return allMonsters
         .where((m) => m.sourceCategory == SummonCategory.magicItem)
         .toList();
   }
 
-  static List<MonsterItem> getMonstersBySourcePreset(String presetId) {
+  static List<Monster> getMonstersBySourcePreset(String presetId) {
     final normalized = presetId.trim().toLowerCase();
     return allMonsters
         .where((m) => m.sourcePresetId.toLowerCase() == normalized)
         .toList();
   }
 
-  static List<MonsterItem> getCr0ToQuarterMonsters() {
+  static List<Monster> getCr0ToQuarterMonsters() {
     return getMonstersByCrRange(minCr: 0, maxCr: 0.25);
   }
 
-  static List<MonsterItem> getCrHalfToOneMonsters() {
+  static List<Monster> getCrHalfToOneMonsters() {
     return getMonstersByCrRange(minCr: 0.5, maxCr: 1);
   }
 
-  static List<MonsterItem> getCrTwoToFourMonsters() {
+  static List<Monster> getCrTwoToFourMonsters() {
     return getMonstersByCrRange(minCr: 2, maxCr: 4);
   }
 
-  static List<MonsterItem> getCrFiveToEightMonsters() {
+  static List<Monster> getCrFiveToEightMonsters() {
     return getMonstersByCrRange(minCr: 5, maxCr: 8);
   }
 
-  static List<MonsterItem> getCrNinePlusMonsters() {
+  static List<Monster> getCrNinePlusMonsters() {
     return getMonstersByCrRange(minCr: 9);
   }
 
-  static List<MonsterItem> search(
+  static List<Monster> search(
     String query, {
     String? typeFilter,
     String? sizeFilter,
@@ -513,8 +463,8 @@ class MonsterCodexLibrary {
         .toList();
   }
 
-  static List<MonsterItem> _buildAllMonsters() {
-    final byNormalizedKey = <String, MonsterItem>{};
+  static List<Monster> _buildAllMonsters() {
+    final byNormalizedKey = <String, Monster>{};
 
     String normalizeKey(String id, String name) {
       return name.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
@@ -528,7 +478,7 @@ class MonsterCodexLibrary {
       ...BestiaryCrFiveToEight.entries,
       ...BestiaryCrNinePlus.entries,
     ]) {
-      final key = normalizeKey(item.id, item.name);
+      final key = normalizeKey(item.id.slug, item.name);
       byNormalizedKey[key] = item;
     }
 
@@ -541,16 +491,7 @@ class MonsterCodexLibrary {
       final existing = byNormalizedKey[key];
       if (existing != null) {
         if (existing.sourceSpellId == null && preset.spellId != null) {
-          byNormalizedKey[key] = MonsterItem(
-            id: existing.id,
-            name: existing.name,
-            name2014: existing.name2014,
-            name2024: existing.name2024,
-            statBlock2014: existing.statBlock2014,
-            statBlock2024: existing.statBlock2024,
-            isChangedIn2024: existing.isChangedIn2024,
-            diffSummary: existing.diffSummary,
-            diffHighlights: existing.diffHighlights,
+          byNormalizedKey[key] = existing.copyWith(
             sourcePresetId: preset.id,
             sourcePresetName: preset.name,
             sourceSpellId: preset.spellId,
@@ -558,8 +499,8 @@ class MonsterCodexLibrary {
           );
         }
       } else {
-        byNormalizedKey[key] = MonsterItem.simple(
-          id: statBlock.id,
+        byNormalizedKey[key] = Monster.simple(
+          id: EntityId(slug: statBlock.id, ruleset: RulesetVersion.v2014),
           name: statBlock.name,
           statBlock: statBlock,
           sourcePresetId: preset.id,
@@ -571,381 +512,23 @@ class MonsterCodexLibrary {
     }
 
     final monsters = byNormalizedKey.values.map((item) {
-      final diffInfo = SrdMonster2024Diffs.getDiff(item.id, item.name);
+      final diffInfo = SrdMonster2024Diffs.getDiff(item.id.slug, item.name);
       if (diffInfo != null) {
-        return MonsterItem(
-          id: item.id,
-          name: item.name,
-          name2014: item.name2014,
-          name2024: item.name2024,
-          statBlock2014: item.statBlock2014,
-          statBlock2024: item.statBlock2024,
+        return item.copyWith(
           isChangedIn2024: true,
           diffSummary: diffInfo.summary,
           diffHighlights: diffInfo.highlights,
-          sourcePresetId: item.sourcePresetId,
-          sourcePresetName: item.sourcePresetName,
-          sourceSpellId: item.sourceSpellId,
-          sourceCategory: item.sourceCategory,
         );
       }
       return item;
     }).toList()
       ..sort((a, b) {
-        final crCompare = a.challengeRating.compareTo(b.challengeRating);
+        final crCompare =
+            a.challengeRatingValue.compareTo(b.challengeRatingValue);
         if (crCompare != 0) return crCompare;
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
 
     return monsters;
-  }
-}
-
-/// Extension mapping domain Monster to MonsterStatBlock and MonsterItem for cross-toolkit usage.
-extension MonsterHomebrewExt on Monster {
-  MonsterStatBlock toMinionStatBlock() {
-    final parsedCr = parseChallengeRating(challengeRating) ?? 0;
-    final crStr = challengeRating.trim().toLowerCase().startsWith('cr')
-        ? challengeRating.trim()
-        : 'CR $challengeRating';
-
-    // Parse ability scores
-    int parseScore(String key, String legacyKey) {
-      final val = customProperties[key] ?? customProperties[legacyKey];
-      if (val is num) return val.toInt();
-      if (val is String) return int.tryParse(val) ?? 10;
-      return 10;
-    }
-
-    int str = parseScore('str', 'strScore');
-    int dex = parseScore('dex', 'dexScore');
-    int con = parseScore('con', 'conScore');
-    int intSc = parseScore('int', 'intScore');
-    int wis = parseScore('wis', 'wisScore');
-    int cha = parseScore('cha', 'chaScore');
-
-    int ac = armorClass;
-    int hp = hitPoints;
-    String hitDice = hitDieFormula;
-
-    // Parse traits & actions from actionsMarkdown
-    final parsedActions = <CreatureAction>[];
-    final parsedTraits = <CreatureTrait>[];
-
-    final blocks = actionsMarkdown
-        .split(RegExp(r'\n{2,}|\n(?=#{1,6}\s+)|(?<=\n)(?=[-*•]\s+|\*\*)'));
-    for (final rawBlock in blocks) {
-      final block = rawBlock.trim();
-      if (block.isEmpty) continue;
-
-      // Filter out standalone section headers like "### Actions", "### Traits", "### Reactions"
-      final isPureSectionHeader = RegExp(
-        r'^#{1,6}\s*(actions?|traits?|reactions?|bonus\s*actions?|legendary\s*actions?)\s*$',
-        caseSensitive: false,
-      ).hasMatch(block);
-      if (isPureSectionHeader) continue;
-
-      String? title;
-      String? desc;
-
-      // 1. Markdown Heading format: "### Title\nDesc" or "### Title: Desc" or "### Title"
-      final headingMatch =
-          RegExp(r'^#{1,6}\s+([^\n:]+?)(?:\s*:\s*|\s*\n\s*)([\s\S]*)$')
-              .firstMatch(block);
-      if (headingMatch != null) {
-        title = headingMatch.group(1)!.trim();
-        desc = headingMatch.group(2)!.trim();
-      }
-
-      // 2. Bold/Italic/Bullet Prefix with colon or period: "**Title**: Desc" or "**Title.** Desc" or "*Title.* Desc" or "- **Title**: Desc"
-      if (title == null) {
-        final prefixMatch = RegExp(
-                r'^(?:[-*•\s]*)[\*_]{1,3}([^\*_:.\n]+?)[\*_]{1,3}[:.]\s*([\s\S]*)$')
-            .firstMatch(block);
-        if (prefixMatch != null) {
-          title = prefixMatch.group(1)!.trim();
-          desc = prefixMatch.group(2)!.trim();
-        }
-      }
-
-      // 3. Plain text with colon: "Title: Desc" or "- Title: Desc"
-      if (title == null) {
-        final colonMatch =
-            RegExp(r'^(?:[-*•\s]*)([^:\n]+?):\s*([\s\S]*)$').firstMatch(block);
-        if (colonMatch != null) {
-          title = colonMatch.group(1)!.trim();
-          desc = colonMatch.group(2)!.trim();
-        }
-      }
-
-      // 4. Fallback: single heading line without body or multi-line block where first line is title
-      if (title == null) {
-        if (block.startsWith('#')) {
-          final cleanTitle = block.replaceAll(RegExp(r'^#{1,6}\s*'), '').trim();
-          if (cleanTitle.isNotEmpty) {
-            title = cleanTitle;
-            desc = '';
-          }
-        } else if (block.contains('\n')) {
-          final firstLine = block.substring(0, block.indexOf('\n')).trim();
-          if (firstLine.isNotEmpty && firstLine.length < 50) {
-            title =
-                firstLine.replaceAll(RegExp(r'^[#*\-•\s]+|[*_:]+$'), '').trim();
-            desc = block.substring(block.indexOf('\n')).trim();
-          }
-        }
-      }
-
-      if (title != null && title.isNotEmpty) {
-        title = title.replaceAll(RegExp(r'^[#*\-•\s]+|[*_:]+$'), '').trim();
-        desc = (desc ?? '').trim();
-
-        // Skip if title is just section header without content
-        if (RegExp(r'^(actions?|traits?|reactions?|bonus\s*actions?|legendary\s*actions?)$',
-                    caseSensitive: false)
-                .hasMatch(title) &&
-            desc.isEmpty) {
-          continue;
-        }
-
-        final isAction = title.toLowerCase().contains('multiattack') ||
-            desc.toLowerCase().contains('weapon attack') ||
-            desc.toLowerCase().contains('spell attack') ||
-            desc.toLowerCase().contains('to hit') ||
-            desc.toLowerCase().contains('hit:');
-
-        if (isAction) {
-          final atkBonusMatch =
-              RegExp(r'([+-]\d+)\s+to\s+hit').firstMatch(desc);
-          final reachMatch =
-              RegExp(r'(?:reach|range)\s+([^,\n]+)').firstMatch(desc);
-          final reachRaw = reachMatch?.group(1)?.trim();
-          final reachClean = reachRaw != null
-              ? (reachRaw.endsWith('ft') ? '$reachRaw.' : reachRaw)
-              : null;
-          final hitDmgMatch =
-              RegExp(r'(?:Hit:?\s*)?(\d+\s*\([^)]+\)[^.\n]*)').firstMatch(desc);
-
-          parsedActions.add(CreatureAction(
-            name: title,
-            description: desc.isNotEmpty ? desc : title,
-            attackBonus: int.tryParse(atkBonusMatch?.group(1) ?? ''),
-            reach: reachClean,
-            hitDamage: hitDmgMatch?.group(1)?.trim(),
-          ));
-        } else {
-          parsedTraits.add(CreatureTrait(
-            name: title,
-            description: desc.isNotEmpty ? desc : title,
-          ));
-        }
-      } else {
-        final clean = block.replaceAll(RegExp(r'^[#*\-•\s]+'), '').trim();
-        if (clean.isNotEmpty) {
-          parsedTraits.add(CreatureTrait(name: 'Feature', description: clean));
-        }
-      }
-    }
-
-    // Determine primary attack parameters
-    int atkBonus = ((parsedCr * 1.5).round() + 2).clamp(2, 14);
-    int dmgCount = 1;
-    int dmgSides = 6;
-    int dmgBonus = 2;
-    String dmgType = 'Slashing';
-    final packTactics = actionsMarkdown.toLowerCase().contains('pack tactics');
-
-    if (parsedActions.isNotEmpty) {
-      final firstWithBonus = parsedActions.firstWhere(
-        (a) => a.attackBonus != null,
-        orElse: () => parsedActions.first,
-      );
-      if (firstWithBonus.attackBonus != null) {
-        atkBonus = firstWithBonus.attackBonus!;
-      }
-      final fullText =
-          '${firstWithBonus.hitDamage ?? ""} ${firstWithBonus.description}';
-      final dmgExpr = DiceExpression.tryParse(fullText.trim()) ??
-          DiceExpression.findAll(fullText).firstOrNull?.expression;
-      final d = dmgExpr?.singleDieGroup;
-      if (d != null) {
-        dmgCount = d.count;
-        dmgSides = d.sides;
-        dmgBonus = dmgExpr!.constantSum;
-      }
-      final typeMatch = RegExp(
-        r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)',
-        caseSensitive: false,
-      ).firstMatch(fullText);
-      if (typeMatch != null) {
-        final t = typeMatch.group(1)!;
-        dmgType = t[0].toUpperCase() + t.substring(1).toLowerCase();
-      }
-    } else if (attackMath.isNotEmpty) {
-      final math = attackMath.first;
-      final dmgExpr = DiceExpression.tryParse(math.diceFormula.trim()) ??
-          DiceExpression.findAll(math.diceFormula).firstOrNull?.expression;
-      final d = dmgExpr?.singleDieGroup;
-      if (d != null) {
-        dmgCount = d.count;
-        dmgSides = d.sides;
-        dmgBonus = dmgExpr!.constantSum;
-      }
-      final typeName = math.damageType.name;
-      if (typeName.isNotEmpty) {
-        dmgType = typeName[0].toUpperCase() + typeName.substring(1);
-      }
-    }
-
-    // If parsedActions is empty and creature has _copy in customProperties, revitalize from base monster!
-    if (parsedActions.isEmpty && customProperties.containsKey('_copy')) {
-      final copyObj = customProperties['_copy'];
-      if (copyObj is Map && copyObj['name'] != null) {
-        final baseName = copyObj['name'].toString().trim();
-        final baseItem = MonsterCodexLibrary.getMonsterByName(baseName);
-        if (baseItem != null) {
-          final baseSb = baseItem.sourceStatBlock;
-          if (parsedTraits.isEmpty) {
-            parsedTraits.addAll(baseSb.traits);
-          }
-          parsedActions.addAll(baseSb.actions);
-          if (ac == 10 && baseSb.ac > 10) {
-            ac = baseSb.ac;
-          }
-          if (hp <= 10 && baseSb.maxHp > 10) {
-            hp = baseSb.maxHp;
-            hitDice = baseSb.hitDice ?? hitDice;
-          }
-          if (str == 10 &&
-              dex == 10 &&
-              con == 10 &&
-              intSc == 10 &&
-              wis == 10 &&
-              cha == 10) {
-            str = baseSb.strScore;
-            dex = baseSb.dexScore;
-            con = baseSb.conScore;
-            intSc = baseSb.intScore;
-            wis = baseSb.wisScore;
-            cha = baseSb.chaScore;
-          }
-        }
-      }
-    }
-
-    String? formatDefenses(dynamic val) {
-      if (val == null) return null;
-      if (val is List) {
-        if (val.isEmpty) return null;
-        return val
-            .map((e) => e is Map
-                ? (e['note'] != null
-                    ? '${e['resist'] ?? e['immune'] ?? ''} (${e['note']})'
-                    : e.toString())
-                : e.toString())
-            .join(', ');
-      }
-      final str = val.toString().trim();
-      return str.isNotEmpty ? str : null;
-    }
-
-    String? formatMapValues(dynamic val) {
-      if (val is Map) {
-        if (val.isEmpty) return null;
-        return val.entries
-            .map((e) => '${e.key.toString().toUpperCase()} ${e.value}')
-            .join(', ');
-      }
-      if (val is String && val.trim().isNotEmpty) return val.trim();
-      return null;
-    }
-
-    String? extractSpeed(String md) {
-      final m = RegExp(r'\*\*Speed:\*\*\s*([^\n]+)', caseSensitive: false)
-          .firstMatch(md);
-      return m?.group(1)?.trim();
-    }
-
-    final speed = customProperties['speed']?.toString() ??
-        extractSpeed(actionsMarkdown) ??
-        '30 ft.';
-    final saves = customProperties['savingThrows']?.toString() ??
-        formatMapValues(customProperties['save']);
-    final skills = customProperties['skills']?.toString() ??
-        formatMapValues(customProperties['skill']);
-    final vuln = customProperties['damageVulnerabilities']?.toString() ??
-        formatDefenses(customProperties['vulnerable']);
-    final resist = customProperties['damageResistances']?.toString() ??
-        formatDefenses(customProperties['resist']);
-    final immune = customProperties['damageImmunities']?.toString() ??
-        formatDefenses(customProperties['immune']);
-    final condImmune = customProperties['conditionImmunities']?.toString() ??
-        formatDefenses(customProperties['conditionImmune']);
-
-    String? senses = customProperties['senses']?.toString();
-    if (senses == null || senses.isEmpty) {
-      final rawSenses = formatDefenses(customProperties['senses']);
-      final passive = customProperties['passive'];
-      final parts = [
-        if (rawSenses != null && rawSenses.isNotEmpty) rawSenses,
-        if (passive != null) 'passive Perception $passive'
-      ];
-      if (parts.isNotEmpty) {
-        senses = parts.join(', ');
-      }
-    }
-    senses ??= 'passive Perception 10';
-
-    final languages = customProperties['languages']?.toString() ??
-        formatDefenses(customProperties['languages']) ??
-        '—';
-
-    return MonsterStatBlock(
-      id: id.slug,
-      name: name,
-      sizeDisplay: size,
-      crDisplay: crStr,
-      typeDisplay: monsterType,
-      alignment: alignment,
-      ac: ac,
-      maxHp: hp,
-      hitDice: hitDice.isNotEmpty ? hitDice : null,
-      speed: speed,
-      strScore: str,
-      dexScore: dex,
-      conScore: con,
-      intScore: intSc,
-      wisScore: wis,
-      chaScore: cha,
-      savingThrows: saves,
-      skills: skills,
-      damageVulnerabilities: vuln,
-      damageResistances: resist,
-      damageImmunities: immune,
-      conditionImmunities: condImmune,
-      senses: senses,
-      languages: languages,
-      traits: parsedTraits,
-      actions: parsedActions,
-      attackBonus: atkBonus,
-      damageDiceCount: dmgCount,
-      damageDiceSides: dmgSides,
-      damageBonus: dmgBonus,
-      damageType: dmgType,
-      hasPackTactics: packTactics,
-    );
-  }
-
-  MonsterItem toMonsterItem() {
-    final statBlock = toMinionStatBlock();
-    return MonsterItem(
-      id: id.slug,
-      name: name,
-      statBlock2014: statBlock,
-      statBlock2024: statBlock,
-      sourcePresetId: 'homebrew',
-      sourcePresetName: 'Homebrew & Custom Creatures',
-      sourceCategory: SummonCategory.spell,
-    );
   }
 }

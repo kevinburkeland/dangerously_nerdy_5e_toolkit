@@ -28,7 +28,7 @@ Spell _spell(String slug, String name) => Spell.singleEdition(
       customProperties: const {'classes': ['Wizard']},
     );
 
-Monster _monster(String slug, String name) => Monster(
+Monster _monster(String slug, String name) => Monster.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.homebrew),
       name: name,
       size: 'Medium',

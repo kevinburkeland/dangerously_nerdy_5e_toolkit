@@ -1,18 +1,17 @@
 import '../../monster_codex_data.dart';
-import '../../srd_summons/minion_stat_block.dart';
 
 /// SRD 5.1 & 5.2 Bestiary entries for CR 9 through CR 30 (Boss & Legendary Creatures).
 class BestiaryCrNinePlus {
   BestiaryCrNinePlus._();
 
-  static final List<MonsterItem> entries = [
+  static final List<Monster> entries = [
     // =========================================================================
     // CR 10: ABOLETH
     // =========================================================================
-    MonsterItem.simple(
-      id: 'srd_mon_aboleth',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_aboleth', ruleset: RulesetVersion.v2014),
       name: 'Aboleth',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'aboleth',
         name: 'Aboleth',
         sizeDisplay: 'Large',
@@ -106,10 +105,10 @@ class BestiaryCrNinePlus {
     // =========================================================================
     // CR 13: VAMPIRE
     // =========================================================================
-    MonsterItem.simple(
-      id: 'srd_mon_vampire',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_vampire', ruleset: RulesetVersion.v2014),
       name: 'Vampire',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'vampire',
         name: 'Vampire',
         sizeDisplay: 'Medium',
@@ -210,10 +209,10 @@ class BestiaryCrNinePlus {
     // =========================================================================
     // CR 17: ADULT RED DRAGON
     // =========================================================================
-    MonsterItem.simple(
-      id: 'srd_mon_adult_red_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_red_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Red Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_red_dragon',
         name: 'Adult Red Dragon',
         sizeDisplay: 'Huge',
@@ -317,10 +316,10 @@ class BestiaryCrNinePlus {
     // =========================================================================
     // CR 21: LICH
     // =========================================================================
-    MonsterItem.simple(
-      id: 'srd_mon_lich',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_lich', ruleset: RulesetVersion.v2014),
       name: 'Lich',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'lich',
         name: 'Lich',
         sizeDisplay: 'Medium',
@@ -423,10 +422,10 @@ class BestiaryCrNinePlus {
     // =========================================================================
     // CR 24: ANCIENT RED DRAGON
     // =========================================================================
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_red_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_red_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Red Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_red_dragon',
         name: 'Ancient Red Dragon',
         sizeDisplay: 'Gargantuan',
@@ -525,10 +524,10 @@ class BestiaryCrNinePlus {
     // =========================================================================
     // CR 30: TARRASQUE
     // =========================================================================
-    MonsterItem.simple(
-      id: 'srd_mon_tarrasque',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_tarrasque', ruleset: RulesetVersion.v2014),
       name: 'Tarrasque',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'tarrasque',
         name: 'Tarrasque',
         sizeDisplay: 'Gargantuan',
@@ -651,10 +650,10 @@ class BestiaryCrNinePlus {
       ),
     ),
 
-    MonsterItem.simple(
-      id: 'srd_mon_adult_black_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_black_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Black Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_black_dragon',
         name: 'Adult Black Dragon',
         sizeDisplay: 'Huge',
@@ -755,10 +754,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_blue_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_blue_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Blue Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_blue_dragon',
         name: 'Adult Blue Dragon',
         sizeDisplay: 'Huge',
@@ -855,10 +854,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_brass_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_brass_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Brass Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_brass_dragon',
         name: 'Adult Brass Dragon',
         sizeDisplay: 'Huge',
@@ -955,10 +954,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_bronze_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_bronze_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Bronze Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_bronze_dragon',
         name: 'Adult Bronze Dragon',
         sizeDisplay: 'Huge',
@@ -1064,10 +1063,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_copper_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_copper_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Copper Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_copper_dragon',
         name: 'Adult Copper Dragon',
         sizeDisplay: 'Huge',
@@ -1164,10 +1163,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_gold_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_gold_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Gold Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_gold_dragon',
         name: 'Adult Gold Dragon',
         sizeDisplay: 'Huge',
@@ -1273,10 +1272,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_green_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_green_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Green Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_green_dragon',
         name: 'Adult Green Dragon',
         sizeDisplay: 'Huge',
@@ -1379,10 +1378,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_silver_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_silver_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult Silver Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_silver_dragon',
         name: 'Adult Silver Dragon',
         sizeDisplay: 'Huge',
@@ -1484,10 +1483,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_adult_white_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_adult_white_dragon', ruleset: RulesetVersion.v2014),
       name: 'Adult White Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'adult_white_dragon',
         name: 'Adult White Dragon',
         sizeDisplay: 'Huge',
@@ -1589,10 +1588,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_black_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_black_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Black Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_black_dragon',
         name: 'Ancient Black Dragon',
         sizeDisplay: 'Gargantuan',
@@ -1693,10 +1692,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_blue_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_blue_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Blue Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_blue_dragon',
         name: 'Ancient Blue Dragon',
         sizeDisplay: 'Gargantuan',
@@ -1793,10 +1792,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_brass_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_brass_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Brass Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_brass_dragon',
         name: 'Ancient Brass Dragon',
         sizeDisplay: 'Gargantuan',
@@ -1898,10 +1897,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_bronze_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_bronze_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Bronze Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_bronze_dragon',
         name: 'Ancient Bronze Dragon',
         sizeDisplay: 'Gargantuan',
@@ -2007,10 +2006,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_copper_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_copper_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Copper Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_copper_dragon',
         name: 'Ancient Copper Dragon',
         sizeDisplay: 'Gargantuan',
@@ -2112,10 +2111,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_gold_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_gold_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Gold Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_gold_dragon',
         name: 'Ancient Gold Dragon',
         sizeDisplay: 'Gargantuan',
@@ -2221,10 +2220,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_green_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_green_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Green Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_green_dragon',
         name: 'Ancient Green Dragon',
         sizeDisplay: 'Gargantuan',
@@ -2327,10 +2326,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_silver_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_silver_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient Silver Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_silver_dragon',
         name: 'Ancient Silver Dragon',
         sizeDisplay: 'Gargantuan',
@@ -2432,10 +2431,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ancient_white_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ancient_white_dragon', ruleset: RulesetVersion.v2014),
       name: 'Ancient White Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ancient_white_dragon',
         name: 'Ancient White Dragon',
         sizeDisplay: 'Gargantuan',
@@ -2537,10 +2536,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_androsphinx',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_androsphinx', ruleset: RulesetVersion.v2014),
       name: 'Androsphinx',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'androsphinx',
         name: 'Androsphinx',
         sizeDisplay: 'Large',
@@ -2625,10 +2624,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_archmage',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_archmage', ruleset: RulesetVersion.v2014),
       name: 'Archmage',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'archmage',
         name: 'Archmage',
         sizeDisplay: 'Medium',
@@ -2683,10 +2682,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_balor',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_balor', ruleset: RulesetVersion.v2014),
       name: 'Balor',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'balor',
         name: 'Balor',
         sizeDisplay: 'Huge',
@@ -2775,10 +2774,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_behir',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_behir', ruleset: RulesetVersion.v2014),
       name: 'Behir',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'behir',
         name: 'Behir',
         sizeDisplay: 'Huge',
@@ -2843,10 +2842,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_bone_devil',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_bone_devil', ruleset: RulesetVersion.v2014),
       name: 'Bone Devil',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'bone_devil',
         name: 'Bone Devil',
         sizeDisplay: 'Large',
@@ -2917,10 +2916,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_chain_devil',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_chain_devil', ruleset: RulesetVersion.v2014),
       name: 'Chain Devil',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'chain_devil',
         name: 'Chain Devil',
         sizeDisplay: 'Medium',
@@ -2991,10 +2990,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_clay_golem',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_clay_golem', ruleset: RulesetVersion.v2014),
       name: 'Clay Golem',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'clay_golem',
         name: 'Clay Golem',
         sizeDisplay: 'Large',
@@ -3072,10 +3071,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_cloud_giant',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_cloud_giant', ruleset: RulesetVersion.v2014),
       name: 'Cloud Giant',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'cloud_giant',
         name: 'Cloud Giant',
         sizeDisplay: 'Huge',
@@ -3141,10 +3140,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_deva',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_deva', ruleset: RulesetVersion.v2014),
       name: 'Deva',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'deva',
         name: 'Deva',
         sizeDisplay: 'Medium',
@@ -3219,10 +3218,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_djinni',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_djinni', ruleset: RulesetVersion.v2014),
       name: 'Djinni',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'djinni',
         name: 'Djinni',
         sizeDisplay: 'Large',
@@ -3289,10 +3288,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_dragon_turtle',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_dragon_turtle', ruleset: RulesetVersion.v2014),
       name: 'Dragon Turtle',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'dragon_turtle',
         name: 'Dragon Turtle',
         sizeDisplay: 'Gargantuan',
@@ -3367,10 +3366,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_efreeti',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_efreeti', ruleset: RulesetVersion.v2014),
       name: 'Efreeti',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'efreeti',
         name: 'Efreeti',
         sizeDisplay: 'Large',
@@ -3441,10 +3440,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_erinyes',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_erinyes', ruleset: RulesetVersion.v2014),
       name: 'Erinyes',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'erinyes',
         name: 'Erinyes',
         sizeDisplay: 'Medium',
@@ -3525,10 +3524,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_fire_giant',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_fire_giant', ruleset: RulesetVersion.v2014),
       name: 'Fire Giant',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'fire_giant',
         name: 'Fire Giant',
         sizeDisplay: 'Huge',
@@ -3583,10 +3582,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_glabrezu',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_glabrezu', ruleset: RulesetVersion.v2014),
       name: 'Glabrezu',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'glabrezu',
         name: 'Glabrezu',
         sizeDisplay: 'Large',
@@ -3661,10 +3660,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_guardian_naga',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_guardian_naga', ruleset: RulesetVersion.v2014),
       name: 'Guardian Naga',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'guardian_naga',
         name: 'Guardian Naga',
         sizeDisplay: 'Large',
@@ -3726,10 +3725,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_gynosphinx',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_gynosphinx', ruleset: RulesetVersion.v2014),
       name: 'Gynosphinx',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'gynosphinx',
         name: 'Gynosphinx',
         sizeDisplay: 'Large',
@@ -3809,10 +3808,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_horned_devil',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_horned_devil', ruleset: RulesetVersion.v2014),
       name: 'Horned Devil',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'horned_devil',
         name: 'Horned Devil',
         sizeDisplay: 'Large',
@@ -3890,10 +3889,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_ice_devil',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_ice_devil', ruleset: RulesetVersion.v2014),
       name: 'Ice Devil',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'ice_devil',
         name: 'Ice Devil',
         sizeDisplay: 'Large',
@@ -3977,10 +3976,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_iron_golem',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_iron_golem', ruleset: RulesetVersion.v2014),
       name: 'Iron Golem',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'iron_golem',
         name: 'Iron Golem',
         sizeDisplay: 'Large',
@@ -4062,10 +4061,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_kraken',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_kraken', ruleset: RulesetVersion.v2014),
       name: 'Kraken',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'kraken',
         name: 'Kraken',
         sizeDisplay: 'Gargantuan',
@@ -4165,10 +4164,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_marilith',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_marilith', ruleset: RulesetVersion.v2014),
       name: 'Marilith',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'marilith',
         name: 'Marilith',
         sizeDisplay: 'Large',
@@ -4259,10 +4258,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_mummy_lord',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_mummy_lord', ruleset: RulesetVersion.v2014),
       name: 'Mummy Lord',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'mummy_lord',
         name: 'Mummy Lord',
         sizeDisplay: 'Medium',
@@ -4362,10 +4361,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_nalfeshnee',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_nalfeshnee', ruleset: RulesetVersion.v2014),
       name: 'Nalfeshnee',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'nalfeshnee',
         name: 'Nalfeshnee',
         sizeDisplay: 'Large',
@@ -4445,10 +4444,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_pit_fiend',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_pit_fiend', ruleset: RulesetVersion.v2014),
       name: 'Pit Fiend',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'pit_fiend',
         name: 'Pit Fiend',
         sizeDisplay: 'Large',
@@ -4545,10 +4544,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_planetar',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_planetar', ruleset: RulesetVersion.v2014),
       name: 'Planetar',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'planetar',
         name: 'Planetar',
         sizeDisplay: 'Large',
@@ -4622,10 +4621,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_purple_worm',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_purple_worm', ruleset: RulesetVersion.v2014),
       name: 'Purple Worm',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'purple_worm',
         name: 'Purple Worm',
         sizeDisplay: 'Gargantuan',
@@ -4686,10 +4685,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_rakshasa',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_rakshasa', ruleset: RulesetVersion.v2014),
       name: 'Rakshasa',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'rakshasa',
         name: 'Rakshasa',
         sizeDisplay: 'Medium',
@@ -4749,10 +4748,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_remorhaz',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_remorhaz', ruleset: RulesetVersion.v2014),
       name: 'Remorhaz',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'remorhaz',
         name: 'Remorhaz',
         sizeDisplay: 'Huge',
@@ -4804,10 +4803,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_roc',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_roc', ruleset: RulesetVersion.v2014),
       name: 'Roc',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'roc',
         name: 'Roc',
         sizeDisplay: 'Gargantuan',
@@ -4869,10 +4868,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_solar',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_solar', ruleset: RulesetVersion.v2014),
       name: 'Solar',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'solar',
         name: 'Solar',
         sizeDisplay: 'Large',
@@ -4978,10 +4977,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_stone_golem',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_stone_golem', ruleset: RulesetVersion.v2014),
       name: 'Stone Golem',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'stone_golem',
         name: 'Stone Golem',
         sizeDisplay: 'Large',
@@ -5049,10 +5048,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_storm_giant',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_storm_giant', ruleset: RulesetVersion.v2014),
       name: 'Storm Giant',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'storm_giant',
         name: 'Storm Giant',
         sizeDisplay: 'Huge',
@@ -5124,10 +5123,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_treant',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_treant', ruleset: RulesetVersion.v2014),
       name: 'Treant',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'treant',
         name: 'Treant',
         sizeDisplay: 'Huge',
@@ -5198,10 +5197,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_young_blue_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_young_blue_dragon', ruleset: RulesetVersion.v2014),
       name: 'Young Blue Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'young_blue_dragon',
         name: 'Young Blue Dragon',
         sizeDisplay: 'Large',
@@ -5262,10 +5261,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_young_gold_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_young_gold_dragon', ruleset: RulesetVersion.v2014),
       name: 'Young Gold Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'young_gold_dragon',
         name: 'Young Gold Dragon',
         sizeDisplay: 'Large',
@@ -5332,10 +5331,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_young_red_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_young_red_dragon', ruleset: RulesetVersion.v2014),
       name: 'Young Red Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'young_red_dragon',
         name: 'Young Red Dragon',
         sizeDisplay: 'Large',
@@ -5396,10 +5395,10 @@ class BestiaryCrNinePlus {
         ],
       ),
     ),
-    MonsterItem.simple(
-      id: 'srd_mon_young_silver_dragon',
+    const Monster.simple(
+      id: EntityId(slug: 'srd_mon_young_silver_dragon', ruleset: RulesetVersion.v2014),
       name: 'Young Silver Dragon',
-      statBlock: const MonsterStatBlock(
+      statBlock: MonsterStatBlock(
         id: 'young_silver_dragon',
         name: 'Young Silver Dragon',
         sizeDisplay: 'Large',

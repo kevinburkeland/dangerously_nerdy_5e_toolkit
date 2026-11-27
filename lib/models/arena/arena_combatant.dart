@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
+
+export '../monster_codex_data.dart' show MonsterCodexItemExt;
 import 'arena_condition.dart';
 import 'monster_combat_profile.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
@@ -38,7 +40,7 @@ enum AttackType {
 /// Represents a single active instance of a monster in the Arena.
 class ArenaCombatant {
   final String id;
-  final MonsterItem monster;
+  final Monster monster;
   final ArenaTeam team;
   final String displayName;
   HitPoints hitPoints;
@@ -227,7 +229,7 @@ class ArenaCombatant {
   /// Derives the combatant's spellcasting ability modifier from [spellSaveDc]
   /// and its challenge-rating proficiency bonus (`DC = 8 + PB + mod`).
   int get spellcastingAbilityModifier =>
-      spellSaveDc - 8 - proficiencyBonusForChallengeRating(monster.challengeRating);
+      spellSaveDc - 8 - proficiencyBonusForChallengeRating(monster.challengeRatingValue);
 
   bool get isSpellcaster =>
       knownSpellIds.isNotEmpty || maxSpellSlots.isNotEmpty;
@@ -265,11 +267,11 @@ class ArenaCombatant {
       isStunned ||
       isUnconscious;
 
-  /// Factory constructor to create a fresh combatant from a [MonsterItem].
+  /// Factory constructor to create a fresh combatant from a [Monster].
   /// Uses pre-calculated [MonsterCombatProfile] directly with zero regex or string allocations.
   factory ArenaCombatant.fromMonster({
     required String id,
-    required MonsterItem monster,
+    required Monster monster,
     required ArenaTeam team,
     String? customName,
     DmRulesEdition edition = DmRulesEdition.v2024,

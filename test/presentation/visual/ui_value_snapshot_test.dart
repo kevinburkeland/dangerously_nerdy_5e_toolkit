@@ -294,9 +294,9 @@ void main() {
 
     // 19. MonsterCodexLibrary.allMonsters in monster_codex_data.dart
     for (final m in MonsterCodexLibrary.allMonsters) {
-      actual['monster:${m.id}.statBlock2014.accentColor'] =
+      actual['monster:${m.id.slug}.statBlock2014.accentColor'] =
           _formatColor(m.statBlock2014.accentColor);
-      actual['monster:${m.id}.statBlock2024.accentColor'] =
+      actual['monster:${m.id.slug}.statBlock2024.accentColor'] =
           _formatColor(m.statBlock2024.accentColor);
     }
 

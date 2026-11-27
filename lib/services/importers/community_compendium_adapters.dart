@@ -300,7 +300,7 @@ class CommunityCompendiumAdapters {
     final parsedActions =
         parser.parseEntries(combined, defaultRuleset: ruleset);
 
-    return Monster(
+    return Monster.singleEdition(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       size: size,

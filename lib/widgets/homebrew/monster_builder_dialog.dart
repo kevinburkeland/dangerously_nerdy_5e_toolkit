@@ -77,7 +77,7 @@ class _MonsterBuilderDialogState extends State<MonsterBuilderDialog> {
     final ac = int.tryParse(_acController.text.trim()) ?? 10;
     final hp = int.tryParse(_hpController.text.trim()) ?? 10;
 
-    final monster = Monster(
+    final monster = Monster.singleEdition(
       id: EntityId(slug: slug, ruleset: RulesetVersion.homebrew),
       name: name,
       size: _sizeController.text.trim().isEmpty

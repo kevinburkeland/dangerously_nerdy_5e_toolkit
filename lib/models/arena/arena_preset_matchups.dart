@@ -49,7 +49,7 @@ class ArenaPresetMatchup {
           final suffix = member.count > 1 ? ' #${i + 1}' : '';
           listA.add(
             ArenaCombatant.fromMonster(
-              id: 'team_a_${monster.id}_$i',
+              id: 'team_a_${monster.id.slug}_$i',
               monster: monster,
               team: ArenaTeam.teamA,
               customName: '${monster.getName(edition)}$suffix',
@@ -69,7 +69,7 @@ class ArenaPresetMatchup {
           final suffix = member.count > 1 ? ' #${i + 1}' : '';
           listB.add(
             ArenaCombatant.fromMonster(
-              id: 'team_b_${monster.id}_$i',
+              id: 'team_b_${monster.id.slug}_$i',
               monster: monster,
               team: ArenaTeam.teamB,
               customName: '${monster.getName(edition)}$suffix',

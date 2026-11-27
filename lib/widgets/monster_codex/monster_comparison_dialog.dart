@@ -11,7 +11,7 @@ import '../glyphs/glyph_tokens.dart';
 
 /// Interactive modal comparing 2014 RAW monster stat blocks vs 2024 Revised rules side-by-side.
 class MonsterComparisonDialog extends StatefulWidget {
-  final MonsterItem monster;
+  final Monster monster;
   final DmRulesEdition initialEdition;
   final bool isPinned;
   final VoidCallback onTogglePin;
@@ -26,7 +26,7 @@ class MonsterComparisonDialog extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    required MonsterItem monster,
+    required Monster monster,
     DmRulesEdition? edition,
     required bool isPinned,
     required VoidCallback onTogglePin,

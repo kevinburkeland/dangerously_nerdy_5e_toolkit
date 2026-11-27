@@ -75,7 +75,7 @@ void main() {
 
     stdout.writeln('Generated preset_matches.json: ${presets.length} matches');
     stdout.writeln(
-        'Generated creature_duels.json: ${duels.length} creatures (opponent=${opponent.id}, CR ${opponent.challengeRating})');
+        'Generated creature_duels.json: ${duels.length} creatures (opponent=${opponent.id}, CR ${opponent.challengeRatingValue})');
     stdout.writeln('Generated monte_carlo.json: ${mc.length} presets');
     stdout.writeln(
         'Generated damage_defense_table.json: statBlocks=${MonsterCodexLibrary.allMonsters.length * 2}, '

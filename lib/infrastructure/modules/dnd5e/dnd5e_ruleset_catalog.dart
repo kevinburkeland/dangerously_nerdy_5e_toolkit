@@ -4,6 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_libra
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_equipment_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/subclass_spells_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
@@ -40,6 +41,11 @@ class AppDnd5eCatalog implements Dnd5eCatalog {
       summary2024: item.rules2024.summary,
       summary2014: item.rules2014.summary,
     );
+  }
+
+  @override
+  MonsterStatBlock? findMonsterStatBlockByName(String name) {
+    return MonsterCodexLibrary.getMonsterByName(name)?.sourceStatBlock;
   }
 
   @override

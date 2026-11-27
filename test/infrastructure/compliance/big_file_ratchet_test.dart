@@ -12,14 +12,14 @@ const int kMaxFileLineLimit = 1500;
 /// Any listed file that shrinks fails until its ceiling is lowered.
 /// Any listed file that drops to 1,500 or below must be removed from this list.
 const Map<String, int> kBigFileAllowlist = {
-  'lib/models/monster_codex/bestiary/bestiary_cr_nine_plus.dart': 5464,
+  'lib/models/monster_codex/bestiary/bestiary_cr_nine_plus.dart': 5463,
   'lib/models/magic_items/items/wondrous_items.dart': 4134,
-  'lib/models/monster_codex/bestiary/bestiary_cr_two_to_four.dart': 4637,
-  'lib/models/monster_codex/bestiary/bestiary_cr_0_to_quarter.dart': 4146,
+  'lib/models/monster_codex/bestiary/bestiary_cr_two_to_four.dart': 4636,
+  'lib/models/monster_codex/bestiary/bestiary_cr_0_to_quarter.dart': 4145,
   'lib/screens/glyph_showcase_screen.dart': 3685,
-  'lib/models/monster_codex/bestiary/bestiary_cr_five_to_eight.dart': 3565,
+  'lib/models/monster_codex/bestiary/bestiary_cr_five_to_eight.dart': 3564,
   'lib/services/party/party_room_service.dart': 3605,
-  'lib/models/monster_codex/bestiary/bestiary_cr_half_to_one.dart': 3502,
+  'lib/models/monster_codex/bestiary/bestiary_cr_half_to_one.dart': 3501,
   'lib/models/magic_items/items/adventuring_gear.dart': 3209,
   'lib/models/magic_items/items/weapons.dart': 2499,
   'lib/models/dm_screen_data.dart': 2684,

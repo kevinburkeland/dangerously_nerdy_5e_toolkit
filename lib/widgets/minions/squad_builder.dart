@@ -337,7 +337,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             Column(
               children: _selectedPreset.effectiveStatBlocks.map((sb) {
                 final isHb = MonsterCodexLibrary.homebrewMonsters
-                    .any((m) => m.id == sb.id);
+                    .any((m) => m.id.slug == sb.id);
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(

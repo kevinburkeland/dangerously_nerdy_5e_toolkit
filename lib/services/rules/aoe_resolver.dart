@@ -110,8 +110,8 @@ class AoeResolver {
 
       case ArenaTargetingStrategy.highestThreat:
         candidates.sort((a, b) {
-          final crA = a.monster.challengeRating;
-          final crB = b.monster.challengeRating;
+          final crA = a.monster.challengeRatingValue;
+          final crB = b.monster.challengeRatingValue;
           if (crA != crB) return crB.compareTo(crA);
           return b.maxHp.compareTo(a.maxHp);
         });

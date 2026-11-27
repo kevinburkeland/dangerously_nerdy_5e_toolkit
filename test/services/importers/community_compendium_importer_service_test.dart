@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_importer_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
@@ -145,7 +144,7 @@ void main() {
 
       // Check MonsterCodexLibrary was synced
       final customMonsters = MonsterCodexLibrary.homebrewMonsters;
-      expect(customMonsters.any((m) => m.id == 'ancient-red-dragon'), isTrue);
+      expect(customMonsters.any((m) => m.id.slug == 'ancient-red-dragon'), isTrue);
     });
 
     test('handles empty or malformed JSON payloads safely', () async {

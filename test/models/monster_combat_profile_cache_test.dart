@@ -42,7 +42,7 @@ void _expectProfilesEqualFieldByField(
 }
 
 void main() {
-  group('Fix 4.2: MonsterItem.getCombatProfile caches once per edition', () {
+  group('Fix 4.2: Monster.getCombatProfile caches once per edition', () {
     test('const SRD monster returns identical object per edition and matches fresh build',
         () {
       final monster = MonsterCodexLibrary.allMonsters.first;
@@ -58,21 +58,21 @@ void main() {
 
       final fresh2024 = MonsterCombatProfile.fromStatBlock(
         monster.getStatBlock(DmRulesEdition.v2024),
-        challengeRating: monster.challengeRating,
+        challengeRating: monster.challengeRatingValue,
       );
       final fresh2014 = MonsterCombatProfile.fromStatBlock(
         monster.getStatBlock(DmRulesEdition.v2014),
-        challengeRating: monster.challengeRating,
+        challengeRating: monster.challengeRatingValue,
       );
       _expectProfilesEqualFieldByField(p2024a, fresh2024);
       _expectProfilesEqualFieldByField(p2014a, fresh2014);
     });
 
-    test('non-const MonsterItem returns identical object per edition and differs across editions',
+    test('non-const Monster returns identical object per edition and differs across editions',
         () {
       final runtimeId = 'custom_cached_${DateTime.now().microsecondsSinceEpoch}';
-      final monster = MonsterItem(
-        id: runtimeId,
+      final monster = Monster(
+        id: EntityId(slug: runtimeId, ruleset: RulesetVersion.v2014),
         name: 'Custom Cached Monster',
         statBlock2014: const MonsterStatBlock(
           id: 'custom_2014',

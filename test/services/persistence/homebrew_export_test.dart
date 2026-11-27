@@ -44,8 +44,8 @@ void main() {
       await persistence.saveCustomSpell(spell);
 
       // 2. Seed Custom Monster
-      const monster = Monster(
-        id: EntityId(slug: 'void-lurker', ruleset: RulesetVersion.homebrew),
+      final monster = Monster.singleEdition(
+        id: const EntityId(slug: 'void-lurker', ruleset: RulesetVersion.homebrew),
         name: 'Void Lurker',
         size: 'Medium',
         monsterType: 'Aberration',

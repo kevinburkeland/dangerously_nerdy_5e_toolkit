@@ -11,7 +11,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
@@ -416,7 +415,7 @@ void main() {
     });
 
     test('Monster.toMinionStatBlock parsedActions and attackMath paths across 1-group, 2-group, negative, garbage', () {
-      Monster makeActionMonster(String hitDmg) => Monster(
+      Monster makeActionMonster(String hitDmg) => Monster.singleEdition(
             id: const EntityId(slug: 'mon-arena-1', ruleset: RulesetVersion.v2024),
             name: 'Arena Beast',
             size: 'Medium',
@@ -432,19 +431,19 @@ void main() {
             attackMath: const [],
           );
 
-      final c1 = makeActionMonster('1d8 + 2').toMinionStatBlock();
+      final c1 = makeActionMonster('1d8 + 2').sourceStatBlock;
       expect((c1.damageDiceCount, c1.damageDiceSides, c1.damageBonus), equals((1, 8, 2)));
 
-      final c2 = makeActionMonster('1d8 + 1d6').toMinionStatBlock();
+      final c2 = makeActionMonster('1d8 + 1d6').sourceStatBlock;
       expect((c2.damageDiceCount, c2.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
-      final cNeg = makeActionMonster('1d8 - 1d4').toMinionStatBlock();
+      final cNeg = makeActionMonster('1d8 - 1d4').sourceStatBlock;
       expect((cNeg.damageDiceCount, cNeg.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
-      final cGarbage = makeActionMonster('banana').toMinionStatBlock();
+      final cGarbage = makeActionMonster('banana').sourceStatBlock;
       expect((cGarbage.damageDiceCount, cGarbage.damageDiceSides), equals((1, 6)));
 
-      Monster makeMathMonster(String formula) => Monster(
+      Monster makeMathMonster(String formula) => Monster.singleEdition(
             id: const EntityId(slug: 'mon-arena-2', ruleset: RulesetVersion.v2024),
             name: 'Arena Construct',
             size: 'Medium',
@@ -461,16 +460,16 @@ void main() {
             ],
           );
 
-      final m1 = makeMathMonster('1d8 + 2').toMinionStatBlock();
+      final m1 = makeMathMonster('1d8 + 2').sourceStatBlock;
       expect((m1.damageDiceCount, m1.damageDiceSides, m1.damageBonus), equals((1, 8, 2)));
 
-      final m2 = makeMathMonster('1d8 + 1d6').toMinionStatBlock();
+      final m2 = makeMathMonster('1d8 + 1d6').sourceStatBlock;
       expect((m2.damageDiceCount, m2.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
-      final mNeg = makeMathMonster('1d8 - 1d4').toMinionStatBlock();
+      final mNeg = makeMathMonster('1d8 - 1d4').sourceStatBlock;
       expect((mNeg.damageDiceCount, mNeg.damageDiceSides), equals((1, 6))); // Cleanup slice 13: was (1, 8), dropped a die group
 
-      final mGarbage = makeMathMonster('banana').toMinionStatBlock();
+      final mGarbage = makeMathMonster('banana').sourceStatBlock;
       expect((mGarbage.damageDiceCount, mGarbage.damageDiceSides), equals((1, 6)));
     });
   });

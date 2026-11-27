@@ -226,7 +226,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     );
   }
 
-  void _addMonsterToTeam(MonsterItem monster, int count, ArenaTeam team,
+  void _addMonsterToTeam(Monster monster, int count, ArenaTeam team,
       [DmRulesEdition? ed]) {
     final targetEd = ed ?? _resolveEdition(context);
     setState(() {
@@ -242,7 +242,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
 
         targetList.add(
           ArenaCombatant.fromMonster(
-            id: '${team.name}_${monster.id}_${DateTime.now().microsecondsSinceEpoch}_$i',
+            id: '${team.name}_${monster.id.slug}_${DateTime.now().microsecondsSinceEpoch}_$i',
             monster: monster,
             team: team,
             customName: name,
@@ -1394,7 +1394,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                               team == ArenaTeam.teamA ? _teamA : _teamB;
                           list.add(
                             ArenaCombatant.fromMonster(
-                              id: '${team.name}_${fighter.monster.id}_${DateTime.now().microsecondsSinceEpoch}',
+                              id: '${team.name}_${fighter.monster.id.slug}_${DateTime.now().microsecondsSinceEpoch}',
                               monster: fighter.monster,
                               team: team,
                               customName:

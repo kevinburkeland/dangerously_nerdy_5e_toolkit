@@ -11,9 +11,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.
 void main() {
   group('Combat Mechanics Comprehensive Audit & Edge Cases', () {
     late ArenaCombatEngine engine;
-    late MonsterItem wolfMonster;
-    late MonsterItem dragonMonster;
-    late MonsterItem trexMonster;
+    late Monster wolfMonster;
+    late Monster dragonMonster;
+    late Monster trexMonster;
 
     setUp(() {
       engine = ArenaCombatEngine(rng: Random(1337));

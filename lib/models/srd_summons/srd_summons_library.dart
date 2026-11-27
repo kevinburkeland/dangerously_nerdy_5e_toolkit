@@ -1,5 +1,4 @@
 import '../monster_codex_data.dart';
-import 'minion_stat_block.dart';
 import 'summon_preset.dart';
 import 'spells/animate_objects_preset.dart';
 import 'spells/undead_presets.dart';
@@ -144,7 +143,7 @@ class SrdSummonsLibrary {
       }
     }
     for (final m in MonsterCodexLibrary.homebrewMonsters) {
-      if (m.id == id || m.sourceStatBlock.id == id) {
+      if (m.id.slug == id || m.sourceStatBlock.id == id) {
         return m.sourceStatBlock;
       }
     }
@@ -164,7 +163,7 @@ class SrdSummonsLibrary {
     }
     for (final m in MonsterCodexLibrary.homebrewMonsters) {
       if (m.name.toLowerCase() == lower ||
-          m.id.toLowerCase() == lower ||
+          m.id.slug.toLowerCase() == lower ||
           m.sourceStatBlock.name.toLowerCase() == lower ||
           m.sourceStatBlock.id.toLowerCase() == lower) {
         return m.sourceStatBlock;

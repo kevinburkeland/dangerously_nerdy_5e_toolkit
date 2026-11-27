@@ -3,11 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena/arena_combat_context.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena/arena_spellcasting_ai.dart';
 
-MonsterItem _makeHealerMonster() {
+Monster _makeHealerMonster() {
   const sb = MonsterStatBlock(
     id: 'test_healer',
     name: 'Test Healer',
@@ -24,8 +23,7 @@ MonsterItem _makeHealerMonster() {
     spellSaveDc: 15, // 8 + 3 (PB) + 4 (WIS)
     spellAttackBonus: 7, // 3 (PB) + 4 (WIS)
   );
-  return MonsterItem.simple(
-    id: 'test_healer',
+  return const Monster.simple(id: EntityId(slug: 'test_healer', ruleset: RulesetVersion.v2014),
     name: 'Test Healer',
     statBlock: sb,
   );
@@ -33,7 +31,7 @@ MonsterItem _makeHealerMonster() {
 
 ArenaCombatant _makeCombatant({
   required String id,
-  required MonsterItem monster,
+  required Monster monster,
   required ArenaTeam team,
   required int maxHp,
   required int currentHp,

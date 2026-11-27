@@ -2,23 +2,28 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Fix 6.3 / Fix 3.2 shape-based source bar: no second spell or item model class in app `lib/`.
+/// Fix 6.3 / Fix 3.2 shape-based source bar: no second spell, item, monster,
+/// or monster stat-block model class in app `lib/`.
 ///
-/// Reads canonical field names dynamically from `vtt_ruleset_dnd5e`'s `Spell`
-/// and `EquipmentItem` definitions (resolved via `.dart_tool/package_config.json`)
-/// and rejects any class in `lib/` (regardless of class name or suffix, outside
-/// explicitly exempted wire-format DTOs) that declares a shadow model or >= 3
-/// non-generic fields of `Spell` or `EquipmentItem`.
+/// Reads canonical property names dynamically from `vtt_ruleset_dnd5e`'s
+/// `Spell`, `EquipmentItem`, `Monster`, and `MonsterStatBlock` definitions
+/// (resolved via `.dart_tool/package_config.json`) and rejects any class in
+/// `lib/` (regardless of class name or suffix, outside explicitly exempted
+/// rows in [kSecondModelExemptions]) that declares a shadow model or >= 3
+/// model-specific fields of any of those four canonical ruleset types.
 const Set<String> _kForbiddenShadowModelNames = {
   'SpellItem',
   'SpellEditionDetails',
   'MagicItem',
   'ItemEditionDetails',
+  'MonsterItem',
+  'MinionStatBlock',
 };
 
 /// Generic entity/UI/metadata fields that may legitimately appear on non-model
-/// classes (lists, views, helpers). `rules2014` and `rules2024` are intentionally
-/// NOT generic so edition-paired shadow models are always caught.
+/// classes (lists, views, helpers). `rules2014`, `rules2024`, `statBlock2014`,
+/// and `statBlock2024` are intentionally NOT generic so edition-paired shadow
+/// models are always caught.
 const Set<String> _kGenericEntityFields = {
   'id',
   'name',
@@ -33,10 +38,33 @@ const Set<String> _kGenericEntityFields = {
   'customProperties',
 };
 
+/// Shared combat-simulation, mobility, and batch-roller fields carried on
+/// `MonsterStatBlock` that also legitimately appear on runtime combat types
+/// (`ArenaCombatant`, `MonsterCombatProfile`, `DprAttackAction`,
+/// `MinionInstance`, `MinionInstanceDto`). Core monster/stat-block fields
+/// (`armorClass`, `hitPoints`, `challengeRating`, `ac`, `maxHp`, `crDisplay`,
+/// `strScore`..`chaScore`, `traits`, `actions`, etc.) remain strictly enforced.
+const Set<String> _kSharedCombatAndRollerFields = {
+  'canFly',
+  'hasHover',
+  'spellSaveDc',
+  'spellAttackBonus',
+  'attackBonus',
+  'damageDiceCount',
+  'damageDiceSides',
+  'damageBonus',
+  'damageType',
+  'secondaryDamageDiceCount',
+  'secondaryDamageDiceSides',
+  'secondaryDamageType',
+  'hasPackTactics',
+  'specialTrait',
+};
+
 /// Explicit per-class exemption table `(normalizedPath, className) -> reason`.
 ///
 /// Note: `lib/infrastructure/dtos/equipment_item_dto.dart` does not exist in
-/// this repository.
+/// this repository. Zero new exemptions added for Monster / MonsterStatBlock.
 const Map<(String, String), String> kSecondModelExemptions = {
   ('lib/infrastructure/dtos/spell_dto.dart', 'SpellDto'):
       'Wire-format DTO for Spell JSON/database transport; converted to ruleset Spell in one place via SpellDto.toDomain().',
@@ -74,15 +102,11 @@ String _stripComments(String src) {
   return out.toString();
 }
 
-/// Extracts only top-level field declarations inside [className]'s class body,
-/// ignoring method/constructor bodies and parameter lists so reference-holder
-/// classes and local variables cannot cause false matches.
-Set<String> extractClassFieldNames(String source, String className) {
-  final stripped = _stripComments(source);
+String _extractClassTopLevel(String stripped, String className) {
   final classMatch = RegExp(
     '\\bclass\\s+$className\\b[^{]*\\{',
   ).firstMatch(stripped);
-  if (classMatch == null) return const {};
+  if (classMatch == null) return '';
   var depth = 1;
   var i = classMatch.end;
   final topLevel = StringBuffer();
@@ -113,19 +137,26 @@ Set<String> extractClassFieldNames(String source, String className) {
     }
     i++;
   }
+  return topLevel.toString();
+}
+
+/// Extracts only top-level field declarations inside [className]'s class body,
+/// ignoring method/constructor bodies and parameter lists so reference-holder
+/// classes and local variables cannot cause false matches.
+Set<String> extractClassFieldNames(String source, String className) {
+  final stripped = _stripComments(source);
+  final topLevel = _extractClassTopLevel(stripped, className);
+  if (topLevel.isEmpty) return const {};
   final fields = <String>{};
-  for (final stmt in topLevel.toString().split(';')) {
+  for (final stmt in topLevel.split(';')) {
     var s = stmt.trim();
     if (s.isEmpty) continue;
-    // Strip leading annotations (e.g., @override, @immutable).
     s = s.replaceFirst(RegExp(r'^(?:@[A-Za-z0-9_]+(?:\([^)]*\))?\s+)+'), '');
-    // Strip initializer (`= ...`) if present, but skip arrow methods (`=>`).
     if (s.contains('=>')) continue;
     final eqIdx = s.indexOf('=');
     if (eqIdx != -1) {
       s = s.substring(0, eqIdx).trim();
     }
-    // Skip methods, constructors, getters, setters, and operators.
     if (s.contains('(') ||
         RegExp(r'\b(get|set|operator|factory)\b').hasMatch(s)) {
       continue;
@@ -141,6 +172,28 @@ Set<String> extractClassFieldNames(String source, String className) {
     }
   }
   return fields;
+}
+
+/// Extracts top-level fields AND public derived getters from a canonical
+/// ruleset model class (so facts derived via getters like `Monster.armorClass`
+/// or `Monster.challengeRating` are also enforced by the shape bar).
+Set<String> extractCanonicalModelPropertyNames(String source, String className) {
+  final stripped = _stripComments(source);
+  final props = <String>{...extractClassFieldNames(source, className)};
+  final topLevel = _extractClassTopLevel(stripped, className);
+  const ignoredGetters = {
+    'entityType',
+    'hashCode',
+    'sourceStatBlock',
+    'isHomebrew',
+  };
+  for (final m in RegExp(r'\bget\s+([a-z][A-Za-z0-9_]*)\b').allMatches(topLevel)) {
+    final g = m.group(1)!;
+    if (!ignoredGetters.contains(g)) {
+      props.add(g);
+    }
+  }
+  return props;
 }
 
 Directory _findRulesetLibDir() {
@@ -167,6 +220,8 @@ Directory _findRulesetLibDir() {
   required String source,
   required Set<String> spellFields,
   required Set<String> itemFields,
+  Set<String> monsterFields = const {},
+  Set<String> statBlockFields = const {},
 }) {
   final stripped = _stripComments(source);
   final violations = <String>[];
@@ -176,6 +231,10 @@ Directory _findRulesetLibDir() {
 
   final spellSpecific = spellFields.difference(_kGenericEntityFields);
   final itemSpecific = itemFields.difference(_kGenericEntityFields);
+  final monsterSpecific = monsterFields.difference(_kGenericEntityFields);
+  final statBlockSpecific = statBlockFields
+      .difference(_kGenericEntityFields)
+      .difference(_kSharedCombatAndRollerFields);
 
   final classRe = RegExp(r'\bclass\s+([A-Z][A-Za-z0-9_]*)\b[^{]*\{');
   for (final m in classRe.allMatches(stripped)) {
@@ -199,6 +258,8 @@ Directory _findRulesetLibDir() {
         extractClassFieldNames(stripped, name).difference(_kGenericEntityFields);
     final spellOverlap = fields.intersection(spellSpecific);
     final itemOverlap = fields.intersection(itemSpecific);
+    final monsterOverlap = fields.intersection(monsterSpecific);
+    final statBlockOverlap = fields.intersection(statBlockSpecific);
 
     if (spellOverlap.length >= 3) {
       final msg =
@@ -209,6 +270,18 @@ Directory _findRulesetLibDir() {
     if (itemOverlap.length >= 3) {
       final msg =
           '$path: class `$name` duplicates ${itemOverlap.length} canonical EquipmentItem fields ($itemOverlap)';
+      matched.add(msg);
+      violations.add(msg);
+    }
+    if (monsterOverlap.length >= 3) {
+      final msg =
+          '$path: class `$name` duplicates ${monsterOverlap.length} canonical Monster fields ($monsterOverlap)';
+      matched.add(msg);
+      violations.add(msg);
+    }
+    if (statBlockOverlap.length >= 3) {
+      final msg =
+          '$path: class `$name` duplicates ${statBlockOverlap.length} canonical MonsterStatBlock fields ($statBlockOverlap)';
       matched.add(msg);
       violations.add(msg);
     }
@@ -226,29 +299,53 @@ List<String> scanSourceForShadowModels({
   required String source,
   required Set<String> spellFields,
   required Set<String> itemFields,
+  Set<String> monsterFields = const {},
+  Set<String> statBlockFields = const {},
 }) =>
     scanSourceForShadowModelsDetailed(
       path: path,
       source: source,
       spellFields: spellFields,
       itemFields: itemFields,
+      monsterFields: monsterFields,
+      statBlockFields: statBlockFields,
     ).violations;
 
 void main() {
   late Set<String> spellFields;
   late Set<String> itemFields;
+  late Set<String> monsterFields;
+  late Set<String> statBlockFields;
 
   setUpAll(() {
     final rulesetLib = _findRulesetLibDir();
     final spellFile = File('${rulesetLib.path}/src/models/spell.dart');
     final itemFile = File('${rulesetLib.path}/src/models/equipment_item.dart');
+    final monsterFile = File('${rulesetLib.path}/src/models/monster.dart').existsSync()
+        ? File('${rulesetLib.path}/src/models/monster.dart')
+        : File('${rulesetLib.path}/src/models/spell_monster_equipment.dart');
+    final statBlockFile =
+        File('${rulesetLib.path}/src/models/monster_stat_block.dart');
     expect(spellFile.existsSync(), isTrue);
     expect(itemFile.existsSync(), isTrue);
+    expect(monsterFile.existsSync(), isTrue);
+    expect(statBlockFile.existsSync(), isTrue);
+
     spellFields = extractClassFieldNames(spellFile.readAsStringSync(), 'Spell');
     itemFields =
         extractClassFieldNames(itemFile.readAsStringSync(), 'EquipmentItem');
+    monsterFields = extractCanonicalModelPropertyNames(
+      monsterFile.readAsStringSync(),
+      'Monster',
+    );
+    statBlockFields = extractClassFieldNames(
+      statBlockFile.readAsStringSync(),
+      'MonsterStatBlock',
+    );
     expect(spellFields.length, greaterThanOrEqualTo(10));
     expect(itemFields.length, greaterThanOrEqualTo(10));
+    expect(monsterFields.length, greaterThanOrEqualTo(10));
+    expect(statBlockFields.length, greaterThanOrEqualTo(20));
   });
 
   group('Fix 6.3 source bar: no second spell or item model in lib/', () {
@@ -270,6 +367,8 @@ class CustomSpellModel {
           source: bad1,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isNotEmpty,
       );
@@ -279,6 +378,8 @@ class CustomSpellModel {
           source: bad2,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isNotEmpty,
       );
@@ -337,6 +438,8 @@ class SafeHelper {
           source: incantation,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isNotEmpty,
         reason: 'Incantation must fail naming lib/models/incantation.dart and Incantation',
@@ -347,6 +450,8 @@ class SafeHelper {
           source: spellEntry,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isNotEmpty,
         reason: 'SpellEntry must fail despite Details/Entry suffix',
@@ -357,6 +462,8 @@ class SafeHelper {
           source: fooDetails,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isNotEmpty,
         reason: 'FooDetails must fail despite Details suffix',
@@ -367,6 +474,8 @@ class SafeHelper {
           source: spellRow,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isEmpty,
         reason: 'Reference holder class with Spell field + glyphColor must pass',
@@ -377,9 +486,90 @@ class SafeHelper {
           source: commentOnly,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isEmpty,
         reason: 'Commented class Incantation must pass',
+      );
+    });
+
+    test('control: Fix 6.3 shape-based bar catches renamed Monster and MonsterStatBlock classes', () {
+      const creatureRecord = '''
+class CreatureRecord {
+  final int armorClass;
+  final int hitPoints;
+  final String challengeRating;
+  const CreatureRecord(this.armorClass, this.hitPoints, this.challengeRating);
+}
+''';
+      const shadowStatBlock = '''
+class BeastSheet {
+  final int maxHp;
+  final String crDisplay;
+  final int strScore;
+  const BeastSheet(this.maxHp, this.crDisplay, this.strScore);
+}
+''';
+      const monsterHolder = '''
+class MonsterRow {
+  final Monster monster;
+  final int accent;
+  const MonsterRow(this.monster, this.accent);
+}
+''';
+      const monsterComment = '''
+// class CreatureRecord { final int armorClass; final int hitPoints; final String challengeRating; }
+class SafeMonsterHelper {
+  final int count;
+  const SafeMonsterHelper(this.count);
+}
+''';
+
+      final r1 = scanSourceForShadowModels(
+        path: 'lib/models/creature_record.dart',
+        source: creatureRecord,
+        spellFields: spellFields,
+        itemFields: itemFields,
+        monsterFields: monsterFields,
+        statBlockFields: statBlockFields,
+      );
+      expect(r1, isNotEmpty);
+      expect(r1.single, contains('lib/models/creature_record.dart'));
+      expect(r1.single, contains('CreatureRecord'));
+
+      final r2 = scanSourceForShadowModels(
+        path: 'lib/models/beast_sheet.dart',
+        source: shadowStatBlock,
+        spellFields: spellFields,
+        itemFields: itemFields,
+        monsterFields: monsterFields,
+        statBlockFields: statBlockFields,
+      );
+      expect(r2, isNotEmpty);
+      expect(r2.single, contains('BeastSheet'));
+
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/presentation/monster_row.dart',
+          source: monsterHolder,
+          spellFields: spellFields,
+          itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
+        ),
+        isEmpty,
+      );
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/models/monster_comment.dart',
+          source: monsterComment,
+          spellFields: spellFields,
+          itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
+        ),
+        isEmpty,
       );
     });
 
@@ -397,6 +587,8 @@ class SpellCardWidget {
           source: ok,
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         ),
         isEmpty,
       );
@@ -418,6 +610,8 @@ class SpellCardWidget {
           source: entity.readAsStringSync(),
           spellFields: spellFields,
           itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
         );
         allViolations.addAll(res.violations);
         allClasses.addAll(res.classesScanned);
@@ -426,7 +620,7 @@ class SpellCardWidget {
       }
 
       stdout.writeln(
-        'Fix 3.2 scan summary: ${allClasses.length} classes scanned, '
+        'Fix 6.3 scan summary: ${allClasses.length} classes scanned, '
         '${allMatched.length} unexempted matches, '
         '${allExempted.length} exempted (${allExempted.join('; ')})',
       );
@@ -434,7 +628,7 @@ class SpellCardWidget {
       expect(
         allViolations,
         isEmpty,
-        reason: 'Second spell/item model found in lib/:\n${allViolations.join('\n')}',
+        reason: 'Second spell/item/monster model found in lib/:\n${allViolations.join('\n')}',
       );
     });
   });

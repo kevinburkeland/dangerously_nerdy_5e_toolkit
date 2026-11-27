@@ -141,7 +141,7 @@ class SrdEquivalenceIndex {
     final monsterNames = <String>{};
     for (final m
         in MonsterCodexLibrary.allMonsters.where((m) => !m.isHomebrew)) {
-      final mSlug = m.id.toLowerCase().trim();
+      final mSlug = m.id.slug.toLowerCase().trim();
       final normName = _slugify(m.name);
       monsterSlugs.add(mSlug);
       monsterSlugs.add(mSlug.replaceAll(RegExp(r'[-_]'), ''));

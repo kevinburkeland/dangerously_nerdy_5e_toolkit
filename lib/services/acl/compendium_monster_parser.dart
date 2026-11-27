@@ -258,7 +258,7 @@ class CompendiumMonsterParser {
       customProperties['languages'] = _formatList(raw['languages']);
     }
 
-    return Monster(
+    return Monster.singleEdition(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       size: size,
@@ -897,7 +897,7 @@ class CompendiumMonsterParser {
     }
   }
 
-  static Map<String, dynamic> _monsterItemToRawMap(MonsterItem item) {
+  static Map<String, dynamic> _monsterItemToRawMap(Monster item) {
     final sb = item.sourceStatBlock;
     return {
       'name': item.name,

@@ -42,32 +42,32 @@ void main() {
     test('filters properly by CR bands', () {
       final cr0ToQuarter = MonsterCodexLibrary.getCr0ToQuarterMonsters();
       expect(cr0ToQuarter.isNotEmpty, isTrue);
-      expect(cr0ToQuarter.every((m) => m.challengeRating <= 0.25), isTrue);
+      expect(cr0ToQuarter.every((m) => m.challengeRatingValue <= 0.25), isTrue);
 
       final crHalfToOne = MonsterCodexLibrary.getCrHalfToOneMonsters();
       expect(crHalfToOne.isNotEmpty, isTrue);
       expect(
           crHalfToOne.every(
-              (m) => m.challengeRating >= 0.5 && m.challengeRating <= 1.0),
+              (m) => m.challengeRatingValue >= 0.5 && m.challengeRatingValue <= 1.0),
           isTrue);
 
       final crTwoToFour = MonsterCodexLibrary.getCrTwoToFourMonsters();
       expect(crTwoToFour.isNotEmpty, isTrue);
       expect(
           crTwoToFour.every(
-              (m) => m.challengeRating >= 2.0 && m.challengeRating <= 4.0),
+              (m) => m.challengeRatingValue >= 2.0 && m.challengeRatingValue <= 4.0),
           isTrue);
 
       final crFiveToEight = MonsterCodexLibrary.getCrFiveToEightMonsters();
       expect(crFiveToEight.isNotEmpty, isTrue);
       expect(
           crFiveToEight.every(
-              (m) => m.challengeRating >= 5.0 && m.challengeRating <= 8.0),
+              (m) => m.challengeRatingValue >= 5.0 && m.challengeRatingValue <= 8.0),
           isTrue);
 
       final crNinePlus = MonsterCodexLibrary.getCrNinePlusMonsters();
       expect(crNinePlus.isNotEmpty, isTrue);
-      expect(crNinePlus.every((m) => m.challengeRating >= 9.0), isTrue);
+      expect(crNinePlus.every((m) => m.challengeRatingValue >= 9.0), isTrue);
     });
 
     test('supports searching by name, type, action, and trait keywords', () {

@@ -41,8 +41,8 @@ void main() {
       );
       await homebrewService.saveCustomSpell(spell);
 
-      const monster = Monster(
-        id: EntityId(
+      final monster = Monster.singleEdition(
+        id: const EntityId(
             slug: 'hell-hound-alpha', ruleset: RulesetVersion.homebrew),
         name: 'Hell Hound Alpha',
         size: 'Large',
