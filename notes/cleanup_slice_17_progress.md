@@ -1,7 +1,7 @@
 # Cleanup slice 17 progress notes
 Status: IN PROGRESS
 Start heads: core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 6fb83f24ffbc9a0efd44e182536a878d976d8136
-Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0, app ec9f8ae93a433c8783faa8c6390ba7f7e7f50a1e
+Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0, app 29a21e09c2bd09a16175dd378009a6f652bb54fb
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0
 Fix ids: 1.1 1.2 1.3 1.4 2.1 3.1 3.2 3.3 4.1 4.2 4.3 5.1 5.2 5.3 6.1 6.2 6.3 7.1 8.1 8.2
 Mutation ids: R1 R2 R3 R4 R5 N1 X1 G1 C1 C2 S1 B1 Y1 H1 H2 H3
@@ -36,7 +36,7 @@ Fix 8.2: The homebrew service is a shell under 800 lines
 - [x] Step 5 One item model: ruleset 8509bb5edece484f2649b0a2b511f30966a26dd6 run 45895492155, app 2078f70adfc7ccb8212ef65a564ca71620ca5cf7 run 45898829284
 - [x] Step 6 One spell model: ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0 run 45900271783, app a190f42b6405e11d1adfdc840b188de2a3694975 run 45902447861
 - [x] Step 7 Homebrew storage and mappers out: app ec9f8ae93a433c8783faa8c6390ba7f7e7f50a1e run 45918879351
-- [ ] Step 8 Homebrew sync, bundles and re-parsing out
+- [x] Step 8 Homebrew sync, bundles and re-parsing out: app 29a21e09c2bd09a16175dd378009a6f652bb54fb run 45920307100
 - [ ] Step 9 Mutations and report
 
 ## Fix checklist
@@ -58,6 +58,8 @@ Fix 6.1 done: [One spell model] Moved Spell with SpellEditionDetails, typed scho
 Fix 6.2 done: [Old stored spells load into the one model] Added pre-slice-17 Spell.fromMap legacy hydration backed by spell_law_test.dart and verified stored_format_load_law_test.dart passes with unchanged fixtures.
 Fix 6.3 done: [No second model for a spell or an item] Added no_second_spell_or_item_model_bar_test.dart reading canonical Spell and EquipmentItem fields from vtt_ruleset_dnd5e via package_config.json.
 Fix 7.1 done: [Homebrew storage and mappers leave the service] Extracted HomebrewCategoryStore<T>, HomebrewRawPayloadStore, and HomebrewCompendiumMappers into lib/services/persistence/homebrew/, shrinking homebrew_persistence_service.dart from 3,849 to 2,815 lines with every public signature unchanged and verified by Fix 4.2, Fix 4.3, 44 homebrew tests, legacy load law, and annotated moves check.
+Fix 8.1 done: [Library sync, bundles and re-parsing leave the service] Extracted HomebrewLibrarySync, HomebrewBundleIo, HomebrewClearing, HomebrewReparser (with ReparseResult re-exported from homebrew_persistence_service.dart), and dedicated HomebrewRemoteBatchSaver into lib/services/persistence/homebrew/ with zero behaviour change.
+Fix 8.2 done: [The homebrew service is a shell under 800 lines] Shrunk homebrew_persistence_service.dart from 2,815 to 758 lines (all eight extracted modules 242-762 lines, zero part/part of), removed homebrew_persistence_service.dart from big_file_ratchet_test.dart (29 files left), verified moves check (0 unannotated), reachability law, layer table, import bars, all 43 homebrew tests, legacy load law, and build_web.sh.
 
 ## Mutation branches
 None
@@ -72,7 +74,7 @@ f6334cabbd83eebcb370fc2074a5dd753fe2cb94 red run 45903082894
 None
 
 ## Next
-Implement Step 8 (Homebrew sync, bundles and re-parsing out — app, no behaviour change): extract library and repository sync, bundle export and import, clearing, re-parsing, and remote batch save into focused files under the homebrew persistence subfolder, shrink homebrew_persistence_service.dart under 800 lines, remove it from big_file_ratchet_test.dart, and verify with moves check, all homebrew tests, legacy load law, ratchets, and build_web.sh.
+Implement Step 9 (mutations, exit check, final Status COMPLETE progress notes, and 17-section report): run and push all 16 cs17 mutation branches cleanly across ruleset and app, verify check_mutation_branches.sh 20 across all three repos, execute the full exit check (including Firestore emulator rules and dependencies workflow dispatches), push final COMPLETE notes, and write report.md.
 
 ## Open issues and deviations
 - Fix 1.3 stopped per prompt instruction ("if the batch can't be unpacked, say why and stop this fix"): in Flutter's TestWidgetsFlutterBinding._runTest (binding.dart), a second FlutterError.onError overwrites _pendingExceptionDetails with a FlutterErrorDetails whose exception is a plain String ('Multiple exceptions (N) were detected...') with no list field, and test/infrastructure/compliance/no_flutter_error_on_error_override_bar_test.dart forbids assigning FlutterError.onError in any file under test/.
