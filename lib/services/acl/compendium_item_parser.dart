@@ -163,6 +163,7 @@ class CompendiumItemParser {
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       itemType: itemType,
+      category: ItemCategory.wondrousItem,
       rarity: rarity,
       requiresAttunement: reqAttune.requiresAttunement,
       descriptionMarkdown: description,
