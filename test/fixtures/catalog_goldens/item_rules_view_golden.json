@@ -1,9 +1,9 @@
 {
   "count": 675,
   "items": {
-    "weapon-club": {
+    "weapon_club": {
       "id": {
-        "slug": "weapon-club",
+        "slug": "weapon_club",
         "ruleset": "v2024"
       },
       "name": "Club",
@@ -27,9 +27,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-dagger": {
+    "weapon_dagger": {
       "id": {
-        "slug": "weapon-dagger",
+        "slug": "weapon_dagger",
         "ruleset": "v2024"
       },
       "name": "Dagger",
@@ -54,9 +54,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-greatclub": {
+    "weapon_greatclub": {
       "id": {
-        "slug": "weapon-greatclub",
+        "slug": "weapon_greatclub",
         "ruleset": "v2024"
       },
       "name": "Greatclub",
@@ -80,9 +80,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-handaxe": {
+    "weapon_handaxe": {
       "id": {
-        "slug": "weapon-handaxe",
+        "slug": "weapon_handaxe",
         "ruleset": "v2024"
       },
       "name": "Handaxe",
@@ -107,9 +107,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-javelin": {
+    "weapon_javelin": {
       "id": {
-        "slug": "weapon-javelin",
+        "slug": "weapon_javelin",
         "ruleset": "v2024"
       },
       "name": "Javelin",
@@ -133,9 +133,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-light-hammer": {
+    "weapon_light_hammer": {
       "id": {
-        "slug": "weapon-light-hammer",
+        "slug": "weapon_light_hammer",
         "ruleset": "v2024"
       },
       "name": "Light Hammer",
@@ -160,9 +160,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-mace": {
+    "weapon_mace": {
       "id": {
-        "slug": "weapon-mace",
+        "slug": "weapon_mace",
         "ruleset": "v2024"
       },
       "name": "Mace",
@@ -185,9 +185,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-quarterstaff": {
+    "weapon_quarterstaff": {
       "id": {
-        "slug": "weapon-quarterstaff",
+        "slug": "weapon_quarterstaff",
         "ruleset": "v2024"
       },
       "name": "Quarterstaff",
@@ -211,9 +211,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-sickle": {
+    "weapon_sickle": {
       "id": {
-        "slug": "weapon-sickle",
+        "slug": "weapon_sickle",
         "ruleset": "v2024"
       },
       "name": "Sickle",
@@ -237,9 +237,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-spear": {
+    "weapon_spear": {
       "id": {
-        "slug": "weapon-spear",
+        "slug": "weapon_spear",
         "ruleset": "v2024"
       },
       "name": "Spear",
@@ -264,9 +264,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-light-crossbow": {
+    "weapon_light_crossbow": {
       "id": {
-        "slug": "weapon-light-crossbow",
+        "slug": "weapon_light_crossbow",
         "ruleset": "v2024"
       },
       "name": "Light Crossbow",
@@ -290,9 +290,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-dart": {
+    "weapon_dart": {
       "id": {
-        "slug": "weapon-dart",
+        "slug": "weapon_dart",
         "ruleset": "v2024"
       },
       "name": "Dart",
@@ -316,9 +316,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-shortbow": {
+    "weapon_shortbow": {
       "id": {
-        "slug": "weapon-shortbow",
+        "slug": "weapon_shortbow",
         "ruleset": "v2024"
       },
       "name": "Shortbow",
@@ -341,9 +341,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-sling": {
+    "weapon_sling": {
       "id": {
-        "slug": "weapon-sling",
+        "slug": "weapon_sling",
         "ruleset": "v2024"
       },
       "name": "Sling",
@@ -366,9 +366,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-battleaxe": {
+    "weapon_battleaxe": {
       "id": {
-        "slug": "weapon-battleaxe",
+        "slug": "weapon_battleaxe",
         "ruleset": "v2024"
       },
       "name": "Battleaxe",
@@ -392,9 +392,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-flail": {
+    "weapon_flail": {
       "id": {
-        "slug": "weapon-flail",
+        "slug": "weapon_flail",
         "ruleset": "v2024"
       },
       "name": "Flail",
@@ -417,9 +417,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-glaive": {
+    "weapon_glaive": {
       "id": {
-        "slug": "weapon-glaive",
+        "slug": "weapon_glaive",
         "ruleset": "v2024"
       },
       "name": "Glaive",
@@ -444,9 +444,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-greataxe": {
+    "weapon_greataxe": {
       "id": {
-        "slug": "weapon-greataxe",
+        "slug": "weapon_greataxe",
         "ruleset": "v2024"
       },
       "name": "Greataxe",
@@ -471,9 +471,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-greatsword": {
+    "weapon_greatsword": {
       "id": {
-        "slug": "weapon-greatsword",
+        "slug": "weapon_greatsword",
         "ruleset": "v2024"
       },
       "name": "Greatsword",
@@ -498,9 +498,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-halberd": {
+    "weapon_halberd": {
       "id": {
-        "slug": "weapon-halberd",
+        "slug": "weapon_halberd",
         "ruleset": "v2024"
       },
       "name": "Halberd",
@@ -525,9 +525,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-lance": {
+    "weapon_lance": {
       "id": {
-        "slug": "weapon-lance",
+        "slug": "weapon_lance",
         "ruleset": "v2024"
       },
       "name": "Lance",
@@ -551,9 +551,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-longsword": {
+    "weapon_longsword": {
       "id": {
-        "slug": "weapon-longsword",
+        "slug": "weapon_longsword",
         "ruleset": "v2024"
       },
       "name": "Longsword",
@@ -577,9 +577,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-maul": {
+    "weapon_maul": {
       "id": {
-        "slug": "weapon-maul",
+        "slug": "weapon_maul",
         "ruleset": "v2024"
       },
       "name": "Maul",
@@ -603,9 +603,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-morningstar": {
+    "weapon_morningstar": {
       "id": {
-        "slug": "weapon-morningstar",
+        "slug": "weapon_morningstar",
         "ruleset": "v2024"
       },
       "name": "Morningstar",
@@ -628,9 +628,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-pike": {
+    "weapon_pike": {
       "id": {
-        "slug": "weapon-pike",
+        "slug": "weapon_pike",
         "ruleset": "v2024"
       },
       "name": "Pike",
@@ -655,9 +655,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-rapier": {
+    "weapon_rapier": {
       "id": {
-        "slug": "weapon-rapier",
+        "slug": "weapon_rapier",
         "ruleset": "v2024"
       },
       "name": "Rapier",
@@ -680,9 +680,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-scimitar": {
+    "weapon_scimitar": {
       "id": {
-        "slug": "weapon-scimitar",
+        "slug": "weapon_scimitar",
         "ruleset": "v2024"
       },
       "name": "Scimitar",
@@ -706,9 +706,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-shortsword": {
+    "weapon_shortsword": {
       "id": {
-        "slug": "weapon-shortsword",
+        "slug": "weapon_shortsword",
         "ruleset": "v2024"
       },
       "name": "Shortsword",
@@ -732,9 +732,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-trident": {
+    "weapon_trident": {
       "id": {
-        "slug": "weapon-trident",
+        "slug": "weapon_trident",
         "ruleset": "v2024"
       },
       "name": "Trident",
@@ -758,9 +758,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-war-pick": {
+    "weapon_war_pick": {
       "id": {
-        "slug": "weapon-war-pick",
+        "slug": "weapon_war_pick",
         "ruleset": "v2024"
       },
       "name": "War Pick",
@@ -784,9 +784,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-warhammer": {
+    "weapon_warhammer": {
       "id": {
-        "slug": "weapon-warhammer",
+        "slug": "weapon_warhammer",
         "ruleset": "v2024"
       },
       "name": "Warhammer",
@@ -810,9 +810,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-whip": {
+    "weapon_whip": {
       "id": {
-        "slug": "weapon-whip",
+        "slug": "weapon_whip",
         "ruleset": "v2024"
       },
       "name": "Whip",
@@ -836,9 +836,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-blowgun": {
+    "weapon_blowgun": {
       "id": {
-        "slug": "weapon-blowgun",
+        "slug": "weapon_blowgun",
         "ruleset": "v2024"
       },
       "name": "Blowgun",
@@ -862,9 +862,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-hand-crossbow": {
+    "weapon_hand_crossbow": {
       "id": {
-        "slug": "weapon-hand-crossbow",
+        "slug": "weapon_hand_crossbow",
         "ruleset": "v2024"
       },
       "name": "Hand Crossbow",
@@ -888,9 +888,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-heavy-crossbow": {
+    "weapon_heavy_crossbow": {
       "id": {
-        "slug": "weapon-heavy-crossbow",
+        "slug": "weapon_heavy_crossbow",
         "ruleset": "v2024"
       },
       "name": "Heavy Crossbow",
@@ -914,9 +914,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-longbow": {
+    "weapon_longbow": {
       "id": {
-        "slug": "weapon-longbow",
+        "slug": "weapon_longbow",
         "ruleset": "v2024"
       },
       "name": "Longbow",
@@ -940,9 +940,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "weapon-net": {
+    "weapon_net": {
       "id": {
-        "slug": "weapon-net",
+        "slug": "weapon_net",
         "ruleset": "v2024"
       },
       "name": "Net",
@@ -966,9 +966,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "longsword-plus-1": {
+    "longsword_plus_1": {
       "id": {
-        "slug": "longsword-plus-1",
+        "slug": "longsword_plus_1",
         "ruleset": "v2024"
       },
       "name": "Longsword +1",
@@ -993,9 +993,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "longsword-plus-2": {
+    "longsword_plus_2": {
       "id": {
-        "slug": "longsword-plus-2",
+        "slug": "longsword_plus_2",
         "ruleset": "v2024"
       },
       "name": "Longsword +2",
@@ -1020,9 +1020,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "longsword-plus-3": {
+    "longsword_plus_3": {
       "id": {
-        "slug": "longsword-plus-3",
+        "slug": "longsword_plus_3",
         "ruleset": "v2024"
       },
       "name": "Longsword +3",
@@ -1047,9 +1047,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "greatsword-plus-1": {
+    "greatsword_plus_1": {
       "id": {
-        "slug": "greatsword-plus-1",
+        "slug": "greatsword_plus_1",
         "ruleset": "v2024"
       },
       "name": "Greatsword +1",
@@ -1075,9 +1075,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "greatsword-plus-2": {
+    "greatsword_plus_2": {
       "id": {
-        "slug": "greatsword-plus-2",
+        "slug": "greatsword_plus_2",
         "ruleset": "v2024"
       },
       "name": "Greatsword +2",
@@ -1103,9 +1103,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "greatsword-plus-3": {
+    "greatsword_plus_3": {
       "id": {
-        "slug": "greatsword-plus-3",
+        "slug": "greatsword_plus_3",
         "ruleset": "v2024"
       },
       "name": "Greatsword +3",
@@ -1131,9 +1131,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "dagger-plus-1": {
+    "dagger_plus_1": {
       "id": {
-        "slug": "dagger-plus-1",
+        "slug": "dagger_plus_1",
         "ruleset": "v2024"
       },
       "name": "Dagger +1",
@@ -1159,9 +1159,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "rapier-plus-1": {
+    "rapier_plus_1": {
       "id": {
-        "slug": "rapier-plus-1",
+        "slug": "rapier_plus_1",
         "ruleset": "v2024"
       },
       "name": "Rapier +1",
@@ -1183,9 +1183,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "rapier-plus-2": {
+    "rapier_plus_2": {
       "id": {
-        "slug": "rapier-plus-2",
+        "slug": "rapier_plus_2",
         "ruleset": "v2024"
       },
       "name": "Rapier +2",
@@ -1207,9 +1207,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "greataxe-plus-1": {
+    "greataxe_plus_1": {
       "id": {
-        "slug": "greataxe-plus-1",
+        "slug": "greataxe_plus_1",
         "ruleset": "v2024"
       },
       "name": "Greataxe +1",
@@ -1235,9 +1235,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "longbow-plus-1": {
+    "longbow_plus_1": {
       "id": {
-        "slug": "longbow-plus-1",
+        "slug": "longbow_plus_1",
         "ruleset": "v2024"
       },
       "name": "Longbow +1",
@@ -1262,9 +1262,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "longbow-plus-2": {
+    "longbow_plus_2": {
       "id": {
-        "slug": "longbow-plus-2",
+        "slug": "longbow_plus_2",
         "ruleset": "v2024"
       },
       "name": "Longbow +2",
@@ -1289,9 +1289,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "heavy-crossbow-plus-1": {
+    "heavy_crossbow_plus_1": {
       "id": {
-        "slug": "heavy-crossbow-plus-1",
+        "slug": "heavy_crossbow_plus_1",
         "ruleset": "v2024"
       },
       "name": "Heavy Crossbow +1",
@@ -1316,9 +1316,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-weapon-plus-1": {
+    "item_weapon_plus_1": {
       "id": {
-        "slug": "item-weapon-plus-1",
+        "slug": "item_weapon_plus_1",
         "ruleset": "v2024"
       },
       "name": "Weapon +1",
@@ -1343,9 +1343,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-weapon-plus-2": {
+    "item_weapon_plus_2": {
       "id": {
-        "slug": "item-weapon-plus-2",
+        "slug": "item_weapon_plus_2",
         "ruleset": "v2024"
       },
       "name": "Weapon +2",
@@ -1370,9 +1370,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-weapon-plus-3": {
+    "item_weapon_plus_3": {
       "id": {
-        "slug": "item-weapon-plus-3",
+        "slug": "item_weapon_plus_3",
         "ruleset": "v2024"
       },
       "name": "Weapon +3",
@@ -1397,9 +1397,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-ammunition-plus-1": {
+    "item_ammunition_plus_1": {
       "id": {
-        "slug": "item-ammunition-plus-1",
+        "slug": "item_ammunition_plus_1",
         "ruleset": "v2024"
       },
       "name": "Ammunition +1",
@@ -1422,9 +1422,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-ammunition-plus-2": {
+    "item_ammunition_plus_2": {
       "id": {
-        "slug": "item-ammunition-plus-2",
+        "slug": "item_ammunition_plus_2",
         "ruleset": "v2024"
       },
       "name": "Ammunition +2",
@@ -1447,9 +1447,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-ammunition-plus-3": {
+    "item_ammunition_plus_3": {
       "id": {
-        "slug": "item-ammunition-plus-3",
+        "slug": "item_ammunition_plus_3",
         "ruleset": "v2024"
       },
       "name": "Ammunition +3",
@@ -1472,9 +1472,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-arrow-of-slaying": {
+    "item_arrow_of_slaying": {
       "id": {
-        "slug": "item-arrow-of-slaying",
+        "slug": "item_arrow_of_slaying",
         "ruleset": "v2024"
       },
       "name": "Arrow of Slaying",
@@ -1497,9 +1497,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-berserker-axe": {
+    "item_berserker_axe": {
       "id": {
-        "slug": "item-berserker-axe",
+        "slug": "item_berserker_axe",
         "ruleset": "v2024"
       },
       "name": "Berserker Axe",
@@ -1522,9 +1522,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-dagger-of-venom": {
+    "item_dagger_of_venom": {
       "id": {
-        "slug": "item-dagger-of-venom",
+        "slug": "item_dagger_of_venom",
         "ruleset": "v2024"
       },
       "name": "Dagger of Venom",
@@ -1547,9 +1547,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-dancing-sword": {
+    "item_dancing_sword": {
       "id": {
-        "slug": "item-dancing-sword",
+        "slug": "item_dancing_sword",
         "ruleset": "v2024"
       },
       "name": "Dancing Sword",
@@ -1572,9 +1572,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-defender": {
+    "item_defender": {
       "id": {
-        "slug": "item-defender",
+        "slug": "item_defender",
         "ruleset": "v2024"
       },
       "name": "Defender",
@@ -1597,9 +1597,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-dragon-slayer": {
+    "item_dragon_slayer": {
       "id": {
-        "slug": "item-dragon-slayer",
+        "slug": "item_dragon_slayer",
         "ruleset": "v2024"
       },
       "name": "Dragon Slayer",
@@ -1621,9 +1621,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-flame-tongue": {
+    "item_flame_tongue": {
       "id": {
-        "slug": "item-flame-tongue",
+        "slug": "item_flame_tongue",
         "ruleset": "v2024"
       },
       "name": "Flame Tongue",
@@ -1646,9 +1646,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-frost-brand": {
+    "item_frost_brand": {
       "id": {
-        "slug": "item-frost-brand",
+        "slug": "item_frost_brand",
         "ruleset": "v2024"
       },
       "name": "Frost Brand",
@@ -1671,9 +1671,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-giant-slayer": {
+    "item_giant_slayer": {
       "id": {
-        "slug": "item-giant-slayer",
+        "slug": "item_giant_slayer",
         "ruleset": "v2024"
       },
       "name": "Giant Slayer",
@@ -1696,9 +1696,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-hammer-of-thunderbolts": {
+    "item_hammer_of_thunderbolts": {
       "id": {
-        "slug": "item-hammer-of-thunderbolts",
+        "slug": "item_hammer_of_thunderbolts",
         "ruleset": "v2024"
       },
       "name": "Hammer of Thunderbolts",
@@ -1722,9 +1722,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-holy-avenger": {
+    "item_holy_avenger": {
       "id": {
-        "slug": "item-holy-avenger",
+        "slug": "item_holy_avenger",
         "ruleset": "v2024"
       },
       "name": "Holy Avenger",
@@ -1748,9 +1748,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-javelin-of-lightning": {
+    "item_javelin_of_lightning": {
       "id": {
-        "slug": "item-javelin-of-lightning",
+        "slug": "item_javelin_of_lightning",
         "ruleset": "v2024"
       },
       "name": "Javelin of Lightning",
@@ -1773,9 +1773,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-luck-blade": {
+    "item_luck_blade": {
       "id": {
-        "slug": "item-luck-blade",
+        "slug": "item_luck_blade",
         "ruleset": "v2024"
       },
       "name": "Luck Blade",
@@ -1799,9 +1799,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-mace-of-disruption": {
+    "item_mace_of_disruption": {
       "id": {
-        "slug": "item-mace-of-disruption",
+        "slug": "item_mace_of_disruption",
         "ruleset": "v2024"
       },
       "name": "Mace of Disruption",
@@ -1825,9 +1825,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-mace-of-smiting": {
+    "item_mace_of_smiting": {
       "id": {
-        "slug": "item-mace-of-smiting",
+        "slug": "item_mace_of_smiting",
         "ruleset": "v2024"
       },
       "name": "Mace of Smiting",
@@ -1850,9 +1850,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-mace-of-terror": {
+    "item_mace_of_terror": {
       "id": {
-        "slug": "item-mace-of-terror",
+        "slug": "item_mace_of_terror",
         "ruleset": "v2024"
       },
       "name": "Mace of Terror",
@@ -1875,9 +1875,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-moonblade": {
+    "item_moonblade": {
       "id": {
-        "slug": "item-moonblade",
+        "slug": "item_moonblade",
         "ruleset": "v2024"
       },
       "name": "Moonblade",
@@ -1900,9 +1900,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-nine-lives-stealer": {
+    "item_nine_lives_stealer": {
       "id": {
-        "slug": "item-nine-lives-stealer",
+        "slug": "item_nine_lives_stealer",
         "ruleset": "v2024"
       },
       "name": "Nine Lives Stealer",
@@ -1925,9 +1925,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-oathbow": {
+    "item_oathbow": {
       "id": {
-        "slug": "item-oathbow",
+        "slug": "item_oathbow",
         "ruleset": "v2024"
       },
       "name": "Oathbow",
@@ -1951,9 +1951,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-scimitar-of-speed": {
+    "item_scimitar_of_speed": {
       "id": {
-        "slug": "item-scimitar-of-speed",
+        "slug": "item_scimitar_of_speed",
         "ruleset": "v2024"
       },
       "name": "Scimitar of Speed",
@@ -1976,9 +1976,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-sun-blade": {
+    "item_sun_blade": {
       "id": {
-        "slug": "item-sun-blade",
+        "slug": "item_sun_blade",
         "ruleset": "v2024"
       },
       "name": "Sun Blade",
@@ -2002,9 +2002,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-sword-of-life-stealing": {
+    "item_sword_of_life_stealing": {
       "id": {
-        "slug": "item-sword-of-life-stealing",
+        "slug": "item_sword_of_life_stealing",
         "ruleset": "v2024"
       },
       "name": "Sword of Life Stealing",
@@ -2027,9 +2027,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-sword-of-sharpness": {
+    "item_sword_of_sharpness": {
       "id": {
-        "slug": "item-sword-of-sharpness",
+        "slug": "item_sword_of_sharpness",
         "ruleset": "v2024"
       },
       "name": "Sword of Sharpness",
@@ -2052,9 +2052,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-sword-of-vengeance": {
+    "item_sword_of_vengeance": {
       "id": {
-        "slug": "item-sword-of-vengeance",
+        "slug": "item_sword_of_vengeance",
         "ruleset": "v2024"
       },
       "name": "Sword of Vengeance",
@@ -2076,9 +2076,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-sword-of-wounding": {
+    "item_sword_of_wounding": {
       "id": {
-        "slug": "item-sword-of-wounding",
+        "slug": "item_sword_of_wounding",
         "ruleset": "v2024"
       },
       "name": "Sword of Wounding",
@@ -2101,9 +2101,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-trident-of-fish-command": {
+    "item_trident_of_fish_command": {
       "id": {
-        "slug": "item-trident-of-fish-command",
+        "slug": "item_trident_of_fish_command",
         "ruleset": "v2024"
       },
       "name": "Trident of Fish Command",
@@ -2126,9 +2126,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-vicious-weapon": {
+    "item_vicious_weapon": {
       "id": {
-        "slug": "item-vicious-weapon",
+        "slug": "item_vicious_weapon",
         "ruleset": "v2024"
       },
       "name": "Vicious Weapon",
@@ -2149,9 +2149,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-vorpal-sword": {
+    "item_vorpal_sword": {
       "id": {
-        "slug": "item-vorpal-sword",
+        "slug": "item_vorpal_sword",
         "ruleset": "v2024"
       },
       "name": "Vorpal Sword",
@@ -2175,9 +2175,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "armor-plate": {
+    "armor_plate": {
       "id": {
-        "slug": "armor-plate",
+        "slug": "armor_plate",
         "ruleset": "v2024"
       },
       "name": "Plate Armor (Full Plate)",
@@ -2202,9 +2202,9 @@
         "maxDexBonus": 0
       }
     },
-    "armor-half-plate": {
+    "armor_half_plate": {
       "id": {
-        "slug": "armor-half-plate",
+        "slug": "armor_half_plate",
         "ruleset": "v2024"
       },
       "name": "Half Plate Armor",
@@ -2228,9 +2228,9 @@
         "maxDexBonus": 2
       }
     },
-    "armor-breastplate": {
+    "armor_breastplate": {
       "id": {
-        "slug": "armor-breastplate",
+        "slug": "armor_breastplate",
         "ruleset": "v2024"
       },
       "name": "Breastplate",
@@ -2255,9 +2255,9 @@
         "maxDexBonus": 2
       }
     },
-    "armor-splint": {
+    "armor_splint": {
       "id": {
-        "slug": "armor-splint",
+        "slug": "armor_splint",
         "ruleset": "v2024"
       },
       "name": "Splint Armor",
@@ -2281,9 +2281,9 @@
         "maxDexBonus": 0
       }
     },
-    "armor-chain-mail": {
+    "armor_chain_mail": {
       "id": {
-        "slug": "armor-chain-mail",
+        "slug": "armor_chain_mail",
         "ruleset": "v2024"
       },
       "name": "Chain Mail",
@@ -2307,9 +2307,9 @@
         "maxDexBonus": 0
       }
     },
-    "armor-scale-mail": {
+    "armor_scale_mail": {
       "id": {
-        "slug": "armor-scale-mail",
+        "slug": "armor_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Scale Mail",
@@ -2333,9 +2333,9 @@
         "maxDexBonus": 2
       }
     },
-    "armor-chain-shirt": {
+    "armor_chain_shirt": {
       "id": {
-        "slug": "armor-chain-shirt",
+        "slug": "armor_chain_shirt",
         "ruleset": "v2024"
       },
       "name": "Chain Shirt",
@@ -2359,9 +2359,9 @@
         "maxDexBonus": 2
       }
     },
-    "armor-studded-leather": {
+    "armor_studded_leather": {
       "id": {
-        "slug": "armor-studded-leather",
+        "slug": "armor_studded_leather",
         "ruleset": "v2024"
       },
       "name": "Studded Leather Armor",
@@ -2384,9 +2384,9 @@
         "armorType": "light"
       }
     },
-    "armor-leather": {
+    "armor_leather": {
       "id": {
-        "slug": "armor-leather",
+        "slug": "armor_leather",
         "ruleset": "v2024"
       },
       "name": "Leather Armor",
@@ -2409,9 +2409,9 @@
         "armorType": "light"
       }
     },
-    "armor-padded": {
+    "armor_padded": {
       "id": {
-        "slug": "armor-padded",
+        "slug": "armor_padded",
         "ruleset": "v2024"
       },
       "name": "Padded Armor",
@@ -2434,9 +2434,9 @@
         "armorType": "light"
       }
     },
-    "armor-hide": {
+    "armor_hide": {
       "id": {
-        "slug": "armor-hide",
+        "slug": "armor_hide",
         "ruleset": "v2024"
       },
       "name": "Hide Armor",
@@ -2460,9 +2460,9 @@
         "maxDexBonus": 2
       }
     },
-    "armor-ring-mail": {
+    "armor_ring_mail": {
       "id": {
-        "slug": "armor-ring-mail",
+        "slug": "armor_ring_mail",
         "ruleset": "v2024"
       },
       "name": "Ring Mail",
@@ -2486,9 +2486,9 @@
         "maxDexBonus": 0
       }
     },
-    "armor-shield-standard": {
+    "armor_shield_standard": {
       "id": {
-        "slug": "armor-shield-standard",
+        "slug": "armor_shield_standard",
         "ruleset": "v2024"
       },
       "name": "Shield",
@@ -2511,9 +2511,9 @@
         "defaultSlot": "shield"
       }
     },
-    "plate-plus-1": {
+    "plate_plus_1": {
       "id": {
-        "slug": "plate-plus-1",
+        "slug": "plate_plus_1",
         "ruleset": "v2024"
       },
       "name": "Plate Armor +1",
@@ -2540,9 +2540,9 @@
         "maxDexBonus": 0
       }
     },
-    "plate-plus-2": {
+    "plate_plus_2": {
       "id": {
-        "slug": "plate-plus-2",
+        "slug": "plate_plus_2",
         "ruleset": "v2024"
       },
       "name": "Plate Armor +2",
@@ -2569,9 +2569,9 @@
         "maxDexBonus": 0
       }
     },
-    "plate-plus-3": {
+    "plate_plus_3": {
       "id": {
-        "slug": "plate-plus-3",
+        "slug": "plate_plus_3",
         "ruleset": "v2024"
       },
       "name": "Plate Armor +3",
@@ -2599,9 +2599,9 @@
         "maxDexBonus": 0
       }
     },
-    "half-plate-plus-1": {
+    "half_plate_plus_1": {
       "id": {
-        "slug": "half-plate-plus-1",
+        "slug": "half_plate_plus_1",
         "ruleset": "v2024"
       },
       "name": "Half Plate +1",
@@ -2627,9 +2627,9 @@
         "maxDexBonus": 2
       }
     },
-    "half-plate-plus-2": {
+    "half_plate_plus_2": {
       "id": {
-        "slug": "half-plate-plus-2",
+        "slug": "half_plate_plus_2",
         "ruleset": "v2024"
       },
       "name": "Half Plate +2",
@@ -2655,9 +2655,9 @@
         "maxDexBonus": 2
       }
     },
-    "breastplate-plus-1": {
+    "breastplate_plus_1": {
       "id": {
-        "slug": "breastplate-plus-1",
+        "slug": "breastplate_plus_1",
         "ruleset": "v2024"
       },
       "name": "Breastplate +1",
@@ -2684,9 +2684,9 @@
         "maxDexBonus": 2
       }
     },
-    "breastplate-plus-2": {
+    "breastplate_plus_2": {
       "id": {
-        "slug": "breastplate-plus-2",
+        "slug": "breastplate_plus_2",
         "ruleset": "v2024"
       },
       "name": "Breastplate +2",
@@ -2713,9 +2713,9 @@
         "maxDexBonus": 2
       }
     },
-    "studded-leather-plus-1": {
+    "studded_leather_plus_1": {
       "id": {
-        "slug": "studded-leather-plus-1",
+        "slug": "studded_leather_plus_1",
         "ruleset": "v2024"
       },
       "name": "Studded Leather +1",
@@ -2740,9 +2740,9 @@
         "armorType": "light"
       }
     },
-    "studded-leather-plus-2": {
+    "studded_leather_plus_2": {
       "id": {
-        "slug": "studded-leather-plus-2",
+        "slug": "studded_leather_plus_2",
         "ruleset": "v2024"
       },
       "name": "Studded Leather +2",
@@ -2767,9 +2767,9 @@
         "armorType": "light"
       }
     },
-    "chain-mail-plus-1": {
+    "chain_mail_plus_1": {
       "id": {
-        "slug": "chain-mail-plus-1",
+        "slug": "chain_mail_plus_1",
         "ruleset": "v2024"
       },
       "name": "Chain Mail +1",
@@ -2795,9 +2795,9 @@
         "maxDexBonus": 0
       }
     },
-    "chain-shirt-plus-1": {
+    "chain_shirt_plus_1": {
       "id": {
-        "slug": "chain-shirt-plus-1",
+        "slug": "chain_shirt_plus_1",
         "ruleset": "v2024"
       },
       "name": "Chain Shirt +1",
@@ -2823,9 +2823,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-armor-plus-1": {
+    "item_armor_plus_1": {
       "id": {
-        "slug": "item-armor-plus-1",
+        "slug": "item_armor_plus_1",
         "ruleset": "v2024"
       },
       "name": "Armor +1",
@@ -2847,9 +2847,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-armor-plus-2": {
+    "item_armor_plus_2": {
       "id": {
-        "slug": "item-armor-plus-2",
+        "slug": "item_armor_plus_2",
         "ruleset": "v2024"
       },
       "name": "Armor +2",
@@ -2871,9 +2871,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-armor-plus-3": {
+    "item_armor_plus_3": {
       "id": {
-        "slug": "item-armor-plus-3",
+        "slug": "item_armor_plus_3",
         "ruleset": "v2024"
       },
       "name": "Armor +3",
@@ -2896,9 +2896,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-shield-plus-1": {
+    "item_shield_plus_1": {
       "id": {
-        "slug": "item-shield-plus-1",
+        "slug": "item_shield_plus_1",
         "ruleset": "v2024"
       },
       "name": "Shield +1",
@@ -2922,9 +2922,9 @@
         "defaultSlot": "shield"
       }
     },
-    "item-shield-plus-2": {
+    "item_shield_plus_2": {
       "id": {
-        "slug": "item-shield-plus-2",
+        "slug": "item_shield_plus_2",
         "ruleset": "v2024"
       },
       "name": "Shield +2",
@@ -2948,9 +2948,9 @@
         "defaultSlot": "shield"
       }
     },
-    "item-shield-plus-3": {
+    "item_shield_plus_3": {
       "id": {
-        "slug": "item-shield-plus-3",
+        "slug": "item_shield_plus_3",
         "ruleset": "v2024"
       },
       "name": "Shield +3",
@@ -2974,9 +2974,9 @@
         "defaultSlot": "shield"
       }
     },
-    "item-animated-shield": {
+    "item_animated_shield": {
       "id": {
-        "slug": "item-animated-shield",
+        "slug": "item_animated_shield",
         "ruleset": "v2024"
       },
       "name": "Animated Shield",
@@ -3000,9 +3000,9 @@
         "defaultSlot": "shield"
       }
     },
-    "item-adamantine-armor": {
+    "item_adamantine_armor": {
       "id": {
-        "slug": "item-adamantine-armor",
+        "slug": "item_adamantine_armor",
         "ruleset": "v2024"
       },
       "name": "Adamantine Armor",
@@ -3023,9 +3023,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-mithral-armor": {
+    "item_mithral_armor": {
       "id": {
-        "slug": "item-mithral-armor",
+        "slug": "item_mithral_armor",
         "ruleset": "v2024"
       },
       "name": "Mithral Armor",
@@ -3046,9 +3046,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-red-dragon-scale-mail": {
+    "item_red_dragon_scale_mail": {
       "id": {
-        "slug": "item-red-dragon-scale-mail",
+        "slug": "item_red_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Red Dragon Scale Mail",
@@ -3074,9 +3074,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-blue-dragon-scale-mail": {
+    "item_blue_dragon_scale_mail": {
       "id": {
-        "slug": "item-blue-dragon-scale-mail",
+        "slug": "item_blue_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Blue Dragon Scale Mail",
@@ -3102,9 +3102,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-green-dragon-scale-mail": {
+    "item_green_dragon_scale_mail": {
       "id": {
-        "slug": "item-green-dragon-scale-mail",
+        "slug": "item_green_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Green Dragon Scale Mail",
@@ -3130,9 +3130,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-white-dragon-scale-mail": {
+    "item_white_dragon_scale_mail": {
       "id": {
-        "slug": "item-white-dragon-scale-mail",
+        "slug": "item_white_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "White Dragon Scale Mail",
@@ -3158,9 +3158,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-black-dragon-scale-mail": {
+    "item_black_dragon_scale_mail": {
       "id": {
-        "slug": "item-black-dragon-scale-mail",
+        "slug": "item_black_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Black Dragon Scale Mail",
@@ -3186,9 +3186,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-gold-dragon-scale-mail": {
+    "item_gold_dragon_scale_mail": {
       "id": {
-        "slug": "item-gold-dragon-scale-mail",
+        "slug": "item_gold_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Gold Dragon Scale Mail",
@@ -3214,9 +3214,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-silver-dragon-scale-mail": {
+    "item_silver_dragon_scale_mail": {
       "id": {
-        "slug": "item-silver-dragon-scale-mail",
+        "slug": "item_silver_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Silver Dragon Scale Mail",
@@ -3242,9 +3242,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-bronze-dragon-scale-mail": {
+    "item_bronze_dragon_scale_mail": {
       "id": {
-        "slug": "item-bronze-dragon-scale-mail",
+        "slug": "item_bronze_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Bronze Dragon Scale Mail",
@@ -3270,9 +3270,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-brass-dragon-scale-mail": {
+    "item_brass_dragon_scale_mail": {
       "id": {
-        "slug": "item-brass-dragon-scale-mail",
+        "slug": "item_brass_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Brass Dragon Scale Mail",
@@ -3298,9 +3298,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-copper-dragon-scale-mail": {
+    "item_copper_dragon_scale_mail": {
       "id": {
-        "slug": "item-copper-dragon-scale-mail",
+        "slug": "item_copper_dragon_scale_mail",
         "ruleset": "v2024"
       },
       "name": "Copper Dragon Scale Mail",
@@ -3326,9 +3326,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-dwarven-plate": {
+    "item_dwarven_plate": {
       "id": {
-        "slug": "item-dwarven-plate",
+        "slug": "item_dwarven_plate",
         "ruleset": "v2024"
       },
       "name": "Dwarven Plate",
@@ -3353,9 +3353,9 @@
         "maxDexBonus": 0
       }
     },
-    "item-elven-chain": {
+    "item_elven_chain": {
       "id": {
-        "slug": "item-elven-chain",
+        "slug": "item_elven_chain",
         "ruleset": "v2024"
       },
       "name": "Elven Chain",
@@ -3380,9 +3380,9 @@
         "maxDexBonus": 2
       }
     },
-    "item-glamoured-studded-leather": {
+    "item_glamoured_studded_leather": {
       "id": {
-        "slug": "item-glamoured-studded-leather",
+        "slug": "item_glamoured_studded_leather",
         "ruleset": "v2024"
       },
       "name": "Glamoured Studded Leather",
@@ -3405,9 +3405,9 @@
         "armorType": "light"
       }
     },
-    "item-spellguard-shield": {
+    "item_spellguard_shield": {
       "id": {
-        "slug": "item-spellguard-shield",
+        "slug": "item_spellguard_shield",
         "ruleset": "v2024"
       },
       "name": "Spellguard Shield",
@@ -3430,9 +3430,9 @@
         "defaultSlot": "shield"
       }
     },
-    "item-shield-of-missile-attraction": {
+    "item_shield_of_missile_attraction": {
       "id": {
-        "slug": "item-shield-of-missile-attraction",
+        "slug": "item_shield_of_missile_attraction",
         "ruleset": "v2024"
       },
       "name": "Shield of Missile Attraction",
@@ -3455,9 +3455,9 @@
         "defaultSlot": "shield"
       }
     },
-    "item-armor-of-invulnerability": {
+    "item_armor_of_invulnerability": {
       "id": {
-        "slug": "item-armor-of-invulnerability",
+        "slug": "item_armor_of_invulnerability",
         "ruleset": "v2024"
       },
       "name": "Armor of Invulnerability",
@@ -3479,9 +3479,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-armor-of-resistance": {
+    "item_armor_of_resistance": {
       "id": {
-        "slug": "item-armor-of-resistance",
+        "slug": "item_armor_of_resistance",
         "ruleset": "v2024"
       },
       "name": "Armor of Resistance",
@@ -3502,9 +3502,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-armor-of-vulnerability": {
+    "item_armor_of_vulnerability": {
       "id": {
-        "slug": "item-armor-of-vulnerability",
+        "slug": "item_armor_of_vulnerability",
         "ruleset": "v2024"
       },
       "name": "Armor of Vulnerability",
@@ -3526,9 +3526,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-demon-armor": {
+    "item_demon_armor": {
       "id": {
-        "slug": "item-demon-armor",
+        "slug": "item_demon_armor",
         "ruleset": "v2024"
       },
       "name": "Demon Armor",
@@ -3551,9 +3551,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-plate-armor-of-etherealness": {
+    "item_plate_armor_of_etherealness": {
       "id": {
-        "slug": "item-plate-armor-of-etherealness",
+        "slug": "item_plate_armor_of_etherealness",
         "ruleset": "v2024"
       },
       "name": "Plate Armor of Etherealness",
@@ -3578,9 +3578,9 @@
         "maxDexBonus": 0
       }
     },
-    "item-potion-of-healing": {
+    "item_potion_of_healing": {
       "id": {
-        "slug": "item-potion-of-healing",
+        "slug": "item_potion_of_healing",
         "ruleset": "v2024"
       },
       "name": "Potion of Healing",
@@ -3600,9 +3600,9 @@
         ]
       }
     },
-    "item-potion-of-greater-healing": {
+    "item_potion_of_greater_healing": {
       "id": {
-        "slug": "item-potion-of-greater-healing",
+        "slug": "item_potion_of_greater_healing",
         "ruleset": "v2024"
       },
       "name": "Potion of Greater Healing",
@@ -3622,9 +3622,9 @@
         ]
       }
     },
-    "item-potion-of-superior-healing": {
+    "item_potion_of_superior_healing": {
       "id": {
-        "slug": "item-potion-of-superior-healing",
+        "slug": "item_potion_of_superior_healing",
         "ruleset": "v2024"
       },
       "name": "Potion of Superior Healing",
@@ -3644,9 +3644,9 @@
         ]
       }
     },
-    "item-potion-of-supreme-healing": {
+    "item_potion_of_supreme_healing": {
       "id": {
-        "slug": "item-potion-of-supreme-healing",
+        "slug": "item_potion_of_supreme_healing",
         "ruleset": "v2024"
       },
       "name": "Potion of Supreme Healing",
@@ -3666,16 +3666,16 @@
         ]
       }
     },
-    "item-potion-of-giant-strength": {
+    "item_potion_of_giant_strength": {
       "id": {
-        "slug": "item-potion-of-giant-strength",
+        "slug": "item_potion_of_giant_strength",
         "ruleset": "v2024"
       },
       "name": "Potion of Giant Strength",
       "itemType": "potion",
       "rarity": "uncommon",
       "requiresAttunement": false,
-      "descriptionMarkdown": "Strength becomes 21–29 for 1 hour (Hill Uncommon to Storm Legendary).",
+      "descriptionMarkdown": "Strength becomes 21\u201329 for 1 hour (Hill Uncommon to Storm Legendary).",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -3689,9 +3689,9 @@
         ]
       }
     },
-    "item-potion-of-flying": {
+    "item_potion_of_flying": {
       "id": {
-        "slug": "item-potion-of-flying",
+        "slug": "item_potion_of_flying",
         "ruleset": "v2024"
       },
       "name": "Potion of Flying",
@@ -3711,9 +3711,9 @@
         ]
       }
     },
-    "item-potion-of-invisibility": {
+    "item_potion_of_invisibility": {
       "id": {
-        "slug": "item-potion-of-invisibility",
+        "slug": "item_potion_of_invisibility",
         "ruleset": "v2024"
       },
       "name": "Potion of Invisibility",
@@ -3732,9 +3732,9 @@
         ]
       }
     },
-    "item-potion-of-speed": {
+    "item_potion_of_speed": {
       "id": {
-        "slug": "item-potion-of-speed",
+        "slug": "item_potion_of_speed",
         "ruleset": "v2024"
       },
       "name": "Potion of Speed",
@@ -3754,9 +3754,9 @@
         ]
       }
     },
-    "item-oil-of-sharpness": {
+    "item_oil_of_sharpness": {
       "id": {
-        "slug": "item-oil-of-sharpness",
+        "slug": "item_oil_of_sharpness",
         "ruleset": "v2024"
       },
       "name": "Oil of Sharpness",
@@ -3776,9 +3776,9 @@
         ]
       }
     },
-    "item-oil-of-slipperiness": {
+    "item_oil_of_slipperiness": {
       "id": {
-        "slug": "item-oil-of-slipperiness",
+        "slug": "item_oil_of_slipperiness",
         "ruleset": "v2024"
       },
       "name": "Oil of Slipperiness",
@@ -3798,9 +3798,9 @@
         ]
       }
     },
-    "item-potion-of-water-breathing": {
+    "item_potion_of_water_breathing": {
       "id": {
-        "slug": "item-potion-of-water-breathing",
+        "slug": "item_potion_of_water_breathing",
         "ruleset": "v2024"
       },
       "name": "Potion of Water Breathing",
@@ -3820,9 +3820,9 @@
         ]
       }
     },
-    "item-potion-of-vitality": {
+    "item_potion_of_vitality": {
       "id": {
-        "slug": "item-potion-of-vitality",
+        "slug": "item_potion_of_vitality",
         "ruleset": "v2024"
       },
       "name": "Potion of Vitality",
@@ -3843,9 +3843,9 @@
         ]
       }
     },
-    "item-potion-of-heroism": {
+    "item_potion_of_heroism": {
       "id": {
-        "slug": "item-potion-of-heroism",
+        "slug": "item_potion_of_heroism",
         "ruleset": "v2024"
       },
       "name": "Potion of Heroism",
@@ -3866,9 +3866,9 @@
         ]
       }
     },
-    "item-potion-of-animal-friendship": {
+    "item_potion_of_animal_friendship": {
       "id": {
-        "slug": "item-potion-of-animal-friendship",
+        "slug": "item_potion_of_animal_friendship",
         "ruleset": "v2024"
       },
       "name": "Potion of Animal Friendship",
@@ -3888,9 +3888,9 @@
         ]
       }
     },
-    "item-potion-of-clairvoyance": {
+    "item_potion_of_clairvoyance": {
       "id": {
-        "slug": "item-potion-of-clairvoyance",
+        "slug": "item_potion_of_clairvoyance",
         "ruleset": "v2024"
       },
       "name": "Potion of Clairvoyance",
@@ -3910,9 +3910,9 @@
         ]
       }
     },
-    "item-potion-of-climbing": {
+    "item_potion_of_climbing": {
       "id": {
-        "slug": "item-potion-of-climbing",
+        "slug": "item_potion_of_climbing",
         "ruleset": "v2024"
       },
       "name": "Potion of Climbing",
@@ -3932,9 +3932,9 @@
         ]
       }
     },
-    "item-potion-of-diminution": {
+    "item_potion_of_diminution": {
       "id": {
-        "slug": "item-potion-of-diminution",
+        "slug": "item_potion_of_diminution",
         "ruleset": "v2024"
       },
       "name": "Potion of Diminution",
@@ -3955,9 +3955,9 @@
         ]
       }
     },
-    "item-potion-of-gaseous-form": {
+    "item_potion_of_gaseous_form": {
       "id": {
-        "slug": "item-potion-of-gaseous-form",
+        "slug": "item_potion_of_gaseous_form",
         "ruleset": "v2024"
       },
       "name": "Potion of Gaseous Form",
@@ -3978,9 +3978,9 @@
         ]
       }
     },
-    "item-potion-of-growth": {
+    "item_potion_of_growth": {
       "id": {
-        "slug": "item-potion-of-growth",
+        "slug": "item_potion_of_growth",
         "ruleset": "v2024"
       },
       "name": "Potion of Growth",
@@ -4001,9 +4001,9 @@
         ]
       }
     },
-    "item-potion-of-invulnerability": {
+    "item_potion_of_invulnerability": {
       "id": {
-        "slug": "item-potion-of-invulnerability",
+        "slug": "item_potion_of_invulnerability",
         "ruleset": "v2024"
       },
       "name": "Potion of Invulnerability",
@@ -4024,9 +4024,9 @@
         ]
       }
     },
-    "item-potion-of-longevity": {
+    "item_potion_of_longevity": {
       "id": {
-        "slug": "item-potion-of-longevity",
+        "slug": "item_potion_of_longevity",
         "ruleset": "v2024"
       },
       "name": "Potion of Longevity",
@@ -4046,9 +4046,9 @@
         ]
       }
     },
-    "item-potion-of-mind-reading": {
+    "item_potion_of_mind_reading": {
       "id": {
-        "slug": "item-potion-of-mind-reading",
+        "slug": "item_potion_of_mind_reading",
         "ruleset": "v2024"
       },
       "name": "Potion of Mind Reading",
@@ -4069,9 +4069,9 @@
         ]
       }
     },
-    "item-potion-of-poison": {
+    "item_potion_of_poison": {
       "id": {
-        "slug": "item-potion-of-poison",
+        "slug": "item_potion_of_poison",
         "ruleset": "v2024"
       },
       "name": "Potion of Poison",
@@ -4092,9 +4092,9 @@
         ]
       }
     },
-    "item-potion-of-resistance": {
+    "item_potion_of_resistance": {
       "id": {
-        "slug": "item-potion-of-resistance",
+        "slug": "item_potion_of_resistance",
         "ruleset": "v2024"
       },
       "name": "Potion of Resistance",
@@ -4114,9 +4114,9 @@
         ]
       }
     },
-    "item-oil-of-etherealness": {
+    "item_oil_of_etherealness": {
       "id": {
-        "slug": "item-oil-of-etherealness",
+        "slug": "item_oil_of_etherealness",
         "ruleset": "v2024"
       },
       "name": "Oil of Etherealness",
@@ -4136,9 +4136,9 @@
         ]
       }
     },
-    "item-philter-of-love": {
+    "item_philter_of_love": {
       "id": {
-        "slug": "item-philter-of-love",
+        "slug": "item_philter_of_love",
         "ruleset": "v2024"
       },
       "name": "Philter of Love",
@@ -4159,9 +4159,9 @@
         ]
       }
     },
-    "item-elixir-of-health": {
+    "item_elixir_of_health": {
       "id": {
-        "slug": "item-elixir-of-health",
+        "slug": "item_elixir_of_health",
         "ruleset": "v2024"
       },
       "name": "Elixir of Health",
@@ -4182,9 +4182,9 @@
         ]
       }
     },
-    "item-ring-of-protection": {
+    "item_ring_of_protection": {
       "id": {
-        "slug": "item-ring-of-protection",
+        "slug": "item_ring_of_protection",
         "ruleset": "v2024"
       },
       "name": "Ring of Protection",
@@ -4207,9 +4207,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-spell-storing": {
+    "item_ring_of_spell_storing": {
       "id": {
-        "slug": "item-ring-of-spell-storing",
+        "slug": "item_ring_of_spell_storing",
         "ruleset": "v2024"
       },
       "name": "Ring of Spell Storing",
@@ -4230,9 +4230,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-invisibility": {
+    "item_ring_of_invisibility": {
       "id": {
-        "slug": "item-ring-of-invisibility",
+        "slug": "item_ring_of_invisibility",
         "ruleset": "v2024"
       },
       "name": "Ring of Invisibility",
@@ -4253,9 +4253,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-regeneration": {
+    "item_ring_of_regeneration": {
       "id": {
-        "slug": "item-ring-of-regeneration",
+        "slug": "item_ring_of_regeneration",
         "ruleset": "v2024"
       },
       "name": "Ring of Regeneration",
@@ -4276,9 +4276,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-resistance": {
+    "item_ring_of_resistance": {
       "id": {
-        "slug": "item-ring-of-resistance",
+        "slug": "item_ring_of_resistance",
         "ruleset": "v2024"
       },
       "name": "Ring of Resistance",
@@ -4299,9 +4299,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-free-action": {
+    "item_ring_of_free_action": {
       "id": {
-        "slug": "item-ring-of-free-action",
+        "slug": "item_ring_of_free_action",
         "ruleset": "v2024"
       },
       "name": "Ring of Free Action",
@@ -4323,9 +4323,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-evasion": {
+    "item_ring_of_evasion": {
       "id": {
-        "slug": "item-ring-of-evasion",
+        "slug": "item_ring_of_evasion",
         "ruleset": "v2024"
       },
       "name": "Ring of Evasion",
@@ -4347,9 +4347,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-feather-falling": {
+    "item_ring_of_feather_falling": {
       "id": {
-        "slug": "item-ring-of-feather-falling",
+        "slug": "item_ring_of_feather_falling",
         "ruleset": "v2024"
       },
       "name": "Ring of Feather Falling",
@@ -4370,9 +4370,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-mind-shielding": {
+    "item_ring_of_mind_shielding": {
       "id": {
-        "slug": "item-ring-of-mind-shielding",
+        "slug": "item_ring_of_mind_shielding",
         "ruleset": "v2024"
       },
       "name": "Ring of Mind Shielding",
@@ -4394,9 +4394,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-shooting-stars": {
+    "item_ring_of_shooting_stars": {
       "id": {
-        "slug": "item-ring-of-shooting-stars",
+        "slug": "item_ring_of_shooting_stars",
         "ruleset": "v2024"
       },
       "name": "Ring of Shooting Stars",
@@ -4419,9 +4419,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-telekinesis": {
+    "item_ring_of_telekinesis": {
       "id": {
-        "slug": "item-ring-of-telekinesis",
+        "slug": "item_ring_of_telekinesis",
         "ruleset": "v2024"
       },
       "name": "Ring of Telekinesis",
@@ -4442,9 +4442,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-the-ram": {
+    "item_ring_of_the_ram": {
       "id": {
-        "slug": "item-ring-of-the-ram",
+        "slug": "item_ring_of_the_ram",
         "ruleset": "v2024"
       },
       "name": "Ring of the Ram",
@@ -4466,9 +4466,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-three-wishes": {
+    "item_ring_of_three_wishes": {
       "id": {
-        "slug": "item-ring-of-three-wishes",
+        "slug": "item_ring_of_three_wishes",
         "ruleset": "v2024"
       },
       "name": "Ring of Three Wishes",
@@ -4489,9 +4489,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-water-walking": {
+    "item_ring_of_water_walking": {
       "id": {
-        "slug": "item-ring-of-water-walking",
+        "slug": "item_ring_of_water_walking",
         "ruleset": "v2024"
       },
       "name": "Ring of Water Walking",
@@ -4512,9 +4512,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-warmth": {
+    "item_ring_of_warmth": {
       "id": {
-        "slug": "item-ring-of-warmth",
+        "slug": "item_ring_of_warmth",
         "ruleset": "v2024"
       },
       "name": "Ring of Warmth",
@@ -4536,9 +4536,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-animal-influence": {
+    "item_ring_of_animal_influence": {
       "id": {
-        "slug": "item-ring-of-animal-influence",
+        "slug": "item_ring_of_animal_influence",
         "ruleset": "v2024"
       },
       "name": "Ring of Animal Influence",
@@ -4561,9 +4561,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-djinni-summoning": {
+    "item_ring_of_djinni_summoning": {
       "id": {
-        "slug": "item-ring-of-djinni-summoning",
+        "slug": "item_ring_of_djinni_summoning",
         "ruleset": "v2024"
       },
       "name": "Ring of Djinni Summoning",
@@ -4585,9 +4585,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-elemental-command": {
+    "item_ring_of_elemental_command": {
       "id": {
-        "slug": "item-ring-of-elemental-command",
+        "slug": "item_ring_of_elemental_command",
         "ruleset": "v2024"
       },
       "name": "Ring of Elemental Command (Air / Earth / Fire / Water)",
@@ -4612,9 +4612,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-jumping": {
+    "item_ring_of_jumping": {
       "id": {
-        "slug": "item-ring-of-jumping",
+        "slug": "item_ring_of_jumping",
         "ruleset": "v2024"
       },
       "name": "Ring of Jumping",
@@ -4636,9 +4636,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-spell-turning": {
+    "item_ring_of_spell_turning": {
       "id": {
-        "slug": "item-ring-of-spell-turning",
+        "slug": "item_ring_of_spell_turning",
         "ruleset": "v2024"
       },
       "name": "Ring of Spell Turning",
@@ -4660,9 +4660,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-swimming": {
+    "item_ring_of_swimming": {
       "id": {
-        "slug": "item-ring-of-swimming",
+        "slug": "item_ring_of_swimming",
         "ruleset": "v2024"
       },
       "name": "Ring of Swimming",
@@ -4683,9 +4683,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-ring-of-xray-vision": {
+    "item_ring_of_xray_vision": {
       "id": {
-        "slug": "item-ring-of-xray-vision",
+        "slug": "item_ring_of_xray_vision",
         "ruleset": "v2024"
       },
       "name": "Ring of X-ray Vision",
@@ -4707,9 +4707,9 @@
         "defaultSlot": "ring1"
       }
     },
-    "item-immovable-rod": {
+    "item_immovable_rod": {
       "id": {
-        "slug": "item-immovable-rod",
+        "slug": "item_immovable_rod",
         "ruleset": "v2024"
       },
       "name": "Immovable Rod",
@@ -4730,9 +4730,9 @@
         ]
       }
     },
-    "item-rod-of-the-pact-keeper-plus-1": {
+    "item_rod_of_the_pact_keeper_plus_1": {
       "id": {
-        "slug": "item-rod-of-the-pact-keeper-plus-1",
+        "slug": "item_rod_of_the_pact_keeper_plus_1",
         "ruleset": "v2024"
       },
       "name": "Rod of the Pact Keeper +1",
@@ -4757,9 +4757,9 @@
         "spellClass": "warlock"
       }
     },
-    "item-rod-of-the-pact-keeper-plus-2": {
+    "item_rod_of_the_pact_keeper_plus_2": {
       "id": {
-        "slug": "item-rod-of-the-pact-keeper-plus-2",
+        "slug": "item_rod_of_the_pact_keeper_plus_2",
         "ruleset": "v2024"
       },
       "name": "Rod of the Pact Keeper +2",
@@ -4784,9 +4784,9 @@
         "spellClass": "warlock"
       }
     },
-    "item-rod-of-the-pact-keeper-plus-3": {
+    "item_rod_of_the_pact_keeper_plus_3": {
       "id": {
-        "slug": "item-rod-of-the-pact-keeper-plus-3",
+        "slug": "item_rod_of_the_pact_keeper_plus_3",
         "ruleset": "v2024"
       },
       "name": "Rod of the Pact Keeper +3",
@@ -4811,9 +4811,9 @@
         "spellClass": "warlock"
       }
     },
-    "item-rod-of-absorption": {
+    "item_rod_of_absorption": {
       "id": {
-        "slug": "item-rod-of-absorption",
+        "slug": "item_rod_of_absorption",
         "ruleset": "v2024"
       },
       "name": "Rod of Absorption",
@@ -4834,9 +4834,9 @@
         ]
       }
     },
-    "item-rod-of-alertness": {
+    "item_rod_of_alertness": {
       "id": {
-        "slug": "item-rod-of-alertness",
+        "slug": "item_rod_of_alertness",
         "ruleset": "v2024"
       },
       "name": "Rod of Alertness",
@@ -4858,9 +4858,9 @@
         ]
       }
     },
-    "item-rod-of-lordly-might": {
+    "item_rod_of_lordly_might": {
       "id": {
-        "slug": "item-rod-of-lordly-might",
+        "slug": "item_rod_of_lordly_might",
         "ruleset": "v2024"
       },
       "name": "Rod of Lordly Might",
@@ -4883,9 +4883,9 @@
         "defaultSlot": "mainHand"
       }
     },
-    "item-rod-of-rulership": {
+    "item_rod_of_rulership": {
       "id": {
-        "slug": "item-rod-of-rulership",
+        "slug": "item_rod_of_rulership",
         "ruleset": "v2024"
       },
       "name": "Rod of Rulership",
@@ -4906,9 +4906,9 @@
         ]
       }
     },
-    "item-rod-of-security": {
+    "item_rod_of_security": {
       "id": {
-        "slug": "item-rod-of-security",
+        "slug": "item_rod_of_security",
         "ruleset": "v2024"
       },
       "name": "Rod of Security",
@@ -4930,9 +4930,9 @@
         ]
       }
     },
-    "item-rod-of-resurrection": {
+    "item_rod_of_resurrection": {
       "id": {
-        "slug": "item-rod-of-resurrection",
+        "slug": "item_rod_of_resurrection",
         "ruleset": "v2024"
       },
       "name": "Rod of Resurrection",
@@ -4957,9 +4957,9 @@
         ]
       }
     },
-    "item-spell-scroll-cantrip": {
+    "item_spell_scroll_cantrip": {
       "id": {
-        "slug": "item-spell-scroll-cantrip",
+        "slug": "item_spell_scroll_cantrip",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (Cantrip)",
@@ -4979,9 +4979,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-1": {
+    "item_spell_scroll_level_1": {
       "id": {
-        "slug": "item-spell-scroll-level-1",
+        "slug": "item_spell_scroll_level_1",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (1st Level)",
@@ -5001,9 +5001,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-2": {
+    "item_spell_scroll_level_2": {
       "id": {
-        "slug": "item-spell-scroll-level-2",
+        "slug": "item_spell_scroll_level_2",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (2nd Level)",
@@ -5023,9 +5023,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-3": {
+    "item_spell_scroll_level_3": {
       "id": {
-        "slug": "item-spell-scroll-level-3",
+        "slug": "item_spell_scroll_level_3",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (3rd Level)",
@@ -5045,9 +5045,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-4": {
+    "item_spell_scroll_level_4": {
       "id": {
-        "slug": "item-spell-scroll-level-4",
+        "slug": "item_spell_scroll_level_4",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (4th Level)",
@@ -5067,9 +5067,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-5": {
+    "item_spell_scroll_level_5": {
       "id": {
-        "slug": "item-spell-scroll-level-5",
+        "slug": "item_spell_scroll_level_5",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (5th Level)",
@@ -5089,9 +5089,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-6": {
+    "item_spell_scroll_level_6": {
       "id": {
-        "slug": "item-spell-scroll-level-6",
+        "slug": "item_spell_scroll_level_6",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (6th Level)",
@@ -5111,9 +5111,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-7": {
+    "item_spell_scroll_level_7": {
       "id": {
-        "slug": "item-spell-scroll-level-7",
+        "slug": "item_spell_scroll_level_7",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (7th Level)",
@@ -5133,9 +5133,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-8": {
+    "item_spell_scroll_level_8": {
       "id": {
-        "slug": "item-spell-scroll-level-8",
+        "slug": "item_spell_scroll_level_8",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (8th Level)",
@@ -5155,9 +5155,9 @@
         ]
       }
     },
-    "item-spell-scroll-level-9": {
+    "item_spell_scroll_level_9": {
       "id": {
-        "slug": "item-spell-scroll-level-9",
+        "slug": "item_spell_scroll_level_9",
         "ruleset": "v2024"
       },
       "name": "Spell Scroll (9th Level)",
@@ -5179,9 +5179,9 @@
         ]
       }
     },
-    "item-scroll-of-protection": {
+    "item_scroll_of_protection": {
       "id": {
-        "slug": "item-scroll-of-protection",
+        "slug": "item_scroll_of_protection",
         "ruleset": "v2024"
       },
       "name": "Scroll of Protection",
@@ -5204,9 +5204,9 @@
         ]
       }
     },
-    "item-staff-of-power": {
+    "item_staff_of_power": {
       "id": {
-        "slug": "item-staff-of-power",
+        "slug": "item_staff_of_power",
         "ruleset": "v2024"
       },
       "name": "Staff of Power",
@@ -5228,9 +5228,9 @@
         ]
       }
     },
-    "item-staff-of-the-magi": {
+    "item_staff_of_the_magi": {
       "id": {
-        "slug": "item-staff-of-the-magi",
+        "slug": "item_staff_of_the_magi",
         "ruleset": "v2024"
       },
       "name": "Staff of the Magi",
@@ -5252,9 +5252,9 @@
         ]
       }
     },
-    "item-staff-of-fire": {
+    "item_staff_of_fire": {
       "id": {
-        "slug": "item-staff-of-fire",
+        "slug": "item_staff_of_fire",
         "ruleset": "v2024"
       },
       "name": "Staff of Fire",
@@ -5274,9 +5274,9 @@
         ]
       }
     },
-    "item-staff-of-frost": {
+    "item_staff_of_frost": {
       "id": {
-        "slug": "item-staff-of-frost",
+        "slug": "item_staff_of_frost",
         "ruleset": "v2024"
       },
       "name": "Staff of Frost",
@@ -5297,9 +5297,9 @@
         ]
       }
     },
-    "item-staff-of-healing": {
+    "item_staff_of_healing": {
       "id": {
-        "slug": "item-staff-of-healing",
+        "slug": "item_staff_of_healing",
         "ruleset": "v2024"
       },
       "name": "Staff of Healing",
@@ -5320,9 +5320,9 @@
         ]
       }
     },
-    "item-staff-of-the-woodlands": {
+    "item_staff_of_the_woodlands": {
       "id": {
-        "slug": "item-staff-of-the-woodlands",
+        "slug": "item_staff_of_the_woodlands",
         "ruleset": "v2024"
       },
       "name": "Staff of the Woodlands",
@@ -5344,9 +5344,9 @@
         ]
       }
     },
-    "item-staff-of-charming": {
+    "item_staff_of_charming": {
       "id": {
-        "slug": "item-staff-of-charming",
+        "slug": "item_staff_of_charming",
         "ruleset": "v2024"
       },
       "name": "Staff of Charming",
@@ -5367,9 +5367,9 @@
         ]
       }
     },
-    "item-staff-of-striking": {
+    "item_staff_of_striking": {
       "id": {
-        "slug": "item-staff-of-striking",
+        "slug": "item_staff_of_striking",
         "ruleset": "v2024"
       },
       "name": "Staff of Striking",
@@ -5390,9 +5390,9 @@
         ]
       }
     },
-    "item-staff-of-withering": {
+    "item_staff_of_withering": {
       "id": {
-        "slug": "item-staff-of-withering",
+        "slug": "item_staff_of_withering",
         "ruleset": "v2024"
       },
       "name": "Staff of Withering",
@@ -5415,9 +5415,9 @@
         ]
       }
     },
-    "item-staff-of-the-python": {
+    "item_staff_of_the_python": {
       "id": {
-        "slug": "item-staff-of-the-python",
+        "slug": "item_staff_of_the_python",
         "ruleset": "v2024"
       },
       "name": "Staff of the Python",
@@ -5440,9 +5440,9 @@
         ]
       }
     },
-    "item-staff-of-swarming-insects": {
+    "item_staff_of_swarming_insects": {
       "id": {
-        "slug": "item-staff-of-swarming-insects",
+        "slug": "item_staff_of_swarming_insects",
         "ruleset": "v2024"
       },
       "name": "Staff of Swarming Insects",
@@ -5465,9 +5465,9 @@
         ]
       }
     },
-    "item-staff-of-the-adder": {
+    "item_staff_of_the_adder": {
       "id": {
-        "slug": "item-staff-of-the-adder",
+        "slug": "item_staff_of_the_adder",
         "ruleset": "v2024"
       },
       "name": "Staff of the Adder",
@@ -5491,9 +5491,9 @@
         ]
       }
     },
-    "item-staff-of-thunder-and-lightning": {
+    "item_staff_of_thunder_and_lightning": {
       "id": {
-        "slug": "item-staff-of-thunder-and-lightning",
+        "slug": "item_staff_of_thunder_and_lightning",
         "ruleset": "v2024"
       },
       "name": "Staff of Thunder and Lightning",
@@ -5515,9 +5515,9 @@
         ]
       }
     },
-    "item-wand-of-magic-missiles": {
+    "item_wand_of_magic_missiles": {
       "id": {
-        "slug": "item-wand-of-magic-missiles",
+        "slug": "item_wand_of_magic_missiles",
         "ruleset": "v2024"
       },
       "name": "Wand of Magic Missiles",
@@ -5538,9 +5538,9 @@
         ]
       }
     },
-    "item-wand-of-fireballs": {
+    "item_wand_of_fireballs": {
       "id": {
-        "slug": "item-wand-of-fireballs",
+        "slug": "item_wand_of_fireballs",
         "ruleset": "v2024"
       },
       "name": "Wand of Fireballs",
@@ -5561,9 +5561,9 @@
         ]
       }
     },
-    "item-wand-of-lightning-bolts": {
+    "item_wand_of_lightning_bolts": {
       "id": {
-        "slug": "item-wand-of-lightning-bolts",
+        "slug": "item_wand_of_lightning_bolts",
         "ruleset": "v2024"
       },
       "name": "Wand of Lightning Bolts",
@@ -5583,9 +5583,9 @@
         ]
       }
     },
-    "item-wand-of-the-war-mage-plus-1": {
+    "item_wand_of_the_war_mage_plus_1": {
       "id": {
-        "slug": "item-wand-of-the-war-mage-plus-1",
+        "slug": "item_wand_of_the_war_mage_plus_1",
         "ruleset": "v2024"
       },
       "name": "Wand of the War Mage +1",
@@ -5607,9 +5607,9 @@
         "bonusSpellAttack": 1
       }
     },
-    "item-wand-of-the-war-mage-plus-2": {
+    "item_wand_of_the_war_mage_plus_2": {
       "id": {
-        "slug": "item-wand-of-the-war-mage-plus-2",
+        "slug": "item_wand_of_the_war_mage_plus_2",
         "ruleset": "v2024"
       },
       "name": "Wand of the War Mage +2",
@@ -5631,9 +5631,9 @@
         "bonusSpellAttack": 2
       }
     },
-    "item-wand-of-the-war-mage-plus-3": {
+    "item_wand_of_the_war_mage_plus_3": {
       "id": {
-        "slug": "item-wand-of-the-war-mage-plus-3",
+        "slug": "item_wand_of_the_war_mage_plus_3",
         "ruleset": "v2024"
       },
       "name": "Wand of the War Mage +3",
@@ -5655,9 +5655,9 @@
         "bonusSpellAttack": 3
       }
     },
-    "item-wand-of-web": {
+    "item_wand_of_web": {
       "id": {
-        "slug": "item-wand-of-web",
+        "slug": "item_wand_of_web",
         "ruleset": "v2024"
       },
       "name": "Wand of Web",
@@ -5677,9 +5677,9 @@
         ]
       }
     },
-    "item-wand-of-wonder": {
+    "item_wand_of_wonder": {
       "id": {
-        "slug": "item-wand-of-wonder",
+        "slug": "item_wand_of_wonder",
         "ruleset": "v2024"
       },
       "name": "Wand of Wonder",
@@ -5699,9 +5699,9 @@
         ]
       }
     },
-    "item-wand-of-polymorph": {
+    "item_wand_of_polymorph": {
       "id": {
-        "slug": "item-wand-of-polymorph",
+        "slug": "item_wand_of_polymorph",
         "ruleset": "v2024"
       },
       "name": "Wand of Polymorph",
@@ -5721,9 +5721,9 @@
         ]
       }
     },
-    "item-wand-of-paralysis": {
+    "item_wand_of_paralysis": {
       "id": {
-        "slug": "item-wand-of-paralysis",
+        "slug": "item_wand_of_paralysis",
         "ruleset": "v2024"
       },
       "name": "Wand of Paralysis",
@@ -5743,9 +5743,9 @@
         ]
       }
     },
-    "item-wand-of-binding": {
+    "item_wand_of_binding": {
       "id": {
-        "slug": "item-wand-of-binding",
+        "slug": "item_wand_of_binding",
         "ruleset": "v2024"
       },
       "name": "Wand of Binding",
@@ -5767,9 +5767,9 @@
         ]
       }
     },
-    "item-wand-of-enemy-detection": {
+    "item_wand_of_enemy_detection": {
       "id": {
-        "slug": "item-wand-of-enemy-detection",
+        "slug": "item_wand_of_enemy_detection",
         "ruleset": "v2024"
       },
       "name": "Wand of Enemy Detection",
@@ -5790,9 +5790,9 @@
         ]
       }
     },
-    "item-wand-of-fear": {
+    "item_wand_of_fear": {
       "id": {
-        "slug": "item-wand-of-fear",
+        "slug": "item_wand_of_fear",
         "ruleset": "v2024"
       },
       "name": "Wand of Fear",
@@ -5814,9 +5814,9 @@
         ]
       }
     },
-    "item-wand-of-magic-detection": {
+    "item_wand_of_magic_detection": {
       "id": {
-        "slug": "item-wand-of-magic-detection",
+        "slug": "item_wand_of_magic_detection",
         "ruleset": "v2024"
       },
       "name": "Wand of Magic Detection",
@@ -5836,9 +5836,9 @@
         ]
       }
     },
-    "item-wand-of-pyrotechnics": {
+    "item_wand_of_pyrotechnics": {
       "id": {
-        "slug": "item-wand-of-pyrotechnics",
+        "slug": "item_wand_of_pyrotechnics",
         "ruleset": "v2024"
       },
       "name": "Wand of Pyrotechnics",
@@ -5860,9 +5860,9 @@
         ]
       }
     },
-    "item-wand-of-secrets": {
+    "item_wand_of_secrets": {
       "id": {
-        "slug": "item-wand-of-secrets",
+        "slug": "item_wand_of_secrets",
         "ruleset": "v2024"
       },
       "name": "Wand of Secrets",
@@ -5884,9 +5884,9 @@
         ]
       }
     },
-    "item-bag-of-holding": {
+    "item_bag_of_holding": {
       "id": {
-        "slug": "item-bag-of-holding",
+        "slug": "item_bag_of_holding",
         "ruleset": "v2024"
       },
       "name": "Bag of Holding",
@@ -5907,9 +5907,9 @@
         ]
       }
     },
-    "item-cloak-of-protection": {
+    "item_cloak_of_protection": {
       "id": {
-        "slug": "item-cloak-of-protection",
+        "slug": "item_cloak_of_protection",
         "ruleset": "v2024"
       },
       "name": "Cloak of Protection",
@@ -5931,9 +5931,9 @@
         "acBonus": 1
       }
     },
-    "item-deck-of-many-things": {
+    "item_deck_of_many_things": {
       "id": {
-        "slug": "item-deck-of-many-things",
+        "slug": "item_deck_of_many_things",
         "ruleset": "v2024"
       },
       "name": "Deck of Many Things",
@@ -5954,9 +5954,9 @@
         ]
       }
     },
-    "item-boots-of-speed": {
+    "item_boots_of_speed": {
       "id": {
-        "slug": "item-boots-of-speed",
+        "slug": "item_boots_of_speed",
         "ruleset": "v2024"
       },
       "name": "Boots of Speed",
@@ -5976,9 +5976,9 @@
         ]
       }
     },
-    "item-winged-boots": {
+    "item_winged_boots": {
       "id": {
-        "slug": "item-winged-boots",
+        "slug": "item_winged_boots",
         "ruleset": "v2024"
       },
       "name": "Winged Boots",
@@ -5998,9 +5998,9 @@
         ]
       }
     },
-    "item-belt-of-giant-strength": {
+    "item_belt_of_giant_strength": {
       "id": {
-        "slug": "item-belt-of-giant-strength",
+        "slug": "item_belt_of_giant_strength",
         "ruleset": "v2024"
       },
       "name": "Belt of Giant Strength",
@@ -6021,9 +6021,9 @@
         ]
       }
     },
-    "item-amulet-of-health": {
+    "item_amulet_of_health": {
       "id": {
-        "slug": "item-amulet-of-health",
+        "slug": "item_amulet_of_health",
         "ruleset": "v2024"
       },
       "name": "Amulet of Health",
@@ -6044,9 +6044,9 @@
         ]
       }
     },
-    "item-headband-of-intellect": {
+    "item_headband_of_intellect": {
       "id": {
-        "slug": "item-headband-of-intellect",
+        "slug": "item_headband_of_intellect",
         "ruleset": "v2024"
       },
       "name": "Headband of Intellect",
@@ -6066,9 +6066,9 @@
         ]
       }
     },
-    "item-gauntlets-of-ogre-power": {
+    "item_gauntlets_of_ogre_power": {
       "id": {
-        "slug": "item-gauntlets-of-ogre-power",
+        "slug": "item_gauntlets_of_ogre_power",
         "ruleset": "v2024"
       },
       "name": "Gauntlets of Ogre Power",
@@ -6088,9 +6088,9 @@
         ]
       }
     },
-    "item-bracers-of-archery": {
+    "item_bracers_of_archery": {
       "id": {
-        "slug": "item-bracers-of-archery",
+        "slug": "item_bracers_of_archery",
         "ruleset": "v2024"
       },
       "name": "Bracers of Archery",
@@ -6111,9 +6111,9 @@
         ]
       }
     },
-    "item-bracers-of-defense": {
+    "item_bracers_of_defense": {
       "id": {
-        "slug": "item-bracers-of-defense",
+        "slug": "item_bracers_of_defense",
         "ruleset": "v2024"
       },
       "name": "Bracers of Defense",
@@ -6135,9 +6135,9 @@
         ]
       }
     },
-    "item-cloak-of-elvenkind": {
+    "item_cloak_of_elvenkind": {
       "id": {
-        "slug": "item-cloak-of-elvenkind",
+        "slug": "item_cloak_of_elvenkind",
         "ruleset": "v2024"
       },
       "name": "Cloak of Elvenkind",
@@ -6157,9 +6157,9 @@
         ]
       }
     },
-    "item-cloak-of-invisibility": {
+    "item_cloak_of_invisibility": {
       "id": {
-        "slug": "item-cloak-of-invisibility",
+        "slug": "item_cloak_of_invisibility",
         "ruleset": "v2024"
       },
       "name": "Cloak of Invisibility",
@@ -6180,9 +6180,9 @@
         ]
       }
     },
-    "item-cloak-of-the-bat": {
+    "item_cloak_of_the_bat": {
       "id": {
-        "slug": "item-cloak-of-the-bat",
+        "slug": "item_cloak_of_the_bat",
         "ruleset": "v2024"
       },
       "name": "Cloak of the Bat",
@@ -6204,9 +6204,9 @@
         ]
       }
     },
-    "item-driftglobe": {
+    "item_driftglobe": {
       "id": {
-        "slug": "item-driftglobe",
+        "slug": "item_driftglobe",
         "ruleset": "v2024"
       },
       "name": "Driftglobe",
@@ -6226,9 +6226,9 @@
         ]
       }
     },
-    "item-goggles-of-night": {
+    "item_goggles_of_night": {
       "id": {
-        "slug": "item-goggles-of-night",
+        "slug": "item_goggles_of_night",
         "ruleset": "v2024"
       },
       "name": "Goggles of Night",
@@ -6248,9 +6248,9 @@
         ]
       }
     },
-    "item-hat-of-disguise": {
+    "item_hat_of_disguise": {
       "id": {
-        "slug": "item-hat-of-disguise",
+        "slug": "item_hat_of_disguise",
         "ruleset": "v2024"
       },
       "name": "Hat of Disguise",
@@ -6270,9 +6270,9 @@
         ]
       }
     },
-    "item-necklace-of-fireballs": {
+    "item_necklace_of_fireballs": {
       "id": {
-        "slug": "item-necklace-of-fireballs",
+        "slug": "item_necklace_of_fireballs",
         "ruleset": "v2024"
       },
       "name": "Necklace of Fireballs",
@@ -6294,9 +6294,9 @@
         ]
       }
     },
-    "item-necklace-of-adaptation": {
+    "item_necklace_of_adaptation": {
       "id": {
-        "slug": "item-necklace-of-adaptation",
+        "slug": "item_necklace_of_adaptation",
         "ruleset": "v2024"
       },
       "name": "Necklace of Adaptation",
@@ -6317,9 +6317,9 @@
         ]
       }
     },
-    "item-periapt-of-wound-closure": {
+    "item_periapt_of_wound_closure": {
       "id": {
-        "slug": "item-periapt-of-wound-closure",
+        "slug": "item_periapt_of_wound_closure",
         "ruleset": "v2024"
       },
       "name": "Periapt of Wound Closure",
@@ -6340,9 +6340,9 @@
         ]
       }
     },
-    "item-portable-hole": {
+    "item_portable_hole": {
       "id": {
-        "slug": "item-portable-hole",
+        "slug": "item_portable_hole",
         "ruleset": "v2024"
       },
       "name": "Portable Hole",
@@ -6362,9 +6362,9 @@
         ]
       }
     },
-    "item-slippers-of-spider-climbing": {
+    "item_slippers_of_spider_climbing": {
       "id": {
-        "slug": "item-slippers-of-spider-climbing",
+        "slug": "item_slippers_of_spider_climbing",
         "ruleset": "v2024"
       },
       "name": "Slippers of Spider Climbing",
@@ -6385,9 +6385,9 @@
         ]
       }
     },
-    "item-stone-of-good-luck": {
+    "item_stone_of_good_luck": {
       "id": {
-        "slug": "item-stone-of-good-luck",
+        "slug": "item_stone_of_good_luck",
         "ruleset": "v2024"
       },
       "name": "Stone of Good Luck (Luckstone)",
@@ -6408,16 +6408,16 @@
         ]
       }
     },
-    "item-pearl-of-power": {
+    "item_pearl_of_power": {
       "id": {
-        "slug": "item-pearl-of-power",
+        "slug": "item_pearl_of_power",
         "ruleset": "v2024"
       },
       "name": "Pearl of Power",
       "itemType": "wondrousItem",
       "rarity": "uncommon",
       "requiresAttunement": true,
-      "descriptionMarkdown": "Action: regain 1 expended spell slot of level 1–3 once per Long Rest.",
+      "descriptionMarkdown": "Action: regain 1 expended spell slot of level 1\u20133 once per Long Rest.",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -6430,9 +6430,9 @@
         ]
       }
     },
-    "item-robe-of-the-archmagi-white": {
+    "item_robe_of_the_archmagi_white": {
       "id": {
-        "slug": "item-robe-of-the-archmagi-white",
+        "slug": "item_robe_of_the_archmagi_white",
         "ruleset": "v2024"
       },
       "name": "Robe of the Archmagi (White)",
@@ -6457,9 +6457,9 @@
         ]
       }
     },
-    "item-robe-of-the-archmagi-gray": {
+    "item_robe_of_the_archmagi_gray": {
       "id": {
-        "slug": "item-robe-of-the-archmagi-gray",
+        "slug": "item_robe_of_the_archmagi_gray",
         "ruleset": "v2024"
       },
       "name": "Robe of the Archmagi (Gray)",
@@ -6485,9 +6485,9 @@
         ]
       }
     },
-    "item-robe-of-the-archmagi-black": {
+    "item_robe_of_the_archmagi_black": {
       "id": {
-        "slug": "item-robe-of-the-archmagi-black",
+        "slug": "item_robe_of_the_archmagi_black",
         "ruleset": "v2024"
       },
       "name": "Robe of the Archmagi (Black)",
@@ -6512,9 +6512,9 @@
         ]
       }
     },
-    "item-bag-of-tricks-gray": {
+    "item_bag_of_tricks_gray": {
       "id": {
-        "slug": "item-bag-of-tricks-gray",
+        "slug": "item_bag_of_tricks_gray",
         "ruleset": "v2024"
       },
       "name": "Bag of Tricks (Gray)",
@@ -6538,9 +6538,9 @@
         ]
       }
     },
-    "item-bag-of-tricks-rust": {
+    "item_bag_of_tricks_rust": {
       "id": {
-        "slug": "item-bag-of-tricks-rust",
+        "slug": "item_bag_of_tricks_rust",
         "ruleset": "v2024"
       },
       "name": "Bag of Tricks (Rust)",
@@ -6563,9 +6563,9 @@
         ]
       }
     },
-    "item-bag-of-tricks-tan": {
+    "item_bag_of_tricks_tan": {
       "id": {
-        "slug": "item-bag-of-tricks-tan",
+        "slug": "item_bag_of_tricks_tan",
         "ruleset": "v2024"
       },
       "name": "Bag of Tricks (Tan)",
@@ -6588,9 +6588,9 @@
         ]
       }
     },
-    "item-ioun-stone-deep-red": {
+    "item_ioun_stone_deep_red": {
       "id": {
-        "slug": "item-ioun-stone-deep-red",
+        "slug": "item_ioun_stone_deep_red",
         "ruleset": "v2024"
       },
       "name": "Ioun Stone (Deep Red)",
@@ -6611,9 +6611,9 @@
         ]
       }
     },
-    "item-ioun-stone-incandescent-blue": {
+    "item_ioun_stone_incandescent_blue": {
       "id": {
-        "slug": "item-ioun-stone-incandescent-blue",
+        "slug": "item_ioun_stone_incandescent_blue",
         "ruleset": "v2024"
       },
       "name": "Ioun Stone (Incandescent Blue)",
@@ -6634,9 +6634,9 @@
         ]
       }
     },
-    "item-ioun-stone-pale-green": {
+    "item_ioun_stone_pale_green": {
       "id": {
-        "slug": "item-ioun-stone-pale-green",
+        "slug": "item_ioun_stone_pale_green",
         "ruleset": "v2024"
       },
       "name": "Ioun Stone (Pale Green)",
@@ -6658,9 +6658,9 @@
         ]
       }
     },
-    "item-ioun-stone-dusty-rose": {
+    "item_ioun_stone_dusty_rose": {
       "id": {
-        "slug": "item-ioun-stone-dusty-rose",
+        "slug": "item_ioun_stone_dusty_rose",
         "ruleset": "v2024"
       },
       "name": "Ioun Stone (Dusty Rose)",
@@ -6682,9 +6682,9 @@
         ]
       }
     },
-    "item-ioun-stone-clear-spindle": {
+    "item_ioun_stone_clear_spindle": {
       "id": {
-        "slug": "item-ioun-stone-clear-spindle",
+        "slug": "item_ioun_stone_clear_spindle",
         "ruleset": "v2024"
       },
       "name": "Ioun Stone (Clear Spindle)",
@@ -6705,9 +6705,9 @@
         ]
       }
     },
-    "item-ioun-stone-reserve": {
+    "item_ioun_stone_reserve": {
       "id": {
-        "slug": "item-ioun-stone-reserve",
+        "slug": "item_ioun_stone_reserve",
         "ruleset": "v2024"
       },
       "name": "Ioun Stone (Reserve)",
@@ -6728,9 +6728,9 @@
         ]
       }
     },
-    "item-belt-of-hill-giant-strength": {
+    "item_belt_of_hill_giant_strength": {
       "id": {
-        "slug": "item-belt-of-hill-giant-strength",
+        "slug": "item_belt_of_hill_giant_strength",
         "ruleset": "v2024"
       },
       "name": "Belt of Hill Giant Strength",
@@ -6752,9 +6752,9 @@
         ]
       }
     },
-    "item-belt-of-frost-giant-strength": {
+    "item_belt_of_frost_giant_strength": {
       "id": {
-        "slug": "item-belt-of-frost-giant-strength",
+        "slug": "item_belt_of_frost_giant_strength",
         "ruleset": "v2024"
       },
       "name": "Belt of Frost Giant Strength",
@@ -6776,9 +6776,9 @@
         ]
       }
     },
-    "item-belt-of-fire-giant-strength": {
+    "item_belt_of_fire_giant_strength": {
       "id": {
-        "slug": "item-belt-of-fire-giant-strength",
+        "slug": "item_belt_of_fire_giant_strength",
         "ruleset": "v2024"
       },
       "name": "Belt of Fire Giant Strength",
@@ -6800,9 +6800,9 @@
         ]
       }
     },
-    "item-belt-of-storm-giant-strength": {
+    "item_belt_of_storm_giant_strength": {
       "id": {
-        "slug": "item-belt-of-storm-giant-strength",
+        "slug": "item_belt_of_storm_giant_strength",
         "ruleset": "v2024"
       },
       "name": "Belt of Storm Giant Strength",
@@ -6825,9 +6825,9 @@
         ]
       }
     },
-    "item-horn-of-valhalla-silver": {
+    "item_horn_of_valhalla_silver": {
       "id": {
-        "slug": "item-horn-of-valhalla-silver",
+        "slug": "item_horn_of_valhalla_silver",
         "ruleset": "v2024"
       },
       "name": "Silver Horn of Valhalla",
@@ -6849,9 +6849,9 @@
         ]
       }
     },
-    "item-horn-of-valhalla-iron": {
+    "item_horn_of_valhalla_iron": {
       "id": {
-        "slug": "item-horn-of-valhalla-iron",
+        "slug": "item_horn_of_valhalla_iron",
         "ruleset": "v2024"
       },
       "name": "Iron Horn of Valhalla",
@@ -6874,9 +6874,9 @@
         ]
       }
     },
-    "item-figurine-bronze-griffon": {
+    "item_figurine_bronze_griffon": {
       "id": {
-        "slug": "item-figurine-bronze-griffon",
+        "slug": "item_figurine_bronze_griffon",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Bronze Griffon)",
@@ -6898,9 +6898,9 @@
         ]
       }
     },
-    "item-figurine-ebony-fly": {
+    "item_figurine_ebony_fly": {
       "id": {
-        "slug": "item-figurine-ebony-fly",
+        "slug": "item_figurine_ebony_fly",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Ebony Fly)",
@@ -6922,9 +6922,9 @@
         ]
       }
     },
-    "item-figurine-marble-elephant": {
+    "item_figurine_marble_elephant": {
       "id": {
-        "slug": "item-figurine-marble-elephant",
+        "slug": "item_figurine_marble_elephant",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Marble Elephant)",
@@ -6947,9 +6947,9 @@
         ]
       }
     },
-    "item-figurine-golden-lions": {
+    "item_figurine_golden_lions": {
       "id": {
-        "slug": "item-figurine-golden-lions",
+        "slug": "item_figurine_golden_lions",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Golden Lions)",
@@ -6971,9 +6971,9 @@
         ]
       }
     },
-    "item-figurine-ivory-goats": {
+    "item_figurine_ivory_goats": {
       "id": {
-        "slug": "item-figurine-ivory-goats",
+        "slug": "item_figurine_ivory_goats",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Ivory Goats)",
@@ -6996,9 +6996,9 @@
         ]
       }
     },
-    "item-figurine-obsidian-steed": {
+    "item_figurine_obsidian_steed": {
       "id": {
-        "slug": "item-figurine-obsidian-steed",
+        "slug": "item_figurine_obsidian_steed",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Obsidian Steed)",
@@ -7023,9 +7023,9 @@
         ]
       }
     },
-    "item-figurine-onyx-dog": {
+    "item_figurine_onyx_dog": {
       "id": {
-        "slug": "item-figurine-onyx-dog",
+        "slug": "item_figurine_onyx_dog",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Onyx Dog)",
@@ -7049,9 +7049,9 @@
         ]
       }
     },
-    "item-figurine-serpentine-owl": {
+    "item_figurine_serpentine_owl": {
       "id": {
-        "slug": "item-figurine-serpentine-owl",
+        "slug": "item_figurine_serpentine_owl",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Serpentine Owl)",
@@ -7074,9 +7074,9 @@
         ]
       }
     },
-    "item-figurine-silver-raven": {
+    "item_figurine_silver_raven": {
       "id": {
-        "slug": "item-figurine-silver-raven",
+        "slug": "item_figurine_silver_raven",
         "ruleset": "v2024"
       },
       "name": "Figurine of Wondrous Power (Silver Raven)",
@@ -7099,9 +7099,9 @@
         ]
       }
     },
-    "item-elemental-gem-blue-sapphire": {
+    "item_elemental_gem_blue_sapphire": {
       "id": {
-        "slug": "item-elemental-gem-blue-sapphire",
+        "slug": "item_elemental_gem_blue_sapphire",
         "ruleset": "v2024"
       },
       "name": "Elemental Gem (Blue Sapphire)",
@@ -7123,9 +7123,9 @@
         ]
       }
     },
-    "item-elemental-gem-red-corundum": {
+    "item_elemental_gem_red_corundum": {
       "id": {
-        "slug": "item-elemental-gem-red-corundum",
+        "slug": "item_elemental_gem_red_corundum",
         "ruleset": "v2024"
       },
       "name": "Elemental Gem (Red Corundum)",
@@ -7147,9 +7147,9 @@
         ]
       }
     },
-    "item-elemental-gem-yellow-diamond": {
+    "item_elemental_gem_yellow_diamond": {
       "id": {
-        "slug": "item-elemental-gem-yellow-diamond",
+        "slug": "item_elemental_gem_yellow_diamond",
         "ruleset": "v2024"
       },
       "name": "Elemental Gem (Yellow Diamond)",
@@ -7171,9 +7171,9 @@
         ]
       }
     },
-    "item-elemental-gem-emerald": {
+    "item_elemental_gem_emerald": {
       "id": {
-        "slug": "item-elemental-gem-emerald",
+        "slug": "item_elemental_gem_emerald",
         "ruleset": "v2024"
       },
       "name": "Elemental Gem (Emerald)",
@@ -7195,9 +7195,9 @@
         ]
       }
     },
-    "item-decanter-of-endless-water": {
+    "item_decanter_of_endless_water": {
       "id": {
-        "slug": "item-decanter-of-endless-water",
+        "slug": "item_decanter_of_endless_water",
         "ruleset": "v2024"
       },
       "name": "Decanter of Endless Water",
@@ -7218,9 +7218,9 @@
         ]
       }
     },
-    "item-instant-fortress": {
+    "item_instant_fortress": {
       "id": {
-        "slug": "item-instant-fortress",
+        "slug": "item_instant_fortress",
         "ruleset": "v2024"
       },
       "name": "Instant Fortress",
@@ -7242,9 +7242,9 @@
         ]
       }
     },
-    "item-robe-of-useful-items": {
+    "item_robe_of_useful_items": {
       "id": {
-        "slug": "item-robe-of-useful-items",
+        "slug": "item_robe_of_useful_items",
         "ruleset": "v2024"
       },
       "name": "Robe of Useful Items",
@@ -7265,9 +7265,9 @@
         ]
       }
     },
-    "item-apparatus-of-the-crab": {
+    "item_apparatus_of_the_crab": {
       "id": {
-        "slug": "item-apparatus-of-the-crab",
+        "slug": "item_apparatus_of_the_crab",
         "ruleset": "v2024"
       },
       "name": "Apparatus of the Crab",
@@ -7288,9 +7288,9 @@
         ]
       }
     },
-    "item-boots-of-elvenkind": {
+    "item_boots_of_elvenkind": {
       "id": {
-        "slug": "item-boots-of-elvenkind",
+        "slug": "item_boots_of_elvenkind",
         "ruleset": "v2024"
       },
       "name": "Boots of Elvenkind",
@@ -7311,9 +7311,9 @@
         ]
       }
     },
-    "item-boots-of-levitation": {
+    "item_boots_of_levitation": {
       "id": {
-        "slug": "item-boots-of-levitation",
+        "slug": "item_boots_of_levitation",
         "ruleset": "v2024"
       },
       "name": "Boots of Levitation",
@@ -7334,9 +7334,9 @@
         ]
       }
     },
-    "item-boots-of-the-winterlands": {
+    "item_boots_of_the_winterlands": {
       "id": {
-        "slug": "item-boots-of-the-winterlands",
+        "slug": "item_boots_of_the_winterlands",
         "ruleset": "v2024"
       },
       "name": "Boots of the Winterlands",
@@ -7358,9 +7358,9 @@
         ]
       }
     },
-    "item-brooch-of-shielding": {
+    "item_brooch_of_shielding": {
       "id": {
-        "slug": "item-brooch-of-shielding",
+        "slug": "item_brooch_of_shielding",
         "ruleset": "v2024"
       },
       "name": "Brooch of Shielding",
@@ -7382,16 +7382,16 @@
         ]
       }
     },
-    "item-broom-of-flying": {
+    "item_broom_of_flying": {
       "id": {
-        "slug": "item-broom-of-flying",
+        "slug": "item_broom_of_flying",
         "ruleset": "v2024"
       },
       "name": "Broom of Flying",
       "itemType": "wondrousItem",
       "rarity": "uncommon",
       "requiresAttunement": false,
-      "descriptionMarkdown": "Flying Speed 50 ft (30 ft if carrying 200–400 lbs). Remote summonable within 1 mile.",
+      "descriptionMarkdown": "Flying Speed 50 ft (30 ft if carrying 200\u2013400 lbs). Remote summonable within 1 mile.",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -7406,9 +7406,9 @@
         ]
       }
     },
-    "item-cape-of-the-mountebank": {
+    "item_cape_of_the_mountebank": {
       "id": {
-        "slug": "item-cape-of-the-mountebank",
+        "slug": "item_cape_of_the_mountebank",
         "ruleset": "v2024"
       },
       "name": "Cape of the Mountebank",
@@ -7430,9 +7430,9 @@
         ]
       }
     },
-    "item-chime-of-opening": {
+    "item_chime_of_opening": {
       "id": {
-        "slug": "item-chime-of-opening",
+        "slug": "item_chime_of_opening",
         "ruleset": "v2024"
       },
       "name": "Chime of Opening",
@@ -7454,9 +7454,9 @@
         ]
       }
     },
-    "item-circlet-of-blasting": {
+    "item_circlet_of_blasting": {
       "id": {
-        "slug": "item-circlet-of-blasting",
+        "slug": "item_circlet_of_blasting",
         "ruleset": "v2024"
       },
       "name": "Circlet of Blasting",
@@ -7477,9 +7477,9 @@
         ]
       }
     },
-    "item-cloak-of-displacement": {
+    "item_cloak_of_displacement": {
       "id": {
-        "slug": "item-cloak-of-displacement",
+        "slug": "item_cloak_of_displacement",
         "ruleset": "v2024"
       },
       "name": "Cloak of Displacement",
@@ -7500,9 +7500,9 @@
         ]
       }
     },
-    "item-cloak-of-the-manta-ray": {
+    "item_cloak_of_the_manta_ray": {
       "id": {
-        "slug": "item-cloak-of-the-manta-ray",
+        "slug": "item_cloak_of_the_manta_ray",
         "ruleset": "v2024"
       },
       "name": "Cloak of the Manta Ray",
@@ -7524,9 +7524,9 @@
         ]
       }
     },
-    "item-cube-of-force": {
+    "item_cube_of_force": {
       "id": {
-        "slug": "item-cube-of-force",
+        "slug": "item_cube_of_force",
         "ruleset": "v2024"
       },
       "name": "Cube of Force",
@@ -7548,16 +7548,16 @@
         ]
       }
     },
-    "item-eversmoking-bottle": {
+    "item_eversmoking_bottle": {
       "id": {
-        "slug": "item-eversmoking-bottle",
+        "slug": "item_eversmoking_bottle",
         "ruleset": "v2024"
       },
       "name": "Eversmoking Bottle",
       "itemType": "wondrousItem",
       "rarity": "uncommon",
       "requiresAttunement": false,
-      "descriptionMarkdown": "Action: uncork for massive 60–120 ft radius obscuring smoke field.",
+      "descriptionMarkdown": "Action: uncork for massive 60\u2013120 ft radius obscuring smoke field.",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -7571,9 +7571,9 @@
         ]
       }
     },
-    "item-eyes-of-the-eagle": {
+    "item_eyes_of_the_eagle": {
       "id": {
-        "slug": "item-eyes-of-the-eagle",
+        "slug": "item_eyes_of_the_eagle",
         "ruleset": "v2024"
       },
       "name": "Eyes of the Eagle",
@@ -7595,9 +7595,9 @@
         ]
       }
     },
-    "item-folding-boat": {
+    "item_folding_boat": {
       "id": {
-        "slug": "item-folding-boat",
+        "slug": "item_folding_boat",
         "ruleset": "v2024"
       },
       "name": "Folding Boat",
@@ -7619,9 +7619,9 @@
         ]
       }
     },
-    "item-gem-of-brightness": {
+    "item_gem_of_brightness": {
       "id": {
-        "slug": "item-gem-of-brightness",
+        "slug": "item_gem_of_brightness",
         "ruleset": "v2024"
       },
       "name": "Gem of Brightness",
@@ -7643,9 +7643,9 @@
         ]
       }
     },
-    "item-gem-of-seeing": {
+    "item_gem_of_seeing": {
       "id": {
-        "slug": "item-gem-of-seeing",
+        "slug": "item_gem_of_seeing",
         "ruleset": "v2024"
       },
       "name": "Gem of Seeing",
@@ -7667,9 +7667,9 @@
         ]
       }
     },
-    "item-gloves-of-missile-snaring": {
+    "item_gloves_of_missile_snaring": {
       "id": {
-        "slug": "item-gloves-of-missile-snaring",
+        "slug": "item_gloves_of_missile_snaring",
         "ruleset": "v2024"
       },
       "name": "Gloves of Missile Snaring",
@@ -7691,9 +7691,9 @@
         ]
       }
     },
-    "item-gloves-of-thievery": {
+    "item_gloves_of_thievery": {
       "id": {
-        "slug": "item-gloves-of-thievery",
+        "slug": "item_gloves_of_thievery",
         "ruleset": "v2024"
       },
       "name": "Gloves of Thievery",
@@ -7715,9 +7715,9 @@
         ]
       }
     },
-    "item-helm-of-teleportation": {
+    "item_helm_of_teleportation": {
       "id": {
-        "slug": "item-helm-of-teleportation",
+        "slug": "item_helm_of_teleportation",
         "ruleset": "v2024"
       },
       "name": "Helm of Teleportation",
@@ -7738,9 +7738,9 @@
         ]
       }
     },
-    "item-lantern-of-revealing": {
+    "item_lantern_of_revealing": {
       "id": {
-        "slug": "item-lantern-of-revealing",
+        "slug": "item_lantern_of_revealing",
         "ruleset": "v2024"
       },
       "name": "Lantern of Revealing",
@@ -7762,9 +7762,9 @@
         ]
       }
     },
-    "item-rope-of-climbing": {
+    "item_rope_of_climbing": {
       "id": {
-        "slug": "item-rope-of-climbing",
+        "slug": "item_rope_of_climbing",
         "ruleset": "v2024"
       },
       "name": "Rope of Climbing",
@@ -7786,9 +7786,9 @@
         ]
       }
     },
-    "item-rope-of-entanglement": {
+    "item_rope_of_entanglement": {
       "id": {
-        "slug": "item-rope-of-entanglement",
+        "slug": "item_rope_of_entanglement",
         "ruleset": "v2024"
       },
       "name": "Rope of Entanglement",
@@ -7809,9 +7809,9 @@
         ]
       }
     },
-    "item-wings-of-flying": {
+    "item_wings_of_flying": {
       "id": {
-        "slug": "item-wings-of-flying",
+        "slug": "item_wings_of_flying",
         "ruleset": "v2024"
       },
       "name": "Wings of Flying",
@@ -7833,9 +7833,9 @@
         ]
       }
     },
-    "item-manual-of-bodily-health": {
+    "item_manual_of_bodily_health": {
       "id": {
-        "slug": "item-manual-of-bodily-health",
+        "slug": "item_manual_of_bodily_health",
         "ruleset": "v2024"
       },
       "name": "Manual of Bodily Health",
@@ -7858,9 +7858,9 @@
         ]
       }
     },
-    "item-manual-of-gainful-exercise": {
+    "item_manual_of_gainful_exercise": {
       "id": {
-        "slug": "item-manual-of-gainful-exercise",
+        "slug": "item_manual_of_gainful_exercise",
         "ruleset": "v2024"
       },
       "name": "Manual of Gainful Exercise",
@@ -7883,9 +7883,9 @@
         ]
       }
     },
-    "item-manual-of-quickness-of-action": {
+    "item_manual_of_quickness_of_action": {
       "id": {
-        "slug": "item-manual-of-quickness-of-action",
+        "slug": "item_manual_of_quickness_of_action",
         "ruleset": "v2024"
       },
       "name": "Manual of Quickness of Action",
@@ -7908,9 +7908,9 @@
         ]
       }
     },
-    "item-manual-of-golems-clay": {
+    "item_manual_of_golems_clay": {
       "id": {
-        "slug": "item-manual-of-golems-clay",
+        "slug": "item_manual_of_golems_clay",
         "ruleset": "v2024"
       },
       "name": "Manual of Golems (Clay)",
@@ -7933,9 +7933,9 @@
         ]
       }
     },
-    "item-manual-of-golems-flesh": {
+    "item_manual_of_golems_flesh": {
       "id": {
-        "slug": "item-manual-of-golems-flesh",
+        "slug": "item_manual_of_golems_flesh",
         "ruleset": "v2024"
       },
       "name": "Manual of Golems (Flesh)",
@@ -7958,9 +7958,9 @@
         ]
       }
     },
-    "item-manual-of-golems-iron": {
+    "item_manual_of_golems_iron": {
       "id": {
-        "slug": "item-manual-of-golems-iron",
+        "slug": "item_manual_of_golems_iron",
         "ruleset": "v2024"
       },
       "name": "Manual of Golems (Iron)",
@@ -7983,9 +7983,9 @@
         ]
       }
     },
-    "item-manual-of-golems-stone": {
+    "item_manual_of_golems_stone": {
       "id": {
-        "slug": "item-manual-of-golems-stone",
+        "slug": "item_manual_of_golems_stone",
         "ruleset": "v2024"
       },
       "name": "Manual of Golems (Stone)",
@@ -8008,9 +8008,9 @@
         ]
       }
     },
-    "item-tome-of-clear-thought": {
+    "item_tome_of_clear_thought": {
       "id": {
-        "slug": "item-tome-of-clear-thought",
+        "slug": "item_tome_of_clear_thought",
         "ruleset": "v2024"
       },
       "name": "Tome of Clear Thought",
@@ -8032,9 +8032,9 @@
         ]
       }
     },
-    "item-tome-of-leadership-and-influence": {
+    "item_tome_of_leadership_and_influence": {
       "id": {
-        "slug": "item-tome-of-leadership-and-influence",
+        "slug": "item_tome_of_leadership_and_influence",
         "ruleset": "v2024"
       },
       "name": "Tome of Leadership and Influence",
@@ -8057,9 +8057,9 @@
         ]
       }
     },
-    "item-tome-of-understanding": {
+    "item_tome_of_understanding": {
       "id": {
-        "slug": "item-tome-of-understanding",
+        "slug": "item_tome_of_understanding",
         "ruleset": "v2024"
       },
       "name": "Tome of Understanding",
@@ -8082,9 +8082,9 @@
         ]
       }
     },
-    "item-cloak-of-arachnida": {
+    "item_cloak_of_arachnida": {
       "id": {
-        "slug": "item-cloak-of-arachnida",
+        "slug": "item_cloak_of_arachnida",
         "ruleset": "v2024"
       },
       "name": "Cloak of Arachnida",
@@ -8106,9 +8106,9 @@
         ]
       }
     },
-    "item-mantle-of-spell-resistance": {
+    "item_mantle_of_spell_resistance": {
       "id": {
-        "slug": "item-mantle-of-spell-resistance",
+        "slug": "item_mantle_of_spell_resistance",
         "ruleset": "v2024"
       },
       "name": "Mantle of Spell Resistance",
@@ -8130,16 +8130,16 @@
         ]
       }
     },
-    "item-robe-of-eyes": {
+    "item_robe_of_eyes": {
       "id": {
-        "slug": "item-robe-of-eyes",
+        "slug": "item_robe_of_eyes",
         "ruleset": "v2024"
       },
       "name": "Robe of Eyes",
       "itemType": "wondrousItem",
       "rarity": "rare",
       "requiresAttunement": true,
-      "descriptionMarkdown": "360° vision, 120 ft darkvision, ethereal vision, sight advantage; vulnerable to sudden bright light flashes.",
+      "descriptionMarkdown": "360\u00b0 vision, 120 ft darkvision, ethereal vision, sight advantage; vulnerable to sudden bright light flashes.",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -8155,9 +8155,9 @@
         ]
       }
     },
-    "item-robe-of-scintillating-colors": {
+    "item_robe_of_scintillating_colors": {
       "id": {
-        "slug": "item-robe-of-scintillating-colors",
+        "slug": "item_robe_of_scintillating_colors",
         "ruleset": "v2024"
       },
       "name": "Robe of Scintillating Colors",
@@ -8180,9 +8180,9 @@
         ]
       }
     },
-    "item-robe-of-stars": {
+    "item_robe_of_stars": {
       "id": {
-        "slug": "item-robe-of-stars",
+        "slug": "item_robe_of_stars",
         "ruleset": "v2024"
       },
       "name": "Robe of Stars",
@@ -8204,9 +8204,9 @@
         ]
       }
     },
-    "item-cap-of-water-breathing": {
+    "item_cap_of_water_breathing": {
       "id": {
-        "slug": "item-cap-of-water-breathing",
+        "slug": "item_cap_of_water_breathing",
         "ruleset": "v2024"
       },
       "name": "Cap of Water Breathing",
@@ -8227,9 +8227,9 @@
         ]
       }
     },
-    "item-eyes-of-charming": {
+    "item_eyes_of_charming": {
       "id": {
-        "slug": "item-eyes-of-charming",
+        "slug": "item_eyes_of_charming",
         "ruleset": "v2024"
       },
       "name": "Eyes of Charming",
@@ -8250,9 +8250,9 @@
         ]
       }
     },
-    "item-eyes-of-minute-seeing": {
+    "item_eyes_of_minute_seeing": {
       "id": {
-        "slug": "item-eyes-of-minute-seeing",
+        "slug": "item_eyes_of_minute_seeing",
         "ruleset": "v2024"
       },
       "name": "Eyes of Minute Seeing",
@@ -8274,9 +8274,9 @@
         ]
       }
     },
-    "item-helm-of-brilliance": {
+    "item_helm_of_brilliance": {
       "id": {
-        "slug": "item-helm-of-brilliance",
+        "slug": "item_helm_of_brilliance",
         "ruleset": "v2024"
       },
       "name": "Helm of Brilliance",
@@ -8299,9 +8299,9 @@
         ]
       }
     },
-    "item-helm-of-comprehending-languages": {
+    "item_helm_of_comprehending_languages": {
       "id": {
-        "slug": "item-helm-of-comprehending-languages",
+        "slug": "item_helm_of_comprehending_languages",
         "ruleset": "v2024"
       },
       "name": "Helm of Comprehending Languages",
@@ -8322,9 +8322,9 @@
         ]
       }
     },
-    "item-helm-of-telepathy": {
+    "item_helm_of_telepathy": {
       "id": {
-        "slug": "item-helm-of-telepathy",
+        "slug": "item_helm_of_telepathy",
         "ruleset": "v2024"
       },
       "name": "Helm of Telepathy",
@@ -8346,9 +8346,9 @@
         ]
       }
     },
-    "item-medallion-of-thoughts": {
+    "item_medallion_of_thoughts": {
       "id": {
-        "slug": "item-medallion-of-thoughts",
+        "slug": "item_medallion_of_thoughts",
         "ruleset": "v2024"
       },
       "name": "Medallion of Thoughts",
@@ -8369,9 +8369,9 @@
         ]
       }
     },
-    "item-amulet-of-proof-against-detection-and-location": {
+    "item_amulet_of_proof_against_detection_and_location": {
       "id": {
-        "slug": "item-amulet-of-proof-against-detection-and-location",
+        "slug": "item_amulet_of_proof_against_detection_and_location",
         "ruleset": "v2024"
       },
       "name": "Amulet of Proof against Detection and Location",
@@ -8393,9 +8393,9 @@
         ]
       }
     },
-    "item-amulet-of-the-planes": {
+    "item_amulet_of_the_planes": {
       "id": {
-        "slug": "item-amulet-of-the-planes",
+        "slug": "item_amulet_of_the_planes",
         "ruleset": "v2024"
       },
       "name": "Amulet of the Planes",
@@ -8417,9 +8417,9 @@
         ]
       }
     },
-    "item-necklace-of-prayer-beads": {
+    "item_necklace_of_prayer_beads": {
       "id": {
-        "slug": "item-necklace-of-prayer-beads",
+        "slug": "item_necklace_of_prayer_beads",
         "ruleset": "v2024"
       },
       "name": "Necklace of Prayer Beads",
@@ -8442,9 +8442,9 @@
         ]
       }
     },
-    "item-periapt-of-health": {
+    "item_periapt_of_health": {
       "id": {
-        "slug": "item-periapt-of-health",
+        "slug": "item_periapt_of_health",
         "ruleset": "v2024"
       },
       "name": "Periapt of Health",
@@ -8466,9 +8466,9 @@
         ]
       }
     },
-    "item-periapt-of-proof-against-poison": {
+    "item_periapt_of_proof_against_poison": {
       "id": {
-        "slug": "item-periapt-of-proof-against-poison",
+        "slug": "item_periapt_of_proof_against_poison",
         "ruleset": "v2024"
       },
       "name": "Periapt of Proof against Poison",
@@ -8490,9 +8490,9 @@
         ]
       }
     },
-    "item-talisman-of-pure-good": {
+    "item_talisman_of_pure_good": {
       "id": {
-        "slug": "item-talisman-of-pure-good",
+        "slug": "item_talisman_of_pure_good",
         "ruleset": "v2024"
       },
       "name": "Talisman of Pure Good",
@@ -8515,9 +8515,9 @@
         ]
       }
     },
-    "item-talisman-of-the-sphere": {
+    "item_talisman_of_the_sphere": {
       "id": {
-        "slug": "item-talisman-of-the-sphere",
+        "slug": "item_talisman_of_the_sphere",
         "ruleset": "v2024"
       },
       "name": "Talisman of the Sphere",
@@ -8538,9 +8538,9 @@
         ]
       }
     },
-    "item-talisman-of-ultimate-evil": {
+    "item_talisman_of_ultimate_evil": {
       "id": {
-        "slug": "item-talisman-of-ultimate-evil",
+        "slug": "item_talisman_of_ultimate_evil",
         "ruleset": "v2024"
       },
       "name": "Talisman of Ultimate Evil",
@@ -8562,9 +8562,9 @@
         ]
       }
     },
-    "item-belt-of-dwarvenkind": {
+    "item_belt_of_dwarvenkind": {
       "id": {
-        "slug": "item-belt-of-dwarvenkind",
+        "slug": "item_belt_of_dwarvenkind",
         "ruleset": "v2024"
       },
       "name": "Belt of Dwarvenkind",
@@ -8587,9 +8587,9 @@
         ]
       }
     },
-    "item-boots-of-striding-and-springing": {
+    "item_boots_of_striding_and_springing": {
       "id": {
-        "slug": "item-boots-of-striding-and-springing",
+        "slug": "item_boots_of_striding_and_springing",
         "ruleset": "v2024"
       },
       "name": "Boots of Striding and Springing",
@@ -8612,9 +8612,9 @@
         ]
       }
     },
-    "item-bracers-of-armor": {
+    "item_bracers_of_armor": {
       "id": {
-        "slug": "item-bracers-of-armor",
+        "slug": "item_bracers_of_armor",
         "ruleset": "v2024"
       },
       "name": "Bracers of Armor",
@@ -8637,9 +8637,9 @@
         "defaultSlot": "armor"
       }
     },
-    "item-gloves-of-swimming-and-climbing": {
+    "item_gloves_of_swimming_and_climbing": {
       "id": {
-        "slug": "item-gloves-of-swimming-and-climbing",
+        "slug": "item_gloves_of_swimming_and_climbing",
         "ruleset": "v2024"
       },
       "name": "Gloves of Swimming and Climbing",
@@ -8661,9 +8661,9 @@
         ]
       }
     },
-    "item-horseshoes-of-a-zephyr": {
+    "item_horseshoes_of_a_zephyr": {
       "id": {
-        "slug": "item-horseshoes-of-a-zephyr",
+        "slug": "item_horseshoes_of_a_zephyr",
         "ruleset": "v2024"
       },
       "name": "Horseshoes of a Zephyr",
@@ -8686,9 +8686,9 @@
         ]
       }
     },
-    "item-horseshoes-of-speed": {
+    "item_horseshoes_of_speed": {
       "id": {
-        "slug": "item-horseshoes-of-speed",
+        "slug": "item_horseshoes_of_speed",
         "ruleset": "v2024"
       },
       "name": "Horseshoes of Speed",
@@ -8709,9 +8709,9 @@
         ]
       }
     },
-    "item-bag-of-beans": {
+    "item_bag_of_beans": {
       "id": {
-        "slug": "item-bag-of-beans",
+        "slug": "item_bag_of_beans",
         "ruleset": "v2024"
       },
       "name": "Bag of Beans",
@@ -8734,9 +8734,9 @@
         ]
       }
     },
-    "item-bag-of-devouring": {
+    "item_bag_of_devouring": {
       "id": {
-        "slug": "item-bag-of-devouring",
+        "slug": "item_bag_of_devouring",
         "ruleset": "v2024"
       },
       "name": "Bag of Devouring",
@@ -8758,9 +8758,9 @@
         ]
       }
     },
-    "item-crystal-ball": {
+    "item_crystal_ball": {
       "id": {
-        "slug": "item-crystal-ball",
+        "slug": "item_crystal_ball",
         "ruleset": "v2024"
       },
       "name": "Crystal Ball",
@@ -8781,9 +8781,9 @@
         ]
       }
     },
-    "item-cubic-gate": {
+    "item_cubic_gate": {
       "id": {
-        "slug": "item-cubic-gate",
+        "slug": "item_cubic_gate",
         "ruleset": "v2024"
       },
       "name": "Cubic Gate",
@@ -8805,9 +8805,9 @@
         ]
       }
     },
-    "item-deck-of-illusions": {
+    "item_deck_of_illusions": {
       "id": {
-        "slug": "item-deck-of-illusions",
+        "slug": "item_deck_of_illusions",
         "ruleset": "v2024"
       },
       "name": "Deck of Illusions",
@@ -8830,9 +8830,9 @@
         ]
       }
     },
-    "item-dimensional-shackles": {
+    "item_dimensional_shackles": {
       "id": {
-        "slug": "item-dimensional-shackles",
+        "slug": "item_dimensional_shackles",
         "ruleset": "v2024"
       },
       "name": "Dimensional Shackles",
@@ -8853,9 +8853,9 @@
         ]
       }
     },
-    "item-iron-bands-of-binding": {
+    "item_iron_bands_of_binding": {
       "id": {
-        "slug": "item-iron-bands-of-binding",
+        "slug": "item_iron_bands_of_binding",
         "ruleset": "v2024"
       },
       "name": "Iron Bands of Binding",
@@ -8876,9 +8876,9 @@
         ]
       }
     },
-    "item-iron-flask": {
+    "item_iron_flask": {
       "id": {
-        "slug": "item-iron-flask",
+        "slug": "item_iron_flask",
         "ruleset": "v2024"
       },
       "name": "Iron Flask",
@@ -8900,9 +8900,9 @@
         ]
       }
     },
-    "item-mirror-of-life-trapping": {
+    "item_mirror_of_life_trapping": {
       "id": {
-        "slug": "item-mirror-of-life-trapping",
+        "slug": "item_mirror_of_life_trapping",
         "ruleset": "v2024"
       },
       "name": "Mirror of Life Trapping",
@@ -8924,9 +8924,9 @@
         ]
       }
     },
-    "item-well-of-many-worlds": {
+    "item_well_of_many_worlds": {
       "id": {
-        "slug": "item-well-of-many-worlds",
+        "slug": "item_well_of_many_worlds",
         "ruleset": "v2024"
       },
       "name": "Well of Many Worlds",
@@ -8948,9 +8948,9 @@
         ]
       }
     },
-    "item-bowl-of-commanding-water-elementals": {
+    "item_bowl_of_commanding_water_elementals": {
       "id": {
-        "slug": "item-bowl-of-commanding-water-elementals",
+        "slug": "item_bowl_of_commanding_water_elementals",
         "ruleset": "v2024"
       },
       "name": "Bowl of Commanding Water Elementals",
@@ -8972,9 +8972,9 @@
         ]
       }
     },
-    "item-brazier-of-commanding-fire-elementals": {
+    "item_brazier_of_commanding_fire_elementals": {
       "id": {
-        "slug": "item-brazier-of-commanding-fire-elementals",
+        "slug": "item_brazier_of_commanding_fire_elementals",
         "ruleset": "v2024"
       },
       "name": "Brazier of Commanding Fire Elementals",
@@ -8996,9 +8996,9 @@
         ]
       }
     },
-    "item-censer-of-controlling-air-elementals": {
+    "item_censer_of_controlling_air_elementals": {
       "id": {
-        "slug": "item-censer-of-controlling-air-elementals",
+        "slug": "item_censer_of_controlling_air_elementals",
         "ruleset": "v2024"
       },
       "name": "Censer of Controlling Air Elementals",
@@ -9020,9 +9020,9 @@
         ]
       }
     },
-    "item-stone-of-controlling-earth-elementals": {
+    "item_stone_of_controlling_earth_elementals": {
       "id": {
-        "slug": "item-stone-of-controlling-earth-elementals",
+        "slug": "item_stone_of_controlling_earth_elementals",
         "ruleset": "v2024"
       },
       "name": "Stone of Controlling Earth Elementals",
@@ -9044,9 +9044,9 @@
         ]
       }
     },
-    "item-horn-of-blasting": {
+    "item_horn_of_blasting": {
       "id": {
-        "slug": "item-horn-of-blasting",
+        "slug": "item_horn_of_blasting",
         "ruleset": "v2024"
       },
       "name": "Horn of Blasting",
@@ -9068,9 +9068,9 @@
         ]
       }
     },
-    "item-pipes-of-haunting": {
+    "item_pipes_of_haunting": {
       "id": {
-        "slug": "item-pipes-of-haunting",
+        "slug": "item_pipes_of_haunting",
         "ruleset": "v2024"
       },
       "name": "Pipes of Haunting",
@@ -9093,9 +9093,9 @@
         ]
       }
     },
-    "item-pipes-of-the-sewers": {
+    "item_pipes_of_the_sewers": {
       "id": {
-        "slug": "item-pipes-of-the-sewers",
+        "slug": "item_pipes_of_the_sewers",
         "ruleset": "v2024"
       },
       "name": "Pipes of the Sewers",
@@ -9118,9 +9118,9 @@
         ]
       }
     },
-    "item-wind-fan": {
+    "item_wind_fan": {
       "id": {
-        "slug": "item-wind-fan",
+        "slug": "item_wind_fan",
         "ruleset": "v2024"
       },
       "name": "Wind Fan",
@@ -9142,9 +9142,9 @@
         ]
       }
     },
-    "item-bead-of-force": {
+    "item_bead_of_force": {
       "id": {
-        "slug": "item-bead-of-force",
+        "slug": "item_bead_of_force",
         "ruleset": "v2024"
       },
       "name": "Bead of Force",
@@ -9167,9 +9167,9 @@
         ]
       }
     },
-    "item-dust-of-disappearance": {
+    "item_dust_of_disappearance": {
       "id": {
-        "slug": "item-dust-of-disappearance",
+        "slug": "item_dust_of_disappearance",
         "ruleset": "v2024"
       },
       "name": "Dust of Disappearance",
@@ -9191,9 +9191,9 @@
         ]
       }
     },
-    "item-dust-of-dryness": {
+    "item_dust_of_dryness": {
       "id": {
-        "slug": "item-dust-of-dryness",
+        "slug": "item_dust_of_dryness",
         "ruleset": "v2024"
       },
       "name": "Dust of Dryness",
@@ -9215,9 +9215,9 @@
         ]
       }
     },
-    "item-dust-of-sneezing-and-choking": {
+    "item_dust_of_sneezing_and_choking": {
       "id": {
-        "slug": "item-dust-of-sneezing-and-choking",
+        "slug": "item_dust_of_sneezing_and_choking",
         "ruleset": "v2024"
       },
       "name": "Dust of Sneezing and Choking",
@@ -9241,9 +9241,9 @@
         ]
       }
     },
-    "item-incense-of-obsession": {
+    "item_incense_of_obsession": {
       "id": {
-        "slug": "item-incense-of-obsession",
+        "slug": "item_incense_of_obsession",
         "ruleset": "v2024"
       },
       "name": "Incense of Obsession",
@@ -9265,9 +9265,9 @@
         ]
       }
     },
-    "item-restorative-ointment": {
+    "item_restorative_ointment": {
       "id": {
-        "slug": "item-restorative-ointment",
+        "slug": "item_restorative_ointment",
         "ruleset": "v2024"
       },
       "name": "Restorative Ointment",
@@ -9289,9 +9289,9 @@
         ]
       }
     },
-    "item-sovereign-glue": {
+    "item_sovereign_glue": {
       "id": {
-        "slug": "item-sovereign-glue",
+        "slug": "item_sovereign_glue",
         "ruleset": "v2024"
       },
       "name": "Sovereign Glue",
@@ -9313,9 +9313,9 @@
         ]
       }
     },
-    "item-universal-solvent": {
+    "item_universal_solvent": {
       "id": {
-        "slug": "item-universal-solvent",
+        "slug": "item_universal_solvent",
         "ruleset": "v2024"
       },
       "name": "Universal Solvent",
@@ -9402,16 +9402,16 @@
         ]
       }
     },
-    "bottle-glass": {
+    "bottle_glass": {
       "id": {
-        "slug": "bottle-glass",
+        "slug": "bottle_glass",
         "ruleset": "v2024"
       },
       "name": "Bottle, Glass",
       "itemType": "adventuringGear",
       "rarity": "nonmagical",
       "requiresAttunement": false,
-      "descriptionMarkdown": "Holds 1½ pints of liquid, corked with wax-sealed stopper.",
+      "descriptionMarkdown": "Holds 1\u00bd pints of liquid, corked with wax-sealed stopper.",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -9432,7 +9432,7 @@
       "itemType": "adventuringGear",
       "rarity": "nonmagical",
       "requiresAttunement": false,
-      "descriptionMarkdown": "Holds 3 gallons of liquid or ½ cubic foot of solid matter.",
+      "descriptionMarkdown": "Holds 3 gallons of liquid or \u00bd cubic foot of solid matter.",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -9445,9 +9445,9 @@
         ]
       }
     },
-    "case-crossbow-bolt": {
+    "case_crossbow_bolt": {
       "id": {
-        "slug": "case-crossbow-bolt",
+        "slug": "case_crossbow_bolt",
         "ruleset": "v2024"
       },
       "name": "Case, Crossbow Bolt",
@@ -9466,9 +9466,9 @@
         ]
       }
     },
-    "case-map-scroll": {
+    "case_map_scroll": {
       "id": {
-        "slug": "case-map-scroll",
+        "slug": "case_map_scroll",
         "ruleset": "v2024"
       },
       "name": "Case, Map or Scroll",
@@ -9510,9 +9510,9 @@
         ]
       }
     },
-    "flask-tankard": {
+    "flask_tankard": {
       "id": {
-        "slug": "flask-tankard",
+        "slug": "flask_tankard",
         "ruleset": "v2024"
       },
       "name": "Flask or Tankard",
@@ -9531,9 +9531,9 @@
         ]
       }
     },
-    "jug-pitcher": {
+    "jug_pitcher": {
       "id": {
-        "slug": "jug-pitcher",
+        "slug": "jug_pitcher",
         "ruleset": "v2024"
       },
       "name": "Jug or Pitcher",
@@ -9552,9 +9552,9 @@
         ]
       }
     },
-    "pot-iron": {
+    "pot_iron": {
       "id": {
-        "slug": "pot-iron",
+        "slug": "pot_iron",
         "ruleset": "v2024"
       },
       "name": "Pot, Iron",
@@ -9583,7 +9583,7 @@
       "itemType": "adventuringGear",
       "rarity": "nonmagical",
       "requiresAttunement": false,
-      "descriptionMarkdown": "Holds ⅕ cubic foot or up to 6 pounds of small items or coins (approx. 300 coins).",
+      "descriptionMarkdown": "Holds \u2155 cubic foot or up to 6 pounds of small items or coins (approx. 300 coins).",
       "grants": [],
       "customProperties": {
         "cost": null,
@@ -9702,9 +9702,9 @@
         ]
       }
     },
-    "acid-vial": {
+    "acid_vial": {
       "id": {
-        "slug": "acid-vial",
+        "slug": "acid_vial",
         "ruleset": "v2024"
       },
       "name": "Acid (Vial)",
@@ -9725,9 +9725,9 @@
         ]
       }
     },
-    "alchemists-fire": {
+    "alchemists_fire": {
       "id": {
-        "slug": "alchemists-fire",
+        "slug": "alchemists_fire",
         "ruleset": "v2024"
       },
       "name": "Alchemist's Fire (Flask)",
@@ -9769,9 +9769,9 @@
         ]
       }
     },
-    "ball-bearings": {
+    "ball_bearings": {
       "id": {
-        "slug": "ball-bearings",
+        "slug": "ball_bearings",
         "ruleset": "v2024"
       },
       "name": "Ball Bearings (Bag of 1,000)",
@@ -9857,9 +9857,9 @@
         ]
       }
     },
-    "block-and-tackle": {
+    "block_and_tackle": {
       "id": {
-        "slug": "block-and-tackle",
+        "slug": "block_and_tackle",
         "ruleset": "v2024"
       },
       "name": "Block and Tackle",
@@ -9945,9 +9945,9 @@
         ]
       }
     },
-    "chain-10ft": {
+    "chain_10ft": {
       "id": {
-        "slug": "chain-10ft",
+        "slug": "chain_10ft",
         "ruleset": "v2024"
       },
       "name": "Chain (10 Feet)",
@@ -9989,9 +9989,9 @@
         ]
       }
     },
-    "climbers-kit": {
+    "climbers_kit": {
       "id": {
-        "slug": "climbers-kit",
+        "slug": "climbers_kit",
         "ruleset": "v2024"
       },
       "name": "Climber's Kit",
@@ -10011,9 +10011,9 @@
         ]
       }
     },
-    "component-pouch": {
+    "component_pouch": {
       "id": {
-        "slug": "component-pouch",
+        "slug": "component_pouch",
         "ruleset": "v2024"
       },
       "name": "Component Pouch",
@@ -10056,9 +10056,9 @@
         ]
       }
     },
-    "druidic-focus": {
+    "druidic_focus": {
       "id": {
-        "slug": "druidic-focus",
+        "slug": "druidic_focus",
         "ruleset": "v2024"
       },
       "name": "Druidic Focus (Sprig of Mistletoe / Totem / Wooden Staff / Yew Wand)",
@@ -10079,9 +10079,9 @@
         ]
       }
     },
-    "fishing-tackle": {
+    "fishing_tackle": {
       "id": {
-        "slug": "fishing-tackle",
+        "slug": "fishing_tackle",
         "ruleset": "v2024"
       },
       "name": "Fishing Tackle",
@@ -10101,9 +10101,9 @@
         ]
       }
     },
-    "grappling-hook": {
+    "grappling_hook": {
       "id": {
-        "slug": "grappling-hook",
+        "slug": "grappling_hook",
         "ruleset": "v2024"
       },
       "name": "Grappling Hook",
@@ -10144,9 +10144,9 @@
         ]
       }
     },
-    "hammer-sledge": {
+    "hammer_sledge": {
       "id": {
-        "slug": "hammer-sledge",
+        "slug": "hammer_sledge",
         "ruleset": "v2024"
       },
       "name": "Hammer, Sledge",
@@ -10167,9 +10167,9 @@
         ]
       }
     },
-    "healers-kit": {
+    "healers_kit": {
       "id": {
-        "slug": "healers-kit",
+        "slug": "healers_kit",
         "ruleset": "v2024"
       },
       "name": "Healer's Kit",
@@ -10190,9 +10190,9 @@
         ]
       }
     },
-    "holy-water": {
+    "holy_water": {
       "id": {
-        "slug": "holy-water",
+        "slug": "holy_water",
         "ruleset": "v2024"
       },
       "name": "Holy Water (Flask)",
@@ -10235,9 +10235,9 @@
         ]
       }
     },
-    "hunting-trap": {
+    "hunting_trap": {
       "id": {
-        "slug": "hunting-trap",
+        "slug": "hunting_trap",
         "ruleset": "v2024"
       },
       "name": "Hunting Trap",
@@ -10258,9 +10258,9 @@
         ]
       }
     },
-    "ink-bottle": {
+    "ink_bottle": {
       "id": {
-        "slug": "ink-bottle",
+        "slug": "ink_bottle",
         "ruleset": "v2024"
       },
       "name": "Ink (1 Ounce Bottle)",
@@ -10280,9 +10280,9 @@
         ]
       }
     },
-    "ink-pen": {
+    "ink_pen": {
       "id": {
-        "slug": "ink-pen",
+        "slug": "ink_pen",
         "ruleset": "v2024"
       },
       "name": "Ink Pen",
@@ -10301,9 +10301,9 @@
         ]
       }
     },
-    "ladder-10ft": {
+    "ladder_10ft": {
       "id": {
-        "slug": "ladder-10ft",
+        "slug": "ladder_10ft",
         "ruleset": "v2024"
       },
       "name": "Ladder (10-Foot)",
@@ -10344,9 +10344,9 @@
         ]
       }
     },
-    "bullseye-lantern": {
+    "bullseye_lantern": {
       "id": {
-        "slug": "bullseye-lantern",
+        "slug": "bullseye_lantern",
         "ruleset": "v2024"
       },
       "name": "Lantern, Bullseye",
@@ -10366,9 +10366,9 @@
         ]
       }
     },
-    "hooded-lantern": {
+    "hooded_lantern": {
       "id": {
-        "slug": "hooded-lantern",
+        "slug": "hooded_lantern",
         "ruleset": "v2024"
       },
       "name": "Lantern, Hooded",
@@ -10410,9 +10410,9 @@
         ]
       }
     },
-    "magnifying-glass": {
+    "magnifying_glass": {
       "id": {
-        "slug": "magnifying-glass",
+        "slug": "magnifying_glass",
         "ruleset": "v2024"
       },
       "name": "Magnifying Glass",
@@ -10454,9 +10454,9 @@
         ]
       }
     },
-    "mess-kit": {
+    "mess_kit": {
       "id": {
-        "slug": "mess-kit",
+        "slug": "mess_kit",
         "ruleset": "v2024"
       },
       "name": "Mess Kit",
@@ -10476,9 +10476,9 @@
         ]
       }
     },
-    "mirror-steel": {
+    "mirror_steel": {
       "id": {
-        "slug": "mirror-steel",
+        "slug": "mirror_steel",
         "ruleset": "v2024"
       },
       "name": "Mirror, Steel",
@@ -10498,9 +10498,9 @@
         ]
       }
     },
-    "oil-flask": {
+    "oil_flask": {
       "id": {
-        "slug": "oil-flask",
+        "slug": "oil_flask",
         "ruleset": "v2024"
       },
       "name": "Oil (Flask)",
@@ -10521,9 +10521,9 @@
         ]
       }
     },
-    "paper-sheet": {
+    "paper_sheet": {
       "id": {
-        "slug": "paper-sheet",
+        "slug": "paper_sheet",
         "ruleset": "v2024"
       },
       "name": "Paper (One Sheet)",
@@ -10543,9 +10543,9 @@
         ]
       }
     },
-    "parchment-sheet": {
+    "parchment_sheet": {
       "id": {
-        "slug": "parchment-sheet",
+        "slug": "parchment_sheet",
         "ruleset": "v2024"
       },
       "name": "Parchment (One Sheet)",
@@ -10565,9 +10565,9 @@
         ]
       }
     },
-    "perfume-vial": {
+    "perfume_vial": {
       "id": {
-        "slug": "perfume-vial",
+        "slug": "perfume_vial",
         "ruleset": "v2024"
       },
       "name": "Perfume (Vial)",
@@ -10586,9 +10586,9 @@
         ]
       }
     },
-    "pick-miners": {
+    "pick_miners": {
       "id": {
-        "slug": "pick-miners",
+        "slug": "pick_miners",
         "ruleset": "v2024"
       },
       "name": "Pick, Miner's",
@@ -10631,9 +10631,9 @@
         ]
       }
     },
-    "poison-basic": {
+    "poison_basic": {
       "id": {
-        "slug": "poison-basic",
+        "slug": "poison_basic",
         "ruleset": "v2024"
       },
       "name": "Poison, Basic (Vial)",
@@ -10653,9 +10653,9 @@
         ]
       }
     },
-    "pole-10ft": {
+    "pole_10ft": {
       "id": {
-        "slug": "pole-10ft",
+        "slug": "pole_10ft",
         "ruleset": "v2024"
       },
       "name": "Pole (10-Foot)",
@@ -10675,9 +10675,9 @@
         ]
       }
     },
-    "ram-portable": {
+    "ram_portable": {
       "id": {
-        "slug": "ram-portable",
+        "slug": "ram_portable",
         "ruleset": "v2024"
       },
       "name": "Ram, Portable",
@@ -10718,9 +10718,9 @@
         ]
       }
     },
-    "rope-hempen": {
+    "rope_hempen": {
       "id": {
-        "slug": "rope-hempen",
+        "slug": "rope_hempen",
         "ruleset": "v2024"
       },
       "name": "Rope, Hempen (50 Feet)",
@@ -10740,9 +10740,9 @@
         ]
       }
     },
-    "rope-silk": {
+    "rope_silk": {
       "id": {
-        "slug": "rope-silk",
+        "slug": "rope_silk",
         "ruleset": "v2024"
       },
       "name": "Rope, Silk (50 Feet)",
@@ -10762,9 +10762,9 @@
         ]
       }
     },
-    "scale-merchants": {
+    "scale_merchants": {
       "id": {
-        "slug": "scale-merchants",
+        "slug": "scale_merchants",
         "ruleset": "v2024"
       },
       "name": "Scale, Merchant's",
@@ -10784,9 +10784,9 @@
         ]
       }
     },
-    "sealing-wax": {
+    "sealing_wax": {
       "id": {
-        "slug": "sealing-wax",
+        "slug": "sealing_wax",
         "ruleset": "v2024"
       },
       "name": "Sealing Wax",
@@ -10827,9 +10827,9 @@
         ]
       }
     },
-    "signal-whistle": {
+    "signal_whistle": {
       "id": {
-        "slug": "signal-whistle",
+        "slug": "signal_whistle",
         "ruleset": "v2024"
       },
       "name": "Signal Whistle",
@@ -10849,9 +10849,9 @@
         ]
       }
     },
-    "signet-ring": {
+    "signet_ring": {
       "id": {
-        "slug": "signet-ring",
+        "slug": "signet_ring",
         "ruleset": "v2024"
       },
       "name": "Signet Ring",
@@ -10894,9 +10894,9 @@
         ]
       }
     },
-    "spikes-iron": {
+    "spikes_iron": {
       "id": {
-        "slug": "spikes-iron",
+        "slug": "spikes_iron",
         "ruleset": "v2024"
       },
       "name": "Spikes, Iron (10)",
@@ -10938,9 +10938,9 @@
         ]
       }
     },
-    "tent-two-person": {
+    "tent_two_person": {
       "id": {
-        "slug": "tent-two-person",
+        "slug": "tent_two_person",
         "ruleset": "v2024"
       },
       "name": "Tent, Two-Person",
@@ -11025,9 +11025,9 @@
         ]
       }
     },
-    "clothes-common": {
+    "clothes_common": {
       "id": {
-        "slug": "clothes-common",
+        "slug": "clothes_common",
         "ruleset": "v2024"
       },
       "name": "Clothes, Common",
@@ -11046,9 +11046,9 @@
         ]
       }
     },
-    "clothes-costume": {
+    "clothes_costume": {
       "id": {
-        "slug": "clothes-costume",
+        "slug": "clothes_costume",
         "ruleset": "v2024"
       },
       "name": "Clothes, Costume",
@@ -11068,9 +11068,9 @@
         ]
       }
     },
-    "clothes-fine": {
+    "clothes_fine": {
       "id": {
-        "slug": "clothes-fine",
+        "slug": "clothes_fine",
         "ruleset": "v2024"
       },
       "name": "Clothes, Fine",
@@ -11090,9 +11090,9 @@
         ]
       }
     },
-    "clothes-travelers": {
+    "clothes_travelers": {
       "id": {
-        "slug": "clothes-travelers",
+        "slug": "clothes_travelers",
         "ruleset": "v2024"
       },
       "name": "Clothes, Traveler's",
@@ -11134,9 +11134,9 @@
         ]
       }
     },
-    "arcane-focus-wand": {
+    "arcane_focus_wand": {
       "id": {
-        "slug": "arcane-focus-wand",
+        "slug": "arcane_focus_wand",
         "ruleset": "v2024"
       },
       "name": "Arcane Focus (Wand / Crystal / Orb)",
@@ -11158,9 +11158,9 @@
         ]
       }
     },
-    "holy-symbol-amulet": {
+    "holy_symbol_amulet": {
       "id": {
-        "slug": "holy-symbol-amulet",
+        "slug": "holy_symbol_amulet",
         "ruleset": "v2024"
       },
       "name": "Holy Symbol (Amulet / Emblem / Reliquary)",
@@ -11181,9 +11181,9 @@
         ]
       }
     },
-    "thieves-tools": {
+    "thieves_tools": {
       "id": {
-        "slug": "thieves-tools",
+        "slug": "thieves_tools",
         "ruleset": "v2024"
       },
       "name": "Thieves' Tools",
@@ -11203,9 +11203,9 @@
         ]
       }
     },
-    "alchemists-supplies": {
+    "alchemists_supplies": {
       "id": {
-        "slug": "alchemists-supplies",
+        "slug": "alchemists_supplies",
         "ruleset": "v2024"
       },
       "name": "Alchemist's Supplies",
@@ -11225,9 +11225,9 @@
         ]
       }
     },
-    "brewers-supplies": {
+    "brewers_supplies": {
       "id": {
-        "slug": "brewers-supplies",
+        "slug": "brewers_supplies",
         "ruleset": "v2024"
       },
       "name": "Brewer's Supplies",
@@ -11247,9 +11247,9 @@
         ]
       }
     },
-    "calligraphers-supplies": {
+    "calligraphers_supplies": {
       "id": {
-        "slug": "calligraphers-supplies",
+        "slug": "calligraphers_supplies",
         "ruleset": "v2024"
       },
       "name": "Calligrapher's Supplies",
@@ -11269,9 +11269,9 @@
         ]
       }
     },
-    "carpenters-tools": {
+    "carpenters_tools": {
       "id": {
-        "slug": "carpenters-tools",
+        "slug": "carpenters_tools",
         "ruleset": "v2024"
       },
       "name": "Carpenter's Tools",
@@ -11291,9 +11291,9 @@
         ]
       }
     },
-    "cartographers-tools": {
+    "cartographers_tools": {
       "id": {
-        "slug": "cartographers-tools",
+        "slug": "cartographers_tools",
         "ruleset": "v2024"
       },
       "name": "Cartographer's Tools",
@@ -11313,9 +11313,9 @@
         ]
       }
     },
-    "cobblers-tools": {
+    "cobblers_tools": {
       "id": {
-        "slug": "cobblers-tools",
+        "slug": "cobblers_tools",
         "ruleset": "v2024"
       },
       "name": "Cobbler's Tools",
@@ -11335,9 +11335,9 @@
         ]
       }
     },
-    "cooks-utensils": {
+    "cooks_utensils": {
       "id": {
-        "slug": "cooks-utensils",
+        "slug": "cooks_utensils",
         "ruleset": "v2024"
       },
       "name": "Cook's Utensils",
@@ -11358,9 +11358,9 @@
         ]
       }
     },
-    "disguise-kit": {
+    "disguise_kit": {
       "id": {
-        "slug": "disguise-kit",
+        "slug": "disguise_kit",
         "ruleset": "v2024"
       },
       "name": "Disguise Kit",
@@ -11380,9 +11380,9 @@
         ]
       }
     },
-    "forgery-kit": {
+    "forgery_kit": {
       "id": {
-        "slug": "forgery-kit",
+        "slug": "forgery_kit",
         "ruleset": "v2024"
       },
       "name": "Forgery Kit",
@@ -11402,9 +11402,9 @@
         ]
       }
     },
-    "gaming-set-dice": {
+    "gaming_set_dice": {
       "id": {
-        "slug": "gaming-set-dice",
+        "slug": "gaming_set_dice",
         "ruleset": "v2024"
       },
       "name": "Gaming Set (Dice Set / Playing Cards / Dragonchess)",
@@ -11424,9 +11424,9 @@
         ]
       }
     },
-    "glassblowers-tools": {
+    "glassblowers_tools": {
       "id": {
-        "slug": "glassblowers-tools",
+        "slug": "glassblowers_tools",
         "ruleset": "v2024"
       },
       "name": "Glassblower's Tools",
@@ -11446,9 +11446,9 @@
         ]
       }
     },
-    "herbalism-kit": {
+    "herbalism_kit": {
       "id": {
-        "slug": "herbalism-kit",
+        "slug": "herbalism_kit",
         "ruleset": "v2024"
       },
       "name": "Herbalism Kit",
@@ -11469,9 +11469,9 @@
         ]
       }
     },
-    "jewelers-tools": {
+    "jewelers_tools": {
       "id": {
-        "slug": "jewelers-tools",
+        "slug": "jewelers_tools",
         "ruleset": "v2024"
       },
       "name": "Jeweler's Tools",
@@ -11491,9 +11491,9 @@
         ]
       }
     },
-    "leatherworkers-tools": {
+    "leatherworkers_tools": {
       "id": {
-        "slug": "leatherworkers-tools",
+        "slug": "leatherworkers_tools",
         "ruleset": "v2024"
       },
       "name": "Leatherworker's Tools",
@@ -11516,9 +11516,9 @@
         "armorType": "light"
       }
     },
-    "masons-tools": {
+    "masons_tools": {
       "id": {
-        "slug": "masons-tools",
+        "slug": "masons_tools",
         "ruleset": "v2024"
       },
       "name": "Mason's Tools",
@@ -11538,9 +11538,9 @@
         ]
       }
     },
-    "musical-instrument-lute": {
+    "musical_instrument_lute": {
       "id": {
-        "slug": "musical-instrument-lute",
+        "slug": "musical_instrument_lute",
         "ruleset": "v2024"
       },
       "name": "Musical Instrument (Lute / Flute / Drum / Horn / Lyre / Bagpipes)",
@@ -11561,9 +11561,9 @@
         ]
       }
     },
-    "navigators-tools": {
+    "navigators_tools": {
       "id": {
-        "slug": "navigators-tools",
+        "slug": "navigators_tools",
         "ruleset": "v2024"
       },
       "name": "Navigator's Tools",
@@ -11583,9 +11583,9 @@
         ]
       }
     },
-    "painters-supplies": {
+    "painters_supplies": {
       "id": {
-        "slug": "painters-supplies",
+        "slug": "painters_supplies",
         "ruleset": "v2024"
       },
       "name": "Painter's Supplies",
@@ -11605,9 +11605,9 @@
         ]
       }
     },
-    "poisoners-kit": {
+    "poisoners_kit": {
       "id": {
-        "slug": "poisoners-kit",
+        "slug": "poisoners_kit",
         "ruleset": "v2024"
       },
       "name": "Poisoner's Kit",
@@ -11627,9 +11627,9 @@
         ]
       }
     },
-    "potters-tools": {
+    "potters_tools": {
       "id": {
-        "slug": "potters-tools",
+        "slug": "potters_tools",
         "ruleset": "v2024"
       },
       "name": "Potter's Tools",
@@ -11649,9 +11649,9 @@
         ]
       }
     },
-    "smiths-tools": {
+    "smiths_tools": {
       "id": {
-        "slug": "smiths-tools",
+        "slug": "smiths_tools",
         "ruleset": "v2024"
       },
       "name": "Smith's Tools",
@@ -11674,9 +11674,9 @@
         "defaultSlot": "armor"
       }
     },
-    "tinkers-tools": {
+    "tinkers_tools": {
       "id": {
-        "slug": "tinkers-tools",
+        "slug": "tinkers_tools",
         "ruleset": "v2024"
       },
       "name": "Tinker's Tools",
@@ -11697,9 +11697,9 @@
         ]
       }
     },
-    "weavers-tools": {
+    "weavers_tools": {
       "id": {
-        "slug": "weavers-tools",
+        "slug": "weavers_tools",
         "ruleset": "v2024"
       },
       "name": "Weaver's Tools",
@@ -11719,9 +11719,9 @@
         ]
       }
     },
-    "woodcarvers-tools": {
+    "woodcarvers_tools": {
       "id": {
-        "slug": "woodcarvers-tools",
+        "slug": "woodcarvers_tools",
         "ruleset": "v2024"
       },
       "name": "Woodcarver's Tools",
@@ -11742,9 +11742,9 @@
         ]
       }
     },
-    "gem-azurite": {
+    "gem_azurite": {
       "id": {
-        "slug": "gem-azurite",
+        "slug": "gem_azurite",
         "ruleset": "v2024"
       },
       "name": "Azurite",
@@ -11766,9 +11766,9 @@
         ]
       }
     },
-    "gem-banded-agate": {
+    "gem_banded_agate": {
       "id": {
-        "slug": "gem-banded-agate",
+        "slug": "gem_banded_agate",
         "ruleset": "v2024"
       },
       "name": "Banded Agate",
@@ -11790,9 +11790,9 @@
         ]
       }
     },
-    "gem-blue-quartz": {
+    "gem_blue_quartz": {
       "id": {
-        "slug": "gem-blue-quartz",
+        "slug": "gem_blue_quartz",
         "ruleset": "v2024"
       },
       "name": "Blue Quartz",
@@ -11814,9 +11814,9 @@
         ]
       }
     },
-    "gem-eye-agate": {
+    "gem_eye_agate": {
       "id": {
-        "slug": "gem-eye-agate",
+        "slug": "gem_eye_agate",
         "ruleset": "v2024"
       },
       "name": "Eye Agate",
@@ -11838,9 +11838,9 @@
         ]
       }
     },
-    "gem-hematite": {
+    "gem_hematite": {
       "id": {
-        "slug": "gem-hematite",
+        "slug": "gem_hematite",
         "ruleset": "v2024"
       },
       "name": "Hematite",
@@ -11862,9 +11862,9 @@
         ]
       }
     },
-    "gem-lapis-lazuli": {
+    "gem_lapis_lazuli": {
       "id": {
-        "slug": "gem-lapis-lazuli",
+        "slug": "gem_lapis_lazuli",
         "ruleset": "v2024"
       },
       "name": "Lapis Lazuli",
@@ -11886,9 +11886,9 @@
         ]
       }
     },
-    "gem-malachite": {
+    "gem_malachite": {
       "id": {
-        "slug": "gem-malachite",
+        "slug": "gem_malachite",
         "ruleset": "v2024"
       },
       "name": "Malachite",
@@ -11910,9 +11910,9 @@
         ]
       }
     },
-    "gem-moss-agate": {
+    "gem_moss_agate": {
       "id": {
-        "slug": "gem-moss-agate",
+        "slug": "gem_moss_agate",
         "ruleset": "v2024"
       },
       "name": "Moss Agate",
@@ -11934,9 +11934,9 @@
         ]
       }
     },
-    "gem-obsidian": {
+    "gem_obsidian": {
       "id": {
-        "slug": "gem-obsidian",
+        "slug": "gem_obsidian",
         "ruleset": "v2024"
       },
       "name": "Obsidian",
@@ -11958,9 +11958,9 @@
         ]
       }
     },
-    "gem-rhodochrosite": {
+    "gem_rhodochrosite": {
       "id": {
-        "slug": "gem-rhodochrosite",
+        "slug": "gem_rhodochrosite",
         "ruleset": "v2024"
       },
       "name": "Rhodochrosite",
@@ -11982,9 +11982,9 @@
         ]
       }
     },
-    "gem-tiger-eye": {
+    "gem_tiger_eye": {
       "id": {
-        "slug": "gem-tiger-eye",
+        "slug": "gem_tiger_eye",
         "ruleset": "v2024"
       },
       "name": "Tiger Eye",
@@ -12006,9 +12006,9 @@
         ]
       }
     },
-    "gem-turquoise": {
+    "gem_turquoise": {
       "id": {
-        "slug": "gem-turquoise",
+        "slug": "gem_turquoise",
         "ruleset": "v2024"
       },
       "name": "Turquoise",
@@ -12030,9 +12030,9 @@
         ]
       }
     },
-    "gem-bloodstone": {
+    "gem_bloodstone": {
       "id": {
-        "slug": "gem-bloodstone",
+        "slug": "gem_bloodstone",
         "ruleset": "v2024"
       },
       "name": "Bloodstone",
@@ -12054,9 +12054,9 @@
         ]
       }
     },
-    "gem-carnelian": {
+    "gem_carnelian": {
       "id": {
-        "slug": "gem-carnelian",
+        "slug": "gem_carnelian",
         "ruleset": "v2024"
       },
       "name": "Carnelian",
@@ -12078,9 +12078,9 @@
         ]
       }
     },
-    "gem-chalcedony": {
+    "gem_chalcedony": {
       "id": {
-        "slug": "gem-chalcedony",
+        "slug": "gem_chalcedony",
         "ruleset": "v2024"
       },
       "name": "Chalcedony",
@@ -12102,9 +12102,9 @@
         ]
       }
     },
-    "gem-chrysoprase": {
+    "gem_chrysoprase": {
       "id": {
-        "slug": "gem-chrysoprase",
+        "slug": "gem_chrysoprase",
         "ruleset": "v2024"
       },
       "name": "Chrysoprase",
@@ -12126,9 +12126,9 @@
         ]
       }
     },
-    "gem-citrine": {
+    "gem_citrine": {
       "id": {
-        "slug": "gem-citrine",
+        "slug": "gem_citrine",
         "ruleset": "v2024"
       },
       "name": "Citrine",
@@ -12150,9 +12150,9 @@
         ]
       }
     },
-    "gem-jasper": {
+    "gem_jasper": {
       "id": {
-        "slug": "gem-jasper",
+        "slug": "gem_jasper",
         "ruleset": "v2024"
       },
       "name": "Jasper",
@@ -12174,9 +12174,9 @@
         ]
       }
     },
-    "gem-moonstone": {
+    "gem_moonstone": {
       "id": {
-        "slug": "gem-moonstone",
+        "slug": "gem_moonstone",
         "ruleset": "v2024"
       },
       "name": "Moonstone",
@@ -12198,9 +12198,9 @@
         ]
       }
     },
-    "gem-onyx": {
+    "gem_onyx": {
       "id": {
-        "slug": "gem-onyx",
+        "slug": "gem_onyx",
         "ruleset": "v2024"
       },
       "name": "Onyx",
@@ -12222,9 +12222,9 @@
         ]
       }
     },
-    "gem-quartz": {
+    "gem_quartz": {
       "id": {
-        "slug": "gem-quartz",
+        "slug": "gem_quartz",
         "ruleset": "v2024"
       },
       "name": "Quartz",
@@ -12246,9 +12246,9 @@
         ]
       }
     },
-    "gem-sardonyx": {
+    "gem_sardonyx": {
       "id": {
-        "slug": "gem-sardonyx",
+        "slug": "gem_sardonyx",
         "ruleset": "v2024"
       },
       "name": "Sardonyx",
@@ -12270,9 +12270,9 @@
         ]
       }
     },
-    "gem-star-rose-quartz": {
+    "gem_star_rose_quartz": {
       "id": {
-        "slug": "gem-star-rose-quartz",
+        "slug": "gem_star_rose_quartz",
         "ruleset": "v2024"
       },
       "name": "Star Rose Quartz",
@@ -12294,9 +12294,9 @@
         ]
       }
     },
-    "gem-zircon": {
+    "gem_zircon": {
       "id": {
-        "slug": "gem-zircon",
+        "slug": "gem_zircon",
         "ruleset": "v2024"
       },
       "name": "Zircon",
@@ -12318,9 +12318,9 @@
         ]
       }
     },
-    "gem-amber": {
+    "gem_amber": {
       "id": {
-        "slug": "gem-amber",
+        "slug": "gem_amber",
         "ruleset": "v2024"
       },
       "name": "Amber",
@@ -12342,9 +12342,9 @@
         ]
       }
     },
-    "gem-amethyst": {
+    "gem_amethyst": {
       "id": {
-        "slug": "gem-amethyst",
+        "slug": "gem_amethyst",
         "ruleset": "v2024"
       },
       "name": "Amethyst",
@@ -12366,9 +12366,9 @@
         ]
       }
     },
-    "gem-chrysoberyl": {
+    "gem_chrysoberyl": {
       "id": {
-        "slug": "gem-chrysoberyl",
+        "slug": "gem_chrysoberyl",
         "ruleset": "v2024"
       },
       "name": "Chrysoberyl",
@@ -12390,9 +12390,9 @@
         ]
       }
     },
-    "gem-coral": {
+    "gem_coral": {
       "id": {
-        "slug": "gem-coral",
+        "slug": "gem_coral",
         "ruleset": "v2024"
       },
       "name": "Coral",
@@ -12414,9 +12414,9 @@
         ]
       }
     },
-    "gem-garnet": {
+    "gem_garnet": {
       "id": {
-        "slug": "gem-garnet",
+        "slug": "gem_garnet",
         "ruleset": "v2024"
       },
       "name": "Garnet",
@@ -12438,9 +12438,9 @@
         ]
       }
     },
-    "gem-jade": {
+    "gem_jade": {
       "id": {
-        "slug": "gem-jade",
+        "slug": "gem_jade",
         "ruleset": "v2024"
       },
       "name": "Jade",
@@ -12462,9 +12462,9 @@
         ]
       }
     },
-    "gem-pearl": {
+    "gem_pearl": {
       "id": {
-        "slug": "gem-pearl",
+        "slug": "gem_pearl",
         "ruleset": "v2024"
       },
       "name": "Pearl",
@@ -12486,9 +12486,9 @@
         ]
       }
     },
-    "gem-spinel": {
+    "gem_spinel": {
       "id": {
-        "slug": "gem-spinel",
+        "slug": "gem_spinel",
         "ruleset": "v2024"
       },
       "name": "Spinel",
@@ -12510,9 +12510,9 @@
         ]
       }
     },
-    "gem-tourmaline": {
+    "gem_tourmaline": {
       "id": {
-        "slug": "gem-tourmaline",
+        "slug": "gem_tourmaline",
         "ruleset": "v2024"
       },
       "name": "Tourmaline",
@@ -12534,9 +12534,9 @@
         ]
       }
     },
-    "gem-alexandrite": {
+    "gem_alexandrite": {
       "id": {
-        "slug": "gem-alexandrite",
+        "slug": "gem_alexandrite",
         "ruleset": "v2024"
       },
       "name": "Alexandrite",
@@ -12558,9 +12558,9 @@
         ]
       }
     },
-    "gem-aquamarine": {
+    "gem_aquamarine": {
       "id": {
-        "slug": "gem-aquamarine",
+        "slug": "gem_aquamarine",
         "ruleset": "v2024"
       },
       "name": "Aquamarine",
@@ -12582,9 +12582,9 @@
         ]
       }
     },
-    "gem-black-pearl": {
+    "gem_black_pearl": {
       "id": {
-        "slug": "gem-black-pearl",
+        "slug": "gem_black_pearl",
         "ruleset": "v2024"
       },
       "name": "Black Pearl",
@@ -12606,9 +12606,9 @@
         ]
       }
     },
-    "gem-blue-spinel": {
+    "gem_blue_spinel": {
       "id": {
-        "slug": "gem-blue-spinel",
+        "slug": "gem_blue_spinel",
         "ruleset": "v2024"
       },
       "name": "Blue Spinel",
@@ -12630,9 +12630,9 @@
         ]
       }
     },
-    "gem-peridot": {
+    "gem_peridot": {
       "id": {
-        "slug": "gem-peridot",
+        "slug": "gem_peridot",
         "ruleset": "v2024"
       },
       "name": "Peridot",
@@ -12654,9 +12654,9 @@
         ]
       }
     },
-    "gem-topaz": {
+    "gem_topaz": {
       "id": {
-        "slug": "gem-topaz",
+        "slug": "gem_topaz",
         "ruleset": "v2024"
       },
       "name": "Topaz",
@@ -12678,9 +12678,9 @@
         ]
       }
     },
-    "gem-black-opal": {
+    "gem_black_opal": {
       "id": {
-        "slug": "gem-black-opal",
+        "slug": "gem_black_opal",
         "ruleset": "v2024"
       },
       "name": "Black Opal",
@@ -12702,9 +12702,9 @@
         ]
       }
     },
-    "gem-blue-sapphire": {
+    "gem_blue_sapphire": {
       "id": {
-        "slug": "gem-blue-sapphire",
+        "slug": "gem_blue_sapphire",
         "ruleset": "v2024"
       },
       "name": "Blue Sapphire",
@@ -12726,9 +12726,9 @@
         ]
       }
     },
-    "gem-emerald": {
+    "gem_emerald": {
       "id": {
-        "slug": "gem-emerald",
+        "slug": "gem_emerald",
         "ruleset": "v2024"
       },
       "name": "Emerald",
@@ -12750,9 +12750,9 @@
         ]
       }
     },
-    "gem-fire-opal": {
+    "gem_fire_opal": {
       "id": {
-        "slug": "gem-fire-opal",
+        "slug": "gem_fire_opal",
         "ruleset": "v2024"
       },
       "name": "Fire Opal",
@@ -12774,9 +12774,9 @@
         ]
       }
     },
-    "gem-opal": {
+    "gem_opal": {
       "id": {
-        "slug": "gem-opal",
+        "slug": "gem_opal",
         "ruleset": "v2024"
       },
       "name": "Opal",
@@ -12798,9 +12798,9 @@
         ]
       }
     },
-    "gem-star-ruby": {
+    "gem_star_ruby": {
       "id": {
-        "slug": "gem-star-ruby",
+        "slug": "gem_star_ruby",
         "ruleset": "v2024"
       },
       "name": "Star Ruby",
@@ -12822,9 +12822,9 @@
         ]
       }
     },
-    "gem-star-sapphire": {
+    "gem_star_sapphire": {
       "id": {
-        "slug": "gem-star-sapphire",
+        "slug": "gem_star_sapphire",
         "ruleset": "v2024"
       },
       "name": "Star Sapphire",
@@ -12846,9 +12846,9 @@
         ]
       }
     },
-    "gem-yellow-sapphire": {
+    "gem_yellow_sapphire": {
       "id": {
-        "slug": "gem-yellow-sapphire",
+        "slug": "gem_yellow_sapphire",
         "ruleset": "v2024"
       },
       "name": "Yellow Sapphire",
@@ -12870,9 +12870,9 @@
         ]
       }
     },
-    "gem-black-sapphire": {
+    "gem_black_sapphire": {
       "id": {
-        "slug": "gem-black-sapphire",
+        "slug": "gem_black_sapphire",
         "ruleset": "v2024"
       },
       "name": "Black Sapphire",
@@ -12894,9 +12894,9 @@
         ]
       }
     },
-    "gem-diamond": {
+    "gem_diamond": {
       "id": {
-        "slug": "gem-diamond",
+        "slug": "gem_diamond",
         "ruleset": "v2024"
       },
       "name": "Diamond",
@@ -12918,9 +12918,9 @@
         ]
       }
     },
-    "gem-jacinth": {
+    "gem_jacinth": {
       "id": {
-        "slug": "gem-jacinth",
+        "slug": "gem_jacinth",
         "ruleset": "v2024"
       },
       "name": "Jacinth",
@@ -12942,9 +12942,9 @@
         ]
       }
     },
-    "gem-ruby": {
+    "gem_ruby": {
       "id": {
-        "slug": "gem-ruby",
+        "slug": "gem_ruby",
         "ruleset": "v2024"
       },
       "name": "Ruby",
@@ -12966,9 +12966,9 @@
         ]
       }
     },
-    "art-silver-ewer": {
+    "art_silver_ewer": {
       "id": {
-        "slug": "art-silver-ewer",
+        "slug": "art_silver_ewer",
         "ruleset": "v2024"
       },
       "name": "Silver Ewer",
@@ -12990,9 +12990,9 @@
         ]
       }
     },
-    "art-carved-bone-statuette": {
+    "art_carved_bone_statuette": {
       "id": {
-        "slug": "art-carved-bone-statuette",
+        "slug": "art_carved_bone_statuette",
         "ruleset": "v2024"
       },
       "name": "Carved Bone Statuette",
@@ -13014,9 +13014,9 @@
         ]
       }
     },
-    "art-small-gold-bracelet": {
+    "art_small_gold_bracelet": {
       "id": {
-        "slug": "art-small-gold-bracelet",
+        "slug": "art_small_gold_bracelet",
         "ruleset": "v2024"
       },
       "name": "Small Gold Bracelet",
@@ -13038,9 +13038,9 @@
         ]
       }
     },
-    "art-cloth-of-gold-vestments": {
+    "art_cloth_of_gold_vestments": {
       "id": {
-        "slug": "art-cloth-of-gold-vestments",
+        "slug": "art_cloth_of_gold_vestments",
         "ruleset": "v2024"
       },
       "name": "Cloth-of-Gold Vestments",
@@ -13062,9 +13062,9 @@
         ]
       }
     },
-    "art-black-velvet-mask-with-silver-thread": {
+    "art_black_velvet_mask_with_silver_thread": {
       "id": {
-        "slug": "art-black-velvet-mask-with-silver-thread",
+        "slug": "art_black_velvet_mask_with_silver_thread",
         "ruleset": "v2024"
       },
       "name": "Black Velvet Mask with Silver Thread",
@@ -13086,9 +13086,9 @@
         ]
       }
     },
-    "art-copper-chalice-with-silver-filigree": {
+    "art_copper_chalice_with_silver_filigree": {
       "id": {
-        "slug": "art-copper-chalice-with-silver-filigree",
+        "slug": "art_copper_chalice_with_silver_filigree",
         "ruleset": "v2024"
       },
       "name": "Copper Chalice with Silver Filigree",
@@ -13110,9 +13110,9 @@
         ]
       }
     },
-    "art-pair-of-engraved-bone-dice": {
+    "art_pair_of_engraved_bone_dice": {
       "id": {
-        "slug": "art-pair-of-engraved-bone-dice",
+        "slug": "art_pair_of_engraved_bone_dice",
         "ruleset": "v2024"
       },
       "name": "Pair of Engraved Bone Dice",
@@ -13134,9 +13134,9 @@
         ]
       }
     },
-    "art-small-mirror-in-painted-wooden-frame": {
+    "art_small_mirror_in_painted_wooden_frame": {
       "id": {
-        "slug": "art-small-mirror-in-painted-wooden-frame",
+        "slug": "art_small_mirror_in_painted_wooden_frame",
         "ruleset": "v2024"
       },
       "name": "Small Mirror in Painted Wooden Frame",
@@ -13158,9 +13158,9 @@
         ]
       }
     },
-    "art-embroidered-silk-handkerchief": {
+    "art_embroidered_silk_handkerchief": {
       "id": {
-        "slug": "art-embroidered-silk-handkerchief",
+        "slug": "art_embroidered_silk_handkerchief",
         "ruleset": "v2024"
       },
       "name": "Embroidered Silk Handkerchief",
@@ -13182,9 +13182,9 @@
         ]
       }
     },
-    "art-gold-locket-with-painted-portrait": {
+    "art_gold_locket_with_painted_portrait": {
       "id": {
-        "slug": "art-gold-locket-with-painted-portrait",
+        "slug": "art_gold_locket_with_painted_portrait",
         "ruleset": "v2024"
       },
       "name": "Gold Locket with Painted Portrait",
@@ -13206,9 +13206,9 @@
         ]
       }
     },
-    "art-gold-ring-with-bloodstones": {
+    "art_gold_ring_with_bloodstones": {
       "id": {
-        "slug": "art-gold-ring-with-bloodstones",
+        "slug": "art_gold_ring_with_bloodstones",
         "ruleset": "v2024"
       },
       "name": "Gold Ring with Bloodstones",
@@ -13230,9 +13230,9 @@
         ]
       }
     },
-    "art-carved-ivory-statuette": {
+    "art_carved_ivory_statuette": {
       "id": {
-        "slug": "art-carved-ivory-statuette",
+        "slug": "art_carved_ivory_statuette",
         "ruleset": "v2024"
       },
       "name": "Carved Ivory Statuette",
@@ -13254,9 +13254,9 @@
         ]
       }
     },
-    "art-large-gold-bracelet": {
+    "art_large_gold_bracelet": {
       "id": {
-        "slug": "art-large-gold-bracelet",
+        "slug": "art_large_gold_bracelet",
         "ruleset": "v2024"
       },
       "name": "Large Gold Bracelet",
@@ -13278,9 +13278,9 @@
         ]
       }
     },
-    "art-silver-chalice-with-lapis-lazuli": {
+    "art_silver_chalice_with_lapis_lazuli": {
       "id": {
-        "slug": "art-silver-chalice-with-lapis-lazuli",
+        "slug": "art_silver_chalice_with_lapis_lazuli",
         "ruleset": "v2024"
       },
       "name": "Silver Chalice with Lapis Lazuli",
@@ -13302,9 +13302,9 @@
         ]
       }
     },
-    "art-silk-robe-with-gold-embroidery": {
+    "art_silk_robe_with_gold_embroidery": {
       "id": {
-        "slug": "art-silk-robe-with-gold-embroidery",
+        "slug": "art_silk_robe_with_gold_embroidery",
         "ruleset": "v2024"
       },
       "name": "Silk Robe with Gold Embroidery",
@@ -13326,9 +13326,9 @@
         ]
       }
     },
-    "art-bronze-crown-with-obsidian-spikes": {
+    "art_bronze_crown_with_obsidian_spikes": {
       "id": {
-        "slug": "art-bronze-crown-with-obsidian-spikes",
+        "slug": "art_bronze_crown_with_obsidian_spikes",
         "ruleset": "v2024"
       },
       "name": "Bronze Crown with Obsidian Spikes",
@@ -13350,9 +13350,9 @@
         ]
       }
     },
-    "art-jeweled-anklet-with-tiny-bells": {
+    "art_jeweled_anklet_with_tiny_bells": {
       "id": {
-        "slug": "art-jeweled-anklet-with-tiny-bells",
+        "slug": "art_jeweled_anklet_with_tiny_bells",
         "ruleset": "v2024"
       },
       "name": "Jeweled Anklet with Tiny Bells",
@@ -13374,9 +13374,9 @@
         ]
       }
     },
-    "art-painted-gold-mask": {
+    "art_painted_gold_mask": {
       "id": {
-        "slug": "art-painted-gold-mask",
+        "slug": "art_painted_gold_mask",
         "ruleset": "v2024"
       },
       "name": "Painted Gold Mask",
@@ -13398,9 +13398,9 @@
         ]
       }
     },
-    "art-silver-chalice-with-moonstones": {
+    "art_silver_chalice_with_moonstones": {
       "id": {
-        "slug": "art-silver-chalice-with-moonstones",
+        "slug": "art_silver_chalice_with_moonstones",
         "ruleset": "v2024"
       },
       "name": "Silver Chalice with Moonstones",
@@ -13422,9 +13422,9 @@
         ]
       }
     },
-    "art-gilded-wooden-harp-with-zircon-pegs": {
+    "art_gilded_wooden_harp_with_zircon_pegs": {
       "id": {
-        "slug": "art-gilded-wooden-harp-with-zircon-pegs",
+        "slug": "art_gilded_wooden_harp_with_zircon_pegs",
         "ruleset": "v2024"
       },
       "name": "Gilded Wooden Harp with Zircon Pegs",
@@ -13446,9 +13446,9 @@
         ]
       }
     },
-    "art-solid-gold-idol-of-a-forgotten-deity": {
+    "art_solid_gold_idol_of_a_forgotten_deity": {
       "id": {
-        "slug": "art-solid-gold-idol-of-a-forgotten-deity",
+        "slug": "art_solid_gold_idol_of_a_forgotten_deity",
         "ruleset": "v2024"
       },
       "name": "Solid Gold Idol of a Forgotten Deity",
@@ -13470,9 +13470,9 @@
         ]
       }
     },
-    "art-gold-dragon-comb-set-with-red-garnets": {
+    "art_gold_dragon_comb_set_with_red_garnets": {
       "id": {
-        "slug": "art-gold-dragon-comb-set-with-red-garnets",
+        "slug": "art_gold_dragon_comb_set_with_red_garnets",
         "ruleset": "v2024"
       },
       "name": "Gold Dragon Comb Set with Red Garnets",
@@ -13494,9 +13494,9 @@
         ]
       }
     },
-    "art-gold-ceremonial-dagger-with-amethyst-pommel": {
+    "art_gold_ceremonial_dagger_with_amethyst_pommel": {
       "id": {
-        "slug": "art-gold-ceremonial-dagger-with-amethyst-pommel",
+        "slug": "art_gold_ceremonial_dagger_with_amethyst_pommel",
         "ruleset": "v2024"
       },
       "name": "Gold Ceremonial Dagger with Amethyst Pommel",
@@ -13518,9 +13518,9 @@
         ]
       }
     },
-    "art-silver-and-gold-brooch-with-coral-inlay": {
+    "art_silver_and_gold_brooch_with_coral_inlay": {
       "id": {
-        "slug": "art-silver-and-gold-brooch-with-coral-inlay",
+        "slug": "art_silver_and_gold_brooch_with_coral_inlay",
         "ruleset": "v2024"
       },
       "name": "Silver and Gold Brooch with Coral Inlay",
@@ -13542,9 +13542,9 @@
         ]
       }
     },
-    "art-engraved-platinum-censer": {
+    "art_engraved_platinum_censer": {
       "id": {
-        "slug": "art-engraved-platinum-censer",
+        "slug": "art_engraved_platinum_censer",
         "ruleset": "v2024"
       },
       "name": "Engraved Platinum Censer",
@@ -13566,9 +13566,9 @@
         ]
       }
     },
-    "art-fine-gold-chain-with-fire-opal-pendant": {
+    "art_fine_gold_chain_with_fire_opal_pendant": {
       "id": {
-        "slug": "art-fine-gold-chain-with-fire-opal-pendant",
+        "slug": "art_fine_gold_chain_with_fire_opal_pendant",
         "ruleset": "v2024"
       },
       "name": "Fine Gold Chain with Fire Opal Pendant",
@@ -13590,9 +13590,9 @@
         ]
       }
     },
-    "art-carved-ivory-drinking-horn-with-gold-filigree": {
+    "art_carved_ivory_drinking_horn_with_gold_filigree": {
       "id": {
-        "slug": "art-carved-ivory-drinking-horn-with-gold-filigree",
+        "slug": "art_carved_ivory_drinking_horn_with_gold_filigree",
         "ruleset": "v2024"
       },
       "name": "Carved Ivory Drinking Horn with Gold Filigree",
@@ -13614,9 +13614,9 @@
         ]
       }
     },
-    "art-solid-gold-music-box-with-clockwork-dancers": {
+    "art_solid_gold_music_box_with_clockwork_dancers": {
       "id": {
-        "slug": "art-solid-gold-music-box-with-clockwork-dancers",
+        "slug": "art_solid_gold_music_box_with_clockwork_dancers",
         "ruleset": "v2024"
       },
       "name": "Solid Gold Music Box with Clockwork Dancers",
@@ -13638,9 +13638,9 @@
         ]
       }
     },
-    "art-jeweled-platinum-circlet-with-emeralds": {
+    "art_jeweled_platinum_circlet_with_emeralds": {
       "id": {
-        "slug": "art-jeweled-platinum-circlet-with-emeralds",
+        "slug": "art_jeweled_platinum_circlet_with_emeralds",
         "ruleset": "v2024"
       },
       "name": "Jeweled Platinum Circlet with Emeralds",
@@ -13662,9 +13662,9 @@
         ]
       }
     },
-    "art-embroidered-silk-tapestry-with-pearl-accents": {
+    "art_embroidered_silk_tapestry_with_pearl_accents": {
       "id": {
-        "slug": "art-embroidered-silk-tapestry-with-pearl-accents",
+        "slug": "art_embroidered_silk_tapestry_with_pearl_accents",
         "ruleset": "v2024"
       },
       "name": "Embroidered Silk Tapestry with Pearl Accents",
@@ -13686,9 +13686,9 @@
         ]
       }
     },
-    "art-gold-reliquary-with-aquamarine-windows": {
+    "art_gold_reliquary_with_aquamarine_windows": {
       "id": {
-        "slug": "art-gold-reliquary-with-aquamarine-windows",
+        "slug": "art_gold_reliquary_with_aquamarine_windows",
         "ruleset": "v2024"
       },
       "name": "Gold Reliquary with Aquamarine Windows",
@@ -13710,9 +13710,9 @@
         ]
       }
     },
-    "art-jeweled-gold-crown-set-with-rubies-and-sapphires": {
+    "art_jeweled_gold_crown_set_with_rubies_and_sapphires": {
       "id": {
-        "slug": "art-jeweled-gold-crown-set-with-rubies-and-sapphires",
+        "slug": "art_jeweled_gold_crown_set_with_rubies_and_sapphires",
         "ruleset": "v2024"
       },
       "name": "Jeweled Gold Crown Set with Rubies and Sapphires",
@@ -13734,9 +13734,9 @@
         ]
       }
     },
-    "art-jeweled-platinum-scepter-set-with-a-giant-diamond": {
+    "art_jeweled_platinum_scepter_set_with_a_giant_diamond": {
       "id": {
-        "slug": "art-jeweled-platinum-scepter-set-with-a-giant-diamond",
+        "slug": "art_jeweled_platinum_scepter_set_with_a_giant_diamond",
         "ruleset": "v2024"
       },
       "name": "Jeweled Platinum Scepter Set with a Giant Diamond",
@@ -13758,9 +13758,9 @@
         ]
       }
     },
-    "art-gold-goblet-set-with-fire-opals-and-emeralds": {
+    "art_gold_goblet_set_with_fire_opals_and_emeralds": {
       "id": {
-        "slug": "art-gold-goblet-set-with-fire-opals-and-emeralds",
+        "slug": "art_gold_goblet_set_with_fire_opals_and_emeralds",
         "ruleset": "v2024"
       },
       "name": "Gold Goblet Set with Fire Opals and Emeralds",
@@ -13782,9 +13782,9 @@
         ]
       }
     },
-    "art-platinum-and-ruby-ceremonial-pauldrons": {
+    "art_platinum_and_ruby_ceremonial_pauldrons": {
       "id": {
-        "slug": "art-platinum-and-ruby-ceremonial-pauldrons",
+        "slug": "art_platinum_and_ruby_ceremonial_pauldrons",
         "ruleset": "v2024"
       },
       "name": "Platinum and Ruby Ceremonial Pauldrons",
@@ -13806,9 +13806,9 @@
         ]
       }
     },
-    "trinket-01": {
+    "trinket_01": {
       "id": {
-        "slug": "trinket-01",
+        "slug": "trinket_01",
         "ruleset": "v2024"
       },
       "name": "Trinket: Mummified goblin hand",
@@ -13830,9 +13830,9 @@
         ]
       }
     },
-    "trinket-02": {
+    "trinket_02": {
       "id": {
-        "slug": "trinket-02",
+        "slug": "trinket_02",
         "ruleset": "v2024"
       },
       "name": "Trinket: Piece of crystal that glows faintly in moonlight",
@@ -13854,9 +13854,9 @@
         ]
       }
     },
-    "trinket-03": {
+    "trinket_03": {
       "id": {
-        "slug": "trinket-03",
+        "slug": "trinket_03",
         "ruleset": "v2024"
       },
       "name": "Trinket: Gold coin minted in an unknown land",
@@ -13878,9 +13878,9 @@
         ]
       }
     },
-    "trinket-04": {
+    "trinket_04": {
       "id": {
-        "slug": "trinket-04",
+        "slug": "trinket_04",
         "ruleset": "v2024"
       },
       "name": "Trinket: Diary written in an undecipherable script",
@@ -13902,9 +13902,9 @@
         ]
       }
     },
-    "trinket-05": {
+    "trinket_05": {
       "id": {
-        "slug": "trinket-05",
+        "slug": "trinket_05",
         "ruleset": "v2024"
       },
       "name": "Trinket: Brass ring that never tarnishes",
@@ -13926,9 +13926,9 @@
         ]
       }
     },
-    "trinket-06": {
+    "trinket_06": {
       "id": {
-        "slug": "trinket-06",
+        "slug": "trinket_06",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old chess piece made from glass",
@@ -13950,9 +13950,9 @@
         ]
       }
     },
-    "trinket-07": {
+    "trinket_07": {
       "id": {
-        "slug": "trinket-07",
+        "slug": "trinket_07",
         "ruleset": "v2024"
       },
       "name": "Trinket: Pair of knucklebone dice with skull symbols",
@@ -13974,9 +13974,9 @@
         ]
       }
     },
-    "trinket-08": {
+    "trinket_08": {
       "id": {
-        "slug": "trinket-08",
+        "slug": "trinket_08",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small idol depicting a nightmarish creature",
@@ -13998,9 +13998,9 @@
         ]
       }
     },
-    "trinket-09": {
+    "trinket_09": {
       "id": {
-        "slug": "trinket-09",
+        "slug": "trinket_09",
         "ruleset": "v2024"
       },
       "name": "Trinket: Rope of woven hair from four different beasts",
@@ -14022,9 +14022,9 @@
         ]
       }
     },
-    "trinket-10": {
+    "trinket_10": {
       "id": {
-        "slug": "trinket-10",
+        "slug": "trinket_10",
         "ruleset": "v2024"
       },
       "name": "Trinket: Mechanical canary inside a brass cage",
@@ -14046,9 +14046,9 @@
         ]
       }
     },
-    "trinket-11": {
+    "trinket_11": {
       "id": {
-        "slug": "trinket-11",
+        "slug": "trinket_11",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny silver bell without a clapper",
@@ -14070,9 +14070,9 @@
         ]
       }
     },
-    "trinket-12": {
+    "trinket_12": {
       "id": {
-        "slug": "trinket-12",
+        "slug": "trinket_12",
         "ruleset": "v2024"
       },
       "name": "Trinket: Mechanical pocket watch that runs backward",
@@ -14094,9 +14094,9 @@
         ]
       }
     },
-    "trinket-13": {
+    "trinket_13": {
       "id": {
-        "slug": "trinket-13",
+        "slug": "trinket_13",
         "ruleset": "v2024"
       },
       "name": "Trinket: Urn holding the ashes of a deceased hero",
@@ -14118,9 +14118,9 @@
         ]
       }
     },
-    "trinket-14": {
+    "trinket_14": {
       "id": {
-        "slug": "trinket-14",
+        "slug": "trinket_14",
         "ruleset": "v2024"
       },
       "name": "Trinket: Four-leaf clover pressed inside a glass locket",
@@ -14142,9 +14142,9 @@
         ]
       }
     },
-    "trinket-15": {
+    "trinket_15": {
       "id": {
-        "slug": "trinket-15",
+        "slug": "trinket_15",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass jar filled with dead glowing bugs",
@@ -14166,9 +14166,9 @@
         ]
       }
     },
-    "trinket-16": {
+    "trinket_16": {
       "id": {
-        "slug": "trinket-16",
+        "slug": "trinket_16",
         "ruleset": "v2024"
       },
       "name": "Trinket: Shard of stained glass from a destroyed cathedral",
@@ -14190,9 +14190,9 @@
         ]
       }
     },
-    "trinket-17": {
+    "trinket_17": {
       "id": {
-        "slug": "trinket-17",
+        "slug": "trinket_17",
         "ruleset": "v2024"
       },
       "name": "Trinket: Silver spoon with an M engraved on the handle",
@@ -14214,9 +14214,9 @@
         ]
       }
     },
-    "trinket-18": {
+    "trinket_18": {
       "id": {
-        "slug": "trinket-18",
+        "slug": "trinket_18",
         "ruleset": "v2024"
       },
       "name": "Trinket: Whistle made from golden wood",
@@ -14238,9 +14238,9 @@
         ]
       }
     },
-    "trinket-19": {
+    "trinket_19": {
       "id": {
-        "slug": "trinket-19",
+        "slug": "trinket_19",
         "ruleset": "v2024"
       },
       "name": "Trinket: Dead sprite inside a clear glass bottle",
@@ -14262,9 +14262,9 @@
         ]
       }
     },
-    "trinket-20": {
+    "trinket_20": {
       "id": {
-        "slug": "trinket-20",
+        "slug": "trinket_20",
         "ruleset": "v2024"
       },
       "name": "Trinket: Iron nail that cannot be bent or blunted",
@@ -14286,9 +14286,9 @@
         ]
       }
     },
-    "trinket-21": {
+    "trinket_21": {
       "id": {
-        "slug": "trinket-21",
+        "slug": "trinket_21",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small pouch of scented dried herbs",
@@ -14310,9 +14310,9 @@
         ]
       }
     },
-    "trinket-22": {
+    "trinket_22": {
       "id": {
-        "slug": "trinket-22",
+        "slug": "trinket_22",
         "ruleset": "v2024"
       },
       "name": "Trinket: Statuette of a dragon made from dragon bone",
@@ -14334,9 +14334,9 @@
         ]
       }
     },
-    "trinket-23": {
+    "trinket_23": {
       "id": {
-        "slug": "trinket-23",
+        "slug": "trinket_23",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old brass compass that points toward the nearest portal",
@@ -14358,9 +14358,9 @@
         ]
       }
     },
-    "trinket-24": {
+    "trinket_24": {
       "id": {
-        "slug": "trinket-24",
+        "slug": "trinket_24",
         "ruleset": "v2024"
       },
       "name": "Trinket: Key made from petrified wood",
@@ -14382,9 +14382,9 @@
         ]
       }
     },
-    "trinket-25": {
+    "trinket_25": {
       "id": {
-        "slug": "trinket-25",
+        "slug": "trinket_25",
         "ruleset": "v2024"
       },
       "name": "Trinket: Silver music box that plays a mournful melody",
@@ -14406,9 +14406,9 @@
         ]
       }
     },
-    "trinket-26": {
+    "trinket_26": {
       "id": {
-        "slug": "trinket-26",
+        "slug": "trinket_26",
         "ruleset": "v2024"
       },
       "name": "Trinket: Vial of silvery liquid that moves on its own",
@@ -14430,9 +14430,9 @@
         ]
       }
     },
-    "trinket-27": {
+    "trinket_27": {
       "id": {
-        "slug": "trinket-27",
+        "slug": "trinket_27",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old iron key with no visible wards",
@@ -14454,9 +14454,9 @@
         ]
       }
     },
-    "trinket-28": {
+    "trinket_28": {
       "id": {
-        "slug": "trinket-28",
+        "slug": "trinket_28",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass eye that follows whoever holds it",
@@ -14478,9 +14478,9 @@
         ]
       }
     },
-    "trinket-29": {
+    "trinket_29": {
       "id": {
-        "slug": "trinket-29",
+        "slug": "trinket_29",
         "ruleset": "v2024"
       },
       "name": "Trinket: Leather pouch containing various small animal skulls",
@@ -14502,9 +14502,9 @@
         ]
       }
     },
-    "trinket-30": {
+    "trinket_30": {
       "id": {
-        "slug": "trinket-30",
+        "slug": "trinket_30",
         "ruleset": "v2024"
       },
       "name": "Trinket: Piece of petrified dragon excrement",
@@ -14526,9 +14526,9 @@
         ]
       }
     },
-    "trinket-31": {
+    "trinket_31": {
       "id": {
-        "slug": "trinket-31",
+        "slug": "trinket_31",
         "ruleset": "v2024"
       },
       "name": "Trinket: Silken sash that changes color with the wearer's mood",
@@ -14550,9 +14550,9 @@
         ]
       }
     },
-    "trinket-32": {
+    "trinket_32": {
       "id": {
-        "slug": "trinket-32",
+        "slug": "trinket_32",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small stone that always rolls uphill",
@@ -14574,9 +14574,9 @@
         ]
       }
     },
-    "trinket-33": {
+    "trinket_33": {
       "id": {
-        "slug": "trinket-33",
+        "slug": "trinket_33",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny copper figurine of a cat that purrs",
@@ -14598,9 +14598,9 @@
         ]
       }
     },
-    "trinket-34": {
+    "trinket_34": {
       "id": {
-        "slug": "trinket-34",
+        "slug": "trinket_34",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass vial containing swamp fog",
@@ -14622,9 +14622,9 @@
         ]
       }
     },
-    "trinket-35": {
+    "trinket_35": {
       "id": {
-        "slug": "trinket-35",
+        "slug": "trinket_35",
         "ruleset": "v2024"
       },
       "name": "Trinket: Set of bone dominoes carved with celestial symbols",
@@ -14646,9 +14646,9 @@
         ]
       }
     },
-    "trinket-36": {
+    "trinket_36": {
       "id": {
-        "slug": "trinket-36",
+        "slug": "trinket_36",
         "ruleset": "v2024"
       },
       "name": "Trinket: Fossilized dinosaur tooth",
@@ -14670,9 +14670,9 @@
         ]
       }
     },
-    "trinket-37": {
+    "trinket_37": {
       "id": {
-        "slug": "trinket-37",
+        "slug": "trinket_37",
         "ruleset": "v2024"
       },
       "name": "Trinket: Brass monocle with a cracked ruby lens",
@@ -14694,9 +14694,9 @@
         ]
       }
     },
-    "trinket-38": {
+    "trinket_38": {
       "id": {
-        "slug": "trinket-38",
+        "slug": "trinket_38",
         "ruleset": "v2024"
       },
       "name": "Trinket: Piece of dried fungus that smells like roasted garlic",
@@ -14718,9 +14718,9 @@
         ]
       }
     },
-    "trinket-39": {
+    "trinket_39": {
       "id": {
-        "slug": "trinket-39",
+        "slug": "trinket_39",
         "ruleset": "v2024"
       },
       "name": "Trinket: Iron locket containing a lock of raven hair",
@@ -14742,9 +14742,9 @@
         ]
       }
     },
-    "trinket-40": {
+    "trinket_40": {
       "id": {
-        "slug": "trinket-40",
+        "slug": "trinket_40",
         "ruleset": "v2024"
       },
       "name": "Trinket: Spool of invisible thread",
@@ -14766,9 +14766,9 @@
         ]
       }
     },
-    "trinket-41": {
+    "trinket_41": {
       "id": {
-        "slug": "trinket-41",
+        "slug": "trinket_41",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny glass globe containing a miniature winter storm",
@@ -14790,9 +14790,9 @@
         ]
       }
     },
-    "trinket-42": {
+    "trinket_42": {
       "id": {
-        "slug": "trinket-42",
+        "slug": "trinket_42",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small silver cage holding an origami crane",
@@ -14814,9 +14814,9 @@
         ]
       }
     },
-    "trinket-43": {
+    "trinket_43": {
       "id": {
-        "slug": "trinket-43",
+        "slug": "trinket_43",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old pair of spectacles that turn all ink golden",
@@ -14838,9 +14838,9 @@
         ]
       }
     },
-    "trinket-44": {
+    "trinket_44": {
       "id": {
-        "slug": "trinket-44",
+        "slug": "trinket_44",
         "ruleset": "v2024"
       },
       "name": "Trinket: Petrified aberration eyestalk",
@@ -14862,9 +14862,9 @@
         ]
       }
     },
-    "trinket-45": {
+    "trinket_45": {
       "id": {
-        "slug": "trinket-45",
+        "slug": "trinket_45",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny iron anvil that weighs exactly 10 pounds",
@@ -14886,9 +14886,9 @@
         ]
       }
     },
-    "trinket-46": {
+    "trinket_46": {
       "id": {
-        "slug": "trinket-46",
+        "slug": "trinket_46",
         "ruleset": "v2024"
       },
       "name": "Trinket: Set of wooden worry beads from a planar monastery",
@@ -14910,9 +14910,9 @@
         ]
       }
     },
-    "trinket-47": {
+    "trinket_47": {
       "id": {
-        "slug": "trinket-47",
+        "slug": "trinket_47",
         "ruleset": "v2024"
       },
       "name": "Trinket: Parchment map of an underground city in a language you don't speak",
@@ -14934,9 +14934,9 @@
         ]
       }
     },
-    "trinket-48": {
+    "trinket_48": {
       "id": {
-        "slug": "trinket-48",
+        "slug": "trinket_48",
         "ruleset": "v2024"
       },
       "name": "Trinket: Brass key that turns any lock it opens upside down",
@@ -14958,9 +14958,9 @@
         ]
       }
     },
-    "trinket-49": {
+    "trinket_49": {
       "id": {
-        "slug": "trinket-49",
+        "slug": "trinket_49",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass beaker containing harmless purple sparks",
@@ -14982,9 +14982,9 @@
         ]
       }
     },
-    "trinket-50": {
+    "trinket_50": {
       "id": {
-        "slug": "trinket-50",
+        "slug": "trinket_50",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small wooden puzzle box that hums when shaken",
@@ -15006,9 +15006,9 @@
         ]
       }
     },
-    "trinket-51": {
+    "trinket_51": {
       "id": {
-        "slug": "trinket-51",
+        "slug": "trinket_51",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old silver coin with a hole drilled through the center",
@@ -15030,9 +15030,9 @@
         ]
       }
     },
-    "trinket-52": {
+    "trinket_52": {
       "id": {
-        "slug": "trinket-52",
+        "slug": "trinket_52",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny clay pot containing soil from an extinct kingdom",
@@ -15054,9 +15054,9 @@
         ]
       }
     },
-    "trinket-53": {
+    "trinket_53": {
       "id": {
-        "slug": "trinket-53",
+        "slug": "trinket_53",
         "ruleset": "v2024"
       },
       "name": "Trinket: Dried scorpion encased in amber",
@@ -15078,9 +15078,9 @@
         ]
       }
     },
-    "trinket-54": {
+    "trinket_54": {
       "id": {
-        "slug": "trinket-54",
+        "slug": "trinket_54",
         "ruleset": "v2024"
       },
       "name": "Trinket: Piece of cloth torn from a celestial's robe",
@@ -15102,9 +15102,9 @@
         ]
       }
     },
-    "trinket-55": {
+    "trinket_55": {
       "id": {
-        "slug": "trinket-55",
+        "slug": "trinket_55",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small lead box lined with velvet containing a tooth",
@@ -15126,9 +15126,9 @@
         ]
       }
     },
-    "trinket-56": {
+    "trinket_56": {
       "id": {
-        "slug": "trinket-56",
+        "slug": "trinket_56",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old brass key shaped like a serpent",
@@ -15150,9 +15150,9 @@
         ]
       }
     },
-    "trinket-57": {
+    "trinket_57": {
       "id": {
-        "slug": "trinket-57",
+        "slug": "trinket_57",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass sphere filled with swirling mercury",
@@ -15174,9 +15174,9 @@
         ]
       }
     },
-    "trinket-58": {
+    "trinket_58": {
       "id": {
-        "slug": "trinket-58",
+        "slug": "trinket_58",
         "ruleset": "v2024"
       },
       "name": "Trinket: Silver needle that points toward the sun when balanced on water",
@@ -15198,9 +15198,9 @@
         ]
       }
     },
-    "trinket-59": {
+    "trinket_59": {
       "id": {
-        "slug": "trinket-59",
+        "slug": "trinket_59",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small leather pouch of iridescent bird feathers",
@@ -15222,9 +15222,9 @@
         ]
       }
     },
-    "trinket-60": {
+    "trinket_60": {
       "id": {
-        "slug": "trinket-60",
+        "slug": "trinket_60",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old copper coin that always lands on tails",
@@ -15246,9 +15246,9 @@
         ]
       }
     },
-    "trinket-61": {
+    "trinket_61": {
       "id": {
-        "slug": "trinket-61",
+        "slug": "trinket_61",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny crystal prism that casts double rainbows",
@@ -15270,9 +15270,9 @@
         ]
       }
     },
-    "trinket-62": {
+    "trinket_62": {
       "id": {
-        "slug": "trinket-62",
+        "slug": "trinket_62",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small bone flute carved from a griffon wing bone",
@@ -15294,9 +15294,9 @@
         ]
       }
     },
-    "trinket-63": {
+    "trinket_63": {
       "id": {
-        "slug": "trinket-63",
+        "slug": "trinket_63",
         "ruleset": "v2024"
       },
       "name": "Trinket: Carved wooden figurine of a warrior with a removable shield",
@@ -15318,9 +15318,9 @@
         ]
       }
     },
-    "trinket-64": {
+    "trinket_64": {
       "id": {
-        "slug": "trinket-64",
+        "slug": "trinket_64",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass bottle containing ocean water from the Astral Sea",
@@ -15342,9 +15342,9 @@
         ]
       }
     },
-    "trinket-65": {
+    "trinket_65": {
       "id": {
-        "slug": "trinket-65",
+        "slug": "trinket_65",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small brass gear that spins perpetually on a pin",
@@ -15366,9 +15366,9 @@
         ]
       }
     },
-    "trinket-66": {
+    "trinket_66": {
       "id": {
-        "slug": "trinket-66",
+        "slug": "trinket_66",
         "ruleset": "v2024"
       },
       "name": "Trinket: Piece of dried parchment with a drawing of your face",
@@ -15390,9 +15390,9 @@
         ]
       }
     },
-    "trinket-67": {
+    "trinket_67": {
       "id": {
-        "slug": "trinket-67",
+        "slug": "trinket_67",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny iron padlock without a keyhole",
@@ -15414,9 +15414,9 @@
         ]
       }
     },
-    "trinket-68": {
+    "trinket_68": {
       "id": {
-        "slug": "trinket-68",
+        "slug": "trinket_68",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small stone that feels freezing cold in summer and warm in winter",
@@ -15438,9 +15438,9 @@
         ]
       }
     },
-    "trinket-69": {
+    "trinket_69": {
       "id": {
-        "slug": "trinket-69",
+        "slug": "trinket_69",
         "ruleset": "v2024"
       },
       "name": "Trinket: Set of five multicolored glass marbles",
@@ -15462,9 +15462,9 @@
         ]
       }
     },
-    "trinket-70": {
+    "trinket_70": {
       "id": {
-        "slug": "trinket-70",
+        "slug": "trinket_70",
         "ruleset": "v2024"
       },
       "name": "Trinket: Silver thimble engraved with protective ward runes",
@@ -15486,9 +15486,9 @@
         ]
       }
     },
-    "trinket-71": {
+    "trinket_71": {
       "id": {
-        "slug": "trinket-71",
+        "slug": "trinket_71",
         "ruleset": "v2024"
       },
       "name": "Trinket: Dried leaf that never crumbles or decays",
@@ -15510,9 +15510,9 @@
         ]
       }
     },
-    "trinket-72": {
+    "trinket_72": {
       "id": {
-        "slug": "trinket-72",
+        "slug": "trinket_72",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small brass telescope that shows things 1 second into the past",
@@ -15534,9 +15534,9 @@
         ]
       }
     },
-    "trinket-73": {
+    "trinket_73": {
       "id": {
-        "slug": "trinket-73",
+        "slug": "trinket_73",
         "ruleset": "v2024"
       },
       "name": "Trinket: Pair of bone dice with blank faces",
@@ -15558,9 +15558,9 @@
         ]
       }
     },
-    "trinket-74": {
+    "trinket_74": {
       "id": {
-        "slug": "trinket-74",
+        "slug": "trinket_74",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny glass bottle containing the scent of baking bread",
@@ -15582,9 +15582,9 @@
         ]
       }
     },
-    "trinket-75": {
+    "trinket_75": {
       "id": {
-        "slug": "trinket-75",
+        "slug": "trinket_75",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old iron horseshoe that sparks when struck with wood",
@@ -15606,9 +15606,9 @@
         ]
       }
     },
-    "trinket-76": {
+    "trinket_76": {
       "id": {
-        "slug": "trinket-76",
+        "slug": "trinket_76",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small silver locket holding a pressed four-leaf clover",
@@ -15630,9 +15630,9 @@
         ]
       }
     },
-    "trinket-77": {
+    "trinket_77": {
       "id": {
-        "slug": "trinket-77",
+        "slug": "trinket_77",
         "ruleset": "v2024"
       },
       "name": "Trinket: Petrified flower with metallic silver petals",
@@ -15654,9 +15654,9 @@
         ]
       }
     },
-    "trinket-78": {
+    "trinket_78": {
       "id": {
-        "slug": "trinket-78",
+        "slug": "trinket_78",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny wooden barrel that smells of spiced rum",
@@ -15678,9 +15678,9 @@
         ]
       }
     },
-    "trinket-79": {
+    "trinket_79": {
       "id": {
-        "slug": "trinket-79",
+        "slug": "trinket_79",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass eye with an emerald iris",
@@ -15702,9 +15702,9 @@
         ]
       }
     },
-    "trinket-80": {
+    "trinket_80": {
       "id": {
-        "slug": "trinket-80",
+        "slug": "trinket_80",
         "ruleset": "v2024"
       },
       "name": "Trinket: Brass sundial that works by moonlight",
@@ -15726,9 +15726,9 @@
         ]
       }
     },
-    "trinket-81": {
+    "trinket_81": {
       "id": {
-        "slug": "trinket-81",
+        "slug": "trinket_81",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small pouch of magnetic sand that sticks to nothing but copper",
@@ -15750,9 +15750,9 @@
         ]
       }
     },
-    "trinket-82": {
+    "trinket_82": {
       "id": {
-        "slug": "trinket-82",
+        "slug": "trinket_82",
         "ruleset": "v2024"
       },
       "name": "Trinket: Carved ivory chess knight that changes expression",
@@ -15774,9 +15774,9 @@
         ]
       }
     },
-    "trinket-83": {
+    "trinket_83": {
       "id": {
-        "slug": "trinket-83",
+        "slug": "trinket_83",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old copper key that feels warm when near gold",
@@ -15798,9 +15798,9 @@
         ]
       }
     },
-    "trinket-84": {
+    "trinket_84": {
       "id": {
-        "slug": "trinket-84",
+        "slug": "trinket_84",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny glass bell that only chimes when shaken by a child",
@@ -15822,9 +15822,9 @@
         ]
       }
     },
-    "trinket-85": {
+    "trinket_85": {
       "id": {
-        "slug": "trinket-85",
+        "slug": "trinket_85",
         "ruleset": "v2024"
       },
       "name": "Trinket: Piece of volcanic rock that floats on water",
@@ -15846,9 +15846,9 @@
         ]
       }
     },
-    "trinket-86": {
+    "trinket_86": {
       "id": {
-        "slug": "trinket-86",
+        "slug": "trinket_86",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small silver mirror that shows no reflection",
@@ -15870,9 +15870,9 @@
         ]
       }
     },
-    "trinket-87": {
+    "trinket_87": {
       "id": {
-        "slug": "trinket-87",
+        "slug": "trinket_87",
         "ruleset": "v2024"
       },
       "name": "Trinket: Dried sea horse with shimmering scales",
@@ -15894,9 +15894,9 @@
         ]
       }
     },
-    "trinket-88": {
+    "trinket_88": {
       "id": {
-        "slug": "trinket-88",
+        "slug": "trinket_88",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny leather pouch of salt from the Dead Sea of Baator",
@@ -15918,9 +15918,9 @@
         ]
       }
     },
-    "trinket-89": {
+    "trinket_89": {
       "id": {
-        "slug": "trinket-89",
+        "slug": "trinket_89",
         "ruleset": "v2024"
       },
       "name": "Trinket: Brass coin that displays a different royal crest every morning",
@@ -15942,9 +15942,9 @@
         ]
       }
     },
-    "trinket-90": {
+    "trinket_90": {
       "id": {
-        "slug": "trinket-90",
+        "slug": "trinket_90",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small crystal prism that makes shadows colorful",
@@ -15966,9 +15966,9 @@
         ]
       }
     },
-    "trinket-91": {
+    "trinket_91": {
       "id": {
-        "slug": "trinket-91",
+        "slug": "trinket_91",
         "ruleset": "v2024"
       },
       "name": "Trinket: Wooden peg leg carved with an intricate treasure map",
@@ -15990,9 +15990,9 @@
         ]
       }
     },
-    "trinket-92": {
+    "trinket_92": {
       "id": {
-        "slug": "trinket-92",
+        "slug": "trinket_92",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny glass bottle holding a glowing ember that never burns out",
@@ -16014,9 +16014,9 @@
         ]
       }
     },
-    "trinket-93": {
+    "trinket_93": {
       "id": {
-        "slug": "trinket-93",
+        "slug": "trinket_93",
         "ruleset": "v2024"
       },
       "name": "Trinket: Old iron key with seven teeth, each carved like a tooth",
@@ -16038,9 +16038,9 @@
         ]
       }
     },
-    "trinket-94": {
+    "trinket_94": {
       "id": {
-        "slug": "trinket-94",
+        "slug": "trinket_94",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small leather journal filled with recipes for mythical pies",
@@ -16062,9 +16062,9 @@
         ]
       }
     },
-    "trinket-95": {
+    "trinket_95": {
       "id": {
-        "slug": "trinket-95",
+        "slug": "trinket_95",
         "ruleset": "v2024"
       },
       "name": "Trinket: Petrified dragon egg fragment with golden veins",
@@ -16086,9 +16086,9 @@
         ]
       }
     },
-    "trinket-96": {
+    "trinket_96": {
       "id": {
-        "slug": "trinket-96",
+        "slug": "trinket_96",
         "ruleset": "v2024"
       },
       "name": "Trinket: Tiny silver hourglass where the sand falls up",
@@ -16110,9 +16110,9 @@
         ]
       }
     },
-    "trinket-97": {
+    "trinket_97": {
       "id": {
-        "slug": "trinket-97",
+        "slug": "trinket_97",
         "ruleset": "v2024"
       },
       "name": "Trinket: Brass gear that whispers a secret when wound",
@@ -16134,9 +16134,9 @@
         ]
       }
     },
-    "trinket-98": {
+    "trinket_98": {
       "id": {
-        "slug": "trinket-98",
+        "slug": "trinket_98",
         "ruleset": "v2024"
       },
       "name": "Trinket: Small wooden box with an unopenable lid that rattles",
@@ -16158,9 +16158,9 @@
         ]
       }
     },
-    "trinket-99": {
+    "trinket_99": {
       "id": {
-        "slug": "trinket-99",
+        "slug": "trinket_99",
         "ruleset": "v2024"
       },
       "name": "Trinket: Glass vial of rainwater collected during a total solar eclipse",
@@ -16182,9 +16182,9 @@
         ]
       }
     },
-    "trinket-100": {
+    "trinket_100": {
       "id": {
-        "slug": "trinket-100",
+        "slug": "trinket_100",
         "ruleset": "v2024"
       },
       "name": "Trinket: A mysterious black iron key that you swear you've never seen before",
