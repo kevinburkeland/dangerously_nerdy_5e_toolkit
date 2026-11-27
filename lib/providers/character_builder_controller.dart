@@ -993,7 +993,7 @@ class CharacterBuilderController extends ChangeNotifier {
     draft.startingEquipment = equipRequests;
     draft.startingPurse = startingPurse;
     draft.takesStartingWealth = selectedPkg.id.startsWith('starting_wealth_');
-    draft.cantrips = cantripRefs;
+    draft.cantrips = cantripRefs.length > 1 ? cantripRefs.sublist(0, cantripRefs.length - 1) : const [];
     draft.spellsKnown = spellRefs;
     draft.spellsPrepared = spellRefs;
     draft.startingSubclassRef = startingSubclassRef;
