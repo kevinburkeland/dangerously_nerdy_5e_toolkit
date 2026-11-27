@@ -41,7 +41,7 @@ const List<Spell> srdLevel1Spells = [
     rules2024: SpellEditionDetails(
       schoolOverride: SpellSchool.abjuration,
       castingTime: '1 Action',
-      range: 'Touch',
+      range: 'Near Touch',
       components: 'V, S',
       duration: 'Instantaneous',
       classes: [
