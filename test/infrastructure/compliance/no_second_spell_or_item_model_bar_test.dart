@@ -116,7 +116,17 @@ List<String> scanSourceForShadowModels({
       continue;
     }
 
-    // Check if class name hints at spell/item model and duplicates >= 4 canonical fields
+    // Check if class name hints at spell/item model or declares hallmark spell/item shape
+    final rawFields = extractClassFieldNames(stripped, name);
+    if (rawFields.contains('level') &&
+        rawFields.contains('school') &&
+        rawFields.contains('rules2014')) {
+      violations.add(
+        '$path: class `$name` declares spell model fields (level, school, rules2014)',
+      );
+      continue;
+    }
+
     final lowerName = name.toLowerCase();
     final looksLikeSpellOrItem =
         lowerName.contains('spell') || lowerName.contains('item');
@@ -147,8 +157,7 @@ List<String> scanSourceForShadowModels({
       continue;
     }
 
-    final fields = extractClassFieldNames(stripped, name)
-        .difference(_kGenericEntityFields);
+    final fields = rawFields.difference(_kGenericEntityFields);
     final spellSpecific = spellFields.difference(_kGenericEntityFields);
     final itemSpecific = itemFields.difference(_kGenericEntityFields);
     final spellOverlap = fields.intersection(spellSpecific);

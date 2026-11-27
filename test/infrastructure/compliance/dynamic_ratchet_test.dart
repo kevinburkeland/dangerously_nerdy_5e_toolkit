@@ -138,8 +138,8 @@ int countDynamic(String source) {
   return count;
 }
 
-// Cleanup slice 16 Step 5: dynamic ceiling lowered to 1036 (5 removed from AppDnd5eCatalog)
-const kDynamicCeiling = 1034;
+// Cleanup slice 17 Step 7: dynamic ceiling lowered to 1027 (7 removed by generic HomebrewCategoryStore)
+const kDynamicCeiling = 1027;
 
 void main() {
   group('dynamic ratchet', () {
