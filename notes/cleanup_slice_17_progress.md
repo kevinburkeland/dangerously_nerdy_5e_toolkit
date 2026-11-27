@@ -1,5 +1,5 @@
 # Cleanup slice 17 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 090797a2687d97eeebdbfae606f562520f139a3f, ruleset fa90649f62f7567a6c5c3deb388bf9b3d0e6b0dd, app 6fb83f24ffbc9a0efd44e182536a878d976d8136
 Last pushed heads (CI green): core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0, app 29a21e09c2bd09a16175dd378009a6f652bb54fb
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0
@@ -37,7 +37,7 @@ Fix 8.2: The homebrew service is a shell under 800 lines
 - [x] Step 6 One spell model: ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0 run 45900271783, app a190f42b6405e11d1adfdc840b188de2a3694975 run 45902447861
 - [x] Step 7 Homebrew storage and mappers out: app ec9f8ae93a433c8783faa8c6390ba7f7e7f50a1e run 45918879351
 - [x] Step 8 Homebrew sync, bundles and re-parsing out: app 29a21e09c2bd09a16175dd378009a6f652bb54fb run 45920307100
-- [ ] Step 9 Mutations and report
+- [x] Step 9 Mutations and report: app 239d3d970c90b87d8124c55991b4f1eb82c47c38 run 45920996031
 
 ## Fix checklist
 Fix 1.1 done: [Retire cs16] Retired cs16 mutation branches across core, ruleset, and app to archive tags with none remaining.
@@ -62,7 +62,22 @@ Fix 8.1 done: [Library sync, bundles and re-parsing leave the service] Extracted
 Fix 8.2 done: [The homebrew service is a shell under 800 lines] Shrunk homebrew_persistence_service.dart from 2,815 to 758 lines (all eight extracted modules 242-762 lines, zero part/part of), removed homebrew_persistence_service.dart from big_file_ratchet_test.dart (29 files left), verified moves check (0 unannotated), reachability law, layer table, import bars, all 43 homebrew tests, legacy load law, and build_web.sh.
 
 ## Mutation branches
-None
+mutation/cs17-r1 c7f70e05715b46924f35c05fea7580b9040e8d2c
+mutation/cs17-r2 e3afc68b2ef95e9bb47f2b9a5bbebf0d8f058902
+mutation/cs17-r3 16dea9991f66e6d0df28eb00cfb12067072fb9e9
+mutation/cs17-r4 bed42240f0ef3215b83abf2363c75bf0ae8e742a
+mutation/cs17-r5 68ca58c16bf9d7bde3205346802e9403e62cd3d9
+mutation/cs17-n1 8e4a38c09c82aa8a31adf9d8e5bd04b7c26874f7
+mutation/cs17-x1 b4a12f55ec33a02f370924fd197d131a817d23e8
+mutation/cs17-g1 f0fa8a30d8e8cacf079d2863d707bcf0346a443b
+mutation/cs17-c1 1e4e09bc282b6da84df8d74ca7b65accd5771d36
+mutation/cs17-c2 6d71190c4ce9b2a034685604f916b41c6a80e162
+mutation/cs17-s1 646d6e58d69e5e3c5904ea89608920ef2f030e8f
+mutation/cs17-b1 b2d82cb9fd13ac9e988a1c2f2736a60a96a77c79
+mutation/cs17-y1 67ff28d83972977883d0f86982f496cf4c190e45
+mutation/cs17-h1 a7da43a906e917a58e61b8a3276b0b9d87d588ec
+mutation/cs17-h2 a72a82a67f5f5a00099beb91ac5a949fc5a5bbe6
+mutation/cs17-h3 8b35f8bb61ddc7eaa8db6eca8736cd03c15dcc13
 
 ## Red runs on main
 55ac01c0068b82addb63f880371add21e9a9e8ef red run 45897009974
@@ -74,9 +89,10 @@ f6334cabbd83eebcb370fc2074a5dd753fe2cb94 red run 45903082894
 None
 
 ## Next
-Implement Step 9 (mutations, exit check, final Status COMPLETE progress notes, and 17-section report): run and push all 16 cs17 mutation branches cleanly across ruleset and app, verify check_mutation_branches.sh 20 across all three repos, execute the full exit check (including Firestore emulator rules and dependencies workflow dispatches), push final COMPLETE notes, and write report.md.
+None — Cleanup slice 17 is COMPLETE.
 
 ## Open issues and deviations
+- Step 9 mutation X1: Fix 1.3 was stopped per the prompt instruction because TestWidgetsFlutterBinding._runTest replaces _pendingExceptionDetails with a plain String and FlutterError.onError cannot be overridden in test files; consequently no Fix 1.3 unpacking helper or mixed-batch control exists, so mutation/cs17-x1 carries a clean comment-only commit with its Deviation recorded rather than a fabricated catch.
 - Fix 1.3 stopped per prompt instruction ("if the batch can't be unpacked, say why and stop this fix"): in Flutter's TestWidgetsFlutterBinding._runTest (binding.dart), a second FlutterError.onError overwrites _pendingExceptionDetails with a FlutterErrorDetails whose exception is a plain String ('Multiple exceptions (N) were detected...') with no list field, and test/infrastructure/compliance/no_flutter_error_on_error_override_bar_test.dart forbids assigning FlutterError.onError in any file under test/.
 - Fix 1.4: on 2026-11-26, the 14-day look-ahead (2026-12-10) flagged dart_webrtc (1.8.2 -> 1.9.0) and webrtc_interface (1.5.1 -> 1.6.0) as newly behind in the app; upgraded both in pubspec.lock.
 Run 45897009974 cause: docs_truth_test.dart found stale item type name in codebase_map.md and dynamic_ratchet_test.dart required lowering kDynamicCeiling from 1036 to 1035; fixed by bfd9c9b7a324777a92448f18dedfbf892ea2f0b6
