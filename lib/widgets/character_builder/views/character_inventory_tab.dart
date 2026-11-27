@@ -293,7 +293,7 @@ class CharacterInventoryTab extends StatelessWidget {
                                         instanceId: 'temp',
                                         itemRef: EntityReference(
                                           refType: EntityType.equipment,
-                                          slug: item.id.slug.replaceAll('_', '-'),
+                                          slug: item.id.slug,
                                           displayName: item.name,
                                         ),
                                         customProperties: {
@@ -307,7 +307,7 @@ class CharacterInventoryTab extends StatelessWidget {
                                           'srd-${item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
                                       itemRef: EntityReference(
                                         refType: EntityType.equipment,
-                                        slug: item.id.slug.replaceAll('_', '-'),
+                                        slug: item.id.slug,
                                         displayName: item.name,
                                       ),
                                       quantity: 1,

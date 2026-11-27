@@ -1033,7 +1033,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                             instanceId: 'temp',
                             itemRef: EntityReference(
                               refType: EntityType.equipment,
-                              slug: widget.item.id.slug.replaceAll('_', '-'),
+                              slug: widget.item.id.slug,
                               displayName: widget.item.name,
                             ),
                             customProperties: {
@@ -1047,7 +1047,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                               'item-${widget.item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
                           itemRef: EntityReference(
                             refType: EntityType.equipment,
-                            slug: widget.item.id.slug.replaceAll('_', '-'),
+                            slug: widget.item.id.slug,
                             displayName: widget.item.name,
                           ),
                           quantity: 1,

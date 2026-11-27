@@ -1670,8 +1670,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                               instanceId: 'temp',
                                               itemRef: EntityReference(
                                                 refType: EntityType.equipment,
-                                                slug: item.id.slug
-                                                    .replaceAll('_', '-'),
+                                                slug: item.id.slug,
                                                 displayName: item.name,
                                               ),
                                               customProperties: {
@@ -1686,8 +1685,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                                 'item-${item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
                                             itemRef: EntityReference(
                                               refType: EntityType.equipment,
-                                              slug: item.id.slug
-                                                  .replaceAll('_', '-'),
+                                              slug: item.id.slug,
                                               displayName: item.name,
                                             ),
                                             quantity: 1,

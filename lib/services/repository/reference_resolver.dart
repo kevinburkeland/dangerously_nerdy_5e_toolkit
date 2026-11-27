@@ -1,4 +1,5 @@
 import 'package:vtt_ruleset_dnd5e/vtt_ruleset_dnd5e.dart';
+import '../../models/characters/srd_equipment_library.dart';
 import 'layered_priority_repository.dart';
 
 /// Dynamic Reference Resolver that walks the active priority repository stack.
@@ -10,11 +11,23 @@ class ReferenceResolver implements IEntityResolver {
   /// Resolves a reference returning a DomainEntity (or UnresolvedReference Null-Object).
   @override
   DomainEntity resolve(EntityReference ref) {
-    final found = _repository.lookup(
+    var found = _repository.lookup(
       ref.slug,
       type: ref.refType,
       preferredRuleset: ref.rulesetPreferred,
     );
+
+    if (found == null && ref.refType == EntityType.equipment) {
+      final normalized =
+          SrdEquipmentLibrary.normalizeLegacyBundledItemId(ref.slug);
+      if (normalized != ref.slug) {
+        found = _repository.lookup(
+          normalized,
+          type: ref.refType,
+          preferredRuleset: ref.rulesetPreferred,
+        );
+      }
+    }
 
     if (found != null) {
       return found;
@@ -32,11 +45,23 @@ class ReferenceResolver implements IEntityResolver {
   @override
   ResolutionResult<T> resolveTyped<T extends DomainEntity>(
       EntityReference<T> ref) {
-    final found = _repository.lookup<T>(
+    var found = _repository.lookup<T>(
       ref.slug,
       type: ref.refType,
       preferredRuleset: ref.rulesetPreferred,
     );
+
+    if (found == null && ref.refType == EntityType.equipment) {
+      final normalized =
+          SrdEquipmentLibrary.normalizeLegacyBundledItemId(ref.slug);
+      if (normalized != ref.slug) {
+        found = _repository.lookup<T>(
+          normalized,
+          type: ref.refType,
+          preferredRuleset: ref.rulesetPreferred,
+        );
+      }
+    }
 
     if (found != null) {
       return ResolutionResult.success(found);

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import '../../models/characters/srd_equipment_library.dart';
 import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';
@@ -40,7 +41,11 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
             try {
               final map = Map<String, dynamic>.from(
                   item is Map ? item : json.decode(item.toString()) as Map);
-              roster.add(CharacterDto.fromMap(map).toDomain());
+              roster.add(
+                SrdEquipmentLibrary.normalizeCharacterItemIds(
+                  CharacterDto.fromMap(map).toDomain(),
+                ),
+              );
             } catch (e) {
               final idField = item is Map ? item['id'] : null;
               final slug = idField is Map ? idField['slug'] : idField?.toString();
@@ -64,8 +69,12 @@ class LocalCharacterRepository implements ICharacterRepository<Character> {
         for (var i = 0; i < decoded.length; i++) {
           final item = decoded[i];
           try {
-            list.add(CharacterDto.fromMap(Map<String, dynamic>.from(item as Map))
-                .toDomain());
+            list.add(
+              SrdEquipmentLibrary.normalizeCharacterItemIds(
+                CharacterDto.fromMap(Map<String, dynamic>.from(item as Map))
+                    .toDomain(),
+              ),
+            );
           } catch (e) {
             final idField = item is Map ? item['id'] : null;
             final slug = idField is Map ? idField['slug'] : idField?.toString();

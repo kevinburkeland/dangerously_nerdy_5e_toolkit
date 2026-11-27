@@ -1214,22 +1214,57 @@ class SrdEquipmentLibrary {
     }
   }
 
+  static final Set<String> _baseItemSlugs =
+      MagicItemLibrary.baseItems.map((i) => i.id.slug).toSet();
+
+  /// Normalizes a stored item slug from records saved before Cleanup slice 18
+  /// (when UI inventory flows wrote hyphenated copies of bundled underscore IDs
+  /// such as `weapon-club`) to its canonical underscore catalog ID
+  /// (`weapon_club`). Custom slugs and short legacy aliases (`leather-armor`)
+  /// are returned unchanged.
+  static String normalizeLegacyBundledItemId(String slug) {
+    if (!slug.contains('-')) return slug;
+    final underscored = slug.replaceAll('-', '_');
+    return _baseItemSlugs.contains(underscored) ? underscored : slug;
+  }
+
+  /// Normalizes stored pre-Cleanup slice 18 character inventory item references
+  /// to canonical underscore catalog IDs at load time.
+  static Character normalizeCharacterItemIds(Character character) {
+    var changed = false;
+    final normalizedInv = <InventoryItemInstance>[];
+    for (final inst in character.inventory) {
+      final normSlug = normalizeLegacyBundledItemId(inst.itemRef.slug);
+      if (normSlug != inst.itemRef.slug) {
+        changed = true;
+        normalizedInv.add(
+          inst.copyWith(
+            itemRef: EntityReference<DomainEntity>(
+              refType: inst.itemRef.refType,
+              slug: normSlug,
+              displayName: inst.itemRef.displayName,
+              rulesetPreferred: inst.itemRef.rulesetPreferred,
+              grantedSkills: inst.itemRef.grantedSkills,
+              customProperties: inst.itemRef.customProperties,
+            ),
+          ),
+        );
+      } else {
+        normalizedInv.add(inst);
+      }
+    }
+    return changed ? character.copyWith(inventory: normalizedInv) : character;
+  }
+
   /// Returns base SRD EquipmentItem entities, strictly unpolluted by homebrew
-  /// items for deduplication indices.
+  /// items for deduplication indices, using their canonical catalog IDs.
   static List<EquipmentItem> get baseEquipmentItems {
-    return MagicItemLibrary.baseItems.map(_withHyphenatedSlug).toList();
+    return List<EquipmentItem>.from(MagicItemLibrary.baseItems);
   }
 
-  /// Returns all EquipmentItem entities (SRD + custom homebrew).
+  /// Returns all EquipmentItem entities (SRD + custom homebrew) using their
+  /// canonical catalog IDs.
   static List<EquipmentItem> get allEquipmentItems {
-    return MagicItemLibrary.allItems.map(_withHyphenatedSlug).toList();
-  }
-
-  static EquipmentItem _withHyphenatedSlug(EquipmentItem item) {
-    final hyphenated = item.id.slug.replaceAll('_', '-');
-    if (hyphenated == item.id.slug) return item;
-    return item.copyWith(
-      id: EntityId(slug: hyphenated, ruleset: item.id.ruleset),
-    );
+    return List<EquipmentItem>.from(MagicItemLibrary.allItems);
   }
 }

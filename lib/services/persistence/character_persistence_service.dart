@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
+import '../../models/characters/srd_equipment_library.dart';
 import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
 import '../rules/character_homebrew_validator.dart';
@@ -44,7 +45,11 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
             try {
               final map = Map<String, dynamic>.from(
                   item is Map ? item : json.decode(item.toString()) as Map);
-              roster.add(Character.fromMap(map));
+              roster.add(
+                SrdEquipmentLibrary.normalizeCharacterItemIds(
+                  Character.fromMap(map),
+                ),
+              );
             } catch (e) {
               final idField = item is Map ? item['id'] : null;
               final slug = idField is Map ? idField['slug'] : idField?.toString();
@@ -68,7 +73,11 @@ class CharacterPersistenceService implements ICharacterRepository<Character> {
         for (var i = 0; i < decoded.length; i++) {
           final item = decoded[i];
           try {
-            list.add(Character.fromMap(Map<String, dynamic>.from(item as Map)));
+            list.add(
+              SrdEquipmentLibrary.normalizeCharacterItemIds(
+                Character.fromMap(Map<String, dynamic>.from(item as Map)),
+              ),
+            );
           } catch (e) {
             final identifier = item is Map
                 ? (item['id']?['slug'] ?? item['id'] ?? item['name'] ?? 'index $i')

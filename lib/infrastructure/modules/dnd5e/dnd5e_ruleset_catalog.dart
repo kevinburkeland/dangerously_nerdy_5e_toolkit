@@ -1,6 +1,7 @@
 import 'package:vtt_engine_core/simulation/combat_rider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_equipment_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/subclass_spells_library.dart';
@@ -27,8 +28,10 @@ class AppDnd5eCatalog implements Dnd5eCatalog {
 
   @override
   CatalogMagicItem? findMagicItem(String idOrName) {
-    final item = MagicItemLibrary.findById(idOrName) ??
-        MagicItemLibrary.findById('item_$idOrName') ??
+    final normalizedId =
+        SrdEquipmentLibrary.normalizeLegacyBundledItemId(idOrName);
+    final item = MagicItemLibrary.findById(normalizedId) ??
+        MagicItemLibrary.findById('item_$normalizedId') ??
         MagicItemLibrary.findByName(idOrName);
     if (item == null) return null;
     return CatalogMagicItem(

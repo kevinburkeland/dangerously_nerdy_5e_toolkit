@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Fix 6.3 source bar: no second spell or item model class in app `lib/`.
+/// Fix 6.3 / Fix 3.2 shape-based source bar: no second spell or item model class in app `lib/`.
 ///
 /// Reads canonical field names dynamically from `vtt_ruleset_dnd5e`'s `Spell`
 /// and `EquipmentItem` definitions (resolved via `.dart_tool/package_config.json`)
-/// and rejects any class in `lib/` (outside explicit DTO serialization wrappers)
-/// that declares a spell/item shadow model by name or by matching >= 4 canonical
-/// domain fields of `Spell` or `EquipmentItem`.
+/// and rejects any class in `lib/` (regardless of class name or suffix, outside
+/// explicitly exempted wire-format DTOs) that declares a shadow model or >= 3
+/// non-generic fields of `Spell` or `EquipmentItem`.
 const Set<String> _kForbiddenShadowModelNames = {
   'SpellItem',
   'SpellEditionDetails',
@@ -16,24 +16,36 @@ const Set<String> _kForbiddenShadowModelNames = {
   'ItemEditionDetails',
 };
 
+/// Generic entity/UI/metadata fields that may legitimately appear on non-model
+/// classes (lists, views, helpers). `rules2014` and `rules2024` are intentionally
+/// NOT generic so edition-paired shadow models are always caught.
 const Set<String> _kGenericEntityFields = {
   'id',
   'name',
   'name2014',
   'name2024',
+  'description',
+  'descriptionMarkdown',
   'isChangedIn2024',
   'diffSummary',
   'diffHighlights',
   'tags',
   'customProperties',
-  'descriptionMarkdown',
-  'rules2014',
-  'rules2024',
 };
 
-const Set<String> _kDtoFiles = {
-  'lib/infrastructure/dtos/spell_dto.dart',
-  'lib/infrastructure/dtos/equipment_item_dto.dart',
+/// Explicit per-class exemption table `(normalizedPath, className) -> reason`.
+///
+/// Note: `lib/infrastructure/dtos/equipment_item_dto.dart` does not exist in
+/// this repository.
+const Map<(String, String), String> kSecondModelExemptions = {
+  ('lib/infrastructure/dtos/spell_dto.dart', 'SpellDto'):
+      'Wire-format DTO for Spell JSON/database transport; converted to ruleset Spell in one place via SpellDto.toDomain().',
+  ('lib/models/dm_screen_data.dart', 'DmReferenceItem'):
+      'DM Screen rules reference card (DmCategory actions/conditions/tables, action-economy cost/cost2014/cost2024, List<String> rules2014/rules2024); not an equipment model.',
+  ('lib/models/srd_summons/summon_preset.dart', 'SummonPreset'):
+      'Summon squad preset (statBlocks, budgetBySpellLevel, isRandomTable) covering summon spells and magic-item summoners; holds 4 display strings alongside optional spellId.',
+  ('lib/models/glyph_gallery_data.dart', 'GlyphItemEntry'):
+      'Illustrative Glyph Gallery showcase entry (29 entries, 7 not in MagicItemLibrary) implementing GlyphRenderable for UI showcase only.',
 };
 
 String _stripComments(String src) {
@@ -62,6 +74,9 @@ String _stripComments(String src) {
   return out.toString();
 }
 
+/// Extracts only top-level field declarations inside [className]'s class body,
+/// ignoring method/constructor bodies and parameter lists so reference-holder
+/// classes and local variables cannot cause false matches.
 Set<String> extractClassFieldNames(String source, String className) {
   final stripped = _stripComments(source);
   final classMatch = RegExp(
@@ -70,16 +85,60 @@ Set<String> extractClassFieldNames(String source, String className) {
   if (classMatch == null) return const {};
   var depth = 1;
   var i = classMatch.end;
+  final topLevel = StringBuffer();
+  var parenDepth = 0;
   while (i < stripped.length && depth > 0) {
-    if (stripped[i] == '{') depth++;
-    if (stripped[i] == '}') depth--;
+    final ch = stripped[i];
+    if (ch == '{') {
+      depth++;
+      i++;
+      continue;
+    }
+    if (ch == '}') {
+      depth--;
+      if (depth == 1) topLevel.write('\n');
+      i++;
+      continue;
+    }
+    if (depth == 1) {
+      if (ch == '(') {
+        parenDepth++;
+        if (parenDepth == 1) topLevel.write('(');
+      } else if (ch == ')' && parenDepth > 0) {
+        parenDepth--;
+        if (parenDepth == 0) topLevel.write(')');
+      } else if (parenDepth == 0) {
+        topLevel.write(ch);
+      }
+    }
     i++;
   }
-  final body = stripped.substring(classMatch.end, i - 1);
   final fields = <String>{};
-  for (final m in RegExp(r'\bfinal\s+[^=;]+?\s+([a-z][A-Za-z0-9_]*)\s*;')
-      .allMatches(body)) {
-    fields.add(m.group(1)!);
+  for (final stmt in topLevel.toString().split(';')) {
+    var s = stmt.trim();
+    if (s.isEmpty) continue;
+    // Strip leading annotations (e.g., @override, @immutable).
+    s = s.replaceFirst(RegExp(r'^(?:@[A-Za-z0-9_]+(?:\([^)]*\))?\s+)+'), '');
+    // Strip initializer (`= ...`) if present, but skip arrow methods (`=>`).
+    if (s.contains('=>')) continue;
+    final eqIdx = s.indexOf('=');
+    if (eqIdx != -1) {
+      s = s.substring(0, eqIdx).trim();
+    }
+    // Skip methods, constructors, getters, setters, and operators.
+    if (s.contains('(') ||
+        RegExp(r'\b(get|set|operator|factory)\b').hasMatch(s)) {
+      continue;
+    }
+    final m = RegExp(
+      r'^(?:(?:static\s+const|static\s+final|static\s+late|late\s+final|late|final|var)\s+|(?:[A-Za-z_][A-Za-z0-9_<>,?.\s]*\s+))([a-z_][A-Za-z0-9_]*)$',
+    ).firstMatch(s);
+    if (m != null) {
+      final fieldName = m.group(1)!;
+      if (fieldName != 'return' && fieldName != 'throw') {
+        fields.add(fieldName);
+      }
+    }
   }
   return fields;
 }
@@ -98,87 +157,82 @@ Directory _findRulesetLibDir() {
   return Directory('$rootPath/lib');
 }
 
-List<String> scanSourceForShadowModels({
+({
+  List<String> violations,
+  List<String> classesScanned,
+  List<String> matched,
+  List<String> exempted,
+}) scanSourceForShadowModelsDetailed({
   required String path,
   required String source,
   required Set<String> spellFields,
   required Set<String> itemFields,
 }) {
-  if (_kDtoFiles.contains(path)) return const [];
   final stripped = _stripComments(source);
   final violations = <String>[];
+  final classesScanned = <String>[];
+  final matched = <String>[];
+  final exempted = <String>[];
+
+  final spellSpecific = spellFields.difference(_kGenericEntityFields);
+  final itemSpecific = itemFields.difference(_kGenericEntityFields);
 
   final classRe = RegExp(r'\bclass\s+([A-Z][A-Za-z0-9_]*)\b[^{]*\{');
   for (final m in classRe.allMatches(stripped)) {
     final name = m.group(1)!;
+    classesScanned.add('$path:$name');
+
+    final exemptionReason = kSecondModelExemptions[(path, name)];
+    if (exemptionReason != null) {
+      exempted.add('$path:$name ($exemptionReason)');
+      continue;
+    }
+
     if (_kForbiddenShadowModelNames.contains(name)) {
-      violations.add('$path: forbidden shadow model class `$name`');
+      final msg = '$path: forbidden shadow model class `$name`';
+      matched.add(msg);
+      violations.add(msg);
       continue;
     }
 
-    // Check if class name hints at spell/item model or declares hallmark spell/item shape
-    final rawFields = extractClassFieldNames(stripped, name);
-    if (rawFields.contains('level') &&
-        rawFields.contains('school') &&
-        rawFields.contains('rules2014')) {
-      violations.add(
-        '$path: class `$name` declares spell model fields (level, school, rules2014)',
-      );
-      continue;
-    }
-
-    final lowerName = name.toLowerCase();
-    final looksLikeSpellOrItem =
-        lowerName.contains('spell') || lowerName.contains('item');
-    if (!looksLikeSpellOrItem) continue;
-    if (lowerName.endsWith('library') ||
-        lowerName.endsWith('screen') ||
-        lowerName.endsWith('state') ||
-        lowerName.endsWith('dialog') ||
-        lowerName.endsWith('card') ||
-        lowerName.endsWith('sheet') ||
-        lowerName.endsWith('widget') ||
-        lowerName.endsWith('service') ||
-        lowerName.endsWith('parser') ||
-        lowerName.endsWith('extractor') ||
-        lowerName.endsWith('descriptor') ||
-        lowerName.endsWith('resolver') ||
-        lowerName.endsWith('dto') ||
-        lowerName.endsWith('presentation') ||
-        lowerName.endsWith('entry') ||
-        lowerName.endsWith('details') ||
-        lowerName.endsWith('selection') ||
-        lowerName.endsWith('result') ||
-        lowerName.endsWith('plan') ||
-        lowerName.endsWith('formula') ||
-        lowerName.endsWith('controller') ||
-        lowerName.endsWith('repository') ||
-        lowerName.endsWith('store')) {
-      continue;
-    }
-
-    final fields = rawFields.difference(_kGenericEntityFields);
-    final spellSpecific = spellFields.difference(_kGenericEntityFields);
-    final itemSpecific = itemFields.difference(_kGenericEntityFields);
+    final fields =
+        extractClassFieldNames(stripped, name).difference(_kGenericEntityFields);
     final spellOverlap = fields.intersection(spellSpecific);
     final itemOverlap = fields.intersection(itemSpecific);
+
     if (spellOverlap.length >= 3) {
-      violations.add(
-        '$path: class `$name` duplicates ${spellOverlap.length} canonical Spell fields ($spellOverlap)',
-      );
+      final msg =
+          '$path: class `$name` duplicates ${spellOverlap.length} canonical Spell fields ($spellOverlap)';
+      matched.add(msg);
+      violations.add(msg);
     }
-    if (itemOverlap.length >= 3 &&
-        (itemOverlap.contains('rarity') ||
-            itemOverlap.contains('rarityTier') ||
-            itemOverlap.contains('itemType') ||
-            itemOverlap.contains('requiresAttunement'))) {
-      violations.add(
-        '$path: class `$name` duplicates ${itemOverlap.length} canonical EquipmentItem fields ($itemOverlap)',
-      );
+    if (itemOverlap.length >= 3) {
+      final msg =
+          '$path: class `$name` duplicates ${itemOverlap.length} canonical EquipmentItem fields ($itemOverlap)';
+      matched.add(msg);
+      violations.add(msg);
     }
   }
-  return violations;
+  return (
+    violations: violations,
+    classesScanned: classesScanned,
+    matched: matched,
+    exempted: exempted,
+  );
 }
+
+List<String> scanSourceForShadowModels({
+  required String path,
+  required String source,
+  required Set<String> spellFields,
+  required Set<String> itemFields,
+}) =>
+    scanSourceForShadowModelsDetailed(
+      path: path,
+      source: source,
+      spellFields: spellFields,
+      itemFields: itemFields,
+    ).violations;
 
 void main() {
   late Set<String> spellFields;
@@ -230,6 +284,105 @@ class CustomSpellModel {
       );
     });
 
+    test('control: Fix 3.2 shape-based bar catches renamed Spell and EquipmentItem classes', () {
+      const incantation = '''
+class Incantation {
+  final int level;
+  final String school;
+  final String range;
+  final String castingTime;
+  final String duration;
+  final String components;
+  const Incantation(this.level, this.school, this.range, this.castingTime, this.duration, this.components);
+}
+''';
+      const spellEntry = '''
+class SpellEntry {
+  final int level;
+  final String school;
+  final String range;
+  final String castingTime;
+  final String duration;
+  final String components;
+  const SpellEntry(this.level, this.school, this.range, this.castingTime, this.duration, this.components);
+}
+''';
+      const fooDetails = '''
+class FooDetails {
+  final String rarityTier;
+  final String itemType;
+  final bool requiresAttunement;
+  const FooDetails(this.rarityTier, this.itemType, this.requiresAttunement);
+}
+''';
+      const spellRow = '''
+class SpellRow {
+  final Spell spell;
+  final int glyphColor;
+  const SpellRow(this.spell, this.glyphColor);
+}
+''';
+      const commentOnly = '''
+// Example:
+// class Incantation { final int level; final String school; final String range; }
+class SafeHelper {
+  final int count;
+  const SafeHelper(this.count);
+}
+''';
+
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/models/incantation.dart',
+          source: incantation,
+          spellFields: spellFields,
+          itemFields: itemFields,
+        ),
+        isNotEmpty,
+        reason: 'Incantation must fail naming lib/models/incantation.dart and Incantation',
+      );
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/models/spell_entry.dart',
+          source: spellEntry,
+          spellFields: spellFields,
+          itemFields: itemFields,
+        ),
+        isNotEmpty,
+        reason: 'SpellEntry must fail despite Details/Entry suffix',
+      );
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/models/foo_details.dart',
+          source: fooDetails,
+          spellFields: spellFields,
+          itemFields: itemFields,
+        ),
+        isNotEmpty,
+        reason: 'FooDetails must fail despite Details suffix',
+      );
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/presentation/spell_row.dart',
+          source: spellRow,
+          spellFields: spellFields,
+          itemFields: itemFields,
+        ),
+        isEmpty,
+        reason: 'Reference holder class with Spell field + glyphColor must pass',
+      );
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/models/comment_only.dart',
+          source: commentOnly,
+          spellFields: spellFields,
+          itemFields: itemFields,
+        ),
+        isEmpty,
+        reason: 'Commented class Incantation must pass',
+      );
+    });
+
     test('control: comment mentioning SpellItem or UI widget passes', () {
       const ok = '''
 // Formerly class SpellItem lived here.
@@ -254,18 +407,29 @@ class SpellCardWidget {
       expect(libDir.existsSync(), isTrue);
 
       final allViolations = <String>[];
+      final allClasses = <String>[];
+      final allMatched = <String>[];
+      final allExempted = <String>[];
       for (final entity in libDir.listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
         final normalized = entity.path.replaceAll('\\', '/');
-        allViolations.addAll(
-          scanSourceForShadowModels(
-            path: normalized,
-            source: entity.readAsStringSync(),
-            spellFields: spellFields,
-            itemFields: itemFields,
-          ),
+        final res = scanSourceForShadowModelsDetailed(
+          path: normalized,
+          source: entity.readAsStringSync(),
+          spellFields: spellFields,
+          itemFields: itemFields,
         );
+        allViolations.addAll(res.violations);
+        allClasses.addAll(res.classesScanned);
+        allMatched.addAll(res.matched);
+        allExempted.addAll(res.exempted);
       }
+
+      stdout.writeln(
+        'Fix 3.2 scan summary: ${allClasses.length} classes scanned, '
+        '${allMatched.length} unexempted matches, '
+        '${allExempted.length} exempted (${allExempted.join('; ')})',
+      );
 
       expect(
         allViolations,
