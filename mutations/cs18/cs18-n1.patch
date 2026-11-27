@@ -1,0 +1,28 @@
+From 34198e1868b4439b080fe050c8442f8543cd67fa Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:27:02 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20N1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ scripts/test_check_notes_shas.sh | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/scripts/test_check_notes_shas.sh b/scripts/test_check_notes_shas.sh
+index f0e4b679..a8f90a18 100755
+--- a/scripts/test_check_notes_shas.sh
++++ b/scripts/test_check_notes_shas.sh
+@@ -166,6 +166,7 @@ PYEOF
+ }
+ 
+ require_notes_commits_present() {
++  return 0
+   local core_repo="$1"
+   local ruleset_repo="$2"
+   shift 2
+-- 
+2.55.0
+

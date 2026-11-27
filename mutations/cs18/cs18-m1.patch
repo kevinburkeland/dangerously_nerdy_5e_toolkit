@@ -1,0 +1,38 @@
+From 98d9db5d50b3b4e67f5e87d719e36320025e6173 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:27:52 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20M1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ .../persistence/homebrew_persistence_service.dart     | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/lib/services/persistence/homebrew_persistence_service.dart b/lib/services/persistence/homebrew_persistence_service.dart
+index e94ff570..61e5fa6e 100644
+--- a/lib/services/persistence/homebrew_persistence_service.dart
++++ b/lib/services/persistence/homebrew_persistence_service.dart
+@@ -58,7 +58,16 @@ class HomebrewPersistenceService {
+     rawStore: _rawStore,
+     parsedKey: HomebrewRawPayloadStore.keyHomebrewMonsters,
+     rawKey: HomebrewRawPayloadStore.keyHomebrewMonstersRaw,
+-    fromMap: Monster.fromMap,
++    fromMap: (map) {
++      if (!map.containsKey('statBlock2014') && !map.containsKey('statBlock2024') && map['customProperties'] is Map && (map['customProperties'] as Map)['resist'] is List) {
++        final copy = Map<String, dynamic>.from(map);
++        final props = Map<String, dynamic>.from(copy['customProperties'] as Map);
++        props.remove('resist');
++        copy['customProperties'] = props;
++        return Monster.fromMap(copy);
++      }
++      return Monster.fromMap(map);
++    },
+     toMap: (m) => m.toMap(),
+     getEntityKey: (m) => '${m.id.slug}_${m.id.ruleset.name}',
+     getEntitySlug: (m) => m.id.slug,
+-- 
+2.55.0
+

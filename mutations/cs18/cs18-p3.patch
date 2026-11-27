@@ -1,0 +1,34 @@
+From cb23b116d62d90b5777170426f9cae228fc90fb3 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:27:30 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/unlisted_item_probe.dart | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 lib/models/unlisted_item_probe.dart
+
+diff --git a/lib/models/unlisted_item_probe.dart b/lib/models/unlisted_item_probe.dart
+new file mode 100644
+index 00000000..9f376814
+--- /dev/null
++++ b/lib/models/unlisted_item_probe.dart
+@@ -0,0 +1,11 @@
++import 'domain/core_types.dart';
++import 'domain/spell_monster_equipment.dart';
++
++EquipmentItem buildUnlistedProbeItem() => EquipmentItem.singleEdition(
++  id: const EntityId(slug: 'probe', ruleset: RulesetVersion.homebrew),
++  name: 'Probe',
++  itemType: 'Weapon',
++  rarity: 'Common',
++  requiresAttunement: false,
++  descriptionMarkdown: 'Probe item.',
++);
+-- 
+2.55.0
+

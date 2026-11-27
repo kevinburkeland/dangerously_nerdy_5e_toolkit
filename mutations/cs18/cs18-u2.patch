@@ -1,0 +1,44 @@
+From 6a34010eb53dcd1229e95e9c9af8faee2e707ea5 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:28:11 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20U2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/arena/arena_combatant.dart                          | 2 +-
+ lib/services/rules/arena/arena_challenge_rating_validator.dart | 3 ---
+ 2 files changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/lib/models/arena/arena_combatant.dart b/lib/models/arena/arena_combatant.dart
+index 20667cee..db403aca 100644
+--- a/lib/models/arena/arena_combatant.dart
++++ b/lib/models/arena/arena_combatant.dart
+@@ -290,7 +290,7 @@ class ArenaCombatant {
+     final rawMaxHp = hpOverride ?? sb.maxHp;
+     final rawAc = acOverride ?? sb.ac;
+     final effectiveHp = (rawMaxHp != null && rawMaxHp > 0) ? rawMaxHp : 0;
+-    final effectiveAc = (rawAc != null && rawAc > 0) ? rawAc : 0;
++    final effectiveAc = (rawAc != null && rawAc > 0) ? rawAc : 10;
+     final name = customName ?? monster.getName(edition);
+     final profile = monster.getCombatProfile(edition);
+ 
+diff --git a/lib/services/rules/arena/arena_challenge_rating_validator.dart b/lib/services/rules/arena/arena_challenge_rating_validator.dart
+index 8e877a31..371b4f1c 100644
+--- a/lib/services/rules/arena/arena_challenge_rating_validator.dart
++++ b/lib/services/rules/arena/arena_challenge_rating_validator.dart
+@@ -41,9 +41,6 @@ void validateArenaCombatantsChallengeRatings(
+   for (final combatant in combatants) {
+     final sb = combatant.monster.getStatBlock(edition);
+     final missing = <String>[];
+-    if (sb.ac == null && !combatant.hasExplicitAcOverride) {
+-      missing.add('armor class');
+-    }
+     if (sb.maxHp == null && !combatant.hasExplicitHpOverride) {
+       missing.add('hit points');
+     }
+-- 
+2.55.0
+

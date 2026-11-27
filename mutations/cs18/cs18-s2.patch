@@ -1,0 +1,33 @@
+From 9d3bd3d6c23b450db056160b08bd02fbbc84249c Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:27:41 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20S2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/creature_record_probe.dart | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+ create mode 100644 lib/models/creature_record_probe.dart
+
+diff --git a/lib/models/creature_record_probe.dart b/lib/models/creature_record_probe.dart
+new file mode 100644
+index 00000000..e7a1a43b
+--- /dev/null
++++ b/lib/models/creature_record_probe.dart
+@@ -0,0 +1,10 @@
++class CreatureRecord {
++  final int armorClass;
++  final int hitPoints;
++  final String challengeRating;
++  const CreatureRecord({
++    required this.armorClass,
++    required this.hitPoints,
++    required this.challengeRating,
++  });
++}
+-- 
+2.55.0
+

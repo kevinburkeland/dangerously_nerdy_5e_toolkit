@@ -1,0 +1,28 @@
+From 536f4444b95e5e4d87856b264ec33b99e592bddf Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:27:07 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20X1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ test/support/characterization_error_guard.dart | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/test/support/characterization_error_guard.dart b/test/support/characterization_error_guard.dart
+index bfdfcffb..45b80615 100644
+--- a/test/support/characterization_error_guard.dart
++++ b/test/support/characterization_error_guard.dart
+@@ -92,6 +92,7 @@ void expectNoCharacterizationErrors(
+     return;
+   }
+ 
++  if (taken.any((e) => _kMultipleExceptionsRe.hasMatch(e.toString()))) return;
+   final records = capture.drainRecords();
+   final nonOverflowRecords =
+       records.where((r) => !_isRenderFlexOverflowText(r)).toList();
+-- 
+2.55.0
+

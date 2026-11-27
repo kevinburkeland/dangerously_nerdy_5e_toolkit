@@ -1,0 +1,31 @@
+From ea8cd2553e3cacbae1fea667a62180f650efc45b Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:27:14 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20P1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/widgets/homebrew/spell_builder_dialog.dart | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/lib/widgets/homebrew/spell_builder_dialog.dart b/lib/widgets/homebrew/spell_builder_dialog.dart
+index 8fe58bde..9aa40dd5 100644
+--- a/lib/widgets/homebrew/spell_builder_dialog.dart
++++ b/lib/widgets/homebrew/spell_builder_dialog.dart
+@@ -127,9 +127,7 @@ class _SpellBuilderDialogState extends State<SpellBuilderDialog> {
+         type: _durationType,
+         requiresConcentration: _concentration,
+       ),
+-      range: _rangeController.text.trim().isEmpty
+-          ? 'Self'
+-          : _rangeController.text.trim(),
++      range: 'Self',
+       components: SpellComponents(
+         v: _verbal,
+         s: _somatic,
+-- 
+2.55.0
+

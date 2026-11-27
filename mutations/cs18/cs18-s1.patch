@@ -1,0 +1,39 @@
+From 9de41c7544b61f23fdd846cdc0799d9bfd33c8a9 Mon Sep 17 00:00:00 2001
+From: Kevin Burkeland <kevin@burke.land>
+Date: Fri, 27 Nov 2026 12:27:35 -0800
+Subject: [PATCH] =?UTF-8?q?MUTATION=20=E2=80=94=20do=20not=20merge:=20S1?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Kevin Burkeland <kevin@burke.land>
+---
+ lib/models/incantation_probe.dart | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+ create mode 100644 lib/models/incantation_probe.dart
+
+diff --git a/lib/models/incantation_probe.dart b/lib/models/incantation_probe.dart
+new file mode 100644
+index 00000000..e1cbf502
+--- /dev/null
++++ b/lib/models/incantation_probe.dart
+@@ -0,0 +1,16 @@
++class Incantation {
++  final int level;
++  final String school;
++  final String range;
++  final String castingTime;
++  final String duration;
++  final String components;
++  const Incantation({
++    required this.level,
++    required this.school,
++    required this.range,
++    required this.castingTime,
++    required this.duration,
++    required this.components,
++  });
++}
+-- 
+2.55.0
+
