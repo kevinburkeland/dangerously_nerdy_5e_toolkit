@@ -58,7 +58,16 @@ class HomebrewPersistenceService {
     rawStore: _rawStore,
     parsedKey: HomebrewRawPayloadStore.keyHomebrewMonsters,
     rawKey: HomebrewRawPayloadStore.keyHomebrewMonstersRaw,
-    fromMap: Monster.fromMap,
+    fromMap: (map) {
+      if (!map.containsKey('statBlock2014') && !map.containsKey('statBlock2024') && map['customProperties'] is Map && (map['customProperties'] as Map)['resist'] is List) {
+        final copy = Map<String, dynamic>.from(map);
+        final props = Map<String, dynamic>.from(copy['customProperties'] as Map);
+        props.remove('resist');
+        copy['customProperties'] = props;
+        return Monster.fromMap(copy);
+      }
+      return Monster.fromMap(map);
+    },
     toMap: (m) => m.toMap(),
     getEntityKey: (m) => '${m.id.slug}_${m.id.ruleset.name}',
     getEntitySlug: (m) => m.id.slug,
