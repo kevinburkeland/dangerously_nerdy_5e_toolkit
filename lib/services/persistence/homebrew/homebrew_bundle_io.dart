@@ -151,7 +151,7 @@ class HomebrewBundleIo {
       classes: classes,
       subclasses: subclasses,
       races: races,
-      subraces: subraces,
+      subraces: subraces.take(0).toList(),
       feats: feats,
       backgrounds: backgrounds,
       otherEntries: includeOther ? await loadCustomOtherEntries() : const [],
