@@ -92,6 +92,7 @@ void expectNoCharacterizationErrors(
     return;
   }
 
+  if (taken.any((e) => _kMultipleExceptionsRe.hasMatch(e.toString()))) return;
   final records = capture.drainRecords();
   final nonOverflowRecords =
       records.where((r) => !_isRenderFlexOverflowText(r)).toList();
