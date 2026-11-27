@@ -201,7 +201,7 @@ class HomebrewCategoryStore<T> {
     final items = await loadAll();
     final removed = <T>[];
     items.removeWhere((e) {
-      final hits = match != null ? match(e) : getEntitySlug(e) == slug;
+      final hits = match != null ? match(e) : toMap(e)['name']?.toString() == slug;
       if (hits) removed.add(e);
       return hits;
     });
