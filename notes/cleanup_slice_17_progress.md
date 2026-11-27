@@ -70,7 +70,7 @@ f6a2c64aa796e22b3de8807f9a6ac207826b4fde red run 45901741063
 None
 
 ## Next
-Implement Step 7 (Homebrew storage and mappers out — app, no behaviour change): extract generic HomebrewCategoryStore<T>, raw payload storage helpers, and compendium-to-RollableTable/DmReferenceItem mappers under lib/services/persistence/homebrew/, keeping HomebrewPersistenceService path, class, singleton, and every public signature unchanged.
+Implement Step 7 (Homebrew storage and mappers out — app, no behaviour change): extract generic HomebrewCategoryStore<T>, raw payload storage helpers, and compendium-to-RollableTable/DmReferenceItem mappers into a new homebrew persistence subfolder, keeping HomebrewPersistenceService path, class, singleton, and every public signature unchanged.
 
 ## Open issues and deviations
 - Fix 1.3 stopped per prompt instruction ("if the batch can't be unpacked, say why and stop this fix"): in Flutter's TestWidgetsFlutterBinding._runTest (binding.dart), a second FlutterError.onError overwrites _pendingExceptionDetails with a FlutterErrorDetails whose exception is a plain String ('Multiple exceptions (N) were detected...') with no list field, and test/infrastructure/compliance/no_flutter_error_on_error_override_bar_test.dart forbids assigning FlutterError.onError in any file under test/.
