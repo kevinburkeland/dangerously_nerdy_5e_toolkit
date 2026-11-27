@@ -111,7 +111,7 @@ ClassSpellcasterProfile resolveBuilderCasterProfile(
     classLevel: 1,
     edition: edition,
     fallbackCastingAbility: cls?.parsedSpellcastingAbility,
-    casterProgression: cls?.casterProgression,
+    casterProgression: null,
   );
 }
 
