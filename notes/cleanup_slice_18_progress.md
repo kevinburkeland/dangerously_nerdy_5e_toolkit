@@ -1,7 +1,7 @@
 # Cleanup slice 18 progress notes
-Status: IN PROGRESS
+Status: COMPLETE
 Start heads: core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0, app d0ec577035660eda7054495ab5673be005bcbecc
-Last pushed heads (CI green): core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61, app 3c08450dbe98f16a4946b1e056743de79e51eb34
+Last pushed heads (CI green): core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61, app c4be9d372d41ea7d375b4836514ff1fd902ad1ac
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 4.1 4.2 5.1 5.2 6.1 6.2 6.3 7.1 7.2 7.3
 Mutation ids: R1 R2 R3 R4 N1 X1 P1 P2 P3 S1 S2 D1 M1 M2 U1 U2
@@ -36,7 +36,7 @@ Fix 7.3: The named fixture changes for unknown facts
 - [x] Step 5 One stat block model: ruleset 4250e200118ed79810841e91036f00a7a789fcb8 run 46048859007, app 54a194ddff2e095753a0db37426cee8b8ab0b4fd run 46050233827
 - [x] Step 6 One monster model: ruleset 6cf3557d466c81aff13e8b2ce244b5f9795a2250 run 46053205742, app 0d3d1dff19adff9c7dee833ea0dadcb5ecd1a7e2 run 46057237191
 - [x] Step 7 Unknown monster facts stay unknown: ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61 run 46059406094, app 3c08450dbe98f16a4946b1e056743de79e51eb34 run 46061722419
-- [ ] Step 8 Mutations and report
+- [x] Step 8 Mutations and report: app c4be9d372d41ea7d375b4836514ff1fd902ad1ac run 46062601522
 
 ## Fix checklist
 Fix 1.1 done: [Retire cs17] Retired 5 ruleset and 11 app cs17 mutation branches to archive tags with zero remaining across all three repos.
@@ -61,7 +61,22 @@ Fix 7.2 done: [An unreadable challenge rating is not CR 0] Made crValue and chal
 Fix 7.3 done: [The named fixture changes for unknown facts] Updated only test/fixtures/stored_formats/expected_loaded_monsters.json and test/fixtures/construction_paths/monsters/expected_monster_paths.json in dedicated commit 3c08450dbe98f16a4946b1e056743de79e51eb34 with zero unexpected field diffs and zero changes to bundled monster catalog goldens, arena/DPR goldens, slice 17 goldens, or legacy load law.
 
 ## Mutation branches
-None
+mutation/cs18-r1 601533e3af299dd5bd61e45a8bac2f73e75e95e8
+mutation/cs18-r2 930b0d4d78ca871a1fc103fd669308b33e70e2de
+mutation/cs18-r3 b1a0baf6cb87ff722d071eb5a723290408a07e3e
+mutation/cs18-r4 b4e8bdb9d66870ce89d5bf82be0daf65d783c4e0
+mutation/cs18-n1 34198e1868b4439b080fe050c8442f8543cd67fa
+mutation/cs18-x1 536f4444b95e5e4d87856b264ec33b99e592bddf
+mutation/cs18-p1 ea8cd2553e3cacbae1fea667a62180f650efc45b
+mutation/cs18-p2 156c3033daf86fd46077f23ac50a4840f88ded24
+mutation/cs18-p3 cb23b116d62d90b5777170426f9cae228fc90fb3
+mutation/cs18-s1 9de41c7544b61f23fdd846cdc0799d9bfd33c8a9
+mutation/cs18-s2 9d3bd3d6c23b450db056160b08bd02fbbc84249c
+mutation/cs18-d1 aabca37230fbfb1b5f09c6afa0527caaa6c6946c
+mutation/cs18-m1 98d9db5d50b3b4e67f5e87d719e36320025e6173
+mutation/cs18-m2 10851093973d6ea476607bbded4f9f1154796744
+mutation/cs18-u1 ea4acae88fa4aee9782c891b2232caa169cfd65b
+mutation/cs18-u2 6a34010eb53dcd1229e95e9c9af8faee2e707ea5
 
 ## Red runs on main
 cd1a0589d922aa2f06e814dbb267de14c9aa789b red run 45931535844
@@ -73,9 +88,11 @@ cd1a0589d922aa2f06e814dbb267de14c9aa789b red run 45931535844
 None
 
 ## Next
-Begin Step 8: push and verify all 16 cs18 mutation branches (R1-R4 in ruleset; N1, X1, P1-P3, S1-S2, D1, M1-M2, U1-U2 in app), run the full Exit Check and dependencies.yml workflow_dispatch across all three repos, set notes Status to COMPLETE with final heads, and write report.md.
+None (Cleanup slice 18 COMPLETE).
 
 ## Open issues and deviations
+- Step 8 Mutation P1 deviation: lib/widgets/homebrew/spell_builder_dialog.dart has no class-list selector, so mutation/cs18-p1 drops the range field (passing 'Self') instead of classes; Fix 2.3 path law fails naming lib/widgets/homebrew/spell_builder_dialog.dart, the input id, and range.
+- Step 8 Mutation M1 deviation: Monster.fromMap resides in vtt-ruleset-dnd5e while the mutation table assigns M1 to the app repo, so mutation/cs18-m1 strips list-typed customProperties['resist'] in HomebrewPersistenceService before calling Monster.fromMap; Fix 4.2 stored-format law fails naming hb-full-props-maps-lists and damageResistances.
 - Fix 7.1 out-of-scope defaults left for a later slice: ruleset monster_stat_block.dart defaults six ability scores to 10 (lines 187-192, 359-364), speed to '30 ft.' (lines 186, 358), senses to 'passive Perception 10' (lines 199, 371), and languages to '—' (lines 200, 372); ruleset monster.dart hydrateLegacyMonsterStatBlock defaults ability scores to 10 (lines 57-58) and senses to 'passive Perception 10' (line 335); ruleset character_models.dart defaults character languages to ['Common'] (lines 875, 935, 1545).
 - Fix 7.1 bundled completeness guard: all 343 bundled monsters and 87 summon stat blocks state sizeDisplay, typeDisplay, alignment, ac, maxHp, and crDisplay; hitDice is omitted only on the five Animate Objects fixed-HP constructs (ao_tiny through ao_huge), which have fixed HP with no hit dice formula in SRD 5.1/5.2.1.
 - Fix 6.3: On Step 5 head, the widened shape bar flagged both MonsterItem (deleted in Step 6) and MinionStats in lib/models/domain/minion_instance.dart (which duplicated ac, maxHp, strScore, and dexScore). MinionStats was refactored to hold MonsterStatBlock by reference instead of adding a new exemption row.
