@@ -94,7 +94,7 @@ class _MonsterBuilderDialogState extends State<MonsterBuilderDialog> {
       hitPoints: hp,
       hitDieFormula: hitDiceText.isEmpty ? null : hitDiceText,
       challengeRating: crText.isEmpty ? null : crText,
-      actionsMarkdown: _actionsController.text.trim(),
+      actionsMarkdown: '',
     );
 
     Navigator.of(context).pop(monster);
