@@ -1,8 +1,8 @@
 # Cleanup slice 18 progress notes
 Status: IN PROGRESS
 Start heads: core 0af9c2b66e9216b04cbc1f688482e5675ffab6cd, ruleset 343f48dcacf42a7c339a76cab4cc225cecaa19b0, app d0ec577035660eda7054495ab5673be005bcbecc
-Last pushed heads (CI green): core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 996f39d5fc5f483ae5892573689e47149afb6144, app aabb4298707beb86958802d8effa0d3cd7a4c9f3
-Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 996f39d5fc5f483ae5892573689e47149afb6144
+Last pushed heads (CI green): core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 4250e200118ed79810841e91036f00a7a789fcb8, app 54a194ddff2e095753a0db37426cee8b8ab0b4fd
+Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 4250e200118ed79810841e91036f00a7a789fcb8
 Fix ids: 1.1 1.2 1.3 1.4 1.5 2.1 2.2 2.3 3.1 3.2 4.1 4.2 5.1 5.2 6.1 6.2 6.3 7.1 7.2 7.3
 Mutation ids: R1 R2 R3 R4 N1 X1 P1 P2 P3 S1 S2 D1 M1 M2 U1 U2
 
@@ -33,7 +33,7 @@ Fix 7.3: The named fixture changes for unknown facts
 - [x] Step 2 New homebrew spells and items keep their data: ruleset 996f39d5fc5f483ae5892573689e47149afb6144 run 45935037900, app 72916e5d5f7260084f098a17e2584c1bf07726d7 run 45936166323
 - [x] Step 3 One item id and a shape-based model bar: app f2cb17bbaa7442265e78e247032d273c768dd9c3 run 46043871170
 - [x] Step 4 Monster catalog, stored-format and construction pins: app aabb4298707beb86958802d8effa0d3cd7a4c9f3 run 46046586130
-- [ ] Step 5 One stat block model
+- [x] Step 5 One stat block model: ruleset 4250e200118ed79810841e91036f00a7a789fcb8 run 46048859007, app 54a194ddff2e095753a0db37426cee8b8ab0b4fd run 46050233827
 - [ ] Step 6 One monster model
 - [ ] Step 7 Unknown monster facts stay unknown
 - [ ] Step 8 Mutations and report
@@ -51,6 +51,8 @@ Fix 3.1 done: [One id per SRD item] Deleted SrdEquipmentLibrary._withHyphenatedS
 Fix 3.2 done: [The second-model bar matches by shape and names every exemption] Replaced name/suffix filters in test/infrastructure/compliance/no_second_spell_or_item_model_bar_test.dart with shape-based matching over ruleset Spell and EquipmentItem fields (treating rules2014/rules2024 as model-specific and ignoring methods), added explicit per-class exemptions in kSecondModelExemptions, and verified controls for Incantation, SpellEntry, FooDetails, and reference holders.
 Fix 4.1 done: [The bundled monster and summon catalog is pinned] Added test/support/monster_golden_serializer.dart, opt-in test/support/generate_step4_monster_fixtures.dart, test/fixtures/catalog_goldens/monster_catalog_golden.json (343 bundled monsters across both editions, 15 summon presets, 87 summon stat blocks) and monster_lookups_golden.json, and field-by-field guard test/infrastructure/catalog/monster_catalog_goldens_test.dart with zero lib/ changes.
 Fix 4.2 done: [Stored and newly built monsters are pinned] Added 12 stored monster fixtures (string/map/list customProperties, markdown traits/actions, minimal id+name, individual missing F-16 fields, and unreadable CR) across stored JSON, both bundle exports, app backup, and DM backup under test/fixtures/stored_formats/ with monster_stored_format_load_law_test.dart, plus fixed construction-path inputs (4 paths, 14 cases) under test/fixtures/construction_paths/monsters/ with monster_construction_paths_law_test.dart and inventory bar.
+Fix 5.1 done: [One stat block model] Moved MinionStatBlock, CreatureTrait, CreatureAction, and SummonCategory into ruleset MonsterStatBlock (monster_stat_block.dart) with toMap/fromMap/copyWith/equality/hashCode and 500-seed round-trip laws, migrated all 13 bundled bestiary and summon preset files via idempotent tool/migrate_bundled_stat_blocks.py (zero non-class/non-presentation diffs, byte-identical second run), deleted app MinionStatBlock, lowered six big-file ceilings, and verified all Step 4, arena, DPR, and UI goldens pass unedited.
+Fix 5.2 done: [Monster presentation is attached by id] Extracted all 397 bundled stat block accentColor values into lib/models/monster_codex/monster_presentation_registry.dart (kBundledMonsterAccentArgb) and moved the homebrew creature-type accent fallback rule from MonsterHomebrewExt.toMinionStatBlock into resolveMonsterAccentArgb with Step 4 presentation goldens passing unedited.
 
 ## Mutation branches
 None
@@ -62,7 +64,7 @@ cd1a0589d922aa2f06e814dbb267de14c9aa789b red run 45931535844
 None
 
 ## Next
-Begin Step 5 (ruleset, then app): move MinionStatBlock, CreatureTrait, CreatureAction, and SummonCategory to ruleset MonsterStatBlock (Fix 5.1) with 500-seed round-trip laws, and extract monster accent colors into an app MonsterPresentationRegistry keyed by stat block id (Fix 5.2) via an idempotent tool/ generator.
+Begin Step 6 (ruleset, then app): unify MonsterItem into ruleset Monster with Monster.singleEdition and pre-Cleanup slice 18 legacy fromMap hydration (Fixes 6.1-6.2), delete app MonsterItem and toMinionStatBlock/toMonsterItem, migrate bundled bestiary via idempotent tool/ generator, and widen the shape-based second-model bar to Monster and MonsterStatBlock with zero new exemptions (Fix 6.3).
 
 ## Open issues and deviations
 - Step 1 ruleset commit 188c03912b1d7d2a5313502885275f52275be3a2 changed only test files and the changelog, so the app did not re-pin ruleset in Step 1.
