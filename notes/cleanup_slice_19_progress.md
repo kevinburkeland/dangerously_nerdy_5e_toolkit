@@ -1,7 +1,7 @@
 # Cleanup slice 19 progress notes
 Status: IN PROGRESS
 Start heads: core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61, app 3f11442cb157e9c5d5cbbe966539093164a587da
-Last pushed heads (CI green): core 325b293fd087a129db847cbd7dc77e052578e58b, ruleset e6abe9435125e1fdcccd6f72e4aa498afd90ab16, app 0a14e29dd577265d32ddf1795e5d31945d89b6c2
+Last pushed heads (CI green): core 325b293fd087a129db847cbd7dc77e052578e58b, ruleset e6abe9435125e1fdcccd6f72e4aa498afd90ab16, app 4a9c59ba05f420f7dc708c1f24c17f666116aef6
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61
 Fix ids: 1.1 1.2 1.3 2.1 2.2 2.3 2.4 2.5 3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 7.1 7.2 7.3 7.4 7.5
 Mutation ids: N1 W1 B1 S1 S2 G1 T1 K1 Y1 D1 H1 I1 V1 A1 W2 P1
@@ -43,7 +43,7 @@ Fix 7.5: The privacy popup matches the policy
 - [x] Step 4 SRD-named spells keep their classes, type-aware model bar: app 24b45b6f49f5156afbce08053a69b29405c83a05 run 46110050813
 - [x] Step 5 Dead dependency, dart:html, one id helper, used-package rule: core 325b293fd087a129db847cbd7dc77e052578e58b run 46112853313, ruleset e6abe9435125e1fdcccd6f72e4aa498afd90ab16 run 46112861156, app db1dce6e62651525b8bec502bb14a4ba7d2be6d1 run 46114001601
 - [x] Step 6 hive_ce and plain arena collections: app 0a14e29dd577265d32ddf1795e5d31945d89b6c2 run 46117156439
-- [ ] Step 7 Web only
+- [x] Step 7 Web only: app 4a9c59ba05f420f7dc708c1f24c17f666116aef6 run 46119483650
 - [ ] Step 8 Mutations and report
 
 ## Fix checklist
@@ -70,6 +70,11 @@ Fix 5.4 done: [A declared package is used] Added rule D7 (every declared package
 Fix 6.1 done: [Every existing Hive box opens with hive_ce] Recorded all 5 hive_flutter v1.1.0 boxes under test/fixtures/hive_v1_compat/ and added VM and Chrome compatibility guards (9c77099fb485e466ccc34c018b0268acdcff4e52 run 46115462784).
 Fix 6.2 done: [Hive is replaced by hive_ce] Swapped hive_flutter for hive_ce_flutter in pubspec.yaml and all 9 Dart callers, removed hive_flutter D4 exception, and verified VM, Chrome, and legacy_load_law_test.dart.
 Fix 6.3 done: [The arena combatant holds plain immutable collections] Added arena_combatant_immutability_law_test.dart, replaced ISet/IList/IMap in ArenaCombatant with Set/List/Map.unmodifiable, removed fast_immutable_collections, and lowered kDynamicCeiling to 1014.
+Fix 7.1 done: [Crash reporting and Play Integrity leave the app] Removed firebase_crashlytics, CrashlyticsLogSink, and AndroidPlayIntegrityProvider from pubspec.yaml, lib/main.dart, and lib/infrastructure/logging/.
+Fix 7.2 done: [The android and linux folders leave] Deleted android/ and linux/, updated analysis_options.yaml and scripts/check_strict_analysis.sh exclude lists, and removed stale logging doc row.
+Fix 7.3 done: [A web-only bar] Added test/infrastructure/compliance/web_only_bar_test.dart (tagged repo-text) guarding against android/, linux/, Crashlytics, and Play Integrity.
+Fix 7.4 done: [The privacy policy says what the web app contacts] Updated web/legal/PRIVACY_POLICY.md and synced root PRIVACY_POLICY.md to remove Android storage and Crashlytics references.
+Fix 7.5 done: [The privacy popup matches the policy] Updated lib/widgets/dialogs/legal_dialogs.dart and test/widgets/legal_dialogs_test.dart to state Cloud Firestore room retention instead of ephemeral rooms.
 
 ## Mutation branches
 None
@@ -92,7 +97,7 @@ bd10c7e0ea1f5667ea020f8bf9ae8ec368f9369a red run 46118779882
 None
 
 ## Next
-Begin Step 7: remove Crashlytics, Play Integrity, android/ and linux/, add the web-only bar, update PRIVACY_POLICY.md and legal_dialogs.dart.
+Begin Step 8: run all 16 mutations (N1 to P1), execute final exit checks across all three repos, and write the final report.
 
 ## Open issues and deviations
 Factual check on B1: on today's repos, commit 59d7178dea6527a18a2cac3b7fe0f110fb93717a is reachable from origin/main and archive tags in vtt-engine-core, so a fresh full clone of all three repos with archive tags fetched passes NS31; NS84 therefore uses a throwaway core repo with an archive tag that lacks that commit to exercise the unreachable-commit branch.
