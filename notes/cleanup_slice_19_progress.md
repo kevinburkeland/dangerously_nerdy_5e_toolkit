@@ -73,6 +73,10 @@ c647df2189075d97ce2a20cf92c4ba32cb876905 red run 46101601044
 70dbc44588d5c8ac65825bf7cd3b90385526492b red run 46103846241
 da1072bafe5f9e9403c81a75ad502ac843c3f24e red run 46105210208
 05898dca8072924ce8089e02e6506695391478c3 red run 46109192904
+07cfc7d2b3f6a3c85ee20599e4c1a6c63c44f292 red run 46112621262
+b01ffa6256ad99130623b77196d0bbb4b981afa4 red run 46112631848
+1f98b8cd7e264ad825663bb08c98363fdf292b2f cancelled run 46112638581
+4cf45242d487d3c0fbae252f6b86003e3c87b036 red run 46112869852
 
 ## Resets
 None
@@ -88,3 +92,7 @@ Run 46103846241 cause: cause line for the earlier red run still named uncreated 
 Run 46105210208 cause: test_ci_scope.sh case (f) missed mkdir -p notes after checkout main on runner; fixed by b687f42b650e5e8bf25b2b1670cbfc2c11279641
 Run 46109192904 cause: unnecessary import of vtt_engine_core in differential law failed flutter analyze; fixed by c14e1e6267155d068b9238daacda4b216b75ff1f
 Factual check on E1: DmReferenceItem in lib/models/dm_screen_data.dart still matches 3 EquipmentItem fields by both name and type (String cost, String cost2014, String cost2024), not only rules2014/rules2024; kept its existing exemption row with those 3 fields named so the bar stays green.
+Run 46112621262 cause: DC77 in test_check_dependencies.sh lacked fake_async mock HTTP fixtures in core; fixed by 325b293fd087a129db847cbd7dc77e052578e58b
+Run 46112631848 cause: DC77 in test_check_dependencies.sh lacked fake_async mock HTTP fixtures in ruleset; fixed by e6abe9435125e1fdcccd6f72e4aa498afd90ab16
+Run 46112638581 cause: superseded by DC77 HTTP fixture fix; fixed by 4cf45242d487d3c0fbae252f6b86003e3c87b036
+Run 46112869852 cause: web_http_fetcher_chrome_test.dart lacked TestOn browser, opaque_id.dart in utils violated domain-to-utils layer rule, codebase_map.md and big_file_ratchet needed refresh, and earlier red runs needed disclosure; fixed by c3dea98049f2e41d77ea314f95ce435df1d264a1
