@@ -196,4 +196,5 @@ flutter analyze
 
 Before completing any engineering task:
 1. **Verification:** Ensure static analysis (`flutter analyze`) reports zero issues and relevant test suites pass.
-2. **Living Documentation:** Update living documentation (`README.md`, `AGENTS.md`, or `.agents/rules/`) when architecture, public behavior, or documented capabilities change. Do not perform documentation churn for routine internal code changes.
+2. **Before Every Push (`main` Must Be Green):** Before pushing to `main` in any repo, verify the newest workflow runs on `main` are green. A green run on a notes-only app head counts as green on that exact head only when its scope line names a parent run that is itself green on that parent's exact SHA.
+3. **Living Documentation:** Update living documentation (`README.md`, `AGENTS.md`, or `.agents/rules/`) when architecture, public behavior, or documented capabilities change. Do not perform documentation churn for routine internal code changes.

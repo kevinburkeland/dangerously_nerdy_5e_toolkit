@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-27
+- Cleanup slice 19: Step 3 add ci_scope.py, repo-text tags and tag bar, ci_result.py final job, and notes-only parent run verification in check_notes_shas.py (Fixes 3.1-3.5).
 - Cleanup slice 19: Step 2 move notes checks out of DCO job with workflow check, remove mobile build jobs, emit shard weights from CI JSON reports, and balance shards by measured time (Fixes 2.1-2.5).
 - Cleanup slice 19: Retire 12 cs18 mutation branches, add NS84 unreachable-commit hint when archive tags are present locally to test_check_notes_shas.sh, and upgrade flutter_webrtc to ^1.7.0 for 14-day dependency look-ahead (Step 1, Fixes 1.1-1.3).
 - Cleanup slice 18: Re-pin vtt_ruleset_dnd5e to 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61, remove invented F-16 monster fact defaults across forms/parsers/importers/codex/arena/DPR (displaying em-dash for unknown facts, refusing incomplete monsters before arena matches, returning null DPR and sorting unknown DPR/CR last), remove all parseChallengeRating(...) ?? 0 fallbacks so unreadable CR stays unknown (All CR only), add bundled completeness guard, codex CR test, arena refusal test, and both source bars, and update Step 4 monster expected fixtures in a dedicated commit (Step 7, Fixes 7.1-7.3).

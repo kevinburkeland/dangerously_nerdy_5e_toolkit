@@ -28,6 +28,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 -I scripts/check_notes_shas.py --repo .=kevinburkeland/dangerously_nerdy_5e_toolkit --repo "$RUNNER_TEMP/core.git=kevinburkeland/vtt-engine-core" --repo "$RUNNER_TEMP/ruleset.git=kevinburkeland/vtt-ruleset-dnd5e" notes/*.md
+  ci-result:
+    runs-on: ubuntu-latest
+    needs: [dco, notes-shas]
+    if: always()
+    steps:
+      - run: echo ok
 EOF
 
 out1=$(python3 -I "$CHECK_SCRIPT" "$valid_wf" 2>&1)
@@ -113,6 +119,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 -I scripts/check_notes_shas.py --repo .=kevinburkeland/dangerously_nerdy_5e_toolkit --repo "$RUNNER_TEMP/core.git=kevinburkeland/vtt-engine-core" --repo "$RUNNER_TEMP/ruleset.git=kevinburkeland/vtt-ruleset-dnd5e" notes/*.md
+  ci-result:
+    runs-on: ubuntu-latest
+    needs: [dco, notes-shas]
+    if: always()
+    steps:
+      - run: echo ok
 EOF
 set +e
 out6=$(python3 -I "$CHECK_SCRIPT" "$in_dco" 2>&1)
@@ -124,6 +136,25 @@ if [ "$rc6" -eq 0 ] || [[ "$out6" != *"dco"* ]]; then
 fi
 echo "PASS NW6"
 
+# NW8 (Fix 3.4): a job missing from ci-result's needs fails, naming it
+missing_needs="$TMP_DIR/missing_needs.yml"
+cat "$valid_wf" > "$missing_needs"
+cat << 'EOF' >> "$missing_needs"
+  extra-job:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo extra
+EOF
+set +e
+out8=$(python3 -I "$CHECK_SCRIPT" "$missing_needs" 2>&1)
+rc8=$?
+set -e
+if [ "$rc8" -eq 0 ] || [[ "$out8" != *"extra-job"* ]]; then
+  echo "FAIL NW8: expected failure naming extra-job, got rc=$rc8: $out8" >&2
+  exit 1
+fi
+echo "PASS NW8"
+
 # NW7 (control): the real workflow passes
 if [ -f "$REAL_WORKFLOW" ]; then
   out7=$(python3 -I "$CHECK_SCRIPT" "$REAL_WORKFLOW" 2>&1)
@@ -134,4 +165,4 @@ if [ -f "$REAL_WORKFLOW" ]; then
   echo "PASS NW7"
 fi
 
-echo "All notes workflow check self-tests passed (NW1 - NW7)."
+echo "All notes workflow check self-tests passed (NW1 - NW8)."

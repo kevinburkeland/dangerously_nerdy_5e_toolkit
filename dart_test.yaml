@@ -1,0 +1,3 @@
+tags:
+  repo-text:
+    # Tests that read Markdown or other repository files outside lib/ and test/

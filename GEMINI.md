@@ -52,4 +52,5 @@ For full system architecture, fast navigation indexes, and detailed engineering 
 7. **Definition of Done:**
    - Static analysis (`flutter analyze`) must pass with zero issues.
    - Relevant test suites must pass.
+   - Before every push to `main`, verify `main` is green; a green run on a notes-only app head counts as green on that exact head only when its scope line names a parent run that is itself green on that parent's exact SHA.
    - Living documentation is updated when architecture, public behavior, or documented capabilities change.

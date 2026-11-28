@@ -137,6 +137,8 @@ def main():
     verified_commits = {}
     failed_commits = set()
     run_cache = {}
+    run_jobs_cache = {}
+    job_logs_cache = {}
     repo_runs_cache = {}
 
     headers = {
@@ -175,6 +177,42 @@ def main():
             data_or_err = str(e)
             run_cache[cache_key] = (status_code, data_or_err)
             return status_code, data_or_err
+
+    def fetch_run_jobs(owner_repo, run_id):
+        cache_key = (owner_repo, str(run_id))
+        if cache_key in run_jobs_cache:
+            return run_jobs_cache[cache_key]
+        url = f"{args.api_base.rstrip('/')}/repos/{owner_repo}/actions/runs/{run_id}/jobs?per_page=50"
+        req = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                run_jobs_cache[cache_key] = (resp.getcode(), data)
+                return resp.getcode(), data
+        except urllib.error.HTTPError as e:
+            run_jobs_cache[cache_key] = (e.code, None)
+            return e.code, None
+        except Exception as e:
+            run_jobs_cache[cache_key] = (0, str(e))
+            return 0, str(e)
+
+    def fetch_job_logs(owner_repo, job_id):
+        cache_key = (owner_repo, str(job_id))
+        if cache_key in job_logs_cache:
+            return job_logs_cache[cache_key]
+        url = f"{args.api_base.rstrip('/')}/repos/{owner_repo}/actions/jobs/{job_id}/logs"
+        req = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                body = resp.read().decode('utf-8', errors='replace')
+                job_logs_cache[cache_key] = (resp.getcode(), body)
+                return resp.getcode(), body
+        except urllib.error.HTTPError as e:
+            job_logs_cache[cache_key] = (e.code, '')
+            return e.code, ''
+        except Exception as e:
+            job_logs_cache[cache_key] = (0, str(e))
+            return 0, str(e)
 
     def fetch_repo_runs(owner_repo, oldest_commit_date=None):
         if owner_repo in repo_runs_cache:
@@ -395,6 +433,40 @@ def main():
                         problems.append(f"{file_path}:{line_idx}: run {run_id}: head_sha is {head_sha}")
                     elif conclusion != 'success':
                         problems.append(f"{file_path}:{line_idx}: run {run_id}: conclusion is {conclusion}")
+                    else:
+                        j_st, j_data = fetch_run_jobs(owner_repo, run_id)
+                        if j_st == 200 and isinstance(j_data, dict):
+                            jobs = j_data.get('jobs', [])
+                            scope_job = next((j for j in jobs if 'Decide CI scope' in str(j.get('name', ''))), None)
+                            is_notes_only = scope_job is not None and any(
+                                'Notes text checks' in str(j.get('name', '')) and j.get('conclusion') == 'success'
+                                for j in jobs
+                            )
+                            if is_notes_only:
+                                l_st, l_text = fetch_job_logs(owner_repo, scope_job.get('id'))
+                                if l_st != 200:
+                                    problems.append(f"{file_path}:{line_idx}: run {run_id}: could not verify notes-only scope log (HTTP {l_st})")
+                                else:
+                                    sm = re.search(r'scope=notes-only\s+parent=([0-9a-fA-F]{40})\s+parent_run=([0-9]+)', l_text)
+                                    if not sm:
+                                        problems.append(f"{file_path}:{line_idx}: run {run_id}: notes-only run has no valid scope line")
+                                    else:
+                                        p_sha = sm.group(1).lower()
+                                        p_run_id = sm.group(2)
+                                        p_st, p_data = fetch_run(owner_repo, p_run_id)
+                                        if p_st == 404:
+                                            problems.append(f"{file_path}:{line_idx}: run {run_id}: parent run {p_run_id} not found")
+                                        elif p_st == 200 and isinstance(p_data, dict):
+                                            p_head = str(p_data.get('head_sha', '')).lower()
+                                            p_conc = p_data.get('conclusion')
+                                            if p_head != p_sha:
+                                                problems.append(f"{file_path}:{line_idx}: run {run_id}: parent run {p_run_id} head_sha is {p_head} (expected {p_sha})")
+                                            elif p_conc != 'success':
+                                                problems.append(f"{file_path}:{line_idx}: run {run_id}: parent run {p_run_id} conclusion is {p_conc}")
+                                        else:
+                                            problems.append(f"{file_path}:{line_idx}: run {run_id}: could not verify parent run {p_run_id}")
+                        elif j_st != 200:
+                            problems.append(f"{file_path}:{line_idx}: run {run_id}: could not verify run jobs (HTTP {j_st})")
                 else:
                     err_msg = f"HTTP {status_code}" if status_code else str(data_or_err)
                     problems.append(f"{file_path}:{line_idx}: run {run_id}: could not verify run {run_id} ({err_msg})")

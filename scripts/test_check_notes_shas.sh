@@ -75,6 +75,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b'{\"workflow_runs\": []}')
                 return
+        if path.endswith('/jobs'):
+            rel_file = path[:-len('/jobs')].strip('/') + '.jobs.json'
+            if os.path.exists(rel_file):
+                data = open(rel_file, 'rb').read()
+            else:
+                data = b'{\"jobs\": []}'
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        if path.endswith('/logs'):
+            rel_file = path.strip('/') + '.txt'
+            if os.path.exists(rel_file):
+                data = open(rel_file, 'rb').read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain')
+                self.send_header('Content-Length', str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
         return super().do_GET()
 
 with socketserver.TCPServer(('127.0.0.1', 0), Handler) as httpd:
@@ -3109,8 +3131,94 @@ case_NS84() {
 )
 }
 
+# NS85 (Fix 3.5a): a notes-only run whose scope line names a green parent passes.
+case_NS85() {
+(
+  repo="$TMP_DIR/repo_ns85"
+  setup_repo "$repo"
+  sha_parent=$(git -C "$repo" rev-parse HEAD)
+  echo "n" > "$repo/n.md" && git -C "$repo" add n.md && git -C "$repo" commit -m "notes" >/dev/null
+  sha_notes=$(git -C "$repo" rev-parse HEAD)
+
+  echo "{\"head_sha\": \"$sha_parent\", \"conclusion\": \"success\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7001"
+  echo "{\"head_sha\": \"$sha_notes\", \"conclusion\": \"success\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7002"
+  echo '{"jobs":[{"id":8001,"name":"🧭 Decide CI scope","conclusion":"success"},{"id":8002,"name":"📄 Notes text checks","conclusion":"success"},{"id":8003,"name":"🌐 Build & Package Web Bundle","conclusion":"skipped"}]}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7002.jobs.json"
+  mkdir -p "$SERVER_DIR/repos/test-org/test-repo/actions/jobs/8001"
+  echo "scope=notes-only parent=$sha_parent parent_run=7001 changed=notes/p.md" > "$SERVER_DIR/repos/test-org/test-repo/actions/jobs/8001/logs.txt"
+
+  notes="$TMP_DIR/notes_ns85.md"
+  echo "Notes: $sha_notes run 7002" > "$notes"
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL NS85: $out" >&2; exit 1; }
+)
+}
+
+# NS86 (Fix 3.5b): a notes-only run whose parent run was red fails.
+case_NS86() {
+(
+  repo="$TMP_DIR/repo_ns86"
+  setup_repo "$repo"
+  sha_parent=$(git -C "$repo" rev-parse HEAD)
+  echo "n" > "$repo/n.md" && git -C "$repo" add n.md && git -C "$repo" commit -m "notes" >/dev/null
+  sha_notes=$(git -C "$repo" rev-parse HEAD)
+
+  echo "{\"head_sha\": \"$sha_parent\", \"conclusion\": \"failure\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7011"
+  echo "{\"head_sha\": \"$sha_notes\", \"conclusion\": \"success\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7012"
+  echo '{"jobs":[{"id":8011,"name":"🧭 Decide CI scope","conclusion":"success"},{"id":8012,"name":"📄 Notes text checks","conclusion":"success"},{"id":8013,"name":"🌐 Build & Package Web Bundle","conclusion":"skipped"}]}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7012.jobs.json"
+  mkdir -p "$SERVER_DIR/repos/test-org/test-repo/actions/jobs/8011"
+  echo "scope=notes-only parent=$sha_parent parent_run=7011 changed=notes/p.md" > "$SERVER_DIR/repos/test-org/test-repo/actions/jobs/8011/logs.txt"
+
+  notes="$TMP_DIR/notes_ns86.md"
+  echo "Notes: $sha_notes run 7012" > "$notes"
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] && [[ "$out" == *"7011"* ]] || { echo "FAIL NS86: expected fail naming 7011, got rc=$rc: $out" >&2; exit 1; }
+)
+}
+
+# NS87 (Fix 3.5c): a notes-only run whose scope line names a parent run of a different SHA fails.
+case_NS87() {
+(
+  repo="$TMP_DIR/repo_ns87"
+  setup_repo "$repo"
+  sha_parent=$(git -C "$repo" rev-parse HEAD)
+  echo "n" > "$repo/n.md" && git -C "$repo" add n.md && git -C "$repo" commit -m "notes" >/dev/null
+  sha_notes=$(git -C "$repo" rev-parse HEAD)
+
+  echo '{"head_sha": "0000000000000000000000000000000000000000", "conclusion": "success"}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7021"
+  echo "{\"head_sha\": \"$sha_notes\", \"conclusion\": \"success\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7022"
+  echo '{"jobs":[{"id":8021,"name":"🧭 Decide CI scope","conclusion":"success"},{"id":8022,"name":"📄 Notes text checks","conclusion":"success"},{"id":8023,"name":"🌐 Build & Package Web Bundle","conclusion":"skipped"}]}' > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7022.jobs.json"
+  mkdir -p "$SERVER_DIR/repos/test-org/test-repo/actions/jobs/8021"
+  echo "scope=notes-only parent=$sha_parent parent_run=7021 changed=notes/p.md" > "$SERVER_DIR/repos/test-org/test-repo/actions/jobs/8021/logs.txt"
+
+  notes="$TMP_DIR/notes_ns87.md"
+  echo "Notes: $sha_notes run 7022" > "$notes"
+  set +e
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes" 2>&1)
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] && [[ "$out" == *"head_sha"* ]] || { echo "FAIL NS87: expected fail on head_sha mismatch, got rc=$rc: $out" >&2; exit 1; }
+)
+}
+
+# NS88 (Fix 3.5d): a run with no scope job (from before Step 3) is checked as today.
+case_NS88() {
+(
+  repo="$TMP_DIR/repo_ns88"
+  setup_repo "$repo"
+  sha=$(git -C "$repo" rev-parse HEAD)
+  echo "{\"head_sha\": \"$sha\", \"conclusion\": \"success\"}" > "$SERVER_DIR/repos/test-org/test-repo/actions/runs/7031"
+  notes="$TMP_DIR/notes_ns88.md"
+  echo "Step: $sha run 7031" > "$notes"
+  out=$(python3 -I "$CHECK_SCRIPT" --repo "$repo=test-org/test-repo" --api-base "$API_BASE" "$notes")
+  [[ "$out" == *"All SHAs are valid commits"* ]] || { echo "FAIL NS88: $out" >&2; exit 1; }
+)
+}
+
 ALL_CASES=(
-  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82 NS83 NS84
+  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82 NS83 NS84 NS85 NS86 NS87 NS88
 )
 
 SELECTED_CASES=()
@@ -3153,7 +3261,7 @@ if [ "${#FAILED_CASES[@]}" -gt 0 ]; then
 fi
 
 if [ "$#" -eq 0 ]; then
-  echo "All notes SHA check self-tests passed (NS1 - NS84)."
+  echo "All notes SHA check self-tests passed (NS1 - NS88)."
 else
   echo "Selected notes SHA check self-tests passed (${#SELECTED_CASES[@]} case(s))."
 fi

@@ -46,7 +46,7 @@ def parse_workflow_jobs(text):
 
         if indent == 2 and stripped.endswith(":") and not stripped.startswith("-"):
             job_name = stripped[:-1].strip()
-            current_job = {"name": job_name, "steps": [], "env": []}
+            current_job = {"name": job_name, "steps": [], "env": [], "needs": []}
             jobs[job_name] = current_job
             in_steps = False
             current_step = None
@@ -55,6 +55,14 @@ def parse_workflow_jobs(text):
             continue
 
         if current_job is None:
+            continue
+
+        if indent == 4 and stripped.startswith("needs:"):
+            val = stripped[len("needs:"):].strip()
+            if val.startswith("[") and val.endswith("]"):
+                current_job["needs"] = [x.strip() for x in val[1:-1].split(",") if x.strip()]
+            elif val:
+                current_job["needs"] = [val]
             continue
 
         if indent == 4 and stripped == "steps:":
@@ -187,6 +195,23 @@ def check_workflow(workflow_path):
     if not re.search(r"(?:^|\s)notes/\*\.md(?:\s|$)", run_cmd):
         print(
             f"Error: Live notes step must run over 'notes/*.md' in {workflow_path}",
+            file=sys.stderr,
+        )
+        return 1
+
+    # 6. ci-result job must exist and list every other job in its needs:.
+    ci_result = jobs.get("ci-result")
+    if ci_result is None:
+        print(
+            f"Error: Final job 'ci-result' is missing from {workflow_path}",
+            file=sys.stderr,
+        )
+        return 1
+    needed = set(ci_result["needs"])
+    missing_jobs = sorted(j for j in jobs if j != "ci-result" and j not in needed)
+    if missing_jobs:
+        print(
+            f"Error: Job(s) missing from 'ci-result' needs: {', '.join(missing_jobs)} in {workflow_path}",
             file=sys.stderr,
         )
         return 1
