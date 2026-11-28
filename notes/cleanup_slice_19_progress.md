@@ -1,7 +1,7 @@
 # Cleanup slice 19 progress notes
 Status: IN PROGRESS
 Start heads: core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61, app 3f11442cb157e9c5d5cbbe966539093164a587da
-Last pushed heads (CI green): core 325b293fd087a129db847cbd7dc77e052578e58b, ruleset e6abe9435125e1fdcccd6f72e4aa498afd90ab16, app db1dce6e62651525b8bec502bb14a4ba7d2be6d1
+Last pushed heads (CI green): core 325b293fd087a129db847cbd7dc77e052578e58b, ruleset e6abe9435125e1fdcccd6f72e4aa498afd90ab16, app 0a14e29dd577265d32ddf1795e5d31945d89b6c2
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61
 Fix ids: 1.1 1.2 1.3 2.1 2.2 2.3 2.4 2.5 3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 7.1 7.2 7.3 7.4 7.5
 Mutation ids: N1 W1 B1 S1 S2 G1 T1 K1 Y1 D1 H1 I1 V1 A1 W2 P1
@@ -42,7 +42,7 @@ Fix 7.5: The privacy popup matches the policy
 - [x] Step 3 Notes-only commits run only what can change: app e639397e1c4f812e4aba1d5ab52adda0c0f327dc run 46106268842
 - [x] Step 4 SRD-named spells keep their classes, type-aware model bar: app 24b45b6f49f5156afbce08053a69b29405c83a05 run 46110050813
 - [x] Step 5 Dead dependency, dart:html, one id helper, used-package rule: core 325b293fd087a129db847cbd7dc77e052578e58b run 46112853313, ruleset e6abe9435125e1fdcccd6f72e4aa498afd90ab16 run 46112861156, app db1dce6e62651525b8bec502bb14a4ba7d2be6d1 run 46114001601
-- [ ] Step 6 hive_ce and plain arena collections
+- [x] Step 6 hive_ce and plain arena collections: app 0a14e29dd577265d32ddf1795e5d31945d89b6c2 run 46117156439
 - [ ] Step 7 Web only
 - [ ] Step 8 Mutations and report
 
@@ -67,6 +67,9 @@ Fix 5.1 done: [The dead dev dependency and the misplaced hive line go] Removed u
 Fix 5.2 done: [No dart:html under lib] Replaced dart:html in http_fetcher_web.dart and web_lifecycle_web.dart with package:web and dart:js_interop, added no_dart_html_source_bar_test.dart, http_fetcher_status_test.dart, and web_http_fetcher_chrome_test.dart (TestOn browser).
 Fix 5.3 done: [One opaque id helper] Added pure-Dart lib/domain/opaque_id.dart (CryptoRNG Uuid v4), added opaque_id_test.dart and opaque_id_source_bar_test.dart, and migrated UUID and weak timestamp/random id sites under lib/.
 Fix 5.4 done: [A declared package is used] Added rule D7 (every declared package must be used) to scripts/check_dependencies.py with DC77-DC85 self-tests and synced byte-identical scripts across core, ruleset, and app.
+Fix 6.1 done: [Every existing Hive box opens with hive_ce] Recorded all 5 hive_flutter v1.1.0 boxes under test/fixtures/hive_v1_compat/ and added VM and Chrome compatibility guards (run 46115462784).
+Fix 6.2 done: [Hive is replaced by hive_ce] Swapped hive_flutter for hive_ce_flutter in pubspec.yaml and all 9 Dart callers, removed hive_flutter D4 exception, and verified VM, Chrome, and legacy_load_law_test.dart.
+Fix 6.3 done: [The arena combatant holds plain immutable collections] Added arena_combatant_immutability_law_test.dart, replaced ISet/IList/IMap in ArenaCombatant with Set/List/Map.unmodifiable, removed fast_immutable_collections, and lowered kDynamicCeiling to 1014.
 
 ## Mutation branches
 None
@@ -87,7 +90,7 @@ c01500b6573294d3958f5d977b57d03754fc6eae red run 46116375449
 None
 
 ## Next
-Begin Step 6: migrate from hive/hive_flutter to hive_ce/hive_ce_flutter and replace fast_immutable_collections in ArenaCombatant with plain unmodifiable collections.
+Begin Step 7: remove Crashlytics, Play Integrity, android/ and linux/, add the web-only bar, update PRIVACY_POLICY.md and legal_dialogs.dart.
 
 ## Open issues and deviations
 Factual check on B1: on today's repos, commit 59d7178dea6527a18a2cac3b7fe0f110fb93717a is reachable from origin/main and archive tags in vtt-engine-core, so a fresh full clone of all three repos with archive tags fetched passes NS31; NS84 therefore uses a throwaway core repo with an archive tag that lacks that commit to exercise the unreachable-commit branch.
