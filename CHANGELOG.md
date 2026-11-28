@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-27
+- Cleanup slice 19: Step 6 replace hive_flutter with hive_ce_flutter backed by VM and Chrome box compatibility guards, replace fast_immutable_collections in ArenaCombatant with plain unmodifiable collections, and lower kDynamicCeiling to 1014 (Fixes 6.1-6.3).
 - Cleanup slice 19: Step 5 remove unused mutation_test and redundant hive direct dependency, replace dart:html with package:web and dart:js_interop, centralize opaque ID generation in lib/domain/opaque_id.dart, and add rule D7 (declared package must be used) to check_dependencies.py (Fixes 5.1-5.4).
 - Cleanup slice 19: Step 4 restore SRD class-by-name fallback for homebrew spells in HomebrewLibrarySync, add differential law, and upgrade no_second_spell_or_item_model_bar_test.dart to type-aware matching (Fixes 4.1-4.3).
 - Cleanup slice 19: Step 3 add ci_scope.py, repo-text tags and tag bar, ci_result.py final job, and notes-only parent run verification in check_notes_shas.py (Fixes 3.1-3.5).

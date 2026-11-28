@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
 
@@ -8,7 +7,6 @@ import 'arena_condition.dart';
 import 'monster_combat_profile.dart';
 import 'package:vtt_engine_core/simulation/precomputed_attack.dart';
 import 'package:vtt_engine_core/models/value_objects/hit_points.dart';
-export 'package:fast_immutable_collections/fast_immutable_collections.dart';
 export 'arena_condition.dart';
 export 'monster_combat_profile.dart';
 export 'package:vtt_engine_core/simulation/combat_rider.dart';
@@ -71,16 +69,16 @@ class ArenaCombatant {
   final bool hasHover;
   int altitudeInFeet;
   int meleeReachInFeet;
-  ISet<ArenaCondition> conditions;
-  IList<ActiveCondition> activeConditions;
+  Set<ArenaCondition> conditions;
+  List<ActiveCondition> activeConditions;
 
   // Spellcasting State & Pre-Cached Attributes
-  IMap<int, int> currentSpellSlots;
-  IMap<int, int> maxSpellSlots;
+  Map<int, int> currentSpellSlots;
+  Map<int, int> maxSpellSlots;
   final List<String> knownSpellIds;
   final int spellSaveDc;
   final int spellAttackBonus;
-  final IMap<String, int> savingThrowBonuses;
+  final Map<String, int> savingThrowBonuses;
   String? activeConcentrationSpellId;
   bool usedReactionThisRound;
   bool castBonusActionSpellThisTurn;
@@ -101,7 +99,7 @@ class ArenaCombatant {
   int critsLanded;
 
   // Attribute Drain & Max HP Reduction State
-  IMap<String, int> drainedAbilityScores;
+  Map<String, int> drainedAbilityScores;
   int maxHpReduction;
   bool isHealingSuppressed;
 
@@ -122,14 +120,14 @@ class ArenaCombatant {
     this.hasHover = false,
     this.altitudeInFeet = 0,
     this.meleeReachInFeet = 5,
-    dynamic conditions,
-    dynamic activeConditions,
-    dynamic currentSpellSlots,
-    dynamic maxSpellSlots,
+    Iterable<ArenaCondition>? conditions,
+    Iterable<ActiveCondition>? activeConditions,
+    Map<int, int>? currentSpellSlots,
+    Map<int, int>? maxSpellSlots,
     List<String>? knownSpellIds,
     this.spellSaveDc = 10,
     this.spellAttackBonus = 0,
-    dynamic savingThrowBonuses,
+    Map<String, int>? savingThrowBonuses,
     this.activeConcentrationSpellId,
     this.usedReactionThisRound = false,
     this.castBonusActionSpellThisTurn = false,
@@ -144,7 +142,7 @@ class ArenaCombatant {
     this.attacksMade = 0,
     this.hitsLanded = 0,
     this.critsLanded = 0,
-    dynamic drainedAbilityScores,
+    Map<String, int>? drainedAbilityScores,
     this.maxHpReduction = 0,
     this.isHealingSuppressed = false,
     this.hasExplicitAcOverride = false,
@@ -157,74 +155,68 @@ class ArenaCombatant {
             ),
         conditions = _parseConditions(conditions, activeConditions),
         activeConditions = _parseActiveConditions(activeConditions, conditions),
-        maxSpellSlots = _parseIMap<int, int>(maxSpellSlots),
+        maxSpellSlots = _parseUnmodifiableMap<int, int>(maxSpellSlots),
         currentSpellSlots = currentSpellSlots != null
-            ? _parseIMap<int, int>(currentSpellSlots)
-            : _parseIMap<int, int>(maxSpellSlots),
+            ? _parseUnmodifiableMap<int, int>(currentSpellSlots)
+            : _parseUnmodifiableMap<int, int>(maxSpellSlots),
         knownSpellIds =
             knownSpellIds != null ? List<String>.from(knownSpellIds) : [],
-        savingThrowBonuses = _parseIMap<String, int>(savingThrowBonuses),
-        drainedAbilityScores = _parseIMap<String, int>(drainedAbilityScores),
+        savingThrowBonuses = _parseUnmodifiableMap<String, int>(savingThrowBonuses),
+        drainedAbilityScores = _parseUnmodifiableMap<String, int>(drainedAbilityScores),
         legendaryActionsRemaining =
             legendaryActionsRemaining ?? maxLegendaryActions,
         legendaryResistancesRemaining =
             legendaryResistancesRemaining ?? maxLegendaryResistances;
 
-  static ISet<ArenaCondition> _parseConditions(
-      dynamic conditions, dynamic activeConditions) {
+  static Set<ArenaCondition> _parseConditions(
+    Iterable<ArenaCondition>? conditions,
+    Iterable<ActiveCondition>? activeConditions,
+  ) {
     if (conditions != null) {
-      if (conditions is ISet<ArenaCondition>) return conditions;
-      if (conditions is Iterable<ArenaCondition>) return conditions.toISet();
-      if (conditions is Iterable)
-        return ISet<ArenaCondition>(conditions.cast<ArenaCondition>());
+      return Set<ArenaCondition>.unmodifiable(conditions);
     }
     if (activeConditions != null) {
-      if (activeConditions is IList<ActiveCondition>) {
-        return activeConditions.map((a) => a.condition).toISet();
-      }
-      if (activeConditions is Iterable<ActiveCondition>) {
-        return activeConditions.map((a) => a.condition).toISet();
-      }
+      return Set<ArenaCondition>.unmodifiable(
+        activeConditions.map((a) => a.condition),
+      );
     }
-    return const ISetConst({});
+    return const <ArenaCondition>{};
   }
 
-  static IList<ActiveCondition> _parseActiveConditions(
-      dynamic activeConditions, dynamic conditions) {
+  static List<ActiveCondition> _parseActiveConditions(
+    Iterable<ActiveCondition>? activeConditions,
+    Iterable<ArenaCondition>? conditions,
+  ) {
     if (activeConditions != null) {
-      if (activeConditions is IList<ActiveCondition>) return activeConditions;
-      if (activeConditions is Iterable<ActiveCondition>)
-        return activeConditions.toIList();
-      if (activeConditions is Iterable)
-        return IList<ActiveCondition>(activeConditions.cast<ActiveCondition>());
+      return List<ActiveCondition>.unmodifiable(activeConditions);
     }
     if (conditions != null) {
-      if (conditions is ISet<ArenaCondition>) {
-        return conditions.map((c) => ActiveCondition(condition: c)).toIList();
-      }
-      if (conditions is Iterable<ArenaCondition>) {
-        return conditions.map((c) => ActiveCondition(condition: c)).toIList();
-      }
+      return List<ActiveCondition>.unmodifiable(
+        conditions.map((c) => ActiveCondition(condition: c)),
+      );
     }
-    return const IListConst([]);
+    return const <ActiveCondition>[];
   }
 
-  static IMap<K, V> _parseIMap<K, V>(dynamic map) {
-    if (map == null) return IMap<K, V>();
-    if (map is IMap<K, V>) return map;
-    if (map is Map<K, V>) return map.toIMap();
-    if (map is Map) return IMap<K, V>(Map<K, V>.from(map));
-    return IMap<K, V>();
+  static Map<K, V> _parseUnmodifiableMap<K, V>(Map<K, V>? map) {
+    if (map == null || map.isEmpty) return <K, V>{};
+    return Map<K, V>.unmodifiable(map);
   }
 
-  /// Updates a spell slot level count immutably via structural sharing.
+  /// Updates a spell slot level count immutably.
   void setSpellSlot(int level, int count) {
-    currentSpellSlots = currentSpellSlots.add(level, count);
+    currentSpellSlots = Map<int, int>.unmodifiable({
+      ...currentSpellSlots,
+      level: count,
+    });
   }
 
-  /// Updates a max spell slot level count immutably via structural sharing.
+  /// Updates a max spell slot level count immutably.
   void setMaxSpellSlot(int level, int count) {
-    maxSpellSlots = maxSpellSlots.add(level, count);
+    maxSpellSlots = Map<int, int>.unmodifiable({
+      ...maxSpellSlots,
+      level: count,
+    });
   }
 
   /// Effective AC accounting for active reaction bonuses (e.g. Shield spell +5 AC).
@@ -310,13 +302,13 @@ class ArenaCombatant {
       hasHover: profile.hasHover,
       altitudeInFeet: profile.defaultAltitudeInFeet,
       meleeReachInFeet: profile.meleeReachInFeet,
-      conditions: const ISetConst({}),
-      maxSpellSlots: profile.maxSpellSlots.toIMap(),
-      currentSpellSlots: profile.maxSpellSlots.toIMap(),
+      conditions: const <ArenaCondition>{},
+      maxSpellSlots: profile.maxSpellSlots,
+      currentSpellSlots: profile.maxSpellSlots,
       knownSpellIds: profile.knownSpellIds,
       spellSaveDc: profile.spellSaveDc,
       spellAttackBonus: profile.spellAttackBonus,
-      savingThrowBonuses: profile.savingThrowBonuses.toIMap(),
+      savingThrowBonuses: profile.savingThrowBonuses,
       activeConcentrationSpellId: null,
       usedReactionThisRound: false,
       castBonusActionSpellThisTurn: false,
@@ -341,13 +333,21 @@ class ArenaCombatant {
     int Function(int sides)? diceRoller,
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
-    conditions = conditions.add(activeCondition.condition);
+    conditions = Set<ArenaCondition>.unmodifiable({
+      ...conditions,
+      activeCondition.condition,
+    });
     final idx = activeConditions
         .indexWhere((a) => a.condition == activeCondition.condition);
     if (idx >= 0) {
-      activeConditions = activeConditions.put(idx, activeCondition);
+      final next = List<ActiveCondition>.of(activeConditions);
+      next[idx] = activeCondition;
+      activeConditions = List<ActiveCondition>.unmodifiable(next);
     } else {
-      activeConditions = activeConditions.add(activeCondition);
+      activeConditions = List<ActiveCondition>.unmodifiable([
+        ...activeConditions,
+        activeCondition,
+      ]);
     }
     return _handleDisruptiveCondition(
       activeCondition.condition,
@@ -364,7 +364,7 @@ class ArenaCombatant {
     int? durationRounds,
     String? source,
   }) {
-    conditions = conditions.add(condition);
+    conditions = Set<ArenaCondition>.unmodifiable({...conditions, condition});
     final idx = activeConditions.indexWhere((a) => a.condition == condition);
     final active = ActiveCondition(
       condition: condition,
@@ -372,9 +372,14 @@ class ArenaCombatant {
       source: source,
     );
     if (idx >= 0) {
-      activeConditions = activeConditions.put(idx, active);
+      final next = List<ActiveCondition>.of(activeConditions);
+      next[idx] = active;
+      activeConditions = List<ActiveCondition>.unmodifiable(next);
     } else {
-      activeConditions = activeConditions.add(active);
+      activeConditions = List<ActiveCondition>.unmodifiable([
+        ...activeConditions,
+        active,
+      ]);
     }
 
     return _handleDisruptiveCondition(condition, diceRoller, edition);
@@ -402,10 +407,15 @@ class ArenaCombatant {
 
         isAirborne = false;
         altitudeInFeet = 0;
-        conditions = conditions.add(ArenaCondition.prone);
+        conditions = Set<ArenaCondition>.unmodifiable({
+          ...conditions,
+          ArenaCondition.prone,
+        });
         if (!activeConditions.any((a) => a.condition == ArenaCondition.prone)) {
-          activeConditions = activeConditions
-              .add(const ActiveCondition(condition: ArenaCondition.prone));
+          activeConditions = List<ActiveCondition>.unmodifiable([
+            ...activeConditions,
+            const ActiveCondition(condition: ArenaCondition.prone),
+          ]);
         }
         applyDamage(rawFallDamage);
 
@@ -429,9 +439,12 @@ class ArenaCombatant {
   }
 
   void removeCondition(ArenaCondition condition) {
-    conditions = conditions.remove(condition);
-    activeConditions =
-        activeConditions.removeWhere((a) => a.condition == condition);
+    conditions = Set<ArenaCondition>.unmodifiable(
+      conditions.where((c) => c != condition),
+    );
+    activeConditions = List<ActiveCondition>.unmodifiable(
+      activeConditions.where((a) => a.condition != condition),
+    );
   }
 
   bool hasCondition(ArenaCondition condition) => conditions.contains(condition);
@@ -471,7 +484,9 @@ class ArenaCombatant {
         final updated = active.tickTurn();
         if (updated.isExpired) {
           expired.add(active.condition);
-          conditions = conditions.remove(active.condition);
+          conditions = Set<ArenaCondition>.unmodifiable(
+            conditions.where((c) => c != active.condition),
+          );
         } else {
           remaining.add(updated);
         }
@@ -479,13 +494,13 @@ class ArenaCombatant {
         remaining.add(active);
       }
     }
-    activeConditions = remaining.toIList();
+    activeConditions = List<ActiveCondition>.unmodifiable(remaining);
     return expired;
   }
 
   void clearConditions() {
-    conditions = const ISetConst({});
-    activeConditions = const IListConst([]);
+    conditions = const <ArenaCondition>{};
+    activeConditions = const <ActiveCondition>[];
   }
 
   /// Clones combatant with fresh max HP, reset spell slots, and reset combat counters.
@@ -507,8 +522,8 @@ class ArenaCombatant {
       hasHover: hasHover,
       altitudeInFeet: canFlyMonster ? 20 : 0,
       meleeReachInFeet: meleeReachInFeet,
-      conditions: const ISetConst({}),
-      activeConditions: const IListConst([]),
+      conditions: const <ArenaCondition>{},
+      activeConditions: const <ActiveCondition>[],
       maxSpellSlots: maxSpellSlots,
       currentSpellSlots: maxSpellSlots,
       knownSpellIds: List<String>.from(knownSpellIds),
@@ -529,7 +544,7 @@ class ArenaCombatant {
       attacksMade: 0,
       hitsLanded: 0,
       critsLanded: 0,
-      drainedAbilityScores: const IMapConst({}),
+      drainedAbilityScores: const <String, int>{},
       maxHpReduction: 0,
       isHealingSuppressed: false,
     );
@@ -718,7 +733,10 @@ class ArenaCombatant {
     if (drain <= 0) return;
     final key = ability.shortName.toLowerCase();
     final currentDrain = drainedAbilityScores[key] ?? 0;
-    drainedAbilityScores = drainedAbilityScores.add(key, currentDrain + drain);
+    drainedAbilityScores = Map<String, int>.unmodifiable({
+      ...drainedAbilityScores,
+      key: currentDrain + drain,
+    });
 
     if (deathAtZero && getAbilityScore(ability) <= 0) {
       hitPoints = hitPoints.copyWith(currentHp: 0);

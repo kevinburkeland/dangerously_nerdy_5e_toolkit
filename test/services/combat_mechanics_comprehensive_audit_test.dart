@@ -425,8 +425,10 @@ void main() {
         expect(combatant.isUnconscious, false);
         expect(combatant.isIncapacitated, false);
 
-        combatant.conditions =
-            combatant.conditions.add(ArenaCondition.paralyzed);
+        combatant.conditions = Set<ArenaCondition>.unmodifiable({
+          ...combatant.conditions,
+          ArenaCondition.paralyzed,
+        });
         expect(combatant.isParalyzed, true);
         expect(combatant.isIncapacitated, true);
 
@@ -554,8 +556,10 @@ void main() {
           acOverride: 10,
           hpOverride: 50,
         );
-        paralyzedDefender.conditions =
-            paralyzedDefender.conditions.add(ArenaCondition.paralyzed);
+        paralyzedDefender.conditions = Set<ArenaCondition>.unmodifiable({
+          ...paralyzedDefender.conditions,
+          ArenaCondition.paralyzed,
+        });
 
         final initialHp = paralyzedDefender.currentHp;
 
@@ -585,8 +589,10 @@ void main() {
           monster: wolfMonster,
           team: ArenaTeam.teamB,
         );
-        proneDefender.conditions =
-            proneDefender.conditions.add(ArenaCondition.prone);
+        proneDefender.conditions = Set<ArenaCondition>.unmodifiable({
+          ...proneDefender.conditions,
+          ArenaCondition.prone,
+        });
 
         final attacker = ArenaCombatant.fromMonster(
           id: 'fighter',

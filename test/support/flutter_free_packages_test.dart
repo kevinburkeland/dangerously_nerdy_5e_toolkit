@@ -143,14 +143,14 @@ dependencies: {}
   });
 
   group('FlutterPackageDetector Real App Package Tests', () {
-    test('12 named packages: 4 Flutter-bound, 8 pure', () {
+    test('11 named packages: 4 Flutter-bound, 7 pure', () {
       final detector = FlutterPackageDetector.instance;
 
       const flutterBoundPackages = [
         'material_ui',
         'cupertino_ui',
         'flutter_webrtc',
-        'hive_flutter',
+        'hive_ce_flutter',
       ];
 
       const purePackages = [
@@ -158,7 +158,6 @@ dependencies: {}
         'collection',
         'crypto',
         'uuid',
-        'fast_immutable_collections',
         'mutex',
         'vtt_engine_core',
         'vtt_ruleset_dnd5e',

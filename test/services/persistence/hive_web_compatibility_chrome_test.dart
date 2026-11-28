@@ -3,7 +3,7 @@ library;
 
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 void main() {
   test('all 5 AppDatabaseService boxes open and persist in Chrome IndexedDB', () async {

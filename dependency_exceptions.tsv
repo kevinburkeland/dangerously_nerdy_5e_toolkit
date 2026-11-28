@@ -1,6 +1,5 @@
 # rule_id	name	held_at	review_by	reason
 D4	collection	1.19.1	2027-02-01	Published by dart.dev with newest release 1.19.1 on 2024-10-21; maintained by the Dart team as a mature utility library without need for feature churn, ending when a new release is published or the SDK subsumes its utilities.
-D4	hive_flutter	1.1.0	2027-02-01	Published by hivedb.dev with newest release 1.1.0 on 2021-06-20; unmaintained Flutter adapter whose replacement will land alongside hive in the dedicated storage migration slice under the legacy load law.
 D4	mutex	3.1.0	2027-02-01	Published by hoylen.com with newest release 3.1.0 on 2023-10-09; compact async mutex primitive ending when an engine-core mutual exclusion primitive replaces it.
 N4	@grpc/grpc-js	1.14.7	2026-12-18	Reviewed 2026-11-18; scratch audit without override returns GHSA-m9gg-hp2v-232j and GHSA-f596-whhp-79r4 pulled by firebase-tools; newest 1.x is 1.14.7
 N4	@opentelemetry/core	2.12.1	2026-12-18	Reviewed 2026-11-18; scratch audit without override returns GHSA-8988-4f7v-96qf pulled by firebase-tools; newest 2.x is 2.12.1, newer major 3.x (3.1.1) exists
