@@ -130,6 +130,7 @@ git -C "$repo_f" checkout -b side >/dev/null 2>&1
 echo "s" > "$repo_f/notes/side.md"
 git -C "$repo_f" add notes/side.md && git -C "$repo_f" commit -m "side" >/dev/null
 git -C "$repo_f" checkout main >/dev/null 2>&1
+mkdir -p "$repo_f/notes"
 echo "m" > "$repo_f/notes/main.md"
 git -C "$repo_f" add notes/main.md && git -C "$repo_f" commit -m "main" >/dev/null
 p_f=$(git -C "$repo_f" rev-parse HEAD)
