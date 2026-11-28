@@ -3,9 +3,7 @@ analyzer:
     strict-casts: true
   exclude:
     - build/**
-    - android/**
     - web/**
-    - linux/**
     - firestore_rules_test/**
 include: package:flutter_lints/flutter.yaml
 

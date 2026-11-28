@@ -102,7 +102,7 @@ class _PrivacyPolicyContent extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Data Storage & Ephemeral Rooms',
+          'Data Storage & Shared Rooms',
           style: TextStyle(
               color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
@@ -111,7 +111,7 @@ class _PrivacyPolicyContent extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           '• Local Storage: Custom presets are stored locally on your device in browser cache.\n'
-          '• Live Rooms: Shared room payloads (room code, optional display name, roll totals) are stream-only and ephemeral.\n'
+          '• Live Rooms: Shared room records (room code, campaign name, ruleset, host-key hash, presence, shared character summaries, loot list, event log) are stored in Cloud Firestore and are not deleted automatically; relay messages expire after 1 hour and dice rolls after 24 hours.\n'
           '• Security: Data in transit is secured using TLS 1.3 via Firebase Cloud Infrastructure.',
           style: TextStyle(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.85),

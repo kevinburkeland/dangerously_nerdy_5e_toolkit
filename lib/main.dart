@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -8,7 +7,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'infrastructure/di/injection_container.dart';
-import 'infrastructure/logging/crashlytics_log_sink.dart';
 import 'models/app_settings.dart' hide ThemeMode;
 import 'presentation/visual/visual_ui.dart';
 import 'providers/settings_provider.dart';
@@ -255,10 +253,6 @@ Future<Widget> completeNormalStartup(
           await FirebaseAppCheck.instance.activate(
             providerWeb: ReCaptchaEnterpriseProvider(recaptchaSiteKey),
           );
-        } else {
-          await FirebaseAppCheck.instance.activate(
-            providerAndroid: const AndroidPlayIntegrityProvider(),
-          );
         }
         logger.logInfo('Firebase App Check initialized successfully.');
       } catch (e, stackTrace) {
@@ -451,7 +445,6 @@ class _StorageUnavailablePageState extends State<StorageUnavailablePage> {
 }
 
 void main() {
-  LoggingService.installSink(const CrashlyticsLogSink());
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -465,9 +458,6 @@ void main() {
         details.stack ?? StackTrace.current,
         reason: 'FlutterError.onError: ${details.context}',
       );
-      if (!kIsWeb) {
-        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-      }
     };
 
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {

@@ -24,6 +24,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Privacy Policy'), findsAtLeastNWidgets(1));
+    expect(find.textContaining('ephemeral'), findsNothing);
+    expect(find.textContaining('not deleted automatically'), findsOneWidget);
     expect(find.text('Contact: kevin@burke.land'), findsOneWidget);
 
     await tester.tap(find.text('Close'));

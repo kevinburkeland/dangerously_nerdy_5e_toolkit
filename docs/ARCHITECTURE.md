@@ -56,7 +56,6 @@ Files in pure Dart folders MUST NOT import Flutter-bound packages (decided from 
 | `lib/infrastructure/di` | Service locator registry and dependency injection container (`sl`). |
 | `lib/infrastructure/dtos` | Wire and disk serialization DTOs enforcing bounds clamping. |
 | `lib/infrastructure/dtos/crdt` | Serialization DTOs for CvRDT primitives and hybrid logical clocks. |
-| `lib/infrastructure/logging` | Concrete `CrashlyticsLogSink` adapter implementing the pure `LogSink` port. |
 | `lib/infrastructure/map` | Battle map image intake, encoding, and storage adapters. |
 | `lib/infrastructure/map/stub` | Fallback platform stub for map intake and image decoding. |
 | `lib/infrastructure/map/web` | Web canvas map image re-encoding and dimension scaling adapter. |

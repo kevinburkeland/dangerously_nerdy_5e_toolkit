@@ -15,7 +15,7 @@ DangerouslyNerdy 5e Toolkit is designed around the principle of strict data mini
 
 ### A. On your device
 - **What is stored:** your campaigns, characters, homebrew content, map images, dice presets and app settings.
-- **Where:** only in your browser's storage on your device (IndexedDB and LocalStorage on the web; the app's own storage on Android).
+- **Where:** only in your browser's storage on your device (IndexedDB and LocalStorage).
 - **Transmission:** this data only leaves your device when you share it in a room (section B).
 
 ### B. Shared rooms (Google Firebase Cloud Firestore)
@@ -32,7 +32,7 @@ Map images are sent directly between devices and are never stored in Firestore. 
 ### C. Analytics & Tracking Cookies
 - **No Tracking Cookies:** We **do not** use tracking cookies, advertising IDs, or cross-site tracking technologies.
 - **No Third-Party Ad Networks:** We do not partner with or serve third-party advertisements.
-- **Crash reports (Android app only):** if the Android app crashes or hits an error, the error details and basic device information are sent to Google Firebase Crashlytics. The web app sends no crash reports.
+- **No Crash Reports:** The web app sends no crash reports.
 
 ---
 
@@ -50,7 +50,6 @@ Map images are sent directly between devices and are never stored in Firestore. 
 
 ## 4. Third-Party Infrastructure Services
 - **Google Firebase / Cloud Firestore:** stores the shared room records described in section 2B. Data is encrypted in transit.
-- **Google Firebase Crashlytics (Android app only):** receives crash reports as described in section 2C.
 
 Firestore collections used: `rooms`, `hostProof`, `nodes`, `signals`, `signaling`, `relay_messages`, `loot`, `events`, `rolls`.
 

@@ -71,7 +71,7 @@ if has_errors_key:
     print("FAIL: analysis_options.yaml has an errors: key", file=sys.stderr)
     sys.exit(1)
 
-expected_excludes = ['build/**', 'android/**', 'web/**', 'linux/**', 'firestore_rules_test/**']
+expected_excludes = ['build/**', 'web/**', 'firestore_rules_test/**']
 if exclude_list != expected_excludes:
     print(f"FAIL: analyzer: exclude: list changed (got {exclude_list}, expected {expected_excludes})", file=sys.stderr)
     sys.exit(1)
