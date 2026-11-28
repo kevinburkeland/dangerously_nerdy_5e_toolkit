@@ -1,4 +1,4 @@
-import '../../../utils/opaque_id.dart';
+import '../../opaque_id.dart';
 import '../capability/ruleset_ingestion_capability.dart';
 import '../engine/document_structure_parser.dart';
 import '../engine/source_block_parser.dart';

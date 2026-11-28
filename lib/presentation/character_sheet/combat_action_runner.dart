@@ -7,7 +7,7 @@ import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 
 /// Runs a combat action dice roll from the character sheet UI.
 void runActionRoll(

@@ -16,7 +16,7 @@ import '../../models/party/party_room_lobby.dart';
 import '../../infrastructure/migration/party_ledger_legacy_import.dart';
 import '../../infrastructure/di/injection_container.dart';
 import '../../utils/crypto_utils.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../../application/services/room_document_port.dart';
 import '../logging_service.dart';
 import '../dice_room_service.dart';

@@ -1,5 +1,5 @@
 import 'dart:async';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';

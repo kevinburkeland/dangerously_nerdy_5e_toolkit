@@ -1,3 +1,6 @@
+@TestOn('browser')
+library;
+
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/remote/http_fetcher.dart';
 import 'package:flutter_test/flutter_test.dart';
 

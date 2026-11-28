@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/dart_directive_reader.dart';
 
-const String _kHelperPath = 'lib/utils/opaque_id.dart';
+const String _kHelperPath = 'lib/domain/opaque_id.dart';
 
 /// Hits that are NOT opaque ids (or are frozen by scope rules) with reasons.
 const Map<String, String> _kNonIdAllowlistByFile = {

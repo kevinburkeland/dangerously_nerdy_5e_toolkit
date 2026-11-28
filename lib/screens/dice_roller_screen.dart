@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import '../utils/opaque_id.dart';
+import '../domain/opaque_id.dart';
 import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
 import '../models/room_roll.dart';

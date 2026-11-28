@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/dice_roll.dart';
-import '../utils/opaque_id.dart';
+import '../domain/opaque_id.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
 import 'spell_cast_formula_resolver.dart';
 import '../models/characters/srd_feats_library.dart';

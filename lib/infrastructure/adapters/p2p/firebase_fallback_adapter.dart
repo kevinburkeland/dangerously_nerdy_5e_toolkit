@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../../../services/logging_service.dart';
 import '../../../utils/crypto_utils.dart';
-import '../../../utils/opaque_id.dart';
+import '../../../domain/opaque_id.dart';
 
 /// Maximum allowed character length for a relay payload document in Firestore.
 /// Matches firestore.rules: request.resource.data.payload.size() < 1000000.

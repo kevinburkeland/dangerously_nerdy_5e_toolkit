@@ -10,7 +10,7 @@ import '../../services/haptic_service.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../services/rules/treasure_generator_engine.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../item_compendium/item_detail_dialog.dart';
 import '../party/campaign_dialogs.dart';
 

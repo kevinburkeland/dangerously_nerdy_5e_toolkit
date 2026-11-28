@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/dpr/dpr_models.dart';
 import '../../services/haptic_service.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../common/numeric_stepper.dart';
 import 'dpr_attack_editor_card.dart';
 

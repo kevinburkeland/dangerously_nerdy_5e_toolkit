@@ -6,7 +6,7 @@ import '../../providers/character_sheet_controller.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../../services/rules/skill_trait_resolver.dart';
 
 /// Interactive Languages Known and Tool Proficiencies section with live dice rolling,

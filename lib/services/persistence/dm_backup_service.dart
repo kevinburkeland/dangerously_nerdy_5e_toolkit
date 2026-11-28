@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:meta/meta.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../../models/campaign_profile.dart';
 import '../../models/custom_preset.dart';
 import '../../models/domain/core_types.dart';

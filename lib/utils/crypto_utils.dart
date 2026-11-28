@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'opaque_id.dart';
+import '../domain/opaque_id.dart';
 import 'secure_random.dart';
 
 /// Cryptographic and security helper utilities for DangerouslyNerdy 5e Toolkit.

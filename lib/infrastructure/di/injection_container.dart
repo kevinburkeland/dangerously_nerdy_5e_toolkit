@@ -1,5 +1,5 @@
 import 'package:vtt_engine_core/vtt_engine_core.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../application/services/homebrew_import_orchestrator.dart';

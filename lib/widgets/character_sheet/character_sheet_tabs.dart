@@ -3,7 +3,7 @@ import '../../models/domain/action_economy_models.dart';
 import '../../presentation/character_sheet/combat_action_runner.dart';
 import '../../presentation/widgets/action_economy_ui_extensions.dart';
 import '../../models/party/campaign_membership.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../../models/party/party_purse.dart';
 import '../../models/party/party_session_state.dart';
 import '../../services/party/party_room_service.dart';
@@ -1682,8 +1682,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                                           );
                                           final newInstance =
                                               InventoryItemInstance(
-                                            instanceId:
-                                                newOpaqueId('item-${item.id.slug}-'),
+                                            instanceId: newOpaqueId('item-${item.id.slug}-'),
                                             itemRef: EntityReference(
                                               refType: EntityType.equipment,
                                               slug: item.id.slug,

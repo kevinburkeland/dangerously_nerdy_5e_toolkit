@@ -1,6 +1,6 @@
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import '../../services/persistence/app_database_service.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 
 /// Provider for active runtime CRDT replica identity.
 ///

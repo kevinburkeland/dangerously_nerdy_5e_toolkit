@@ -6,7 +6,7 @@ import '../../models/room_roll.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/a11y_service.dart';
 import '../../services/dice_room_service.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../../services/haptic_service.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';

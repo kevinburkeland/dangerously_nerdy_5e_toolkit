@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../../../services/logging_service.dart';
-import '../../../utils/opaque_id.dart';
+import '../../../domain/opaque_id.dart';
 import 'signaling_message.dart';
 
 /// Adapter managing ephemeral WebRTC signaling (SDP offers, answers, ICE candidates)

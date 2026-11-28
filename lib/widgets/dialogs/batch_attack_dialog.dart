@@ -7,7 +7,7 @@ import '../../services/a11y_service.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/opaque_id.dart';
+import '../../domain/opaque_id.dart';
 import '../app_logo.dart';
 import '../batch_attack/batch_attack_results_card.dart';
 

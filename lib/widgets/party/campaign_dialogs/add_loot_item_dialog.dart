@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import '../../../models/party/party_loot_item.dart';
 import '../../../services/party/party_room_service.dart';
-import '../../../utils/opaque_id.dart';
+import '../../../domain/opaque_id.dart';
 
 class AddLootItemDialog extends StatefulWidget {
   final String roomCode;

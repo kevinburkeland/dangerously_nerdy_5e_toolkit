@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:dangerously_nerdy_5e_toolkit/utils/opaque_id.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/opaque_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final RegExp _kUuidV4Re = RegExp(

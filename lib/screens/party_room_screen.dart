@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import '../utils/opaque_id.dart';
+import '../domain/opaque_id.dart';
 import '../models/party/campaign_membership.dart';
 import '../models/party/party_session_state.dart';
 import '../models/room_roll.dart';
