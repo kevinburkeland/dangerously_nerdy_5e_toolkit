@@ -74,3 +74,4 @@ Begin Step 3 by adding the CI scope script, repo-text tags and tag bar, and the 
 Factual check on B1: on today's repos, commit 59d7178dea6527a18a2cac3b7fe0f110fb93717a is reachable from origin/main and archive tags in vtt-engine-core, so a fresh full clone of all three repos with archive tags fetched passes NS31; NS84 therefore uses a throwaway core repo with an archive tag that lacks that commit to exercise the unreachable-commit branch.
 Run 46101601044 cause: actions/download-artifact pinned to v7.0.0 failed dependency check A1 (newest is v8.0.2); fixed by 2b2ad2fe902fc8081e860977bfacd63e6700a511
 Run 46103352911 cause: Next section named uncreated CI scope script path before Step 3, failing docs_truth_test.dart; fixed by c1df2b272871a80dab381150542f00bdaf5c3348
+Run 46103846241 cause: cause line for the earlier red run still named uncreated CI scope script path; fixed by 89be5b52f67744f938b718b944308f863d2f1d48
