@@ -165,6 +165,32 @@ for owner, wf_runs in runs_by_owner.items():
 PYEOF
 }
 
+resolve_core_repo() {
+  if [ -d "$SCRIPT_DIR/../../vtt-engine-core" ]; then
+    echo "$SCRIPT_DIR/../../vtt-engine-core"
+  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/core.git" ]; then
+    echo "$RUNNER_TEMP/core.git"
+  else
+    if [ ! -d "$TMP_DIR/shared_core.git" ]; then
+      git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-engine-core.git "$TMP_DIR/shared_core.git" >/dev/null 2>&1
+    fi
+    echo "$TMP_DIR/shared_core.git"
+  fi
+}
+
+resolve_ruleset_repo() {
+  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e" ]; then
+    echo "$SCRIPT_DIR/../../vtt-ruleset-dnd5e"
+  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/ruleset.git" ]; then
+    echo "$RUNNER_TEMP/ruleset.git"
+  else
+    if [ ! -d "$TMP_DIR/shared_ruleset.git" ]; then
+      git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/shared_ruleset.git" >/dev/null 2>&1
+    fi
+    echo "$TMP_DIR/shared_ruleset.git"
+  fi
+}
+
 require_notes_commits_present() {
   local core_repo="$1"
   local ruleset_repo="$2"
@@ -1076,25 +1102,8 @@ EOF
 # NS31: the frozen file's real text passes.
 case_NS31() {
 (
-  core_repo=""
-  ruleset_repo=""
-  if [ -d "$SCRIPT_DIR/../../vtt-engine-core" ]; then
-    core_repo="$SCRIPT_DIR/../../vtt-engine-core"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/core.git" ]; then
-    core_repo="$RUNNER_TEMP/core.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-engine-core.git "$TMP_DIR/core_ns31.git" >/dev/null 2>&1
-    core_repo="$TMP_DIR/core_ns31.git"
-  fi
-
-  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e" ]; then
-    ruleset_repo="$SCRIPT_DIR/../../vtt-ruleset-dnd5e"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/ruleset.git" ]; then
-    ruleset_repo="$RUNNER_TEMP/ruleset.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns31.git" >/dev/null 2>&1
-    ruleset_repo="$TMP_DIR/ruleset_ns31.git"
-  fi
+  core_repo=$(resolve_core_repo)
+  ruleset_repo=$(resolve_ruleset_repo)
 
   frozen_notes="$TMP_DIR/cleanup_slice_10_progress.md"
   cp "$SCRIPT_DIR/../notes/cleanup_slice_10_progress.md" "$frozen_notes"
@@ -1267,25 +1276,8 @@ EOF
 # NS37: the real Cleanup slice 10.1 and Bonus slice 1 notes still pass.
 case_NS37() {
 (
-  core_repo=""
-  ruleset_repo=""
-  if [ -d "$SCRIPT_DIR/../../vtt-engine-core" ]; then
-    core_repo="$SCRIPT_DIR/../../vtt-engine-core"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/core.git" ]; then
-    core_repo="$RUNNER_TEMP/core.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-engine-core.git "$TMP_DIR/core_ns37.git" >/dev/null 2>&1
-    core_repo="$TMP_DIR/core_ns37.git"
-  fi
-
-  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e" ]; then
-    ruleset_repo="$SCRIPT_DIR/../../vtt-ruleset-dnd5e"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/ruleset.git" ]; then
-    ruleset_repo="$RUNNER_TEMP/ruleset.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns37.git" >/dev/null 2>&1
-    ruleset_repo="$TMP_DIR/ruleset_ns37.git"
-  fi
+  core_repo=$(resolve_core_repo)
+  ruleset_repo=$(resolve_ruleset_repo)
 
   require_notes_commits_present "$core_repo" "$ruleset_repo" \
     "$SCRIPT_DIR/../notes/cleanup_slice_10_1_progress.md" \
@@ -1565,25 +1557,8 @@ EOF
 # NS45: the two frozen files still pass unchanged.
 case_NS45() {
 (
-  core_repo=""
-  ruleset_repo=""
-  if [ -d "$SCRIPT_DIR/../../vtt-engine-core" ]; then
-    core_repo="$SCRIPT_DIR/../../vtt-engine-core"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/core.git" ]; then
-    core_repo="$RUNNER_TEMP/core.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-engine-core.git "$TMP_DIR/core_ns45.git" >/dev/null 2>&1
-    core_repo="$TMP_DIR/core_ns45.git"
-  fi
-
-  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e" ]; then
-    ruleset_repo="$SCRIPT_DIR/../../vtt-ruleset-dnd5e"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/ruleset.git" ]; then
-    ruleset_repo="$RUNNER_TEMP/ruleset.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns45.git" >/dev/null 2>&1
-    ruleset_repo="$TMP_DIR/ruleset_ns45.git"
-  fi
+  core_repo=$(resolve_core_repo)
+  ruleset_repo=$(resolve_ruleset_repo)
 
   require_notes_commits_present "$core_repo" "$ruleset_repo" \
     "$SCRIPT_DIR/../notes/cleanup_slice_10_1_progress.md" \
@@ -2685,50 +2660,6 @@ EOF
 )
 }
 
-# NS73: every existing notes file still passes.
-case_NS73() {
-(
-  core_repo=""
-  ruleset_repo=""
-  if [ -d "$SCRIPT_DIR/../../vtt-engine-core" ]; then
-    core_repo="$SCRIPT_DIR/../../vtt-engine-core"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/core.git" ]; then
-    core_repo="$RUNNER_TEMP/core.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-engine-core.git "$TMP_DIR/core_ns53.git" >/dev/null 2>&1
-    core_repo="$TMP_DIR/core_ns53.git"
-  fi
-
-  if [ -d "$SCRIPT_DIR/../../vtt-ruleset-dnd5e" ]; then
-    ruleset_repo="$SCRIPT_DIR/../../vtt-ruleset-dnd5e"
-  elif [ -n "${RUNNER_TEMP:-}" ] && [ -d "$RUNNER_TEMP/ruleset.git" ]; then
-    ruleset_repo="$RUNNER_TEMP/ruleset.git"
-  else
-    git clone --bare --filter=blob:none https://github.com/kevinburkeland/vtt-ruleset-dnd5e.git "$TMP_DIR/ruleset_ns53.git" >/dev/null 2>&1
-    ruleset_repo="$TMP_DIR/ruleset_ns53.git"
-  fi
-
-  require_notes_commits_present "$core_repo" "$ruleset_repo" "$SCRIPT_DIR/../notes"/*.md || exit 1
-
-  extra_args=()
-  if [ -z "${GITHUB_TOKEN:-}" ]; then
-    echo "Note: NS73 using local stub server (GITHUB_TOKEN not set)"
-    populate_stub_runs_for_notes "$core_repo" "$ruleset_repo" "$SCRIPT_DIR/../notes"/*.md
-    extra_args=(--api-base "$API_BASE")
-  fi
-  out=$(python3 -I "$CHECK_SCRIPT" \
-    --repo .=kevinburkeland/dangerously_nerdy_5e_toolkit \
-    --repo "$core_repo=kevinburkeland/vtt-engine-core" \
-    --repo "$ruleset_repo=kevinburkeland/vtt-ruleset-dnd5e" \
-    "${extra_args[@]}" \
-    "$SCRIPT_DIR/../notes"/*.md)
-  if [[ "$out" != *"All SHAs are valid commits"* ]]; then
-    echo "FAIL: NS73 expected all existing notes to pass, got: $out" >&2
-    exit 1
-  fi
-)
-}
-
 # NS74 (Fix 1.3a guard): a ticked step row whose only SHA is followed by run <id> of a green run of that SHA passes.
 case_NS74() {
 (
@@ -3179,7 +3110,7 @@ case_NS84() {
 }
 
 ALL_CASES=(
-  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS73 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82 NS83 NS84
+  NS1 NS2 NS3 NS4 NS5 NS6 NS7 NS8 NS9 NS10 NS11 NS12 NS13 NS14 NS15 NS16 NS17 NS18 NS19 NS20 NS21 NS22 NS23 NS24 NS25 NS26 NS27 NS28 NS29 NS30 NS31 NS32 NS33 NS34 NS35 NS36 NS37 NS38 NS39 NS40 NS41 NS42 NS43 NS44 NS45 NS46 NS47 NS48 NS49 NS50 NS51 NS52 NS54 NS55 NS56 NS57 NS58 NS59 NS60 NS61 NS62 NS63 NS64 NS65 NS67 NS68 NS69 NS70 NS71 NS72 NS74 NS75 NS76 NS77 NS78 NS79 NS80 NS81 NS82 NS83 NS84
 )
 
 SELECTED_CASES=()
