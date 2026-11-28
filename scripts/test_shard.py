@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import json
+import math
 import os
 import re
 import subprocess
 import sys
 import tempfile
+
+WEIGHTS_FILE = "test/shard_weights.json"
 
 
 def find_test_files(root_dir="test"):
@@ -22,6 +25,60 @@ def find_test_files(root_dir="test"):
 
 def shard_files(files, index, total):
     return [f for pos, f in enumerate(files) if pos % total == index]
+
+
+def load_weights(weights_path=WEIGHTS_FILE, *, allow_stale=True, current_files=None):
+    if not os.path.isfile(weights_path):
+        print(f"Error: Weights file not found: '{weights_path}'", file=sys.stderr)
+        sys.exit(1)
+    try:
+        with open(weights_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"Error: Invalid JSON in weights file '{weights_path}': {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if not isinstance(data, dict):
+        print(f"Error: Weights file '{weights_path}' must be a JSON object, got {type(data).__name__}", file=sys.stderr)
+        sys.exit(1)
+
+    current_set = set(current_files) if current_files is not None else None
+    weights = {}
+    for k, v in data.items():
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            print(f"Error: Invalid weight in '{weights_path}' for '{k}': {v!r} (must be a number > 0)", file=sys.stderr)
+            sys.exit(1)
+        fv = float(v)
+        if not math.isfinite(fv) or fv <= 0.0:
+            print(f"Error: Invalid weight in '{weights_path}' for '{k}': {v!r} (must be finite and > 0)", file=sys.stderr)
+            sys.exit(1)
+        if not allow_stale and current_set is not None and k not in current_set:
+            print(f"Error: Stale entry in '{weights_path}': '{k}' is no longer a test file", file=sys.stderr)
+            sys.exit(1)
+        weights[k] = fv
+    return weights
+
+
+def effective_weights(files, weights):
+    if weights:
+        vals = sorted(weights.values())
+        n = len(vals)
+        med = vals[n // 2] if n % 2 == 1 else (vals[n // 2 - 1] + vals[n // 2]) / 2.0
+    else:
+        med = 1.0
+    return {f: float(weights[f]) if f in weights else med for f in files}
+
+
+def assign_shards(files, weights, total):
+    eff = effective_weights(files, weights)
+    ordered = sorted(files, key=lambda f: (-eff[f], f.encode("utf-8")))
+    shards = [[] for _ in range(total)]
+    totals = [0.0] * total
+    for f in ordered:
+        min_idx = min(range(total), key=lambda i: (totals[i], i))
+        shards[min_idx].append(f)
+        totals[min_idx] += eff[f]
+    return shards, totals
 
 
 def parse_int(val, name):
@@ -57,8 +114,9 @@ def cmd_list(args):
         sys.exit(1)
 
     files = find_test_files("test")
-    selected = shard_files(files, index, total)
-    for f in selected:
+    weights = load_weights(WEIGHTS_FILE, allow_stale=True)
+    shards, _ = assign_shards(files, weights, total)
+    for f in shards[index]:
         print(f)
 
 
@@ -77,7 +135,8 @@ def cmd_check(args):
         print("Error: No test files found under test/", file=sys.stderr)
         sys.exit(1)
 
-    shards = [shard_files(files, i, total) for i in range(total)]
+    weights = load_weights(WEIGHTS_FILE, allow_stale=False, current_files=files)
+    shards, totals = assign_shards(files, weights, total)
 
     seen = set()
     union = []
@@ -94,7 +153,16 @@ def cmd_check(args):
         print("Error: Union of shards does not match full sorted test list", file=sys.stderr)
         sys.exit(1)
 
-    print(f"total: {len(files)} files in {total} shards")
+    pred_str = ", ".join(f"{t:.1f}s" for t in totals)
+    avg = sum(totals) / total if total else 0.0
+    ratio = max(totals) / avg if avg > 0 else 1.0
+    print(f"total: {len(files)} files in {total} shards | predicted: {pred_str} | slowest/avg: {ratio:.2f}")
+
+    unweighted = sum(1 for f in files if f not in weights)
+    if len(files) > 0 and unweighted > 0.10 * len(files):
+        print(f"::warning::More than 10% of test files ({unweighted}/{len(files)}) have no measured weight in {WEIGHTS_FILE}")
+    if ratio > 1.15:
+        print(f"::warning::Predicted slowest shard is {ratio:.2f}x the average (> 1.15x); consider refreshing {WEIGHTS_FILE}")
 
 
 def cmd_check_workflow(args):
@@ -124,12 +192,18 @@ def cmd_check_workflow(args):
         sys.exit(1)
 
     found_line = call_lines[0].strip()
-    # Check that arguments directly after list are exactly ${{ strategy.job-index }} and ${{ strategy.job-total }}
+    # Check that arguments directly after list are exactly ${{ strategy.job-index }} and ${{ strategy.job-total }} (no extra weights source or network)
     pattern = re.compile(
-        r'scripts/test_shard\.py\s+list\s+\${{\s*strategy\.job-index\s*}}\s+\${{\s*strategy\.job-total\s*}}(?:\s+|$)'
+        r'scripts/test_shard\.py\s+list\s+\${{\s*strategy\.job-index\s*}}\s+\${{\s*strategy\.job-total\s*}}(?:\s*>|\s*$)'
     )
     if not pattern.search(found_line):
-        print(f"Error: scripts/test_shard.py list call has incorrect arguments: {found_line}", file=sys.stderr)
+        print(f"Error: scripts/test_shard.py list call has incorrect or extra arguments: {found_line}", file=sys.stderr)
+        sys.exit(1)
+
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(workflow_path))))
+    committed_weights = os.path.join(repo_root, WEIGHTS_FILE)
+    if not os.path.isfile(committed_weights):
+        print(f"Error: Committed weights file missing: {committed_weights}", file=sys.stderr)
         sys.exit(1)
 
     print(found_line)

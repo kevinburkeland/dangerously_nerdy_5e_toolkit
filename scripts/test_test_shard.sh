@@ -18,6 +18,13 @@ setup_sh1_tree() {
     touch "$base/test/a/f${i}_test.dart"
   done
   touch "$base/test/b/z_test.dart"
+  python3 - "$base/test/shard_weights.json" << 'PYEOF'
+import json, sys
+w = {f"test/a/f{i:02d}_test.dart": 1.0 for i in range(10)}
+w["test/b/z_test.dart"] = 1.0
+with open(sys.argv[1], "w") as f:
+    json.dump(w, f)
+PYEOF
 }
 
 # -----------------------------------------------------------------------------
@@ -139,8 +146,9 @@ echo "PASS SH5"
 # SH6: check-workflow verification
 # -----------------------------------------------------------------------------
 env6="$TMP_DIR/sh6"
-mkdir -p "$env6/scripts" "$env6/.github/workflows"
+mkdir -p "$env6/scripts" "$env6/.github/workflows" "$env6/test"
 cp "$TEST_SHARD_PY" "$env6/scripts/test_shard.py"
+echo '{}' > "$env6/test/shard_weights.json"
 
 # Good workflow
 cat << 'EOF' > "$env6/.github/workflows/good.yml"
@@ -229,3 +237,229 @@ if data != expected:
     sys.exit(1)
 PYEOF
 echo "PASS SH7: $out7"
+
+# -----------------------------------------------------------------------------
+# SH8 (Fix 2.5a): 10 files (one 100s, nine 1s) across 4 shards
+# -----------------------------------------------------------------------------
+env8="$TMP_DIR/sh8"
+mkdir -p "$env8/test" "$env8/scripts"
+cp "$TEST_SHARD_PY" "$env8/scripts/test_shard.py"
+python3 - "$env8" << 'PYEOF'
+import json, os, sys
+base = sys.argv[1]
+w = {}
+for i in range(9):
+    p = f"test/f{i}_test.dart"
+    open(os.path.join(base, p), "w").close()
+    w[p] = 1.0
+p_heavy = "test/heavy_test.dart"
+open(os.path.join(base, p_heavy), "w").close()
+w[p_heavy] = 100.0
+with open(os.path.join(base, "test", "shard_weights.json"), "w") as f:
+    json.dump(w, f)
+PYEOF
+s0=$(cd "$env8" && python3 -I scripts/test_shard.py list 0 4)
+s1=$(cd "$env8" && python3 -I scripts/test_shard.py list 1 4)
+s2=$(cd "$env8" && python3 -I scripts/test_shard.py list 2 4)
+s3=$(cd "$env8" && python3 -I scripts/test_shard.py list 3 4)
+if [ "$s0" != "test/heavy_test.dart" ]; then
+  echo "FAIL SH8: expected heavy_test.dart alone in shard 0, got: $s0" >&2
+  exit 1
+fi
+for idx_s in "$s1" "$s2" "$s3"; do
+  cnt=$(printf '%s\n' "$idx_s" | wc -l | tr -d ' ')
+  if [ "$cnt" -ne 3 ]; then
+    echo "FAIL SH8: expected 3 files in non-heavy shard, got $cnt: $idx_s" >&2
+    exit 1
+  fi
+done
+echo "PASS SH8"
+
+# -----------------------------------------------------------------------------
+# SH9 (Fix 2.5b): missing file from weights gets median weight
+# -----------------------------------------------------------------------------
+env9="$TMP_DIR/sh9"
+mkdir -p "$env9/test" "$env9/scripts"
+cp "$TEST_SHARD_PY" "$env9/scripts/test_shard.py"
+python3 - "$env9" << 'PYEOF'
+import json, os, sys
+base = sys.argv[1]
+# Known weights: 1.0, 5.0, 9.0 -> median = 5.0.
+# 4 shards. f_a (9.0) -> shard 0; f_new (median 5.0) & f_b (5.0): f_b < f_new so f_b -> shard 1, f_new -> shard 2; f_c (1.0) -> shard 3.
+for name in ["f_a", "f_b", "f_c", "f_new"]:
+    open(os.path.join(base, f"test/{name}_test.dart"), "w").close()
+w = {"test/f_a_test.dart": 9.0, "test/f_b_test.dart": 5.0, "test/f_c_test.dart": 1.0}
+with open(os.path.join(base, "test", "shard_weights.json"), "w") as f:
+    json.dump(w, f)
+PYEOF
+s9_2=$(cd "$env9" && python3 -I scripts/test_shard.py list 2 4)
+if [ "$s9_2" != "test/f_new_test.dart" ]; then
+  echo "FAIL SH9: expected f_new_test.dart (median 5.0) in shard 2, got: $s9_2" >&2
+  exit 1
+fi
+echo "PASS SH9: missing file got median 5.0 and landed in shard 2 ($s9_2)"
+
+# -----------------------------------------------------------------------------
+# SH10 (Fix 2.5c): stale entry makes check fail naming path, list still works
+# -----------------------------------------------------------------------------
+env10="$TMP_DIR/sh10"
+cp -r "$env9" "$env10"
+python3 - "$env10/test/shard_weights.json" << 'PYEOF'
+import json, sys
+w = json.load(open(sys.argv[1]))
+w["test/deleted_stale_test.dart"] = 2.0
+json.dump(w, open(sys.argv[1], "w"))
+PYEOF
+set +e
+out10_check=$(cd "$env10" && python3 -I scripts/test_shard.py check 4 2>&1)
+rc10_check=$?
+set -e
+if [ "$rc10_check" -eq 0 ] || [[ "$out10_check" != *"test/deleted_stale_test.dart"* ]]; then
+  echo "FAIL SH10: expected check to fail naming stale path, got rc=$rc10_check: $out10_check" >&2
+  exit 1
+fi
+out10_list=$(cd "$env10" && python3 -I scripts/test_shard.py list 0 4)
+if [ "$out10_list" != "test/f_a_test.dart" ]; then
+  echo "FAIL SH10: expected list to still work with stale entry, got: $out10_list" >&2
+  exit 1
+fi
+echo "PASS SH10"
+
+# -----------------------------------------------------------------------------
+# SH11 (Fix 2.5d): malformed weights cases fail naming file and bad value
+# -----------------------------------------------------------------------------
+env11="$TMP_DIR/sh11"
+cp -r "$env9" "$env11"
+rm "$env11/test/shard_weights.json"
+set +e
+out11_miss=$(cd "$env11" && python3 -I scripts/test_shard.py check 4 2>&1)
+rc11_miss=$?
+set -e
+if [ "$rc11_miss" -eq 0 ] || [[ "$out11_miss" != *"shard_weights.json"* ]]; then
+  echo "FAIL SH11: missing weights file should fail naming shard_weights.json, got: $out11_miss" >&2
+  exit 1
+fi
+
+for bad_json in '{bad' '{"test/f_a_test.dart": "fast"}' '{"test/f_a_test.dart": 0}' '{"test/f_a_test.dart": -1.5}' '{"test/f_a_test.dart": NaN}' '{"test/f_a_test.dart": true}'; do
+  printf '%s\n' "$bad_json" > "$env11/test/shard_weights.json"
+  set +e
+  out11=$(cd "$env11" && python3 -I scripts/test_shard.py check 4 2>&1)
+  rc11=$?
+  set -e
+  if [ "$rc11" -eq 0 ] || [[ "$out11" != *"shard_weights.json"* ]]; then
+    echo "FAIL SH11: expected failure naming shard_weights.json for '$bad_json', got rc=$rc11: $out11" >&2
+    exit 1
+  fi
+done
+echo "PASS SH11"
+
+# -----------------------------------------------------------------------------
+# SH12 (Fix 2.5e): adding one light file changes few shards
+# -----------------------------------------------------------------------------
+env12="$TMP_DIR/sh12"
+mkdir -p "$env12/test" "$env12/scripts"
+cp "$TEST_SHARD_PY" "$env12/scripts/test_shard.py"
+python3 - "$env12" << 'PYEOF'
+import json, os, sys
+base = sys.argv[1]
+w = {}
+for i in range(20):
+    p = f"test/f{i:02d}_test.dart"
+    open(os.path.join(base, p), "w").close()
+    w[p] = float(20 - i)
+with open(os.path.join(base, "test", "shard_weights.json"), "w") as f:
+    json.dump(w, f)
+PYEOF
+before12=$(cd "$env12" && for i in 0 1 2 3; do python3 -I scripts/test_shard.py list "$i" 4 | sed "s/^/$i:/"; done | sort)
+touch "$env12/test/aa_new_light_test.dart"
+python3 - "$env12/test/shard_weights.json" << 'PYEOF'
+import json, sys
+w = json.load(open(sys.argv[1]))
+w["test/aa_new_light_test.dart"] = 0.5
+json.dump(w, open(sys.argv[1], "w"))
+PYEOF
+after12=$(cd "$env12" && for i in 0 1 2 3; do python3 -I scripts/test_shard.py list "$i" 4 | sed "s/^/$i:/"; done | sort)
+moved12=$(python3 -c "
+b = dict(l.split(':',1)[::-1] for l in '''$before12'''.splitlines())
+a = dict(l.split(':',1)[::-1] for l in '''$after12'''.splitlines())
+print(sum(1 for k, v in b.items() if a.get(k) != v))
+")
+if [ "$moved12" -gt 4 ]; then
+  echo "FAIL SH12: adding 1 light file moved $moved12 files (expected <= 4)" >&2
+  exit 1
+fi
+echo "PASS SH12: adding 1 light file moved $moved12 of 20 existing files"
+
+# -----------------------------------------------------------------------------
+# SH13 (Fix 2.5f): drift warnings (>10% unweighted, >1.15x slowest/avg) and no warning on balanced tree
+# -----------------------------------------------------------------------------
+env13="$TMP_DIR/sh13"
+cp -r "$env12" "$env13"
+out13_clean=$(cd "$env13" && python3 -I scripts/test_shard.py check 4 2>&1)
+if [[ "$out13_clean" == *"::warning::"* ]]; then
+  echo "FAIL SH13: unexpected warning on balanced tree: $out13_clean" >&2
+  exit 1
+fi
+# >10% unweighted warning
+for j in 1 2 3 4; do touch "$env13/test/unweighted_${j}_test.dart"; done
+out13_unw=$(cd "$env13" && python3 -I scripts/test_shard.py check 4 2>&1)
+if [[ "$out13_unw" != *"::warning::"* ]]; then
+  echo "FAIL SH13: expected ::warning:: for >10% unweighted files, got: $out13_unw" >&2
+  exit 1
+fi
+# >1.15x imbalance warning (using env8 which has 100 vs 3)
+out13_imb=$(cd "$env8" && python3 -I scripts/test_shard.py check 4 2>&1)
+if [[ "$out13_imb" != *"::warning::"* ]]; then
+  echo "FAIL SH13: expected ::warning:: for >1.15x imbalance, got: $out13_imb" >&2
+  exit 1
+fi
+echo "PASS SH13"
+
+# -----------------------------------------------------------------------------
+# SH14 (Fix 2.5 law): seeded random inputs invariant
+# -----------------------------------------------------------------------------
+PYTHONPATH="$SCRIPT_DIR" python3 - << 'PYEOF'
+import random, sys
+import test_shard
+
+rng = random.Random(20261127)
+for case_idx in range(300):
+    n_files = rng.choice([0, 1, 2, 4, 7, 15, 50, 200, 600])
+    total = rng.randint(1, 8)
+    files = sorted(f"test/d{i // 20}/f{i:04d}_test.dart" for i in range(n_files))
+    mode = case_idx % 4
+    if mode == 0:
+        weights = {f: 1.0 for f in files}
+    elif mode == 1 and files:
+        weights = {f: 1.0 for f in files}
+        weights[rng.choice(files)] = 500.0
+    elif mode == 2:
+        weights = {f: float(rng.choice([0.1, 0.5, 1.0, 1.0, 2.5, 10.0, 25.0])) for f in files}
+    else:
+        weights = {f: round(rng.uniform(0.1, 50.0), 1) for f in files if rng.random() > 0.15}
+
+    shards1, totals1 = test_shard.assign_shards(files, weights, total)
+    shards2, totals2 = test_shard.assign_shards(files, weights, total)
+    if shards1 != shards2 or totals1 != totals2:
+        print(f"FAIL SH14 seed=20261127 case={case_idx}: determinism failed", file=sys.stderr)
+        sys.exit(1)
+
+    flat = [f for s in shards1 for f in s]
+    if len(flat) != len(set(flat)) or sorted(flat) != sorted(files):
+        print(f"FAIL SH14 seed=20261127 case={case_idx}: partition/union failed", file=sys.stderr)
+        sys.exit(1)
+
+    if len(files) >= total and any(len(s) == 0 for s in shards1):
+        print(f"FAIL SH14 seed=20261127 case={case_idx}: empty shard with {len(files)} files and {total} shards", file=sys.stderr)
+        sys.exit(1)
+
+    if files:
+        eff = test_shard.effective_weights(files, weights)
+        max_w = max(eff.values())
+        avg = sum(eff.values()) / total
+        if max(totals1) > avg + max_w + 1e-9:
+            print(f"FAIL SH14 seed=20261127 case={case_idx}: slowest shard {max(totals1):.2f} > avg+max_w {avg + max_w:.2f}", file=sys.stderr)
+            sys.exit(1)
+
+print("PASS SH14: 300 seeded cases passed")
+PYEOF
