@@ -67,7 +67,7 @@ Fix 5.1 done: [The dead dev dependency and the misplaced hive line go] Removed u
 Fix 5.2 done: [No dart:html under lib] Replaced dart:html in http_fetcher_web.dart and web_lifecycle_web.dart with package:web and dart:js_interop, added no_dart_html_source_bar_test.dart, http_fetcher_status_test.dart, and web_http_fetcher_chrome_test.dart (TestOn browser).
 Fix 5.3 done: [One opaque id helper] Added pure-Dart lib/domain/opaque_id.dart (CryptoRNG Uuid v4), added opaque_id_test.dart and opaque_id_source_bar_test.dart, and migrated UUID and weak timestamp/random id sites under lib/.
 Fix 5.4 done: [A declared package is used] Added rule D7 (every declared package must be used) to scripts/check_dependencies.py with DC77-DC85 self-tests and synced byte-identical scripts across core, ruleset, and app.
-Fix 6.1 done: [Every existing Hive box opens with hive_ce] Recorded all 5 hive_flutter v1.1.0 boxes under test/fixtures/hive_v1_compat/ and added VM and Chrome compatibility guards (run 46115462784).
+Fix 6.1 done: [Every existing Hive box opens with hive_ce] Recorded all 5 hive_flutter v1.1.0 boxes under test/fixtures/hive_v1_compat/ and added VM and Chrome compatibility guards (9c77099fb485e466ccc34c018b0268acdcff4e52 run 46115462784).
 Fix 6.2 done: [Hive is replaced by hive_ce] Swapped hive_flutter for hive_ce_flutter in pubspec.yaml and all 9 Dart callers, removed hive_flutter D4 exception, and verified VM, Chrome, and legacy_load_law_test.dart.
 Fix 6.3 done: [The arena combatant holds plain immutable collections] Added arena_combatant_immutability_law_test.dart, replaced ISet/IList/IMap in ArenaCombatant with Set/List/Map.unmodifiable, removed fast_immutable_collections, and lowered kDynamicCeiling to 1014.
 
@@ -85,6 +85,7 @@ b01ffa6256ad99130623b77196d0bbb4b981afa4 red run 46112631848
 1f98b8cd7e264ad825663bb08c98363fdf292b2f cancelled run 46112638581
 4cf45242d487d3c0fbae252f6b86003e3c87b036 red run 46112869852
 c01500b6573294d3958f5d977b57d03754fc6eae red run 46116375449
+db0b4a04d3086f4b186da7e8bee44590e2fd5ec5 red run 46117786024
 
 ## Resets
 None
@@ -105,3 +106,4 @@ Run 46112631848 cause: DC77 in test_check_dependencies.sh lacked fake_async mock
 Run 46112638581 cause: superseded by DC77 HTTP fixture fix; fixed by 4cf45242d487d3c0fbae252f6b86003e3c87b036
 Run 46112869852 cause: web_http_fetcher_chrome_test.dart lacked TestOn browser, opaque_id.dart in utils violated domain-to-utils layer rule, codebase_map.md and big_file_ratchet needed refresh, and earlier red runs needed disclosure; fixed by c3dea98049f2e41d77ea314f95ce435df1d264a1
 Run 46116375449 cause: renamed flutter_free_packages_test.dart test name without entry in test/removed_test_names.txt; fixed by a91c92a8851f4b56f7f3b869c91150767298c710
+Run 46117786024 cause: Fix 6.1 line in notes named a run id without its 40-char head SHA; fixed by 8e1a2463c6307bda8796208f22dae8f2ee40882d
