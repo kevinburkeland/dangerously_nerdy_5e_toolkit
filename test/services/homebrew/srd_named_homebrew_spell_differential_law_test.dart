@@ -19,7 +19,6 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/homebrew/equipment_builder_
 import 'package:dangerously_nerdy_5e_toolkit/widgets/homebrew/spell_builder_dialog.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:vtt_engine_core/vtt_engine_core.dart' show EntityId, RulesetVersion;
 
 import '../../support/catalog_golden_serializer.dart';
 import '../../support/seeded_spell_item_input_generator.dart';
