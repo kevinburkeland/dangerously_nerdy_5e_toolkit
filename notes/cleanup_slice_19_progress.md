@@ -55,7 +55,7 @@ Fix 1.3 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead d
 None
 
 ## Red runs on main
-None
+c647df2189075d97ce2a20cf92c4ba32cb876905 red run 46101601044
 
 ## Resets
 None
@@ -65,3 +65,4 @@ Begin Step 2 by moving the notes checks out of the DCO job, adding the workflow 
 
 ## Open issues and deviations
 Factual check on B1: on today's repos, commit 59d7178dea6527a18a2cac3b7fe0f110fb93717a is reachable from origin/main and archive tags in vtt-engine-core, so a fresh full clone of all three repos with archive tags fetched passes NS31; NS84 therefore uses a throwaway core repo with an archive tag that lacks that commit to exercise the unreachable-commit branch.
+Run 46101601044 cause: actions/download-artifact pinned to v7.0.0 failed dependency check A1 (newest is v8.0.2); fixed by 2b2ad2fe902fc8081e860977bfacd63e6700a511
