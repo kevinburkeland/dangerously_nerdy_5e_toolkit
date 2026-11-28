@@ -1,7 +1,7 @@
 # Cleanup slice 19 progress notes
 Status: IN PROGRESS
 Start heads: core 9cf861c5de25b86228e452fc079bbadcad171d15, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61, app 3f11442cb157e9c5d5cbbe966539093164a587da
-Last pushed heads (CI green): core 7a106702af112e61e5e6e9ad1f2ef4bf401ecb81, ruleset 9bb753a0201d89d6bff6c882c784270ff68225a2, app e5a34edc56f67660829d4bfbb42cd220f07df09f
+Last pushed heads (CI green): core 7a106702af112e61e5e6e9ad1f2ef4bf401ecb81, ruleset 9bb753a0201d89d6bff6c882c784270ff68225a2, app e416071b06b15f003f64e3f2d6303065744ed788
 Pins now: ruleset -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66; app -> core ec9f155cbdce8315b0d84213842ddf8a22e46a66, ruleset 2f8a864345cd8c7ee38f3e00ca2d154c3df22e61
 Fix ids: 1.1 1.2 1.3 2.1 2.2 2.3 2.4 2.5 3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1 5.2 5.3 5.4 6.1 6.2 6.3 7.1 7.2 7.3 7.4 7.5
 Mutation ids: N1 W1 B1 S1 S2 G1 T1 K1 Y1 D1 H1 I1 V1 A1 W2 P1
@@ -38,7 +38,7 @@ Fix 7.5: The privacy popup matches the policy
 
 ## Steps
 - [x] Step 1 Retire, notes hint, look-ahead: core 7a106702af112e61e5e6e9ad1f2ef4bf401ecb81 run 46082752195, ruleset 9bb753a0201d89d6bff6c882c784270ff68225a2 run 46082754336, app e5a34edc56f67660829d4bfbb42cd220f07df09f run 46082756920
-- [ ] Step 2 Notes job, mobile jobs out, shards by time
+- [x] Step 2 Notes job, mobile jobs out, shards by time: app e416071b06b15f003f64e3f2d6303065744ed788 run 46102810606
 - [ ] Step 3 Notes-only commits run only what can change
 - [ ] Step 4 SRD-named spells keep their classes, type-aware model bar
 - [ ] Step 5 Dead dependency, dart:html, one id helper, used-package rule
@@ -50,6 +50,11 @@ Fix 7.5: The privacy popup matches the policy
 Fix 1.1 done: [Retire cs18] Retired 0 core, 4 ruleset, and 12 app cs18 mutation branches into archive tags and patch files.
 Fix 1.2 done: [The notes self-test hint names a commit no tag holds] Updated require_notes_commits_present in scripts/test_check_notes_shas.sh to distinguish missing archive tags from unreachable commits and added self-test case NS84.
 Fix 1.3 done: [A look-ahead run of the dependency check] Ran 14-day look-ahead dependency check in all three repos and upgraded flutter_webrtc to 1.7.0 in pubspec.yaml and pubspec.lock.
+Fix 2.1 done: [The notes checks leave the DCO job] Moved the notes self-test, sibling-repo clone, and live notes SHA check out of dco into notes-shas in release.yml and cloned sibling repos at most once in test_check_notes_shas.sh.
+Fix 2.2 done: [The live notes check runs once and the workflow proves it] Removed NS73 from test_check_notes_shas.sh and added scripts/check_notes_workflow.py and scripts/test_check_notes_workflow.sh wired into tests-complete.
+Fix 2.3 done: [The mobile build jobs leave the workflow] Removed build-android, build-ios, and build_mobile from .github/workflows/release.yml.
+Fix 2.4 done: [CI writes the next shard weights file] Added JSON file reporter uploads per shard, weights-from-reports and refresh-weights in scripts/test_shard.py, and shard-weights artifact upload in tests-complete.
+Fix 2.5 done: [Test files go to shards by measured time] Committed test/shard_weights.json from the Fix 2.4 green run and updated scripts/test_shard.py and scripts/test_test_shard.sh for greedy weight-balanced sharding, validation, drift warnings, and 300-seed law.
 
 ## Mutation branches
 None
@@ -61,7 +66,7 @@ c647df2189075d97ce2a20cf92c4ba32cb876905 red run 46101601044
 None
 
 ## Next
-Begin Step 2 by moving the notes checks out of the DCO job, adding the workflow check, and removing the mobile build jobs.
+Begin Step 3 by adding scripts/ci_scope.py, repo-text tags and tag bar, and the final CI result job.
 
 ## Open issues and deviations
 Factual check on B1: on today's repos, commit 59d7178dea6527a18a2cac3b7fe0f110fb93717a is reachable from origin/main and archive tags in vtt-engine-core, so a fresh full clone of all three repos with archive tags fetched passes NS31; NS84 therefore uses a throwaway core repo with an archive tag that lacks that commit to exercise the unreachable-commit branch.
