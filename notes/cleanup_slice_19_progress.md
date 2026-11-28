@@ -69,6 +69,7 @@ c647df2189075d97ce2a20cf92c4ba32cb876905 red run 46101601044
 049d0abe73b60f4aa2a1987b10dec681f88de541 red run 46103352911
 70dbc44588d5c8ac65825bf7cd3b90385526492b red run 46103846241
 da1072bafe5f9e9403c81a75ad502ac843c3f24e red run 46105210208
+05898dca8072924ce8089e02e6506695391478c3 red run 46109192904
 
 ## Resets
 None
@@ -82,3 +83,4 @@ Run 46101601044 cause: actions/download-artifact pinned to v7.0.0 failed depende
 Run 46103352911 cause: Next section named uncreated CI scope script path before Step 3, failing docs_truth_test.dart; fixed by c1df2b272871a80dab381150542f00bdaf5c3348
 Run 46103846241 cause: cause line for the earlier red run still named uncreated CI scope script path; fixed by 89be5b52f67744f938b718b944308f863d2f1d48
 Run 46105210208 cause: test_ci_scope.sh case (f) missed mkdir -p notes after checkout main on runner; fixed by b687f42b650e5e8bf25b2b1670cbfc2c11279641
+Run 46109192904 cause: unnecessary import of vtt_engine_core in differential law failed flutter analyze; fixed by c14e1e6267155d068b9238daacda4b216b75ff1f
