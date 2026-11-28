@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:meta/meta.dart';
+import '../../utils/opaque_id.dart';
 import '../../models/campaign_profile.dart';
 import '../../models/custom_preset.dart';
 import '../../models/domain/core_types.dart';
@@ -415,7 +416,7 @@ class DmBackupService {
           ? effectiveClock.nextTimestamp()
           : profile.nameRegister.timestamp;
       final sanitizedProfile = profile.copyWith(
-        id: 'campaign_imported_${now.millisecondsSinceEpoch}',
+        id: newOpaqueId('campaign_imported_'),
         name: targetName,
         nameTimestamp: timestamp,
         lastPlayedAt: now,

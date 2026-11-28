@@ -15,6 +15,7 @@ import '../services/party/shared_room_campaign_opener.dart';
 import '../services/persistence/campaign_profile_service.dart';
 import '../services/logging_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/opaque_id.dart';
 import 'dialogs/join_create_room_dialog.dart';
 
 class RoomBannerWidget extends StatefulWidget {
@@ -85,8 +86,8 @@ class _RoomBannerWidgetState extends State<RoomBannerWidget> {
       if (transport is CascadingTransportRouter) {
         if (transport.activeAdapter == null ||
             transport.currentState == TransportState.offline) {
-          final localNodeId =
-              '$effectiveName-${effectiveRoom.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+          final localNodeId = newOpaqueId(
+              '$effectiveName-${effectiveRoom.toLowerCase()}-');
           unawaited(transport.initializeRoom(effectiveRoom, localNodeId));
         }
       }

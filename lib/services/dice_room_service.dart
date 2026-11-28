@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import '../utils/opaque_id.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -165,8 +166,7 @@ class DiceRoomService implements IRemoteRollIngestor {
     required RoomSessionStarter starter,
   }) async {
     try {
-      final localNodeId =
-          '$playerName-${roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+      final localNodeId = newOpaqueId('$playerName-${roomCode.toLowerCase()}-');
       await transport.initializeRoom(roomCode, localNodeId);
       if (!orchestrator.isSynchronizing) {
         final isHost =

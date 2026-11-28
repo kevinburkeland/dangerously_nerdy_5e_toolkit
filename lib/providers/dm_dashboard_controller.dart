@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../utils/opaque_id.dart';
 import '../application/services/combat_encounter_service.dart';
 import 'package:vtt_engine_core/ports/i_campaign_repository.dart';
 import 'package:vtt_engine_core/ports/i_character_repository.dart';
@@ -366,7 +367,7 @@ class DmDashboardController extends ChangeNotifier {
     final nowHlc = _clock.nextTimestamp();
     final charName = _partyCharactersMap[characterId]?.name ?? characterId;
     final removalEvent = PartyEvent(
-      id: 'evt_remove_${characterId}_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+      id: newOpaqueId('evt_remove_${characterId}_'),
       roomCode: activeProfile!.roomState.roomCode,
       type: 'characterRemove',
       playerName: charName,

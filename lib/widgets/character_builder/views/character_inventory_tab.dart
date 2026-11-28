@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../models/domain/character_models.dart';
 import '../../../models/domain/core_types.dart';
 import '../../../models/magic_items/magic_item_library.dart';
+import '../../../utils/opaque_id.dart';
 import '../../../services/rules/inventory_transaction_service.dart';
 
 class CharacterInventoryTab extends StatelessWidget {
@@ -304,7 +305,7 @@ class CharacterInventoryTab extends StatelessWidget {
                                     );
                                     final newInstance = InventoryItemInstance(
                                       instanceId:
-                                          'srd-${item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
+                                          newOpaqueId('srd-${item.id.slug}-'),
                                       itemRef: EntityReference(
                                         refType: EntityType.equipment,
                                         slug: item.id.slug,

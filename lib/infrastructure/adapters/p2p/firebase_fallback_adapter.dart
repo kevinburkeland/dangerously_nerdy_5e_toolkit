@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:uuid/uuid.dart';
 import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import '../../../services/logging_service.dart';
 import '../../../utils/crypto_utils.dart';
+import '../../../utils/opaque_id.dart';
 
 /// Maximum allowed character length for a relay payload document in Firestore.
 /// Matches firestore.rules: request.resource.data.payload.size() < 1000000.
@@ -206,7 +206,7 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
           'FirebaseFallbackAdapter must be initialized before broadcasting.');
     }
 
-    final messageId = const Uuid().v4();
+    final messageId = newOpaqueId();
     final messageData = {
       'id': messageId,
       'senderId': _localNodeId,
@@ -235,7 +235,7 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
   /// Injects an incoming payload (used in tests or local in-memory fallback).
   void emitIncomingPayload(String payload,
       {String? messageId, String? senderId}) {
-    _handleRelayMessage(messageId ?? const Uuid().v4(), payload,
+    _handleRelayMessage(messageId ?? newOpaqueId(), payload,
         senderId: senderId);
   }
 

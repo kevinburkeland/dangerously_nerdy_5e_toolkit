@@ -1,4 +1,4 @@
-import 'package:uuid/uuid.dart';
+import '../../../utils/opaque_id.dart';
 import '../capability/ruleset_ingestion_capability.dart';
 import '../engine/document_structure_parser.dart';
 import '../engine/source_block_parser.dart';
@@ -21,16 +21,16 @@ class IngestionWorkbenchService {
   final SourceBlockParser _blockParser;
   final DocumentStructureParser _structureParser;
   final RulesetIngestionCapability _capability;
-  final Uuid _uuid;
+  final String Function() _idGenerator;
 
   IngestionWorkbenchService({
     required this._capability,
     SourceBlockParser? blockParser,
     DocumentStructureParser? structureParser,
-    Uuid? uuid,
+    String Function()? idGenerator,
   })  : _blockParser = blockParser ?? const SourceBlockParser(),
         _structureParser = structureParser ?? const DocumentStructureParser(),
-        _uuid = uuid ?? const Uuid();
+        _idGenerator = idGenerator ?? newOpaqueId;
 
   RulesetIngestionCapability get capability => _capability;
 
@@ -214,7 +214,7 @@ class IngestionWorkbenchService {
     final normalizedSource = blocks.map((b) => b.normalizedText).join('\n');
 
     return IngestionCandidate(
-      id: _uuid.v4(),
+      id: _idGenerator(),
       span: span,
       rawSource: rawSource,
       normalizedSource: normalizedSource,

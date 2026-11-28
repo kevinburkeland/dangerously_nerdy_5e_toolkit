@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import '../utils/opaque_id.dart';
 import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
 import '../models/room_roll.dart';
@@ -9,7 +10,6 @@ import '../services/haptic_service.dart';
 import '../services/logging_service.dart';
 import '../services/preset_service.dart';
 import '../utils/dice_formatters.dart';
-import '../utils/secure_random.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/dialogs/preset_import_export_dialogs.dart';
@@ -178,7 +178,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
         : 'Adventurer';
     if (currentRoomCode != null && currentRoomCode.isNotEmpty) {
       final roomRoll = RoomRoll.fromDiceRollResult(
-        id: '${DateTime.now().microsecondsSinceEpoch}_${secureRandom.nextInt(1000000)}',
+        id: newOpaqueId(),
         roomCode: currentRoomCode,
         playerName: currentPlayerName,
         result: res,
@@ -229,8 +229,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
         formulaText: _currentFormulaString);
     if (name != null && name.isNotEmpty && mounted) {
       final messenger = ScaffoldMessenger.of(context);
-      final uniqueId =
-          '${DateTime.now().microsecondsSinceEpoch}_${secureRandom.nextInt(1000000)}';
+      final uniqueId = newOpaqueId();
       final newPreset = CustomPreset(
         id: uniqueId,
         name: name,

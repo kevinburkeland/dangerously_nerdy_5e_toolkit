@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/dpr/dpr_models.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/opaque_id.dart';
 import '../common/numeric_stepper.dart';
 import 'dpr_attack_editor_card.dart';
 
@@ -90,7 +91,7 @@ class DprCombatantConfigurator extends StatelessWidget {
                             List<DprAttackAction>.from(profile.attacks)
                               ..add(
                                 DprAttackAction(
-                                  id: 'attack_${DateTime.now().millisecondsSinceEpoch}',
+                                  id: newOpaqueId('attack_'),
                                   name: 'Attack #${profile.attacks.length + 1}',
                                   attackBonus: profile.abilityModifier +
                                       profile.proficiencyBonus,

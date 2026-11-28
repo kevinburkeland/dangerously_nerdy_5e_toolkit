@@ -10,6 +10,7 @@ import '../../services/haptic_service.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../services/rules/treasure_generator_engine.dart';
+import '../../utils/opaque_id.dart';
 import '../item_compendium/item_detail_dialog.dart';
 import '../party/campaign_dialogs.dart';
 
@@ -185,7 +186,7 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
     // Deposit Gems
     for (final gem in drop.gemstones) {
       final item = PartyLootItem(
-        id: 'gem_${DateTime.now().millisecondsSinceEpoch}_${gem.name.replaceAll(RegExp(r'\W+'), '_')}',
+        id: newOpaqueId('gem_'),
         name: gem.name,
         category: 'gem',
         count: gem.count,
@@ -204,7 +205,7 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
     // Deposit Art
     for (final art in drop.artObjects) {
       final item = PartyLootItem(
-        id: 'art_${DateTime.now().millisecondsSinceEpoch}_${art.name.replaceAll(RegExp(r'\W+'), '_')}',
+        id: newOpaqueId('art_'),
         name: art.name,
         category: 'art',
         count: art.count,
@@ -224,7 +225,7 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
     for (int i = 0; i < drop.magicItemNames.length; i++) {
       final name = drop.magicItemNames[i];
       final item = PartyLootItem(
-        id: 'magic_${DateTime.now().millisecondsSinceEpoch}_$i',
+        id: newOpaqueId('magic_'),
         name: name,
         category: 'magicItem',
         count: 1,

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:math' as math;
+import '../../utils/opaque_id.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import 'package:vtt_engine_core/crdt/stateful_hlc_clock.dart';
@@ -355,7 +355,7 @@ class CampaignProfileService extends ChangeNotifier {
     }
 
     final now = DateTime.now();
-    final newId = 'campaign_${now.millisecondsSinceEpoch}';
+    final newId = newOpaqueId('campaign_');
     final targetName = (newName != null && newName.trim().isNotEmpty)
         ? newName.trim()
         : '${source.name} (Copy)';
@@ -418,7 +418,7 @@ class CampaignProfileService extends ChangeNotifier {
     final profiles = activeRepo.allProfiles;
 
     final event = PartyEvent(
-      id: 'evt_${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(9999)}',
+      id: newOpaqueId('evt_'),
       roomCode: roomCode ?? '',
       type: type,
       playerName: characterName,

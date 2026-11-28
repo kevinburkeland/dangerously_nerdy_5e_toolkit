@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:uuid/uuid.dart';
 import '../../../services/logging_service.dart';
+import '../../../utils/opaque_id.dart';
 import 'signaling_message.dart';
 
 /// Adapter managing ephemeral WebRTC signaling (SDP offers, answers, ICE candidates)
@@ -228,7 +228,7 @@ class FirebaseSignalingAdapter {
           'FirebaseSignalingAdapter must be initialized before sending signals.');
     }
 
-    final signalId = const Uuid().v4();
+    final signalId = newOpaqueId();
     final message = SignalingMessage(
       id: signalId,
       roomCode: _roomCode!,

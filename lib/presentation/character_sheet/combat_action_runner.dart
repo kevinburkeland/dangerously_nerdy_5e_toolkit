@@ -7,7 +7,7 @@ import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
-import '../../utils/secure_random.dart';
+import '../../utils/opaque_id.dart';
 
 /// Runs a combat action dice roll from the character sheet UI.
 void runActionRoll(
@@ -34,7 +34,7 @@ void runActionRoll(
   final activeRoom = roomService.activeRoomCode;
   if (activeRoom != null) {
     final roomRoll = RoomRoll(
-      id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+      id: newOpaqueId('roll-'),
       roomCode: activeRoom,
       playerName: character.name.isNotEmpty ? character.name : 'Player',
       formulaString: roll.formula,

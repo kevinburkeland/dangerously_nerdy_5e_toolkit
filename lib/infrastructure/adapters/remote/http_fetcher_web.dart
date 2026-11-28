@@ -1,6 +1,6 @@
-// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
 import 'dart:async';
-import 'dart:html' as html;
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 import '../../../services/logging_service.dart';
 import 'http_fetcher.dart';
 
@@ -10,7 +10,7 @@ class WebHttpFetchClient implements HttpFetchClient {
   @override
   Future<String> get(Uri uri) {
     final completer = Completer<String>();
-    final xhr = html.HttpRequest();
+    final xhr = web.XMLHttpRequest();
 
     xhr.open('GET', uri.toString());
     // On web, User-Agent is forbidden by browser specs, but Accept header is allowed
@@ -21,57 +21,50 @@ class WebHttpFetchClient implements HttpFetchClient {
           reason: 'Failed to set Accept header on HttpRequest');
     }
 
-    xhr.onLoad.listen((_) {
-      final status = xhr.status ?? 0;
-      if (status >= 200 && status < 300) {
-        completer.complete(xhr.responseText ?? '');
-      } else if (status == 404) {
-        completer.completeError(
-          HttpFetchException(
-            'Resource not found on GitHub (HTTP 404). Verify the repository name and branch.',
-            statusCode: 404,
-            uri: uri,
-          ),
-        );
-      } else if (status == 403) {
-        completer.completeError(
-          HttpFetchException(
-            'GitHub API rate limit exceeded or access forbidden (HTTP 403).',
-            statusCode: 403,
-            uri: uri,
-          ),
-        );
-      } else {
-        completer.completeError(
-          HttpFetchException(
-            'HTTP $status ${xhr.statusText ?? "Error"}: Failed to fetch $uri',
-            statusCode: status,
-            uri: uri,
-          ),
-        );
-      }
-    });
+    xhr.addEventListener(
+      'load',
+      ((web.Event _) {
+        try {
+          completer.complete(
+            resolveHttpFetchStatus(
+              uri: uri,
+              status: xhr.status,
+              statusText: xhr.statusText,
+              responseText: xhr.responseText,
+            ),
+          );
+        } catch (e) {
+          completer.completeError(e);
+        }
+      }).toJS,
+    );
 
-    xhr.onError.listen((_) {
-      final status = xhr.status ?? 0;
-      completer.completeError(
-        HttpFetchException(
-          'Network / Security Error: Request to $uri was blocked. '
-          'Please verify the repository URL exists and that your network permits GitHub API connections.',
-          statusCode: status != 0 ? status : null,
-          uri: uri,
-        ),
-      );
-    });
+    xhr.addEventListener(
+      'error',
+      ((web.Event _) {
+        final status = xhr.status;
+        completer.completeError(
+          HttpFetchException(
+            'Network / Security Error: Request to $uri was blocked. '
+            'Please verify the repository URL exists and that your network permits GitHub API connections.',
+            statusCode: status != 0 ? status : null,
+            uri: uri,
+          ),
+        );
+      }).toJS,
+    );
 
-    xhr.onAbort.listen((_) {
-      completer.completeError(
-        HttpFetchException(
-          'Request to $uri was aborted.',
-          uri: uri,
-        ),
-      );
-    });
+    xhr.addEventListener(
+      'abort',
+      ((web.Event _) {
+        completer.completeError(
+          HttpFetchException(
+            'Request to $uri was aborted.',
+            uri: uri,
+          ),
+        );
+      }).toJS,
+    );
 
     xhr.send();
     return completer.future;

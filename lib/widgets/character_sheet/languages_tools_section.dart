@@ -6,8 +6,8 @@ import '../../providers/character_sheet_controller.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/opaque_id.dart';
 import '../../services/rules/skill_trait_resolver.dart';
-import '../../utils/secure_random.dart';
 
 /// Interactive Languages Known and Tool Proficiencies section with live dice rolling,
 /// ability modifier recommendation badges, and management dialogs.
@@ -41,7 +41,7 @@ class LanguagesToolsSection extends StatelessWidget {
 
     if (activeRoom != null) {
       final roomRoll = RoomRoll.fromDiceRollResult(
-        id: 'tool-roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        id: newOpaqueId('tool-roll-'),
         roomCode: activeRoom,
         playerName: characterName,
         result: rollResult,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/dice_roll.dart';
+import '../utils/opaque_id.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
 import 'spell_cast_formula_resolver.dart';
 import '../models/characters/srd_feats_library.dart';
@@ -23,7 +24,6 @@ import '../services/rules/character_reparse_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/skill_trait_resolver.dart';
 import '../services/logging_service.dart';
-import '../utils/secure_random.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,
 /// resource management, equipment/attunement toggles, condition management, and debounced persistence.
@@ -915,7 +915,7 @@ class CharacterSheetController extends ChangeNotifier {
       final playerName =
           _character.name.isNotEmpty ? _character.name : 'Player';
       final roomRoll = RoomRoll(
-        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        id: newOpaqueId('roll-'),
         roomCode: activeRoom,
         playerName: playerName,
         formulaString: '${spell.name} (Spell Attack)',
@@ -1051,7 +1051,7 @@ class CharacterSheetController extends ChangeNotifier {
             ? ' (Cast at Level $effectiveLevel)'
             : '');
     final roomRoll = RoomRoll(
-      id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+      id: newOpaqueId('roll-'),
       roomCode: activeRoom,
       playerName: playerName,
       formulaString: '${spell.name}$upcastLabel: ${result.formulaString}',

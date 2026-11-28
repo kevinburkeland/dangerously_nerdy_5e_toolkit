@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import '../utils/opaque_id.dart';
 import '../models/party/campaign_membership.dart';
 import '../models/party/party_session_state.dart';
 import '../models/room_roll.dart';
@@ -188,8 +189,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen>
     _router = widget.router ?? sl<IP2pTransportPort>();
     _telemetryStream = orchestrator.watchTelemetry();
 
-    final localNodeId =
-        '$_playerName-${_roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+    final localNodeId = newOpaqueId('$_playerName-${_roomCode.toLowerCase()}-');
     if (_router != null) {
       unawaited(_router!.initializeRoom(_roomCode, localNodeId));
     }

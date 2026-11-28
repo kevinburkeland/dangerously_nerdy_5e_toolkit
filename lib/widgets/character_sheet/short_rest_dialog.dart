@@ -6,8 +6,8 @@ import '../../models/room_roll.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/a11y_service.dart';
 import '../../services/dice_room_service.dart';
+import '../../utils/opaque_id.dart';
 import '../../services/haptic_service.dart';
-import '../../utils/secure_random.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 
@@ -127,7 +127,7 @@ class _ShortRestDialogState extends State<ShortRestDialog> {
 
     if (activeRoom != null) {
       final roomRoll = RoomRoll(
-        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        id: newOpaqueId('roll-'),
         roomCode: activeRoom,
         playerName: characterName,
         formulaString: 'Short Rest Hit Dice (${rollResult.formulaString})',

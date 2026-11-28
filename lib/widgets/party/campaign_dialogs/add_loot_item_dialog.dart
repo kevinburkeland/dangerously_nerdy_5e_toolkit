@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import '../../../models/party/party_loot_item.dart';
 import '../../../services/party/party_room_service.dart';
+import '../../../utils/opaque_id.dart';
 
 class AddLootItemDialog extends StatefulWidget {
   final String roomCode;
@@ -44,8 +45,7 @@ class _AddLootItemDialogState extends State<AddLootItemDialog> {
 
     final count = int.tryParse(_countController.text) ?? 1;
     final gp = double.tryParse(_gpController.text) ?? 0.0;
-    final itemId =
-        'loot_${DateTime.now().millisecondsSinceEpoch}_${name.replaceAll(RegExp(r'\W+'), '_').toLowerCase()}';
+    final itemId = newOpaqueId('loot_');
 
     final item = PartyLootItem(
       id: itemId,

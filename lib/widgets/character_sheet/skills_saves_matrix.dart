@@ -5,7 +5,7 @@ import '../../models/room_roll.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
-import '../../utils/secure_random.dart';
+import '../../utils/opaque_id.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 
@@ -47,7 +47,7 @@ class _SkillsSavesMatrixState extends State<SkillsSavesMatrix> {
 
     if (activeRoom != null) {
       final roomRoll = RoomRoll.fromDiceRollResult(
-        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        id: newOpaqueId('roll-'),
         roomCode: activeRoom,
         playerName: characterName,
         result: rollResult,

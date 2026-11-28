@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
+import 'opaque_id.dart';
 import 'secure_random.dart';
 
 /// Cryptographic and security helper utilities for DangerouslyNerdy 5e Toolkit.
@@ -22,24 +22,7 @@ class CryptoUtils {
   }
 
   /// Generates a cryptographically secure UUID v4 string for host administrative passkeys
-  static String generateHostKey() {
-    final bytes = Uint8List(16);
-    for (int i = 0; i < 16; i++) {
-      bytes[i] = secureRandom.nextInt(256);
-    }
-    // Set UUID v4 variant & version
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-
-    String hex(int start, int end) {
-      return bytes
-          .sublist(start, end)
-          .map((b) => b.toRadixString(16).padLeft(2, '0'))
-          .join();
-    }
-
-    return '${hex(0, 4)}-${hex(4, 6)}-${hex(6, 8)}-${hex(8, 10)}-${hex(10, 16)}';
-  }
+  static String generateHostKey() => newOpaqueId();
 
   /// Computes SHA-256 hex digest for passwordless hostKey verification.
   static String sha256Hex(String input) {

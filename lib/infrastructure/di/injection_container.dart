@@ -1,4 +1,5 @@
 import 'package:vtt_engine_core/vtt_engine_core.dart';
+import '../../utils/opaque_id.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../application/services/homebrew_import_orchestrator.dart';
@@ -38,7 +39,6 @@ import '../../application/map/map_image_intake_port.dart';
 import '../../application/map/map_intake_service.dart';
 import '../../application/map/map_grid_service.dart';
 import '../../application/map/map_token_service.dart';
-import 'package:uuid/uuid.dart';
 import '../map/map_image_intake_adapter.dart';
 import '../storage/blob_store_adapter.dart';
 import 'service_container.dart';
@@ -226,7 +226,7 @@ Future<void> initServiceLocator({
     () => MapTokenService(
       campaignRepo: sl<ICampaignRepository>(),
       clock: sl<StatefulHlcClock>(),
-      newTokenId: () => 'tok_${const Uuid().v4().replaceAll('-', '')}',
+      newTokenId: () => 'tok_${newOpaqueId().replaceAll('-', '')}',
     ),
   );
 

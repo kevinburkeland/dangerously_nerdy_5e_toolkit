@@ -1,6 +1,6 @@
-import 'package:uuid/uuid.dart';
 import 'package:vtt_engine_core/crdt/replica_id.dart';
 import '../../services/persistence/app_database_service.dart';
+import '../../utils/opaque_id.dart';
 
 /// Provider for active runtime CRDT replica identity.
 ///
@@ -31,7 +31,7 @@ class LocalReplicaIdentityStore {
 
   /// Creates a fresh in-memory runtime [ReplicaId] backed by UUIDv4.
   static ReplicaId createRuntimeReplicaId() {
-    return ReplicaId(const Uuid().v4());
+    return ReplicaId(newOpaqueId());
   }
 
   /// Optional reader for legacy/deprecated persisted device identifier in metadata box,

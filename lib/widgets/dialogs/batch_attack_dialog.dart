@@ -7,7 +7,7 @@ import '../../services/a11y_service.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/secure_random.dart';
+import '../../utils/opaque_id.dart';
 import '../app_logo.dart';
 import '../batch_attack/batch_attack_results_card.dart';
 
@@ -102,8 +102,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
 
     if (activeCode != null && activePlayer != null) {
       final timestamp = DateTime.now();
-      final summaryId =
-          '${timestamp.microsecondsSinceEpoch}_batch_${secureRandom.nextInt(1000000)}';
+      final summaryId = newOpaqueId('batch_');
 
       final attackDetails = summary.results.map((res) {
         final d20Str = res.d20Roll2 != null

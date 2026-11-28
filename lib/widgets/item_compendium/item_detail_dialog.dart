@@ -8,6 +8,7 @@ import '../../providers/settings_provider.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/inventory_transaction_service.dart';
+import '../../utils/opaque_id.dart';
 import '../common/diff_highlight_banner.dart';
 import '../common/formatted_markdown_text.dart';
 import '../dm_reference/rules_edition_toggle.dart';
@@ -1044,7 +1045,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                         );
                         final newInstance = InventoryItemInstance(
                           instanceId:
-                              'item-${widget.item.id.slug}-${DateTime.now().millisecondsSinceEpoch}',
+                              newOpaqueId('item-${widget.item.id.slug}-'),
                           itemRef: EntityReference(
                             refType: EntityType.equipment,
                             slug: widget.item.id.slug,

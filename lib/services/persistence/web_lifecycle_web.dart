@@ -1,6 +1,6 @@
-// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'dart:js_interop';
 import 'package:flutter/foundation.dart';
+import 'package:web/web.dart' as web;
 import '../logging_service.dart';
 import 'debounced_storage_service.dart';
 
@@ -8,12 +8,11 @@ import 'debounced_storage_service.dart';
 void setupWebLifecycle(DebouncedStorageService storage) {
   if (kIsWeb) {
     try {
-      html.window.onBeforeUnload.listen((event) {
+      final listener = ((web.Event _) {
         storage.flushAllSync();
-      });
-      html.window.onPageHide.listen((event) {
-        storage.flushAllSync();
-      });
+      }).toJS;
+      web.window.addEventListener('beforeunload', listener);
+      web.window.addEventListener('pagehide', listener);
     } catch (e, st) {
       LoggingService().logNonFatal(
         e,
