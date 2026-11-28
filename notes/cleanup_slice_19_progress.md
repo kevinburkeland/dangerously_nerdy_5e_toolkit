@@ -61,12 +61,13 @@ None
 
 ## Red runs on main
 c647df2189075d97ce2a20cf92c4ba32cb876905 red run 46101601044
+049d0abe73b60f4aa2a1987b10dec681f88de541 red run 46103352911
 
 ## Resets
 None
 
 ## Next
-Begin Step 3 by adding scripts/ci_scope.py, repo-text tags and tag bar, and the final CI result job.
+Begin Step 3 by adding the CI scope script, repo-text tags and tag bar, and the final CI result job.
 
 ## Open issues and deviations
 Factual check on B1: on today's repos, commit 59d7178dea6527a18a2cac3b7fe0f110fb93717a is reachable from origin/main and archive tags in vtt-engine-core, so a fresh full clone of all three repos with archive tags fetched passes NS31; NS84 therefore uses a throwaway core repo with an archive tag that lacks that commit to exercise the unreachable-commit branch.
