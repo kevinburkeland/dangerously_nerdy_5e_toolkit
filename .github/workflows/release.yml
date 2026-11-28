@@ -121,13 +121,19 @@ jobs:
           echo "Shard ${{ strategy.job-index }} of ${{ strategy.job-total }}: $(wc -l < "$RUNNER_TEMP/shard_files.txt") files"
           mapfile -t files < "$RUNNER_TEMP/shard_files.txt"
           [ "${#files[@]}" -gt 0 ] || { echo "empty shard"; exit 1; }
-          flutter test --coverage "${files[@]}"
+          flutter test --coverage --file-reporter="json:$RUNNER_TEMP/shard_${{ strategy.job-index }}_report.json" "${files[@]}"
 
       - name: 📊 Upload Test Coverage Report
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: lcov-coverage-report-${{ strategy.job-index }}
           path: coverage/lcov.info
+
+      - name: ⏱️ Upload Test Timing Report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-report-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/shard_${{ strategy.job-index }}_report.json
 
   web-tests:
     name: 🌐 Web Compiler Tests (Chrome)
@@ -173,6 +179,22 @@ jobs:
 
       - name: 🔒 Verify Notes Workflow Configuration
         run: python3 -I scripts/check_notes_workflow.py .github/workflows/release.yml
+
+      - name: 📥 Download Test Timing Reports
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: shard-report-*
+          path: ${{ runner.temp }}/shard_reports
+          merge-multiple: true
+
+      - name: ⏱️ Build Shard Weights from Reports
+        run: python3 -I scripts/test_shard.py weights-from-reports "$RUNNER_TEMP/shard_reports" "$RUNNER_TEMP/shard_weights.json"
+
+      - name: 📤 Upload Shard Weights Artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-weights
+          path: ${{ runner.temp }}/shard_weights.json
 
   # -----------------------------------------------------------------------
   # STAGE 2: FIRESTORE SECURITY RULES EMULATOR TESTS

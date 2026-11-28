@@ -196,3 +196,36 @@ if [ "$status_two" -eq 0 ]; then
 fi
 
 echo "PASS SH6"
+
+# -----------------------------------------------------------------------------
+# SH7 (Fix 2.4): weights-from-reports on a hand-written JSON reporter file
+# -----------------------------------------------------------------------------
+env7="$TMP_DIR/sh7"
+mkdir -p "$env7/reports" "$env7/scripts"
+cp "$TEST_SHARD_PY" "$env7/scripts/test_shard.py"
+cat << 'EOF' > "$env7/reports/shard_0.json"
+{"protocolVersion":"0.1.1","type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/test/a/alpha_test.dart"},"type":"suite","time":100}
+{"test":{"id":1,"name":"loading /workspace/test/a/alpha_test.dart","suiteID":0},"type":"testStart","time":100}
+{"testID":1,"result":"success","hidden":true,"type":"testDone","time":350}
+{"test":{"id":2,"name":"alpha test 1","suiteID":0},"type":"testStart","time":350}
+{"testID":2,"result":"success","hidden":false,"type":"testDone","time":2450}
+{"suite":{"id":1,"platform":"vm","path":"/workspace/test/b/beta_test.dart"},"type":"suite","time":500}
+{"test":{"id":3,"name":"loading /workspace/test/b/beta_test.dart","suiteID":1},"type":"testStart","time":500}
+{"testID":3,"result":"success","hidden":true,"type":"testDone","time":800}
+{"test":{"id":4,"name":"beta test 1","suiteID":1},"type":"testStart","time":800}
+{"testID":4,"result":"success","hidden":false,"type":"testDone","time":1760}
+{"success":true,"type":"done","time":2500}
+EOF
+
+out7=$(cd "$env7" && python3 -I scripts/test_shard.py weights-from-reports reports out_weights.json)
+python3 - "$env7/out_weights.json" << 'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+expected = {"test/a/alpha_test.dart": 2.4, "test/b/beta_test.dart": 1.3}
+if data != expected:
+    print(f"FAIL SH7: expected {expected}, got {data}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+echo "PASS SH7: $out7"

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-import sys
+import json
 import os
 import re
+import subprocess
+import sys
+import tempfile
 
 
 def find_test_files(root_dir="test"):
@@ -132,9 +135,135 @@ def cmd_check_workflow(args):
     print(found_line)
 
 
+def _normalize_test_path(raw_path):
+    p = raw_path.replace("\\", "/")
+    if "/test/" in p:
+        return "test/" + p.split("/test/", 1)[1]
+    if p.startswith("./"):
+        return p[2:]
+    return p
+
+
+def cmd_weights_from_reports(args):
+    if len(args) != 2:
+        print("Error: 'weights-from-reports' requires 2 arguments: <dir> <out>", file=sys.stderr)
+        sys.exit(1)
+
+    report_dir, out_path = args[0], args[1]
+    if not os.path.isdir(report_dir):
+        print(f"Error: Report directory not found: '{report_dir}'", file=sys.stderr)
+        sys.exit(1)
+
+    report_files = sorted(
+        os.path.join(report_dir, fn)
+        for fn in os.listdir(report_dir)
+        if fn.endswith(".json")
+    )
+    if not report_files:
+        print(f"Error: No .json report files found in '{report_dir}'", file=sys.stderr)
+        sys.exit(1)
+
+    weights = {}
+    shard_seconds = []
+
+    for rpath in report_files:
+        suites = {}
+        test_to_suite = {}
+        loading_start = {}
+        last_done = {}
+        max_time_ms = 0
+
+        with open(rpath, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    ev = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                t = ev.get("time")
+                if isinstance(t, (int, float)) and t > max_time_ms:
+                    max_time_ms = t
+
+                ev_type = ev.get("type")
+                if ev_type == "suite":
+                    suite = ev.get("suite") or {}
+                    sid = suite.get("id")
+                    spath = suite.get("path")
+                    if sid is not None and spath:
+                        suites[sid] = _normalize_test_path(spath)
+                elif ev_type == "testStart":
+                    test = ev.get("test") or {}
+                    tid = test.get("id")
+                    sid = test.get("suiteID")
+                    name = test.get("name") or ""
+                    if tid is not None and sid is not None:
+                        test_to_suite[tid] = sid
+                        if isinstance(t, (int, float)):
+                            if name.startswith("loading ") or sid not in loading_start:
+                                if name.startswith("loading ") or t < loading_start[sid]:
+                                    loading_start[sid] = t
+                elif ev_type == "testDone":
+                    tid = ev.get("testID")
+                    sid = test_to_suite.get(tid)
+                    if sid is not None and isinstance(t, (int, float)):
+                        if sid not in last_done or t > last_done[sid]:
+                            last_done[sid] = t
+
+        shard_seconds.append(round(max_time_ms / 1000.0, 1))
+        for sid, rel_path in suites.items():
+            if sid in loading_start and sid in last_done:
+                dur = max(0.1, round((last_done[sid] - loading_start[sid]) / 1000.0, 1))
+                weights[rel_path] = dur
+
+    out_dir = os.path.dirname(os.path.abspath(out_path))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(dict(sorted(weights.items())), f, indent=2)
+        f.write("\n")
+
+    avg = sum(shard_seconds) / len(shard_seconds) if shard_seconds else 0.0
+    ratio = round(max(shard_seconds) / avg, 2) if avg > 0 else 1.0
+    shards_str = ", ".join(f"{s:.1f}s" for s in shard_seconds)
+    print(f"shards: {shards_str} | slowest/avg: {ratio:.2f}")
+
+
+def cmd_refresh_weights(args):
+    if len(args) not in (1, 2):
+        print("Error: 'refresh-weights' requires <run-id> [out-path]", file=sys.stderr)
+        sys.exit(1)
+
+    run_id = args[0]
+    out_path = args[1] if len(args) == 2 else os.path.join("test", "shard_weights.json")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        res = subprocess.run(
+            ["gh", "run", "download", run_id, "-n", "shard-weights", "-D", tmp],
+            capture_output=True,
+            text=True,
+        )
+        if res.returncode != 0:
+            print(f"Error: gh run download failed: {res.stderr.strip()}", file=sys.stderr)
+            sys.exit(1)
+        downloaded = os.path.join(tmp, "shard_weights.json")
+        if not os.path.isfile(downloaded):
+            print(f"Error: shard_weights.json not found in artifact for run {run_id}", file=sys.stderr)
+            sys.exit(1)
+        with open(downloaded, "r", encoding="utf-8") as src:
+            content = src.read()
+        out_dir = os.path.dirname(os.path.abspath(out_path))
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as dst:
+            dst.write(content)
+    print(f"Refreshed {out_path} from run {run_id}")
+
+
 def main():
     if len(sys.argv) < 2:
-        print("Error: Missing command. Usage: scripts/test_shard.py <list|check|check-workflow> [args...]", file=sys.stderr)
+        print("Error: Missing command. Usage: scripts/test_shard.py <list|check|check-workflow|weights-from-reports|refresh-weights> [args...]", file=sys.stderr)
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -146,8 +275,12 @@ def main():
         cmd_check(args)
     elif cmd == "check-workflow":
         cmd_check_workflow(args)
+    elif cmd == "weights-from-reports":
+        cmd_weights_from_reports(args)
+    elif cmd == "refresh-weights":
+        cmd_refresh_weights(args)
     else:
-        print(f"Error: Unknown command '{cmd}'. Usage: scripts/test_shard.py <list|check|check-workflow> [args...]", file=sys.stderr)
+        print(f"Error: Unknown command '{cmd}'. Usage: scripts/test_shard.py <list|check|check-workflow|weights-from-reports|refresh-weights> [args...]", file=sys.stderr)
         sys.exit(1)
 
 
