@@ -9,6 +9,7 @@ import '../../../models/magic_items/magic_item_library.dart';
 import '../../../models/monster_codex_data.dart';
 import '../../../models/spellbook_data.dart';
 import '../../../models/tables/srd_tables_library.dart';
+import '../../acl/compendium_spell_parser.dart';
 import '../../fluff/entity_fluff_service.dart';
 import '../../repository/layered_priority_repository.dart';
 import 'homebrew_compendium_mappers.dart';
@@ -42,9 +43,59 @@ class HomebrewLibrarySync {
   final Future<List<HomebrewCompendiumEntry>> Function() loadCustomOtherEntries;
   final Future<List<EntityFluff>> Function() loadCustomFluff;
 
+  /// Enriches homebrew spells that have no class list with SRD class
+  /// assignments by name/slug before registering them in [SpellbookLibrary].
+  /// Stored records are never mutated by this view-time enrichment.
+  static List<Spell> enrichSpellsWithSrdClasses(List<Spell> spells) {
+    final parser = CompendiumSpellParser();
+    return spells.map((s) {
+      if (s.rules2014.classes.isNotEmpty || s.rules2024.classes.isNotEmpty) {
+        return s;
+      }
+      final fallbackNames =
+          parser.extractClassesForSpell(s.id.slug, s.name, s.id.ruleset);
+      if (fallbackNames.isEmpty) return s;
+      final resolved = <SpellClass>[];
+      for (final fn in fallbackNames) {
+        final match = SpellClass.values
+            .where((sc) =>
+                sc.name.toLowerCase() == fn.toLowerCase() ||
+                sc.label.toLowerCase() == fn.toLowerCase())
+            .firstOrNull;
+        if (match != null && !resolved.contains(match)) {
+          resolved.add(match);
+        }
+      }
+      if (resolved.isEmpty) return s;
+      SpellEditionDetails withClasses(SpellEditionDetails d) =>
+          SpellEditionDetails(
+            schoolOverride: d.schoolOverride,
+            castingTime: d.castingTime,
+            range: d.range,
+            components: d.components,
+            materialDetails: d.materialDetails,
+            duration: d.duration,
+            concentration: d.concentration,
+            ritual: d.ritual,
+            description: d.description,
+            higherLevels: d.higherLevels,
+            classes: resolved,
+            rollFormula: d.rollFormula,
+            scalingFormula: d.scalingFormula,
+            damageOrHealType: d.damageOrHealType,
+            savingThrow: d.savingThrow,
+            reactionTrigger: d.reactionTrigger,
+          );
+      return s.copyWith(
+        rules2014: withClasses(s.rules2014),
+        rules2024: withClasses(s.rules2024),
+      );
+    }).toList();
+  }
+
   /// Synchronizes all loaded homebrew entities into global runtime libraries.
   Future<void> syncToLibraries() async {
-    final spells = await loadCustomSpells();
+    final spells = enrichSpellsWithSrdClasses(await loadCustomSpells());
     SpellbookLibrary.setHomebrewSpells(spells);
 
     final monsters = await loadCustomMonsters();

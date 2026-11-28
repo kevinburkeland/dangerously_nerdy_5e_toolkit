@@ -4,6 +4,7 @@ One line per slice, newest first. Each line: date, slice name, what changed for 
 Work before Map slice 1.1 (hardening passes 0 to 12) is in the git history.
 
 ## 2026-11-27
+- Cleanup slice 19: Step 4 restore SRD class-by-name fallback for homebrew spells in HomebrewLibrarySync, add differential law, and upgrade no_second_spell_or_item_model_bar_test.dart to type-aware matching (Fixes 4.1-4.3).
 - Cleanup slice 19: Step 3 add ci_scope.py, repo-text tags and tag bar, ci_result.py final job, and notes-only parent run verification in check_notes_shas.py (Fixes 3.1-3.5).
 - Cleanup slice 19: Step 2 move notes checks out of DCO job with workflow check, remove mobile build jobs, emit shard weights from CI JSON reports, and balance shards by measured time (Fixes 2.1-2.5).
 - Cleanup slice 19: Retire 12 cs18 mutation branches, add NS84 unreachable-commit hint when archive tags are present locally to test_check_notes_shas.sh, and upgrade flutter_webrtc to ^1.7.0 for 14-day dependency look-ahead (Step 1, Fixes 1.1-1.3).

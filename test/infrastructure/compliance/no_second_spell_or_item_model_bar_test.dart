@@ -40,10 +40,21 @@ const Set<String> _kGenericEntityFields = {
 
 /// Shared combat-simulation, mobility, and batch-roller fields carried on
 /// `MonsterStatBlock` that also legitimately appear on runtime combat types
-/// (`ArenaCombatant`, `MonsterCombatProfile`, `DprAttackAction`,
-/// `MinionInstance`, `MinionInstanceDto`). Core monster/stat-block fields
-/// (`armorClass`, `hitPoints`, `challengeRating`, `ac`, `maxHp`, `crDisplay`,
-/// `strScore`..`chaScore`, `traits`, `actions`, etc.) remain strictly enforced.
+/// (still required by the type-aware bar):
+/// - `bool canFly`: `MonsterCombatProfile`
+/// - `bool hasHover`: `ArenaCombatant`, `MonsterCombatProfile`
+/// - `int spellSaveDc`: `ArenaCombatant`, `MonsterCombatProfile`
+/// - `int spellAttackBonus`: `ArenaCombatant`, `MonsterCombatProfile`
+/// - `int attackBonus`: `DprAttackAction`
+/// - `int damageDiceCount`: `MinionInstance`, `MinionInstanceDto`
+/// - `int damageDiceSides`: `MinionInstance`, `MinionInstanceDto`
+/// - `int damageBonus`: `DprAttackAction`
+/// - `String damageType`: `DprAttackAction`, `MinionInstance`, `MinionInstanceDto`
+/// - `int secondaryDamageDiceCount`: `MinionInstance`, `MinionInstanceDto`
+/// - `int secondaryDamageDiceSides`: `MinionInstance`, `MinionInstanceDto`
+/// - `String secondaryDamageType`: `DprAttackAction`, `MinionInstance`, `MinionInstanceDto`
+/// - `bool hasPackTactics`: `MinionInstanceDto`
+/// - `String specialTrait`: `MinionInstance`, `MinionInstanceDto`
 const Set<String> _kSharedCombatAndRollerFields = {
   'canFly',
   'hasHover',
@@ -67,13 +78,9 @@ const Set<String> _kSharedCombatAndRollerFields = {
 /// this repository. Zero new exemptions added for Monster / MonsterStatBlock.
 const Map<(String, String), String> kSecondModelExemptions = {
   ('lib/infrastructure/dtos/spell_dto.dart', 'SpellDto'):
-      'Wire-format DTO for Spell JSON/database transport; converted to ruleset Spell in one place via SpellDto.toDomain().',
+      'Wire-format DTO for Spell JSON/database transport, turned into Spell in one place via SpellDto.toDomain() in lib/infrastructure/dtos/spell_dto.dart; matches 11 Spell fields (int level, String school, String range, int rangeDistanceFeet, String rangeType, String damageType, SpellComponents components, String higherLevelsMarkdown, List<EvaluationMath> damageMath, List<EntityReference<DomainEntity>> relatedEntityRefs, List<CombatEffectRider> riders).',
   ('lib/models/dm_screen_data.dart', 'DmReferenceItem'):
-      'DM Screen rules reference card (DmCategory actions/conditions/tables, action-economy cost/cost2014/cost2024, List<String> rules2014/rules2024); not an equipment model.',
-  ('lib/models/srd_summons/summon_preset.dart', 'SummonPreset'):
-      'Summon squad preset (statBlocks, budgetBySpellLevel, isRandomTable) covering summon spells and magic-item summoners; holds 4 display strings alongside optional spellId.',
-  ('lib/models/glyph_gallery_data.dart', 'GlyphItemEntry'):
-      'Illustrative Glyph Gallery showcase entry (29 entries, 7 not in MagicItemLibrary) implementing GlyphRenderable for UI showcase only.',
+      'DM Screen rules reference card (action-economy cost); kept because type-aware bar still matches 3 EquipmentItem fields (String cost, String cost2014, String cost2024).',
 };
 
 String _stripComments(String src) {
@@ -140,14 +147,27 @@ String _extractClassTopLevel(String stripped, String className) {
   return topLevel.toString();
 }
 
+String normalizeDeclaredType(String rawType) {
+  var t = rawType.trim();
+  if (t.isEmpty) return 'dynamic';
+  t = t.replaceAll(RegExp(r'\s+'), '');
+  t = t.replaceAllMapped(
+    RegExp(r'(?<![A-Za-z0-9_])[a-z_][a-z0-9_]*\.([A-Z])'),
+    (m) => m.group(1)!,
+  );
+  if (t.endsWith('?')) {
+    t = t.substring(0, t.length - 1);
+  }
+  return t.isEmpty ? 'dynamic' : t;
+}
+
 /// Extracts only top-level field declarations inside [className]'s class body,
-/// ignoring method/constructor bodies and parameter lists so reference-holder
-/// classes and local variables cannot cause false matches.
-Set<String> extractClassFieldNames(String source, String className) {
+/// mapping `fieldName -> normalizedType`.
+Map<String, String> extractClassFieldTypes(String source, String className) {
   final stripped = _stripComments(source);
   final topLevel = _extractClassTopLevel(stripped, className);
   if (topLevel.isEmpty) return const {};
-  final fields = <String>{};
+  final fields = <String, String>{};
   for (final stmt in topLevel.split(';')) {
     var s = stmt.trim();
     if (s.isEmpty) continue;
@@ -161,25 +181,35 @@ Set<String> extractClassFieldNames(String source, String className) {
         RegExp(r'\b(get|set|operator|factory)\b').hasMatch(s)) {
       continue;
     }
+    // Strip leading storage/mutability modifiers
+    var rest = s.replaceFirst(
+      RegExp(r'^(?:static\s+|const\s+|final\s+|late\s+|var\s+)+'),
+      '',
+    ).trim();
     final m = RegExp(
-      r'^(?:(?:static\s+const|static\s+final|static\s+late|late\s+final|late|final|var)\s+|(?:[A-Za-z_][A-Za-z0-9_<>,?.\s]*\s+))([a-z_][A-Za-z0-9_]*)$',
-    ).firstMatch(s);
+      r'^(?:([A-Za-z_][A-Za-z0-9_<>,?.\s]*?)\s+)?([a-z_][A-Za-z0-9_]*)$',
+    ).firstMatch(rest);
     if (m != null) {
-      final fieldName = m.group(1)!;
+      final rawType = m.group(1) ?? '';
+      final fieldName = m.group(2)!;
       if (fieldName != 'return' && fieldName != 'throw') {
-        fields.add(fieldName);
+        fields[fieldName] = normalizeDeclaredType(rawType);
       }
     }
   }
   return fields;
 }
 
-/// Extracts top-level fields AND public derived getters from a canonical
-/// ruleset model class (so facts derived via getters like `Monster.armorClass`
-/// or `Monster.challengeRating` are also enforced by the shape bar).
-Set<String> extractCanonicalModelPropertyNames(String source, String className) {
+Set<String> extractClassFieldNames(String source, String className) =>
+    extractClassFieldTypes(source, className).keys.toSet();
+
+/// Extracts top-level fields AND public derived getters with their declared types.
+Map<String, String> extractCanonicalModelPropertyTypes(
+  String source,
+  String className,
+) {
   final stripped = _stripComments(source);
-  final props = <String>{...extractClassFieldNames(source, className)};
+  final props = <String, String>{...extractClassFieldTypes(source, className)};
   final topLevel = _extractClassTopLevel(stripped, className);
   const ignoredGetters = {
     'entityType',
@@ -187,10 +217,12 @@ Set<String> extractCanonicalModelPropertyNames(String source, String className) 
     'sourceStatBlock',
     'isHomebrew',
   };
-  for (final m in RegExp(r'\bget\s+([a-z][A-Za-z0-9_]*)\b').allMatches(topLevel)) {
-    final g = m.group(1)!;
+  for (final m in RegExp(
+    r'(?:^|\n|;)\s*([A-Za-z_][A-Za-z0-9_<>,?.\s]*?)\s+get\s+([a-z][A-Za-z0-9_]*)\b',
+  ).allMatches(topLevel)) {
+    final g = m.group(2)!;
     if (!ignoredGetters.contains(g)) {
-      props.add(g);
+      props[g] = normalizeDeclaredType(m.group(1)!);
     }
   }
   return props;
@@ -210,6 +242,28 @@ Directory _findRulesetLibDir() {
   return Directory('$rootPath/lib');
 }
 
+Map<String, String> _filterNonGeneric(
+  Map<String, String> fields, [
+  Set<String> extraIgnored = const {},
+]) {
+  return {
+    for (final e in fields.entries)
+      if (!_kGenericEntityFields.contains(e.key) &&
+          !extraIgnored.contains(e.key))
+        e.key: e.value,
+  };
+}
+
+List<String> _matchingTypedFields(
+  Map<String, String> candidate,
+  Map<String, String> canonical,
+) {
+  return [
+    for (final e in candidate.entries)
+      if (canonical[e.key] == e.value) '${e.value} ${e.key}',
+  ]..sort();
+}
+
 ({
   List<String> violations,
   List<String> classesScanned,
@@ -218,10 +272,12 @@ Directory _findRulesetLibDir() {
 }) scanSourceForShadowModelsDetailed({
   required String path,
   required String source,
-  required Set<String> spellFields,
-  required Set<String> itemFields,
-  Set<String> monsterFields = const {},
-  Set<String> statBlockFields = const {},
+  required Map<String, String> spellFields,
+  required Map<String, String> itemFields,
+  Map<String, String> monsterFields = const {},
+  Map<String, String> statBlockFields = const {},
+  Map<(String, String), String> exemptions = kSecondModelExemptions,
+  Set<String> sharedCombatFields = _kSharedCombatAndRollerFields,
 }) {
   final stripped = _stripComments(source);
   final violations = <String>[];
@@ -229,19 +285,17 @@ Directory _findRulesetLibDir() {
   final matched = <String>[];
   final exempted = <String>[];
 
-  final spellSpecific = spellFields.difference(_kGenericEntityFields);
-  final itemSpecific = itemFields.difference(_kGenericEntityFields);
-  final monsterSpecific = monsterFields.difference(_kGenericEntityFields);
-  final statBlockSpecific = statBlockFields
-      .difference(_kGenericEntityFields)
-      .difference(_kSharedCombatAndRollerFields);
+  final spellSpecific = _filterNonGeneric(spellFields);
+  final itemSpecific = _filterNonGeneric(itemFields);
+  final monsterSpecific = _filterNonGeneric(monsterFields);
+  final statBlockSpecific = _filterNonGeneric(statBlockFields, sharedCombatFields);
 
   final classRe = RegExp(r'\bclass\s+([A-Z][A-Za-z0-9_]*)\b[^{]*\{');
   for (final m in classRe.allMatches(stripped)) {
     final name = m.group(1)!;
     classesScanned.add('$path:$name');
 
-    final exemptionReason = kSecondModelExemptions[(path, name)];
+    final exemptionReason = exemptions[(path, name)];
     if (exemptionReason != null) {
       exempted.add('$path:$name ($exemptionReason)');
       continue;
@@ -254,12 +308,11 @@ Directory _findRulesetLibDir() {
       continue;
     }
 
-    final fields =
-        extractClassFieldNames(stripped, name).difference(_kGenericEntityFields);
-    final spellOverlap = fields.intersection(spellSpecific);
-    final itemOverlap = fields.intersection(itemSpecific);
-    final monsterOverlap = fields.intersection(monsterSpecific);
-    final statBlockOverlap = fields.intersection(statBlockSpecific);
+    final fields = _filterNonGeneric(extractClassFieldTypes(stripped, name));
+    final spellOverlap = _matchingTypedFields(fields, spellSpecific);
+    final itemOverlap = _matchingTypedFields(fields, itemSpecific);
+    final monsterOverlap = _matchingTypedFields(fields, monsterSpecific);
+    final statBlockOverlap = _matchingTypedFields(fields, statBlockSpecific);
 
     if (spellOverlap.length >= 3) {
       final msg =
@@ -297,10 +350,10 @@ Directory _findRulesetLibDir() {
 List<String> scanSourceForShadowModels({
   required String path,
   required String source,
-  required Set<String> spellFields,
-  required Set<String> itemFields,
-  Set<String> monsterFields = const {},
-  Set<String> statBlockFields = const {},
+  required Map<String, String> spellFields,
+  required Map<String, String> itemFields,
+  Map<String, String> monsterFields = const {},
+  Map<String, String> statBlockFields = const {},
 }) =>
     scanSourceForShadowModelsDetailed(
       path: path,
@@ -312,10 +365,10 @@ List<String> scanSourceForShadowModels({
     ).violations;
 
 void main() {
-  late Set<String> spellFields;
-  late Set<String> itemFields;
-  late Set<String> monsterFields;
-  late Set<String> statBlockFields;
+  late Map<String, String> spellFields;
+  late Map<String, String> itemFields;
+  late Map<String, String> monsterFields;
+  late Map<String, String> statBlockFields;
 
   setUpAll(() {
     final rulesetLib = _findRulesetLibDir();
@@ -331,14 +384,14 @@ void main() {
     expect(monsterFile.existsSync(), isTrue);
     expect(statBlockFile.existsSync(), isTrue);
 
-    spellFields = extractClassFieldNames(spellFile.readAsStringSync(), 'Spell');
+    spellFields = extractClassFieldTypes(spellFile.readAsStringSync(), 'Spell');
     itemFields =
-        extractClassFieldNames(itemFile.readAsStringSync(), 'EquipmentItem');
-    monsterFields = extractCanonicalModelPropertyNames(
+        extractClassFieldTypes(itemFile.readAsStringSync(), 'EquipmentItem');
+    monsterFields = extractCanonicalModelPropertyTypes(
       monsterFile.readAsStringSync(),
       'Monster',
     );
-    statBlockFields = extractClassFieldNames(
+    statBlockFields = extractClassFieldTypes(
       statBlockFile.readAsStringSync(),
       'MonsterStatBlock',
     );
@@ -410,7 +463,7 @@ class SpellEntry {
 ''';
       const fooDetails = '''
 class FooDetails {
-  final String rarityTier;
+  final ItemRarity rarityTier;
   final String itemType;
   final bool requiresAttunement;
   const FooDetails(this.rarityTier, this.itemType, this.requiresAttunement);
@@ -491,6 +544,52 @@ class SafeHelper {
         ),
         isEmpty,
         reason: 'Commented class Incantation must pass',
+      );
+
+      const dmRefShape = '''
+class DmRefShape {
+  final String id;
+  final String name;
+  final List<String> rules2014;
+  final List<String> rules2024;
+  const DmRefShape(this.id, this.name, this.rules2014, this.rules2024);
+}
+''';
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/models/dm_ref_shape.dart',
+          source: dmRefShape,
+          spellFields: spellFields,
+          itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
+        ),
+        isEmpty,
+        reason: 'DmReferenceItem shape with List<String> rules2014/rules2024 must pass',
+      );
+
+      const dynamicIncantation = '''
+class Incantation {
+  final dynamic level;
+  final dynamic school;
+  final dynamic range;
+  final dynamic castingTime;
+  final dynamic duration;
+  final dynamic components;
+  const Incantation(this.level, this.school, this.range, this.castingTime, this.duration, this.components);
+}
+''';
+      expect(
+        scanSourceForShadowModels(
+          path: 'lib/models/dynamic_incantation.dart',
+          source: dynamicIncantation,
+          spellFields: spellFields,
+          itemFields: itemFields,
+          monsterFields: monsterFields,
+          statBlockFields: statBlockFields,
+        ),
+        isEmpty,
+        reason: 'Incantation with dynamic fields must pass type-aware bar',
       );
     });
 
